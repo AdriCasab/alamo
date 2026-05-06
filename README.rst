@@ -1,194 +1,205 @@
-.. raw:: html
+MMW Thermal Spallation In ALAMO
+===============================
 
-   <p align="center">
-       <img src="https://www.solids.group/wp-content/uploads/2025/03/alamo3-inv.png" alt="alamo" width="400">
-   </p>
+This fork extends `ALAMO <https://github.com/solidsgroup/alamo>`_ with a new
+research integrator for millimetre-wave (MMW) drilling and thermal spallation
+of rock.  The model couples enthalpy heat conduction, a Gaussian/Beer-Lambert
+MMW source, prescribed-temperature flame-spallation boundary conditions,
+mineral microstructure, thermoelastic stress, damage, grain-boundary cohesive
+diagnostics, and first-pass spall detachment/removal.
 
-   <p align="center">
-       <a href="https://github.com/solidsgroup/alamo/actions/workflows/linux.yml"><img src="https://github.com/solidsgroup/alamo/actions/workflows/linux.yml/badge.svg?branch=development"></a>
-       <a href="https://github.com/solidsgroup/alamo/actions/workflows/coverage.yml"><img src="https://github.com/solidsgroup/alamo/actions/workflows/coverage.yml/badge.svg?branch=development"></a>
-       <a href="https://github.com/solidsgroup/alamo/tree/development"><img src="https://img.shields.io/github/last-commit/solidsuccs/alamo/development.svg?label=last%20commit%20%28development%29"></a>
-       <a href="https://github.com/solidsgroup/alamo/graphs/contributors"><img src="https://img.shields.io/github/contributors/solidsuccs/alamo.svg"></a>
-       <a href="https://github.com/solidsgroup/alamo/pulls"><img src="https://img.shields.io/github/issues-pr/solidsuccs/alamo.svg"></a>
-       <a href="https://github.com/solidsgroup/alamo/issues"><img src="https://img.shields.io/github/issues/solidsuccs/alamo.svg"></a>
-       <a href="https://doi.org/10.5281/zenodo.15792528"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.15792528.svg"></a>
-       <a href="https://joss.theoj.org/papers/43ba1a1a4b86a557f2c74b9f2296a0f4"><img src="https://joss.theoj.org/papers/43ba1a1a4b86a557f2c74b9f2296a0f4/status.svg"></a>
-   </p>
+The main executable is built from:
 
-.. getting-started:
+- ``src/mmwspalling.cc`` - dedicated executable entry point.
+- ``src/Integrator/MMWSpalling.H`` - top-level multiphysics integrator.
 
-Alamo is a high-performance scientific code that uses block-structured adaptive mesh refinement
-to solve such problems as: the ignition and burn of solid rocket propellant, plasticity, damage
-and fracture in materials undergoing loading, and the interaction of compressible flow with
-eroding solid materials. Alamo is powered by AMReX, and provides a set of unique methods,
-models, and algorithms that enable it to solve solid-mechanics problems (coupled to other
-physical behavior such as fluid flow or thermal diffusion) using the power of block-structured
-adaptive mesh refinement.
+The generated binary is:
 
-`Alamo documentation <https://solidsgroup.github.io/alamo/docs/>`_
+.. code-block:: bash
 
-Downloading Alamo
------------------
-
-Download alamo using git:
-
-.. code-block::
-
-    git clone git@github.com:solidsgroup/alamo.git
-    
-If you do not have a Github account and/or you have not uploaded your public SSH key, this will probably throw an error.
-You can download alamo using HTTPS instead,
-
-.. code-block::
-    
-    https://github.com/solidsuccs/alamo.git 
-
-Note, that you will not be able to push anything using HTTPS authentication.
-The :code:`master` branch is the most stable and is what is checked out by default.
-The :code:`develompent` branch is generally stable, and includes the latest functionality.
-To switch to :code:`development`, in the alamo directory,
-
-.. code-block::
-    
-    git checkout development
-    
-Installing dependencies
------------------------
-
-Alamo is routinely run and tested on Ubuntu and MacOS.
-You can use the
-`System Install Scripts <https://solidsgroup.github.io/alamo/docs/GettingStarted.html#system-install-scripts>`_
-to install all necessary dependencies for your system.
-
-Setting default MPI
--------------------
-
-It may be necessary to use a specific MPI distribution.
-On Ubuntu, you can change the distribution with the following:
-
-.. code-block::
-
-    $> sudo update-alternatives --config mpi
-
-    There are 2 choices for the alternative mpi (providing /usr/bin/mpicc).
-    
-      Selection    Path                    Priority   Status
-    ------------------------------------------------------------
-    * 0            /usr/bin/mpicc.openmpi   50        auto mode
-      1            /usr/bin/mpicc.mpich     40        manual mode
-      2            /usr/bin/mpicc.openmpi   50        manual mode
-    
-    Press <enter> to keep the current choice[*], or type selection number:     
-
-Do the same thing for mpirun.
-
-.. code-block::
-
-    $> sudo update-alternatives --config mpirun
-    
-Remember to run :code:`make realclean` every time you switch mpi versions. 
-
-Configuring
------------
-
-To compile alamo, you must first run the configure script. 
-This is done simply by running the following in the alamo directory 
-(note that AMReX download is triggered by this command, so it may take a couple minutes to complete depending on your internet connection)
-
-.. code-block::
-
-    ./configure
-
-By default, alamo will configure in 3D production mode. 
-To compile in  2D debug mode, 
-
-.. code-block::
-
-    ./configure --dim=2 --debug
-
-There are multiple compilation options available for Alamo, and they must all be specified at configure time.
-For a complete listing of the Alamo configuration options, type
-
-.. code-block::
-
-    ./configure --help
+   bin/mmwspalling-3d-g++
 
 
-.. NOTE:: 
-    The configure script produces output designed to assist in determining compile issues with Alamo.
-    Whenever you request help with alamo, please always include the complete output of the configure script.
+What This Project Adds
+----------------------
 
-Compiling
----------
+Thermal model
+~~~~~~~~~~~~~
 
-Once you have configured Alamo, compile it by
+- Conserved enthalpy state ``H`` with solid/liquid/vapour phase fractions.
+- Explicit and implicit thermal paths for material-property validation.
+- Temperature-dependent material tables with reusable ``H <-> T`` inversion.
+- Gaussian/Beer-Lambert MMW beam source with time-varying power schedules.
+- Radiation and convection losses on surface cells.
+- Hu-style prescribed-temperature circular surface patch for flame-spallation
+  validation.
 
-.. code-block::
+Relevant files:
 
-    make
-
-If you are on a platform with multiple cores, you can compile in parallel (for instance, with 4 cores) with
-
-.. code-block::
-
-    make -j4
-
-The alamo exectuable will be stored in :code:`./bin/` and name according to the options specified at configure time.
-For instance, if you are using GCC to make Alamo in 2D using debug mode, the alamo executable will be :code:`./bin/alamo-2d-debug-g++`.
-You can work with multiple versions of Alamo at the same time without having to re-compile the entire code base.
-All you need to do is re-run the configure script, and previous versions of Alamo and AMReX will be saved automatically.
-
-.. WARNING::
-    There is an issue with GNU Make that can cause I/O errors during parallel builds.
-    You may get the following error:
-
-    .. code-block::
-
-        make[1]: write error: stdout
-
-    To continue the build, just issue the :code:`make` command again and it should continue normally.
-    You can also add the :code:`--output-sync=target` option which may help eliminate the issue.
-
-Unit Testing
-------------
-
-Upon successful compilation, run tests by
-
-.. code-block::
-
-    make test
-
-This will run the unit tests and regression tests for all compiled production versions of Alamo.
-If you have only run in 2D, only 2D tests will be generated.
-If you are a developer and you are preparing to merge your branch into :code:`development`, you should perform a complete test via
-
-.. code-block::
-
-    ./configure --dim=2
-    make
-    ./configure --dim=3
-    make
-    make test
-
-Regression Testing
-------------------
-
-Alamo contains several `Regression Tests <https://solidsgroup.github.io/alamo/docs/Tests.html>`_ that are routinely tested
-and checked with CI.
-These are checked for `Performance <https://lookerstudio.google.com/s/id-e_zDzO8w>`_ 
-and `Code Coverage <https://solidsgroup.github.io/alamo/cov/>`_
+- ``src/Integrator/MMWSpalling.H``
+- ``src/Numeric/MMWBeam.H``
+- ``src/Numeric/Material/Material.H``
+- ``src/Numeric/Material/Constant.H``
+- ``src/Numeric/Material/Zhang.H``
+- ``src/Numeric/Material/Table.H``
 
 
-Citing Alamo 
-------------
+Microstructure and AMR
+~~~~~~~~~~~~~~~~~~~~~~
 
-To acknowledge alamo in your publications, please cite the following article.
+- Voronoi and expression-based mineral microstructures.
+- Per-phase material fields for ``kappa``, ``rho``, ``Cp``, ``beta``, ``E``,
+  ``mu``, and damage parameters.
+- Explicit grain topology:
+  ``grain_id``, ``is_grain_boundary``, ``is_phase_boundary``, and legacy
+  ``is_gb`` compatibility output.
+- Heterogeneous conductivity and damage-modified conductivity.
+- AMR repair for discrete phase/grain fields and derived material fields.
+- Quartz alpha-beta transformation strain on the microstructure mechanics path.
 
-.. code-block::
+Primary implementation:
 
-    @article{runnels2025alamo,
-      title={The Alamo multiphysics solver for phase field simulations with strong-form mechanics and block structured adaptive mesh refinement},
-      author={Runnels, Brandon and Agrawal, Vinamra and Meier, Maycon},
-      journal={Journal of Open Source Software},
-      year={2025}
-    }
+- ``src/Integrator/MMWSpalling.H``
+
+
+Mechanics, Damage, and Spallation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Heterogeneous thermoelastic mechanics coupled to the temperature field.
+- Top-surface prescribed-temperature eigenstrain coupling for Hu validation.
+- Drucker-Prager failure criterion and continuous irreversible damage
+  evolution.
+- Hu breakage indicator ``f_b = sigma_v / sigma_s`` from thermoelastic stress.
+- Bilinear grain-boundary cohesive-zone law with irreversible history and
+  diagnostics.
+- Level-set-style ``phi`` field for surface advancement and first-pass spall
+  detachment/removal.
+
+Relevant files:
+
+- ``src/Integrator/MMWSpalling.H``
+- ``src/Numeric/DruckerPrager.H``
+- ``src/Numeric/CohesiveZone.H``
+
+
+Validation and Regression Tests
+-------------------------------
+
+The MMWSpalling tests live in ``tests/MMWSpalling/``.  They are staged so each
+piece of the model is verified before the fully coupled thermal-spallation
+pipeline is used.
+
+Implemented test directories include:
+
+- ``skeleton`` - executable/integrator smoke test.
+- ``stefan`` - enthalpy and phase-fraction verification.
+- ``beam`` - MMW source energy deposition.
+- ``equilibrium`` - radiation/convection equilibrium.
+- ``zhang_oglesby`` - MMW granite-heating thermal validation.
+- ``voronoi`` - mineral microstructure generation.
+- ``heterogeneous_kappa`` - heterogeneous conductivity.
+- ``heterogeneous_enthalpy`` - per-phase enthalpy/table consistency.
+- ``grain_topology`` - grain vs phase boundary flags.
+- ``hu_conduction`` - Hu prescribed-temperature conduction validation.
+- ``thermal_stress`` - thermoelastic stress regression.
+- ``hu_thermoelastic`` - Hu Granite 2 vs Sandstone 2 stress validation.
+- ``hu_thermoelastic_amr`` - AMR version of Hu thermoelastic validation.
+- ``amr_microstructure_regrid`` - AMR repair for microstructure fields.
+- ``dp_yield`` - Drucker-Prager damage evolution.
+- ``hu_breakage_index`` - Hu breakage indicator validation.
+- ``alpha_beta_transition`` - quartz alpha-beta transformation strain.
+- ``gb_cohesive`` - bilinear cohesive-zone law and irreversibility.
+- ``spall_event`` - deterministic spall-detachment and surface-advance event.
+
+Most validation tests write an ``output/comparison.png`` figure comparing the
+simulation output with the analytical or experimental target.
+
+
+Build
+-----
+
+From the repository root:
+
+.. code-block:: bash
+
+   EIGEN=$PWD/ext \
+     CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+     LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current \
+     make -j8
+
+If starting from a clean upstream checkout, run ``./configure`` first using the
+normal ALAMO workflow for your platform.
+
+
+Run a Simulation
+----------------
+
+Use 4 MPI ranks by default for these test and validation cases on the current
+development machine:
+
+.. code-block:: bash
+
+   mpirun --oversubscribe --bind-to none -np 4 \
+     bin/mmwspalling-3d-g++ tests/MMWSpalling/<case>/input
+
+Examples:
+
+.. code-block:: bash
+
+   mpirun --oversubscribe --bind-to none -np 4 \
+     bin/mmwspalling-3d-g++ tests/MMWSpalling/hu_breakage_index/input_granite2_37
+
+   mpirun --oversubscribe --bind-to none -np 4 \
+     bin/mmwspalling-3d-g++ tests/MMWSpalling/spall_event/input
+
+
+Run a Regression Test
+---------------------
+
+The Python postprocessors use ``yt`` and ``numpy``.  On the current development
+machine, use:
+
+.. code-block:: bash
+
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/<case>/test
+
+Examples:
+
+.. code-block:: bash
+
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/hu_breakage_index/test
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/gb_cohesive/test
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/spall_event/test
+
+
+Project Context
+---------------
+
+This repository remains an ALAMO-based research code.  The upstream ALAMO
+documentation is still the reference for the framework, AMReX setup, mechanics
+operators, and general build system:
+
+`ALAMO documentation <https://solidsgroup.github.io/alamo/docs/>`_
+
+For this fork's staged implementation notes and task history, see:
+
+- ``ROADMAP.md`` - short status map.
+- ``ACTIVE_STEP.md`` - current coding packet.
+- ``ARCHIVE_DONE.md`` - completed-step history.
+- ``in-main-tex-you-will-quizzical-treasure.md`` - long historical plan.
+- ``main.tex`` - physics proposal and equations.
+
+
+Citation
+--------
+
+If you use the underlying ALAMO framework, cite the ALAMO paper:
+
+.. code-block:: bibtex
+
+   @article{runnels2025alamo,
+     title={The Alamo multiphysics solver for phase field simulations with strong-form mechanics and block structured adaptive mesh refinement},
+     author={Runnels, Brandon and Agrawal, Vinamra and Meier, Maycon},
+     journal={Journal of Open Source Software},
+     year={2025}
+   }
