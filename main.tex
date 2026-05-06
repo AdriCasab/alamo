@@ -1,0 +1,1467 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Core packages ─────────────────────────────────────────────────────────────
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage[protrusion=true,expansion=false]{microtype}
+\usepackage{natbib}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable, skins, listings}
+\usepackage{listings}
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{abstract}
+\usepackage{lipsum}
+
+% ── Colour palette ────────────────────────────────────────────────────────────
+\definecolor{darkblue}{RGB}{0,51,102}
+\definecolor{midblue}{RGB}{0,102,179}
+\definecolor{lightblue}{RGB}{219,234,248}
+\definecolor{warmgrey}{RGB}{248,248,245}
+\definecolor{codegrey}{RGB}{240,240,240}
+\definecolor{darkred}{RGB}{150,20,20}
+\definecolor{darkgreen}{RGB}{20,100,20}
+\definecolor{pyblue}{RGB}{40,80,160}
+\definecolor{pygreen}{RGB}{0,128,0}
+\definecolor{pygrey}{RGB}{128,128,128}
+\definecolor{pyorange}{RGB}{200,100,0}
+
+% ── Hyperref ──────────────────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=darkblue,
+    citecolor=midblue,
+    urlcolor=midblue,
+    pdftitle={A Unified Thermomechanical Model for MMW Drilling},
+}
+
+% ── Custom tcolorboxes ────────────────────────────────────────────────────────
+\newtcolorbox{systembox}[1][]{
+    enhanced, breakable,
+    colback=lightblue!35,
+    colframe=midblue,
+    arc=3pt, boxrule=0.8pt,
+    left=8pt, right=8pt, top=5pt, bottom=5pt,
+    title={#1},
+    fonttitle=\bfseries\color{darkblue},
+}
+
+\newtcolorbox{notebox}{
+    enhanced, breakable,
+    colback=warmgrey,
+    colframe=darkblue!50,
+    arc=2pt, boxrule=0.6pt,
+    left=7pt, right=7pt, top=3pt, bottom=3pt,
+}
+
+\newtcolorbox{remarbox}{
+    enhanced, breakable,
+    colback=orange!8,
+    colframe=pyorange!70,
+    arc=2pt, boxrule=0.6pt,
+    left=7pt, right=7pt, top=3pt, bottom=3pt,
+}
+
+% ── Python listings style ─────────────────────────────────────────────────────
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    backgroundcolor=\color{codegrey},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{pyblue}\bfseries,
+    commentstyle=\color{pygrey}\itshape,
+    stringstyle=\color{pyorange},
+    numberstyle=\tiny\color{pygrey},
+    numbers=left,
+    stepnumber=1,
+    numbersep=6pt,
+    breaklines=true,
+    showstringspaces=false,
+    frame=single,
+    framesep=4pt,
+    rulecolor=\color{darkblue!30},
+    tabsize=4,
+    morekeywords={True, False, None},
+}
+
+% ── Math macros ───────────────────────────────────────────────────────────────
+\newcommand{\pd}[2]{\dfrac{\partial #1}{\partial #2}}
+\newcommand{\pdd}[2]{\dfrac{\partial^2 #1}{\partial #2^2}}
+\newcommand{\vv}[1]{\bm{#1}}
+\newcommand{\tens}[1]{\bm{\mathsf{#1}}}
+\newcommand{\jump}[1]{\llbracket #1 \rrbracket}
+\usepackage{stmaryrd}   % for \llbracket
+
+% ── Section formatting ────────────────────────────────────────────────────────
+\titleformat{\section}
+    {\large\bfseries\color{darkblue}}{\thesection}{1em}{}
+    [\vspace{-4pt}\color{midblue}\rule{\linewidth}{0.6pt}]
+\titleformat{\subsection}
+    {\normalsize\bfseries\color{darkblue!90}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+    {\normalsize\itshape\color{darkblue!80}}{\thesubsubsection}{1em}{}
+
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% ── Algorithm style ───────────────────────────────────────────────────────────
+\SetAlFnt{\small}
+\SetAlCapFnt{\small\bfseries}
+\SetAlCapNameFnt{\small\bfseries}
+\newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{pygrey}{#1}}
+\SetCommentSty{mycommfont}
+
+% ── Line spacing ──────────────────────────────────────────────────────────────
+\setstretch{1.15}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Title page ────────────────────────────────────────────────────────────────
+\begin{titlepage}
+\begin{center}
+    \vspace*{1.5cm}
+    {\Huge\bfseries\color{darkblue}
+        A Unified Thermomechanical Model\\[8pt]
+        for Millimetre-Wave Drilling:\\[8pt]
+        Spallation and Vaporisation Regimes}\\[1.5cm]
+
+    {\large\color{darkblue!70}\textit{Research Proposal}}\\[0.6cm]
+    {\normalsize\color{black!70} \today}\\[2cm]
+
+    \noindent\color{midblue}\rule{0.85\linewidth}{0.8pt}\\[0.4cm]
+    \begin{minipage}{0.85\linewidth}
+    \footnotesize\color{black!70}
+    \textbf{Abstract.}
+    Millimetre-wave (MMW) drilling is a contact-less excavation technology with
+    potential to access deep geothermal resources currently beyond the reach of
+    conventional mechanical drilling.  Existing numerical models treat either
+    thermal spallation or vaporisation in isolation; however, both mechanisms
+    operate simultaneously and their relative dominance shifts with depth and
+    applied beam power.  This proposal describes a unified thermomechanical
+    simulation framework that captures both material removal modes within a
+    single fast engineering model.  The framework couples a Gaussian MMW beam
+    model with a heterogeneous Voronoi microstructure, a pressure-dependent
+    equation of state, a Drucker--Prager damage criterion, and a two-regime
+    surface recession model.  Four research directions are addressed: (i)
+    development of the cohesive multi-mode removal model; (ii) performance
+    comparison across granite, basalt, and limestone; (iii) validation of the
+    proposed spall-initiation time scaling law; and (iv) investigation of the
+    depth-dependent regime transition driven by the equation of state.  The
+    proposed work fills a significant gap in the MMW drilling literature and
+    provides engineering design tools for geothermal well construction.
+    \end{minipage}\\[0.4cm]
+    \noindent\color{midblue}\rule{0.85\linewidth}{0.8pt}
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =============================================================================
+\section{Introduction}
+\label{sec:intro}
+% =============================================================================
+
+Accessing deep geothermal energy — at depths exceeding 5--10\,km in crystalline
+basement rock — requires fundamentally new drilling technologies.  Conventional
+rotary drilling faces exponentially increasing costs beyond 5\,km due to bit wear
+in hard rock, tool failure under extreme temperatures, and slow penetration rates
+\citep{tester2006future, augustine2009hydrothermal}.  Millimetre-wave (MMW) drilling
+avoids these limitations entirely by delivering focused electromagnetic energy to
+the rock face through a corrugated waveguide, fragmenting rock without mechanical
+contact \citep{oglesby2014mmw, houde2021mmw, zhang2023thermal}.
+
+Two fundamentally different material removal mechanisms operate in MMW drilling.
+At moderate beam powers and shallow depths, \textbf{thermal spallation} dominates:
+rapid surface heating generates large compressive thermal stresses that drive
+pre-existing micro-cracks to coalesce, ejecting thin flakes from the surface well
+below the melting point \citep{rauenzahn1989rock, kant2017theory}.  At higher
+powers or greater depths — where confining pressure suppresses spall ejection —
+\textbf{vaporisation} dominates: the rock surface melts and evaporates directly,
+forming a melt pool that is expelled by the beam pressure \citep{zhang2023thermal}.
+The transition between these regimes, and its dependence on material properties,
+depth, and beam parameters, is poorly understood.
+
+Existing numerical models address each regime in isolation.  The thermal model of
+\citet{zhang2023thermal} captures vaporisation with high fidelity but does not
+include the thermoelastic damage mechanics required to predict spallation.
+Conversely, the damage models of \citet{vogler2020simulation} and
+\citet{liu2023failure} capture grain-scale spallation but are not coupled to a
+physically-based EOS or vaporisation model.  No current model treats both regimes
+within a single unified framework, nor investigates the regime transition as a
+function of depth.
+
+\subsection*{Objectives and contributions}
+
+This work proposes a unified fast-engineering simulation framework with four
+specific research directions:
+
+\begin{enumerate}[leftmargin=*, noitemsep]
+    \item \textbf{Unified two-mode removal model.}  Develop a cohesive
+    thermomechanical framework that captures both spallation and vaporisation
+    within a single set of governing equations, with a physically based switching
+    criterion between modes.
+
+    \item \textbf{Material performance comparison.}  Apply the model to granite,
+    basalt, and limestone to quantify the role of mineralogy and microstructure on
+    spallation susceptibility, vaporisation threshold, and rate of penetration.
+
+    \item \textbf{Spall initiation time scaling.}  Derive and validate an
+    analytical scaling law for spall onset time as a function of beam power, rock
+    thermal diffusivity, and microstructure; compare against available experimental
+    and simulation data.
+
+    \item \textbf{Depth-dependent regime transition.}  Couple the model to a
+    pressure-dependent equation of state for rock and investigate how the
+    spallation--vaporisation transition shifts with drilling depth.
+\end{enumerate}
+
+\begin{remarbox}
+\textbf{Physics and numerics added beyond the baseline framework.}
+In addition to the standard thermal--mechanical--damage coupling, the present
+model incorporates:
+(a) \textbf{Enthalpy-based conservation} replacing the temperature PDE, handling
+phase transitions without a modified specific heat;
+(b) \textbf{Beer--Lambert attenuation} with frequency-dependent $\alpha \propto f$
+linking gyrotron selection to removal regime;
+(c) \textbf{Mie--Gr\"{u}neisen equation of state} for pressure-dependent
+elastic modulus at depth;
+(d) \textbf{Drucker--Prager} failure criterion accounting for pressure-dependent
+rock strength;
+(e) \textbf{Voronoi microstructure} with grain-boundary cohesive zones as the
+physical mechanism driving spallation;
+(f) \textbf{temperature-dependent fracture toughness} $K_{Ic}(T)$;
+(g) a \textbf{confining pressure correction} to the damage threshold; and
+(h) \textbf{block-structured AMR} via AMReX/ALAMO with two refinement levels.
+\end{remarbox}
+
+% =============================================================================
+\section{Physical Framework}
+\label{sec:physics}
+% =============================================================================
+
+\subsection{MMW energy deposition and the Beer--Lambert law}
+\label{sec:beam}
+
+\subsubsection{Beam profile and volumetric absorption}
+
+The MMW power deposited per unit volume follows the Beer--Lambert law.  For a
+beam incident on the rock surface at $z = z_0$, the volumetric source is
+\begin{equation}
+    \dot{Q}(\vv{x}, T) = P(\vv{x})\,\alpha(T)\,
+                          \exp\!\left(-\alpha(T)(z_0 - z)\right),
+    \label{eq:qdot}
+\end{equation}
+where $\alpha(T)$ is the temperature-dependent attenuation coefficient
+(units m$^{-1}$) and $P(\vv{x})$ is the surface power intensity.
+For a Gaussian beam centred at $(x_0, y_0)$,
+\begin{equation}
+    P_\mathrm{GB}(x,y,z) = \frac{2P_0}{\pi\omega_0^2}
+            \left(\frac{\omega_0}{\omega(z)}\right)^{\!2}
+            \exp\!\left(\frac{-2r^2}{\omega^2(z)}\right),
+    \qquad
+    r = \sqrt{(x-x_0)^2 + (y-y_0)^2},
+    \label{eq:intensity}
+\end{equation}
+with spot size
+\begin{equation}
+    \omega(z) = \omega_0\sqrt{1 + \left(\frac{\lambda\,(z_0 - z)}
+                                         {\pi\omega_0^2}\right)^{\!2}},
+    \label{eq:waist}
+\end{equation}
+where $P_0$ is beam power, $\omega_0$ the beam waist at the waveguide exit,
+and $\lambda$ the MMW wavelength.
+
+\subsubsection{Role of the attenuation coefficient}
+\label{sec:attenuation}
+
+The attenuation coefficient $\alpha$ is the single most important parameter
+governing the \emph{spatial shape} of energy deposition, and therefore
+exerts a first-order influence on whether spallation or vaporisation is
+the dominant removal mode.
+
+\paragraph{Physical definition.}
+For a dielectric rock material, the attenuation coefficient is related to
+the imaginary part of the complex permittivity
+$\varepsilon^* = \varepsilon' - i\varepsilon''$ by
+\begin{equation}
+    \alpha = \frac{2\omega}{c}\sqrt{
+        \frac{\mu_r}{2}\!\left(\sqrt{{\varepsilon'}^2 + {\varepsilon''}^2}
+                               - \varepsilon'\right)},
+    \label{eq:alpha_def}
+\end{equation}
+where $\omega = 2\pi c/\lambda$ is the angular frequency and
+$\mu_r \approx 1$.  In the low-loss limit ($\varepsilon'' \ll \varepsilon'$),
+this simplifies to
+\begin{equation}
+    \alpha \approx \frac{\pi}{\lambda}\,
+                   \frac{\varepsilon''}{\sqrt{\varepsilon'}}
+           = \frac{\pi\,\tan\delta}{\lambda}\sqrt{\varepsilon'},
+    \label{eq:alpha_approx}
+\end{equation}
+where $\tan\delta = \varepsilon''/\varepsilon'$ is the loss tangent.
+Two key consequences follow:
+\begin{enumerate}[noitemsep]
+    \item \textbf{$\alpha \propto 1/\lambda \propto f$}: the attenuation
+    coefficient is proportional to the gyrotron operating frequency.
+    A 28\,GHz gyrotron ($\lambda \approx 10.7\,\mathrm{mm}$) produces
+    roughly $3\times$ less surface attenuation than a 94\,GHz system
+    ($\lambda \approx 3.2\,\mathrm{mm}$) for the same rock
+    \citep{woskov2009mmw}.
+
+    \item \textbf{Temperature feedback:} the loss tangent $\tan\delta(T)$
+    increases as minerals approach their melting point, so $\alpha$ rises
+    with temperature, further concentrating energy deposition at the
+    surface — a positive feedback that accelerates phase transitions.
+\end{enumerate}
+
+\paragraph{Effect on thermal gradient and removal regime.}
+The characteristic penetration depth is $\ell_\alpha = 1/\alpha$.
+The induced surface thermal gradient scales as
+\begin{equation}
+    \left.\frac{\partial T}{\partial z}\right|_{z=z_0}
+    \;\sim\; \frac{P\,\alpha}{\kappa}
+    \;=\; \frac{P}{\kappa\,\ell_\alpha},
+    \label{eq:grad_scale}
+\end{equation}
+giving rise to two limiting regimes:
+\begin{itemize}[noitemsep]
+    \item \textbf{High $\alpha$ (high frequency, $\ell_\alpha \ll
+    h_\mathrm{spall}$):} energy deposits in a thin near-surface layer;
+    steep gradients drive large compressive thermal stresses favouring
+    \emph{spallation}.
+
+    \item \textbf{Low $\alpha$ (low frequency, $\ell_\alpha \gg
+    h_\mathrm{spall}$):} energy spreads through a thick rock volume;
+    gradients are mild, stress concentrations at grain boundaries are
+    reduced, and the surface must reach $T_v$ before removal, favouring
+    \emph{vaporisation}.
+\end{itemize}
+The mode transition occurs when $\ell_\alpha \sim h_\mathrm{spall} \sim
+C_h\sqrt{\alpha_\mathrm{th}\,t_\mathrm{spall}}$, directly linking the
+gyrotron frequency to the dominant removal mechanism.
+
+\paragraph{Proposed test: attenuation sensitivity study.}
+\label{para:atten_test}
+To quantify this, a controlled numerical experiment is proposed.  All
+parameters are held fixed except the attenuation coefficient, which is
+swept over
+$\alpha \in \{10,\, 30,\, 100,\, 300,\, 1000\}\,\mathrm{m}^{-1}$,
+corresponding approximately to gyrotron frequencies of 28, 45, 94, 140,
+and 300\,GHz respectively for granitic rock \citep{woskov2009mmw}.
+Each simulation records:
+\begin{enumerate}[noitemsep]
+    \item The depth profile $\partial T/\partial z(z)$ at $t = 1\,\mathrm{s}$
+          to visualise the change in energy localisation;
+    \item The onset-spallation time $t_\mathrm{spall}$, or ``vaporisation
+          dominant'' if $T_v$ is reached first;
+    \item The specific energy (J\,mm$^{-3}$ removed) for each case.
+\end{enumerate}
+The expected result is a monotone decrease in $t_\mathrm{spall}$ with
+increasing $\alpha$, saturating when $\ell_\alpha$ drops below the mean
+grain size (at which point grain-boundary heterogeneity, not the beam
+profile, controls damage localisation).  A crossover from spallation to
+vaporisation is expected at low $\alpha$, providing a direct experimental
+prediction linking gyrotron selection to drilling performance.
+
+\noindent The total source entering the enthalpy equation is
+\begin{equation}
+    q(\vv{x},T) = \dot{Q}(\vv{x},T)
+                 - \varepsilon\sigma\bigl(T^4 - T_0^4\bigr)
+                 - h\bigl(T - T_0\bigr),
+    \label{eq:source}
+\end{equation}
+with the loss terms applied only at the ablation surface.
+
+\subsection{Enthalpy conservation and phase tracking}
+\label{sec:heat}
+
+Rather than evolving temperature directly, the model tracks the volumetric
+enthalpy $H$.  This formulation, introduced by \citet{alexiades2010enthalpy},
+handles phase transitions naturally without the need for explicit front-tracking
+or a modified specific heat.  Under the constant-pressure assumption ($\mathrm{d}p
+= 0$), the volumetric enthalpy satisfies
+\begin{equation}
+    \mathrm{d}H = \rho\,c_p\,\mathrm{d}T,
+    \label{eq:dH}
+\end{equation}
+and the conservation law takes the form
+\begin{equation}
+    \pd{H}{t}
+    - \nabla\cdot\!\left[\frac{\kappa(T,D,\vv{x})}{\rho(T)\,c_p(T)}\,\nabla H\right]
+    = q(\vv{x}, T),
+    \label{eq:enthalpy_pde}
+\end{equation}
+where the source term $q$ is the net volumetric power input:
+\begin{equation}
+    q(\vv{x}, T) = \dot{Q}(\vv{x},T)
+                   - \varepsilon\sigma\bigl(T^4 - T_0^4\bigr)
+                   - h\bigl(T - T_0\bigr).
+    \label{eq:source_q}
+\end{equation}
+The radiation and convection losses (the final two terms) are resolved only at
+the ablation surface and are computed using the surface temperature $T_0$ and
+the vertical extent of the corresponding surface cell $\mathrm{d}z$.
+
+\subsubsection{Temperature--enthalpy inversion}
+
+Since all material properties ($\kappa$, $\rho$, $c_p$, $E$, $\beta$) are
+functions of temperature, the enthalpy field must be inverted to recover $T$
+at every time step.  This inversion is governed by four phase-indicator
+enthalpies \citep{alexiades2010enthalpy}:
+\begin{itemize}[noitemsep]
+    \item $H^S$: enthalpy at the onset of melting (solidus);
+    \item $H^L = H^S + \Delta H^\mathrm{fus}$: enthalpy at the end of melting
+          (liquidus);
+    \item $H^{LV}$: enthalpy at the onset of vaporisation;
+    \item $H^V = H^{LV} + \Delta H^\mathrm{vap}$: enthalpy at the completion
+          of vaporisation.
+\end{itemize}
+
+\noindent\textbf{Solid phase} ($H < H^S$, $T < T_m$):
+\begin{equation}
+    H^S - H(T) = \int_{T}^{T_m} \rho(T')\,c_p(T')\,\mathrm{d}T'.
+    \label{eq:H_solid}
+\end{equation}
+
+\noindent\textbf{Solid--liquid transition} ($H^S \le H \le H^L$):
+temperature is constant at $T = T_m$ while phase fractions evolve.
+Mixture properties are computed via linear combination of the
+solid ($\Lambda^S$) and liquid ($\Lambda^L$) volume fractions:
+\begin{equation}
+    \Lambda^L = \frac{H - H^S}{\Delta H^\mathrm{fus}},
+    \qquad
+    \Lambda^S = 1 - \Lambda^L,
+    \label{eq:phase_fracs}
+\end{equation}
+so that, for example, $\rho = \Lambda^L\rho^L + \Lambda^S\rho^S$.  The
+same linear-combination rule is applied to $\kappa$, $c_p$, and $\beta$.
+
+\noindent\textbf{Liquid phase} ($H^L < H < H^{LV}$): analogous to the solid
+phase with fully liquid properties.
+
+\noindent\textbf{Liquid--vapour transition} ($H^{LV} \le H \le H^V$):
+temperature is constant at $T = T_v$; liquid and vapour volume fractions
+are computed analogously to \cref{eq:phase_fracs} using $\Delta H^\mathrm{vap}$.
+
+\noindent\textbf{Vapour phase} ($H > H^V$): material has been removed and the
+surface $\phi = 0$ is advanced accordingly.
+
+\noindent The spatial thermal conductivity field appearing in
+\cref{eq:enthalpy_pde} is the heterogeneous, damage-modified field
+$\kappa(T, D, \vv{x})$ defined in \S\ref{sec:voronoi}.
+
+\subsection{Equation of state for elastic modulus}
+\label{sec:eos}
+
+At depth, rock is subject to significant confining pressure $P_c$.  The elastic
+modulus is no longer a constant material property but depends on both pressure
+and temperature (or internal energy $e$).  We adopt a \textbf{Mie--Gr\"{u}neisen}
+form for the pressure--energy relation:
+\begin{equation}
+    P(V,e) = P_H(V) + \frac{\Gamma(V)}{V}\left(e - e_H(V)\right),
+    \label{eq:mie-gruneisen}
+\end{equation}
+where $V = 1/\rho$ is the specific volume, $P_H$ and $e_H$ are the
+Hugoniot reference pressure and internal energy, and $\Gamma(V)$ is the
+Gr\"{u}neisen parameter.  For a linear $u_s$--$u_p$ Hugoniot,
+\begin{equation}
+    P_H(\eta) = \frac{\rho_0\,c_0^2\,\eta}{(1 - s\eta)^2}, \qquad
+    \eta = 1 - \frac{\rho_0}{\rho},
+    \label{eq:hugoniot}
+\end{equation}
+where $c_0$ is the ambient bulk sound speed and $s$ the Hugoniot slope
+coefficient.  The pressure-dependent Young's modulus is then recovered as
+\begin{equation}
+    E(P, T) = \rho\,c_s^2(P)\,\frac{3(1-2\mu)}{1},
+    \qquad
+    c_s^2(P) = c_0^2 + \frac{\partial P}{\partial \rho}\bigg|_e,
+    \label{eq:E_EOS}
+\end{equation}
+where $c_s$ is the pressure-modified longitudinal sound speed.  At low pressures
+and temperatures this reduces to the standard elastic modulus $E_0$.  The
+practical consequence for MMW drilling is that $E$ increases with depth,
+raising the LRST and spallation threshold, and eventually rendering spallation
+impossible — at which point vaporisation becomes the sole removal mechanism.
+
+\subsection{Stress criterion: von Mises, Drucker--Prager, and Hoek--Brown}
+\label{sec:stress_criterion}
+
+The choice of failure criterion significantly affects which regions of the rock
+are predicted to damage and which removal mode dominates.  We discuss three
+candidates and justify our choice.
+
+\subsubsection{Von Mises criterion}
+
+The von Mises criterion,
+\begin{equation}
+    \sigma_v = \sqrt{\tfrac{1}{2}\!\left[
+        (\sigma_1-\sigma_2)^2 + (\sigma_2-\sigma_3)^2 + (\sigma_3-\sigma_1)^2
+        \right]} \ge \sigma_Y,
+    \label{eq:vonmises}
+\end{equation}
+is \emph{pressure-independent}: it predicts the same yield stress regardless of
+the mean stress $p = -(\sigma_1+\sigma_2+\sigma_3)/3$.  This is appropriate for
+metals but fundamentally incorrect for rock, which is significantly stronger in
+compression than in tension, and whose strength increases with confining pressure.
+Under a MMW beam, the near-surface layer is in low confinement while material at
+depth is under $P_c$.  Von Mises cannot capture this contrast and will overpredict
+damage at depth.  It is retained in some thermal spallation studies
+\citep{hu2018lrst} purely for simplicity.
+
+\subsubsection{Drucker--Prager criterion (recommended)}
+
+The Drucker--Prager (DP) criterion is the smooth, circular-cone generalisation
+of Mohr--Coulomb in principal-stress space:
+\begin{equation}
+    F_\mathrm{DP} = \sqrt{J_2} + \alpha_\mathrm{DP}\,I_1 - k_\mathrm{DP} \ge 0,
+    \label{eq:DP}
+\end{equation}
+where $I_1 = \sigma_{kk}$ is the first stress invariant (trace),
+$J_2 = \tfrac{1}{2}s_{ij}s_{ij}$ is the second deviatoric stress invariant, and
+the material constants are
+\begin{equation}
+    \alpha_\mathrm{DP} = \frac{2\sin\phi}{\sqrt{3}(3 - \sin\phi)},
+    \qquad
+    k_\mathrm{DP} = \frac{6c\cos\phi}{\sqrt{3}(3 - \sin\phi)},
+    \label{eq:DP_params}
+\end{equation}
+with $\phi$ the internal friction angle and $c$ the cohesion.  DP correctly
+predicts that rock is weaker in tension than compression, strengthens with
+confinement, and — critically for deep drilling — the damage threshold increases
+with $P_c = I_1/3$.  We adopt this criterion as the primary failure measure for
+both tensile-dominated spallation and compressive shear failure at depth.
+
+\subsubsection{Hoek--Brown spalling limit}
+
+For the specific case of near-surface spallation under low confinement,
+\citet{vogler2020simulation} showed that a bilinear spalling limit cut-off on
+the Hoek--Brown envelope better captures the reduced strength of the
+grain-boundary zone:
+\begin{equation}
+    \frac{\sigma_1}{\sigma_3} \ge \xi_s \approx 8,
+    \label{eq:HB_spall}
+\end{equation}
+where $\xi_s$ is the spalling ratio.  This criterion is applied as a secondary
+check for spall \emph{detachment} after the DP criterion indicates that $D \to 1$
+in a connected near-surface zone.
+
+\subsubsection{Practical implementation}
+
+In the unified model, failure is assessed hierarchically:
+\begin{enumerate}[noitemsep]
+    \item Evaluate $F_\mathrm{DP}$; if $F_\mathrm{DP} \ge 0$ update damage $D$
+          via \cref{eq:damage_evo}.
+    \item If $D \to 1$ over a connected zone \emph{and} $\sigma_1/\sigma_3
+          \ge \xi_s$, trigger spall detachment.
+    \item If surface temperature $T \ge T_v$ (vaporisation threshold), activate
+          the vaporisation removal mode regardless of mechanical criteria.
+\end{enumerate}
+
+\subsection{Voronoi microstructure and grain-boundary physics}
+\label{sec:voronoi}
+
+Grain-scale heterogeneity is not a refinement — it is the physical mechanism
+responsible for spallation.  \citet{vogler2020simulation} and
+\citet{liu2023failure} both demonstrated that \emph{homogeneous} material models
+predict zero spallation damage under conditions where experiments show abundant
+fracture.  The Voronoi tessellation is therefore central to the framework.
+
+\subsubsection{Tessellation and phase assignment}
+
+A Voronoi tessellation of the domain $\Omega$ is constructed from $N$ seed points
+$\{\vv{x}_k\}_{k=1}^N$, chosen so that the average grain radius matches target
+mineralogy:
+\begin{equation}
+    R_a = \sum_{i=1}^m \phi_i\,r_i, \qquad
+    H = \sqrt{\sum_{i=1}^m \phi_i\!\left(\frac{r_i}{R_a}-1\right)^{\!2}},
+    \label{eq:grain_size}
+\end{equation}
+where $\phi_i$ and $r_i$ are the volume fraction and average radius of mineral
+phase $i$, and $H$ is the dimensionless heterogeneity index \citep{liu2023failure}.
+Each Voronoi cell is assigned a mineral phase by drawing from the multinomial
+distribution $\{\phi_k\}$.  The resulting piecewise-constant property fields
+$\kappa(\vv{x})$, $\beta(\vv{x})$, $E(\vv{x})$ carry discontinuities at every
+grain boundary.
+
+\subsubsection{Why heterogeneity drives spallation}
+
+Three grain-scale mechanisms generate the stress concentrations required for
+damage nucleation:
+\begin{enumerate}[noitemsep]
+    \item \textbf{Differential thermal conduction.}  Quartz
+    ($\kappa \approx 7.7\,\mathrm{W\,m^{-1}K^{-1}}$) conducts heat $3\times$
+    faster than feldspar ($\kappa \approx 2.3\,\mathrm{W\,m^{-1}K^{-1}}$), so
+    adjacent grains reach different temperatures under the same heat flux,
+    generating a $\nabla T$ discontinuity at their shared boundary.
+
+    \item \textbf{Thermal expansion mismatch.}  Quartz
+    ($\beta \approx 1.67\times10^{-5}\,\mathrm{K}^{-1}$) expands $\approx
+    4\times$ more than K-feldspar ($\beta \approx 0.37\times10^{-5}\,\mathrm{K}^{-1}$).
+    The resulting intergranular stress concentration at a quartz--feldspar
+    boundary scales as
+    \begin{equation}
+        \Delta\sigma \sim
+        \frac{E_1\,E_2}{E_1+E_2}\,(\beta_1 - \beta_2)\,\Delta T.
+        \label{eq:grain_stress}
+    \end{equation}
+    For $\Delta T \approx 200\,\mathrm{K}$, this yields $\Delta\sigma
+    \approx 20$--$50\,\mathrm{MPa}$, sufficient to exceed grain-boundary
+    tensile strength.
+
+    \item \textbf{Quartz $\alpha$--$\beta$ phase transition.}  At
+    $573\,^\circ\mathrm{C}$ (at atmospheric pressure), quartz undergoes a
+    displacive phase transition from trigonal to hexagonal symmetry with a
+    volumetric expansion of $\approx 0.63\%$, with anisotropic linear strains
+    of $0.24\%$ and $0.14\%$ along the principal $a$ and $c$ axes respectively
+    \citep{carpenter1998quartz, johnson2021quartz}.  The transition temperature
+    is pressure-dependent, increasing at $\approx
+    0.255\,^\circ\mathrm{C\,MPa}^{-1}$ \citep{shen1993quartz}, so at
+    1\,km drilling depth ($\sim 25$\,MPa) the transition shifts to
+    $\approx 580\,^\circ\mathrm{C}$ --- still within the thermal spallation
+    regime.  At the transition, the thermal expansion coefficient diverges
+    before dropping sharply, and Young's modulus falls to a local minimum
+    \citep{haussuehl1960quartz}.  This produces a sharp spike in the effective
+    $\beta_\mathrm{qtz}(T)$, a pulse of intergranular stress independent of
+    the background thermal gradient, and a strong burst of acoustic-emission
+    activity confirming micro-crack nucleation at grain boundaries
+    \citep{griffin1995acoustic}.
+\end{enumerate}
+
+\subsubsection{Grain-boundary cohesive zones}
+
+Grain boundaries are modelled as zero-thickness cohesive interface elements with
+a bilinear traction-separation law:
+\begin{equation}
+    t_n(\delta_n) =
+    \begin{cases}
+        K_n\,\delta_n & 0 \le \delta_n < \delta_c \\
+        K_n\,\delta_c\,\dfrac{\delta_\mathrm{max} - \delta_n}
+                              {\delta_\mathrm{max} - \delta_c}
+        & \delta_c \le \delta_n < \delta_\mathrm{max} \\
+        0 & \delta_n \ge \delta_\mathrm{max}
+    \end{cases}
+    \label{eq:czm}
+\end{equation}
+where $K_n$ is the interface stiffness, $\delta_c$ the crack-opening displacement
+at peak traction, and $\delta_\mathrm{max}$ the failure opening.  The grain
+boundary tensile strength is set to $f_{t0}^\mathrm{gb} \approx 0.3$--$0.5\,
+f_{t0}^\mathrm{grain}$ and the interface fracture energy
+$G_c^\mathrm{gb} = K_n\,\delta_\mathrm{max}^2/2$ is calibrated to the mode-I
+fracture toughness of grain boundaries in granite.  As damage accumulates ($D
+\to 1$ at the interface), the thermal conductance also degrades:
+\begin{equation}
+    h_\mathrm{gb}(D) = h_{\mathrm{gb},0}\,(1-D),
+    \label{eq:gb_conductance}
+\end{equation}
+creating an insulating crack that amplifies local temperature gradients and
+accelerates further damage — the positive feedback loop responsible for spall
+detachment.
+
+\subsubsection{Homogenised vs heterogeneous conductivity}
+
+Within each grain, the damage-modified conductivity is
+\begin{equation}
+    \kappa(\vv{x},T,D) = \kappa_k(T)\,\exp(-\alpha_D\,D),
+    \label{eq:kappa_damage}
+\end{equation}
+and the bulk effective value is computed via arithmetic-harmonic averaging over
+mineral fractions \citep{vogler2020simulation}:
+\begin{equation}
+    \kappa_\mathrm{eff} = \frac{1}{2}\!\left(
+        \sum_k \phi_k\,\kappa_k
+        + \frac{1}{\displaystyle\sum_k \phi_k/\kappa_k}
+    \right).
+    \label{eq:keff}
+\end{equation}
+
+\subsection{Damage evolution}
+\label{sec:damage}
+
+The damage variable $D \in [0,1]$ evolves continuously under the Drucker--Prager
+overstress.  The damage driving force is the normalised excess stress
+\begin{equation}
+    \Psi = \frac{F_\mathrm{DP}}{k_\mathrm{DP}},
+    \label{eq:psi}
+\end{equation}
+and the evolution law is
+\begin{equation}
+    \pd{D}{t} =
+    A_D(\vv{x})\left(\frac{\Psi}{1 + \Psi_0}\right)^{\!n}(1-D)^m
+    \cdot\mathbf{1}[\Psi \ge \Psi_0] \cdot \mathbf{1}[\dot{D} \ge 0],
+    \label{eq:damage_evo}
+\end{equation}
+where $\Psi_0$ is the initiation threshold (approximately $\Psi_0 \approx 0.15$
+for granite, calibrated against $f_{b,0} \approx 0.82$ from \citealt{hu2018lrst}),
+$n$ controls the acceleration rate, and $(1-D)^m$ ensures saturation.  The rate
+coefficient $A_D(\vv{x})$ is mineral-phase specific and elevated at grain
+boundaries.  Stiffness degrades as
+\begin{equation}
+    E(\vv{x},D) = E(\vv{x},P,T)\,(1-D), \qquad G(\vv{x},D) = G_0(\vv{x})\,(1-D).
+    \label{eq:stiffness_degrade}
+\end{equation}
+
+\subsubsection{Confining pressure correction at depth}
+
+At drilling depth $z_d$, the lithostatic confining pressure is
+$P_c = \rho_r\,g\,z_d$, where $\rho_r$ is the average overburden density.
+This shifts the DP yield surface outward, increasing the effective initiation
+threshold:
+\begin{equation}
+    \Psi_0(P_c) = \Psi_0^{(0)}\left(1 + \frac{\alpha_\mathrm{DP}\,P_c}{k_\mathrm{DP}}\right).
+    \label{eq:depth_correction}
+\end{equation}
+Physically, greater confining pressure suppresses spall ejection and raises the
+energy required to initiate fracture, driving the system toward the vaporisation
+regime.
+
+\subsubsection{Temperature-dependent fracture toughness}
+
+Experimental data \citep{rossi2018effects} show that $K_{Ic}$ decreases
+approximately linearly with temperature for granitic rocks:
+\begin{equation}
+    K_{Ic}(T) = K_{Ic}^{(0)}\!\left(1 - \frac{T - T_\mathrm{ref}}
+                                               {T_\mathrm{melt}}\right), \quad
+    T \in [T_\mathrm{ref},\, T_\mathrm{melt}].
+    \label{eq:Kic_T}
+\end{equation}
+This is incorporated via the grain-boundary cohesive energy
+$G_c(T) \propto K_{Ic}^2(T)/E(T)$, which decreases with temperature and
+promotes crack propagation at lower stress levels.
+
+\subsection{Spall thickness scaling and rate of penetration}
+\label{sec:spall_scaling}
+
+Once a connected damage zone forms and the spall detachment criterion is
+satisfied, the spall thickness is estimated from the thermal diffusion length at
+the onset time:
+\begin{equation}
+    h_\mathrm{spall} = C_h\sqrt{\alpha\,t_\mathrm{spall}},
+    \qquad
+    \alpha = \frac{\kappa_\mathrm{eff}}{\rho\,C_p},
+    \label{eq:spall_thickness}
+\end{equation}
+where $C_h$ is a geometry factor of order unity.  The onset time is estimated
+analytically from the heat-flux solution \citep{hu2018lrst, carslaw1959},
+\begin{equation}
+    Q = \frac{A\,K_r}{2(\alpha/\pi)^{1/2}},
+    \label{eq:Q_onset}
+\end{equation}
+where $A = \mathrm{d}T_s/\mathrm{d}t^{1/2}$ is the slope of surface temperature
+against $\sqrt{t}$.  Inverting for $t_\mathrm{spall}(Q)$ and substituting into
+\cref{eq:spall_thickness} gives the scaling
+\begin{equation}
+    h_\mathrm{spall} \propto C_h\,\frac{K_r}{\rho\,C_p}\,
+    \left(\frac{2K_r}{Q}\right)^2 \frac{1}{\sqrt{\pi\alpha}}.
+    \label{eq:spall_scaling_explicit}
+\end{equation}
+The \textbf{rate of penetration} from spallation is
+\begin{equation}
+    \mathrm{RoP}_\mathrm{spall} = \frac{h_\mathrm{spall}}{t_\mathrm{spall}},
+    \label{eq:rop_spall}
+\end{equation}
+and from vaporisation it is
+\begin{equation}
+    \mathrm{RoP}_\mathrm{vap} = \frac{(1-R)\,P_0}
+                                      {\rho\,L_\mathrm{tot}\,A_\mathrm{beam}},
+    \qquad
+    L_\mathrm{tot} = C_p(T_v - T_0) + L_m + L_v,
+    \label{eq:rop_vap}
+\end{equation}
+where $A_\mathrm{beam}$ is the beam footprint area.  The overall RoP is
+\begin{equation}
+    \mathrm{RoP} = \max(\mathrm{RoP}_\mathrm{spall},\;\mathrm{RoP}_\mathrm{vap}),
+    \label{eq:rop_total}
+\end{equation}
+with the dominant mode determined by whichever criterion is first satisfied at
+each time step.
+
+% =============================================================================
+\section{Numerical Model}
+\label{sec:numerics}
+% =============================================================================
+
+\subsection{Overall architecture}
+
+The simulation is structured as a staggered operator-split loop over time steps.
+At each step, four sequential solves are performed:
+(1) thermal solve for $T^{n+1}$; (2) mechanical solve for $\vv{u}^{n+1}$;
+(3) damage update for $D^{n+1}$; (4) surface and regime update.
+This decoupling allows each sub-problem to use its natural solver (implicit
+diffusion, static equilibrium, explicit integration) without forming a
+monolithic Jacobian.
+
+\begin{algorithm}[H]
+\caption{Main MMW drilling simulation loop (AMReX/ALAMO)}
+\label{alg:main}
+\DontPrintSemicolon
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{Beam parameters $(P_0, \omega_0, \lambda, \alpha(T))$; rock properties;
+       depth $z_d$; Voronoi microstructure; time span $[0, t_\mathrm{end}]$}
+\Output{$H(\vv{x},t)$, $T(\vv{x},t)$, $D(\vv{x},t)$, surface profile $\phi(t)$,
+        $\mathrm{RoP}(t)$}
+\BlankLine
+Initialise AMR hierarchy; base mesh $\Delta x^0$; 2 refinement levels\;
+Initialise: $H^0 = H(T_\mathrm{amb})$, $D^0 = 0$, $\phi^0 = 0$, $z_0 = z_d$\;
+Compute lithostatic pressure $P_c = \rho_r g z_d$\;
+Compute EOS-adjusted moduli $E(\vv{x}, P_c, T^0)$ per grain\;
+\BlankLine
+\For{$n = 0, 1, 2, \ldots$ until $t^n \ge t_\mathrm{end}$}{
+    \tcc{Regrid AMR hierarchy every $N_\mathrm{regrid}$ steps}
+    \If{$n \bmod N_\mathrm{regrid} = 0$}{
+        Tag cells by $|\nabla H|$, $|\nabla D|$, beam footprint\;
+        Regenerate fine levels; propagate phase array by injection\;
+    }
+    \BlankLine
+    \tcc{Step 1: Enthalpy solve (implicit Crank--Nicolson per AMR level)}
+    Evaluate $\dot{Q}(\vv{x}, z_0 - z, \alpha(T^n))$ via \cref{eq:qdot}\;
+    Assemble source $q^n$ via \cref{eq:source}\;
+    Solve \cref{eq:enthalpy_pde} implicitly for $H^{n+1}$ at each level\;
+    Perform reflux and average-down across levels\;
+    \BlankLine
+    \tcc{Step 1b: Enthalpy inversion to recover $T^{n+1}$}
+    \For{each cell $\vv{x}_i$}{
+        Invert $H^{n+1}(\vv{x}_i) \to T^{n+1}(\vv{x}_i)$ via
+        phase indicators $\{H^S, H^L, H^{LV}, H^V\}$ (\S\ref{sec:heat})\;
+        Update phase fractions $\Lambda^S$, $\Lambda^L$, $\Lambda^V$\;
+        Update $\kappa$, $\rho$, $c_p$, $\beta$ from phase and Voronoi phase\;
+    }
+    \BlankLine
+    \tcc{Step 2: Mechanical solve}
+    Compute thermal strains $\varepsilon^{th} = \beta(\vv{x})\,(T^{n+1}-T_0)$\;
+    Assemble degraded stiffness $\tens{K}(D^n, E(\vv{x}, P_c, T^{n+1}))$\;
+    Solve for $\vv{u}^{n+1}$ and stresses $\sigma^{n+1}$\;
+    \BlankLine
+    \tcc{Step 3: Damage update}
+    Evaluate DP criterion $F_\mathrm{DP}(\sigma^{n+1}, P_c)$\;
+    \If{$F_\mathrm{DP} \ge 0$ at grain boundary cells}{
+        Apply CZM traction-separation update \cref{eq:czm}\;
+    }
+    Integrate damage ODE \cref{eq:damage_evo} with RK4 for $D^{n+1}$\;
+    Apply irreversibility: $D^{n+1} \leftarrow \max(D^{n+1},\, D^n)$\;
+    Update $E \leftarrow E(1-D^{n+1})$\;
+    \BlankLine
+    \tcc{Step 4: Surface and regime update}
+    \uIf{$D^{n+1} \to 1$ over connected zone \textbf{and}
+          $\sigma_1/\sigma_3 \ge \xi_s$ \textbf{(spallation)}}{
+        $h_s \leftarrow C_h\sqrt{\alpha_\mathrm{th}\,\Delta t_\mathrm{spall}}$\;
+        $\phi \leftarrow \phi - h_s$, $z_0 \leftarrow z_0 - h_s$;
+        reset $D=0$, $H = H(T_\mathrm{amb})$ in detached zone\;
+        Record $\mathrm{RoP} \leftarrow h_s / \Delta t_\mathrm{spall}$\;
+    }
+    \uElseIf{$H^{n+1} \ge H^V$ at surface \textbf{(vaporisation)}}{
+        $h_v \leftarrow \mathrm{RoP}_\mathrm{vap}\cdot\Delta t$
+        via \cref{eq:rop_vap}\;
+        $\phi \leftarrow \phi - h_v$, $z_0 \leftarrow z_0 - h_v$\;
+        Record $\mathrm{RoP} \leftarrow h_v / \Delta t$\;
+    }
+    Advance time; adapt $\Delta t^\ell$ via \cref{eq:cfl_amr}\;
+}
+\end{algorithm}
+
+\subsection{Voronoi mesh generation}
+\label{sec:voronoi_numerics}
+
+\begin{algorithm}[H]
+\caption{Voronoi microstructure generation}
+\label{alg:voronoi}
+\DontPrintSemicolon
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{Domain $\Omega = [L_x \times L_y \times L_z]$; target mineral fractions
+       $\{\phi_k\}$; target grain radii $\{r_k\}$; FEM mesh nodes}
+\Output{Grain-phase array \texttt{phase[node]};
+        grain-boundary element flag \texttt{is\_gb[elem]}}
+\BlankLine
+Compute target seed count $N = |\Omega|/(\tfrac{4}{3}\pi R_a^3)$\;
+Generate $N$ initial seeds via Poisson disk sampling in $\Omega$\;
+\BlankLine
+\tcc{Lloyd's algorithm: regularise grain sizes}
+\For{$\ell = 1$ to $N_\mathrm{Lloyd}$ iterations}{
+    Compute Voronoi cells $\{V_k\}$ from current seeds\;
+    Move each seed to centroid of its cell\;
+    \If{$|\mathrm{seed} - \mathrm{centroid}| < \epsilon_\mathrm{tol}$}{break}
+}
+\BlankLine
+\tcc{Phase assignment}
+Draw phase labels $p_k \sim \mathrm{Multinomial}(\{\phi_k\})$ for $k=1\ldots N$\;
+Verify volume fractions match targets within 1\%\;
+\BlankLine
+\tcc{Map to FEM mesh}
+\For{each FEM node $\vv{x}_i$}{
+    $k^* \leftarrow \arg\min_k |\vv{x}_i - \mathrm{seed}_k|$\;
+    \texttt{phase[$i$]} $\leftarrow p_{k^*}$\;
+}
+\BlankLine
+\tcc{Identify grain boundary elements}
+\For{each FEM element $e$}{
+    \If{nodes of $e$ belong to $\ge 2$ different phases}{
+        \texttt{is\_gb[$e$]} $\leftarrow$ \texttt{True}\;
+        Assign weakened properties: $f_{t0}^e \leftarrow 0.4\,f_{t0}$,
+                                     $A_D^e \leftarrow 3\,A_D$\;
+    }
+}
+Assign material properties per node from \texttt{phase} table\;
+\end{algorithm}
+
+\vspace{4pt}
+The corresponding Python implementation sketch is:
+
+\begin{lstlisting}[style=pythonstyle, caption={Voronoi microstructure generation (core routine)}, label={lst:voronoi}]
+import numpy as np
+from scipy.spatial import Voronoi, cKDTree
+
+def generate_voronoi_microstructure(domain, n_grains, mineral_props,
+                                     mesh_nodes, n_lloyd=30):
+    """
+    domain       : (Lx, Ly, Lz)  -- domain dimensions [m]
+    n_grains     : int            -- target number of grains
+    mineral_props: dict with keys = mineral names,
+                   values = {'fraction', 'kappa', 'beta', 'E',
+                              'mu', 'rho', 'Cp', 'r_avg'}
+    mesh_nodes   : (N, 3) array of FEM node coordinates
+    Returns: phase_ids (N,), is_gb (M,) for M elements
+    """
+    minerals = list(mineral_props.keys())
+    fractions = np.array([mineral_props[m]['fraction'] for m in minerals])
+    fractions /= fractions.sum()        # normalise
+
+    # --- seed points (Poisson disk approximation via random + thinning) ---
+    seeds = np.random.rand(n_grains, 3) * domain
+
+    # --- Lloyd relaxation ---
+    for _ in range(n_lloyd):
+        vor = Voronoi(seeds)
+        new_seeds = np.zeros_like(seeds)
+        counts    = np.zeros(n_grains)
+        for idx, region_id in enumerate(vor.point_region):
+            region = vor.regions[region_id]
+            if -1 not in region and len(region) > 0:
+                verts = vor.vertices[region]
+                new_seeds[idx] = verts.mean(axis=0)
+                counts[idx] = 1
+        mask = counts > 0
+        seeds[mask] = new_seeds[mask]   # update converged seeds
+
+    # --- phase assignment ---
+    phase_ids_grains = np.random.choice(
+        len(minerals), size=n_grains, p=fractions)
+
+    # --- map nodes to nearest grain ---
+    tree = cKDTree(seeds)
+    _, nearest_grain = tree.query(mesh_nodes)
+    node_phases = phase_ids_grains[nearest_grain]
+
+    return node_phases, minerals, mineral_props
+\end{lstlisting}
+
+\subsection{Time-step control}
+
+The adaptive time step is bounded by three conditions:
+\begin{equation}
+    \Delta t \le \min\!\left(
+        C_\mathrm{th}\frac{(\Delta x)^2}{\alpha},\;
+        C_D\frac{1 - D}{|\dot{D}|},\;
+        C_\mathrm{sp}\frac{h_\mathrm{spall}}{\mathrm{RoP}}
+    \right),
+    \label{eq:cfl}
+\end{equation}
+where $C_\mathrm{th} \approx 0.4$ is the thermal CFL constant, $C_D \approx 0.1$
+limits damage increment per step, and $C_\mathrm{sp}$ prevents a spall event
+spanning more than one time step.
+
+\subsection{Adaptive mesh refinement with AMReX/ALAMO}
+\label{sec:amr}
+
+The enthalpy PDE \cref{eq:enthalpy_pde} is implemented within the
+\textbf{AMReX} block-structured adaptive mesh refinement (AMR) framework
+\citep{zhang2019amrex}, using the \textbf{ALAMO} (AMReX-based Low-Mach
+Operations) application layer.  AMR is essential for this problem because
+the physically important regions — the ablation front, the grain-boundary
+damage zone, and the beam footprint — span length scales from micrometres
+(grain boundaries) to centimetres (borehole radius), a ratio of $\sim 10^4$.
+Resolving this with a uniform mesh would be computationally prohibitive.
+
+\subsubsection{Block-structured AMR}
+
+AMReX uses a \textbf{block-structured} hierarchy of Cartesian grids.
+Starting from a coarse base grid that spans the full domain $\Omega$,
+regions requiring higher resolution are covered by progressively finer
+patches.  The refinement hierarchy has $\ell = 0, 1, \ldots, L$ levels,
+where level $\ell+1$ has twice the spatial resolution of level $\ell$ (a
+refinement ratio of 2).  The simulation uses \textbf{two layers of
+adaptive refinement}, giving a total resolution ratio of $4:1$ between
+the coarsest and finest levels.
+
+Refinement is triggered by tagging criteria applied at each time step.
+Three tagging conditions are used:
+\begin{enumerate}[noitemsep]
+    \item \textbf{Enthalpy gradient:} refine cells where
+          $|\nabla H| > \tau_H$, placing fine cells at the ablation
+          front and phase interfaces.
+    \item \textbf{Damage gradient:} refine cells where
+          $|\nabla D| > \tau_D$, placing fine cells at the leading edge
+          of the damage zone.
+    \item \textbf{Beam footprint:} refine cells within the beam spot
+          radius $2\omega(z)$, ensuring adequate resolution of the
+          Gaussian profile.
+\end{enumerate}
+Threshold values $\tau_H$ and $\tau_D$ are set as fractions of the maximum
+observed gradient at each level, making them automatically scale-adaptive.
+
+\subsubsection{Finite volume discretisation}
+
+The enthalpy equation \cref{eq:enthalpy_pde} is discretised with a
+second-order cell-centred finite volume scheme on the AMR hierarchy.
+The diffusion flux at cell face $(i+\tfrac{1}{2}, j, k)$ is
+\begin{equation}
+    F_{i+\frac{1}{2}} = \frac{\kappa_{i+\frac{1}{2}}}
+                              {\rho_{i+\frac{1}{2}}\,c_{p,i+\frac{1}{2}}}
+                        \frac{H_{i+1} - H_i}{\Delta x},
+    \label{eq:fv_flux}
+\end{equation}
+where face-centred properties are computed by linear interpolation.  At
+coarse--fine grid interfaces, flux matching is enforced via \emph{reflux}
+operations, which correct the coarse-level fluxes to be consistent with
+the fine-level solution, ensuring conservation across levels.
+
+\subsubsection{Time integration}
+
+Each AMR level advances with its own time step $\Delta t^\ell$, subject to
+the CFL condition at that level:
+\begin{equation}
+    \Delta t^\ell \le C_\mathrm{th}
+                    \frac{(\Delta x^\ell)^2}
+                    {\max(\kappa/(\rho c_p))},
+    \label{eq:cfl_amr}
+\end{equation}
+with $C_\mathrm{th} \approx 0.4$.  The enthalpy equation is advanced
+with an \textbf{implicit Crank--Nicolson} scheme at each level, providing
+unconditional stability for the diffusion term.  The source terms
+$\dot{Q}$ and surface losses are treated explicitly, which is stable
+provided $\Delta t^\ell$ satisfies \cref{eq:cfl_amr}.  Subcycling in
+time is used: the fine level takes multiple steps per coarse step,
+with the ratio equal to the refinement ratio (2 per level).
+
+\subsubsection{Multi-level synchronisation}
+
+After each coarse time step, a \textbf{synchronisation sweep} is
+performed:
+\begin{enumerate}[noitemsep]
+    \item Reflux: correct coarse-level $H$ using fine-level flux registers.
+    \item Average-down: overwrite coarse cells covered by fine cells with
+          the arithmetic average of fine cell values.
+    \item Regrid: re-evaluate tagging criteria and regenerate the AMR
+          hierarchy if the number of tagged cells outside existing fine
+          patches exceeds a threshold.
+\end{enumerate}
+Regridding is performed every $N_\mathrm{regrid} = 4$ coarse steps to
+balance accuracy against the overhead of grid generation.
+
+\subsubsection{Parallelism}
+
+AMReX decomposes the grid hierarchy into boxes and distributes them
+across MPI ranks using a \textbf{space-filling curve} load-balancing
+algorithm.  Within each box, OpenMP threading is used for the innermost
+loops.  This hybrid MPI/OpenMP approach scales efficiently to $O(10^4)$
+cores, enabling full three-dimensional simulations of the borehole at
+grain-scale resolution within practical wall-clock times.
+
+\subsubsection{Integration with Voronoi microstructure}
+
+The Voronoi grain structure is stored as a cell-centred integer array
+(phase identifier) on the base AMR level.  When the hierarchy is
+refined, the phase array is propagated to fine levels by
+\emph{injection} (nearest-neighbour copy, preserving sharp grain
+boundaries without artificial smearing).  Material properties
+$\{\kappa_k, \rho_k, c_{p,k}, E_k, \beta_k\}$ are looked up per cell
+from the phase identifier at runtime.
+
+\begin{notebox}
+\textbf{Implementation note.}  The enthalpy inversion
+(\S\ref{sec:heat}) is performed cell-by-cell immediately after each
+implicit solve, using the phase-indicator enthalpies
+$\{H^S, H^L, H^{LV}, H^V\}$ stored as level-0 metadata.  Newton
+iteration is used only in the single-phase regions where the
+$T \to H$ relation is nonlinear due to temperature-dependent $c_p(T)$;
+the phase-transition intervals use the closed-form expressions
+\cref{eq:phase_fracs} directly.
+\end{notebox}
+
+% =============================================================================
+\section{Validation}
+\label{sec:validation}
+% =============================================================================
+
+Two validation cases are selected to test the most critical components of the
+model: the thermal field and the spallation onset.
+
+\subsection{Case 1 — MMW temperature field and rate of penetration
+            \textnormal{\citep{zhang2023thermal}}}
+\label{sec:val_zhang}
+
+\textbf{Setup.}  \citet{zhang2023thermal} present the only available experimental
+validation dataset for MMW drilling of geological materials.  They measure
+temperature profiles as a function of depth and radial position in Barre granite,
+and record the rate of penetration as a function of beam power under vaporisation
+conditions.  The experimental parameters are: $P_0 \approx 10$--$50\,\mathrm{kW}$;
+beam waist $w_0 \approx 10$--$20\,\mathrm{mm}$; wavelength $\lambda = 3\,\mathrm{mm}$;
+Barre granite with $\kappa \approx 2.9\,\mathrm{W\,m^{-1}K^{-1}}$,
+$\rho = 2630\,\mathrm{kg\,m^{-3}}$.
+
+\textbf{What is tested.}  This case validates the enthalpy conservation model
+(\cref{eq:enthalpy_pde}--\cref{eq:source}), the Gaussian beam implementation
+(\cref{eq:intensity}--\cref{eq:waist}), and the vaporisation RoP formula
+(\cref{eq:rop_vap}).  The spallation damage model is inactive at these high power
+levels.
+
+\textbf{Pass criteria.}
+\begin{itemize}[noitemsep]
+    \item Simulated temperatures within 15\% of measured values at depths of
+          5, 10, 20\,mm below the surface.
+    \item Simulated RoP within 20\% of measured values across the power range.
+    \item Temperature radial profile (FWHM) matches experimental spot size to
+          within 10\%.
+\end{itemize}
+
+\subsection{Case 2 — Lowest required surface temperature and onset-spallation
+            time \textnormal{\citep{hu2018lrst}}}
+\label{sec:val_hu}
+
+\textbf{Setup.}  \citet{hu2018lrst} conducted flame-jet spallation experiments on
+$100\times100\times100\,\mathrm{mm}$ granite and sandstone specimens and measured
+(i) the LRST by infrared thermometer and (ii) the onset-spallation time by
+direct observation.  Heat flux was $Q \approx 6$--$8.5\times10^4\,\mathrm{W\,m}^{-2}$
+over a 30\,mm diameter heating zone.  Material properties are given in
+\cref{tab:matprops}.
+
+\textbf{What is tested.}  This case validates the thermal--damage coupling:
+the heat equation drives the stress field, which drives the damage evolution, which
+predicts the onset time.  The Voronoi microstructure is critical here — homogeneous
+models are known to underpredict the breakage factor by $\sim 10$--$18\%$.
+
+\textbf{Pass criteria.}
+\begin{itemize}[noitemsep]
+    \item LRST: $791\,\mathrm{K} \pm 10\%$ (granite); $842\,\mathrm{K} \pm 10\%$
+          (sandstone).
+    \item Onset time: $31.5\,\mathrm{s} \pm 20\%$ (granite);
+          $65.75\,\mathrm{s} \pm 20\%$ (sandstone).
+    \item Damage-zone depth: $1$--$5\,\mathrm{mm}$ for granite.
+    \item Heterogeneous model should yield $f_b \approx 0.91$ at onset (granite),
+          vs.\ $f_b \approx 0.82$ for homogeneous, consistent with experiment.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Material properties for validation cases.  Granite and sandstone from
+         \citet{hu2018lrst}; mineral phases from \citet{vogler2020simulation}.}
+\label{tab:matprops}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lllll}
+\toprule
+\textbf{Property} & \textbf{Symbol} & \textbf{Unit}
+    & \textbf{Granite} & \textbf{Sandstone} \\
+\midrule
+Density                  & $\rho$    & kg\,m$^{-3}$ & 2640   & 2480  \\
+Young's modulus          & $E_0$     & GPa          & 29.98  & 16.63 \\
+Poisson's ratio          & $\mu$     & ---          & 0.19   & 0.34  \\
+Internal friction angle  & $\phi$    & $^\circ$     & 30     & 25    \\
+Cohesion                 & $c$       & MPa          & 20     & 12    \\
+Thermal conductivity     & $\kappa_0$& W\,m$^{-1}$K$^{-1}$ & 2.50 & 4.96 \\
+Specific heat            & $C_p$     & J\,kg$^{-1}$K$^{-1}$ & 827  & 829  \\
+Thermal expansion        & $\beta$   & K$^{-1}$     & $8\times10^{-6}$ & $1\times10^{-5}$ \\
+LRST (experimental)      & ---       & K            & 791    & 842   \\
+Onset time (experimental)& $t_s$     & s            & 31.5   & 65.75 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =============================================================================
+\section{Proposed Results}
+\label{sec:results}
+% =============================================================================
+
+\subsection{Spallation vs vaporisation regime map}
+
+The first result to be generated is a \textbf{regime map} in the
+$(P_0,\, z_d)$ plane (beam power vs.\ drilling depth) showing where each removal
+mode dominates.  At shallow depth and low power, spallation dominates; at depth
+and high power, vaporisation dominates.  The transition boundary is defined by
+\begin{equation}
+    \mathrm{RoP}_\mathrm{spall}(P_0, z_d, \vv{\theta}) =
+    \mathrm{RoP}_\mathrm{vap}(P_0, z_d, \vv{\theta}),
+    \label{eq:transition}
+\end{equation}
+where $\vv{\theta}$ collects rock properties.  The EOS enters through
+$E(P_c, T)$: at depth, the raised modulus increases the energy required for
+spallation while the vaporisation energy is depth-independent at leading order.
+The regime map will be computed for each of the three target rock types.
+
+\textbf{Expected finding.}  We anticipate a monotone transition from spallation
+to vaporisation as depth increases, with the transition depth being
+material-dependent and strongly correlated with Young's modulus and quartz
+content.
+
+\subsection{Material comparison: granite, basalt, and limestone}
+
+Three rock types are selected to span a wide range of mineralogy and mechanical
+properties:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Granite}: silica-rich ($\sim 30\%$ quartz), high $E$, high
+    $\kappa_\mathrm{qtz}$ mismatch — expected to be the most
+    spallation-susceptible rock.
+    \item \textbf{Basalt}: fine-grained, low quartz content, high density —
+    expected lower spallation susceptibility; vaporisation threshold lower due
+    to lower $T_\mathrm{melt}$ ($\approx 1100\,^\circ\mathrm{C}$).
+    \item \textbf{Limestone}: calcite-dominated, undergoes $\mathrm{CaCO_3}
+    \to \mathrm{CaO} + \mathrm{CO_2}$ decomposition at $\approx 850\,^\circ
+    \mathrm{C}$, releasing gas that may contribute an additional pressure-driven
+    spallation mechanism not present in silicates.
+\end{itemize}
+
+\noindent
+For each material the simulation will compute: LRST; onset-spallation time;
+RoP as a function of $P_0$; and specific energy (energy per unit volume removed).
+Material properties will be taken from the compiled databases of
+\citet{vogler2020simulation} and supplemented from \citet{liu2023failure} for
+mineral phases not covered therein.
+
+\subsection{Spall initiation time scaling validation}
+\label{sec:scaling_validation}
+
+The analytical scaling law \cref{eq:spall_thickness} predicts
+\begin{equation}
+    t_\mathrm{spall} \propto \frac{K_r^2}{\rho^2\,C_p^2\,Q^2}\,
+    \frac{1}{\pi\alpha},
+    \label{eq:t_scaling}
+\end{equation}
+i.e.\ onset time scales as $Q^{-2}$ and $\alpha^{-1}$.  This will be tested
+against:
+\begin{enumerate}[noitemsep]
+    \item Experimental data of \citet{hu2018lrst} for granite and sandstone
+          across three heat-flux levels.
+    \item Full numerical simulation results from the present model across a
+          grid of $(Q, \alpha)$ values.
+    \item Literature data of \citet{wilkinson1993experimental} for flame-jet
+          spallation of granite at varied stand-off distances (and hence varied
+          effective $Q$).
+\end{enumerate}
+A log-log regression of simulated $t_\mathrm{spall}$ against $Q$ will test the
+predicted $-2$ slope; deviations indicate the importance of mechanisms beyond
+the simple diffusion scaling (e.g.\ grain-boundary kinetics or quartz transition
+effects).
+
+\subsection{Depth dependence and EOS effects}
+
+Using the Mie--Gr\"{u}neisen EOS, the variation of key outputs with drilling
+depth will be computed from the surface to $z_d = 10\,\mathrm{km}$:
+\begin{itemize}[noitemsep]
+    \item $\mathrm{RoP}(z_d)$ for fixed $P_0$, showing the expected decrease
+          with depth.
+    \item The depth at which the dominant removal mode transitions from
+          spallation to vaporisation.
+    \item Required beam power to maintain a target $\mathrm{RoP} = 5\,\mathrm{m/h}$
+          as a function of depth — a direct engineering design output.
+\end{itemize}
+
+\textbf{Expected finding.}  Spallation RoP is expected to fall faster with depth
+than vaporisation RoP, because the confining pressure correction to the damage
+threshold \cref{eq:depth_correction} scales as $P_c \sim z_d$, while the
+vaporisation energy $L_\mathrm{tot}$ is depth-independent.  The transition depth
+is expected to be of order $1$--$3\,\mathrm{km}$ for granite under typical
+operational beam powers.
+
+% =============================================================================
+\section{Conclusions}
+\label{sec:conclusions}
+% =============================================================================
+
+This proposal describes a unified thermomechanical model for MMW-driven rock
+drilling that for the first time treats spallation and vaporisation as two
+competing modes within a single engineering framework.  The key modelling
+contributions are:
+
+\begin{enumerate}[noitemsep]
+    \item A \textbf{Voronoi heterogeneous microstructure} with grain-boundary
+    cohesive zones as the physical mechanism driving spallation — without
+    which no purely continuum model can predict the experimentally observed
+    damage patterns.
+
+    \item A \textbf{Drucker--Prager failure criterion} replacing the
+    pressure-independent von Mises criterion, enabling correct prediction of
+    the depth-dependent damage threshold.
+
+    \item A \textbf{Mie--Gr\"{u}neisen equation of state} linking elastic
+    modulus to pressure and internal energy, capturing the mechanical stiffening
+    of rock at depth and its consequences for the spallation--vaporisation
+    transition.
+
+    \item A \textbf{continuous damage evolution law} driven by the DP overstress,
+    with mineral-phase-specific rate coefficients and grain-boundary weakening,
+    replacing the binary threshold criteria of prior work.
+
+    \item A \textbf{spall thickness scaling law} derived from thermal diffusion
+    theory, providing a fast engineering estimate of RoP without requiring full
+    simulation.
+\end{enumerate}
+
+The proposed validation against \citet{zhang2023thermal} and \citet{hu2018lrst}
+provides a rigorous test of the thermal and damage sub-models respectively.
+The four result directions — regime maps, material comparison, scaling law
+validation, and depth dependence — collectively address the core engineering
+question: \emph{for a given rock type and target depth, what beam power is
+needed to drill at a commercially viable rate?}
+
+% =============================================================================
+% Bibliography
+% =============================================================================
+\bibliographystyle{plainnat}
+
+\begin{thebibliography}{99}
+
+\bibitem[Alexiades \& Solomon(1993)]{alexiades2010enthalpy}
+Alexiades, V.\ \& Solomon, A.D.\ (1993).
+\textit{Mathematical Modeling of Melting and Freezing Processes}.
+Taylor \& Francis, Washington DC.
+
+\bibitem[Augustine(2009)]{augustine2009hydrothermal}
+Augustine, C.R.\ (2009).
+Hydrothermal spallation drilling and advanced energy conversion technologies
+for engineered geothermal systems.
+Ph.D.\ thesis, Massachusetts Institute of Technology.
+
+\bibitem[Carpenter et al.(1998)]{carpenter1998quartz}
+Carpenter, M.A., Salje, E.K.H., Graeme-Barber, A., Wruck, B., Dove, M.T.,
+\& Knight, K.S.\ (1998).
+Calibration of excess thermodynamic properties and elastic constant variations
+associated with the $\alpha \leftrightarrow \beta$ phase transition in quartz.
+\textit{American Mineralogist}, 83, 2--22.
+
+\bibitem[Griffin et al.(1995)]{griffin1995acoustic}
+Griffin, P.G., Agrawal, D., \& Pegg, I.L.\ (1995).
+$\alpha/\beta$ phase transition in quartz monitored using acoustic emissions.
+\textit{Geophysical Journal International}, 120, 775--782.
+
+\bibitem[Haussühl(1960)]{haussuehl1960quartz}
+Hauss\"{u}hl, S.\ (1960).
+The $\alpha$--$\beta$ transformation of quartz.
+\textit{Nature}, 145, 147--148.
+
+\bibitem[Johnson et al.(2021)]{johnson2021quartz}
+Johnson, T.E., Brown, M., Gardiner, N.J., Kirkland, C.L., \&
+Smithies, R.H.\ (2021).
+The quartz $\alpha \leftrightarrow \beta$ phase transition: Does it drive
+damage and reaction in continental crust?
+\textit{Earth and Planetary Science Letters}, 553, 116628.
+
+\bibitem[Shen et al.(1993)]{shen1993quartz}
+Shen, A., Bassett, W.A., \& Chou, I.M.\ (1993).
+The $\alpha$--$\beta$ quartz transition at high temperatures and pressures
+in a diamond-anvil cell by laser interferometry.
+\textit{American Mineralogist}, 78, 694--698.
+
+
+Augustine, C.R. (2009).
+Hydrothermal spallation drilling and advanced energy conversion technologies
+for engineered geothermal systems.
+Ph.D.\ thesis, Massachusetts Institute of Technology.
+
+\bibitem[Carslaw \& Jaeger(1959)]{carslaw1959}
+Carslaw, H.S.\ \& Jaeger, J.C.\ (1959).
+\textit{Conduction of Heat in Solids}.
+Oxford University Press.
+
+\bibitem[Gaston et al.(2009)]{gaston2009moose}
+Gaston, D., Newman, C., Hansen, G., \& Lebrun-Grandi\'{e}, D.\ (2009).
+MOOSE: a parallel computational framework for coupled systems of nonlinear
+equations.
+\textit{Nuclear Engineering and Design}, 239, 1768--1778.
+
+\bibitem[Houde et al.(2021)]{houde2021mmw}
+Houde, A.J., et al.\ (2021).
+Unlocking deep superhot rock resources through millimetre-wave drilling.
+\textit{GRC Transactions}, 45.
+
+\bibitem[Hu et al.(2018)]{hu2018lrst}
+Hu, X., Song, X., Liu, Y., Li, G., Shen, Z., Lyu, Z., \& Liu, Q.\ (2018).
+Lowest required surface temperature for thermal spallation in granite and
+sandstone specimens: Experiments and simulations.
+\textit{Rock Mechanics and Rock Engineering}, 52, 1771--1788.
+
+\bibitem[Woskov(2009)]{woskov2009mmw}
+Woskov, P.P.\ \& Cohn, D.R.\ (2009).
+Annual report 2009: Millimeter wave deep drilling for geothermal energy,
+natural gas and oil.
+MIT Energy Initiative Technical Report, MITEI-RP-2009-01.
+
+\bibitem[Zhang et al.(2019)]{zhang2019amrex}
+Zhang, W., et al.\ (2019).
+AMReX: a framework for block-structured adaptive mesh refinement.
+\textit{Journal of Open Source Software}, 4(37), 1370.
+
+\bibitem[Kant et al.(2017)]{kant2017theory}
+Kant, M.A., Rossi, E., Madonna, C., H\"{o}ser, D., \& von Rohr, P.R.\ (2017).
+A theory on thermal spalling of rocks with a focus on thermal spallation drilling.
+\textit{Journal of Geophysical Research: Solid Earth}, 122, 1805--1815.
+
+\bibitem[Liu et al.(2023)]{liu2023failure}
+Liu, W., Chang, X., \& Zhu, X.\ (2023).
+The failure mechanism of thermal spallation in granitic rock.
+Preprint, SSRN 4387953.
+
+\bibitem[Oglesby et al.(2014)]{oglesby2014mmw}
+Oglesby, K., et al.\ (2014).
+White paper: Drilling and fracturing with millimeter-wave directed energy.
+Technical Report, GA-EMS.
+
+\bibitem[Rauenzahn \& Tester(1989)]{rauenzahn1989rock}
+Rauenzahn, R.M.\ \& Tester, J.W.\ (1989).
+Rock failure mechanisms of flame-jet thermal spallation drilling — theory
+and experimental testing.
+\textit{International Journal of Rock Mechanics and Mining Sciences}, 26, 381--399.
+
+\bibitem[Rossi et al.(2018)]{rossi2018effects}
+Rossi, E., Kant, M.A., Madonna, C., Saar, M.O., \& von Rohr, P.R.\ (2018).
+The effects of high heating rate and high temperature on the rock strength:
+feasibility study of a thermally assisted drilling method.
+\textit{Rock Mechanics and Rock Engineering}, 51, 2957--2964.
+
+\bibitem[Tester et al.(2006)]{tester2006future}
+Tester, J.W., et al.\ (2006).
+\textit{The Future of Geothermal Energy}.
+Massachusetts Institute of Technology.
+
+\bibitem[Vogler et al.(2020)]{vogler2020simulation}
+Vogler, D., Walsh, S.D.C., von Rohr, P.R., \& Saar, M.O.\ (2020).
+Simulation of rock failure modes in thermal spallation drilling.
+\textit{Acta Geotechnica}, 15, 2327--2340.
+
+\bibitem[Wilkinson \& Tester(1993)]{wilkinson1993experimental}
+Wilkinson, M.A.\ \& Tester, J.W.\ (1993).
+Experimental measurement of surface temperatures during flame-jet induced
+thermal spallation.
+\textit{Rock Mechanics and Rock Engineering}, 26, 29--62.
+
+\bibitem[Zhang et al.(2023)]{zhang2023thermal}
+Zhang, A.Z., Millmore, S.T., \& Nikiforakis, N.\ (2023).
+Thermal simulation of millimetre wave ablation of geological materials.
+\textit{Computers and Geotechnics}, 163, 105732.
+
+\end{thebibliography}
+
+\end{document}

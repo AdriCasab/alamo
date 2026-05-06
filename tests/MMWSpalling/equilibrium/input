@@ -1,0 +1,98 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 4 verification: surface radiation equilibrium.
+#
+# 1D-style problem: kappa = 0 (no internal conduction), uniform beam (omega0
+# >> domain size so the in-plane Gaussian is essentially flat), surface
+# losses on the top z-row only.
+#
+# The surface cell sees a balance
+#
+#     Q_vol(z_center) = q_loss_flux / dz
+#
+# i.e.  peak_intensity * alpha * exp(-alpha * dz/2)
+#         = (eps * sigma_SB * T^4 + h * (T - T_amb)) / dz
+#
+# Interior cells, having no path to dump energy, grow without bound — the
+# test only checks the top-z-row equilibrium temperature.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/equilibrium/output
+
+timestep  = 1.0e-3
+stop_time = 10.0
+
+amr.plot_int        = 1000
+amr.max_level       = 0
+amr.n_cell          = 4 4 32
+amr.blocking_factor = 4
+amr.regrid_int      = 100000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 1.0 1.0 1.0
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+#
+# BEAM (effectively uniform: omega0 >> domain).
+#
+beam.P0         = 3.141592653589793e6   # P0 = pi * omega0^2 -> peak intensity = 2 W/m^2
+beam.omega0     = 1000.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 2
+
+#
+# SURFACE LOSSES (radiation only; convection disabled).
+#
+losses.epsilon  = 1.0
+losses.sigma_SB = 1.0
+losses.h_conv   = 0.0
+losses.T_amb    = 0.0
+
+#
+# HEAT CONDUCTION (kappa = 0).
+#
+hc.heat.alpha = 0.0
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 0.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY MODEL — present but inert.
+#
+el.interval = 100000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

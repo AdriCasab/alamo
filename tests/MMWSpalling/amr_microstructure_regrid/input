@@ -1,0 +1,139 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 7c: AMR regrid correctness for MMWSpalling microstructure fields.
+#
+# This is the AMR counterpart of grain_topology with two additions:
+#   1. AMR is forced by an initial temperature step and regrid_int = 1.
+#   2. A passive D strip checks that damage-like integer fields are repaired
+#      after regrid and after fine-to-coarse average_down.
+#
+# The expected microstructure is analytic on every level:
+#   grain_expr = floor(4*x)   -> ids 0,1,2,3
+#   phase_expr = (x>=0.5)     -> ids 0,1
+#   D          = (y>=0.5)     -> ids 0,1
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/amr_microstructure_regrid/output
+
+timestep  = 1.0e-4
+stop_time = 2.0e-4
+
+amr.plot_int        = 1
+amr.max_level       = 1
+amr.n_cell          = 32 8 4
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 1.0  1.0  1.0
+geometry.is_periodic = 0 0 0
+
+# Required by MMWSpalling; mechanics is disabled below.
+alpha = 0.0
+
+#
+# MICROSTRUCTURE: deterministic four-grain / two-phase split.
+#
+microstructure.mode             = expression
+microstructure.phase_expr       = (x>=0.5)
+microstructure.grain_expr       = floor(4*x)
+microstructure.nphases          = 2
+
+microstructure.phase0.name              = A
+microstructure.phase0.fraction          = 0.5
+microstructure.phase0.kappa             = 3.0
+microstructure.phase0.beta              = 1.0e-6
+microstructure.phase0.E                 = 1.0
+microstructure.phase0.mu                = 0.4
+microstructure.phase0.rho               = 2.0
+microstructure.phase0.Cp                = 3.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 300.0
+
+microstructure.phase1.name              = B
+microstructure.phase1.fraction          = 0.5
+microstructure.phase1.kappa             = 1.0
+microstructure.phase1.beta              = 2.0e-6
+microstructure.phase1.E                 = 2.0
+microstructure.phase1.mu                = 0.8
+microstructure.phase1.rho               = 5.0
+microstructure.phase1.Cp                = 7.0
+microstructure.phase1.alpha_attenuation = 0.0
+microstructure.phase1.A_D               = 0.0
+microstructure.phase1.T_ref             = 310.0
+
+#
+# PASSIVE DAMAGE: D=1 on y >= 0.5 and 0 elsewhere. This is still an IC-only
+# field in Step 7c; Step 8 will own irreversible damage evolution.
+#
+conductivity.kappa_damage_alpha = 0.6931471805599453
+conductivity.h_gb0              = 0.0
+
+damage.ic.type                  = expression
+damage.ic.expression.coord      = cartesian
+damage.ic.expression.region0    = "(y>=0.5)"
+
+#
+# BEAM and SURFACE LOSSES off.
+#
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 1
+beam.R          = 0.0
+beam.P0         = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 300.0
+
+#
+# HEAT CONDUCTION: the initial temperature step forces refinement; the tiny
+# run time keeps the thermal field nearly static while still exercising a
+# normal AMR timestep and regrid.
+#
+hc.heat.alpha = 1.0
+hc.heat.refinement_threshold = 0.1
+hc.ic.type                 = expression
+hc.ic.expression.coord     = cartesian
+hc.ic.expression.region0   = "300.0+20.0*(x>=0.25)*(x<0.75)"
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# Mechanics is irrelevant for this AMR topology test. The wrapper still parses
+# one model for eta bookkeeping, but Base::Mechanics does no work.
+#
+el.type = disable
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

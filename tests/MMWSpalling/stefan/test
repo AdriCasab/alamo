@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+# Verification of Step 2: enthalpy formulation + Stefan problem.
+#
+# Pass criteria:
+#   - Melt-front position x_m at t = 0.5 within 5% of analytic 2 lambda sqrt(alpha t)
+#     with St = 1, lambda = 0.6201.
+#
+# We locate the front as the largest x where Lambda_L crosses 0.5 (i.e. the
+# liquid fraction drops below half). All other thermal params: alpha = 1.
+
+import sys
+import os
+import glob
+import math
+
+import yt
+
+ALPHA = 1.0
+T_END = 0.5
+LAMBDA_STEFAN = 0.6201           # solves lambda exp(lambda^2) erf(lambda) = 1/sqrt(pi)
+TOL = 0.05                       # 5% tolerance
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/stefan/output"
+
+x_m_analytic = 2.0 * LAMBDA_STEFAN * math.sqrt(ALPHA * T_END)
+
+# Pick the latest cell-centred plotfile.
+plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+if not plotfiles:
+    print("FAIL: no plotfiles in", outdir)
+    sys.exit(1)
+final = plotfiles[-1]
+
+ds = yt.load(final)
+ad = ds.all_data()
+
+# Build a 1D ray along x at the centre of the y,z slab.
+center = ds.domain_center
+ray = ds.ray((ds.domain_left_edge[0], center[1], center[2]),
+             (ds.domain_right_edge[0], center[1], center[2]))
+
+# Sort by x.
+idx = ray["x"].argsort()
+xs = ray["x"][idx].to_value()
+LL = ray["Lambda_L"][idx].to_value()
+
+# Find the largest x where Lambda_L >= 0.5.
+above = [x for x, v in zip(xs, LL) if v >= 0.5]
+if not above:
+    print("FAIL: melt front not detected (no Lambda_L >= 0.5).")
+    sys.exit(1)
+x_m_sim = max(above)
+
+err = abs(x_m_sim - x_m_analytic) / x_m_analytic
+print(f"Stefan front position: simulated = {x_m_sim:.4f}, analytic = {x_m_analytic:.4f}, "
+      f"relative error = {err*100:.2f}%")
+
+if err > TOL:
+    print(f"FAIL: error {err*100:.2f}% exceeds tolerance {TOL*100:.0f}%.")
+    sys.exit(1)
+print("PASS")
+sys.exit(0)

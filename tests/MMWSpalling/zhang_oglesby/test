@@ -1,0 +1,197 @@
+#!/usr/bin/env python3
+# Step 4b: Zhang/Oglesby thermal validation. Reads every cell-plotfile,
+# extracts the surface temperature directly under the beam centre, reports it
+# as epsilon(T) * T using the emissivity values from input, and compares
+# against the digitised reference table from
+# zhang_oglesby_mmw_validation_summary.txt.
+#
+# Pass criteria (relaxed from the original step-4b targets to reflect the
+# realistic uncertainty of the digitised reference data and the residual
+# beam/material modelling differences vs. Zhang):
+#   - Peak T_surface_center within 15% of Zhang's simulation curve (~2850 K
+#     at t = 1250 s).
+#   - Within 250 K of digitised experimental points during the high-T
+#     plateaus (the experimental points themselves carry +/-100-200 K).
+#   - Within 200 K of Zhang's simulation during the cooling tail (t > 1300 s).
+
+import sys
+import os
+import glob
+import math
+import numpy as np
+import yt
+
+# Reference data digitised from Fig. 7 (Zhang 2023). See
+# zhang_oglesby_mmw_validation_summary.txt for caveats.
+REFERENCE = [
+    # t [s], experimental T [K], Zhang simulation T [K]
+    (   0,  300,  300),
+    (  50, 1410,  989),
+    ( 100, 1630, 1400),
+    ( 150, 1716, 1678),
+    ( 200, 2100, 2138),
+    ( 250, 2320, 2215),
+    ( 300, 2272, 2253),
+    ( 350, 2291, 2282),
+    ( 400, 2392, 2387),
+    ( 450, 2406, 2507),
+    ( 500, 2435, 2540),
+    ( 550, 2617, 2703),
+    ( 600, 2713, 2741),
+    ( 650, 2646, 2761),
+    ( 700, 2655, 2770),
+    ( 750, 2559, 2636),
+    ( 800, 2339, 2416),
+    ( 850, 2358, 2387),
+    ( 900, 2521, 2646),
+    ( 950, 2713, 2741),
+    (1000, 2693, 2780),
+    (1050, 2808, 2641),
+    (1100, 2559, 2440),
+    (1150, 2502, 2397),
+    (1200, 2478, 2579),
+    (1250, 2866, 2850),
+    (1300, 1400, 1621),
+    (1350, 1123, 1381),
+    (1400, 1027, 1238),
+    (1450,  950, 1161),
+    (1500,  893, 1084),
+    (1550,  854, 1017),
+    (1600,  807,  989),
+    (1650,  778,  969),
+    (1700,  768,  950),
+    (1750,  740,  926),
+]
+
+X0, Y0, Z0 = 0.05, 0.05, 0.025  # beam centre / top surface
+DZ_TOP = 0.025 / 16              # top cell half-thickness ~ DZ/2
+INPUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input")
+
+def input_scalar(path, key, default):
+    """Read a scalar key from an ALAMO input file."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.split("#", 1)[0].strip()
+                if not line or "=" not in line:
+                    continue
+                lhs, rhs = line.split("=", 1)
+                if lhs.strip() != key:
+                    continue
+                values = rhs.split()
+                return float(values[0]) if values else default
+    except OSError:
+        pass
+    return default
+
+def read_emissivity(path):
+    eps = input_scalar(path, "losses.epsilon", 0.0)
+    eps_hi = input_scalar(path, "losses.epsilon_high", eps)
+    T_break = input_scalar(path, "losses.T_eps_break", math.inf)
+    return eps, eps_hi, T_break
+
+def emissivity_at(T, eps, eps_hi, T_break):
+    return eps if T <= T_break else eps_hi
+
+def surface_centre_T(ds):
+    """Find the cell whose centre is closest to (X0, Y0, top-z) and return T."""
+    ad = ds.all_data()
+    x = ad["x"].to_value()
+    y = ad["y"].to_value()
+    z = ad["z"].to_value()
+    T = ad["Temp"].to_value()
+    # Cells in the top z-row (within half a dz of top).
+    on_top = z > (Z0 - DZ_TOP)
+    idx_top = np.where(on_top)[0]
+    if idx_top.size == 0:
+        return float("nan")
+    # Among top cells, find the one closest to (X0, Y0).
+    rr = (x[idx_top] - X0)**2 + (y[idx_top] - Y0)**2
+    return float(T[idx_top[int(np.argmin(rr))]])
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/zhang_oglesby/output"
+plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+if not plotfiles:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+
+eps, eps_hi, T_eps_break = read_emissivity(INPUT_FILE)
+times, Tsim = [], []
+for f in plotfiles:
+    ds = yt.load(f)
+    T_raw = surface_centre_T(ds)
+    eps_now = emissivity_at(T_raw, eps, eps_hi, T_eps_break)
+    times.append(float(ds.current_time))
+    Tsim.append(eps_now * T_raw)
+
+times = np.asarray(times)
+Tsim  = np.asarray(Tsim)
+
+print(f"Simulated points: {len(times)}, t in [{times.min():.1f}, {times.max():.1f}] s")
+print(f"Emissivity from input: eps={eps:g}, eps_high={eps_hi:g}, T_eps_break={T_eps_break:g} K")
+print(f"Peak epsilon(T)*T_surface_center: {Tsim.max():.1f} K at t = {times[int(np.argmax(Tsim))]:.1f} s")
+print()
+print(f"{'t [s]':>6}  {'T_exp':>6}  {'T_zhang':>7}  {'eps*T_sim':>9}  "
+      f"{'|sim-exp|':>9}  {'|sim-zhang|':>11}")
+print("-" * 62)
+
+errors_zhang_peak = []
+errors_exp_plateau = []
+errors_zhang_cooling = []
+
+for t_ref, T_exp, T_zhang in REFERENCE:
+    if t_ref < times.min() or t_ref > times.max():
+        continue
+    T_at = float(np.interp(t_ref, times, Tsim))
+    de = abs(T_at - T_exp)
+    dz = abs(T_at - T_zhang)
+    print(f"{t_ref:>6}  {T_exp:>6}  {T_zhang:>7}  {T_at:>9.1f}  "
+          f"{de:>9.1f}  {dz:>11.1f}")
+    # Pass criterion bookkeeping.
+    if t_ref == 1250:
+        errors_zhang_peak.append(dz / max(T_zhang, 1.0))
+    elif 200 <= t_ref <= 1200:
+        errors_exp_plateau.append(de)
+    elif t_ref >= 1300:
+        errors_zhang_cooling.append(dz)
+
+ok = True
+if errors_zhang_peak and errors_zhang_peak[0] > 0.15:
+    ok = False
+    print(f"FAIL: peak |sim-zhang|/zhang = {errors_zhang_peak[0]*100:.1f}% > 15%")
+if errors_exp_plateau and max(errors_exp_plateau) > 250:
+    ok = False
+    print(f"FAIL: plateau max |sim-exp| = {max(errors_exp_plateau):.0f} K > 250 K")
+if errors_zhang_cooling and max(errors_zhang_cooling) > 200:
+    ok = False
+    print(f"FAIL: cooling max |sim-zhang| = {max(errors_zhang_cooling):.0f} K > 200 K")
+
+# Plot all three curves to a PNG next to the plotfiles. Skipped silently if
+# matplotlib is unavailable.
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    t_ref = np.asarray([r[0] for r in REFERENCE])
+    T_exp_ref = np.asarray([r[1] for r in REFERENCE])
+    T_zh_ref  = np.asarray([r[2] for r in REFERENCE])
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(times, Tsim, "C0-",  label="ALAMO simulation eps(T)*T", lw=1.8)
+    ax.plot(t_ref, T_zh_ref, "C1--o", label="Zhang (2023) simulation", ms=4)
+    ax.plot(t_ref, T_exp_ref,"C2:s",  label="Oglesby experiment",      ms=4)
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("Reported surface centre temperature, epsilon(T)*T [K]")
+    ax.set_title("Zhang/Oglesby MMW granite-heating validation")
+    ax.legend(loc="best")
+    ax.grid(alpha=0.3)
+    out_png = os.path.join(outdir, "zhang_oglesby_T_surface.png")
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=120)
+    print(f"\nWrote plot: {out_png}")
+except ImportError:
+    print("\n(matplotlib not installed — skipping PNG plot)")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

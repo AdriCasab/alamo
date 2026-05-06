@@ -1,0 +1,94 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+#@ [no-conduction]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 3 verification: Beer-Lambert + Gaussian MMW source.
+#
+# With kappa = 0 (no conduction), no losses, no phase change, and constant
+# alpha(T), the closed-form domain-integrated source per unit time is
+#
+#     int Q dV = P0 * (1 - exp(-alpha * Lz))
+#
+# (the in-plane Gaussian integral evaluates to P0 because omega0 << domain
+# size and the tails are negligible). Forward-Euler in time with a T-independent
+# Q is exact, so total enthalpy at the final step should equal
+# t_end * P0 * (1 - exp(-alpha * Lz)) up to spatial midpoint-quadrature error.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/beam/output
+
+timestep  = 1.0e-4
+stop_time = 0.01
+
+amr.plot_int        = 100
+amr.max_level       = 0
+amr.n_cell          = 64 64 16
+amr.blocking_factor = 4
+amr.regrid_int      = 100000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 1.0 1.0 1.0
+geometry.is_periodic = 0 0 0
+
+# Thermoelastic coupling disabled.
+alpha = 0.0 0.0
+
+#
+# BEAM (Beer-Lambert + Gaussian)
+#   P0 = 1, omega0 = 0.1 (small relative to the 1x1 base, full power captured).
+#   z0 = 1.0 (top of the domain). alpha(T) = 10  (T-independent).
+#
+beam.P0         = 1.0
+beam.omega0     = 0.1
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 10
+
+#
+# HEAT CONDUCTION (kappa = 0 -> source-only test)
+#
+hc.heat.alpha = 0.0
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 0.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY MODEL — present but inert (alpha_thermal = 0 zeroes thermal stress)
+#
+el.interval = 100000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

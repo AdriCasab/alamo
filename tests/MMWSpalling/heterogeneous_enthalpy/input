@@ -1,0 +1,136 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 6b: H/T consistency for heterogeneous microstructure.
+#
+# Two-phase laminate (phase 0 on x<0.5, phase 1 on x>=0.5) with EQUAL
+# kappa but DIFFERENT rho*Cp across the two phases. Driven by Dirichlet
+# x-BCs so the laminate evolves from a uniform initial T toward a
+# steady state. The Python regression checks the central Step 6b
+# invariant: every cell satisfies the per-phase enthalpy relation
+#
+#   H = rho_phase * Cp_phase * (T - T_ref)        (no phase change)
+#
+# which holds only if the microstructure path actually evolves H_mf
+# conservatively and inverts H -> T per phase. (Pre-Step-6b code wrote
+# Temp directly and never touched H_mf on the microstructure path.)
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/heterogeneous_enthalpy/output
+
+# Same anisotropic stencil used in heterogeneous_kappa for fast turnaround.
+# Stability bound: alpha_max = kappa_max / min(rho*Cp) = 1.0; dt safe.
+timestep  = 1.0e-4
+stop_time = 0.5
+
+amr.plot_int        = 5000
+amr.max_level       = 0
+amr.n_cell          = 32 4 4
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 1.0  1.0  1.0
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+#
+# MICROSTRUCTURE: two phases, equal kappa, unequal rho*Cp.
+# Phase 0 has rho*Cp = 1 (heats fast); phase 1 has rho*Cp = 2 (heats slow).
+# T_ref = 350 K matches the initial T so H_initial == 0 everywhere.
+#
+microstructure.mode             = expression
+microstructure.phase_expr       = (x>=0.5)
+microstructure.nphases          = 2
+
+microstructure.phase0.name              = light
+microstructure.phase0.fraction          = 0.5
+microstructure.phase0.kappa             = 1.0
+microstructure.phase0.beta              = 0.0
+microstructure.phase0.E                 = 1.0
+microstructure.phase0.mu                = 0.4
+microstructure.phase0.rho               = 1.0
+microstructure.phase0.Cp                = 1.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 350.0
+
+microstructure.phase1.name              = heavy
+microstructure.phase1.fraction          = 0.5
+microstructure.phase1.kappa             = 1.0
+microstructure.phase1.beta              = 0.0
+microstructure.phase1.E                 = 1.0
+microstructure.phase1.mu                = 0.4
+microstructure.phase1.rho               = 2.0
+microstructure.phase1.Cp                = 1.0
+microstructure.phase1.alpha_attenuation = 0.0
+microstructure.phase1.A_D               = 0.0
+microstructure.phase1.T_ref             = 350.0
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+#
+# BEAM and SURFACE LOSSES off; pure conduction transient.
+#
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 1
+beam.R          = 0.0
+beam.P0         = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 350.0
+
+#
+# HEAT CONDUCTION. Initial T = 350 K (== T_ref) so initial H = 0.
+# Dirichlet on x faces drives the transient; Neumann on y/z keeps
+# every y-row identical.
+#
+hc.heat.alpha = 1.0
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 350.0
+hc.bc.temp.constant.type.xlo = dirichlet
+hc.bc.temp.constant.type.xhi = dirichlet
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 400.0
+hc.bc.temp.constant.val.xhi  = 300.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY: present but inert.
+#
+el.interval = 1000000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

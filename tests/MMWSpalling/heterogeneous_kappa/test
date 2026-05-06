@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+# Step 6: Heterogeneous + damage-modified conductivity validation.
+#
+# Loads the steady-state plotfile for the two-phase laminate and checks
+# four properties:
+#
+#   1. Steady-state T(x) on a y-row in the undamaged half matches the
+#      analytical series-resistance solution to better than ~2 K (a few
+#      percent of the imposed 100 K span). The discrete steady state is
+#      O(dx) accurate at the boundaries with this 16-cell grid; the
+#      tolerance encodes that, not modelling error.
+#   2. T(x) on a y-row in the damaged half lands on the same profile.
+#      With α_D = ln(2), damage uniformly halves κ_phase, which preserves
+#      the temperature field (only the heat flux changes). This sanity
+#      check confirms the heterogeneous solve uses the right κ_eff
+#      (otherwise the damaged half would diverge from the undamaged one).
+#   3. kappa_eff per cell == kappa_phase * exp(-alpha_D * D).
+#   4. The bulk diagnostic k_eff (a uniform per-cell field) matches the
+#      arithmetic-harmonic average of {kappa_phase, fraction}.
+
+import sys
+import os
+import re
+import glob
+import math
+import numpy as np
+import yt
+
+def latest_plotfile(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    if not cands:
+        return None
+    cands.sort()
+    return cands[-1][1]
+
+KAPPA_PHASE = {0: 3.0, 1: 1.0}
+ALPHA_D = math.log(2.0)
+T_LO, T_HI = 400.0, 300.0
+LX = 1.0
+INTERFACE_X = 0.5
+
+# Analytical series-resistance solution for two equal-length layers.
+def T_analytic(x, k0, k1):
+    R0 = 0.5 * LX / k0
+    R1 = 0.5 * LX / k1
+    T_int = (T_LO * (1.0 / R0) + T_HI * (1.0 / R1)) / (1.0 / R0 + 1.0 / R1)
+    if x < INTERFACE_X:
+        return T_LO + (T_int - T_LO) * (x / INTERFACE_X)
+    return T_int + (T_HI - T_int) * ((x - INTERFACE_X) / (LX - INTERFACE_X))
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/heterogeneous_kappa/output"
+plotfile = latest_plotfile(outdir)
+if not plotfile:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+ds = yt.load(plotfile)
+print(f"Loaded {plotfile} at t={float(ds.current_time):.3f}")
+
+cg = ds.covering_grid(level=0,
+                      left_edge=ds.domain_left_edge,
+                      dims=ds.domain_dimensions)
+T      = np.asarray(cg["Temp"])
+phase  = np.asarray(cg["phase"]).astype(int)
+D      = np.asarray(cg["D"])
+keff   = np.asarray(cg["kappa_eff"])
+kphase = np.asarray(cg["kappa_phase"])
+k_eff_field = np.asarray(cg["k_eff"])
+
+nx, ny, nz = T.shape
+dx = LX / nx
+x_centers = np.linspace(0.5 * dx, LX - 0.5 * dx, nx)
+
+# 1 + 2. T-profile checks. Pick one undamaged and one damaged y-row.
+ok = True
+PROFILE_TOL = 2.5  # K, dominated by O(dx) boundary discretisation error
+
+# Find a y-row that is fully undamaged (D ≡ 0 along that row) and one
+# fully damaged (D ≡ 1).
+und_row = None
+dam_row = None
+for j in range(ny):
+    if np.all(D[:, j, 0] == 0.0): und_row = j
+    if np.all(D[:, j, 0] == 1.0): dam_row = j
+    if und_row is not None and dam_row is not None: break
+print(f"Sampled rows: undamaged j={und_row}, damaged j={dam_row}")
+if und_row is None or dam_row is None:
+    ok = False
+    print("FAIL: could not locate fully-undamaged and fully-damaged y-rows")
+    sys.exit(1)
+
+T_und = T[:, und_row, 0]
+T_dam = T[:, dam_row, 0]
+
+# Undamaged: use kappa_phase directly.
+T_und_ana = np.array([T_analytic(x, KAPPA_PHASE[0], KAPPA_PHASE[1]) for x in x_centers])
+# Damaged: kappa_phase * exp(-alpha_D * 1) on both phases (uniform halving;
+# series profile is invariant under uniform κ rescaling, so analytic == undamaged).
+T_dam_ana = np.array([T_analytic(x,
+                                 KAPPA_PHASE[0] * math.exp(-ALPHA_D),
+                                 KAPPA_PHASE[1] * math.exp(-ALPHA_D))
+                      for x in x_centers])
+
+err_und = np.max(np.abs(T_und - T_und_ana))
+err_dam = np.max(np.abs(T_dam - T_dam_ana))
+print(f"T profile max |err|: undamaged={err_und:.3f} K, damaged={err_dam:.3f} K")
+print(f"  (tolerance {PROFILE_TOL} K, dominated by O(dx) at the Dirichlet faces)")
+if err_und > PROFILE_TOL:
+    ok = False
+    print("FAIL: undamaged T profile exceeds tolerance")
+if err_dam > PROFILE_TOL:
+    ok = False
+    print("FAIL: damaged T profile exceeds tolerance")
+
+# 3. kappa_eff = kappa_phase * exp(-alpha_D * D) per cell.
+keff_expected = kphase * np.exp(-ALPHA_D * D)
+keff_err = float(np.max(np.abs(keff - keff_expected)))
+print(f"kappa_eff max |err| vs. formula: {keff_err:.6e}")
+if keff_err > 1e-10:
+    ok = False
+    print("FAIL: kappa_eff does not match kappa_phase * exp(-alpha_D * D)")
+
+# 4. k_eff arithmetic-harmonic average from cell-volume fractions.
+counts = {p: int(np.sum(phase == p)) for p in (0, 1)}
+total = sum(counts.values())
+phi = {p: counts[p] / total for p in counts}
+k_arith = sum(phi[p] * KAPPA_PHASE[p] for p in counts)
+k_harm  = 1.0 / sum(phi[p] / KAPPA_PHASE[p] for p in counts)
+k_eff_expected = 0.5 * (k_arith + k_harm)
+k_eff_observed = float(k_eff_field.flatten()[0])
+print(f"k_eff observed={k_eff_observed:.6f}, expected={k_eff_expected:.6f}")
+if abs(k_eff_observed - k_eff_expected) > 1e-9:
+    ok = False
+    print("FAIL: k_eff does not match arithmetic-harmonic average")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

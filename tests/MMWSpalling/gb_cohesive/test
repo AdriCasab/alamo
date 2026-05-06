@@ -1,0 +1,301 @@
+#!/usr/bin/env python3
+# Step 9: grain-boundary cohesive-zone bilinear unit regression.
+#
+# - Verifies that gb_delta, gb_delta_max, gb_traction, gb_cohesive_damage
+#   match the analytical bilinear envelope across the full delta sweep.
+# - Verifies irreversibility under unloading and partial reload.
+# - Verifies that integrated work along the monotonic envelope equals G_c.
+# - Verifies that the no-GB companion run leaves every cohesive diagnostic
+#   identically zero.
+# - Writes output/comparison.png with the simulated traction-separation
+#   curve overlaid on the analytical bilinear law.
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "gb_cohesive")
+INPUT = os.path.join(TEST_DIR, "input")
+INPUT_NO_GB = os.path.join(TEST_DIR, "input_no_gb")
+DEFAULT_OUT = os.path.join(TEST_DIR, "output")
+DEFAULT_OUT_NO_GB = os.path.join(TEST_DIR, "output_no_gb")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+K_N = 1.0
+DELTA_C = 1.0
+DELTA_MAX = 2.0
+F_T = K_N * DELTA_C
+G_C = 0.5 * F_T * DELTA_MAX
+
+
+def envelope_traction(d):
+    d = np.asarray(d, dtype=float)
+    out = np.zeros_like(d)
+    lin = (d > 0.0) & (d < DELTA_C)
+    soft = (d >= DELTA_C) & (d < DELTA_MAX)
+    out[lin] = K_N * d[lin]
+    out[soft] = F_T * (DELTA_MAX - d[soft]) / (DELTA_MAX - DELTA_C)
+    return out
+
+
+def envelope_damage(d):
+    d = np.asarray(d, dtype=float)
+    out = np.zeros_like(d)
+    soft = (d > DELTA_C) & (d < DELTA_MAX)
+    failed = d >= DELTA_MAX
+    t_env = envelope_traction(d[soft])
+    out[soft] = 1.0 - t_env / (K_N * d[soft])
+    out[failed] = 1.0
+    return out
+
+
+def secant_traction(d_now, d_hist):
+    d_now = np.asarray(d_now, dtype=float)
+    d_hist = np.asarray(d_hist, dtype=float)
+    D = envelope_damage(d_hist)
+    return (1.0 - D) * K_N * d_now
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        match = pat.search(os.path.basename(path))
+        if match:
+            cands.append((int(match.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo(input_path, outdir):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    cmd = [BIN, input_path]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run for {input_path} exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def load_plot(path):
+    ds = yt.load(path)
+    cg = ds.covering_grid(level=0,
+                          left_edge=ds.domain_left_edge,
+                          dims=ds.domain_dimensions)
+    return {
+        "path": path,
+        "time": float(ds.current_time),
+        "is_gb": np.asarray(cg["is_grain_boundary"]),
+        "delta": np.asarray(cg["gb_delta"]),
+        "hist": np.asarray(cg["gb_delta_max"]),
+        "trac": np.asarray(cg["gb_traction"]),
+        "dam": np.asarray(cg["gb_cohesive_damage"]),
+    }
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
+manual = (outdir == DEFAULT_OUT)
+if manual:
+    run_alamo(INPUT, DEFAULT_OUT)
+    run_alamo(INPUT_NO_GB, DEFAULT_OUT_NO_GB)
+
+files = plotfiles(outdir)
+if not files:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+series = [load_plot(p) for p in files]
+print("Loaded plot times:", [round(s["time"], 6) for s in series])
+
+ok = True
+
+# Sanity: at t=0 (initial plot) all cohesive fields must be zero.
+init = series[0]
+if init["time"] != 0.0:
+    print(f"WARN: first plot is at t={init['time']}, not 0")
+for key in ("delta", "hist", "trac", "dam"):
+    m = float(np.max(np.abs(init[key])))
+    if m > 0.0:
+        ok = False
+        print(f"FAIL: initial plot {key} not zero (max abs = {m:.3e})")
+
+# Build the cell-centred x-coordinate grid (shape matches arrays).
+nx, ny, nz = init["is_gb"].shape
+xc = (np.arange(nx) + 0.5) / nx
+xc3 = np.broadcast_to(xc[:, None, None], init["is_gb"].shape)
+
+# Every cell should be flagged GB in this layout. Confirm so the rest of
+# the test can broadcast over the full grid.
+gb_mask = series[1]["is_gb"] > 0.5
+if not np.all(gb_mask):
+    ok = False
+    n_off = int(np.size(gb_mask) - np.sum(gb_mask))
+    print(f"FAIL: {n_off} cells unexpectedly not flagged is_grain_boundary")
+
+# Expected per-step prescribed-delta multipliers (evaluated at start of step).
+multipliers = [1.5, 3.0, 0.4, 0.7]
+expected_delta = [3.0 * 0.0 * xc3] + [m * xc3 for m in multipliers]  # plot 0..4
+running_max = np.zeros_like(xc3)
+expected_hist = [running_max.copy()]
+for d in expected_delta[1:]:
+    running_max = np.maximum(running_max, d)
+    expected_hist.append(running_max.copy())
+
+TOL = 1.0e-9
+for idx in range(1, len(series)):
+    s = series[idx]
+    d_now = expected_delta[idx]
+    d_hist = expected_hist[idx]
+    t_exp = secant_traction(d_now, d_hist)
+    D_exp = envelope_damage(d_hist)
+
+    de = float(np.max(np.abs(s["delta"] - d_now)))
+    he = float(np.max(np.abs(s["hist"] - d_hist)))
+    te = float(np.max(np.abs(s["trac"] - t_exp)))
+    Dee = float(np.max(np.abs(s["dam"] - D_exp)))
+    print(f"plot {idx} (t={s['time']:.1f}): max |Delta| err {de:.2e}, "
+          f"|hist| err {he:.2e}, |trac| err {te:.2e}, |D| err {Dee:.2e}")
+    if de > TOL: ok = False; print(f"FAIL: gb_delta mismatch at plot {idx}")
+    if he > TOL: ok = False; print(f"FAIL: gb_delta_max mismatch at plot {idx}")
+    if te > TOL: ok = False; print(f"FAIL: gb_traction mismatch at plot {idx}")
+    if Dee > TOL: ok = False; print(f"FAIL: gb_cohesive_damage mismatch at plot {idx}")
+
+# Irreversibility: history must be non-decreasing across plots.
+hist_stack = np.stack([s["hist"] for s in series], axis=0)
+diffs = np.diff(hist_stack, axis=0)
+hist_drop = float(np.min(diffs))
+if hist_drop < -TOL:
+    ok = False
+    print(f"FAIL: gb_delta_max decreased across plots (min diff {hist_drop:.3e})")
+
+# Peak-traction check on the full-sweep plot (plot 2, multiplier 3.0): the
+# 1D x-profile of traction should reach exactly f_t at delta = delta_c.
+sweep = series[2]
+prof_d = sweep["delta"][:, 0, 0]
+prof_t = sweep["trac"][:, 0, 0]
+peak_idx = int(np.argmax(prof_t))
+peak_d = float(prof_d[peak_idx])
+peak_t = float(prof_t[peak_idx])
+print(f"sweep peak: delta={peak_d:.6f}, traction={peak_t:.6f} "
+      f"(expected delta=1.0, traction=1.0)")
+# delta increments by 3/64 per x-cell, so the peak cell lands within
+# 3/(2*64) of delta_c on either branch; the softening slope is f_t /
+# (delta_max - delta_c) = 1.0 here so traction error is ~3/(2*64) too.
+peak_tol = 3.0 / 64.0
+if F_T - peak_t > peak_tol:
+    ok = False
+    print(f"FAIL: sweep peak traction {peak_t} too far below f_t={F_T}")
+if abs(peak_d - DELTA_C) > peak_tol:
+    ok = False
+    print("FAIL: sweep peak occurs at delta noticeably off delta_c")
+
+# Failed cells: at delta >= delta_max, traction must be zero.
+failed = prof_d >= DELTA_MAX - 1.0e-12
+if not np.all(np.abs(prof_t[failed]) < 1.0e-12):
+    ok = False
+    print("FAIL: cells past delta_max have nonzero traction")
+
+# Work integral along the monotonic envelope (plot 2). Integrate t_env(d)
+# d(d) using the analytical envelope evaluated at simulated d's. The
+# trapezoid integral over a fine x-grid converges to G_c.
+order = np.argsort(prof_d)
+d_sorted = prof_d[order]
+t_sorted = prof_t[order]
+# Restrict to the monotonic envelope: ignore d < 0 (none here) and clip
+# above delta_max where traction is zero anyway.
+trap = getattr(np, "trapezoid", None) or np.trapz
+work = float(trap(t_sorted, d_sorted))
+work_err = abs(work - G_C)
+print(f"envelope work: simulated {work:.8f}, target {G_C:.8f}, err {work_err:.2e}")
+if work_err > 1.0e-3:
+    ok = False
+    print(f"FAIL: integrated envelope work deviates from G_c")
+
+# Unloading at plot 3: secant stiffness must be lower than K_n on cells
+# where history exceeded delta_c (D > 0).
+unload = series[3]
+pd_h = unload["hist"][:, 0, 0]
+pd_d = unload["delta"][:, 0, 0]
+pd_t = unload["trac"][:, 0, 0]
+soft = (pd_h > DELTA_C) & (pd_h < DELTA_MAX)
+sec_stiff = np.zeros_like(pd_d)
+nz = pd_d > 0
+sec_stiff[nz] = pd_t[nz] / pd_d[nz]
+sec_under = sec_stiff[soft]
+if sec_under.size > 0:
+    if not np.all(sec_under < K_N - 1.0e-9):
+        ok = False
+        print("FAIL: secant stiffness on damaged cells did not fall below K_n")
+    print(f"unload secant stiffness range on softened cells: "
+          f"[{sec_under.min():.6f}, {sec_under.max():.6f}] (< {K_N})")
+
+# Reload at plot 4: history must equal plot-2 history.
+if not np.allclose(series[4]["hist"], series[2]["hist"], atol=1.0e-12):
+    ok = False
+    print("FAIL: history at plot 4 differs from plot-2 maximum")
+
+# Comparison plot: simulated traction-separation overlaid on the analytical
+# bilinear envelope, plus the unload secant samples.
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+    d_grid = np.linspace(0.0, 1.5 * DELTA_MAX, 401)
+    ax.plot(d_grid, envelope_traction(d_grid), "k-", lw=1.5,
+            label="analytical envelope")
+    ax.plot(prof_d, prof_t, "C0o", ms=3, label="ALAMO sweep (plot 2)")
+    ax.plot(pd_d, pd_t, "C3.", ms=3, label="ALAMO unload (plot 3)")
+    ax.axvline(DELTA_C, ls="--", color="0.6", lw=0.8)
+    ax.axvline(DELTA_MAX, ls="--", color="0.6", lw=0.8)
+    ax.set_xlabel("opening delta")
+    ax.set_ylabel("normal traction")
+    ax.set_title("Step 9 cohesive-zone bilinear law")
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(os.path.join(outdir, "comparison.png"), dpi=120)
+    plt.close(fig)
+    print("wrote", os.path.join(outdir, "comparison.png"))
+except Exception as exc:
+    print(f"WARN: skipped comparison.png ({exc})")
+
+# No-GB run: every cohesive diagnostic must be identically zero.
+if manual:
+    no_gb_files = plotfiles(DEFAULT_OUT_NO_GB)
+    if not no_gb_files:
+        ok = False
+        print("FAIL: no-GB run produced no plotfiles")
+    else:
+        for path in no_gb_files:
+            data = load_plot(path)
+            for key in ("delta", "hist", "trac", "dam"):
+                m = float(np.max(np.abs(data[key])))
+                if m > 0.0:
+                    ok = False
+                    print(f"FAIL: no-GB plot {os.path.basename(path)} "
+                          f"{key} not zero (max abs {m:.3e})")
+            if float(np.max(np.abs(data["is_gb"]))) > 0.0:
+                ok = False
+                print(f"FAIL: no-GB plot {os.path.basename(path)} "
+                      f"has nonzero is_grain_boundary")
+        print(f"no-GB checked {len(no_gb_files)} plotfiles, all cohesive "
+              f"diagnostics zero")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

@@ -60,3 +60,21 @@ alamo.egg-info
 alamo
 setup.py
 alamo.py
+
+# Local run / developer artifacts
+*.log
+*.out
+*.err
+*.trace
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+*.gcov
+*.dSYM/
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+.venv/
+venv/
+.claude/

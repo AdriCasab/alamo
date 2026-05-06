@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+# Step 6d: Hu prescribed-surface-temperature thermal validation.
+#
+# Reads the cell plotfiles for Granite 2 and Sandstone 2 (both produced by the
+# `hu_conduction` runs), extracts:
+#   - Hole 1 probe at (0.05, 0.05, 0.08) m, computes Delta T(t) = T(t) - T(0)
+#   - At t = 30 s: temperature on L1 (z = 0.095) at the heating-zone centre
+#     (x = 0.05, y = 0.05), and on L2 (vertical centreline) at z = 0.09 m
+#
+# Pass criteria (the validation `.txt` does not include digitised hole-1
+# time-series arrays for direct curve comparison; we check the available
+# qualitative/quantitative facts):
+#   - Hole 1 Delta T(t) finite and monotone non-decreasing during heating
+#     (allowing a small non-monotonicity floor for floating-point noise).
+#   - Sandstone hotter than granite at L1 centre and at L2 z=0.09.
+#   - Hu reports sandstone 12.58% hotter than granite at L1 centre and 18.90%
+#     hotter at L2 z=0.09 at t=30 s. Use these as soft targets with a
+#     documented +/-10 percentage-point tolerance (boundary treatment, grid
+#     resolution, and the absence of a fully digitised reference make the
+#     exact number unreproducible without further calibration).
+#
+# Usage:
+#   python3 tests/MMWSpalling/hu_conduction/test [granite_dir [sandstone_dir]]
+
+import sys
+import os
+import glob
+import math
+import numpy as np
+import yt
+
+T0       = 280.15
+HOLE1    = (0.05, 0.05, 0.08)
+L1_Z     = 0.095   # 5 mm below the top surface (z = 0.1)
+L1_XY    = (0.05, 0.05)
+L2_Z     = 0.09    # 10 mm below the top surface
+L2_XY    = (0.05, 0.05)
+
+HU_L1_PCT = 12.58  # sandstone vs granite at L1 centre, t = 30 s
+HU_L2_PCT = 18.90  # sandstone vs granite at L2 z=0.09, t = 30 s
+PCT_TOL   = 10.0   # +/- percentage points
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def cell_temp_at(ds, xq, yq, zq):
+    ad = ds.all_data()
+    x = ad["x"].to_value()
+    y = ad["y"].to_value()
+    z = ad["z"].to_value()
+    T = ad["Temp"].to_value()
+    d2 = (x - xq) ** 2 + (y - yq) ** 2 + (z - zq) ** 2
+    return float(T[int(np.argmin(d2))])
+
+
+def load_curve(outdir, probe):
+    plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+    if not plotfiles:
+        raise RuntimeError(f"no cell plotfiles in {outdir}")
+    times, Tprobe = [], []
+    for f in plotfiles:
+        ds = yt.load(f)
+        times.append(float(ds.current_time))
+        Tprobe.append(cell_temp_at(ds, *probe))
+    return np.asarray(times), np.asarray(Tprobe)
+
+
+def temp_at_time(outdir, target_t, probe):
+    plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+    best = None
+    best_dt = math.inf
+    for f in plotfiles:
+        ds = yt.load(f)
+        t = float(ds.current_time)
+        if abs(t - target_t) < best_dt:
+            best_dt = abs(t - target_t)
+            best = (t, ds)
+    if best is None:
+        raise RuntimeError(f"no plotfiles found in {outdir}")
+    return best[0], cell_temp_at(best[1], *probe)
+
+
+granite_dir   = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "output", "granite2")
+sandstone_dir = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "output", "sandstone2")
+
+print(f"Loading Granite 2 from   {granite_dir}")
+print(f"Loading Sandstone 2 from {sandstone_dir}")
+
+t_g, Tprobe_g = load_curve(granite_dir,   HOLE1)
+t_s, Tprobe_s = load_curve(sandstone_dir, HOLE1)
+
+dT_g = Tprobe_g - T0
+dT_s = Tprobe_s - T0
+
+print(f"Granite  Hole 1 dT range: {dT_g.min():.3f} K -> {dT_g.max():.3f} K "
+      f"over t in [{t_g.min():.1f}, {t_g.max():.1f}] s ({len(t_g)} pts)")
+print(f"Sandstone Hole 1 dT range: {dT_s.min():.3f} K -> {dT_s.max():.3f} K "
+      f"over t in [{t_s.min():.1f}, {t_s.max():.1f}] s ({len(t_s)} pts)")
+
+ok = True
+
+if not np.all(np.isfinite(dT_g)) or not np.all(np.isfinite(dT_s)):
+    ok = False
+    print("FAIL: non-finite Hole 1 temperature samples")
+
+# Monotone non-decreasing during the heating window (floor floating-point
+# noise at 0.05 K).
+def monotone_violations(dT):
+    return float(np.maximum(0.0, -np.diff(dT)).max())
+
+mv_g = monotone_violations(dT_g)
+mv_s = monotone_violations(dT_s)
+if mv_g > 0.05:
+    ok = False
+    print(f"FAIL: granite Hole 1 dT non-monotone, max drop = {mv_g:.3g} K")
+if mv_s > 0.05:
+    ok = False
+    print(f"FAIL: sandstone Hole 1 dT non-monotone, max drop = {mv_s:.3g} K")
+
+# t=30 field comparison (L1 centre and L2 z=0.09)
+t_L1_g, T_L1_g = temp_at_time(granite_dir,   30.0, (L1_XY[0], L1_XY[1], L1_Z))
+t_L1_s, T_L1_s = temp_at_time(sandstone_dir, 30.0, (L1_XY[0], L1_XY[1], L1_Z))
+t_L2_g, T_L2_g = temp_at_time(granite_dir,   30.0, (L2_XY[0], L2_XY[1], L2_Z))
+t_L2_s, T_L2_s = temp_at_time(sandstone_dir, 30.0, (L2_XY[0], L2_XY[1], L2_Z))
+
+pct_L1 = 100.0 * (T_L1_s - T_L1_g) / max(T_L1_g, 1.0)
+pct_L2 = 100.0 * (T_L2_s - T_L2_g) / max(T_L2_g, 1.0)
+
+print(f"L1 centre (z=0.095) at t~{t_L1_g:.1f} s: granite {T_L1_g:.2f} K, "
+      f"sandstone {T_L1_s:.2f} K, sandstone hotter by {pct_L1:+.2f}% "
+      f"(Hu: +{HU_L1_PCT:.2f}%)")
+print(f"L2 z=0.09         at t~{t_L2_g:.1f} s: granite {T_L2_g:.2f} K, "
+      f"sandstone {T_L2_s:.2f} K, sandstone hotter by {pct_L2:+.2f}% "
+      f"(Hu: +{HU_L2_PCT:.2f}%)")
+
+if T_L1_s <= T_L1_g:
+    ok = False
+    print("FAIL: sandstone is not hotter than granite at L1 centre, t=30 s")
+if T_L2_s <= T_L2_g:
+    ok = False
+    print("FAIL: sandstone is not hotter than granite at L2 z=0.09, t=30 s")
+
+if abs(pct_L1 - HU_L1_PCT) > PCT_TOL:
+    ok = False
+    print(f"FAIL: L1 sandstone-vs-granite percentage off Hu by "
+          f"{abs(pct_L1 - HU_L1_PCT):.2f} pp > {PCT_TOL:.1f} pp")
+if abs(pct_L2 - HU_L2_PCT) > PCT_TOL:
+    ok = False
+    print(f"FAIL: L2 sandstone-vs-granite percentage off Hu by "
+          f"{abs(pct_L2 - HU_L2_PCT):.2f} pp > {PCT_TOL:.1f} pp")
+
+# Plot Hole 1 dT(t) for both rocks. Hu simulation/measured curves are not
+# digitised in the validation .txt so they are intentionally absent.
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(t_g, dT_g, "C0-",  label="ALAMO Granite 2",   lw=1.8)
+    ax.plot(t_s, dT_s, "C1--", label="ALAMO Sandstone 2", lw=1.8)
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel(r"$\Delta T$ at Hole 1 (centreline, z=0.08 m) [K]")
+    ax.set_title("Hu prescribed-surface-temperature conduction (Step 6d)")
+    ax.legend(loc="best")
+    ax.grid(alpha=0.3)
+    out_png = os.path.join(ROOT, "output", "comparison.png")
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=120)
+    print(f"Wrote plot: {out_png}")
+except ImportError:
+    print("(matplotlib not installed - skipping PNG plot)")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

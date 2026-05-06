@@ -1,0 +1,150 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 6c: grain-topology correction.
+#
+# Four vertical grain bands and two mineral phases on a deterministic
+# expression microstructure:
+#
+#   grain_expr = floor(4*x)   ⇒ ids 0,1,2,3 in equal-width bands
+#   phase_expr = (x>=0.5)     ⇒ ids 0,1
+#
+# (floor(4*x) is mathematically equivalent to (x>=0.25)+(x>=0.5)+(x>=0.75)
+# on this grid and avoids the comma split that ParmParse would do on an
+# if(...) expression. Cell centres at (i+0.5)/32 never coincide with the
+# integer breakpoints, so the band assignment is unambiguous.)
+#
+# This produces three internal grain interfaces (x=0.25, 0.5, 0.75) and a
+# single internal phase interface (x=0.5). The Python regression checks:
+#
+#   1. grain_id is integer-valued and matches the expression.
+#   2. phase    is integer-valued and matches the expression.
+#   3. is_grain_boundary = 1 on the cells adjacent to all three internal
+#      grain interfaces, including the same-mineral pair (x=0.25 and
+#      x=0.75 in the phase-0 / phase-1 halves respectively).
+#   4. is_phase_boundary = 1 only on cells adjacent to x=0.5.
+#   5. is_gb (alias) exactly matches is_phase_boundary.
+#   6. kappa_phase, rho_phase, Cp_phase, E_phase, beta_phase follow phase
+#      (NOT grain_id) — so neighbouring same-mineral grains share
+#      properties even though they are distinct grains.
+#
+# This is a pure microstructure-init smoke test: stop_time is short, the
+# beam and surface losses are off, and the diffusivity is tiny so T does
+# not move during the run.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/grain_topology/output
+
+timestep  = 1.0
+stop_time = 1.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 32 4 4
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 1.0  1.0  1.0
+geometry.is_periodic = 0 0 0
+
+# Thermoelastic coupling disabled (microstructure-only test).
+alpha = 0.0 0.0
+
+#
+# MICROSTRUCTURE (Expression mode, deterministic 4-grain / 2-phase split)
+#
+microstructure.mode             = expression
+microstructure.phase_expr       = (x>=0.5)
+microstructure.grain_expr       = floor(4*x)
+microstructure.nphases          = 2
+
+microstructure.phase0.name              = A
+microstructure.phase0.fraction          = 0.5
+microstructure.phase0.kappa             = 3.0
+microstructure.phase0.beta              = 1.0e-6
+microstructure.phase0.E                 = 1.0
+microstructure.phase0.mu                = 0.4
+microstructure.phase0.rho               = 1.0
+microstructure.phase0.Cp                = 1.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+
+microstructure.phase1.name              = B
+microstructure.phase1.fraction          = 0.5
+microstructure.phase1.kappa             = 1.0
+microstructure.phase1.beta              = 2.0e-6
+microstructure.phase1.E                 = 2.0
+microstructure.phase1.mu                = 0.4
+microstructure.phase1.rho               = 3.0
+microstructure.phase1.Cp                = 4.0
+microstructure.phase1.alpha_attenuation = 0.0
+microstructure.phase1.A_D               = 0.0
+
+#
+# CONDUCTIVITY DEGRADATION off — Step 6c is a pure topology test.
+#
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+#
+# BEAM and SURFACE LOSSES off.
+#
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 1
+beam.R          = 0.0
+beam.P0         = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 300.0
+
+#
+# HEAT CONDUCTION: tiny α + adiabatic BCs keep T flat across the run.
+#
+hc.heat.alpha = 1.0e-12
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 300.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY MODEL — present but inert (alpha_thermal = 0).
+#
+el.interval = 1000000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

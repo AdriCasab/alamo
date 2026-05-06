@@ -1,0 +1,161 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 8: Drucker-Prager damage-yield regression.
+#
+# A four-slab expression microstructure keeps material properties simple while
+# varying A_D per slab. The default-off prescribed-stress driver exercises the
+# DP utility and damage ODE deterministically:
+#
+#   slab 0: sub-threshold uniaxial tension, no damage
+#   slab 1: sustained super-threshold uniaxial tension, clamps at D = 1
+#   slab 2: one super-threshold uniaxial compression step, then unloads
+#   slab 3: hydrostatic compression, no damage
+#
+# The sign convention is positive tension and negative compression, matching
+# the mechanics stress tensor.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/dp_yield/output
+
+timestep  = 1.0
+stop_time = 3.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 16 4 4
+amr.blocking_factor = 2
+amr.max_grid_size   = 8
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 1.0 1.0 1.0
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+microstructure.mode       = expression
+microstructure.phase_expr = floor(4*x)
+microstructure.nphases    = 4
+
+microstructure.phase0.name              = below_tension
+microstructure.phase0.fraction          = 0.25
+microstructure.phase0.kappa             = 2.0
+microstructure.phase0.beta              = 0.0
+microstructure.phase0.E                 = 10.0
+microstructure.phase0.mu                = 4.0
+microstructure.phase0.rho               = 1.0
+microstructure.phase0.Cp                = 1.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 1.0
+
+microstructure.phase1.name              = clamp_tension
+microstructure.phase1.fraction          = 0.25
+microstructure.phase1.kappa             = 2.0
+microstructure.phase1.beta              = 0.0
+microstructure.phase1.E                 = 10.0
+microstructure.phase1.mu                = 4.0
+microstructure.phase1.rho               = 1.0
+microstructure.phase1.Cp                = 1.0
+microstructure.phase1.alpha_attenuation = 0.0
+microstructure.phase1.A_D               = 1.0
+
+microstructure.phase2.name              = unload_compression
+microstructure.phase2.fraction          = 0.25
+microstructure.phase2.kappa             = 2.0
+microstructure.phase2.beta              = 0.0
+microstructure.phase2.E                 = 10.0
+microstructure.phase2.mu                = 4.0
+microstructure.phase2.rho               = 1.0
+microstructure.phase2.Cp                = 1.0
+microstructure.phase2.alpha_attenuation = 0.0
+microstructure.phase2.A_D               = 0.5
+
+microstructure.phase3.name              = hydro_compression
+microstructure.phase3.fraction          = 0.25
+microstructure.phase3.kappa             = 2.0
+microstructure.phase3.beta              = 0.0
+microstructure.phase3.E                 = 10.0
+microstructure.phase3.mu                = 4.0
+microstructure.phase3.rho               = 1.0
+microstructure.phase3.Cp                = 1.0
+microstructure.phase3.alpha_attenuation = 0.0
+microstructure.phase3.A_D               = 1.0
+
+conductivity.kappa_damage_alpha = 0.6931471805599453
+conductivity.h_gb0              = 0.0
+
+damage.enabled         = 1
+damage.phi_deg         = 30.0
+damage.cohesion        = 10.0
+damage.psi0            = 0.1
+damage.n               = 1.0
+damage.m               = 0.0
+damage.gb_multiplier   = 1.0
+damage.stiffness_floor = 1.0e-4
+
+damage.prescribed_stress.enabled = 1
+damage.prescribed_stress.xx_expr = "(x<0.25)*10.0+((1-(x<0.25))*(x<0.5))*30.0+((1-(x<0.5))*(x<0.75))*((t<1.0)*-50.0)+(1-(x<0.75))*-100.0"
+damage.prescribed_stress.yy_expr = "(1-(x<0.75))*-100.0"
+damage.prescribed_stress.zz_expr = "(1-(x<0.75))*-100.0"
+damage.prescribed_stress.xy_expr = 0.0
+damage.prescribed_stress.yz_expr = 0.0
+damage.prescribed_stress.zx_expr = 0.0
+
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 1
+beam.R          = 0.0
+beam.P0         = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 300.0
+
+hc.heat.alpha = 1.0e-12
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 300.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1000000
+el.bc.type  = constant
+el.print_model = 1
+
+el.nmodels = 1
+el.model1.E  = 10.0
+el.model1.nu = 0.25
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+el.solver.max_iter = 50
+el.solver.tol_rel  = 1.0e-8
+el.solver.tol_abs  = 1.0e-8
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

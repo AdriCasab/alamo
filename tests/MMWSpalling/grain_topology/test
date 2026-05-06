@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+# Step 6c: grain-topology correction regression test.
+#
+# Loads the t=0 plotfile and checks that:
+#   1. grain_id matches grain_expr = (x>=0.25)+(x>=0.5)+(x>=0.75).
+#   2. phase    matches phase_expr = (x>=0.5).
+#   3. is_grain_boundary = 1 on cells adjacent to x = 0.25, 0.5, 0.75
+#      grain interfaces, and 0 elsewhere.
+#   4. is_phase_boundary = 1 only on cells adjacent to x = 0.5.
+#   5. is_gb (compatibility alias) exactly matches is_phase_boundary.
+#   6. Per-phase property fields follow `phase`, not `grain_id` — i.e.
+#      same-mineral grains have identical kappa/rho/Cp/E/beta.
+
+import sys
+import os
+import re
+import glob
+import numpy as np
+import yt
+
+PHASE_PROPS = {
+    0: dict(kappa=3.0, beta=1.0e-6, E=1.0, rho=1.0, Cp=1.0),
+    1: dict(kappa=1.0, beta=2.0e-6, E=2.0, rho=3.0, Cp=4.0),
+}
+
+LX = 1.0
+
+def latest_plotfile(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    if not cands:
+        return None
+    cands.sort()
+    return cands[0][1]  # earliest plotfile (t=0 is sufficient)
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/grain_topology/output"
+plotfile = latest_plotfile(outdir)
+if not plotfile:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+ds = yt.load(plotfile)
+print(f"Loaded {plotfile} at t={float(ds.current_time):.3f}")
+
+cg = ds.covering_grid(level=0,
+                      left_edge=ds.domain_left_edge,
+                      dims=ds.domain_dimensions)
+phase     = np.asarray(cg["phase"])
+grain_id  = np.asarray(cg["grain_id"])
+is_gb     = np.asarray(cg["is_gb"])
+is_pb     = np.asarray(cg["is_phase_boundary"])
+is_grb    = np.asarray(cg["is_grain_boundary"])
+kappa     = np.asarray(cg["kappa_phase"])
+beta      = np.asarray(cg["beta_phase"])
+E         = np.asarray(cg["E_phase"])
+rho       = np.asarray(cg["rho_phase"])
+Cp        = np.asarray(cg["Cp_phase"])
+
+nx, ny, nz = phase.shape
+dx = LX / nx
+x = np.linspace(0.5*dx, LX - 0.5*dx, nx)
+
+ok = True
+
+# 1. grain_id matches grain_expr.
+gid_expected_1d = (
+    (x >= 0.25).astype(int)
+    + (x >= 0.5 ).astype(int)
+    + (x >= 0.75).astype(int)
+)
+gid_expected = np.broadcast_to(gid_expected_1d[:, None, None], phase.shape)
+gid_int = grain_id.astype(int)
+if not np.all(np.isclose(grain_id, gid_int)):
+    ok = False
+    print("FAIL: grain_id is not integer-valued")
+if not np.array_equal(gid_int, gid_expected):
+    ok = False
+    bad = np.argwhere(gid_int != gid_expected)
+    print(f"FAIL: grain_id mismatch (first bad cell {tuple(bad[0])}, "
+          f"got {gid_int[tuple(bad[0])]} expected {gid_expected[tuple(bad[0])]})")
+
+# 2. phase matches phase_expr.
+ph_expected_1d = (x >= 0.5).astype(int)
+ph_expected = np.broadcast_to(ph_expected_1d[:, None, None], phase.shape)
+ph_int = phase.astype(int)
+if not np.all(np.isclose(phase, ph_int)):
+    ok = False
+    print("FAIL: phase is not integer-valued")
+if not np.array_equal(ph_int, ph_expected):
+    ok = False
+    bad = np.argwhere(ph_int != ph_expected)
+    print(f"FAIL: phase mismatch (first bad cell {tuple(bad[0])})")
+
+# 3 + 4. Boundary flags. With Neumann (no-difference) external faces, the
+# boundary kernel skips out-of-domain neighbours, so only internal
+# interfaces count.
+def expected_boundary_1d(ids_1d):
+    flag = np.zeros(nx, dtype=int)
+    for i in range(nx):
+        for di in (-1, 1):
+            ii = i + di
+            if ii < 0 or ii >= nx: continue
+            if ids_1d[ii] != ids_1d[i]:
+                flag[i] = 1
+                break
+    return flag
+
+grb_expected_1d = expected_boundary_1d(gid_expected_1d)
+pb_expected_1d  = expected_boundary_1d(ph_expected_1d)
+
+grb_expected = np.broadcast_to(grb_expected_1d[:, None, None], phase.shape)
+pb_expected  = np.broadcast_to(pb_expected_1d [:, None, None], phase.shape)
+
+if not np.array_equal(is_grb.astype(int), grb_expected):
+    ok = False
+    diff = np.argwhere(is_grb.astype(int) != grb_expected)
+    print(f"FAIL: is_grain_boundary mismatch (first bad cell {tuple(diff[0])})")
+
+if not np.array_equal(is_pb.astype(int), pb_expected):
+    ok = False
+    diff = np.argwhere(is_pb.astype(int) != pb_expected)
+    print(f"FAIL: is_phase_boundary mismatch (first bad cell {tuple(diff[0])})")
+
+# 5. is_gb is the phase-boundary alias.
+if not np.array_equal(is_gb.astype(int), is_pb.astype(int)):
+    ok = False
+    print("FAIL: is_gb does not equal is_phase_boundary")
+
+# Sanity: at least one cell should be a grain-only boundary (grain but not
+# phase boundary), confirming we actually exercise the same-mineral case.
+grain_only = np.logical_and(is_grb.astype(int) == 1, is_pb.astype(int) == 0)
+if not np.any(grain_only):
+    ok = False
+    print("FAIL: no grain-only boundary cells found "
+          "(test does not exercise the same-mineral grain case)")
+else:
+    n_grain_only = int(np.sum(grain_only))
+    print(f"Same-mineral grain-only boundary cells: {n_grain_only}")
+
+# 6. Properties follow phase, not grain_id.
+for p, props in PHASE_PROPS.items():
+    mask = (ph_int == p)
+    if not np.any(mask): continue
+    for fname, arr in (("kappa_phase", kappa), ("beta_phase", beta),
+                       ("E_phase", E), ("rho_phase", rho), ("Cp_phase", Cp)):
+        key = fname.split("_")[0]
+        expected = props[key]
+        observed = arr[mask]
+        if not np.allclose(observed, expected):
+            ok = False
+            print(f"FAIL: {fname} for phase {p} not constant ({observed.min()}..{observed.max()}, expected {expected})")
+
+# Cross-check that two adjacent same-mineral grains share properties
+# (else the test is silently keyed off grain_id).
+for fname, arr in (("kappa_phase", kappa), ("rho_phase", rho)):
+    for p in (0, 1):
+        mask = (ph_int == p)
+        vals = arr[mask]
+        if vals.size and not np.allclose(vals, vals[0]):
+            ok = False
+            print(f"FAIL: {fname} varies within phase {p} — properties keyed off grain_id?")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

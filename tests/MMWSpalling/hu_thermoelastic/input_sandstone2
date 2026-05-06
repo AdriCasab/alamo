@@ -1,0 +1,186 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@ args=stop_time=1.0
+#@
+
+# Step 7b: Hu Sandstone 2 prescribed-surface-temperature thermoelastic
+# validation, single-level. Same geometry as Granite 2 with sandstone
+# constants and the sandstone prescribed-T trendline. See
+# hu_thermal_spallation_validation_tests_augmented_vv_framework.txt.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/hu_thermoelastic/output/sandstone2
+
+# alpha_sandstone = 2.412e-6 m^2/s, dx = 2.5 mm -> stability dt < 0.43 s.
+# dt = 0.1 keeps a comfortable margin (matches Step 6d).
+timestep  = 0.1
+stop_time = 30.0
+
+amr.plot_int        = 30
+amr.max_level       = 0
+amr.n_cell          = 40 40 40
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+
+#
+# THERMAL EIGENSTRAIN — Hu Sandstone 2: alpha_t = 1.0e-5 1/K.
+#
+alpha = 1.0e-5
+phase.T_ref = 280.15
+
+#
+# MATERIAL: constant-property Hu Sandstone 2.
+#
+material.type           = constant
+material.constant.rho   = 2480.0
+material.constant.cp    = 829.30
+material.constant.kappa = 4.96
+material.constant.T_ref = 280.15
+
+#
+# BEAM disabled.
+#
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon  = 0.0
+losses.sigma_SB = 0.0
+losses.h_conv   = 0.0
+losses.T_amb    = 280.15
+
+#
+# SURFACE PATCH: Hu Sandstone 2 trendline T_B1(t) = 2.46*t + 684.64.
+#
+surface_patch.enabled = 1
+surface_patch.type    = prescribed_temperature
+surface_patch.face    = zhi
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+surface_patch.radius  = 0.015
+surface_patch.T_expr  = 684.64+2.46*t
+surface_patch.T_ext   = 280.15
+surface_patch.h_conv  = 0.0
+
+hc.heat.alpha = 2.412e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTIC SOLVE — static, every step. Hu Sandstone 2: E = 16.63 GPa,
+# nu = 0.34. Eigenstrain via homogeneous alpha path; F0 = 0.
+#
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = constant
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 16.63e9
+el.model1.nu = 0.34
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 1.0e-6
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = smoother
+el.solver.normalize_ddw = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0
+
+# Faces. zlo is fully clamped (disp disp disp). Hu specifies a roller,
+# but pure roller leaves MLMG too near-singular: it converges for the
+# first few seconds and loses efficacy as the thermal eigenstrain layer
+# thickens. Bottom-clamp is a documented deviation; the bottom face is
+# 100 mm below the 30 mm patch so it does not contaminate L3/L4.
+# Sides and top remain traction-free per Hu.
+el.bc.constant.type.zlo = disp disp disp
+el.bc.constant.val.zlo  = 0.0 0.0 0.0
+el.bc.constant.type.xlo = trac trac trac
+el.bc.constant.val.xlo  = 0.0 0.0 0.0
+el.bc.constant.type.xhi = trac trac trac
+el.bc.constant.val.xhi  = 0.0 0.0 0.0
+el.bc.constant.type.ylo = trac trac trac
+el.bc.constant.val.ylo  = 0.0 0.0 0.0
+el.bc.constant.type.yhi = trac trac trac
+el.bc.constant.val.yhi  = 0.0 0.0 0.0
+el.bc.constant.type.zhi = trac trac trac
+el.bc.constant.val.zhi  = 0.0 0.0 0.0
+
+# Edges.
+el.bc.constant.type.ylozlo = disp disp disp
+el.bc.constant.val.ylozlo  = 0.0 0.0 0.0
+el.bc.constant.type.yhizlo = disp disp disp
+el.bc.constant.val.yhizlo  = 0.0 0.0 0.0
+el.bc.constant.type.zloxlo = disp disp disp
+el.bc.constant.val.zloxlo  = 0.0 0.0 0.0
+el.bc.constant.type.zloxhi = disp disp disp
+el.bc.constant.val.zloxhi  = 0.0 0.0 0.0
+el.bc.constant.type.ylozhi = trac trac trac
+el.bc.constant.val.ylozhi  = 0.0 0.0 0.0
+el.bc.constant.type.yhizhi = trac trac trac
+el.bc.constant.val.yhizhi  = 0.0 0.0 0.0
+el.bc.constant.type.zhixlo = trac trac trac
+el.bc.constant.val.zhixlo  = 0.0 0.0 0.0
+el.bc.constant.type.zhixhi = trac trac trac
+el.bc.constant.val.zhixhi  = 0.0 0.0 0.0
+el.bc.constant.type.xloylo = trac trac trac
+el.bc.constant.val.xloylo  = 0.0 0.0 0.0
+el.bc.constant.type.xloyhi = trac trac trac
+el.bc.constant.val.xloyhi  = 0.0 0.0 0.0
+el.bc.constant.type.xhiylo = trac trac trac
+el.bc.constant.val.xhiylo  = 0.0 0.0 0.0
+el.bc.constant.type.xhiyhi = trac trac trac
+el.bc.constant.val.xhiyhi  = 0.0 0.0 0.0
+
+# Corners. zlo corners follow the bottom clamp; zhi corners are
+# traction-free.
+el.bc.constant.type.xloylozlo = disp disp disp
+el.bc.constant.val.xloylozlo  = 0.0 0.0 0.0
+el.bc.constant.type.xhiylozlo = disp disp disp
+el.bc.constant.val.xhiylozlo  = 0.0 0.0 0.0
+el.bc.constant.type.xloyhizlo = disp disp disp
+el.bc.constant.val.xloyhizlo  = 0.0 0.0 0.0
+el.bc.constant.type.xhiyhizlo = disp disp disp
+el.bc.constant.val.xhiyhizlo  = 0.0 0.0 0.0
+el.bc.constant.type.xloylozhi = trac trac trac
+el.bc.constant.val.xloylozhi  = 0.0 0.0 0.0
+el.bc.constant.type.xhiylozhi = trac trac trac
+el.bc.constant.val.xhiylozhi  = 0.0 0.0 0.0
+el.bc.constant.type.xloyhizhi = trac trac trac
+el.bc.constant.val.xloyhizhi  = 0.0 0.0 0.0
+el.bc.constant.type.xhiyhizhi = trac trac trac
+el.bc.constant.val.xhiyhizhi  = 0.0 0.0 0.0
+
+solver = explicit

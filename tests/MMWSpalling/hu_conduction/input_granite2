@@ -1,0 +1,120 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@ args=stop_time=1.0
+#@
+
+# Step 6d: Hu Granite 2 prescribed-surface-temperature conduction validation.
+#
+# 0.1 m cubic block, top face has a 30 mm-diameter circular patch held at
+#   T_B1(t) = 3.74*t + 638.22  K
+# while the rest of the top face and all side/bottom faces are adiabatic.
+# Initial temperature 280.15 K. MMW beam disabled; mechanics inert.
+# Hole 1 is the centreline probe at (0.05, 0.05, 0.08) m. See
+# hu_thermal_spallation_validation_tests_augmented_vv_framework.txt.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/hu_conduction/output/granite2
+
+# Explicit forward Euler. dx = 2.5 mm, alpha_granite = 1.143e-6 m^2/s,
+# stability dt < dx^2 / (6*alpha) ~ 0.91 s. dt=0.2 keeps a healthy margin.
+timestep  = 0.2
+stop_time = 90.0
+
+amr.plot_int        = 15      # ~30 plotfiles, 3 s cadence
+amr.max_level       = 0
+amr.n_cell          = 40 40 40
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+
+# Mechanics inert.
+alpha = 0.0 0.0
+
+#
+# MATERIAL: constant-property granite.
+#
+material.type           = constant
+material.constant.rho   = 2640.0
+material.constant.cp    = 827.20
+material.constant.kappa = 2.50
+material.constant.T_ref = 280.15
+
+#
+# BEAM disabled (P0 = 0, schedule absent → power_at returns 0).
+#
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+# Surface losses off (Hu specifies prescribed-T on the patch only).
+losses.epsilon  = 0.0
+losses.sigma_SB = 0.0
+losses.h_conv   = 0.0
+losses.T_amb    = 280.15
+
+#
+# SURFACE PATCH: circular Dirichlet patch on +z face.
+#
+surface_patch.enabled = 1
+surface_patch.type    = prescribed_temperature
+surface_patch.face    = zhi
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+surface_patch.radius  = 0.015
+# Note: the parser expression is one ParmParse token, so no whitespace.
+# T_B1(t) = 3.74*t + 638.22 K (Hu Granite 2 prescribed surface trendline).
+surface_patch.T_expr  = 638.22+3.74*t
+surface_patch.T_ext   = 280.15
+surface_patch.h_conv  = 0.0
+
+#
+# HEAT CONDUCTION: hc.heat.alpha unused on material path but required.
+# Initial T = 280.15 K, all faces adiabatic (Neumann). The patch is applied
+# as a separate volumetric divergence contribution in MMWSpalling.
+#
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY: present but inert.
+#
+el.interval = 1000000
+el.bc.type  = constant
+el.nmodels  = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0
+
+solver = explicit

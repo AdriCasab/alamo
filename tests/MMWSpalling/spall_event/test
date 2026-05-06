@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+# Step 10: surface advancement and spall detachment regression.
+#
+# Event case: prescribed Hoek-Brown ratio = 10 > xi_s = 8 so every (i,j)
+# column triggers a single spall event. Calibration gives h_spall = 2*dz,
+# detaching the top two cells of every column. Verifies phi shift, the
+# detached-cell reset (D=0, Temp=T_amb), surface mask migration, and the
+# diagnostic fields. No-event companion holds the ratio below threshold
+# and verifies all spall fields stay zero and the surface mask stays at
+# the original top row.
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "spall_event")
+INPUT_EVENT = os.path.join(TEST_DIR, "input")
+INPUT_NOEV  = os.path.join(TEST_DIR, "input_no_event")
+DEFAULT_OUT = os.path.join(TEST_DIR, "output")
+DEFAULT_OUT_NOEV = os.path.join(TEST_DIR, "output_no_event")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+DZ = 1.0 / 8.0
+H_SPALL = 0.25 * math.sqrt(1.0 * 1.0)  # C_h * sqrt(alpha * t_spall)
+T_AMB = 300.0
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo(input_path, outdir):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    cmd = [BIN, input_path]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run for {input_path} exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def load_plot(path):
+    ds = yt.load(path)
+    cg = ds.covering_grid(level=0,
+                          left_edge=ds.domain_left_edge,
+                          dims=ds.domain_dimensions)
+    return {
+        "path": path,
+        "time": float(ds.current_time),
+        "phi": np.asarray(cg["phi"]),
+        "removed": np.asarray(cg["removed"]),
+        "ev": np.asarray(cg["spall_event"]),
+        "thk": np.asarray(cg["spall_thickness"]),
+        "rop": np.asarray(cg["RoP_spall"]),
+        "D": np.asarray(cg["D"]),
+        "T": np.asarray(cg["Temp"]),
+        "surface": np.asarray(cg["surface"]),
+    }
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
+manual = (outdir == DEFAULT_OUT)
+if manual:
+    run_alamo(INPUT_EVENT, DEFAULT_OUT)
+    run_alamo(INPUT_NOEV, DEFAULT_OUT_NOEV)
+
+files = plotfiles(outdir)
+if not files:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+series = [load_plot(p) for p in files]
+print("Event run plot times:", [round(s["time"], 6) for s in series])
+
+ok = True
+
+# Initial plotfile: phi must follow the level-set convention z_top - zc,
+# the removed mask must be all zero, and the surface mask must light up
+# only the topmost cell row.
+init = series[0]
+nx, ny, nz = init["phi"].shape
+zc = (np.arange(nz) + 0.5) / nz
+phi_expected_init = (1.0 - zc)
+phi_init_3d = np.broadcast_to(phi_expected_init[None, None, :], init["phi"].shape)
+phi_init_err = float(np.max(np.abs(init["phi"] - phi_init_3d)))
+print(f"initial phi error: {phi_init_err:.3e}")
+if phi_init_err > 1.0e-12:
+    ok = False
+    print("FAIL: initial phi does not match z_top - z_cell")
+if float(np.max(np.abs(init["removed"]))) > 0.0:
+    ok = False
+    print("FAIL: initial removed not all zero")
+expected_init_surface = np.zeros_like(init["surface"])
+expected_init_surface[:, :, nz - 1] = 1.0
+if not np.array_equal(init["surface"], expected_init_surface):
+    ok = False
+    print("FAIL: initial surface mask does not light only the top row")
+
+# Final plotfile: top two cells of every (i,j) column should be detached.
+final = series[-1]
+removed = final["removed"]
+expected_removed = np.zeros_like(removed)
+expected_removed[:, :, nz - 2:] = 1.0
+if not np.array_equal(removed, expected_removed):
+    ok = False
+    diff = int(np.sum(removed != expected_removed))
+    print(f"FAIL: removed mask differs in {diff} cells from expected top-2")
+
+# phi: every cell should have shifted down by exactly h_spall.
+phi_expected_final = phi_init_3d - H_SPALL
+phi_err = float(np.max(np.abs(final["phi"] - phi_expected_final)))
+print(f"final phi error: {phi_err:.3e}, h_spall={H_SPALL}")
+if phi_err > 1.0e-12:
+    ok = False
+    print("FAIL: final phi does not match initial - h_spall")
+
+# Per-cell event/thickness/RoP diagnostics on detached cells.
+ev = final["ev"]
+thk = final["thk"]
+rop = final["rop"]
+det_mask = expected_removed > 0.5
+non_mask = ~det_mask
+if not np.all(ev[det_mask] == 1.0):
+    ok = False
+    print("FAIL: spall_event not 1 on every detached cell")
+if not np.all(np.isclose(thk[det_mask], H_SPALL, atol=1.0e-12)):
+    ok = False
+    print("FAIL: spall_thickness != h_spall on detached cells")
+if not np.all(np.isclose(rop[det_mask], H_SPALL / 1.0, atol=1.0e-12)):
+    ok = False
+    print("FAIL: RoP_spall != h_spall/dt on detached cells")
+if (float(np.max(np.abs(ev[non_mask]))) > 0.0
+    or float(np.max(np.abs(thk[non_mask]))) > 0.0
+    or float(np.max(np.abs(rop[non_mask]))) > 0.0):
+    ok = False
+    print("FAIL: spall diagnostics nonzero outside detached cells")
+
+# Detached cells must have D = 0 and Temp = T_amb.
+D_det = final["D"][det_mask]
+T_det = final["T"][det_mask]
+print(f"detached D range: [{D_det.min():.3e}, {D_det.max():.3e}]; "
+      f"detached T range: [{T_det.min():.3f}, {T_det.max():.3f}]")
+if float(np.max(np.abs(D_det))) > 1.0e-12:
+    ok = False
+    print("FAIL: detached cells did not reset D to 0")
+if not np.all(np.isclose(T_det, T_AMB, atol=1.0e-9)):
+    ok = False
+    print("FAIL: detached cells did not reset Temp to T_amb")
+
+# Non-detached cells must keep their initial-condition state. The damage IC
+# is D=1 in z>=0.5 and 0 below. zc index 4 corresponds to z=0.5625, so
+# k>=4 is in the IC=1 region; the surviving k=4..5 cells should still hold
+# D=1.
+zc_grid = (np.arange(nz) + 0.5) / nz
+expected_D_initial = (zc_grid >= 0.5).astype(float)
+remaining_z = ~det_mask  # everything except the top two rows
+expected_D_remaining = np.broadcast_to(expected_D_initial[None, None, :],
+                                       final["D"].shape)
+D_remain_err = float(np.max(np.abs(final["D"][remaining_z]
+                                   - expected_D_remaining[remaining_z])))
+print(f"surviving-cell D error vs IC: {D_remain_err:.3e}")
+if D_remain_err > 1.0e-12:
+    ok = False
+    print("FAIL: non-detached cells lost their initial D")
+
+# Surface mask must now light up the new top, k = nz-3 = 5.
+expected_surface = np.zeros_like(final["surface"])
+expected_surface[:, :, nz - 3] = 1.0
+if not np.array_equal(final["surface"], expected_surface):
+    ok = False
+    diff = int(np.sum(final["surface"] != expected_surface))
+    print(f"FAIL: post-event surface mask differs in {diff} cells; "
+          f"expected only k=={nz-3} lit")
+
+# h_spall closed-form check:
+expected_h = 0.25 * math.sqrt(1.0 * 1.0)
+print(f"h_spall closed form check: simulated {H_SPALL:.6f}, "
+      f"expected {expected_h:.6f}")
+if abs(H_SPALL - expected_h) > 1.0e-12:
+    ok = False
+    print("FAIL: h_spall does not match C_h * sqrt(alpha * t_spall)")
+
+# Optional comparison plot: column slice of phi before/after.
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+    z_axis = (np.arange(nz) + 0.5) / nz
+    ax.plot(z_axis, init["phi"][0, 0, :], "ko-", label="initial phi")
+    ax.plot(z_axis, final["phi"][0, 0, :], "C3.-", label="post-event phi")
+    ax.axhline(0.0, ls="--", color="0.6", lw=0.8)
+    ax.axvline(z_axis[nz - 3] + 0.5 / nz, ls=":", color="C2", lw=0.8,
+               label=f"new surface (k={nz-3})")
+    ax.set_xlabel("z (cell-centre coord)")
+    ax.set_ylabel("phi = z_surface - z_cell")
+    ax.set_title(f"Step 10 spall_event column slice (h_spall = {H_SPALL})")
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(os.path.join(outdir, "comparison.png"), dpi=120)
+    plt.close(fig)
+    print("wrote", os.path.join(outdir, "comparison.png"))
+except Exception as exc:
+    print(f"WARN: skipped comparison.png ({exc})")
+
+# No-event companion: ratio < xi_s, so phi/removed/surface stay at the
+# initial state.
+if manual:
+    ne_files = plotfiles(DEFAULT_OUT_NOEV)
+    if not ne_files:
+        ok = False
+        print("FAIL: no-event run produced no plotfiles")
+    else:
+        ne = load_plot(ne_files[-1])
+        if not np.allclose(ne["phi"], phi_init_3d, atol=1.0e-12):
+            ok = False
+            print("FAIL: no-event phi drifted from initial")
+        if float(np.max(np.abs(ne["removed"]))) > 0.0:
+            ok = False
+            print("FAIL: no-event removed mask not zero")
+        if float(np.max(np.abs(ne["ev"]))) > 0.0:
+            ok = False
+            print("FAIL: no-event spall_event not zero")
+        if not np.array_equal(ne["surface"], expected_init_surface):
+            ok = False
+            print("FAIL: no-event surface mask moved off the top row")
+        # Detached cells in event run had D reset; in no-event run, the
+        # IC must be intact across the entire grid.
+        D_full = ne["D"]
+        D_expected = np.broadcast_to(expected_D_initial[None, None, :], D_full.shape)
+        if float(np.max(np.abs(D_full - D_expected))) > 1.0e-12:
+            ok = False
+            print("FAIL: no-event D field departed from IC")
+        print("no-event final state matches IC, no spall diagnostics fired")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

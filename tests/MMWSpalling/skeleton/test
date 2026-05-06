@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+# Smoke test for MMWSpalling skeleton (Step 1 of plan).
+# Pass criteria: executable runs to completion and produces a plotfile.
+import sys
+import os
+import glob
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/skeleton/output"
+
+plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+if not plotfiles:
+    print("FAIL: no plotfiles found in", outdir)
+    sys.exit(1)
+
+print("PASS: skeleton produced", len(plotfiles), "plotfile(s); last:", plotfiles[-1])
+sys.exit(0)

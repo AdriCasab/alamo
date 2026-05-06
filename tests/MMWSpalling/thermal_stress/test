@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+# Step 7: heterogeneous thermoelastic mechanics regression test.
+#
+# Loads the t=1 cell plotfile and checks:
+#   1. phase, mu_phase, T_ref_phase, E_phase, beta_phase follow `phase`
+#      (constant within each phase region, switching at x=0.5).
+#   2. cell-averaged nodal model_mu/model_lambda deep inside each phase
+#      match the per-phase elastic moduli.
+#   3. cell-averaged nodal model_F0_xx matches the nodal average of the
+#      per-cell free strain beta*(T-T_ref), including the mixed-interface
+#      cells where node averaging matters.
+#   4. The thermal-expansion mismatch produces non-zero stress, and the
+#      stiffer / higher-eigenstrain phase carries larger magnitude stress
+#      than the softer / lower-eigenstrain phase.
+
+import sys
+import os
+import re
+import glob
+import numpy as np
+import yt
+
+# Per-phase mineral inputs (must match the input file).
+PHASES = {
+    0: dict(E=1.0, mu=0.4, beta=1.0e-5, T_ref=300.0),
+    1: dict(E=2.0, mu=0.8, beta=3.0e-5, T_ref=350.0),
+}
+T_UNIFORM = 500.0
+LX = 1.0
+
+def lam_from_E_mu(E, mu):
+    return mu * (E - 2.0 * mu) / (3.0 * mu - E)
+
+def latest_plotfile(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    if not cands:
+        return None
+    cands.sort()
+    return cands[-1][1]  # final plotfile (after the elastic solve)
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/thermal_stress/output"
+plotfile = latest_plotfile(outdir)
+if not plotfile:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+ds = yt.load(plotfile)
+print(f"Loaded {plotfile} at t={float(ds.current_time):.3f}")
+
+cg = ds.covering_grid(level=0,
+                      left_edge=ds.domain_left_edge,
+                      dims=ds.domain_dimensions)
+phase    = np.asarray(cg["phase"]).astype(int)
+mu_ph    = np.asarray(cg["mu_phase"])
+Tref_ph  = np.asarray(cg["T_ref_phase"])
+E_ph     = np.asarray(cg["E_phase"])
+beta_ph  = np.asarray(cg["beta_phase"])
+model_mu = np.asarray(cg["model_mu"])
+model_lam= np.asarray(cg["model_lambda"])
+model_F0 = np.asarray(cg["model_F0_xx"])
+stress_xx= np.asarray(cg["stress_xx"])
+
+nx, ny, nz = phase.shape
+dx = LX / nx
+xc = (np.arange(nx) + 0.5) * dx
+
+ok = True
+
+# 1. Per-phase property fields are exactly the per-phase values.
+ph_expected_1d = (xc >= 0.5).astype(int)
+ph_expected = np.broadcast_to(ph_expected_1d[:, None, None], phase.shape)
+if not np.array_equal(phase, ph_expected):
+    ok = False
+    print("FAIL: phase does not match phase_expr")
+for p, props in PHASES.items():
+    mask = (phase == p)
+    for fname, arr, key in (("mu_phase",   mu_ph,   "mu"),
+                            ("T_ref_phase",Tref_ph, "T_ref"),
+                            ("E_phase",    E_ph,    "E"),
+                            ("beta_phase", beta_ph, "beta")):
+        observed = arr[mask]
+        if not np.allclose(observed, props[key]):
+            ok = False
+            print(f"FAIL: {fname} for phase {p}: range "
+                  f"{observed.min()}..{observed.max()}, expected {props[key]}")
+
+# 2 + 3. model_mu, model_lambda, model_F0_xx on cells deep inside each phase.
+# model_mf is nodal; the cell plotfile averages 8 surrounding nodes onto
+# each cell. For a cell to be a "pure-phase" cell, all 8 surrounding
+# nodes must themselves be pure-phase (i.e. cell-to-node averaging at
+# the node only sees one phase). With phase_expr = (x>=0.5) on n_cell=16,
+# pure-phase-0 cells are i=1..6 and pure-phase-1 cells are i=9..14.
+# Cells i=7,8 straddle the interface and cells i=0,15 / j,k=0,15 read
+# out-of-domain property-field ghosts (no BC handler) — exclude both.
+def deep_phase_slice(i_range):
+    return (slice(i_range[0], i_range[1]+1),
+            slice(1, ny-1),
+            slice(1, nz-1))
+
+for p, i_range in ((0, (1, 6)), (1, (9, 14))):
+    sl = deep_phase_slice(i_range)
+    props = PHASES[p]
+    expected_mu  = props["mu"]
+    expected_lam = lam_from_E_mu(props["E"], props["mu"])
+    expected_F0  = props["beta"] * (T_UNIFORM - props["T_ref"])
+    obs_mu  = model_mu[sl]
+    obs_lam = model_lam[sl]
+    obs_F0  = model_F0[sl]
+    if not np.allclose(obs_mu, expected_mu, rtol=1e-10, atol=1e-12):
+        ok = False
+        print(f"FAIL: model_mu in phase {p} interior: range "
+              f"{obs_mu.min()}..{obs_mu.max()}, expected {expected_mu}")
+    if not np.allclose(obs_lam, expected_lam, rtol=1e-10, atol=1e-12):
+        ok = False
+        print(f"FAIL: model_lambda in phase {p} interior: range "
+              f"{obs_lam.min()}..{obs_lam.max()}, expected {expected_lam}")
+    if not np.allclose(obs_F0, expected_F0, rtol=1e-10, atol=1e-12):
+        ok = False
+        print(f"FAIL: model_F0_xx in phase {p} interior: range "
+              f"{obs_F0.min()}..{obs_F0.max()}, expected {expected_F0}")
+
+# Full interior eigenstrain check, including the two cells adjacent to the
+# phase interface. Because the properties vary only along x, the expected
+# cell-plot value is the average of the two x-nodes that bound each cell.
+# Each nodal value is formed exactly as UpdateModel does it: compute per-cell
+# free strain first, then average that scalar to the node. This preserves the
+# right behaviour when a nonlinear phase-local strain term, such as quartz
+# alpha-beta expansion, is enabled.
+def phase_at_cell_index(i):
+    return int(((i + 0.5) * dx) >= 0.5)
+
+def cell_free_strain(i_cell):
+    props = PHASES[phase_at_cell_index(i_cell)]
+    return props["beta"] * (T_UNIFORM - props["T_ref"])
+
+def node_F0(i_node):
+    vals = [cell_free_strain(i_node - 1),
+            cell_free_strain(i_node)]
+    return 0.5 * (vals[0] + vals[1])
+
+expected_F0_x = np.array([
+    0.5 * (node_F0(i) + node_F0(i + 1))
+    for i in range(1, nx - 1)
+])
+obs_F0_interior = model_F0[1:nx-1, 1:ny-1, 1:nz-1]
+exp_F0_interior = expected_F0_x[:, None, None]
+if not np.allclose(obs_F0_interior, exp_F0_interior, rtol=1e-10, atol=1e-12):
+    ok = False
+    err = np.max(np.abs(obs_F0_interior - exp_F0_interior))
+    print(f"FAIL: model_F0_xx full interior mismatch; max abs error {err:.3e}")
+    print(f"      expected interface cells i=7,8: "
+          f"{expected_F0_x[6]:.6e}, {expected_F0_x[7]:.6e}")
+
+# 4. Stress signature. Two checks:
+#   (a) |stress_xx| in each interior region is well above zero.
+#   (b) phase 1 (higher eigenstrain, stiffer) carries strictly larger
+#       compressive stress magnitude than phase 0 — proving the
+#       stress comes from the per-phase eigenstrain, not from a
+#       BC-driven uniform load.
+sl0 = deep_phase_slice((1, 6))
+sl1 = deep_phase_slice((9, 14))
+sxx0 = stress_xx[sl0]
+sxx1 = stress_xx[sl1]
+mag0 = np.mean(np.abs(sxx0))
+mag1 = np.mean(np.abs(sxx1))
+print(f"|stress_xx| mean: phase0={mag0:.4e}, phase1={mag1:.4e}")
+if mag0 < 1.0e-4:
+    ok = False
+    print(f"FAIL: phase 0 stress too small ({mag0:.4e}) — solve produced no stress")
+if mag1 < mag0 * 1.5:
+    ok = False
+    print(f"FAIL: phase 1 stress not significantly larger than phase 0 "
+          f"(ratio {mag1/mag0:.2f}); thermal-mismatch signature missing")
+
+# Sanity reference: free-thermal-mismatch shear scale at the interface.
+# Plan reference: Delta sigma ~ E1*E2/(E1+E2)*(epsilon_th1-epsilon_th0).
+E0, E1 = PHASES[0]["E"], PHASES[1]["E"]
+eps0 = PHASES[0]["beta"] * (T_UNIFORM - PHASES[0]["T_ref"])
+eps1 = PHASES[1]["beta"] * (T_UNIFORM - PHASES[1]["T_ref"])
+mismatch_scale = E0 * E1 / (E0 + E1) * abs(eps1 - eps0)
+print(f"Reference free-mismatch stress scale: {mismatch_scale:.4e} "
+      f"(observed |Delta stress| ~ {abs(mag1 - mag0):.4e})")
+# Order-of-magnitude check only — clamped BCs change the prefactor.
+ratio = abs(mag1 - mag0) / mismatch_scale
+if ratio < 0.1 or ratio > 10.0:
+    ok = False
+    print(f"FAIL: |stress_phase1 - stress_phase0| / mismatch_scale = {ratio:.3f} "
+          f"out of [0.1, 10] order-of-magnitude band")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

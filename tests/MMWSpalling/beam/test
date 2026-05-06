@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+# Verification of Step 3: Beer-Lambert + Gaussian MMW source.
+#
+# Pass criteria:
+#   - Domain-integrated enthalpy at t_end matches t_end * P0 * (1 - exp(-alpha Lz))
+#     to within 5% (the in-plane Gaussian is fully captured because omega0 << L).
+#   - Surface (top-z) row max H is at the in-plane beam centre (x0, y0).
+
+import sys
+import os
+import glob
+import math
+
+import numpy as np
+import yt
+
+P0    = 1.0
+ALPHA = 10.0
+LZ    = 1.0
+T_END = 0.01
+TOL_INTEGRAL = 0.05
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/beam/output"
+
+plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+if not plotfiles:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+final = plotfiles[-1]
+
+ds = yt.load(final)
+ad = ds.all_data()
+
+H  = ad["H"].to_value()
+dV = ad["cell_volume"].to_value()
+H_int = float(np.sum(H * dV))
+
+H_int_analytic = T_END * P0 * (1.0 - math.exp(-ALPHA * LZ))
+err = abs(H_int - H_int_analytic) / H_int_analytic
+print(f"Beer-Lambert integral: simulated = {H_int:.6e}, analytic = {H_int_analytic:.6e}, "
+      f"relative error = {err*100:.2f}%")
+
+ok = True
+if err > TOL_INTEGRAL:
+    print(f"FAIL: integral error {err*100:.2f}% exceeds tolerance {TOL_INTEGRAL*100:.0f}%.")
+    ok = False
+
+# Spot check: beam centre (x0, y0) just below the top surface should have the
+# largest H; the corner cell at the same z should have effectively zero.
+x = ad["x"].to_value()
+y = ad["y"].to_value()
+z = ad["z"].to_value()
+top = z > (LZ - 1.0/16)  # within the top z-row
+H_top = H[top]
+x_top = x[top]
+y_top = y[top]
+i_max = int(np.argmax(H_top))
+center_dist = math.hypot(x_top[i_max] - 0.5, y_top[i_max] - 0.5)
+if center_dist > 0.05:
+    print(f"FAIL: hot-spot not at beam axis (offset {center_dist:.3f} m).")
+    ok = False
+else:
+    print(f"Hot-spot location offset from beam axis: {center_dist:.4f} m (OK).")
+
+if not ok:
+    sys.exit(1)
+print("PASS")
+sys.exit(0)

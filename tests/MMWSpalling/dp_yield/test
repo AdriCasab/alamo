@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+# Step 8: Drucker-Prager yield and irreversible damage regression.
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "dp_yield")
+INPUT = os.path.join(TEST_DIR, "input")
+DEFAULT_OUT = os.path.join(TEST_DIR, "output")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+PHI = math.radians(30.0)
+COHESION = 10.0
+PSI0 = 0.1
+KAPPA_DAMAGE_ALPHA = math.log(2.0)
+STIFFNESS_FLOOR = 1.0e-4
+
+
+def alpha_dp(phi):
+    return 2.0 * math.sin(phi) / (math.sqrt(3.0) * (3.0 - math.sin(phi)))
+
+
+def k_dp(cohesion, phi):
+    return 6.0 * cohesion * math.cos(phi) / (math.sqrt(3.0) * (3.0 - math.sin(phi)))
+
+
+ALPHA = alpha_dp(PHI)
+K_DP = k_dp(COHESION, PHI)
+
+
+def psi_from_sigma(sig):
+    sig = np.asarray(sig, dtype=float)
+    i1 = float(np.trace(sig))
+    dev = sig - (i1 / 3.0) * np.eye(3)
+    j2 = 0.5 * float(np.sum(dev * dev))
+    f = math.sqrt(max(j2, 0.0)) + ALPHA * i1 - K_DP
+    return f / K_DP
+
+
+EXPECTED_PSI = {
+    0: psi_from_sigma(np.diag([10.0, 0.0, 0.0])),
+    1: psi_from_sigma(np.diag([30.0, 0.0, 0.0])),
+    2: psi_from_sigma(np.diag([-50.0, 0.0, 0.0])),
+    3: psi_from_sigma(np.diag([-100.0, -100.0, -100.0])),
+}
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_if_needed(outdir):
+    if outdir != DEFAULT_OUT:
+        return
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    cmd = [BIN, INPUT]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self")
+    result = subprocess.run(cmd, cwd=ROOT, env=env)
+    if result.returncode != 0:
+        print(f"FAIL: ALAMO run exited with {result.returncode}")
+        sys.exit(result.returncode)
+
+
+def load(outdir):
+    files = plotfiles(outdir)
+    if not files:
+        print("FAIL: no cell plotfiles in", outdir)
+        sys.exit(1)
+    data = []
+    for p in files:
+        ds = yt.load(p)
+        cg = ds.covering_grid(level=0,
+                              left_edge=ds.domain_left_edge,
+                              dims=ds.domain_dimensions)
+        item = {
+            "path": p,
+            "time": float(ds.current_time),
+            "phase": np.asarray(cg["phase"]).astype(int),
+            "D": np.asarray(cg["D"]),
+            "psi": np.asarray(cg["damage_Psi"]),
+            "F": np.asarray(cg["damage_F_DP"]),
+            "rate": np.asarray(cg["damage_rate"]),
+            "keff": np.asarray(cg["kappa_eff"]),
+            "kphase": np.asarray(cg["kappa_phase"]),
+            "model_mu": np.asarray(cg["model_mu"]),
+        }
+        data.append(item)
+    return data
+
+
+def phase_mean(arr, phase, p):
+    mask = phase == p
+    return float(np.mean(arr[mask]))
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
+run_if_needed(outdir)
+series = load(outdir)
+print("Loaded plot times:", [round(d["time"], 6) for d in series])
+
+ok = True
+
+first = series[1]
+final = series[-1]
+phase = final["phase"]
+
+nx, ny, nz = phase.shape
+xc = (np.arange(nx) + 0.5) / nx
+expected_phase_1d = np.floor(4.0 * xc + 1.0e-12).astype(int)
+expected_phase_1d = np.clip(expected_phase_1d, 0, 3)
+expected_phase = np.broadcast_to(expected_phase_1d[:, None, None], phase.shape)
+if not np.array_equal(phase, expected_phase):
+    ok = False
+    print("FAIL: phase field does not match floor(4*x)")
+
+# DP utility/sign-convention checks use the first post-update plot: t=1 stores
+# stresses evaluated at t=0, including the uniaxial compression slab.
+for p, target in EXPECTED_PSI.items():
+    observed = phase_mean(first["psi"], first["phase"], p)
+    err = abs(observed - target)
+    print(f"phase {p} Psi: observed {observed:+.6f}, expected {target:+.6f}")
+    if err > 1.0e-10:
+        ok = False
+        print(f"FAIL: phase {p} damage_Psi mismatch ({err:.3e})")
+    f_obs = phase_mean(first["F"], first["phase"], p)
+    if abs(f_obs - target * K_DP) > 1.0e-10:
+        ok = False
+        print(f"FAIL: phase {p} damage_F_DP mismatch")
+
+if not (EXPECTED_PSI[1] > EXPECTED_PSI[2] > PSI0 > EXPECTED_PSI[0]):
+    ok = False
+    print("FAIL: expected DP ordering was not constructed correctly")
+if EXPECTED_PSI[3] >= PSI0:
+    ok = False
+    print("FAIL: hydrostatic compression should stay below threshold")
+
+# Damage monotonicity and final states.
+D_by_time = np.array([
+    [phase_mean(item["D"], item["phase"], p) for p in range(4)]
+    for item in series
+])
+print("D means by plot:")
+for item, row in zip(series, D_by_time):
+    print(f"  t={item['time']:.1f}: " + " ".join(f"p{p}={row[p]:.6f}" for p in range(4)))
+
+if np.any(np.diff(D_by_time, axis=0) < -1.0e-12):
+    ok = False
+    print("FAIL: damage decreased between plotfiles")
+if abs(D_by_time[-1, 0]) > 1.0e-12:
+    ok = False
+    print("FAIL: sub-threshold tension grew damage")
+if D_by_time[-1, 1] < 1.0 - 1.0e-12 or D_by_time[-1, 1] > 1.0 + 1.0e-12:
+    ok = False
+    print("FAIL: sustained super-threshold tension did not clamp at D=1")
+if not (0.18 < D_by_time[1, 2] < 0.22):
+    ok = False
+    print("FAIL: compression slab did not grow by the expected first-step amount")
+if np.max(np.abs(D_by_time[1:, 2] - D_by_time[1, 2])) > 1.0e-12:
+    ok = False
+    print("FAIL: unloaded compression slab changed after unloading")
+if abs(D_by_time[-1, 3]) > 1.0e-12:
+    ok = False
+    print("FAIL: hydrostatic compression grew damage")
+
+if not np.all(np.isfinite(final["D"])) or np.min(final["D"]) < -1.0e-12 or np.max(final["D"]) > 1.0 + 1.0e-12:
+    ok = False
+    print("FAIL: final D is non-finite or outside [0,1]")
+
+# Conductivity degradation follows the Step 6 law using evolved D.
+keff_expected = final["kphase"] * np.exp(-KAPPA_DAMAGE_ALPHA * final["D"])
+keff_err = float(np.max(np.abs(final["keff"] - keff_expected)))
+print(f"kappa_eff max |err| vs formula: {keff_err:.3e}")
+if keff_err > 1.0e-12:
+    ok = False
+    print("FAIL: kappa_eff does not reflect evolved D")
+
+# Stiffness degradation uses node-averaged D and is visible in model_mu after
+# the next model refresh. Check only cells whose two x-nodes are pure phase 1;
+# interface cells intentionally average neighbouring damage states.
+pure_phase1_i = [
+    i for i in range(1, nx - 1)
+    if expected_phase_1d[i - 1] == 1 and expected_phase_1d[i] == 1
+    and expected_phase_1d[i + 1] == 1
+]
+mu_phase1 = final["model_mu"][pure_phase1_i, 1:-1, 1:-1]
+mu_expected = 4.0 * STIFFNESS_FLOOR
+mu_err = float(np.max(np.abs(mu_phase1 - mu_expected)))
+print(f"damaged slab model_mu interior: observed range "
+      f"{mu_phase1.min():.6e}..{mu_phase1.max():.6e}, expected {mu_expected:.6e}")
+if mu_err > 1.0e-12:
+    ok = False
+    print("FAIL: stiffness floor degradation not reflected in model_mu")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

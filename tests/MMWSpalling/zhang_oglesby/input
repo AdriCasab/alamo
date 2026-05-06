@@ -1,0 +1,124 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 4b: Zhang/Oglesby end-to-end thermal validation.
+#
+# Setup follows zhang_oglesby_mmw_validation_summary.txt:
+#   Granite block 0.10 x 0.10 x 0.025 m, T_amb = 297.5 K, beam centred on
+#   the top face with omega_0 = 0.02 m, lambda corresponding to a 137 GHz
+#   gyrotron, time-varying power schedule from 0 -> 1750 s, surface losses
+#   on the top face only, sides and bottom adiabatic.
+#
+# Reference: zhang_oglesby_mmw_validation_summary.txt for material and
+# loss parameters.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/zhang_oglesby/output
+
+# Forward Euler. Diffusion-stability constraint is dx^2 / (2 D_max), with
+# D_max ~ 1.3e-6 m^2/s near room temperature giving dt < ~1.5 s for dx = 2 mm.
+# 0.1 s gives a healthy margin and resolves the radiative transient at the
+# surface.
+timestep  = 2.0
+#stop_time = 1750.0
+stop_time = 1750.0
+
+amr.plot_int        = 10    # plot every 25 s -> 70 cell-plotfiles
+amr.max_level       = 0
+amr.n_cell          = 128 128 32
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.10 0.10 0.025
+geometry.is_periodic = 0 0 0
+
+# Thermoelastic coupling disabled (this is a thermal-only validation).
+alpha = 0.0 0.0
+
+#
+# MATERIAL: Zhang/Oglesby granite. Defaults in src/Numeric/Material/Zhang.H
+# already match Table 1, so no coefficients need restating.
+#
+material.type = zhang
+
+#
+# BEAM: Beer-Lambert + Gaussian with a piecewise-constant power schedule.
+# alpha_lambda chosen at 300 m^-1, the 137 GHz / granite figure cited in
+# main.tex Sec. 2.1 (between the 94 GHz and 140 GHz tabulated values).
+#
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3            # c / 137 GHz
+beam.x0         = 0.05
+beam.y0         = 0.05
+beam.z0         = 0.025
+beam.alpha_expr = 300
+beam.R          = 0.2
+
+# Power schedule from the summary file (W). schedule.t_end[i] is the END of
+# interval i in seconds; schedule.P[i] is the active power on that interval.
+beam.schedule.t_end = 150.0  390.0  510.0  750.0  850.0  1050.0  1200.0  1250.0  1750.0
+beam.schedule.P     = 800.0  1800.0 2300.0 2800.0 1700.0 2800.0  1700.0  3200.0  0.0
+# (P0 is unused when a schedule is supplied; left at the default 0.)
+
+#
+# SURFACE LOSSES (Zhang Table 1):
+#   eps = 0.7 below T_m, 0.3 above; h = 56 W/(m^2 K); T_amb = 297.5 K.
+#
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1510.5
+losses.sigma_SB      = 5.670374419e-8
+losses.h_conv        = 56.0
+losses.T_amb         = 297.5
+
+#
+# HEAT CONDUCTION: hc.heat.alpha is unused on the material path (κ/(ρcp)
+# comes from the material) but the base class still requires the key.
+# Initial T = T_amb everywhere; adiabatic Neumann on all faces (the surface
+# losses on the top face are applied as a volumetric source, not a BC flux).
+#
+hc.heat.alpha = 1.3e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 297.5
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY MODEL — present but inert (alpha_thermal = 0 zeroes thermal stress)
+#
+el.interval = 1000000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0
+
+solver = implicit
+implicit.tol_rel = 1e-8        # MG relative tolerance (default 1e-10)
+implicit.max_iter = 100         # MG iteration cap (default 100)
+implicit.verbose = 1   

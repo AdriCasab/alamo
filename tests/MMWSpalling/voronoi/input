@@ -1,0 +1,139 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 5: Voronoi mineral microstructure smoke + regression test.
+#
+# A short, thermally-trivial run that exercises only the microstructure
+# initialisation: the beam is off, no phase change, and stop_time is small.
+# The Python regression test reads the t=0 plotfile and verifies
+#   1. integrated cell-volume fractions match the requested mineral
+#      fractions {0.30, 0.50, 0.20} within ~5% (limited by grain count
+#      and grid resolution chosen for a fast test).
+#   2. is_gb marks every cell that has at least one face neighbour with a
+#      different phase ID (and zero elsewhere).
+#   3. the result is reproducible for the chosen seed.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/voronoi/output
+
+timestep  = 1.0
+stop_time = 1.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 64 64 32
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.05 0.05 0.025
+geometry.is_periodic = 0 0 0
+
+# Thermoelastic coupling disabled (microstructure-only test).
+alpha = 0.0 0.0
+
+#
+# MICROSTRUCTURE
+#
+microstructure.number_of_grains = 1000
+microstructure.seed             = 42
+microstructure.nphases          = 3
+
+microstructure.phase0.name              = quartz
+microstructure.phase0.fraction          = 0.30
+microstructure.phase0.kappa             = 7.7
+microstructure.phase0.beta              = 12.4e-6
+microstructure.phase0.E                 = 95.0e9
+microstructure.phase0.mu                = 44.0e9
+microstructure.phase0.rho               = 2650.0
+microstructure.phase0.Cp                = 730.0
+microstructure.phase0.alpha_attenuation = 300.0
+microstructure.phase0.A_D               = 1.0e6
+
+microstructure.phase1.name              = feldspar
+microstructure.phase1.fraction          = 0.50
+microstructure.phase1.kappa             = 2.3
+microstructure.phase1.beta              = 8.0e-6
+microstructure.phase1.E                 = 70.0e9
+microstructure.phase1.mu                = 28.0e9
+microstructure.phase1.rho               = 2620.0
+microstructure.phase1.Cp                = 700.0
+microstructure.phase1.alpha_attenuation = 250.0
+microstructure.phase1.A_D               = 1.5e6
+
+microstructure.phase2.name              = mica
+microstructure.phase2.fraction          = 0.20
+microstructure.phase2.kappa             = 2.0
+microstructure.phase2.beta              = 5.0e-6
+microstructure.phase2.E                 = 50.0e9
+microstructure.phase2.mu                = 20.0e9
+microstructure.phase2.rho               = 2800.0
+microstructure.phase2.Cp                = 760.0
+microstructure.phase2.alpha_attenuation = 350.0
+microstructure.phase2.A_D               = 0.5e6
+
+#
+# BEAM: power = 0 disables the source for this thermal-trivial test.
+#
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.025
+beam.y0         = 0.025
+beam.z0         = 0.025
+beam.alpha_expr = 300
+beam.R          = 0.0
+beam.P0         = 0.0
+
+#
+# Surface losses off.
+#
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 297.5
+
+#
+# HEAT CONDUCTION: constant-α path; small α and adiabatic BCs keep the
+# field essentially static during the single timestep we take.
+#
+hc.heat.alpha = 1.0e-12
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 297.5
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY MODEL — present but inert (alpha_thermal = 0).
+#
+el.interval = 1000000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

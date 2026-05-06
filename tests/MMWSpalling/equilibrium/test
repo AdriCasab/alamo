@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+# Verification of Step 4: surface losses (radiation + convection).
+#
+# Pass criterion: top-z-row temperature equals the analytic radiation balance
+#
+#     peak_intensity * alpha * exp(-alpha * dz/2) * dz
+#         = eps * sigma_SB * T_eq^4 + h * (T_eq - T_amb)
+#
+# to within 5%. With omega0 >> domain, the in-plane Gaussian is uniform across
+# the top face, so the prediction is independent of (x, y).
+
+import sys
+import os
+import glob
+import math
+
+import numpy as np
+import yt
+
+# Beam / loss parameters mirror the input file.
+P0      = math.pi * 1.0e6
+OMEGA0  = 1000.0
+ALPHA   = 2.0
+EPS     = 1.0
+SIGMA   = 1.0
+H_CONV  = 0.0
+T_AMB   = 0.0
+LZ      = 1.0
+NZ      = 32
+TOL     = 0.05
+
+dz = LZ / NZ
+peak_intensity = 2.0 * P0 / (math.pi * OMEGA0 * OMEGA0)
+Q_vol = peak_intensity * ALPHA * math.exp(-ALPHA * dz / 2.0)
+rhs   = Q_vol * dz
+
+# Solve eps * sigma * T^4 + h * (T - T_amb) = rhs.
+# With h = 0, T_eq = (rhs / (eps * sigma))^(1/4).
+if H_CONV == 0.0:
+    T_eq = (rhs / (EPS * SIGMA)) ** 0.25
+else:
+    from scipy.optimize import brentq
+    T_eq = brentq(lambda T: EPS*SIGMA*T**4 + H_CONV*(T - T_AMB) - rhs, T_AMB, 1.0e6)
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/equilibrium/output"
+plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+if not plotfiles:
+    print("FAIL: no cell plotfiles in", outdir)
+    sys.exit(1)
+final = plotfiles[-1]
+
+ds = yt.load(final)
+ad = ds.all_data()
+
+z = ad["z"].to_value()
+H = ad["H"].to_value()
+top_z = LZ - dz / 2.0
+on_top = np.abs(z - top_z) < dz * 0.1
+H_top = H[on_top]
+T_sim = float(np.mean(H_top))   # H == T when T_ref = 0 and no phase change
+
+err = abs(T_sim - T_eq) / T_eq
+print(f"Surface equilibrium: T_sim = {T_sim:.4f}, T_analytic = {T_eq:.4f}, "
+      f"relative error = {err*100:.2f}%")
+
+if err > TOL:
+    print(f"FAIL: error {err*100:.2f}% exceeds tolerance {TOL*100:.0f}%.")
+    sys.exit(1)
+print("PASS")
+sys.exit(0)

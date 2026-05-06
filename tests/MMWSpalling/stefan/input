@@ -1,0 +1,83 @@
+#@
+#@ [2d]
+#@ dim=2
+#@ check=true
+#@ exe=mmwspalling
+#@ args=stop_time=0.5
+#@
+
+# 1D Stefan problem (one-phase melting front).
+#   alpha = 1, T_ref = 0, T_m = 1, lh_m = 1, T_b = 2 at xlo, T_0 = T_m.
+#   Stefan number St = (T_b - T_m)/lh_m = 1.
+#   Analytic front position: x_m(t) = 2 lambda sqrt(alpha t), lambda ≈ 0.6201.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/stefan/output
+
+# Stable forward-Euler: dt < dx_min^2 / (2*d) with d = 3.
+# dx_x = 2.5/64 = 0.039, dx_y = dx_z = 0.625, dt_max ≈ 2.5e-4.
+timestep  = 1.0e-4
+stop_time = 0.5
+
+amr.plot_int        = 1000
+amr.max_level       = 0
+amr.n_cell          = 64 4 4
+amr.blocking_factor = 4
+amr.regrid_int      = 100000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+# y/z extent intentionally large so dx_y, dx_z don't tighten CFL.
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 2.5 2.5 2.5
+geometry.is_periodic = 0 1 1
+
+# Thermoelastic coupling disabled
+alpha = 0.0 0.0
+
+# Phase change: melting only (vap disabled)
+phase.T_ref = 0.0
+phase.T_m   = 1.0
+phase.lh_m  = 1.0
+
+#
+# HEAT CONDUCTION
+#
+hc.heat.alpha = 1.0
+hc.heat.refinement_threshold = 1.0
+
+# Initial T = T_m everywhere (one-phase Stefan; solid stays at T_m, liquid
+# grows from xlo as heat enters).
+hc.ic.type           = constant
+hc.ic.constant.value = 1.0
+
+# Hot Dirichlet T=2 at xlo, zero-flux elsewhere.
+hc.bc.temp.constant.type.xlo = dirichlet
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 2.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY MODEL — present but inert (alpha = 0 zeroes thermal stress)
+#
+el.interval = 10000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

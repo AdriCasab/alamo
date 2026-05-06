@@ -1,0 +1,88 @@
+#@
+#@ [2d]
+#@ dim=2
+#@ check=true
+#@ exe=mmwspalling
+#@ args=stop_time=1.0
+#@
+#@ [2d-coverage]
+#@ dim=2
+#@ check=false
+#@ exe=mmwspalling
+#@ args=stop_time=0.1
+#@ coverage=true
+#@
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/skeleton/output
+
+timestep = 0.01
+stop_time = 1.0
+
+amr.plot_int        = 10
+amr.max_level       = 1
+amr.n_cell          = 16 16 16
+amr.blocking_factor = 4
+amr.regrid_int      = 50
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = -8 -8 -8
+geometry.prob_hi     =  8  8  8
+geometry.is_periodic = 0 0 0
+
+# Thermoelastic coupling per model component
+alpha = 0.001 0.0
+
+# Phase-change defaults disable transitions for this smoke test
+# phase.T_m, phase.T_v default to 1e30
+
+#
+# HEAT CONDUCTION (reused from HeatConduction integrator)
+#
+hc.heat.alpha = 1.0
+hc.heat.refinement_threshold = 0.1
+
+hc.ic.type = sphere
+hc.ic.sphere.center = 0.5 0.5 0.5
+hc.ic.sphere.radius = 0.25
+hc.ic.sphere.inside = 0.0
+
+hc.bc.temp.constant.type.xhi = dirichlet
+hc.bc.temp.constant.type.xlo = dirichlet
+hc.bc.temp.constant.type.yhi = dirichlet
+hc.bc.temp.constant.type.ylo = dirichlet
+hc.bc.temp.constant.type.zhi = dirichlet
+hc.bc.temp.constant.type.zlo = dirichlet
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.xlo  = 1.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 1.0
+hc.bc.temp.constant.val.zhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 1.0
+
+#
+# ELASTICITY MODEL
+#
+el.interval = 10
+
+el.ic.type        = ellipse
+el.ic.ellipse.a   = 3.0 3.0 3.0
+el.ic.ellipse.x0  = 0 0 0
+el.ic.ellipse.eps = 0.8
+
+el.bc.type = constant
+
+el.nmodels = 2
+el.model1.E  = 210
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.model2.E  = 210
+el.model2.nu = 0.3
+el.model2.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 5E-5
+el.eta_ref_threshold = 5E-5

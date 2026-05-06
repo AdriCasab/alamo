@@ -1,0 +1,123 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 9: grain-boundary cohesive-zone bilinear unit test.
+#
+# Each cell column along x is its own grain (grain_expr = floor(64*x)) so
+# every cell is flagged as is_grain_boundary. The prescribed-delta driver
+# imposes a deterministic opening that sweeps the full bilinear envelope
+# across x and exercises monotonic loading, unloading, and reloading
+# across the four advance steps:
+#
+#   advance 1 (time=0): delta = 1.5 * x   (partial loading, peak at x=2/3)
+#   advance 2 (time=1): delta = 3.0 * x   (full sweep, x=1/3 -> peak,
+#                                          x=2/3 -> delta_max,
+#                                          x>2/3  -> failed)
+#   advance 3 (time=2): delta = 0.4 * x   (unloading; history unchanged)
+#   advance 4 (time=3): delta = 0.7 * x   (partial reload; history unchanged)
+#
+# Calibration: K_n = 1.0, delta_c = 1.0, delta_max = 2.0, peak f_t = 1.0,
+# fracture energy G_c = 0.5 * f_t * delta_max = 1.0.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/gb_cohesive/output
+
+timestep  = 1.0
+stop_time = 4.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 64 4 4
+amr.blocking_factor = 2
+amr.max_grid_size   = 32
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 1.0 1.0 1.0
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.grain_expr = floor(64*x)
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = uniform
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.0
+microstructure.phase0.beta              = 0.0
+microstructure.phase0.E                 = 1.0
+microstructure.phase0.mu                = 0.4
+microstructure.phase0.rho               = 1.0
+microstructure.phase0.Cp                = 1.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+cohesive.enabled = 1
+cohesive.K_n     = 1.0
+cohesive.delta_c   = 1.0
+cohesive.delta_max = 2.0
+cohesive.prescribed_delta.enabled = 1
+cohesive.prescribed_delta.expr    = "(t<1)*1.5*x+((t>=1)*(t<2))*3.0*x+((t>=2)*(t<3))*0.4*x+(t>=3)*0.7*x"
+
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 1
+beam.R          = 0.0
+beam.P0         = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 300.0
+
+hc.heat.alpha = 1.0e-12
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 300.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1000000
+el.bc.type  = constant
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.25
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+el.solver.max_iter = 50
+el.solver.tol_rel  = 1.0e-8
+el.solver.tol_abs  = 1.0e-8
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

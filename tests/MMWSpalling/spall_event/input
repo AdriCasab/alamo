@@ -1,0 +1,128 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 10: spall surface advancement and detachment unit test (event case).
+#
+# A 4x4 (x,y) grid with 8 cells in z. The top half (z>=0.5) is initialised
+# with D=1.0 via damage.ic so every column's top material cell satisfies
+# the damage threshold. The prescribed-ratio hook returns 10.0 > xi_s=8,
+# so every (i,j) column triggers a spall event.
+#
+# Calibration: dz = 1/8 = 0.125, alpha = 1.0, t_spall = 1.0, C_h = 0.25,
+# so h_spall = 0.25 = 2*dz. The top two cells of every column detach: their
+# new phi falls below zero, removed flips to 1, D resets to 0, and Temp
+# resets to T_amb. The new surface mask sits at k = 5 (formerly the third
+# cell from the top).
+#
+# Damage evolution is disabled — D is held at the IC value — so this test
+# isolates the geometry/removal bookkeeping from the elastic-stress driver.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/spall_event/output
+
+timestep  = 1.0
+stop_time = 1.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 4 4 8
+amr.blocking_factor = 2
+amr.max_grid_size   = 8
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 1.0 1.0 1.0
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = uniform
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.0
+microstructure.phase0.beta              = 0.0
+microstructure.phase0.E                 = 1.0
+microstructure.phase0.mu                = 0.4
+microstructure.phase0.rho               = 1.0
+microstructure.phase0.Cp                = 1.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 300.0
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+damage.ic.type                  = expression
+damage.ic.expression.coord      = cartesian
+damage.ic.expression.region0    = "(z>=0.5)"
+
+spall.enabled                     = 1
+spall.damage_threshold            = 0.99
+spall.xi_s                        = 8.0
+spall.C_h                         = 0.25
+spall.alpha                       = 1.0
+spall.t_spall                     = 1.0
+spall.prescribed_ratio.enabled    = 1
+spall.prescribed_ratio.expr       = "10.0"
+
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.alpha_expr = 1
+beam.R          = 0.0
+beam.P0         = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 300.0
+
+hc.heat.alpha = 1.0e-12
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 500.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1000000
+el.bc.type  = constant
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.25
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+el.solver.max_iter = 50
+el.solver.tol_rel  = 1.0e-8
+el.solver.tol_abs  = 1.0e-8
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0
