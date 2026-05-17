@@ -1,0 +1,185 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 18 (Kant 2017 confining-pressure sweep) -- BASE input.
+#
+# Reproduces sp_kant_onset/input_verification verbatim with the addition
+# of `confining.p = 0` (Step 18 NEW). The Python harness drives three
+# variants by overriding `confining.p` and `plot_file` on the mpirun
+# command line:
+#   - p = 0 MPa  -> output/p0
+#   - p = 27 MPa -> output/p27
+#   - p = 48 MPa -> output/p48
+#
+# Kant Eq. 15 with confining pressure (kant-2017-central-aare-validation-
+# reference.md line 96):
+#   Theta_onset = (1-nu)/(E*alpha) * [ K_Ic/(2*1.763*sqrt(a/pi)) - p*nu/(1-nu) ]
+#
+# Under sp_weibull, confining.p adds +p*nu/(1-nu) to compression-positive
+# sigma_xx in BOTH the UpdateSpAfterMechanics Sp_field path and the
+# Step 16d k_i_at_zcrack depth scan. Default 0 here ensures the p = 0
+# case matches sp_kant_onset/input_verification byte-identically.
+#
+# Frozen K_Ic0 = 1.5 MPa.m^0.5 (Kant Table 1) is the K_Ic used for the
+# 390-560 C predicted band; T_melt = 1e9 K makes the linear law
+# effectively constant. Lateral roller box + full-face flame heating
+# enforces eps_xx = eps_yy = 0 (Kant's 1-D confinement) exactly.
+# stop_time = 48 s covers the onset for all three pressures (Eq.15
+# predicts 446, 421, 401 C at p = 0, 27, 48 MPa; onset times shift
+# slightly earlier as p increases).
+
+alamo.program = mmwspalling
+
+# plot_file overridden by the harness per case.
+plot_file = tests/MMWSpalling/sp_kant_pressure_sweep/output/p0
+
+timestep  = 0.1
+stop_time = 48.0
+
+amr.plot_int        = 5
+amr.max_level       = 0
+amr.n_cell          = 24 24 24
+amr.blocking_factor = 2
+amr.max_grid_size   = 12
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.024 0.024 0.024
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = central_aare
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 2.50
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 35.0e9
+microstructure.phase0.mu                = 13.8888888889e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 800.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+spallation.model          = sp_weibull
+spallation.sp.a0          = 20.0e-6
+spallation.sp.n_segments  = 128
+
+spallation.sp.kic.law    = linear
+spallation.sp.kic.K_Ic0  = 1.5
+spallation.sp.kic.T_ref  = 293.15
+spallation.sp.kic.T_melt = 1.0e9
+
+# Step 18: confining-pressure (Pa). Default 0 here; harness overrides
+# per case (0, 27e6, 48e6 Pa).
+confining.p = 0.0
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.012
+beam.y0     = 0.012
+beam.z0     = 0.024
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 293.15
+
+surface_patch.enabled = 1
+surface_patch.mode    = convective_flame
+surface_patch.face    = zhi
+surface_patch.x0      = 0.012
+surface_patch.y0      = 0.012
+surface_patch.radius  = 0.05
+surface_patch.h_conv  = 150.0
+surface_patch.T_flame = 1673.15
+surface_patch.T_ext   = 293.15
+
+hc.heat.alpha = 1.1882129e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.print_model = 0
+
+# Kant-style lateral roller box (eps_xx = eps_yy = 0 exactly).
+el.bc.type = constant
+el.bc.constant.type.xlo = disp trac trac
+el.bc.constant.type.xhi = disp trac trac
+el.bc.constant.type.ylo = trac disp trac
+el.bc.constant.type.yhi = trac disp trac
+el.bc.constant.type.zlo = trac trac disp
+el.bc.constant.type.zhi = trac trac trac
+el.bc.constant.type.xloylo = disp disp trac
+el.bc.constant.type.xloyhi = disp disp trac
+el.bc.constant.type.xhiylo = disp disp trac
+el.bc.constant.type.xhiyhi = disp disp trac
+el.bc.constant.type.ylozlo = trac disp disp
+el.bc.constant.type.ylozhi = trac disp trac
+el.bc.constant.type.yhizlo = trac disp disp
+el.bc.constant.type.yhizhi = trac disp trac
+el.bc.constant.type.zloxlo = disp trac disp
+el.bc.constant.type.zloxhi = disp trac disp
+el.bc.constant.type.zhixlo = disp trac trac
+el.bc.constant.type.zhixhi = disp trac trac
+el.bc.constant.type.xloylozlo = disp disp disp
+el.bc.constant.type.xloylozhi = disp disp trac
+el.bc.constant.type.xloyhizlo = disp disp disp
+el.bc.constant.type.xloyhizhi = disp disp trac
+el.bc.constant.type.xhiylozlo = disp disp disp
+el.bc.constant.type.xhiylozhi = disp disp trac
+el.bc.constant.type.xhiyhizlo = disp disp disp
+el.bc.constant.type.xhiyhizhi = disp disp trac
+
+el.nmodels = 1
+el.model1.E  = 35.0e9
+el.model1.nu = 0.26
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 1.0e-6
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level  = 2
+
+solver = explicit

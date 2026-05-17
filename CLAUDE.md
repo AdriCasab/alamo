@@ -4,30 +4,66 @@ This file is the small entry point for Claude. Keep it short. The long project
 plan remains in `in-main-tex-you-will-quizzical-treasure.md`, but Claude should
 not read that file by default.
 
+## Three-Phase Workflow
+
+This project is driven by three separate Claude invocations. Each one is a
+slash command defined under `.claude/commands/`. The same Claude does all
+three roles, but each phase is a fresh call with a focused responsibility.
+
+1. **`/plan`** — Planner. Reads the long sources, archives any completed
+   step, and rewrites `ACTIVE_STEP.md` so the next coding step is fully
+   specified. Does not write production code.
+2. **`/implement`** — Implementer. Reads `ACTIVE_STEP.md` and writes the
+   code, tests, and regressions. Updates `ACTIVE_STEP.md` with completion
+   notes and takeaways at the end. Does not rewrite the next packet.
+3. **`/verify`** — Reviewer. Verifies the implementer's output against
+   `ACTIVE_STEP.md`. Writes a `## Review findings` section with an
+   `accepted` or `rejected` verdict. On rejection, the user re-runs `/plan`
+   to revise the packet. The reviewer does not edit code or rewrite the
+   packet itself.
+
+Run them in separate Claude sessions. Each command's spec lives in
+`.claude/commands/<phase>.md` and contains the full phase instructions.
+
+The typical loop:
+
+```
+/plan       -> ACTIVE_STEP.md is fresh and ready
+/implement  -> code + tests + completion notes
+/verify     -> accepted | rejected
+  if accepted: /plan (archives + preps next step)
+  if rejected: /plan (revises ACTIVE_STEP.md, then /implement again)
+```
+
 ## Context Loading Order
 
 After opening this file, read only these additional files by default:
 
-1. `ROADMAP.md` - current status, active milestone, and next milestones.
-2. `ACTIVE_STEP.md` - the detailed task packet for the next coding step.
+1. `ROADMAP.md` — current status, active milestone, and next milestones.
+2. `ACTIVE_STEP.md` — the detailed task packet for the active coding step.
 
 Then use the project rules, commands, ALAMO gotchas, and guardrails below.
 
-Open the long/reference files only when the active task explicitly requires
+Open the long/reference files only when the active phase explicitly requires
 them or the user asks:
 
-- `in-main-tex-you-will-quizzical-treasure.md` - full historical plan and
-  checklist. Treat as the long source of truth, not default context.
-- `main.tex` - full physics proposal and equations. Prefer the relevant
+- `in-main-tex-you-will-quizzical-treasure.md` — full historical plan and
+  checklist. The planner phase reads slices of this; the implementer should
+  not need it.
+- `main.tex` — full physics proposal and equations. Prefer the relevant
   excerpts already distilled into `ACTIVE_STEP.md`.
-- `zhang_oglesby_mmw_validation_summary.txt` - Zhang/Oglesby MMW thermal
+- `zhang_oglesby_mmw_validation_summary.txt` — Zhang/Oglesby MMW thermal
   validation reference.
-- `hu_thermal_spallation_validation_tests_augmented_vv_framework.txt` - Hu
+- `hu_thermal_spallation_validation_tests_augmented_vv_framework.txt` — Hu
   prescribed-temperature, thermoelastic, breakage, and LRST validation data.
-- `kant_von_rohr_validation_test_for_mmwspalling_plan.txt` - Kant/von Rohr
+- `kant_von_rohr_validation_test_for_mmwspalling_plan.txt` — Kant/von Rohr
   flame-spallation threshold validation data.
-- `docs/paper/paper.md` - ALAMO architecture paper; use only for ALAMO design
+- `docs/paper/paper.md` — ALAMO architecture paper; use only for ALAMO design
   background.
+- `ARCHIVE_DONE.md` — completed-step history. Read only for debugging
+  regressions or when the planner is updating project context.
+- `AGENTS.md` — historical record of the prior Codex+Claude split workflow.
+  Kept for reference; not active.
 
 ## Project Goal
 
@@ -36,24 +72,6 @@ enthalpy heat conduction, Gaussian/Beer-Lambert MMW source, surface losses,
 Voronoi mineral microstructure, thermoelastic stress, Drucker-Prager damage,
 grain-boundary/cohesive effects, material removal by spallation or vaporisation,
 and staged validation tests.
-
-Claude does the coding. Codex periodically rewrites `ACTIVE_STEP.md`, updates
-`ROADMAP.md`, and archives completed work so Claude does not need to ingest the
-full project history on every session.
-
-## End-of-Task Handoff
-
-When you complete the active coding step, update `ACTIVE_STEP.md` before ending
-the session:
-
-- Mark the step status as completed.
-- Add a short `Claude completion notes` section with the files changed, tests
-  run, test result, and any tests not run.
-- Add a short `Implementation takeaways` section with gotchas, design choices,
-  input names, changed assumptions, or caveats that Codex should preserve in
-  `ARCHIVE_DONE.md`, `ROADMAP.md`, or the next active task.
-- Do not rewrite the next step yourself unless the user asks. Codex will read
-  those notes later and regenerate the planning files.
 
 ## ALAMO Architecture Notes
 
@@ -109,14 +127,29 @@ mpirun --oversubscribe --bind-to none -np 4 \
 
 # Regression check.
 python3 tests/MMWSpalling/<step>/test tests/MMWSpalling/<step>/output
+# Or, if the test needs numpy/yt on this machine:
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/<step>/test
 ```
 
 ## Do Not Touch
 
-- `ext/` - vendored AMReX and Eigen sources.
-- `bin/`, `obj/`, `build/` - build artefacts managed by `make`.
-- `compile_commands.json` - auto-generated.
-- `configure` - generated configuration script.
-- `LICENSE` - leave as-is.
+- `ext/` — vendored AMReX and Eigen sources.
+- `bin/`, `obj/`, `build/` — build artefacts managed by `make`.
+- `compile_commands.json` — auto-generated.
+- `configure` — generated configuration script.
+- `LICENSE` — leave as-is.
 - Existing unrelated integrators unless the active step explicitly requires a
   small, justified integration point.
+
+## Context Budget Rules
+
+- Keep `CLAUDE.md` short and operational.
+- Keep `ROADMAP.md` short enough to read every session.
+- Put detailed completed history in `ARCHIVE_DONE.md`, not `ROADMAP.md`.
+- Keep each completed-step summary in
+  `in-main-tex-you-will-quizzical-treasure.md` to 20 lines or fewer.
+- Put only the current coding packet in `ACTIVE_STEP.md`.
+- Include equations, constants, file paths, validation criteria, and guardrails
+  in `ACTIVE_STEP.md` when the implementer needs them.
+- Prefer summaries and exact pointers over copying large blocks from `main.tex`
+  or the validation references.

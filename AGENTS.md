@@ -1,5 +1,10 @@
 # AGENTS.md
 
+> **Historical document.** This file describes the previous Codex+Claude
+> split workflow and is no longer active. The live workflow is documented in
+> `CLAUDE.md` and the slash commands under `.claude/commands/`
+> (`/plan`, `/implement`, `/review`). Keep this file for reference only.
+
 Codex restart instructions for this thermal-spallation project.
 
 ## Role Split

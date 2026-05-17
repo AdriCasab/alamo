@@ -1,0 +1,139 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 12c: Kant 2017 closed-form Sp = K_I/K_Ic verification for the
+# sp_weibull branch. Constant-property Central Aare granite, beam off,
+# mechanics on (static). The sigma_xx field that feeds the K_I integral is
+# driven directly by spallation.sp.prescribed_stress so the test isolates the
+# K_I integrator and K_Ic(T) interpolator from FEM-stress-field noise. The
+# Python regression compares ALAMO's Sp_field to the analytic closed-form
+# computed from the same parser expressions and the same Nasseri 2007
+# K_Ic(T) table (Central-Aare-scaled by 1.05 per
+# revised-model-approach.md s11).
+#
+# Step 15b: the K_I integrand now consumes -sigma_xx (compression-positive).
+# The prescribed xx_expr below is therefore a COMPRESSIVE (negative)
+# tension-positive sigma_xx, and the verification confirms a compressive
+# heated surface yields K_I > 0 / Sp > 0 -- the sign convention from
+# long-plan s12b that the original (self-consistent, tensile) test could
+# not catch. weibull.enabled stays off here: this is the deterministic-a0
+# path.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/sp_onset_kant_closed_form/output
+
+timestep  = 0.5
+stop_time = 10.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 20 20 20
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.01 0.01 0.01
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# One-phase homogeneous "Central Aare granite" microstructure. Properties
+# from revised-model-approach.md s11; E and nu pick midpoints of the
+# published bracket.
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = central_aare
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 2.50
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 35.0e9
+microstructure.phase0.mu                = 14.7058823529e9
+microstructure.phase0.rho               = 2700.0
+microstructure.phase0.Cp                = 820.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 298.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# Spallation toggle: LEFM Sp branch.
+spallation.model                              = sp_weibull
+spallation.sp.a0                              = 20.0e-6
+spallation.sp.n_segments                      = 128
+spallation.sp.kic.law                         = nasseri_table
+spallation.sp.kic.scale                       = 1.05
+# Closed-form sigma_xx and T_surface drivers (12c verification path).
+spallation.sp.prescribed_stress.enabled       = 1
+spallation.sp.prescribed_stress.xx_expr       = -50.0e6*(1.0-exp(-t/5.0))
+spallation.sp.prescribed_T_surface.enabled    = 1
+spallation.sp.prescribed_T_surface.expr       = 298.15+30.0*t
+
+beam.P0     = 0.0
+beam.omega0 = 0.005
+beam.lambda = 2.19e-3
+beam.x0     = 0.005
+beam.y0     = 0.005
+beam.z0     = 0.01
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 298.15
+
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 298.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = zlo_roller_321
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 35.0e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 1.0e-6
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level  = 2
+
+solver = explicit

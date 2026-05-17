@@ -1,0 +1,370 @@
+#!/usr/bin/env python3
+# Step 18 (Kant 2017 confining-pressure sweep): Central Aare granite spall
+# onset under three confining pressures p in {0, 27, 48} MPa with the new
+# `confining.p` parser key. Closes the revised-approach Stage 5 Kant
+# validation chain (12c integrator unit -> 15b p=0 onset -> 15c sensitivity
+# -> 18 pressure sweep).
+#
+# Kant Eq. 15 with confining pressure (kant-2017-central-aare-validation-
+# reference.md line 96):
+#   Theta_onset = (1-nu)/(E*alpha) * [ K_Ic/(2*1.763*sqrt(a/pi))
+#                                      - p*nu/(1-nu) ]
+# Under 1-D-confined geometry (lateral roller box + full-face flame
+# heating), the confining pressure contributes +p*nu/(1-nu) to the
+# compression-positive sigma_xx that the K_I integrand sees -- same
+# offset added to the Path A/Path B sigma_xx lambdas in MMWSpalling.H.
+#
+# A SINGLE base input (`input`) drives all three sims; the harness
+# overrides `confining.p` and `plot_file` on the mpirun command line.
+# Default confining.p = 0 in the base input is the byte-identity guarantee
+# (existing sp_kant_onset/input_verification onset at 461.3 C must NOT
+# shift under the new code path).
+#
+# PASS gates:
+#   R1 (binding):  for each p in {0, 27, 48} MPa,
+#                    |dT_FEM(p) - dT_Eq15(p)| / dT_Eq15(p) <= 0.08
+#                    (matches §15b target 3 tolerance).
+#   R2 (binding):  dT_FEM(p=0) > dT_FEM(p=27) > dT_FEM(p=48) strictly.
+#   R3 (info):     dT_FEM(p=0) in Kant Table-2 predicted band 390-560 C.
+#   R4 (info):     FEM slope dT/dp matches Eq.15 slope -nu/(E*alpha)
+#                  = -0.9286 K/MPa within 20%.
+# Kant's measured spall window 553-694 C at p=0 is shown as a literature
+# anchor; NOT scored against (kant-2017-central-aare-validation-
+# reference.md line 116-119: measured anchor is biased high by the
+# pyrometer's miss of the first small spall).
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "sp_kant_pressure_sweep")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+BASE_INPUT = os.path.join(TEST_DIR, "input")
+OUT_ROOT = os.path.join(TEST_DIR, "output")
+
+# --- constants, mirror the input file --------------------------------------
+T_I    = 293.15
+E      = 35.0e9
+NU     = 0.26
+ALPHA  = 8.0e-6
+A_FLAW = 20.0e-6
+I_FK   = 1.763
+KIC0_PA = 1.5e6
+
+# Kant predicted band (Table 2) and measured anchor (NOT a gate).
+BAND_LO, BAND_HI = 390.0, 560.0
+MEAS_LO, MEAS_HI = 553.0, 694.0
+
+TOL_EQ15  = 0.08    # R1: FEM onset dT vs Kant Eq. 15
+TOL_SLOPE = 0.20    # R4: FEM slope vs closed-form -nu/(E*alpha)
+
+
+def theta15(p_pa, kic_pa=KIC0_PA, a=A_FLAW, e=E, nu=NU, alpha=ALPHA):
+    """Kant Eq. 15 onset dT with frozen K_Ic and confining pressure p (Pa)."""
+    return (1.0 - nu) / (e * alpha) * (
+        kic_pa / (2.0 * I_FK * math.sqrt(a / math.pi))
+        - p_pa * nu / (1.0 - nu)
+    )
+
+
+def eq15_slope_K_per_MPa():
+    """Eq. 15 closed-form slope dTheta/dp -- linear in p under frozen K_Ic."""
+    # d/dp[ -(1-nu)/(E*alpha) * p*nu/(1-nu) ] = -nu/(E*alpha) (per Pa)
+    return -NU / (E * ALPHA) * 1.0e6  # K per MPa
+
+
+CASES = [
+    {
+        "label": "p = 0 MPa",
+        "p_pa": 0.0,
+        "tag":  "p0",
+    },
+    {
+        "label": "p = 27 MPa",
+        "p_pa": 27.0e6,
+        "tag":  "p27",
+    },
+    {
+        "label": "p = 48 MPa",
+        "p_pa": 48.0e6,
+        "tag":  "p48",
+    },
+]
+
+
+def case_outdir(case):
+    return os.path.join(OUT_ROOT, case["tag"])
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo(case):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    outdir = case_outdir(case)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    plot_rel = os.path.relpath(outdir, ROOT)
+    cmd = [
+        "mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+        BIN, BASE_INPUT,
+        f"confining.p={case['p_pa']}",
+        f"plot_file={plot_rel}",
+    ]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run for {case['label']} exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def np_(arr):
+    return np.asarray(arr.to_value() if hasattr(arr, "to_value") else arr)
+
+
+def top_slab(path):
+    """Return the top-z surface plane from a cell plotfile."""
+    ds = yt.load(path)
+    ad = ds.all_data()
+    x = np_(ad["x"]); y = np_(ad["y"]); z = np_(ad["z"])
+    top = np.isclose(z, z.max(), atol=1.0e-9)
+    return {
+        "t": float(ds.current_time),
+        "x": x[top], "y": y[top],
+        "Sp": np_(ad["Sp_field"])[top],
+        "dT": np_(ad["Temp"])[top] - T_I,
+    }
+
+
+def onset_homogeneous(outdir):
+    """First crossing of max(Sp) >= 1; interpolate onset dT between the
+    bracketing plotfiles. Returns None if no plotfiles exist."""
+    files = plotfiles(outdir)
+    if not files:
+        return None
+    series = []
+    for p in files:
+        s = top_slab(p)
+        series.append((s["t"], float(np.max(s["Sp"])), float(np.mean(s["dT"]))))
+    prev = None
+    for (t, mx, dT) in series:
+        if mx >= 1.0:
+            if prev is None:
+                return {"t": t, "dT": dT, "maxSp": mx, "series": series}
+            t0, mx0, dT0 = prev
+            f = (1.0 - mx0) / (mx - mx0) if mx > mx0 else 1.0
+            return {"t": t0 + f * (t - t0),
+                    "dT": dT0 + f * (dT - dT0),
+                    "maxSp": 1.0, "series": series}
+        prev = (t, mx, dT)
+    return {"t": None, "dT": None, "maxSp": series[-1][1], "series": series}
+
+
+def main():
+    manual = len(sys.argv) > 1
+    if not manual:
+        for case in CASES:
+            run_alamo(case)
+
+    print()
+    print("=" * 70)
+    print("Step 18: Kant 2017 confining-pressure sweep validation")
+    print("=" * 70)
+
+    # --- Eq. 15 closed-form references (frozen K_Ic0 = 1.5) ----------------
+    refs = [theta15(c["p_pa"]) for c in CASES]
+    slope_eq15 = eq15_slope_K_per_MPa()
+    print("\nKant Eq. 15 closed-form predictions (frozen K_Ic0 = 1.5):")
+    for c, r in zip(CASES, refs):
+        print(f"  p = {c['p_pa']*1e-6:5.1f} MPa  -> Theta_onset = {r:6.1f} C")
+    print(f"  slope dTheta/dp = {slope_eq15:.4f} K/MPa")
+
+    # --- per-case FEM onset ------------------------------------------------
+    fem_dT = []
+    fem_t  = []
+    onsets = []
+    for case in CASES:
+        outdir = case_outdir(case)
+        onset = onset_homogeneous(outdir)
+        if onset is None or onset.get("dT") is None:
+            print(f"\nFAIL: {case['label']} run never reached Sp >= 1")
+            fem_dT.append(float("nan"))
+            fem_t.append(float("nan"))
+            onsets.append(None)
+        else:
+            fem_dT.append(float(onset["dT"]))
+            fem_t.append(float(onset["t"]))
+            onsets.append(onset)
+
+    ok = True
+
+    # --- R1 (binding): FEM within 8% of Eq.15 at each p --------------------
+    print("\n[R1 binding] FEM onset dT vs Kant Eq. 15 (tol "
+          f"{TOL_EQ15*100:.0f}%):")
+    for c, fdT, ref in zip(CASES, fem_dT, refs):
+        if math.isnan(fdT):
+            ok = False
+            print(f"  {c['label']:>10s}: FEM = nan  Eq.15 = {ref:6.1f} C  "
+                  f"-- FAIL (no onset)")
+            continue
+        err = abs(fdT - ref) / ref
+        verdict = "PASS" if err <= TOL_EQ15 else "FAIL"
+        if err > TOL_EQ15:
+            ok = False
+        print(f"  {c['label']:>10s}: FEM = {fdT:6.1f} C  Eq.15 = {ref:6.1f} C  "
+              f"|err| = {err*100:4.1f}%  -- {verdict}")
+
+    # --- R2 (binding): strict monotone decrease ----------------------------
+    print("\n[R2 binding] strict monotone decrease in p:")
+    if any(math.isnan(d) for d in fem_dT):
+        ok = False
+        print("  FAIL: missing FEM onset; cannot evaluate monotonicity")
+    else:
+        d0, d27, d48 = fem_dT
+        mono = (d0 > d27) and (d27 > d48)
+        verdict = "PASS" if mono else "FAIL"
+        if not mono:
+            ok = False
+        print(f"  dT(0) = {d0:.1f} > dT(27) = {d27:.1f} > dT(48) = {d48:.1f}  "
+              f"-- {verdict}")
+
+    # --- R3 (informational): p=0 in Kant predicted band [390, 560] ---------
+    print(f"\n[R3 info] p=0 FEM onset dT in Kant Table-2 band "
+          f"[{BAND_LO:.0f}, {BAND_HI:.0f}] C:")
+    d0 = fem_dT[0]
+    if math.isnan(d0):
+        print("  SKIP: p=0 FEM onset unavailable")
+    else:
+        in_band = BAND_LO <= d0 <= BAND_HI
+        print(f"  dT(0) = {d0:.1f} C  -- {'IN band' if in_band else 'OUT of band'} "
+              f"({'pass' if in_band else 'fail'} informational)")
+
+    # --- R4 (informational): slope match -----------------------------------
+    print(f"\n[R4 info] FEM slope dT/dp vs Eq.15 slope {slope_eq15:.4f} K/MPa "
+          f"(tol {TOL_SLOPE*100:.0f}%):")
+    if any(math.isnan(d) for d in fem_dT):
+        print("  SKIP: missing FEM onset; cannot fit slope")
+        slope_fem = float("nan")
+    else:
+        p_MPa = np.array([c["p_pa"] * 1e-6 for c in CASES])
+        dT_arr = np.array(fem_dT)
+        slope_fem, intercept_fem = np.polyfit(p_MPa, dT_arr, 1)
+        rel_slope_err = (abs(slope_fem - slope_eq15) / abs(slope_eq15)
+                         if abs(slope_eq15) > 0 else float("inf"))
+        verdict = "pass" if rel_slope_err <= TOL_SLOPE else "fail"
+        print(f"  FEM slope = {slope_fem:.4f} K/MPa  (rel err "
+              f"{rel_slope_err*100:.1f}% vs Eq.15)  -- {verdict} informational")
+
+    # --- Anchor (no gate): Kant measured 553-694 C at p=0 ------------------
+    print(f"\n[anchor, NO gate] Kant measured spall window at p=0 "
+          f"[{MEAS_LO:.0f}, {MEAS_HI:.0f}] C  -- pyrometer-biased "
+          f"(reference §6.2); reported only.")
+
+    plot_results(CASES, fem_dT, fem_t, refs, slope_eq15)
+
+    print()
+    print("=" * 70)
+    print("PASS" if ok else "FAIL")
+    return 0 if ok else 1
+
+
+def plot_results(cases, fem_dT, fem_t, refs, slope_eq15):
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("(matplotlib not installed - skipping PNG plot)")
+        return
+
+    p_MPa = np.array([c["p_pa"] * 1e-6 for c in cases])
+
+    fig, axes = plt.subplots(1, 4, figsize=(18.0, 4.4))
+
+    # Panel 1: dT_FEM vs p, with Eq.15 line + Kant bands
+    ax = axes[0]
+    p_grid = np.linspace(0.0, 60.0, 200)
+    eq15_line = np.array([theta15(p * 1.0e6) for p in p_grid])
+    ax.axhspan(BAND_LO, BAND_HI, color="C2", alpha=0.20,
+               label=f"Kant predicted [{BAND_LO:.0f}, {BAND_HI:.0f}] C")
+    ax.axhspan(MEAS_LO, MEAS_HI, color="0.6", alpha=0.20,
+               label=f"Kant measured anchor [{MEAS_LO:.0f}, {MEAS_HI:.0f}] C")
+    ax.plot(p_grid, eq15_line, "k--", lw=1.2, label="Kant Eq. 15 (frozen K_Ic0)")
+    finite = np.array([not math.isnan(d) for d in fem_dT])
+    if finite.any():
+        ax.plot(p_MPa[finite], np.array(fem_dT)[finite], "o", color="C0",
+                ms=8, label="ALAMO FEM")
+    for p, d, ref in zip(p_MPa, fem_dT, refs):
+        if not math.isnan(d):
+            ax.annotate(f"{d:.0f}", (p, d), textcoords="offset points",
+                        xytext=(8, 4), fontsize=8, color="C0")
+    ax.set_xlabel("confining pressure p [MPa]")
+    ax.set_ylabel("onset dT [C]")
+    ax.set_title("Step 18: dT_onset(p)")
+    ax.set_xlim([-2.0, 55.0])
+    ax.legend(fontsize=7, loc="lower left")
+    ax.grid(alpha=0.3)
+
+    # Panel 2-4: per-case top-slice Sp_field map at the bracketing plotfile
+    for i, case in enumerate(cases):
+        ax = axes[1 + i]
+        outdir = case_outdir(case)
+        files = plotfiles(outdir)
+        if not files:
+            ax.set_axis_off()
+            ax.set_title(f"{case['label']} (no plotfiles)")
+            continue
+        # First plotfile where any cell has Sp >= 1
+        target_path = files[-1]
+        for p in files:
+            s = top_slab(p)
+            if np.any(s["Sp"] >= 1.0):
+                target_path = p
+                break
+        s = top_slab(target_path)
+        sc = ax.scatter(s["x"] * 1e3, s["y"] * 1e3, c=s["Sp"], s=60,
+                        cmap="viridis", marker="s", vmin=0.0, vmax=1.2)
+        fire = s["Sp"] >= 1.0
+        n_fire = int(np.count_nonzero(fire))
+        ax.scatter(s["x"][fire] * 1e3, s["y"][fire] * 1e3,
+                   facecolors="none", edgecolors="red", s=90, linewidths=1.4,
+                   label=f"firing ({n_fire})")
+        plt.colorbar(sc, ax=ax, label="Sp")
+        ax.set_xlabel("x [mm]")
+        ax.set_ylabel("y [mm]")
+        ax.set_title(f"{case['label']}: t = {s['t']:.1f} s")
+        ax.set_aspect("equal")
+        if n_fire > 0:
+            ax.legend(fontsize=7, loc="upper right")
+
+    fig.tight_layout()
+    os.makedirs(OUT_ROOT, exist_ok=True)
+    out_png = os.path.join(OUT_ROOT, "comparison.png")
+    fig.savefig(out_png, dpi=140)
+    print(f"\nwrote {out_png}")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

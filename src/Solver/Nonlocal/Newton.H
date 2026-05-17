@@ -353,6 +353,15 @@ public:
         return 0.0;
     }
 
+    Set::Scalar solve(const Set::Field<Set::Vector>& a_u_mf,
+        const Set::Field<Set::Vector>& a_b_mf,
+        Set::Field<T>& a_model_mf)
+    {
+        const Real rel = (tol_rel >= 0.0) ? tol_rel : 1.0e-8;
+        const Real abs = (tol_abs >= 0.0) ? tol_abs : 1.0e-8;
+        return solve(a_u_mf, a_b_mf, a_model_mf, rel, abs);
+    }
+
     Set::Scalar solve(const Set::Field<Set::Scalar>& a_u_mf,
         const Set::Field<Set::Scalar>& a_b_mf,
         Set::Field<T>& a_model_mf,
@@ -436,7 +445,9 @@ public:
         const Set::Field<Set::Scalar>& a_b_mf,
         Set::Field<T>& a_model_mf)
     {
-        return solve(a_u_mf, a_b_mf, a_model_mf, tol_rel, tol_abs);
+        const Real rel = (tol_rel >= 0.0) ? tol_rel : 1.0e-8;
+        const Real abs = (tol_abs >= 0.0) ? tol_abs : 1.0e-8;
+        return solve(a_u_mf, a_b_mf, a_model_mf, rel, abs);
     }
 
     void compResidual(Set::Field<Set::Scalar>& a_res_mf,

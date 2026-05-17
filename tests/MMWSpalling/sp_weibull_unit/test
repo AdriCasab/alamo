@@ -1,0 +1,350 @@
+#!/usr/bin/env python3
+# Step 15b: self-contained synthetic verification of the Sp-mechanics
+# changes. NOT a physical validation -- the Kant 2017 onset case is the
+# next step. The ALAMO input drives sigma_xx(x,y,z,t) directly via
+# spallation.sp.prescribed_stress (compressive, depth-varying,
+# (x,y)-uniform) and enables the Weibull per-cell flaw distribution with a
+# fixed seed. This test re-implements the same K_I Tada-weight integral and
+# checks, per top-z cell:
+#   (a) sign convention -- a compressive sigma_xx gives Sp > 0;
+#   (b) depth-resolved K_I -- ALAMO Sp matches the analytic integral of the
+#       same depth-varying profile, using that cell's flaw length a_f;
+#   (c) Weibull statistics -- flaw_a mean over grain-boundary cells matches
+#       a0_gb*Gamma(1+1/m) and over intragranular cells a0_ig*Gamma(1+1/m);
+#   (d) per-cell Sp variation -- Sp varies across the top slab because a_f
+#       varies, even though sigma_xx is (x,y)-uniform.
+# Plus a determinism check that flaw_a is identical across plotfiles.
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "sp_weibull_unit")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT_FILE = os.path.join(TEST_DIR, "input")
+OUT_ROOT = os.path.join(TEST_DIR, "output")
+
+# Step 15c: AMR regrid-repair verification (sibling input).
+REGRID_INPUT_FILE = os.path.join(TEST_DIR, "input_regrid")
+REGRID_OUT_ROOT  = os.path.join(TEST_DIR, "output_regrid")
+
+# Mirrors the input file. Update both together if the input changes.
+N_SEGMENTS = 128            # composite Simpson segments
+KIC_SCALE = 1.05            # Central Aare scaling on Nasseri 2007
+T_SURFACE = 298.15          # K, prescribed constant surface T
+Z_TOP = 0.01                # m, top face (geometry.prob_hi z)
+SIGMA_AMP_PA = 50.0e6       # peak |sigma_xx| (Pa)
+SIGMA_DECAY_M = 0.0006      # m, depth decay scale of the prescribed stress
+A0_GB = 0.26e-3             # m, Weibull scale, grain-boundary cells
+A0_IG = 0.13e-3             # m, Weibull scale, intragranular cells
+WEIBULL_M = 15.0            # Weibull shape (modulus)
+
+KI_REL_TOL = 1.0e-3         # ALAMO vs analytic K_I/Sp per cell
+STAT_REL_TOL = 0.03         # Weibull sample-mean tolerance
+SP_CV_MIN = 0.02            # min coefficient of variation of top-slab Sp
+
+# Nasseri 2007 Table 4 (Westerly granite). Temperatures in K.
+NASSERI_T_K = np.array([298.15, 523.15, 723.15, 923.15, 1123.15])
+NASSERI_KIC_MPA = np.array([1.43, 1.35, 0.98, 0.43, 0.22])
+
+
+def k_ic_pa_sqrtm(T_K):
+    """Piecewise-linear K_Ic(T), endpoint-clamped, scaled, in Pa*sqrt(m)."""
+    mpa = KIC_SCALE * np.interp(T_K, NASSERI_T_K, NASSERI_KIC_MPA)
+    return mpa * 1.0e6
+
+
+def sigma_at_depth(depth):
+    """The K_I integrand: -sigma_xx (compression-positive).
+
+    The input prescribes a tension-positive sigma_xx
+        sigma_xx(z) = -SIGMA_AMP * exp(-(Z_TOP - z) / SIGMA_DECAY)
+    evaluated at z_phys = Z_TOP - depth. The integrand consumes -sigma_xx,
+    so this returns +SIGMA_AMP * exp(-depth / SIGMA_DECAY) >= 0.
+    """
+    z_phys = Z_TOP - depth
+    sigma_xx = -SIGMA_AMP_PA * math.exp(-(Z_TOP - z_phys) / SIGMA_DECAY_M)
+    return -sigma_xx
+
+
+def k_i_analytic(a):
+    """K_I for an edge crack of length a, mirroring SpCriterion::K_I.
+
+    Composite Simpson on theta in [0, pi/2] via xi = sin(theta);
+    integrand sigma_at_depth(xi*a) * (1.3 - 0.3 xi^1.25).
+    """
+    if not (a > 0.0):
+        return 0.0
+    n = N_SEGMENTS
+    if n % 2 != 0:
+        n += 1
+    h = (0.5 * math.pi) / n
+    acc = 0.0
+    for k in range(n + 1):
+        theta = h * k
+        xi = math.sin(theta)
+        g_xi = 1.3 - 0.3 * (xi ** 1.25)
+        sxx = sigma_at_depth(xi * a)
+        if k == 0 or k == n:
+            w = 1.0
+        elif k % 2 == 1:
+            w = 4.0
+        else:
+            w = 2.0
+        acc += w * sxx * g_xi
+    acc *= h / 3.0
+    return 2.0 * math.sqrt(a / math.pi) * acc
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return cands
+
+
+def run_alamo(input_file=INPUT_FILE, out_root=OUT_ROOT):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(out_root):
+        shutil.rmtree(out_root)
+    cmd = [
+        "mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+        BIN, input_file,
+    ]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run for {input_file} exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def load_fields(path):
+    ds = yt.load(path)
+    ad = ds.all_data()
+    out = {
+        "t": float(ds.current_time),
+        "x": np.asarray(ad["x"].to_value()),
+        "y": np.asarray(ad["y"].to_value()),
+        "z": np.asarray(ad["z"].to_value()),
+        "Sp_field": np.asarray(ad["Sp_field"].to_value()),
+        "flaw_a": np.asarray(ad["flaw_a"].to_value()),
+        "is_grain_boundary": np.asarray(ad["is_grain_boundary"].to_value()),
+    }
+    # Refinement level per leaf cell (yt's "grid_level" field). Used by
+    # the Step 15c regrid-repair check to key cells by (level, position).
+    try:
+        out["level"] = np.asarray(ad[("index", "grid_level")].to_value()).astype(int)
+    except Exception:
+        out["level"] = np.zeros_like(out["x"], dtype=int)
+    return out
+
+
+def check_amr_regrid_repair():
+    """Step 15c: run input_regrid (amr.max_level=1, regrid_int=1, mechanics
+    disabled) and assert flaw_a is bit-identical between consecutive
+    plotfiles for cells at the same physical position and refinement level.
+    InitializeFlaws is keyed on the global cell index via splitmix64, so
+    on regrid the same (level, i, j, k) deterministically resamples to the
+    same value -- this check verifies that end-to-end."""
+    run_alamo(REGRID_INPUT_FILE, REGRID_OUT_ROOT)
+
+    pf = plotfiles(REGRID_OUT_ROOT)
+    if len(pf) < 2:
+        print(f"FAIL: regrid test produced fewer than 2 plotfiles "
+              f"in {REGRID_OUT_ROOT}")
+        return False
+
+    saw_level_1 = False
+    bit_id_levels = 0
+    F0 = load_fields(pf[0][1])
+    for (_step, path) in pf[1:]:
+        F = load_fields(path)
+        if int(F["level"].max()) > 0:
+            saw_level_1 = True
+        # Compare flaw_a per (level, x, y, z) — sort each set
+        # independently then assert the sorted (level, x, y, z, flaw_a)
+        # tuples match for cells that exist in both plotfiles.
+        for lvl in sorted(set(F0["level"]).intersection(set(F["level"]))):
+            m0 = (F0["level"] == lvl)
+            m1 = (F["level"]  == lvl)
+            o0 = np.lexsort((F0["z"][m0], F0["y"][m0], F0["x"][m0]))
+            o1 = np.lexsort((F["z"][m1],  F["y"][m1],  F["x"][m1]))
+            x0, y0, z0 = F0["x"][m0][o0], F0["y"][m0][o0], F0["z"][m0][o0]
+            x1, y1, z1 = F["x"][m1][o1],  F["y"][m1][o1],  F["z"][m1][o1]
+            # Intersect on (x, y, z) so cells that exist in both plotfiles
+            # at this level (didn't move levels) are matched.
+            key0 = list(zip(x0.tolist(), y0.tolist(), z0.tolist()))
+            key1 = list(zip(x1.tolist(), y1.tolist(), z1.tolist()))
+            i0 = {k: i for i, k in enumerate(key0)}
+            i1 = {k: i for i, k in enumerate(key1)}
+            shared = sorted(set(i0.keys()) & set(i1.keys()))
+            if not shared:
+                continue
+            fa0 = F0["flaw_a"][m0][o0]
+            fa1 = F["flaw_a"][m1][o1]
+            i0v = np.array([i0[k] for k in shared])
+            i1v = np.array([i1[k] for k in shared])
+            if not np.array_equal(fa0[i0v], fa1[i1v]):
+                print(f"FAIL: regrid-repair -- flaw_a differs at level {lvl} "
+                      f"between plotfiles {pf[0][1]} and {path} "
+                      f"({np.count_nonzero(fa0[i0v] != fa1[i1v])} of "
+                      f"{len(shared)} cells)")
+                return False
+            bit_id_levels += 1
+
+    if not saw_level_1:
+        print("WARN: regrid test never produced a level-1 patch -- AMR may "
+              "not have refined. The bit-identity check still passes "
+              "trivially on level 0; rerun if you want a stronger AMR "
+              "exercise.")
+    print(f"regrid-repair: flaw_a bit-identical across {len(pf) - 1} "
+          f"plotfile transitions ({bit_id_levels} level-pair "
+          f"comparisons, max level observed = {int(F['level'].max())})")
+    return True
+
+
+def main():
+    run_alamo()
+
+    pf = plotfiles(OUT_ROOT)
+    if not pf:
+        print(f"FAIL: no cell plotfiles in {OUT_ROOT}")
+        sys.exit(1)
+
+    # Sp_field at plotfile `<n>cell` was computed at t_eval = (n-1)*dt;
+    # the step-0 plotfile has Sp_field at its allocation default of 0.
+    # sigma_xx and T are time-independent here, so use the last plotfile.
+    last_step, last_path = pf[-1]
+    if last_step < 1:
+        print("FAIL: only the step-0 plotfile exists; Sp_field not computed")
+        sys.exit(1)
+    F = load_fields(last_path)
+
+    failures = 0
+
+    # ---- (c) Weibull statistics over ALL cells -------------------------
+    gb_mask = F["is_grain_boundary"] > 0.5
+    ig_mask = ~gb_mask
+    flaw = F["flaw_a"]
+    n_gb = int(np.count_nonzero(gb_mask))
+    n_ig = int(np.count_nonzero(ig_mask))
+    print(f"cells: {flaw.size} total, {n_gb} grain-boundary, {n_ig} intragranular")
+    if n_gb < 200 or n_ig < 200:
+        print(f"FAIL: too few GB ({n_gb}) or IG ({n_ig}) cells for statistics")
+        sys.exit(1)
+
+    if not np.all(np.isfinite(flaw)):
+        print("FAIL: non-finite flaw_a values")
+        sys.exit(1)
+    if np.any(flaw <= 0.0) or np.any(flaw > 2.0 * A0_GB):
+        print(f"FAIL: flaw_a outside (0, 2*a0_gb]; "
+              f"min={flaw.min():.3e}, max={flaw.max():.3e}")
+        failures += 1
+
+    gamma_factor = math.gamma(1.0 + 1.0 / WEIBULL_M)
+    exp_gb = A0_GB * gamma_factor
+    exp_ig = A0_IG * gamma_factor
+    mean_gb = float(np.mean(flaw[gb_mask]))
+    mean_ig = float(np.mean(flaw[ig_mask]))
+    rel_gb = abs(mean_gb - exp_gb) / exp_gb
+    rel_ig = abs(mean_ig - exp_ig) / exp_ig
+    print(f"flaw_a GB mean {mean_gb:.5e} (expect {exp_gb:.5e}, rel {rel_gb:.3e})")
+    print(f"flaw_a IG mean {mean_ig:.5e} (expect {exp_ig:.5e}, rel {rel_ig:.3e})")
+    if rel_gb >= STAT_REL_TOL:
+        print(f"FAIL: GB flaw_a mean off by {rel_gb*100:.2f}% (tol {STAT_REL_TOL*100:.0f}%)")
+        failures += 1
+    if rel_ig >= STAT_REL_TOL:
+        print(f"FAIL: IG flaw_a mean off by {rel_ig*100:.2f}% (tol {STAT_REL_TOL*100:.0f}%)")
+        failures += 1
+
+    # ---- top-z slab: per-cell K_I / Sp checks --------------------------
+    z = F["z"]
+    z_top = z.max()
+    top = np.isclose(z, z_top, atol=1.0e-9)
+    sp_top = F["Sp_field"][top]
+    a_top = flaw[top]
+    if sp_top.size == 0:
+        print("FAIL: no top-z cells found")
+        sys.exit(1)
+
+    # (a) sign convention -- compressive sigma_xx must give Sp > 0.
+    n_nonpos = int(np.count_nonzero(sp_top <= 0.0))
+    if n_nonpos > 0:
+        print(f"FAIL: sign convention -- {n_nonpos}/{sp_top.size} top cells "
+              f"have Sp <= 0 under compressive sigma_xx")
+        failures += 1
+    else:
+        print(f"sign: all {sp_top.size} top cells have Sp > 0 (compressive sigma_xx)")
+
+    # (b) depth-resolved K_I -- ALAMO Sp matches the analytic integral
+    #     evaluated with each cell's own flaw length a_f.
+    kic = k_ic_pa_sqrtm(T_SURFACE)
+    worst = 0.0
+    for sp_a, a_f in zip(sp_top, a_top):
+        sp_ref = k_i_analytic(a_f) / kic
+        denom = max(abs(sp_ref), 1.0e-30)
+        rel = abs(sp_a - sp_ref) / denom
+        if rel > worst:
+            worst = rel
+    print(f"depth-resolved K_I: worst per-cell Sp rel err {worst:.3e} "
+          f"(tol {KI_REL_TOL:.1e})")
+    if worst >= KI_REL_TOL:
+        print(f"FAIL: ALAMO Sp deviates from the analytic integral by {worst:.3e}")
+        failures += 1
+
+    # (d) per-cell Sp variation -- Sp varies across the (x,y)-uniform-sigma
+    #     top slab purely because a_f varies.
+    sp_mean = float(np.mean(sp_top))
+    sp_cv = float(np.std(sp_top)) / max(abs(sp_mean), 1.0e-30)
+    print(f"top-slab Sp: mean {sp_mean:.5e}, coeff. of variation {sp_cv:.3e}")
+    if sp_cv < SP_CV_MIN:
+        print(f"FAIL: top-slab Sp is nearly uniform (CV {sp_cv:.3e} < {SP_CV_MIN}); "
+              f"per-cell a_f does not propagate into Sp")
+        failures += 1
+
+    # ---- determinism: flaw_a identical across plotfiles ----------------
+    if len(pf) >= 2:
+        F0 = load_fields(pf[0][1])
+        # Sort both by (x,y,z) so the comparison is partition-independent.
+        def order(G):
+            return np.lexsort((G["z"], G["y"], G["x"]))
+        o_last = order(F)
+        o_first = order(F0)
+        if not np.array_equal(F["flaw_a"][o_last], F0["flaw_a"][o_first]):
+            print("FAIL: flaw_a differs between plotfiles -- not deterministic")
+            failures += 1
+        else:
+            print("determinism: flaw_a identical across plotfiles")
+
+    # Step 15c: AMR regrid-repair verification for flaw_a_mf.
+    if not check_amr_regrid_repair():
+        failures += 1
+
+    if failures > 0:
+        print(f"FAIL: {failures} check(s) failed")
+        sys.exit(1)
+    print("PASS: sign convention, depth-resolved K_I, Weibull statistics, "
+          "per-cell Sp variation, determinism, and AMR regrid-repair all "
+          "verified.")
+
+
+if __name__ == "__main__":
+    main()

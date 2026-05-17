@@ -1,0 +1,221 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 15b (Kant onset validation) -- WEIBULL run (patchiness).
+#
+# Reproduces Kant 2017's Central Aare granite spalling-onset calculation
+# (Table 2, predicted dT 390-560 C) under a flame-jet convective Robin BC.
+# Kant's Table 2 used room-temperature properties INCLUDING a frozen room-T
+# fracture toughness K_Ic0 = 1.5 MPa.m^0.5 (Kant Table 1, "all values
+# evaluated at room temperature"; Kant section 4.3). This run uses
+# the production K_Ic(T) treatment + the Weibull per-cell flaw
+# distribution. Used for target 6 (grain-scale patchy first firing).
+#
+# Kant Eq. 15 (onset-temperature closed form, p = 0):
+#   Theta_onset = K_Ic*(1-nu) / (2*1.763*sqrt(a/pi)*E*alpha)
+# is h_fl-independent: h_fl sets only the onset TIME, not the onset dT.
+#
+# SETUP: Kant's model is a 1-D half-space with full lateral confinement
+# (eps_xx = eps_yy = 0). Rather than approximate that with a heated patch in
+# a cold-rim block (which under-resolves the thin near-surface thermal
+# stress unless the mesh is very fine), this uses LATERAL ROLLER BCs
+# (u_x = 0 on x-faces, u_y = 0 on y-faces, u_z = 0 on zlo) with the WHOLE
+# top face convectively heated. That enforces eps_xx = eps_yy = 0 exactly,
+# so sigma_xx = -E*alpha*dT/(1-nu) per cell -- Kant's exact 1-D form, with
+# no mesh-resolution dependence. Homogeneous one-phase microstructure
+# (sp_weibull requires microstructure; weibull stays off here).
+#
+# The Python regression scans Sp_field for the first surface cell with
+# Sp >= 1 and asserts onset dT in 390-560 C (target 1) and that it matches
+# Kant Eq. 15 (target 3).
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/sp_kant_onset/output/weibull
+
+timestep  = 0.1
+stop_time = 35.0
+
+amr.plot_int        = 5
+amr.max_level       = 0
+amr.n_cell          = 24 24 24
+amr.blocking_factor = 2
+amr.max_grid_size   = 12
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+# 24 x 24 x 24 mm cubic block, dx = dy = dz = 1.0 mm. With lateral roller
+# BCs + full-face heating the problem is 1-D; depth 24 mm keeps the thermal
+# front well away from the bottom at onset (far-BC-insensitive, ref s4).
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.024 0.024 0.024
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Central Aare granite, room-temperature properties (Kant 2017 Table 1 /
+# reference packet section 3, mean bracket values E = 35 GPa, nu = 0.26).
+# Single-phase Voronoi microstructure: nphases = 1 so the rock is
+# mechanically homogeneous, but grain_id varies grain-to-grain so
+# is_grain_boundary marks a GB/IG cell mix that keys the Weibull scale.
+microstructure.number_of_grains = 60
+microstructure.seed             = 7
+microstructure.nphases          = 1
+
+microstructure.phase0.name              = central_aare
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 2.50
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 35.0e9
+microstructure.phase0.mu                = 13.8888888889e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 800.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# Spallation toggle: LEFM Sp branch. Deterministic flaw a0 = 20 um (Moeri
+# 2003 thin-section, Kant's largest pre-existing crack). weibull off here.
+spallation.model          = sp_weibull
+spallation.sp.a0          = 20.0e-6
+spallation.sp.n_segments  = 128
+
+# Step 15b Weibull per-cell flaw distribution. Central Aare granite: the
+# characteristic flaw a ~ 20 um (Moeri 2003) is taken as the grain-boundary
+# Weibull SCALE; intragranular faces get a0_gb/5 (Rossi 2018 rho_B/rho_I
+# partition). m = 15 (granite tensile-strength literature). Fixed seed.
+# With the flaw distribution active the first-firing pattern is grain-scale
+# patchy (target 6), unlike the homogeneous verification/model runs which
+# fire as a uniform sheet.
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 15.0
+weibull.seed    = 12345
+
+# Temperature-dependent K_Ic(T): the Nasseri 2007 Westerly-granite table
+# scaled x1.05 to Central Aare's room-T value. This is the production
+# model's K_Ic treatment (reference packet section 5); its onset dT
+# (~350-380 C) is the model's honest prediction, NOT scored against Kant's
+# Table-2 band (Kant used frozen room-T K_Ic -- see input_verification).
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.05
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.012
+beam.y0     = 0.012
+beam.z0     = 0.024
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 293.15
+
+# Convective flame-jet Robin BC (Step 15a): q = h_fl*(T_flame - T_s).
+# T_flame = 1673.15 K (1400 C CH4/air flame). radius >> face half-diagonal
+# so the WHOLE +z face is the patch (1-D problem). h_fl is chosen purely
+# for transient resolvability -- onset dT is h_fl-independent (Kant Eq. 15)
+# so the value is immaterial to the result; small h_fl just keeps onset at
+# a well-resolved number of timesteps. Bi = h_fl*a/lambda = 2e-3 << 0.5.
+surface_patch.enabled = 1
+surface_patch.mode    = convective_flame
+surface_patch.face    = zhi
+surface_patch.x0      = 0.012
+surface_patch.y0      = 0.012
+surface_patch.radius  = 0.05
+surface_patch.h_conv  = 150.0
+surface_patch.T_flame = 1673.15
+surface_patch.T_ext   = 293.15
+
+hc.heat.alpha = 1.1882129e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.print_model = 0
+
+# LATERAL ROLLER BOX: u_x = 0 on x-faces, u_y = 0 on y-faces, u_z = 0 on
+# zlo, +z face free. Enforces eps_xx = eps_yy = 0 (Kant's 1-D confinement)
+# exactly. All 26 boundary regions (6 faces + 12 edges + 8 corners) are
+# specified consistently; all values default to 0.
+el.bc.type = constant
+# faces
+el.bc.constant.type.xlo = disp trac trac
+el.bc.constant.type.xhi = disp trac trac
+el.bc.constant.type.ylo = trac disp trac
+el.bc.constant.type.yhi = trac disp trac
+el.bc.constant.type.zlo = trac trac disp
+el.bc.constant.type.zhi = trac trac trac
+# edges (x-y)
+el.bc.constant.type.xloylo = disp disp trac
+el.bc.constant.type.xloyhi = disp disp trac
+el.bc.constant.type.xhiylo = disp disp trac
+el.bc.constant.type.xhiyhi = disp disp trac
+# edges (y-z)
+el.bc.constant.type.ylozlo = trac disp disp
+el.bc.constant.type.ylozhi = trac disp trac
+el.bc.constant.type.yhizlo = trac disp disp
+el.bc.constant.type.yhizhi = trac disp trac
+# edges (z-x)
+el.bc.constant.type.zloxlo = disp trac disp
+el.bc.constant.type.zloxhi = disp trac disp
+el.bc.constant.type.zhixlo = disp trac trac
+el.bc.constant.type.zhixhi = disp trac trac
+# corners
+el.bc.constant.type.xloylozlo = disp disp disp
+el.bc.constant.type.xloylozhi = disp disp trac
+el.bc.constant.type.xloyhizlo = disp disp disp
+el.bc.constant.type.xloyhizhi = disp disp trac
+el.bc.constant.type.xhiylozlo = disp disp disp
+el.bc.constant.type.xhiylozhi = disp disp trac
+el.bc.constant.type.xhiyhizlo = disp disp disp
+el.bc.constant.type.xhiyhizhi = disp disp trac
+
+el.nmodels = 1
+el.model1.E  = 35.0e9
+el.model1.nu = 0.26
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 1.0e-6
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level  = 2
+
+solver = explicit

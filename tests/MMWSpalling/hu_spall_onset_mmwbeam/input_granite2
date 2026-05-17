@@ -1,0 +1,255 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Model-extension study (NOT the Step 11b Hu validation).
+#
+# Same Voronoi granite microstructure as hu_spall_onset_voronoi, but the heat
+# source is the MMW beam instead of the prescribed-temperature surface patch:
+#   - surface_patch DISABLED;
+#   - beam.P0 = 5 kW, beam.R = 0.2, beam.alpha_expr = 100 1/m (~1 cm depth);
+#   - spall removal ENABLED.
+#
+# Recalibration history:
+#   - 50 kW ran away: T pinned at the 5000 K H/T-table ceiling, damage
+#     saturated the cube. P0 lowered to 5 kW.
+#   - The homogeneous Step 11b A_D = 0.034 still ran away at 5 kW (damage
+#     punched to the far boundary). An A_D sweep {0.034, 0.01, 0.003, 0.001,
+#     0.0003} at 5 kW (see the `ad_sweep_summary` script) showed A_D <= 0.01
+#     keeps the damage front tracking the removal front; A_D = 0.001 is the
+#     working value baked in below — onset ~11 s, damage zone ~11 mm, drills
+#     ~14 mm in 30 s. This is a "behaves sanely" value, NOT calibrated to MMW
+#     drilling reference data (none available).
+#
+# Thermal-overshoot fixes layered on after the A_D recalibration:
+#   - surface radiative + convective losses enabled (see the losses block);
+#   - per-phase melt/vapor latent-heat sinks enabled (see the phase blocks);
+#   - the Beer-Lambert beam path is measured from the receding surface
+#     (BeamSource dz_abs / phi fix in src/Integrator/MMWSpalling.H).
+# Vapor REMOVAL is ON (vapor.enabled = 1) — vaporised cells detach.
+# Drucker-Prager friction angle set to 0 (von Mises-type criterion) so the
+# compressive hot core damages too — see the damage block. A_D = 0.0003 and
+# stop_time = 20 s for this phi=0 / 32^3 exploratory run.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/hu_spall_onset_mmwbeam/output/granite2
+
+# Explicit forward Euler. Diffusion stability (quartz, alpha = 2.50e-6 m^2/s)
+# limits dt < dx^2/(6*alpha) ~ 0.65 s. At P0 = 10 kW with beam.alpha_expr =
+# 100 1/m the surface transient is ~600 K/s, so dt = 0.05 is still comfortable.
+timestep  = 0.05
+stop_time = 60.0
+
+amr.plot_int        = 20
+amr.max_level       = 0
+amr.n_cell          = 32 32 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Voronoi mineral microstructure — same minerals as hu_spall_onset_voronoi.
+# A_D = 0.001 for all three phases (recalibrated — see the header notes).
+# Note: microstructure.phaseN.alpha_attenuation is parsed but NOT used by the
+# beam source; beam.alpha_expr controls the absorption depth (see below).
+microstructure.mode             = voronoi
+microstructure.number_of_grains = 200
+microstructure.seed             = 1
+microstructure.nphases          = 3
+
+microstructure.phase0.name              = quartz
+microstructure.phase0.fraction          = 0.474
+microstructure.phase0.kappa             = 4.94
+microstructure.phase0.beta              = 1.6e-5
+microstructure.phase0.E                 = 75.0e9
+microstructure.phase0.mu                = 34.7e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 750.0
+microstructure.phase0.alpha_attenuation = 100.0
+microstructure.phase0.A_D               = 0.0003
+microstructure.phase0.T_ref             = 280.15
+# Melt/vapor latent-heat sinks (recalibration step 3 — combat the thermal
+# overshoot). Granite values, same as the Zhang/Oglesby material:
+# T_m = 1510.5 K, L_m = 3.4e5 J/kg; vaporisation 3233-3503 K, L_v = 4.8e6 J/kg.
+# fus_width = 200 K spreads the fusion plateau. These feed the per-phase
+# H<->T table so energy goes into phase change instead of unbounded T rise.
+microstructure.phase0.T_m               = 1510.5
+microstructure.phase0.fus_width         = 200.0
+microstructure.phase0.L_m               = 3.4e5
+microstructure.phase0.T_vap_lo          = 3233.0
+microstructure.phase0.T_vap_hi          = 3503.0
+microstructure.phase0.L_v               = 4.8e6
+
+microstructure.phase1.name              = kfeldspar
+microstructure.phase1.fraction          = 0.320
+microstructure.phase1.kappa             = 2.34
+microstructure.phase1.beta              = 0.75e-5
+microstructure.phase1.E                 = 53.0e9
+microstructure.phase1.mu                = 23.5e9
+microstructure.phase1.rho               = 2630.0
+microstructure.phase1.Cp                = 711.0
+microstructure.phase1.alpha_attenuation = 100.0
+microstructure.phase1.A_D               = 0.0003
+microstructure.phase1.T_ref             = 280.15
+microstructure.phase1.T_m               = 1510.5
+microstructure.phase1.fus_width         = 200.0
+microstructure.phase1.L_m               = 3.4e5
+microstructure.phase1.T_vap_lo          = 3233.0
+microstructure.phase1.T_vap_hi          = 3503.0
+microstructure.phase1.L_v               = 4.8e6
+
+microstructure.phase2.name              = plagioclase
+microstructure.phase2.fraction          = 0.206
+microstructure.phase2.kappa             = 3.26
+microstructure.phase2.beta              = 1.067e-5
+microstructure.phase2.E                 = 55.0e9
+microstructure.phase2.mu                = 24.6e9
+microstructure.phase2.rho               = 2540.0
+microstructure.phase2.Cp                = 711.0
+microstructure.phase2.alpha_attenuation = 100.0
+microstructure.phase2.A_D               = 0.0003
+microstructure.phase2.T_ref             = 280.15
+microstructure.phase2.T_m               = 1510.5
+microstructure.phase2.fus_width         = 200.0
+microstructure.phase2.L_m               = 3.4e5
+microstructure.phase2.T_vap_lo          = 3233.0
+microstructure.phase2.T_vap_hi          = 3503.0
+microstructure.phase2.L_v               = 4.8e6
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled         = 1
+# phi_deg = 0: Drucker-Prager friction angle set to zero, i.e. a pressure-
+# insensitive (von Mises-type) yield function F = sqrt(J2) - k_dp. The
+# standard DP friction term alpha_dp*I1 SUPPRESSED damage in the hot, confined
+# beam centre (compressive I1) and let only the shear-dominated spot edge
+# spall — producing an inverted crater. The compressed core is in fact just
+# as deviatorically stressed as the edge (sqrt(J2) ~ 271 MPa in both), so
+# phi_deg = 0 lets it damage too. This is a deliberate thermal-spallation
+# stand-in, NOT general rock mechanics; the proper fix is the sp_weibull LEFM
+# Sp criterion. Because it raises the damage drive everywhere, A_D was scaled
+# down (0.001 -> 0.0003) vs the phi=30 runs.
+damage.phi_deg         = 0.0
+damage.cohesion        = 20.0e6
+damage.psi0            = 0.25
+damage.n               = 2.0
+damage.m               = 1.0
+damage.gb_multiplier   = 1.0
+damage.stiffness_floor = 1.0
+
+spall.enabled          = 1
+spall.sample           = shallow_max
+spall.shallow_depth    = 0.006
+spall.damage_threshold = 0.51
+# xi_s = 1.0 (was 8.0): the PrincipalStressRatio >= xi_s removal gate is a
+# shear-anisotropy cutoff that blocked detachment of the near-hydrostatically
+# compressed hot core (fully damaged, D=1, but ratio ~1-3 << 8) — the second
+# compression-suppression in the damage_law branch, paralleling the DP drive.
+# PrincipalStressRatio >= 1 always holds for an all-compressive state, so
+# xi_s = 1.0 effectively retires the gate: removal becomes purely D-threshold
+# driven. Deliberate test-branch simplification, like phi_deg = 0.
+spall.xi_s             = 1.0
+spall.C_h              = 1.0
+
+# Vapor removal ON: cells that reach the vaporisation plateau are detached
+# (become void -> stop conducting/absorbing). Shares phi/removed with spall.
+vapor.enabled          = 1
+
+# MMW beam ON. 50 kW, Gaussian waist 2 cm, axis through the cube centre,
+# entering the +z face. R = 0.2 surface reflectivity.
+#
+# IMPORTANT: BeamSource() uses beam.alpha_expr as the Beer-Lambert absorption
+# coefficient [1/m] (Q ~ (1-R)*Pi*a*exp(-a*dz), a = alpha_expr(T)). The
+# per-phase microstructure.phaseN.alpha_attenuation field is parsed but NOT
+# read by the beam source (or anything else) in the current code — so the
+# beam penetration depth is controlled here, not per-mineral.
+# alpha_expr = 100 1/m => ~1 cm absorption depth (surface-localised drilling).
+# P0 history: 50 kW ran away (T pinned at the 5000 K ceiling); lowered to
+# 5 kW for the A_D / phi=0 recalibration; now raised to 10 kW (2x) to probe
+# the power sensitivity of the recalibrated phi=0 + A_D=0.0003 config.
+beam.P0     = 10000.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+beam.alpha_expr = 100.0
+beam.R      = 0.2
+
+# Surface losses ON (recalibration step 2 — combat the thermal overshoot).
+# Applied at the receding surface via surface_mf (recomputed from phi after
+# every removal step). epsilon = 0.8 (granite emissivity), sigma_SB = the
+# Stefan-Boltzmann constant 5.670374e-8 W/(m^2 K^4), h_conv = 56 W/(m^2 K).
+# T_eps_break = 1e30 disables the optional T-dependent emissivity break, so
+# epsilon = 0.8 applies at all temperatures.
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 56.0
+losses.T_amb         = 280.15
+
+# Surface patch OFF — the MMW beam is the sole heat source. Only the
+# `enabled` key is set: SurfacePatch::Parse returns early when disabled, and
+# the strict ParmParse checker would abort on any other unconsumed
+# surface_patch.* key.
+surface_patch.enabled = 0
+
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = zlo_roller_321
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 29.98e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+# tol_rel loosened from 1.0e-6 to 1.0e-3 — see hu_spall_onset_voronoi for the
+# full rationale. ALAMO's multigrid stalls at a ~1e-4 relative-residual floor
+# for the heterogeneous (Voronoi) vector-elastic operator; 1e-6 aborts on
+# step 1. Exploratory model-extension run, not validation-grade.
+el.solver.tol_rel       = 1.0e-3
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level = 2
+
+solver = explicit

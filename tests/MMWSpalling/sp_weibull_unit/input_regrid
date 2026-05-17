@@ -1,0 +1,140 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 15c: AMR regrid-repair verification for flaw_a_mf. Drives the same
+# single-phase Voronoi microstructure + weibull.enabled = 1 as `input` but
+# forces amr.max_level = 1 with regrid_int = 1 so a regrid fires every step.
+# Mechanics is disabled (sp_weibull bypasses CZM/damage; prescribed_stress
+# stands in for stress_mf so UpdateSpAfterMechanics is safe under the
+# Disable mechanics path). Beam off, no Robin BC -- the only driver is a
+# linear initial temperature gradient that the heat-conduction refinement
+# criterion tags so AMR actually creates a level-1 patch.
+#
+# Verification (Python test):
+#   For each cell at the same physical position and refinement level in
+#   two consecutive plotfiles, flaw_a is bit-identical. Because
+#   InitializeFlaws is keyed on the GLOBAL cell index (i, j, k) at the
+#   level being initialised, deterministic resample-on-regrid is
+#   single-level-safe by construction; this input verifies the end-to-end
+#   path under regrid pressure.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/sp_weibull_unit/output_regrid
+
+timestep  = 0.05
+stop_time = 0.2
+
+amr.plot_int        = 1
+amr.max_level       = 1
+amr.n_cell          = 16 16 16
+amr.blocking_factor = 4
+amr.max_grid_size   = 16
+amr.regrid_int      = 1
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.01 0.01 0.01
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Single-phase Voronoi microstructure: same seed / phase block as `input`
+# so flaw_a sampling sees the same is_grain_boundary topology baseline.
+microstructure.number_of_grains = 50
+microstructure.seed             = 42
+microstructure.nphases          = 1
+
+microstructure.phase0.name              = central_aare
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 2.50
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 35.0e9
+microstructure.phase0.mu                = 14.7058823529e9
+microstructure.phase0.rho               = 2700.0
+microstructure.phase0.Cp                = 820.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 298.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# Spallation: sp_weibull is required for weibull.enabled. prescribed_stress
+# stands in for stress_mf so UpdateSpAfterMechanics is safe under
+# el.type = disable; xx_expr = 0 means Sp_field stays at zero (no firing),
+# which is fine -- the verification target here is flaw_a determinism, not
+# Sp onset.
+spallation.model                              = sp_weibull
+spallation.sp.a0                              = 20.0e-6
+spallation.sp.n_segments                      = 32
+spallation.sp.kic.law                         = nasseri_table
+spallation.sp.kic.scale                       = 1.05
+spallation.sp.prescribed_stress.enabled       = 1
+spallation.sp.prescribed_stress.xx_expr       = 0.0
+spallation.sp.prescribed_T_surface.enabled    = 1
+spallation.sp.prescribed_T_surface.expr       = 298.15
+
+# Step 15c regrid-repair target: same Weibull state as `input` so any
+# determinism-on-regrid bug surfaces with bit-identical RNG inputs.
+weibull.enabled = 1
+weibull.a0_gb   = 0.26e-3
+weibull.a0_ig   = 0.13e-3
+weibull.m       = 15.0
+weibull.seed    = 12345
+
+beam.P0     = 0.0
+beam.omega0 = 0.005
+beam.lambda = 2.19e-3
+beam.x0     = 0.005
+beam.y0     = 0.005
+beam.z0     = 0.01
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 298.15
+
+# Drive AMR refinement via a non-uniform initial temperature gradient. The
+# linear-in-z profile gives grad*dx ~ 100 K * (dx/L) >> 0.01 K, so the
+# heat-conduction refinement criterion tags every cell on level 0 and AMR
+# really does carve a level-1 patch.
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 0.01
+hc.ic.type = expression
+hc.ic.expression.region0 = 298.15+100.0*z/0.01
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics disabled (Step 15c regrid spec): dodges the
+# MLMG-on-anisotropic-cells / AMR-multilevel limitations. The model block
+# is still parsed by Mechanics::Parse before Base::Mechanics::Parse's
+# early-return on type=disable takes effect, so el.nmodels / el.model1.*
+# must be present; they are unused once the disable branch is taken.
+el.type = disable
+el.nmodels = 1
+el.model1.E  = 35.0e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+# Visualisation + specific-energy summary for the MMW-beam Voronoi granite run.
+#
+# Produces result.png:
+#   - x-z cross-sections (through the beam axis, y = 0.05 m) of the FINAL
+#     state: temperature, damage D, and the drilled cavity (removed cells);
+#   - time series of peak temperature, drill depth, and cumulative specific
+#     energy SE(t).
+#
+# Also prints the specific energy of the run. SE is the standard rock-drilling
+# metric: energy delivered per unit volume of rock removed.
+#   SE_total(t)    = P0 * t            / V_removed(t)
+#   SE_absorbed(t) = (1 - R) * P0 * t  / V_removed(t)
+# Reported in kJ/m^3 and MJ/m^3, at the final time and over the drilling
+# window (first removal -> end).
+#
+# Usage:
+#   python3 tests/MMWSpalling/hu_spall_onset_mmwbeam/visualize [output_dir]
+
+import sys
+import os
+import glob
+import re
+import numpy as np
+import yt
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# Read beam.P0 and beam.R straight from the input file so they cannot drift
+# out of sync with the run that produced the plotfiles.
+def _parse_input_scalar(key, default):
+    path = os.path.join(ROOT, "input_granite2")
+    try:
+        with open(path) as fh:
+            for line in fh:
+                line = line.split("#", 1)[0]
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    if k.strip() == key:
+                        return float(v.strip())
+    except OSError:
+        pass
+    return default
+
+
+P0      = _parse_input_scalar("beam.P0", 5000.0)   # beam power [W]
+R       = _parse_input_scalar("beam.R", 0.2)       # surface reflectivity
+Y_SLICE = 0.05                                     # beam-axis y location [m]
+
+
+def to_numpy(a):
+    return np.asarray(a.to_value() if hasattr(a, "to_value") else a)
+
+
+def plotfiles_cell(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "output", "granite2")
+files = plotfiles_cell(outdir)
+if not files:
+    print(f"FAIL: no cell plotfiles in {outdir}")
+    sys.exit(1)
+
+print(f"Loading {len(files)} plotfiles from {outdir}")
+
+# --- per-plotfile time series ---
+times, Tmax, n_removed, drill_depth = [], [], [], []
+ds0 = yt.load(files[0])
+n_cell = np.asarray(ds0.domain_dimensions, dtype=int)
+edge_lo = to_numpy(ds0.domain_left_edge)
+edge_hi = to_numpy(ds0.domain_right_edge)
+dx = (edge_hi - edge_lo) / n_cell
+cell_vol = float(np.prod(dx))
+z_top = float(edge_hi[2])
+print(f"grid {tuple(n_cell)}, cell volume = {cell_vol:.4e} m^3, z_top = {z_top} m")
+
+for f in files:
+    ds = yt.load(f)
+    ad = ds.all_data()
+    fields = {fl[1] for fl in ds.field_list}
+    z = to_numpy(ad["z"])
+    T = to_numpy(ad["Temp"])
+    removed = to_numpy(ad["removed"]) if "removed" in fields else np.zeros_like(T)
+    rem = removed > 0.5
+    times.append(float(ds.current_time))
+    Tmax.append(float(np.max(T)))
+    n_removed.append(int(np.count_nonzero(rem)))
+    drill_depth.append(float(np.max(z_top - z[rem])) if np.any(rem) else 0.0)
+
+times = np.asarray(times)
+Tmax = np.asarray(Tmax)
+n_removed = np.asarray(n_removed)
+drill_depth = np.asarray(drill_depth)
+V_removed = n_removed * cell_vol
+
+# --- specific energy ---
+with np.errstate(divide="ignore", invalid="ignore"):
+    SE_total = np.where(V_removed > 0, P0 * times / V_removed, np.nan)
+    SE_absorbed = np.where(V_removed > 0, (1.0 - R) * P0 * times / V_removed, np.nan)
+
+t_end = times[-1]
+V_end = V_removed[-1]
+first_idx = next((i for i, n in enumerate(n_removed) if n > 0), None)
+
+print()
+print("=== Specific energy (SE = energy in / volume removed) ===")
+print(f"Run length            : {t_end:.2f} s")
+print(f"Volume removed (end)  : {V_end:.4e} m^3  ({n_removed[-1]} cells)")
+print(f"Energy delivered      : P0*t        = {P0*t_end/1e3:.1f} kJ")
+print(f"Energy absorbed       : (1-R)*P0*t  = {(1-R)*P0*t_end/1e3:.1f} kJ")
+if V_end > 0:
+    se_t = P0 * t_end / V_end
+    se_a = (1.0 - R) * P0 * t_end / V_end
+    print(f"SE_total    (whole run) : {se_t/1e3:.3e} kJ/m^3   ({se_t/1e6:.1f} MJ/m^3)")
+    print(f"SE_absorbed (whole run) : {se_a/1e3:.3e} kJ/m^3   ({se_a/1e6:.1f} MJ/m^3)")
+if first_idx is not None and V_end > 0:
+    t_drill = t_end - times[first_idx]
+    se_t_win = P0 * t_drill / V_end
+    se_a_win = (1.0 - R) * P0 * t_drill / V_end
+    print(f"First removal at        : t = {times[first_idx]:.2f} s "
+          f"({100*times[first_idx]/t_end:.0f}% of the run was pre-onset heat-up)")
+    print(f"SE_total    (drill window only, t={times[first_idx]:.1f}->{t_end:.1f}s) : "
+          f"{se_t_win/1e3:.3e} kJ/m^3  ({se_t_win/1e6:.1f} MJ/m^3)")
+    print(f"SE_absorbed (drill window only)                       : "
+          f"{se_a_win/1e3:.3e} kJ/m^3  ({se_a_win/1e6:.1f} MJ/m^3)")
+
+# --- final-state cross-section (x-z plane through y = Y_SLICE) ---
+ds_last = yt.load(files[-1])
+ad = ds_last.all_data()
+x = to_numpy(ad["x"]); y = to_numpy(ad["y"]); z = to_numpy(ad["z"])
+T = to_numpy(ad["Temp"]); D = to_numpy(ad["D"])
+fields = {fl[1] for fl in ds_last.field_list}
+removed = to_numpy(ad["removed"]) if "removed" in fields else np.zeros_like(T)
+
+y_levels = np.unique(np.round(y, 9))
+y_pick = y_levels[np.argmin(np.abs(y_levels - Y_SLICE))]
+m = np.isclose(y, y_pick)
+xs = np.unique(np.round(x[m], 9)); zs = np.unique(np.round(z[m], 9))
+nx, nz = xs.size, zs.size
+
+
+def to_grid(vals):
+    g = np.full((nz, nx), np.nan)
+    xi = {v: i for i, v in enumerate(xs)}
+    zi = {v: i for i, v in enumerate(zs)}
+    for xv, zv, vv in zip(np.round(x[m], 9), np.round(z[m], 9), vals[m]):
+        g[zi[zv], xi[xv]] = vv
+    return g
+
+
+Tg = to_grid(T); Dg = to_grid(D); Rg = to_grid(removed)
+extent = [xs.min()*1e3, xs.max()*1e3, zs.min()*1e3, zs.max()*1e3]
+
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(2, 2, figsize=(13, 10))
+    fig.suptitle(f"MMW-beam Voronoi granite drilling — final state at "
+                 f"t = {times[-1]:.1f} s  (P0 = {P0/1e3:g} kW, R = {R:g})",
+                 fontsize=13)
+
+    im0 = ax[0, 0].imshow(Tg, origin="lower", extent=extent, aspect="auto",
+                          cmap="inferno")
+    ax[0, 0].set_title("Temperature [K]")
+    fig.colorbar(im0, ax=ax[0, 0])
+
+    im1 = ax[0, 1].imshow(Dg, origin="lower", extent=extent, aspect="auto",
+                          cmap="viridis", vmin=0, vmax=1)
+    ax[0, 1].set_title("Damage D")
+    fig.colorbar(im1, ax=ax[0, 1])
+
+    # cavity: removed cells masked over the damage field for context
+    cav = np.ma.masked_where(Rg < 0.5, np.ones_like(Rg))
+    ax[1, 0].imshow(Dg, origin="lower", extent=extent, aspect="auto",
+                    cmap="Greys", vmin=0, vmax=1, alpha=0.5)
+    ax[1, 0].imshow(cav, origin="lower", extent=extent, aspect="auto",
+                    cmap="autumn", vmin=0, vmax=1)
+    ax[1, 0].set_title("Drilled cavity (removed cells, orange)")
+    for a in (ax[0, 0], ax[0, 1], ax[1, 0]):
+        a.set_xlabel("x [mm]"); a.set_ylabel("z [mm]  (surface at top)")
+
+    axr = ax[1, 1]
+    axr.plot(times, drill_depth*1e3, "C2o-", lw=1.8, ms=3, label="drill depth [mm]")
+    axr.set_xlabel("Time [s]"); axr.set_ylabel("drill depth [mm]", color="C2")
+    axr.tick_params(axis="y", labelcolor="C2")
+    axr.grid(alpha=0.3)
+    axt = axr.twinx()
+    axt.plot(times, Tmax, "C3--", lw=1.5, label="peak T [K]")
+    axt.set_ylabel("peak T [K]", color="C3")
+    axt.tick_params(axis="y", labelcolor="C3")
+    axr.set_title("Drill depth and peak temperature")
+
+    out_png = os.path.join(ROOT, "output", "result.png")
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.savefig(out_png, dpi=130)
+    print()
+    print(f"Wrote figure: {out_png}")
+except ImportError:
+    print("(matplotlib not installed - skipping figure)")

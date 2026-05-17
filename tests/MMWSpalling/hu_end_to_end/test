@@ -1,0 +1,442 @@
+#!/usr/bin/env python3
+# Step 14: Hu flame-jet end-to-end validation under `spallation.model =
+# damage_law`. Runs Granite 2 and Sandstone 2 primary cases with
+# conduction + thermoelasticity + DP damage + spall removal enabled on a
+# single integrated input each, single-level 32^3.
+#
+# Pass criteria (after Step 14b promoted the spall firing to hard pass):
+#   1. First shallow surface-connected `D >= 0.50` time (Step 11b onset
+#      proxy) falls inside the Hu-primary onset window (+/-20%).
+#   2. Surface T at that onset time falls inside the Hu-primary LRST
+#      window (+/-10%).
+#   3. Granite onset time < Sandstone onset time.
+#   4. Spall removal infrastructure is engaged: `spall_event`,
+#      `spall_thickness`, `RoP_spall` are registered in the plotfiles.
+#   5. At least one `spall_event > 0` cell exists by stop_time. Inputs
+#      now use `spall.sample = shallow_max` (Step 14b) so the firing
+#      condition picks up the sub-surface DP damage Hu's patch produces
+#      ~4-5 mm below the surface.
+#
+# Emits output/comparison.png with the long-plan-14 4-panel figure:
+#   (top-left) hole-1 dT(t); (top-right) sigma_v at 30 s for both
+#   materials; (bottom-left) f_b map at experimental onset; (bottom-right)
+#   LRST/onset bar chart with Hu measured values.
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "hu_end_to_end")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT_ROOT = os.path.join(TEST_DIR, "output")
+
+PATCH_X0 = 0.05
+PATCH_Y0 = 0.05
+PATCH_RADIUS = 0.015
+Z_TOP = 0.10
+D_THRESHOLD = 0.50          # Step 11b onset proxy
+SHALLOW_DEPTH = 0.006
+
+# Step 14b promoted spall firing from warning-only to a hard pass.
+# Inputs now use `spall.sample = shallow_max` which reduces D over the
+# top 6 mm of each column (matching the Step 11b SHALLOW_DEPTH), so the
+# pipeline fires shortly after the Step 11b D >= 0.50 onset proxy.
+SPALL_FIRING_WARNING_ONLY = False
+
+CASES = {
+    "granite2": {
+        "label": "Granite 2",
+        "input": os.path.join(TEST_DIR, "input_granite2"),
+        "outdir": os.path.join(OUT_ROOT, "granite2"),
+        "T_expr": lambda t: 638.22 + 3.74 * t,
+        "sigma_s": 103.87e6,
+        "hu_primary_onset": 37.0,
+        "hu_primary_lrst": 773.15,
+        "target_onset": 37.0,
+        "onset_tol": 0.20,
+        "target_lrst": 773.15,
+        "lrst_tol": 0.10,
+    },
+    "sandstone2": {
+        "label": "Sandstone 2",
+        "input": os.path.join(TEST_DIR, "input_sandstone2"),
+        "outdir": os.path.join(OUT_ROOT, "sandstone2"),
+        "T_expr": lambda t: 684.64 + 2.46 * t,
+        "sigma_s": 80.11e6,
+        "hu_primary_onset": 89.0,
+        "hu_primary_lrst": 893.15,
+        "target_onset": 89.0,
+        "onset_tol": 0.20,
+        "target_lrst": 893.15,
+        "lrst_tol": 0.10,
+    },
+}
+
+
+def to_numpy(arr):
+    return np.asarray(arr.to_value() if hasattr(arr, "to_value") else arr)
+
+
+def plotfiles_cell(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return cands
+
+
+def plotfiles_node(outdir):
+    pat = re.compile(r"(\d+)node$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*node")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return cands
+
+
+def run_alamo(case):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(case["outdir"]):
+        shutil.rmtree(case["outdir"])
+    cmd = [
+        "mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+        BIN, case["input"],
+    ]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run for {case['label']} exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def load_damage_metrics(path):
+    ds = yt.load(path)
+    ad = ds.all_data()
+    x = to_numpy(ad["x"])
+    y = to_numpy(ad["y"])
+    z = to_numpy(ad["z"])
+    D = to_numpy(ad["D"])
+    Temp = to_numpy(ad["Temp"])
+    # spall_event exists only when spall.enabled; with the Step 14 inputs
+    # it always exists. Tolerate absence defensively.
+    fields = {f[1] for f in ds.field_list}
+    spall_event = to_numpy(ad["spall_event"]) if "spall_event" in fields else np.zeros_like(D)
+
+    depth = Z_TOP - z
+    r2 = (x - PATCH_X0) ** 2 + (y - PATCH_Y0) ** 2
+    heated = r2 <= PATCH_RADIUS ** 2 + 1.0e-14
+    shallow = heated & (depth >= -1.0e-12) & (depth <= SHALLOW_DEPTH + 1.0e-12)
+    damaged = D >= D_THRESHOLD
+    shallow_damaged = shallow & damaged
+    return {
+        "time": float(ds.current_time),
+        "path": path,
+        "max_D_shallow": float(np.max(D[shallow])) if np.any(shallow) else 0.0,
+        "max_T_heated": float(np.max(Temp[heated])) if np.any(heated) else float(np.max(Temp)),
+        "surface_connected": bool(np.any(shallow_damaged)),
+        "max_spall_event": float(np.max(spall_event)) if spall_event.size > 0 else 0.0,
+        "n_spall_event": int(np.count_nonzero(spall_event > 0.5)),
+    }
+
+
+def analyze_case(case):
+    files = plotfiles_cell(case["outdir"])
+    if not files:
+        return {"case": case, "ok": False,
+                "reason": f"no cell plotfiles in {case['outdir']}"}
+
+    # Confirm the spall pipeline registered its diagnostic fields. If any
+    # of these is missing, the integration is broken (not the geometry).
+    ds = yt.load(files[-1][1])
+    fields = {f[1] for f in ds.field_list}
+    required = {"spall_event", "spall_thickness", "RoP_spall", "D",
+                "damage_F_DP", "damage_Psi", "damage_rate"}
+    missing = required - fields
+    if missing:
+        return {"case": case, "ok": False,
+                "reason": f"missing required plot fields: {sorted(missing)}"}
+
+    series = [load_damage_metrics(p) for _, p in files]
+    onset = None
+    for item in series:
+        if item["max_D_shallow"] >= D_THRESHOLD and item["surface_connected"]:
+            onset = item
+            break
+
+    # Aggregate spall-event presence over the whole run.
+    any_spall = any(s["max_spall_event"] >= 0.5 for s in series)
+    total_spall_cells = sum(s["n_spall_event"] for s in series)
+
+    if onset is None:
+        return {
+            "case": case, "ok": False,
+            "reason": (
+                "no shallow surface-connected D >= "
+                f"{D_THRESHOLD:.2f} reached within stop_time; "
+                f"final max shallow D = {series[-1]['max_D_shallow']:.3f}"
+            ),
+            "series": series,
+            "any_spall": any_spall,
+            "total_spall_cells": total_spall_cells,
+        }
+
+    t_on = onset["time"]
+    lrst = case["T_expr"](t_on)
+    return {
+        "case": case, "ok": True,
+        "series": series,
+        "onset": onset,
+        "onset_time": t_on,
+        "lrst": lrst,
+        "max_D_shallow_onset": onset["max_D_shallow"],
+        "any_spall": any_spall,
+        "total_spall_cells": total_spall_cells,
+    }
+
+
+def check_case(result):
+    case = result["case"]
+    if not result["ok"]:
+        print(f"{case['label']}: FAIL: {result.get('reason', 'unknown')}")
+        return False
+
+    t = result["onset_time"]
+    lrst = result["lrst"]
+    onset_lo = case["target_onset"] * (1.0 - case["onset_tol"])
+    onset_hi = case["target_onset"] * (1.0 + case["onset_tol"])
+    lrst_lo = case["target_lrst"] * (1.0 - case["lrst_tol"])
+    lrst_hi = case["target_lrst"] * (1.0 + case["lrst_tol"])
+
+    print(
+        f"{case['label']}: onset={t:.1f} s "
+        f"(Hu primary {case['hu_primary_onset']:.1f} s; window {onset_lo:.1f}..{onset_hi:.1f} s), "
+        f"LRST={lrst:.2f} K "
+        f"(Hu primary {case['hu_primary_lrst']:.2f} K; window {lrst_lo:.2f}..{lrst_hi:.2f} K), "
+        f"any_spall_event={result['any_spall']} (cum cells={result['total_spall_cells']})"
+    )
+
+    ok = True
+    if not (onset_lo <= t <= onset_hi):
+        ok = False
+        print(f"FAIL: {case['label']} onset outside Hu-primary tolerance window")
+    if not (lrst_lo <= lrst <= lrst_hi):
+        ok = False
+        print(f"FAIL: {case['label']} LRST outside Hu-primary tolerance window")
+    if not result["any_spall"]:
+        msg = (
+            f"{case['label']} no spall_event fired by stop_time. Damage "
+            f"concentrates at depth ~5 mm; the top cell stays nearly "
+            f"undamaged so the production spall pipeline's `D[k_top] >= "
+            f"damage_threshold` test never triggers."
+        )
+        if SPALL_FIRING_WARNING_ONLY:
+            print(f"WARNING: {msg}")
+        else:
+            ok = False
+            print(f"FAIL: {msg}")
+    return ok
+
+
+def hole1_series(case):
+    """ALAMO hole-1 surrogate: max T_heated over time across the heated patch."""
+    files = plotfiles_cell(case["outdir"])
+    out = []
+    for _, p in files:
+        ds = yt.load(p)
+        ad = ds.all_data()
+        x = to_numpy(ad["x"]); y = to_numpy(ad["y"]); z = to_numpy(ad["z"])
+        Temp = to_numpy(ad["Temp"])
+        depth = Z_TOP - z
+        r2 = (x - PATCH_X0) ** 2 + (y - PATCH_Y0) ** 2
+        # Hu hole-1 is ~5 mm below the heated surface at the centre. Take
+        # the topmost cell within 1 cell-width of the patch centre.
+        near_centre = r2 <= (1.5 * (0.1 / 32.0)) ** 2 + 1e-14
+        shallow = (depth >= 0.004) & (depth <= 0.006)
+        mask = near_centre & shallow
+        T_here = float(np.mean(Temp[mask])) if np.any(mask) else float(np.max(Temp[near_centre])) if np.any(near_centre) else float(np.mean(Temp))
+        dT = T_here - 280.15
+        out.append((float(ds.current_time), dT))
+    return out
+
+
+def find_node_plot_at(case, target_t):
+    files = plotfiles_node(case["outdir"])
+    if not files:
+        return None
+    best = None
+    best_dt = math.inf
+    for _, path in files:
+        ds = yt.load(path)
+        t = float(ds.current_time)
+        if abs(t - target_t) < best_dt:
+            best = (t, path)
+            best_dt = abs(t - target_t)
+    return best
+
+
+def stress_field_names(ds):
+    fields = {f[1] for f in ds.field_list}
+    candidates = [
+        ("stress_xx", "stress_yy", "stress_zz",
+         "stress_xy", "stress_yz", "stress_zx"),
+        ("stress_xx", "stress_yy", "stress_zz",
+         "stress_xy", "stress_yz", "stress_xz"),
+        ("stress11", "stress22", "stress33",
+         "stress12", "stress23", "stress13"),
+    ]
+    for names in candidates:
+        if all(name in fields for name in names):
+            return names
+    raise RuntimeError("could not find stress tensor fields")
+
+
+def vm_from_components(sxx, syy, szz, sxy, syz, szx):
+    return np.sqrt(
+        0.5 * ((sxx - syy) ** 2 + (syy - szz) ** 2 + (szz - sxx) ** 2)
+        + 3.0 * (sxy ** 2 + syz ** 2 + szx ** 2)
+    )
+
+
+def surface_vm_at(case, target_t):
+    """Return (x_top, y_top, vM_top, dataset_time) sampled at the highest
+    z-row of the node plotfile closest to target_t. Returns None on failure."""
+    hit = find_node_plot_at(case, target_t)
+    if hit is None:
+        return None
+    t, path = hit
+    ds = yt.load(path)
+    ad = ds.all_data()
+    try:
+        names = stress_field_names(ds)
+    except RuntimeError:
+        return None
+    comps = [to_numpy(ad[n]) for n in names]
+    vm = vm_from_components(*comps)
+    x = to_numpy(ad["x"]); y = to_numpy(ad["y"]); z = to_numpy(ad["z"])
+    z_top = z.max()
+    mask = np.isclose(z, z_top, atol=1.0e-9)
+    return float(t), x[mask], y[mask], vm[mask]
+
+
+def plot_results(results):
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("(matplotlib not installed - skipping PNG plot)")
+        return
+
+    labels = [results[k]["case"]["label"] for k in ("granite2", "sandstone2")]
+    sim_onset = [results[k].get("onset_time", math.nan) for k in ("granite2", "sandstone2")]
+    hu_onset = [results[k]["case"]["hu_primary_onset"] for k in ("granite2", "sandstone2")]
+    sim_lrst = [results[k].get("lrst", math.nan) for k in ("granite2", "sandstone2")]
+    hu_lrst = [results[k]["case"]["hu_primary_lrst"] for k in ("granite2", "sandstone2")]
+
+    fig, axes = plt.subplots(2, 2, figsize=(13.5, 9.0))
+
+    # (top-left) hole-1 dT(t) for both materials.
+    ax = axes[0, 0]
+    for name in ("granite2", "sandstone2"):
+        case = results[name]["case"]
+        series = hole1_series(case)
+        ts = [s[0] for s in series]; dts = [s[1] for s in series]
+        ax.plot(ts, dts, label=case["label"])
+    ax.set_xlabel("t [s]")
+    ax.set_ylabel("hole-1 dT [K]")
+    ax.set_title("Hole-1 dT(t) (5 mm subsurface, central)")
+    ax.legend()
+
+    # (top-right) surface von Mises field at 30 s for both materials.
+    ax = axes[0, 1]
+    for name in ("granite2", "sandstone2"):
+        case = results[name]["case"]
+        hit = surface_vm_at(case, 30.0)
+        if hit is None: continue
+        t_h, xs, ys, vms = hit
+        ax.scatter(xs * 1e3, vms * 1e-6, s=10, label=f"{case['label']} (t={t_h:.1f}s)")
+    ax.set_xlabel("x [mm] (surface)")
+    ax.set_ylabel("σ_v [MPa]")
+    ax.set_title("Surface σ_v at ~30 s")
+    ax.legend()
+
+    # (bottom-left) f_b on the surface at experimental onset for both.
+    ax = axes[1, 0]
+    for name in ("granite2", "sandstone2"):
+        case = results[name]["case"]
+        hit = surface_vm_at(case, case["hu_primary_onset"])
+        if hit is None: continue
+        t_h, xs, ys, vms = hit
+        fb = vms / case["sigma_s"]
+        ax.scatter(xs * 1e3, fb, s=10, label=f"{case['label']} (t={t_h:.1f}s)")
+    ax.axhline(1.0, color="k", ls="--", lw=1.0)
+    ax.set_xlabel("x [mm] (surface)")
+    ax.set_ylabel("f_b = σ_v / σ_s")
+    ax.set_title("Surface f_b at Hu-primary onset")
+    ax.legend()
+
+    # (bottom-right) LRST / onset bar chart.
+    ax = axes[1, 1]
+    x = np.arange(len(labels)); width = 0.36
+    ax.bar(x - width / 2, sim_onset, width, label="ALAMO onset")
+    ax.bar(x + width / 2, hu_onset, width, label="Hu primary onset")
+    ax.set_xticks(x, labels)
+    ax.set_ylabel("onset time [s]")
+    ax.set_title("Damage-threshold onset")
+    ax.legend()
+
+    fig.tight_layout()
+    out_png = os.path.join(OUT_ROOT, "comparison.png")
+    os.makedirs(OUT_ROOT, exist_ok=True)
+    fig.savefig(out_png, dpi=140)
+    print(f"wrote {out_png}")
+
+
+def main():
+    manual = len(sys.argv) > 1
+    if manual:
+        CASES["granite2"]["outdir"] = sys.argv[1]
+        CASES["sandstone2"]["outdir"] = sys.argv[2] if len(sys.argv) > 2 else CASES["sandstone2"]["outdir"]
+    else:
+        for case in CASES.values():
+            run_alamo(case)
+
+    results = {name: analyze_case(case) for name, case in CASES.items()}
+    ok = True
+    ok = check_case(results["granite2"]) and ok
+    ok = check_case(results["sandstone2"]) and ok
+
+    g_on = results["granite2"].get("onset_time", math.inf)
+    s_on = results["sandstone2"].get("onset_time", -math.inf)
+    print(f"material ordering: granite {g_on:.1f} s, sandstone {s_on:.1f} s")
+    if not (g_on < s_on):
+        ok = False
+        print("FAIL: Granite 2 did not reach onset before Sandstone 2")
+
+    plot_results(results)
+    print()
+    print("PASS" if ok else "FAIL")
+    sys.exit(0 if ok else 1)
+
+
+if __name__ == "__main__":
+    main()

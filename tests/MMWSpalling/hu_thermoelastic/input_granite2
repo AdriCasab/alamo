@@ -114,7 +114,7 @@ hc.bc.temp.constant.val.zhi  = 0.0
 el.type     = static
 el.interval = 1
 el.time_evolving = 1
-el.bc.type  = constant
+el.bc.type  = zlo_roller_321
 el.print_model = 0
 
 el.nmodels = 1
@@ -126,82 +126,17 @@ el.solver.nriters       = 1
 el.solver.max_iter      = 1000
 el.solver.tol_rel       = 1.0e-6
 el.solver.tol_abs       = 1.0e-16
-el.solver.bottom_solver = smoother
+el.solver.bottom_solver = cg
 el.solver.normalize_ddw = 1
+el.zero_out_displacement = 1
+el.max_coarsening_level = 2
 
 el.ref_threshold     = 1.0
 el.eta_ref_threshold = 1.0
 
-#
-# MECHANICAL BCs — Hu intent: bottom roller (u_z = 0), all other faces
-# traction-free. To remove rigid-body x,y translation and rotation about z,
-# pin (x,y,z) at corner (xlo,ylo,zlo) and additionally pin y at corner
-# (xhi,ylo,zlo).
-#
-# Faces. zlo is fully clamped (disp disp disp). Hu specifies a roller
-# (trac trac disp), but pure roller leaves MLMG too near-singular: it
-# converges for the first few steps and loses efficacy after the
-# thermal eigenstrain layer thickens. Bottom-clamp is a documented
-# deviation; the bottom face is 100 mm below the 30 mm patch, so its
-# contamination of L3 (z = 0.095) and L4 (z = 0.10) stresses is small.
-# Sides and top remain traction-free per Hu.
-el.bc.constant.type.zlo = disp disp disp
-el.bc.constant.val.zlo  = 0.0 0.0 0.0
-el.bc.constant.type.xlo = trac trac trac
-el.bc.constant.val.xlo  = 0.0 0.0 0.0
-el.bc.constant.type.xhi = trac trac trac
-el.bc.constant.val.xhi  = 0.0 0.0 0.0
-el.bc.constant.type.ylo = trac trac trac
-el.bc.constant.val.ylo  = 0.0 0.0 0.0
-el.bc.constant.type.yhi = trac trac trac
-el.bc.constant.val.yhi  = 0.0 0.0 0.0
-el.bc.constant.type.zhi = trac trac trac
-el.bc.constant.val.zhi  = 0.0 0.0 0.0
-
-# Edges. zlo edges follow the bottom clamp (disp disp disp). All other
-# edges are traction-free.
-el.bc.constant.type.ylozlo = disp disp disp
-el.bc.constant.val.ylozlo  = 0.0 0.0 0.0
-el.bc.constant.type.yhizlo = disp disp disp
-el.bc.constant.val.yhizlo  = 0.0 0.0 0.0
-el.bc.constant.type.zloxlo = disp disp disp
-el.bc.constant.val.zloxlo  = 0.0 0.0 0.0
-el.bc.constant.type.zloxhi = disp disp disp
-el.bc.constant.val.zloxhi  = 0.0 0.0 0.0
-el.bc.constant.type.ylozhi = trac trac trac
-el.bc.constant.val.ylozhi  = 0.0 0.0 0.0
-el.bc.constant.type.yhizhi = trac trac trac
-el.bc.constant.val.yhizhi  = 0.0 0.0 0.0
-el.bc.constant.type.zhixlo = trac trac trac
-el.bc.constant.val.zhixlo  = 0.0 0.0 0.0
-el.bc.constant.type.zhixhi = trac trac trac
-el.bc.constant.val.zhixhi  = 0.0 0.0 0.0
-el.bc.constant.type.xloylo = trac trac trac
-el.bc.constant.val.xloylo  = 0.0 0.0 0.0
-el.bc.constant.type.xloyhi = trac trac trac
-el.bc.constant.val.xloyhi  = 0.0 0.0 0.0
-el.bc.constant.type.xhiylo = trac trac trac
-el.bc.constant.val.xhiylo  = 0.0 0.0 0.0
-el.bc.constant.type.xhiyhi = trac trac trac
-el.bc.constant.val.xhiyhi  = 0.0 0.0 0.0
-
-# Corners. zlo corners follow the bottom clamp; zhi corners are
-# traction-free.
-el.bc.constant.type.xloylozlo = disp disp disp
-el.bc.constant.val.xloylozlo  = 0.0 0.0 0.0
-el.bc.constant.type.xhiylozlo = disp disp disp
-el.bc.constant.val.xhiylozlo  = 0.0 0.0 0.0
-el.bc.constant.type.xloyhizlo = disp disp disp
-el.bc.constant.val.xloyhizlo  = 0.0 0.0 0.0
-el.bc.constant.type.xhiyhizlo = disp disp disp
-el.bc.constant.val.xhiyhizlo  = 0.0 0.0 0.0
-el.bc.constant.type.xloylozhi = trac trac trac
-el.bc.constant.val.xloylozhi  = 0.0 0.0 0.0
-el.bc.constant.type.xhiylozhi = trac trac trac
-el.bc.constant.val.xhiylozhi  = 0.0 0.0 0.0
-el.bc.constant.type.xloyhizhi = trac trac trac
-el.bc.constant.val.xloyhizhi  = 0.0 0.0 0.0
-el.bc.constant.type.xhiyhizhi = trac trac trac
-el.bc.constant.val.xhiyhizhi  = 0.0 0.0 0.0
+# Mechanical BCs are provided by zlo_roller_321:
+# u_z = 0 on zlo, homogeneous traction elsewhere, full pin at xloylozlo,
+# and u_y/u_z pinned at xhiyhizlo. Bottom zlo traction components use the
+# physical zlo normal on faces, edges, and corners.
 
 solver = explicit

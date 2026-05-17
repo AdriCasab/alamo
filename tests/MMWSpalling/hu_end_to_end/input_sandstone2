@@ -1,0 +1,144 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 14: Hu Sandstone 2 flame-jet end-to-end validation under damage_law.
+# See input_granite2 for modelling notes. Sandstone 2 material parameters
+# match the Step 11b live hu_spall_onset inputs (A_D = 0.005, phi_deg = 25,
+# cohesion = 12 MPa, E = 16.63 GPa, nu = 0.34).
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/hu_end_to_end/output/sandstone2
+
+timestep  = 0.5
+stop_time = 110.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 32 32 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = sandstone2
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 4.96
+microstructure.phase0.beta              = 1.0e-5
+microstructure.phase0.E                 = 16.63e9
+microstructure.phase0.mu                = 6.2052238806e9
+microstructure.phase0.rho               = 2480.0
+microstructure.phase0.Cp                = 829.30
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.005
+microstructure.phase0.T_ref             = 280.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# Step 11b sandstone damage calibration — do not retune.
+damage.enabled         = 1
+damage.phi_deg         = 25.0
+damage.cohesion        = 12.0e6
+damage.psi0            = 0.25
+damage.n               = 2.0
+damage.m               = 1.0
+damage.gb_multiplier   = 1.0
+damage.stiffness_floor = 1.0
+
+# Step 14 spall removal — see input_granite2 for the rationale on
+# spall.sample = shallow_max (Step 14b) and spall.damage_threshold = 0.51.
+spall.enabled          = 1
+spall.sample           = shallow_max
+spall.shallow_depth    = 0.006
+spall.damage_threshold = 0.51
+spall.xi_s             = 8.0
+spall.C_h              = 1.0
+
+# See input_granite2 for the Step 14b PrincipalStressRatio sentinel that
+# replaced the prescribed_ratio workaround.
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 280.15
+
+# Hu Sandstone 2 prescribed-T trendline (primary case).
+surface_patch.enabled = 1
+surface_patch.type    = prescribed_temperature
+surface_patch.face    = zhi
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+surface_patch.radius  = 0.015
+surface_patch.T_expr  = 684.64+2.46*t
+surface_patch.T_ext   = 280.15
+surface_patch.h_conv  = 0.0
+
+hc.heat.alpha = 2.412e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = zlo_roller_321
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 16.63e9
+el.model1.nu = 0.34
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 2.0e-6
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level  = 2
+
+solver = explicit

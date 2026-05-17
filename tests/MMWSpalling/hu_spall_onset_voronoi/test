@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+# Model-extension study: Voronoi-microstructure granite spall-onset + drilling.
+#
+# This is NOT the Step 11b Hu validation (which is homogeneous and frozen).
+# There is no digitised reference for a heterogeneous run, so this script is a
+# diagnostic + sanity check, not a quantitative validation. It loads the cell
+# plotfiles, prints a drilling-progress table, and PASSES if the run produced
+# physically sane output and actually evolved damage.
+#
+# Sanity pass criteria:
+#   - cell plotfiles exist;
+#   - Temp and D are finite everywhere;
+#   - D stays within [0, 1] (small epsilon slack);
+#   - damage evolved (max D at the end exceeds max D at t = 0).
+#
+# Reported diagnostics (not pass/fail):
+#   - per-plotfile: max Temp, max D, deepest D >= 0.5 cell, cumulative
+#     removed cells, max drill depth;
+#   - onset time (first shallow D >= 0.5) and whether spall fired.
+#
+# Usage:
+#   python3 tests/MMWSpalling/hu_spall_onset_voronoi/test [output_dir]
+
+import sys
+import os
+import glob
+import numpy as np
+import yt
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+Z_TOP        = 0.1     # +z surface position [m]
+SHALLOW_BAND = 0.006   # m below the surface — onset proxy band
+D_ONSET      = 0.5     # damage threshold for the onset proxy
+D_EPS        = 1.0e-3  # slack on the [0, 1] bound
+
+
+def to_numpy(a):
+    return np.asarray(a.to_value() if hasattr(a, "to_value") else a)
+
+
+def plotfiles_cell(outdir):
+    import re
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def summarize(ds):
+    ad = ds.all_data()
+    fields = {f[1] for f in ds.field_list}
+    z = to_numpy(ad["z"])
+    T = to_numpy(ad["Temp"])
+    D = to_numpy(ad["D"])
+    depth = Z_TOP - z
+    removed = to_numpy(ad["removed"]) if "removed" in fields else np.zeros_like(D)
+    spall_event = to_numpy(ad["spall_event"]) if "spall_event" in fields else np.zeros_like(D)
+
+    shallow = depth <= SHALLOW_BAND + 1e-9
+    damaged = D >= D_ONSET
+    rem_mask = removed > 0.5
+
+    return {
+        "time": float(ds.current_time),
+        "T_max": float(np.max(T)),
+        "T_min": float(np.min(T)),
+        "D_max": float(np.max(D)),
+        "D_max_shallow": float(np.max(D[shallow])) if np.any(shallow) else 0.0,
+        "deepest_D": float(np.max(depth[damaged])) if np.any(damaged) else 0.0,
+        "n_removed": int(np.count_nonzero(rem_mask)),
+        "drill_depth": float(np.max(depth[rem_mask])) if np.any(rem_mask) else 0.0,
+        "n_spall_event": int(np.count_nonzero(spall_event > 0.5)),
+        "finite": bool(np.all(np.isfinite(T)) and np.all(np.isfinite(D))),
+        "D_in_range": bool(np.min(D) >= -D_EPS and np.max(D) <= 1.0 + D_EPS),
+    }
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "output", "granite2")
+print(f"Loading hu_spall_onset_voronoi granite run from {outdir}")
+print("Heating: Step 11b prescribed-T surface patch (638.22 + 3.74*t K). "
+      "Voronoi granite, spall removal on.")
+
+files = plotfiles_cell(outdir)
+if not files:
+    print(f"FAIL: no cell plotfiles in {outdir}")
+    sys.exit(1)
+
+series = [summarize(yt.load(f)) for f in files]
+
+ok = True
+
+print()
+print(f"  {'t [s]':>7}  {'T_max [K]':>10}  {'D_max':>7}  {'D_sh':>6}  "
+      f"{'deepD[mm]':>9}  {'removed':>8}  {'drill[mm]':>9}  {'spallEv':>8}")
+for s in series:
+    print(f"  {s['time']:7.2f}  {s['T_max']:10.2f}  {s['D_max']:7.4f}  "
+          f"{s['D_max_shallow']:6.3f}  {s['deepest_D']*1e3:9.2f}  "
+          f"{s['n_removed']:8d}  {s['drill_depth']*1e3:9.2f}  {s['n_spall_event']:8d}")
+
+# --- sanity checks ---
+for s in series:
+    if not s["finite"]:
+        ok = False
+        print(f"FAIL: non-finite Temp or D at t = {s['time']:.2f} s")
+    if not s["D_in_range"]:
+        ok = False
+        print(f"FAIL: D out of [0,1] at t = {s['time']:.2f} s")
+
+if series[-1]["D_max"] <= series[0]["D_max"] + 1e-9:
+    ok = False
+    print("FAIL: damage never evolved (D_max did not increase)")
+
+# --- diagnostics (not pass/fail) ---
+onset = next((s for s in series if s["D_max_shallow"] >= D_ONSET), None)
+any_spall = any(s["n_spall_event"] > 0 for s in series)
+total_removed = series[-1]["n_removed"]
+print()
+if onset is not None:
+    print(f"Onset proxy (shallow D >= {D_ONSET}): t = {onset['time']:.2f} s")
+else:
+    print(f"Onset proxy (shallow D >= {D_ONSET}): not reached by "
+          f"t = {series[-1]['time']:.2f} s")
+print(f"Spall fired: {'yes' if any_spall else 'no'}; "
+      f"cumulative removed cells by end: {total_removed}; "
+      f"max drill depth: {series[-1]['drill_depth']*1e3:.2f} mm")
+
+# --- plot ---
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    t = [s["time"] for s in series]
+    fig, ax = plt.subplots(1, 3, figsize=(15, 4.5))
+    ax[0].plot(t, [s["T_max"] for s in series], "C3o-", lw=1.6, ms=4)
+    ax[0].set_xlabel("Time [s]"); ax[0].set_ylabel("max Temp [K]")
+    ax[0].set_title("Peak temperature"); ax[0].grid(alpha=0.3)
+    ax[1].plot(t, [s["D_max"] for s in series], "C0o-", label="D_max", lw=1.6, ms=4)
+    ax[1].plot(t, [s["D_max_shallow"] for s in series], "C1s--",
+               label="D_max (top 6 mm)", lw=1.6, ms=4)
+    ax[1].axhline(D_ONSET, color="k", ls=":", lw=1)
+    ax[1].set_xlabel("Time [s]"); ax[1].set_ylabel("damage D")
+    ax[1].set_title("Damage evolution"); ax[1].legend(loc="best"); ax[1].grid(alpha=0.3)
+    ax[2].plot(t, [s["n_removed"] for s in series], "C2o-", lw=1.6, ms=4)
+    ax[2].set_xlabel("Time [s]"); ax[2].set_ylabel("cumulative removed cells")
+    ax[2].set_title("Drilling progress"); ax[2].grid(alpha=0.3)
+    out_png = os.path.join(ROOT, "output", "comparison.png")
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=120)
+    print(f"Wrote plot: {out_png}")
+except ImportError:
+    print("(matplotlib not installed - skipping PNG plot)")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

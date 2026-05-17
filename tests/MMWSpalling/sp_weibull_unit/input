@@ -1,0 +1,154 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 15b: self-contained synthetic verification of the Sp-mechanics
+# changes (Weibull flaw distribution + -sigma_xx sign convention +
+# depth-resolved K_I integration + per-cell Sp evaluation). NOT a physical
+# validation -- the Kant 2017 onset case is the next step.
+#
+# Setup: a small constant-property single-phase Voronoi block (so grain_id
+# varies and is_grain_boundary marks a healthy mix of GB / intragranular
+# cells), beam off, losses off, mechanics on (static) but its stress field
+# is unused -- sigma_xx is driven directly by
+# spallation.sp.prescribed_stress with a COMPRESSIVE, depth-varying,
+# (x,y)-uniform profile. weibull.enabled = 1 with a fixed seed.
+#
+# The Python regression checks, per top-z cell:
+#   (a) sign convention -- compressive sigma_xx gives Sp > 0;
+#   (b) depth-resolved K_I -- ALAMO Sp matches the analytic Tada-weight
+#       integral of the same depth-varying profile, using that cell's a_f;
+#   (c) Weibull statistics -- flaw_a mean over GB cells ~ a0_gb*Gamma(1+1/m)
+#       and over intragranular cells ~ a0_ig*Gamma(1+1/m);
+#   (d) per-cell Sp variation -- Sp varies across the top slab because a_f
+#       varies, even though sigma_xx is (x,y)-uniform.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/sp_weibull_unit/output
+
+timestep  = 0.5
+stop_time = 1.0
+
+amr.plot_int        = 1
+amr.max_level       = 0
+amr.n_cell          = 24 24 24
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.01 0.01 0.01
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Single-phase Voronoi microstructure: nphases = 1 so every cell is the
+# same mineral, but grain_id still varies grain-to-grain, so
+# is_grain_boundary marks a mix of GB and intragranular cells.
+microstructure.number_of_grains = 50
+microstructure.seed             = 42
+microstructure.nphases          = 1
+
+microstructure.phase0.name              = central_aare
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 2.50
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 35.0e9
+microstructure.phase0.mu                = 14.7058823529e9
+microstructure.phase0.rho               = 2700.0
+microstructure.phase0.Cp                = 820.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 298.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# Spallation toggle: LEFM Sp branch with the Weibull flaw distribution on.
+spallation.model                              = sp_weibull
+spallation.sp.a0                              = 20.0e-6
+spallation.sp.n_segments                      = 128
+spallation.sp.kic.law                         = nasseri_table
+spallation.sp.kic.scale                       = 1.05
+
+# Step 15b: Weibull per-cell flaw-length distribution. Westerly-granite
+# Stage-1 defaults (Nasseri 2007 Table 4): a0_gb = 0.26 mm,
+# a0_ig = 0.13 mm, m = 15. Fixed seed for reproducibility.
+weibull.enabled = 1
+weibull.a0_gb   = 0.26e-3
+weibull.a0_ig   = 0.13e-3
+weibull.m       = 15.0
+weibull.seed    = 12345
+
+# Compressive, depth-varying, (x,y)-uniform prescribed sigma_xx. The
+# surface is at z = 0.01 m; the stress decays into the depth over a
+# 0.6 mm scale. The Python reference integrates the SAME expression.
+spallation.sp.prescribed_stress.enabled       = 1
+spallation.sp.prescribed_stress.xx_expr       = -50.0e6*exp(-(0.01-z)/0.0006)
+spallation.sp.prescribed_T_surface.enabled    = 1
+spallation.sp.prescribed_T_surface.expr       = 298.15
+
+beam.P0     = 0.0
+beam.omega0 = 0.005
+beam.lambda = 2.19e-3
+beam.x0     = 0.005
+beam.y0     = 0.005
+beam.z0     = 0.01
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 298.15
+
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 298.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = zlo_roller_321
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 35.0e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 1.0e-6
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level  = 2
+
+solver = explicit

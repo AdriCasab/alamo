@@ -1,0 +1,915 @@
+#!/usr/bin/env python3
+# Step 15b (Kant onset validation): Kant 2017 Central Aare granite spalling
+# onset under a flame-jet convective Robin BC, confining pressure p = 0.
+#
+# This is primarily a VERIFICATION test: does the ALAMO FEM (convective
+# Robin BC + thermoelastic solve + the -sigma_xx K_I integrator + K_Ic
+# table) reproduce Kant's closed-form onset calculation? Kant's experimental
+# spalling temperature (553-694 C) is biased high -- his pyrometer cannot
+# catch the first, smallest spall -- so it is a context anchor only, never a
+# pass gate (reference packet section 6.2).
+#
+# Kant Eq. 15 (onset-temperature closed form, p = 0):
+#   Theta_onset = K_Ic*(1-nu) / (2 * 1.763 * sqrt(a/pi) * E * alpha)
+# is h_fl-INDEPENDENT and lambda-INDEPENDENT: onset dT is a material
+# threshold; h_fl sets only the onset time. The setup uses lateral roller
+# BCs + full-face heating so eps_xx = eps_yy = 0 is enforced exactly
+# (Kant's 1-D half-space confinement) and sigma_xx = -E*alpha*dT/(1-nu) per
+# cell, up to an O(dz/thermal-layer) FEM discretization residual.
+#
+# Targets (reference packet section 6):
+#  1. VERIFICATION run (frozen room-T K_Ic0 = 1.5 -- Kant's actual Table-2
+#     input): FEM onset dT in Kant's predicted band 390-560 C.
+#  3. Closed-form cross-check: FEM onset dT reproduces Kant Eq. 15 (computed
+#     with the SAME K_Ic treatment as the run) within TOL.
+#       - verification: vs Eq. 15 with frozen K_Ic0 = 1.5
+#       - model:        vs Eq. 15 with the K_Ic(T) Nasseri x1.05 table.
+#         The model run's onset dT (~350-380 C) is the production model's
+#         honest prediction -- reported, NOT scored against Kant's band
+#         (Kant used frozen room-T K_Ic; the K_Ic(T) substitute is the
+#         revised-model treatment, reference packet section 5).
+#  4. a-sensitivity: halving a raises Eq. 15 onset dT by sqrt(2) (frozen
+#     K_Ic; Eq. 15 scales as a^-1/2). Closed-form assertion.
+#  5. h_fl-independence: input_verification (h_fl=150) and
+#     input_verification_hfl (h_fl=250) give the same onset dT within TOL
+#     (h_fl shifts only the onset time).
+#  6. Weibull patchiness: with the per-cell flaw distribution active, first
+#     firing is grain-scale patchy -- >= 5 distinct firing locations,
+#     spatially spread, not the uniform sheet the homogeneous runs produce.
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "sp_kant_onset")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT_ROOT = os.path.join(TEST_DIR, "output")
+
+# --- constants, mirror the input files -------------------------------------
+T_I      = 293.15           # K, initial / room temperature
+E        = 35.0e9           # Pa, Central Aare granite (mean bracket)
+NU       = 0.26             # Poisson (mean bracket)
+ALPHA    = 8.0e-6           # 1/K, linear thermal expansion
+A_FLAW   = 20.0e-6          # m, deterministic flaw length (Moeri 2003)
+I_FK     = 1.763            # integral_0^1 f_K(xi) dxi  (Kant Eq. 15)
+KIC0_PA  = 1.5e6            # Pa.m^0.5, frozen room-T K_Ic0 (Kant Table 1)
+KIC_SCALE = 1.05            # Central Aare scaling on the Nasseri table
+Z_TOP    = 0.024            # m, +z face
+
+# Kant predicted band (Table 2) and measured anchor (do NOT score on measured)
+BAND_LO, BAND_HI = 390.0, 560.0
+MEAS_LO, MEAS_HI = 553.0, 694.0
+
+TOL_EQ15  = 0.08    # target 3: FEM onset dT vs Kant Eq. 15
+TOL_HFL   = 0.08    # target 5: onset dT across two h_fl values
+PATCH_MIN_FIRE = 5  # target 6: >= 5 distinct firing locations
+
+# Nasseri 2007 Westerly-granite K_Ic(T) table (raw; the FEM applies x1.05).
+NAS_TK = np.array([298.15, 523.15, 723.15, 923.15, 1123.15])
+NAS_K  = np.array([1.43, 1.35, 0.98, 0.43, 0.22])
+
+
+def kic_nasseri_pa(T_K):
+    """Scaled Nasseri K_Ic(T), endpoint-clamped, in Pa.m^0.5."""
+    return KIC_SCALE * np.interp(T_K, NAS_TK, NAS_K) * 1.0e6
+
+
+def theta15_frozen(kic_pa=KIC0_PA, a=A_FLAW, e=E, nu=NU):
+    """Kant Eq. 15 onset dT with a frozen (T-independent) K_Ic."""
+    return kic_pa * (1.0 - nu) / (2.0 * I_FK * math.sqrt(a / math.pi) * e * ALPHA)
+
+
+def theta15_kict(a=A_FLAW, e=E, nu=NU):
+    """Kant Eq. 15 onset dT with the K_Ic(T) table (implicit; fixed-point)."""
+    th = 400.0
+    for _ in range(500):
+        th = float(kic_nasseri_pa(T_I + th)) * (1.0 - nu) \
+            / (2.0 * I_FK * math.sqrt(a / math.pi) * e * ALPHA)
+    return th
+
+
+CASES = {
+    "verification": {
+        "label": "verification (frozen K_Ic0=1.5)",
+        "input": os.path.join(TEST_DIR, "input_verification"),
+        "outdir": os.path.join(OUT_ROOT, "verification"),
+    },
+    "verification_hfl": {
+        "label": "verification h_fl=250",
+        "input": os.path.join(TEST_DIR, "input_verification_hfl"),
+        "outdir": os.path.join(OUT_ROOT, "verification_hfl"),
+    },
+    "model": {
+        "label": "model (K_Ic(T) Nasseri x1.05)",
+        "input": os.path.join(TEST_DIR, "input_model"),
+        "outdir": os.path.join(OUT_ROOT, "model"),
+    },
+    "weibull": {
+        "label": "weibull (K_Ic(T) + per-cell flaw distribution)",
+        "input": os.path.join(TEST_DIR, "input_weibull"),
+        "outdir": os.path.join(OUT_ROOT, "weibull"),
+    },
+    # Step 15c: detach_mode A/B partner of `weibull` -- same Weibull RNG,
+    # same first-firing Sp_field, but the labeller zeroes out clusters
+    # with area < A_crit. Onset *timing* is unchanged; cluster_count and
+    # total_firing_area shrink. PASS criteria scored in score_ab_test().
+    "weibull_cluster": {
+        "label": "weibull connected_cluster (A_crit = 4 mm^2)",
+        "input": os.path.join(TEST_DIR, "input_weibull_cluster"),
+        "outdir": os.path.join(OUT_ROOT, "weibull_cluster"),
+    },
+}
+
+# Step 15c sensitivity sweep: (a0_gb, m) over the central third of each
+# axis (and the outer ring) -- 25 cases at 35 s each on 4 ranks. The
+# central-third PASS gate is m in [12,20] x a0_gb in [0.75x, 1.5x].
+SWEEP_A0_SCALES = [0.5, 0.75, 1.0, 1.5, 2.0]
+SWEEP_M_VALUES  = [8.0, 12.0, 15.0, 20.0, 25.0]
+SWEEP_CENTRAL_A0   = [0.75, 1.0, 1.5]
+SWEEP_CENTRAL_M    = [12.0, 15.0, 20.0]
+SWEEP_BAND_LO_C    = BAND_LO
+SWEEP_BAND_HI_C    = BAND_HI
+SWEEP_DIR          = os.path.join(OUT_ROOT, "sweep")
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo(case):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(case["outdir"]):
+        shutil.rmtree(case["outdir"])
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+           BIN, case["input"]]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run for {case['label']} exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def np_(arr):
+    return np.asarray(arr.to_value() if hasattr(arr, "to_value") else arr)
+
+
+def top_slab(path):
+    """Return dict of top-surface-cell arrays from a cell plotfile."""
+    ds = yt.load(path)
+    ad = ds.all_data()
+    x = np_(ad["x"]); y = np_(ad["y"]); z = np_(ad["z"])
+    top = np.isclose(z, z.max(), atol=1.0e-9)
+    out = {
+        "t": float(ds.current_time),
+        "x": x[top], "y": y[top],
+        "Sp": np_(ad["Sp_field"])[top],
+        "dT": np_(ad["Temp"])[top] - T_I,
+    }
+    fl = ds.field_list
+    if ("boxlib", "flaw_a") in fl or any(f[1] == "flaw_a" for f in fl):
+        out["flaw_a"] = np_(ad["flaw_a"])[top]
+    if any(f[1] == "is_grain_boundary" for f in fl):
+        out["is_gb"] = np_(ad["is_grain_boundary"])[top]
+    return out
+
+
+def onset_homogeneous(outdir):
+    """First crossing of max(Sp)>=1 for a homogeneous run; interpolate the
+    onset dT at Sp=1 between the bracketing plotfiles."""
+    files = plotfiles(outdir)
+    if not files:
+        return None
+    series = []
+    for p in files:
+        s = top_slab(p)
+        series.append((s["t"], float(np.max(s["Sp"])), float(np.mean(s["dT"]))))
+    prev = None
+    for (t, mx, dT) in series:
+        if mx >= 1.0:
+            if prev is None:
+                return {"t": t, "dT": dT, "maxSp": mx, "series": series}
+            t0, mx0, dT0 = prev
+            f = (1.0 - mx0) / (mx - mx0) if mx > mx0 else 1.0
+            return {"t": t0 + f * (t - t0),
+                    "dT": dT0 + f * (dT - dT0),
+                    "maxSp": 1.0, "series": series}
+        prev = (t, mx, dT)
+    return {"t": None, "dT": None, "maxSp": series[-1][1], "series": series}
+
+
+def make_sweep_input(a0_gb_scale, m_val):
+    """Generate a sweep variant of input_weibull and return (input_path,
+    outdir). Patches `weibull.a0_gb`, `weibull.a0_ig` (= a0_gb / 5), and
+    `weibull.m` in the canonical input; rewrites `plot_file` so each case
+    lands in its own subdir under output/sweep/."""
+    os.makedirs(SWEEP_DIR, exist_ok=True)
+    src = os.path.join(TEST_DIR, "input_weibull")
+    a0_gb_m = 20.0e-6 * a0_gb_scale
+    a0_ig_m = a0_gb_m / 5.0
+    tag = f"a{a0_gb_scale:.2f}_m{m_val:.0f}".replace(".", "p")
+    dst_input = os.path.join(SWEEP_DIR, f"input_{tag}")
+    case_outdir = os.path.join(SWEEP_DIR, tag)
+    plot_rel = os.path.relpath(case_outdir, ROOT)
+    with open(src, "r") as f:
+        text = f.read()
+    out_lines = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("plot_file"):
+            out_lines.append(f"plot_file = {plot_rel}")
+        elif stripped.startswith("weibull.a0_gb"):
+            out_lines.append(f"weibull.a0_gb   = {a0_gb_m:.6e}")
+        elif stripped.startswith("weibull.a0_ig"):
+            out_lines.append(f"weibull.a0_ig   = {a0_ig_m:.6e}")
+        elif stripped.startswith("weibull.m") and not stripped.startswith(
+                "weibull.model") and not stripped.startswith("weibull.mode"):
+            out_lines.append(f"weibull.m       = {m_val:.1f}")
+        else:
+            out_lines.append(line)
+    with open(dst_input, "w") as f:
+        f.write("\n".join(out_lines) + "\n")
+    return dst_input, case_outdir
+
+
+def onset_weibull(outdir):
+    """First plotfile where at least PATCH_MIN_FIRE cells have fired; return
+    that slab + fire mask. (Plotfile cadence catches the very first crossing
+    with only a handful fired; the patchiness check wants the early scattered
+    set, so we look at the first snapshot with >= PATCH_MIN_FIRE. A
+    homogeneous run goes 0 -> all-cells in one plotfile, so this snapshot
+    would have ~n_surf fired -- caught by the 'not a sheet' check below.)"""
+    files = plotfiles(outdir)
+    if not files:
+        return None
+    fallback = None
+    for p in files:
+        s = top_slab(p)
+        fire = s["Sp"] >= 1.0
+        nf = int(np.count_nonzero(fire))
+        if nf > 0 and fallback is None:
+            s_fb = dict(s); s_fb["fire"] = fire
+            fallback = s_fb
+        if nf >= PATCH_MIN_FIRE:
+            s["fire"] = fire
+            return s
+    if fallback is not None:
+        return fallback
+    s = top_slab(files[-1])
+    s["fire"] = s["Sp"] >= 1.0
+    return s
+
+
+def main():
+    manual = len(sys.argv) > 1
+    if not manual:
+        for case in CASES.values():
+            run_alamo(case)
+
+    ok = True
+    print()
+    print("=" * 70)
+
+    # ---- closed-form references (Kant Eq. 15) -----------------------------
+    th_frozen = theta15_frozen()
+    th_kict   = theta15_kict()
+    print(f"Kant Eq. 15 onset dT, frozen K_Ic0=1.5 : {th_frozen:7.1f} C")
+    print(f"Kant Eq. 15 onset dT, K_Ic(T) Nasseri  : {th_kict:7.1f} C")
+
+    # ---- target 4: a-sensitivity (closed form, frozen K_Ic) ---------------
+    th_half = theta15_frozen(a=A_FLAW / 2.0)
+    ratio_a = th_half / th_frozen
+    print(f"\n[target 4] a-sensitivity: halving a -> onset dT x {ratio_a:.4f} "
+          f"(expect sqrt(2) = {math.sqrt(2.0):.4f})")
+    if abs(ratio_a - math.sqrt(2.0)) > 0.02:
+        ok = False
+        print("FAIL: a-sensitivity not sqrt(2) (Eq. 15 should scale as a^-1/2)")
+
+    # ---- verification run: targets 1 + 3 ----------------------------------
+    ver = onset_homogeneous(CASES["verification"]["outdir"])
+    if ver is None or ver["dT"] is None:
+        ok = False
+        print("\nFAIL: verification run never reached Sp >= 1")
+        ver = {"dT": float("nan"), "t": float("nan")}
+    else:
+        dT = ver["dT"]
+        err = abs(dT - th_frozen) / th_frozen
+        print(f"\n[target 1] verification FEM onset dT = {dT:.1f} C "
+              f"(t = {ver['t']:.1f} s); Kant band {BAND_LO:.0f}-{BAND_HI:.0f} C")
+        if not (BAND_LO <= dT <= BAND_HI):
+            ok = False
+            print(f"FAIL: onset dT {dT:.1f} C outside Kant's predicted band")
+        print(f"[target 3] verification FEM onset dT vs Eq. 15 (frozen): "
+              f"{dT:.1f} vs {th_frozen:.1f} C  (rel err {err*100:.1f}%, tol "
+              f"{TOL_EQ15*100:.0f}%)")
+        if err > TOL_EQ15:
+            ok = False
+            print("FAIL: verification onset dT does not reproduce Kant Eq. 15")
+
+    # ---- model run: target 3 (K_Ic(T)) + honest prediction ----------------
+    mod = onset_homogeneous(CASES["model"]["outdir"])
+    if mod is None or mod["dT"] is None:
+        ok = False
+        print("\nFAIL: model run never reached Sp >= 1")
+        mod = {"dT": float("nan"), "t": float("nan")}
+    else:
+        dT = mod["dT"]
+        err = abs(dT - th_kict) / th_kict
+        print(f"\n[target 3] model FEM onset dT vs Eq. 15 (K_Ic(T)): "
+              f"{dT:.1f} vs {th_kict:.1f} C  (rel err {err*100:.1f}%, tol "
+              f"{TOL_EQ15*100:.0f}%)")
+        if err > TOL_EQ15:
+            ok = False
+            print("FAIL: model onset dT does not reproduce Kant Eq. 15 with K_Ic(T)")
+        print(f"           model onset dT = {dT:.1f} C is the production "
+              f"model's honest prediction (K_Ic(T) treatment) -- reported, "
+              f"NOT scored against Kant's 390-560 C band.")
+
+    # ---- target 5: h_fl-independence --------------------------------------
+    verh = onset_homogeneous(CASES["verification_hfl"]["outdir"])
+    if verh is None or verh["dT"] is None or ver.get("dT") is None \
+            or math.isnan(ver["dT"]):
+        ok = False
+        print("\nFAIL: cannot check h_fl-independence (a run did not onset)")
+    else:
+        d1, d2 = ver["dT"], verh["dT"]
+        rel = abs(d1 - d2) / (0.5 * (d1 + d2))
+        print(f"\n[target 5] h_fl-independence: onset dT = {d1:.1f} C (h_fl=150) "
+              f"vs {d2:.1f} C (h_fl=250)  (rel diff {rel*100:.1f}%, tol "
+              f"{TOL_HFL*100:.0f}%)")
+        if rel > TOL_HFL:
+            ok = False
+            print("FAIL: onset dT depends on h_fl beyond the discretization residual")
+
+    # ---- target 6: Weibull patchiness -------------------------------------
+    wb = onset_weibull(CASES["weibull"]["outdir"])
+    n_fire = 0
+    if wb is None:
+        ok = False
+        print("\nFAIL: weibull run produced no plotfiles")
+    else:
+        fire = wb["fire"]
+        n_fire = int(np.count_nonzero(fire))
+        n_surf = fire.size
+        xf, yf = wb["x"][fire], wb["y"][fire]
+        if n_fire > 0:
+            xspan = (xf.max() - xf.min()) / (wb["x"].max() - wb["x"].min() + 1e-30)
+            yspan = (yf.max() - yf.min()) / (wb["y"].max() - wb["y"].min() + 1e-30)
+        else:
+            xspan = yspan = 0.0
+        gb_frac = (float(np.mean(wb["is_gb"][fire])) if "is_gb" in wb
+                   and n_fire > 0 else float("nan"))
+        print(f"\n[target 6] weibull first firing: {n_fire}/{n_surf} surface "
+              f"cells (t = {wb['t']:.1f} s), spatial span {xspan*100:.0f}% x "
+              f"{yspan*100:.0f}% of the face, GB fraction {gb_frac:.2f}")
+        patchy = (n_fire >= PATCH_MIN_FIRE and n_fire < 0.5 * n_surf
+                  and xspan > 0.33 and yspan > 0.33)
+        if not patchy:
+            ok = False
+            if n_fire < PATCH_MIN_FIRE:
+                print(f"FAIL: only {n_fire} firing locations (need "
+                      f">= {PATCH_MIN_FIRE})")
+            elif n_fire >= 0.5 * n_surf:
+                print("FAIL: first firing is not patchy -- fired as a sheet "
+                      "(>= 50% of the surface at once)")
+            else:
+                print("FAIL: firing locations not spatially spread "
+                      "(clustered, not grain-scale patchy)")
+        else:
+            print("           first firing is grain-scale patchy (scattered, "
+                  "GB-biased), unlike the homogeneous sheet onset.")
+
+    # Step 15c: detach_mode A/B + (a0, m) sensitivity sweep.
+    ab_ok, ab_summary = score_ab_test(ver, mod)
+    if not ab_ok:
+        ok = False
+    sweep_ok, sweep_grid = run_sensitivity_sweep(manual)
+    if not sweep_ok:
+        ok = False
+
+    plot_results(th_frozen, th_kict, ver, mod, verh, wb, sweep_grid, ab_summary)
+
+    print()
+    print("=" * 70)
+    print("PASS" if ok else "FAIL")
+    return 0 if ok else 1
+
+
+# --------------------------------------------------------------------------
+# Step 15c helpers: cluster CSV reader, A/B score, sensitivity sweep.
+# --------------------------------------------------------------------------
+
+def read_clusters_csv(plot_file_prefix):
+    """Read the per-step cluster diagnostics CSV written by the labeller.
+    `plot_file_prefix` matches the input file's `plot_file` directive (so
+    the CSV lives at `<prefix>_clusters.csv`). Returns a dict of arrays
+    (or None if the CSV is missing/empty)."""
+    csv_path = plot_file_prefix + "_clusters.csv"
+    if not os.path.exists(csv_path):
+        return None
+    rows = []
+    with open(csv_path, "r") as f:
+        header = f.readline().strip().split(",")
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            rows.append([float(x) for x in line.split(",")])
+    if not rows:
+        return None
+    arr = np.array(rows)
+    return {
+        "header": header,
+        "time": arr[:, 0],
+        "cluster_count": arr[:, 1].astype(int),
+        "max_cluster_area_m2": arr[:, 2],
+        "total_firing_area_m2": arr[:, 3],
+    }
+
+
+def score_ab_test(_ver, _mod):
+    """Step 15c detach_mode A/B: compare input_weibull (per_face, default)
+    vs input_weibull_cluster (connected_cluster, A_crit = 4e-6 m^2). PASS:
+      (a) Onset timing matches within 2 x timestep. Onset = first time
+          Sp_field >= 1 anywhere on the top surface. Sp_field is computed
+          BEFORE the labeller and is independent of detach_mode, so the
+          two runs should hit it at the same plotfile.
+      (b) At per_face's first CSV-emit timestamp (cluster_count > 0),
+          connected_cluster's cluster_count and total_firing_area are
+          STRICTLY smaller (read directly from connected_cluster's CSV at
+          the matching timestamp, or 0 if no row exists -- which is the
+          A_crit-zeroes-everything case).
+    Returns (ok, summary_dict). summary_dict feeds the comparison plot."""
+    print()
+    print("=" * 70)
+    print("Step 15c A/B: detach_mode per_face vs connected_cluster")
+    ok = True
+    summary = {"ok": False}
+
+    per_outdir = CASES["weibull"]["outdir"]
+    clu_outdir = CASES["weibull_cluster"]["outdir"]
+    per_csv = read_clusters_csv(per_outdir)
+    clu_csv = read_clusters_csv(clu_outdir)
+    if per_csv is None:
+        print("FAIL: missing per_face cluster CSV (weibull run)")
+        return False, summary
+
+    # (a) Onset = first plotfile where max Sp_field >= 1 on the top slab.
+    # Sp_field is unchanged by detach_mode, so this should match between
+    # the two runs.
+    per_onset = onset_first_plot(per_outdir)
+    clu_onset = onset_first_plot(clu_outdir)
+    timestep = 0.1
+    if per_onset is None or clu_onset is None:
+        print(f"FAIL: A/B onset Sp >= 1 not reached "
+              f"(per_face={per_onset}, connected_cluster={clu_onset})")
+        ok = False
+    else:
+        diff = abs(per_onset - clu_onset)
+        print(f"A/B onset (Sp_field >= 1): per_face = {per_onset:.3f} s, "
+              f"connected_cluster = {clu_onset:.3f} s "
+              f"(|delta| = {diff:.3f} s, tol = 2*dt = {2.0*timestep:.3f} s)")
+        if diff > 2.0 * timestep + 1.0e-9:
+            ok = False
+            print(f"FAIL: A/B onset timing differs by {diff:.3f} s > "
+                  f"2*dt = {2.0*timestep:.3f} s")
+
+    # (b) cluster_count + total_firing_area at per_face's first CSV-emit.
+    # Look up the matching connected_cluster CSV row by time (rounded to
+    # the timestep grid); absent row = both metrics at 0.
+    t_emit_per = float(per_csv["time"][0])
+    cnt_per = int(per_csv["cluster_count"][0])
+    fa_per  = float(per_csv["total_firing_area_m2"][0])
+    cnt_clu, fa_clu = 0, 0.0
+    if clu_csv is not None:
+        # match by time tolerance of 0.5 * timestep
+        idx = np.where(np.abs(clu_csv["time"] - t_emit_per) < 0.5 * timestep)[0]
+        if idx.size > 0:
+            cnt_clu = int(clu_csv["cluster_count"][idx[0]])
+            fa_clu  = float(clu_csv["total_firing_area_m2"][idx[0]])
+    print(f"A/B at per_face first CSV emit (t = {t_emit_per:.3f} s): "
+          f"cluster_count per_face = {cnt_per}, connected_cluster = "
+          f"{cnt_clu}; total_firing_area per_face = {fa_per*1e6:.4f} mm^2, "
+          f"connected_cluster = {fa_clu*1e6:.4f} mm^2")
+    if not (cnt_clu < cnt_per):
+        ok = False
+        print(f"FAIL: A/B cluster_count not strictly smaller under "
+              f"connected_cluster ({cnt_clu} >= {cnt_per})")
+    if not (fa_clu < fa_per):
+        ok = False
+        print(f"FAIL: A/B total_firing_area not strictly smaller under "
+              f"connected_cluster ({fa_clu:.3e} >= {fa_per:.3e})")
+
+    summary.update({
+        "ok": ok,
+        "t_onset_per": (per_onset if per_onset is not None else float("nan")),
+        "t_onset_clu": (clu_onset if clu_onset is not None else float("nan")),
+        "cnt_per": cnt_per,
+        "cnt_clu": cnt_clu,
+        "fa_per_m2": fa_per,
+        "fa_clu_m2": fa_clu,
+    })
+    return ok, summary
+
+
+def onset_first_plot(outdir):
+    """First plotfile time where any top-z cell has Sp_field >= 1.
+    Independent of detach_mode (Sp_field_mf is unchanged by the labeller).
+    Returns None if no plotfile crosses Sp >= 1."""
+    files = plotfiles(outdir)
+    for p in files:
+        s = top_slab(p)
+        if np.any(s["Sp"] >= 1.0):
+            return s["t"]
+    return None
+
+
+def read_realized_amax_top(outdir):
+    """Realized order-statistic max(flaw_a) over the top-z surface plane,
+    read from the t=0 plotfile of `outdir`. Weibull samples are fixed at
+    Initialize, so this is the same a_max the FEM first-fire cell sees.
+    Returns nan if no plotfile exists or `flaw_a` is missing (e.g. a
+    weibull-off run sneaks into the sweep)."""
+    files = plotfiles(outdir)
+    if not files:
+        return float("nan")
+    s = top_slab(files[0])
+    if "flaw_a" not in s or s["flaw_a"].size == 0:
+        return float("nan")
+    return float(np.max(s["flaw_a"]))
+
+
+def run_sensitivity_sweep(manual):
+    """Step 15c v2 (a0_gb, m) sensitivity sweep: 5x5 grid of input_weibull
+    variants, dual-scored against the REALIZED order-statistic max(a_f)
+    per case.
+
+    Under weibull.enabled = 1 with N = 576 surface cells, first-fire is
+    governed by the realized max(flaw_a) rather than the scale parameter
+    a0_gb (Galambos extreme-value asymptotic: E[a_max] ~ a0*(ln N)^(1/m)).
+    Sp scales as sqrt(a), so first-fire onset dT sits systematically
+    BELOW the deterministic Kant Eq. 15 prediction at a = a0_gb. The v1
+    PASS gate (Kant's [390, 560] C band per cell) confused these two
+    quantities; v2 fixes the reference and keeps the gate.
+
+    Per case:
+        a_max_realized = max(flaw_a) over the top-z plane at t = 0
+        dT_ref_real    = Eq.15(a_max_realized, K_Ic(T)) -- correct
+                          analytical reference for first-fire under
+                          Weibull max-statistics
+        dT_FEM         = onset dT measured from the Sp_field >= 1 crossing
+        rel_err        = |dT_FEM - dT_ref_real| / dT_ref_real
+
+    PASS gate (binding): rel_err <= TOL_EQ15 for every central-third case
+    (m in [12, 20] x a0_gb in [0.75x, 1.5x] = 9 of 25). Outer 16 cases
+    are reported, not gated. NaN dT_FEM inside the central third = FAIL
+    with diagnostic "stop_time insufficient for case (a0_gb, m)".
+
+    The deterministic Kant [390, 560] C band is shown on the heatmap as
+    a LITERATURE REFERENCE line (it describes the Weibull-off
+    verification run -- target 1 -- not a per-cell expectation under
+    Weibull-on max-statistics).
+
+    Returns (ok, grid). `grid` is a dict with arrays for the plot."""
+    print()
+    print("=" * 70)
+    print("Step 15c sensitivity sweep (v2 dual-scoring): FEM onset dT "
+          "vs Kant Eq. 15(a_max_realized)")
+
+    nM, nA = len(SWEEP_M_VALUES), len(SWEEP_A0_SCALES)
+    grid_dT_FEM      = np.full((nM, nA), np.nan)
+    grid_dT_det      = np.full((nM, nA), np.nan)
+    grid_dT_ref_real = np.full((nM, nA), np.nan)
+    grid_a_max_real  = np.full((nM, nA), np.nan)
+    grid_a0_gb       = np.full((nM, nA), np.nan)
+    grid_rel_err     = np.full((nM, nA), np.nan)
+    grid_in_band     = np.zeros((nM, nA), dtype=bool)
+
+    ok = True
+    n_central_pass = 0
+    n_central_total = len(SWEEP_CENTRAL_M) * len(SWEEP_CENTRAL_A0)  # 9
+    fails = []
+
+    for j, a0_scale in enumerate(SWEEP_A0_SCALES):
+        for i, m_val in enumerate(SWEEP_M_VALUES):
+            input_path, case_outdir = make_sweep_input(a0_scale, m_val)
+            case = {"input": input_path, "outdir": case_outdir,
+                    "label": f"sweep a0x{a0_scale} m={m_val:.0f}"}
+            if not manual:
+                run_alamo(case)
+
+            # FEM observable.
+            onset = onset_homogeneous(case_outdir)
+            dT_FEM = (float(onset["dT"])
+                      if onset is not None and onset.get("dT") is not None
+                      else float("nan"))
+
+            # Realized order-statistic max(a_f) from t=0 plotfile.
+            a_max_realized = read_realized_amax_top(case_outdir)
+            a0_gb_m = 20.0e-6 * a0_scale
+
+            # Two analytical references under the same K_Ic(T) treatment
+            # the sim uses: deterministic Kant (a = a0_gb) and the
+            # dual-scoring reference (a = a_max_realized).
+            dT_det = theta15_kict(a=a0_gb_m)
+            dT_ref_real = (theta15_kict(a=a_max_realized)
+                           if (not math.isnan(a_max_realized) and
+                               a_max_realized > 0.0)
+                           else float("nan"))
+            rel_err = (abs(dT_FEM - dT_ref_real) / dT_ref_real
+                       if (not math.isnan(dT_FEM) and
+                           not math.isnan(dT_ref_real) and dT_ref_real > 0.0)
+                       else float("nan"))
+
+            grid_dT_FEM[i, j]      = dT_FEM
+            grid_dT_det[i, j]      = dT_det
+            grid_dT_ref_real[i, j] = dT_ref_real
+            grid_a_max_real[i, j]  = a_max_realized
+            grid_a0_gb[i, j]       = a0_gb_m
+            grid_rel_err[i, j]     = rel_err
+            grid_in_band[i, j]     = (not math.isnan(dT_FEM) and
+                                     SWEEP_BAND_LO_C <= dT_FEM <= SWEEP_BAND_HI_C)
+
+            is_central = (m_val in SWEEP_CENTRAL_M and
+                          a0_scale in SWEEP_CENTRAL_A0)
+            tag = "central" if is_central else "outer  "
+
+            fem_str = ("   nan " if math.isnan(dT_FEM) else f"{dT_FEM:7.1f}")
+            ref_str = ("   nan " if math.isnan(dT_ref_real)
+                       else f"{dT_ref_real:7.1f}")
+            ar_str  = ("  nan" if math.isnan(a_max_realized) or a0_gb_m <= 0.0
+                       else f"{a_max_realized / a0_gb_m:5.2f}")
+            re_str  = ("   nan" if math.isnan(rel_err)
+                       else f"{rel_err * 100:5.1f}%")
+            print(f"  [{tag}] a0x{a0_scale:.2f} m={m_val:>4.0f}  "
+                  f"a_max/a0 = {ar_str}  FEM = {fem_str} C  "
+                  f"ref(a_max) = {ref_str} C  |err| = {re_str}  "
+                  f"(tol {TOL_EQ15*100:.0f}%)")
+
+            if is_central:
+                if math.isnan(dT_FEM):
+                    msg = (f"central a0x{a0_scale:.2f} m={m_val:.0f}: "
+                           f"dT_FEM = NaN -- stop_time insufficient for "
+                           f"case (a0_gb, m)")
+                    fails.append(msg)
+                    print(f"    FAIL: {msg}")
+                elif math.isnan(dT_ref_real):
+                    msg = (f"central a0x{a0_scale:.2f} m={m_val:.0f}: "
+                           f"flaw_a missing at t=0; cannot score against "
+                           f"Eq.15(a_max_realized)")
+                    fails.append(msg)
+                    print(f"    FAIL: {msg}")
+                elif rel_err <= TOL_EQ15:
+                    n_central_pass += 1
+                else:
+                    msg = (f"central a0x{a0_scale:.2f} m={m_val:.0f}: "
+                           f"|dT_FEM - dT_ref_real| / dT_ref_real = "
+                           f"{rel_err*100:.1f}% > {TOL_EQ15*100:.0f}%")
+                    fails.append(msg)
+                    print(f"    FAIL: {msg}")
+
+    print(f"\n[target sweep] central-third PASS (v2 dual-scoring): "
+          f"{n_central_pass}/{n_central_total} "
+          f"(need {n_central_total}/{n_central_total} with "
+          f"|dT_FEM - Eq.15(a_max_realized)| / Eq.15(a_max_realized) <= "
+          f"{TOL_EQ15*100:.0f}%)")
+    if n_central_pass < n_central_total:
+        ok = False
+        print(f"FAIL: only {n_central_pass}/{n_central_total} central-third "
+              f"sensitivity cases meet the dual-scoring tolerance")
+        for f in fails:
+            print(f"      - {f}")
+
+    # Informational: how many cells happen to land in the deterministic
+    # Kant band. Not a pass gate under Weibull-on (first-fire is biased
+    # below the band by the order-statistic shift); reported only.
+    n_in_band = int(np.count_nonzero(grid_in_band))
+    print(f"           (informational: {n_in_band}/{nM*nA} cases land in "
+          f"the deterministic Kant [{SWEEP_BAND_LO_C:.0f}, "
+          f"{SWEEP_BAND_HI_C:.0f}] C band -- not a gate under "
+          f"weibull.enabled, target 1 is the per-band claim)")
+
+    grid = {
+        "dT_FEM":          grid_dT_FEM,
+        "dT_det":          grid_dT_det,
+        "dT_ref_real":     grid_dT_ref_real,
+        "a_max_realized":  grid_a_max_real,
+        "a0_gb":           grid_a0_gb,
+        "rel_err":         grid_rel_err,
+        "in_band":         grid_in_band,
+        "a0_scales":       SWEEP_A0_SCALES,
+        "m_values":        SWEEP_M_VALUES,
+        "band":            (SWEEP_BAND_LO_C, SWEEP_BAND_HI_C),
+        "central_a0":      SWEEP_CENTRAL_A0,
+        "central_m":       SWEEP_CENTRAL_M,
+        "n_central_pass":  n_central_pass,
+        "n_central_total": n_central_total,
+        "tol":             TOL_EQ15,
+        # legacy alias for the plotter
+        "dT":              grid_dT_FEM,
+    }
+    return ok, grid
+
+
+def plot_results(th_frozen, th_kict, ver, mod, verh, wb,
+                 sweep_grid=None, ab_summary=None):
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("(matplotlib not installed - skipping PNG plot)")
+        return
+
+    # 5 panels: keep the original 3 (onset dT bars, FEM-vs-Eq.15, weibull
+    # patch map) and append the Step 15c sensitivity heatmap and A/B
+    # cluster bars.
+    fig, axes = plt.subplots(1, 5, figsize=(22.0, 4.4))
+
+    # Panel 1: verification onset dT vs Kant predicted band + measured anchor
+    ax = axes[0]
+    ax.axhspan(BAND_LO, BAND_HI, color="C2", alpha=0.25,
+               label="Kant predicted 390-560 C")
+    ax.axhspan(MEAS_LO, MEAS_HI, color="0.6", alpha=0.25,
+               label="Kant measured 553-694 C (anchor)")
+    dT_ver = ver.get("dT", float("nan"))
+    dT_mod = mod.get("dT", float("nan"))
+    ax.bar([0], [dT_ver], width=0.5, color="C0", label="ALAMO verification")
+    ax.bar([1], [dT_mod], width=0.5, color="C1", label="ALAMO model K_Ic(T)")
+    ax.set_xticks([0, 1], ["verification\n(frozen K_Ic)", "model\n(K_Ic(T))"])
+    ax.set_ylabel("onset dT [C]")
+    ax.set_title("Onset dT vs Kant 2017")
+    ax.legend(fontsize=7, loc="upper right")
+
+    # Panel 2: FEM vs Eq. 15
+    ax = axes[1]
+    labels = ["verification\n(frozen)", "model\n(K_Ic(T))"]
+    fem = [dT_ver, dT_mod]
+    eq15 = [th_frozen, th_kict]
+    xx = np.arange(2)
+    ax.bar(xx - 0.18, fem, 0.36, label="ALAMO FEM", color="C0")
+    ax.bar(xx + 0.18, eq15, 0.36, label="Kant Eq. 15", color="C3")
+    ax.set_xticks(xx, labels)
+    ax.set_ylabel("onset dT [C]")
+    ax.set_title("FEM vs closed-form Eq. 15")
+    ax.legend(fontsize=8)
+
+    # Panel 3: weibull first-firing surface map
+    ax = axes[2]
+    if wb is not None:
+        sc = ax.scatter(wb["x"] * 1e3, wb["y"] * 1e3, c=wb["Sp"],
+                        s=60, cmap="viridis", marker="s")
+        fire = wb["fire"]
+        ax.scatter(wb["x"][fire] * 1e3, wb["y"][fire] * 1e3,
+                   facecolors="none", edgecolors="red", s=90, linewidths=1.4,
+                   label=f"firing ({int(np.count_nonzero(fire))})")
+        plt.colorbar(sc, ax=ax, label="Sp")
+        ax.legend(fontsize=8, loc="upper right")
+    ax.set_xlabel("x [mm]")
+    ax.set_ylabel("y [mm]")
+    ax.set_title("Weibull first-firing map (patchy)")
+    ax.set_aspect("equal")
+
+    # Panel 4: Step 15c v2 sensitivity sweep heatmap (dual-scoring).
+    # Per cell -- three numbers:
+    #   line 1: FEM onset dT (the simulation observable, heatmap color)
+    #   line 2: a_max_realized / a0_gb  (order-statistic ratio; the
+    #           "first-fire is biased below Eq.15(a0_gb)" claim quantified)
+    #   line 3: |dT_FEM - Eq.15(a_max_real)| / Eq.15(a_max_real) -- the
+    #           PASS metric. Central-third cells outlined; FAIL highlighted.
+    # The deterministic Kant [390, 560] C band is drawn on the colorbar as
+    # a literature reference (target 1 / verification run), NOT a per-cell
+    # gate -- that gate would mis-score first-fire under Weibull-on
+    # max-statistics, which is exactly what v2 is fixing.
+    ax = axes[3]
+    if sweep_grid is not None:
+        dT      = sweep_grid["dT_FEM"]
+        a_ratio = (sweep_grid["a_max_realized"] /
+                   np.where(sweep_grid["a0_gb"] > 0, sweep_grid["a0_gb"],
+                            np.nan))
+        rel_err = sweep_grid["rel_err"]
+        a0s     = sweep_grid["a0_scales"]
+        ms      = sweep_grid["m_values"]
+        central_a0 = set(sweep_grid["central_a0"])
+        central_m  = set(sweep_grid["central_m"])
+        tol     = sweep_grid["tol"]
+        band_lo, band_hi = sweep_grid["band"]
+
+        finite = dT[np.isfinite(dT)]
+        if finite.size > 0:
+            vmin = min(float(finite.min()) - 20.0, band_lo - 30.0)
+            vmax = max(float(finite.max()) + 20.0, band_hi + 30.0)
+        else:
+            vmin, vmax = band_lo * 0.5, band_hi * 1.3
+        im = ax.imshow(dT, origin="lower", aspect="auto", cmap="viridis",
+                       extent=[-0.5, len(a0s) - 0.5, -0.5, len(ms) - 0.5],
+                       vmin=vmin, vmax=vmax)
+
+        for ii, m_val in enumerate(ms):
+            for jj, a0s_val in enumerate(a0s):
+                v_dT = dT[ii, jj]
+                v_ar = a_ratio[ii, jj]
+                v_re = rel_err[ii, jj]
+                is_central = (m_val in central_m and a0s_val in central_a0)
+
+                if np.isnan(v_dT):
+                    label = "nan"
+                else:
+                    parts = [f"{v_dT:.0f}C"]
+                    if not np.isnan(v_ar):
+                        parts.append(f"a/a0={v_ar:.2f}")
+                    if not np.isnan(v_re):
+                        bang = "!" if v_re > tol else ""
+                        parts.append(f"err {v_re*100:.0f}%{bang}")
+                    label = "\n".join(parts)
+
+                if is_central and not np.isnan(v_re):
+                    color = "lime" if v_re <= tol else "red"
+                else:
+                    color = "white"
+                ax.text(jj, ii, label, ha="center", va="center",
+                        color=color, fontsize=6.0)
+
+                if is_central:
+                    ax.add_patch(plt.Rectangle((jj - 0.5, ii - 0.5),
+                                               1.0, 1.0, fill=False,
+                                               edgecolor="white",
+                                               linewidth=1.4))
+
+        cbar = plt.colorbar(im, ax=ax, label="FEM onset dT [C]")
+        # Kant band marked on the colorbar as literature reference
+        # (the band is for the deterministic verification run, not a
+        # per-cell expectation under Weibull-on -- shown here so a
+        # reader can see how far first-fire shifts below it).
+        if vmin <= band_lo <= vmax:
+            cbar.ax.axhline(band_lo, color="white", linewidth=1.0,
+                            linestyle="--")
+        if vmin <= band_hi <= vmax:
+            cbar.ax.axhline(band_hi, color="white", linewidth=1.0,
+                            linestyle="--")
+
+        ax.set_xticks(range(len(a0s)),
+                      [f"{s:.2f}x" for s in a0s], rotation=30)
+        ax.set_yticks(range(len(ms)), [f"{m:.0f}" for m in ms])
+        ax.set_xlabel("a0_gb / 20 um")
+        ax.set_ylabel("Weibull m")
+        ax.set_title(f"v2 dual-scoring: central third outlined, "
+                     f"|FEM - Eq15(a_max)| <= {tol*100:.0f}%")
+    else:
+        ax.set_axis_off()
+        ax.set_title("Sensitivity sweep (no data)")
+
+    # Panel 5: Step 15c A/B detach_mode comparison.
+    ax = axes[4]
+    if ab_summary is not None and "cnt_per" in ab_summary:
+        labels = ["per_face", "connected_cluster"]
+        counts = [ab_summary["cnt_per"], ab_summary["cnt_clu"]]
+        areas  = [ab_summary["fa_per_m2"] * 1e6,
+                  ab_summary["fa_clu_m2"] * 1e6]
+        xx = np.arange(2)
+        ax2 = ax.twinx()
+        b1 = ax.bar(xx - 0.18, counts, 0.36, color="C0",
+                    label="cluster_count")
+        b2 = ax2.bar(xx + 0.18, areas, 0.36, color="C3",
+                     label="total_firing_area [mm^2]")
+        ax.set_xticks(xx, labels)
+        ax.set_ylabel("cluster_count")
+        ax2.set_ylabel("total_firing_area [mm^2]")
+        ax.set_title(f"A/B at first onset (dt = "
+                     f"{abs(ab_summary['t_onset_per'] - ab_summary['t_onset_clu']):.2f} s)")
+        lns = [b1, b2]
+        ax.legend(lns, [b.get_label() for b in lns], loc="upper right",
+                  fontsize=8)
+    else:
+        ax.set_axis_off()
+        ax.set_title("detach_mode A/B (no data)")
+
+    fig.tight_layout()
+    os.makedirs(OUT_ROOT, exist_ok=True)
+    out_png = os.path.join(OUT_ROOT, "comparison.png")
+    fig.savefig(out_png, dpi=140)
+    print(f"\nwrote {out_png}")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

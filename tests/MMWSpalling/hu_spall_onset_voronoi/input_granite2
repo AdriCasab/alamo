@@ -1,0 +1,201 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Model-extension study (NOT the Step 11b Hu validation).
+#
+# hu_spall_onset granite, re-run with:
+#   - Voronoi mineral microstructure (quartz / K-feldspar / plagioclase)
+#     instead of the homogeneous one-phase microstructure;
+#   - spall removal ENABLED (Step 14b shallow_max sampling) so material
+#     actually detaches and the surface advances;
+#   - a longer stop_time so drilling progress is visible.
+#
+# Heating is the unchanged Step 11b prescribed-temperature surface patch
+# (T_B1(t) = 638.22 + 3.74*t K on a 30 mm circular patch). The Drucker-Prager
+# strength parameters (cohesion, phi_deg, psi0, n, m) are global and unchanged
+# from Step 11b. Mineral heterogeneity enters through per-phase elastic /
+# thermal properties; A_D is held at the Step 11b granite value (0.034) for
+# every phase pending per-mineral calibration.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/hu_spall_onset_voronoi/output/granite2
+
+# Explicit forward Euler. dx = 3.125 mm. The stiffest phase (quartz,
+# alpha = kappa/(rho*Cp) = 4.94/(2630*750) = 2.50e-6 m^2/s) has a diffusion
+# stability limit dx^2/(6*alpha) ~ 0.65 s; dt = 0.3 keeps a safe margin.
+timestep  = 0.3
+stop_time = 120.0
+
+amr.plot_int        = 10
+amr.max_level       = 0
+amr.n_cell          = 32 32 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Voronoi mineral microstructure. Granite modal composition supplied by the
+# user: quartz 47.4 %, K-feldspar (microcline) 32.0 %, plagioclase (albite)
+# 20.6 %. mu is the shear modulus (E and mu together set the per-phase
+# Poisson ratio). alpha_attenuation = 0 (MMW beam off in this run).
+microstructure.mode             = voronoi
+microstructure.number_of_grains = 200
+microstructure.seed             = 1
+microstructure.nphases          = 3
+
+microstructure.phase0.name              = quartz
+microstructure.phase0.fraction          = 0.474
+microstructure.phase0.kappa             = 4.94
+microstructure.phase0.beta              = 1.6e-5
+microstructure.phase0.E                 = 75.0e9
+microstructure.phase0.mu                = 34.7e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 750.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.034
+microstructure.phase0.T_ref             = 280.15
+
+microstructure.phase1.name              = kfeldspar
+microstructure.phase1.fraction          = 0.320
+microstructure.phase1.kappa             = 2.34
+microstructure.phase1.beta              = 0.75e-5
+microstructure.phase1.E                 = 53.0e9
+microstructure.phase1.mu                = 23.5e9
+microstructure.phase1.rho               = 2630.0
+microstructure.phase1.Cp                = 711.0
+microstructure.phase1.alpha_attenuation = 0.0
+microstructure.phase1.A_D               = 0.034
+microstructure.phase1.T_ref             = 280.15
+
+microstructure.phase2.name              = plagioclase
+microstructure.phase2.fraction          = 0.206
+microstructure.phase2.kappa             = 3.26
+microstructure.phase2.beta              = 1.067e-5
+microstructure.phase2.E                 = 55.0e9
+microstructure.phase2.mu                = 24.6e9
+microstructure.phase2.rho               = 2540.0
+microstructure.phase2.Cp                = 711.0
+microstructure.phase2.alpha_attenuation = 0.0
+microstructure.phase2.A_D               = 0.034
+microstructure.phase2.T_ref             = 280.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# Step 11b damage calibration — global DP strength, unchanged.
+# gb_multiplier = 1.0: no grain-boundary A_D enhancement yet (the Voronoi
+# microstructure does carry real grain boundaries, so this is a knob to
+# explore later).
+damage.enabled         = 1
+damage.phi_deg         = 30.0
+damage.cohesion        = 20.0e6
+damage.psi0            = 0.25
+damage.n               = 2.0
+damage.m               = 1.0
+damage.gb_multiplier   = 1.0
+damage.stiffness_floor = 1.0
+
+# Spall removal enabled (mirrors hu_end_to_end / Step 14b). shallow_max
+# samples D over the top 6 mm of each column so subsurface damage drives
+# detachment; h_spall = C_h*sqrt(alpha*t_spall) from microstructure props.
+spall.enabled          = 1
+spall.sample           = shallow_max
+spall.shallow_depth    = 0.006
+spall.damage_threshold = 0.51
+spall.xi_s             = 8.0
+spall.C_h              = 1.0
+
+# MMW beam off in this run.
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 280.15
+
+# Hu Granite 2 prescribed-T trendline (unchanged from Step 11b).
+surface_patch.enabled = 1
+surface_patch.type    = prescribed_temperature
+surface_patch.face    = zhi
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+surface_patch.radius  = 0.015
+surface_patch.T_expr  = 638.22+3.74*t
+surface_patch.T_ext   = 280.15
+surface_patch.h_conv  = 0.0
+
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = zlo_roller_321
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 29.98e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+# tol_rel loosened from the Step 11b 1.0e-6 to 1.0e-3. ALAMO's multigrid
+# stalls at a ~1e-4 relative-residual floor for this heterogeneous (Voronoi)
+# vector-elastic operator — not an iteration-count issue (deeper coarsening
+# and more iterations both made it worse). 1e-6 aborts ("MLMG failed") on
+# step 1. This is an exploratory model-extension run, so the looser elastic
+# tolerance (=> ~0.1% stress error feeding the DP damage drive) is accepted;
+# it is NOT validation-grade. Proper fix = better MG for jumping-coefficient
+# vector elasticity (a code-level project, not an input knob).
+el.solver.tol_rel       = 1.0e-3
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level = 2
+
+# Mechanical BCs from zlo_roller_321 (same as Step 11b):
+# u_z = 0 on zlo, homogeneous traction elsewhere, full pin at xloylozlo,
+# u_y/u_z pinned at xhiyhizlo.
+
+solver = explicit

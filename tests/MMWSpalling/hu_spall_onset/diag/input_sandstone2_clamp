@@ -1,0 +1,167 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# THROWAWAY DIAGNOSTIC: Sandstone AMR test with zlo CLAMPED (full Dirichlet
+# u=0) instead of zlo_roller_321. Distinguishes whether the AMR failure is
+# specific to the rank-deficient roller+pin BC or a general AMR/operator
+# issue. Everything else mirrors input_sandstone2_base.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/hu_spall_onset/output/diag_sandstone2_clamp
+
+timestep  = 0.25
+stop_time = 5.0
+
+amr.plot_int        = 1
+amr.max_level       = 1
+amr.n_cell          = 40 40 40
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 3
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = sandstone2
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 4.96
+microstructure.phase0.beta              = 1.0e-5
+microstructure.phase0.E                 = 16.63e9
+microstructure.phase0.mu                = 6.2052238806e9
+microstructure.phase0.rho               = 2480.0
+microstructure.phase0.Cp                = 829.30
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.005
+microstructure.phase0.T_ref             = 280.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled         = 1
+damage.phi_deg         = 25.0
+damage.cohesion        = 12.0e6
+damage.psi0            = 0.25
+damage.n               = 2.0
+damage.m               = 1.0
+damage.gb_multiplier   = 1.0
+damage.stiffness_floor = 1.0
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 280.15
+
+surface_patch.enabled = 1
+surface_patch.type    = prescribed_temperature
+surface_patch.face    = zhi
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+surface_patch.radius  = 0.015
+surface_patch.T_expr  = 684.64+2.46*t
+surface_patch.T_ext   = 280.15
+surface_patch.h_conv  = 0.0
+
+hc.heat.alpha = 2.412e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+
+# Mechanical BC: clamped-bottom (Dirichlet u=0 on zlo, traction-free elsewhere).
+el.bc.type  = constant
+### Faces
+el.bc.constant.type.xlo = trac trac trac
+el.bc.constant.type.xhi = trac trac trac
+el.bc.constant.type.ylo = trac trac trac
+el.bc.constant.type.yhi = trac trac trac
+el.bc.constant.type.zlo = disp disp disp
+el.bc.constant.type.zhi = trac trac trac
+### XY edges
+el.bc.constant.type.xloylo = trac trac trac
+el.bc.constant.type.xloyhi = trac trac trac
+el.bc.constant.type.xhiylo = trac trac trac
+el.bc.constant.type.xhiyhi = trac trac trac
+### YZ edges
+el.bc.constant.type.ylozlo = disp disp disp
+el.bc.constant.type.ylozhi = trac trac trac
+el.bc.constant.type.yhizlo = disp disp disp
+el.bc.constant.type.yhizhi = trac trac trac
+### ZX edges
+el.bc.constant.type.zloxlo = disp disp disp
+el.bc.constant.type.zhixlo = trac trac trac
+el.bc.constant.type.zloxhi = disp disp disp
+el.bc.constant.type.zhixhi = trac trac trac
+### Corners (those touching zlo are clamped, those on zhi are free)
+el.bc.constant.type.xloylozlo = disp disp disp
+el.bc.constant.type.xloylozhi = trac trac trac
+el.bc.constant.type.xloyhizlo = disp disp disp
+el.bc.constant.type.xloyhizhi = trac trac trac
+el.bc.constant.type.xhiylozlo = disp disp disp
+el.bc.constant.type.xhiylozhi = trac trac trac
+el.bc.constant.type.xhiyhizlo = disp disp disp
+el.bc.constant.type.xhiyhizhi = trac trac trac
+
+el.print_model = 0
+el.print_residual = 1
+
+el.nmodels = 1
+el.model1.E  = 16.63e9
+el.model1.nu = 0.34
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 2
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 2.0e-6
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level = 2
+
+mmw.debug_amr_mechanics = 1
+
+solver = explicit

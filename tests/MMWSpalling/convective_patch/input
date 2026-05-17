@@ -1,0 +1,131 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@ args=stop_time=1.0
+#@
+
+# Step 15a: convective Robin surface-patch BC verification.
+#
+# 1D-style problem. A 16 x 16 x 192 mm column of constant-property granite is
+# heated on its full +z face by a flame-jet Robin patch:
+#   q = h_fl * (T_flame - T_surface),  h_fl = 1000 W/(m^2 K),  T_flame = 1673.15 K
+# (h_fl on the floor of the Kant-2017 reference bracket 1e3-1e4 W/(m^2 K)).
+# All side/bottom faces are adiabatic, so the response is purely 1D. The
+# heated patch covers the whole +z face (radius >> face half-width), so the
+# only +z-face flux is the Robin patch term. The beam is off, surface losses
+# off, mechanics inert.
+#
+# The domain is deep enough (192 mm) that the thermal front (~9 mm at
+# t = 16 s) never reaches the far face, so the run is a Carslaw-Jaeger
+# semi-infinite-solid problem with a convective surface BC. See the
+# `test` script for the analytic reference and pass criteria.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/convective_patch/output/granite
+
+# Explicit forward Euler. dz = 0.5 mm, alpha = kappa/(rho*cp) = 1.1882e-6 m^2/s.
+# Diffusion stability dt < dz^2/(6*alpha) ~ 0.035 s; dt = 0.01 keeps a wide
+# margin and resolves the fast early-time surface transient.
+timestep  = 0.01
+stop_time = 16.0
+
+amr.plot_int        = 100     # 16 plotfiles, 1 s cadence
+amr.max_level       = 0
+amr.n_cell          = 8 8 384
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.016  0.016  0.192
+geometry.is_periodic = 0 0 0
+
+# Mechanics inert.
+alpha = 0.0 0.0
+
+#
+# MATERIAL: constant-property granite (Kant 2017 reference packet, standard
+# granite values: kappa = 2.5 W/(m K), rho = 2630 kg/m^3, cp = 800 J/(kg K)).
+#
+material.type           = constant
+material.constant.rho   = 2630.0
+material.constant.cp    = 800.0
+material.constant.kappa = 2.50
+material.constant.T_ref = 293.15
+
+#
+# BEAM disabled (P0 = 0).
+#
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.008
+beam.y0     = 0.008
+beam.z0     = 0.192
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+# Surface losses off.
+losses.epsilon  = 0.0
+losses.sigma_SB = 0.0
+losses.h_conv   = 0.0
+losses.T_amb    = 293.15
+
+#
+# SURFACE PATCH: convective flame-jet Robin BC on the +z face.
+# radius = 0.05 m >> face half-diagonal (~0.0113 m), so the whole +z face is
+# the patch. `type` is omitted: it defaults to `prescribed_temperature` and is
+# not consulted under mode = convective_flame.
+#
+surface_patch.enabled = 1
+surface_patch.mode    = convective_flame
+surface_patch.face    = zhi
+surface_patch.x0      = 0.008
+surface_patch.y0      = 0.008
+surface_patch.radius  = 0.05
+surface_patch.h_conv  = 1000.0
+surface_patch.T_flame = 1673.15
+surface_patch.T_ext   = 293.15
+
+#
+# HEAT CONDUCTION: hc.heat.alpha unused on the material path but required.
+# Initial T = 293.15 K, all faces adiabatic (Neumann). The convective patch is
+# applied as a separate volumetric divergence contribution in MMWSpalling.
+#
+hc.heat.alpha = 1.1882129e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+#
+# ELASTICITY: present but inert.
+#
+el.interval = 1000000
+el.bc.type  = constant
+el.nmodels  = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0
+
+solver = explicit

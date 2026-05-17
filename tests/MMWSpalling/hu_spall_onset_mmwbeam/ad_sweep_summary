@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+# Summarise the A_D recalibration sweep for the 5 kW MMW-beam Voronoi granite
+# run. Reads output/sweep/AD_<value>/granite2/ for each swept A_D, prints a
+# comparison table, classifies each case (runaway vs localised vs no-onset),
+# and writes output/ad_sweep.png.
+#
+# "Works" target for MMW thermal-spallation drilling:
+#   - peak T stays off the 5000 K H/T-table ceiling (ideally physical, < melt);
+#   - damage does NOT saturate the whole cube (the heated zone localises);
+#   - drilling is progressive, not explosive.
+#
+# Usage:
+#   python3 tests/MMWSpalling/hu_spall_onset_mmwbeam/ad_sweep_summary
+
+import os
+import sys
+import glob
+import re
+import numpy as np
+import yt
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+# Sweep subdir under output/ — override with argv[1] (e.g. "sweep" for the
+# original 5 kW / 30 s screen, "sweep_v2" for the 80 s + vapor-removal sweep).
+_sweep_name = sys.argv[1] if len(sys.argv) > 1 else "sweep_v2"
+SWEEP_DIR = os.path.join(ROOT, "output", _sweep_name)
+
+Z_TOP        = 0.1
+SHALLOW_BAND = 0.006
+D_ONSET      = 0.5
+T_PIN        = 4999.0   # H/T-table ceiling is 5000 K
+BOUNDARY_D   = 0.085    # deepest D>=0.5 beyond this (m) => damage hit the
+                        # far boundary => runaway
+LEAD_RUNAWAY = 0.015    # deepest D>=0.5 running >15 mm ahead of the removal
+                        # front => bulk damage, not a drilling front
+
+
+def to_numpy(a):
+    return np.asarray(a.to_value() if hasattr(a, "to_value") else a)
+
+
+def plotfiles_cell(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def summarize_case(outdir):
+    files = plotfiles_cell(outdir)
+    if not files:
+        return None
+    series = []
+    for f in files:
+        ds = yt.load(f)
+        ad = ds.all_data()
+        fields = {fl[1] for fl in ds.field_list}
+        z = to_numpy(ad["z"]); T = to_numpy(ad["Temp"]); D = to_numpy(ad["D"])
+        depth = Z_TOP - z
+        removed = to_numpy(ad["removed"]) if "removed" in fields else np.zeros_like(D)
+        rem = removed > 0.5
+        shallow = depth <= SHALLOW_BAND + 1e-9
+        dmg = D >= D_ONSET
+        series.append({
+            "t": float(ds.current_time),
+            "T_max": float(np.max(T)),
+            "D_max": float(np.max(D)),
+            "D_max_shallow": float(np.max(D[shallow])) if np.any(shallow) else 0.0,
+            "sat_frac": float(np.count_nonzero(dmg)) / D.size,
+            "deepest_D": float(np.max(depth[dmg])) if np.any(dmg) else 0.0,
+            "n_removed": int(np.count_nonzero(rem)),
+            "drill_depth": float(np.max(depth[rem])) if np.any(rem) else 0.0,
+        })
+    return series
+
+
+def sweep_dirs():
+    out = []
+    for d in sorted(glob.glob(os.path.join(SWEEP_DIR, "AD_*"))):
+        m = re.search(r"AD_([0-9.eE+-]+)$", d)
+        if m:
+            out.append((float(m.group(1)), os.path.join(d, "granite2")))
+    out.sort(key=lambda kv: -kv[0])
+    return out
+
+
+cases = sweep_dirs()
+if not cases:
+    print(f"FAIL: no sweep output under {SWEEP_DIR}")
+    raise SystemExit(1)
+
+print(f"A_D recalibration sweep — 5 kW MMW beam, Voronoi granite "
+      f"({len(cases)} cases)")
+print()
+header = (f"  {'A_D':>9}  {'onset[s]':>9}  {'T_max[K]':>9}  {'pinned':>7}  "
+          f"{'deepD[mm]':>9}  {'lead[mm]':>9}  {'removed':>8}  "
+          f"{'drill[mm]':>9}  verdict")
+print(header)
+print("  " + "-" * (len(header) - 2))
+
+results = []
+for ad, outdir in cases:
+    series = summarize_case(outdir)
+    if series is None:
+        print(f"  {ad:9.4g}  (no plotfiles)")
+        continue
+    last = series[-1]
+    onset = next((s["t"] for s in series if s["D_max_shallow"] >= D_ONSET), None)
+    T_ever = max(s["T_max"] for s in series)
+    pinned = T_ever >= T_PIN
+    # how far the deepest D>=0.5 cell runs ahead of the deepest removed cell:
+    # a real drilling front keeps damage ~at the removal front, a runaway
+    # punches damage far into undisturbed rock.
+    lead = last["deepest_D"] - last["drill_depth"]
+    if pinned or last["deepest_D"] > BOUNDARY_D:
+        verdict = "RUNAWAY"
+    elif lead > LEAD_RUNAWAY:
+        verdict = "bulk-damage"
+    elif onset is None:
+        verdict = "no onset"
+    else:
+        verdict = "localised"
+    results.append((ad, series, onset, T_ever, pinned, lead, verdict))
+    onset_s = f"{onset:.2f}" if onset is not None else "  --"
+    print(f"  {ad:9.4g}  {onset_s:>9}  {T_ever:9.1f}  {str(pinned):>7}  "
+          f"{last['deepest_D']*1e3:9.2f}  {lead*1e3:9.2f}  "
+          f"{last['n_removed']:8d}  {last['drill_depth']*1e3:9.2f}  {verdict}")
+
+print()
+localised = [r for r in results if r[6] == "localised"]
+if localised:
+    # "best" = largest A_D that still localises (fastest drilling that is
+    # still a contained, advancing front)
+    best = max(localised, key=lambda r: r[0])
+    bl = best[1][-1]
+    print(f"Candidate A_D (largest value that still localises): {best[0]:g}")
+    print(f"  -> onset {best[2]:.2f} s, peak T {best[3]:.1f} K, "
+          f"damage depth {bl['deepest_D']*1e3:.2f} mm, "
+          f"drill depth {bl['drill_depth']*1e3:.2f} mm at t = {bl['t']:.1f} s")
+else:
+    print("No A_D in the swept range gave localised drilling — "
+          "either widen the sweep (smaller A_D) or lower the power further.")
+
+# --- figure ---
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(1, 3, figsize=(16, 4.8))
+    for ad, series, onset, T_ever, pinned, lead, verdict in results:
+        t = [s["t"] for s in series]
+        lbl = f"A_D={ad:g} ({verdict})"
+        ax[0].plot(t, [s["T_max"] for s in series], "o-", ms=3, lw=1.5, label=lbl)
+        ax[1].plot(t, [s["deepest_D"]*1e3 for s in series], "o-", ms=3, lw=1.5, label=lbl)
+        ax[2].plot(t, [s["n_removed"] for s in series], "o-", ms=3, lw=1.5, label=lbl)
+    ax[0].axhline(5000, color="k", ls=":", lw=1)
+    ax[0].set_xlabel("Time [s]"); ax[0].set_ylabel("peak Temp [K]")
+    ax[0].set_title("Peak temperature (5000 K = table ceiling)")
+    ax[1].axhline(Z_TOP*1e3, color="k", ls=":", lw=1)
+    ax[1].set_xlabel("Time [s]"); ax[1].set_ylabel("deepest D >= 0.5 [mm]")
+    ax[1].set_title("Damage depth (100 mm = far boundary)")
+    ax[2].set_xlabel("Time [s]"); ax[2].set_ylabel("cumulative removed cells")
+    ax[2].set_title("Drilling progress")
+    for a in ax:
+        a.grid(alpha=0.3); a.legend(loc="best", fontsize=8)
+    out_png = os.path.join(ROOT, "output", "ad_sweep.png")
+    fig.suptitle("A_D recalibration sweep — 5 kW MMW beam, Voronoi granite",
+                 fontsize=12)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(out_png, dpi=120)
+    print(f"\nWrote figure: {out_png}")
+except ImportError:
+    print("(matplotlib not installed - skipping figure)")

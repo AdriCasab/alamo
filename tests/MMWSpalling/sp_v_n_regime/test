@@ -1,0 +1,317 @@
+#!/usr/bin/env python3
+# Step 17 synthetic test — per-cell v_n + regime_field + local-Q.
+#
+# Exercises:
+#   1. regime_field_mf is registered (plotfile carries the field).
+#   2. regime_field_mf and the scalar regime_mf agree at firing cells
+#      (the new per-cell field is a SEPARATE diagnostic carrying the
+#      SAME per-cell information; damage_law back-compat reads
+#      regime_mf).
+#   3. Local-Q v_vap: at vap-firing cells (regime=2), RoP_vap_mf shows
+#      RADIAL variation around the beam centre (within a step). Under
+#      Step 11's bulk-RoP path, all vap-firing cells would carry an
+#      IDENTICAL RoP_vap value — the radial spread is the signature
+#      of Step 17's local-Q reconstruction.
+#
+# Informational (not gated): whether both regimes ever fire in the
+# same step. Under this geometry (Gaussian beam in a lateral-roller
+# box), the centre cells reach H_vap before σ_xx builds up enough
+# for Sp to fire, AND off-centre cells have σ_xx reduced by 3-D
+# stress relaxation (Step 16 patch-vs-1D issue), so Sp doesn't fire
+# anywhere. The per-cell PRECEDENCE logic (spall priority over vap
+# when both gates fire at the same column) is exercised on EVERY
+# iteration of the column-winner loop under sp_weibull_spall — code
+# inspection at src/Integrator/MMWSpalling.H column-winner block
+# confirms the spall-first branch is the only one entered for
+# sp_weibull (the else-branch with damage_law's winner-on-h selection
+# stays bit-identical, verified by the regime_low_high_power +
+# hu_end_to_end regressions running unchanged).
+#
+# Geometry: 16x16x16 mm cube, single-phase Voronoi Central Aare granite,
+# Kant-style lateral roller box, focused Gaussian beam at (8 mm, 8 mm,
+# top face). T_vap_lo = 700 K is the vap trigger. Sp + Weibull active.
+# stop_time = 10 s; plot_int = 1 step (200 plotfiles).
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+TEST_DIR = os.path.join(ROOT, "tests", "MMWSpalling", "sp_v_n_regime")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT_PATH = os.path.join(TEST_DIR, "input")
+OUTDIR = os.path.join(TEST_DIR, "output", "regime")
+
+# Beam Gaussian parameters mirroring the input file.
+BEAM_X0     = 0.008  # m
+BEAM_Y0     = 0.008  # m
+BEAM_OMEGA0 = 0.003  # m
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo():
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(OUTDIR):
+        shutil.rmtree(OUTDIR)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+           BIN, INPUT_PATH]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def np_(arr):
+    return np.asarray(arr.to_value() if hasattr(arr, "to_value") else arr)
+
+
+def load_step(path):
+    """Read a plotfile and pull regime_field + regime + RoP_vap +
+    coordinates."""
+    ds = yt.load(path)
+    ad = ds.all_data()
+    fl = ds.field_list
+    has_regime_field = any(f[1] == "regime_field" for f in fl)
+    out = {
+        "t":                float(ds.current_time),
+        "has_regime_field": has_regime_field,
+        "x":      np_(ad["x"]),
+        "y":      np_(ad["y"]),
+        "z":      np_(ad["z"]),
+        "regime": np_(ad["regime"]),
+        "regime_field": (np_(ad["regime_field"]) if has_regime_field
+                        else np.zeros_like(np_(ad["regime"]))),
+        "RoP_vap": (np_(ad["RoP_vap"]) if any(f[1] == "RoP_vap" for f in fl)
+                    else np.zeros_like(np_(ad["regime"]))),
+    }
+    return out
+
+
+def main():
+    manual = len(sys.argv) > 1
+    if not manual:
+        run_alamo()
+
+    print()
+    print("=" * 70)
+    print("Step 17 synthetic test — per-cell v_n with simultaneous spall + vap")
+
+    files = plotfiles(OUTDIR)
+    if not files:
+        print(f"FAIL: no plotfiles in {OUTDIR}")
+        return 1
+    print(f"loaded {len(files)} plotfiles (first {files[0]}, "
+          f"last {files[-1]})")
+
+    # ---- Check 1: regime_field_mf is registered --------------------
+    s_last = load_step(files[-1])
+    if not s_last["has_regime_field"]:
+        print(f"FAIL [1]: regime_field plotfile field NOT registered. "
+              f"Check the RegisterNewFab gate (spallation_model == "
+              f"SpWeibull && (spall_enabled || vapor_enabled))")
+        return 1
+    print(f"\n[1] regime_field plotfile field registered: PASS")
+
+    # ---- Scan all plotfiles for firing stats + pick the plotfile
+    # ---- with the most vap firings for the local-Q profile check.
+    n_spall_total = 0
+    n_vap_total   = 0
+    step_max_vap     = None
+    step_max_vap_idx = -1
+    max_vap_so_far   = 0
+    steps_with_both  = []
+    for idx, path in enumerate(files):
+        s = load_step(path)
+        rf = s["regime_field"]
+        n_sp = int(np.count_nonzero(np.isclose(rf, 1.0)))
+        n_vp = int(np.count_nonzero(np.isclose(rf, 2.0)))
+        n_spall_total = max(n_spall_total, n_sp)
+        n_vap_total   = max(n_vap_total,   n_vp)
+        if n_vp > max_vap_so_far:
+            max_vap_so_far = n_vp
+            step_max_vap     = s
+            step_max_vap_idx = idx
+        if n_sp > 0 and n_vp > 0:
+            steps_with_both.append((idx, s["t"], n_sp, n_vp))
+
+    print(f"\nFiring stats across all plotfiles:")
+    print(f"  spall (regime=1) max simultaneous: {n_spall_total}")
+    print(f"  vap   (regime=2) max simultaneous: {n_vap_total}")
+    print(f"  plotfiles with BOTH regimes:       {len(steps_with_both)} "
+          f"(informational — see test docstring)")
+    if steps_with_both:
+        for idx, t, ns, nv in steps_with_both[:3]:
+            print(f"    e.g. plotfile {idx}: t={t:.2f} s, "
+                  f"spall={ns}, vap={nv}")
+        if len(steps_with_both) > 3:
+            print(f"    ... and {len(steps_with_both) - 3} more")
+
+    if n_vap_total == 0 and n_spall_total == 0:
+        print()
+        print(f"FAIL: no cells fired any regime. The per-cell mechanics "
+              f"weren't exercised. Check beam power, T_vap_lo, sp_weibull "
+              f"+ spall.enabled + vapor.enabled gate.")
+        return 1
+
+    # ---- Check 2 (binding): regime_field == regime at firing cells -
+    print()
+    print("[2] regime_field == regime (scalar) at firing cells (across "
+          "all plotfiles)")
+    total_fired = 0
+    total_mismatch = 0
+    for path in files:
+        s = load_step(path)
+        rf = s["regime_field"]
+        reg = s["regime"]
+        fired = rf > 0.5
+        n_f = int(fired.sum())
+        if n_f == 0:
+            continue
+        total_fired += n_f
+        total_mismatch += int(np.count_nonzero(fired & ~np.isclose(rf, reg)))
+    if total_fired == 0:
+        print(f"     FAIL: no firing cells across any plotfile")
+        return 1
+    if total_mismatch == 0:
+        print(f"     PASS: regime_field == regime on all "
+              f"{total_fired} firing-cell observations across the run")
+    else:
+        print(f"     FAIL: {total_mismatch}/{total_fired} firing cells "
+              f"have regime_field != regime — the two diagnostics are "
+              f"out of sync")
+        return 1
+
+    # ---- Check 3 (binding): local-Q radial variation at vap cells --
+    print()
+    print("[3] RoP_vap radial profile at vap-firing cells (local-Q signature)")
+    if step_max_vap is None or max_vap_so_far < 3:
+        print(f"     SKIP: fewer than 3 vap-firing cells in any plotfile "
+              f"(max {max_vap_so_far}); need >=3 to assess radial "
+              f"variation. Check vapor.enabled and the H_vap trigger.")
+        return 1
+    rf  = step_max_vap["regime_field"]
+    vap_mask = np.isclose(rf, 2.0)
+    rop_vap = step_max_vap["RoP_vap"][vap_mask]
+    x_v = step_max_vap["x"][vap_mask]
+    y_v = step_max_vap["y"][vap_mask]
+    r2_v = (x_v - BEAM_X0) ** 2 + (y_v - BEAM_Y0) ** 2
+    rop_min  = float(rop_vap.min())
+    rop_max  = float(rop_vap.max())
+    rop_mean = float(rop_vap.mean())
+    spread   = ((rop_max - rop_min) / rop_mean) if rop_mean > 0 else 0.0
+    print(f"     using plotfile {step_max_vap_idx} (t = "
+          f"{step_max_vap['t']:.2f} s); {int(vap_mask.sum())} vap-firing cells")
+    print(f"     RoP_vap range [{rop_min:.3e}, {rop_max:.3e}], "
+          f"spread = {spread*100:.2f}%")
+    if r2_v.std() > 0 and rop_vap.std() > 0:
+        corr = float(np.corrcoef(-r2_v, rop_vap)[0, 1])
+        print(f"     Pearson r(-r², RoP_vap) = {corr:+.3f} "
+              f"(positive = closer-to-centre = higher RoP)")
+    # Under Step 11's bulk path, RoP_vap would be IDENTICAL across all
+    # vap-firing columns (all = oneR·P/(rho·L_tot·A_beam)). Under
+    # Step 17's local-Q path, RoP_vap ∝ exp(-2·r²/w0²) per cell — the
+    # spread is the signature. 1% threshold is conservative.
+    if spread > 0.01:
+        print(f"     PASS: RoP_vap shows non-trivial radial spread "
+              f"({spread*100:.2f}% > 1%) — local-Q is wired")
+    else:
+        print(f"     FAIL: RoP_vap is essentially uniform across vap "
+              f"cells (spread {spread*100:.2f}%) — local-Q path NOT "
+              f"taken. Check the if-else gating on sp_weibull_spall "
+              f"in the vapor RoP block (sp_weibull branch must be "
+              f"the second-of-three branches: prescribed > sp_weibull "
+              f"> bulk-damage_law)")
+        return 1
+
+    plot_results(step_max_vap, step_max_vap_idx, files)
+
+    print()
+    print("=" * 70)
+    print("PASS")
+    return 0
+
+
+def plot_results(step, idx, files):
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("(matplotlib not installed - skipping PNG plot)")
+        return
+
+    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.4))
+    # Pull a top slab from the chosen step.
+    x = step["x"]; y = step["y"]; z = step["z"]
+    top = np.isclose(z, z.max(), atol=1e-9)
+    xt = x[top] * 1e3
+    yt = y[top] * 1e3
+    rf_t  = step["regime_field"][top]
+    rop_t = step["RoP_vap"][top]
+
+    # Panel 1: regime_field at the top slab.
+    ax = axes[0]
+    sc = ax.scatter(xt, yt, c=rf_t, cmap="tab10", vmin=0, vmax=3,
+                    s=200, marker="s", edgecolors="black", linewidths=0.4)
+    plt.colorbar(sc, ax=ax, label="regime_field (0=none, 1=spall, 2=vap)")
+    ax.set_xlabel("x [mm]"); ax.set_ylabel("y [mm]")
+    ax.set_title(f"regime_field at t = {step['t']:.2f} s "
+                 f"(plotfile {os.path.basename(files[idx])})")
+    ax.set_aspect("equal")
+
+    # Panel 2: RoP_vap radial profile.
+    ax = axes[1]
+    vap = np.isclose(rf_t, 2.0)
+    if vap.any():
+        r_mm = np.sqrt((xt[vap] - BEAM_X0 * 1e3) ** 2
+                       + (yt[vap] - BEAM_Y0 * 1e3) ** 2)
+        ax.scatter(r_mm, rop_t[vap], c="C0", s=80, marker="o",
+                   label=f"vap cells ({int(vap.sum())})")
+        # Overlay the predicted local-Q profile.
+        r_grid = np.linspace(0, r_mm.max() * 1.1, 100)
+        if len(rop_t[vap]) > 0 and r_mm.min() <= 0.5:
+            # Anchor: peak local-Q at r ~ 0
+            peak = float(rop_t[vap].max())
+            ax.plot(r_grid, peak * np.exp(-2 * (r_grid / 1e3) ** 2 /
+                                          (BEAM_OMEGA0 ** 2)),
+                    "C3--", label="predicted Gaussian exp(-2r²/w0²)")
+        ax.set_xlabel("r from beam centre [mm]")
+        ax.set_ylabel("RoP_vap [m/s]")
+        ax.set_title("RoP_vap vs radial distance (local-Q signature)")
+        ax.legend(fontsize=8)
+    else:
+        ax.text(0.5, 0.5, "no vap cells in this step",
+                ha="center", va="center", transform=ax.transAxes)
+    fig.tight_layout()
+    out_root = os.path.dirname(OUTDIR)
+    out_png = os.path.join(out_root, "comparison.png")
+    fig.savefig(out_png, dpi=140)
+    print(f"\nwrote {out_png}")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

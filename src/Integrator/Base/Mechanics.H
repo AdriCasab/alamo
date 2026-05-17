@@ -6,6 +6,7 @@
 #include "BC/Operator/Elastic/Constant.H"
 #include "BC/Operator/Elastic/TensionTest.H"
 #include "BC/Operator/Elastic/Expression.H"
+#include "BC/Operator/Elastic/ZloRoller321.H"
 #include "Integrator/Integrator.H"
 #include "Numeric/Stencil.H"
 #include "Model/Solid/Solid.H"
@@ -95,7 +96,7 @@ public:
         }
 
         // Select the mechanical boundary conditions
-        pp.select<BC::Operator::Elastic::Constant,BC::Operator::Elastic::TensionTest,BC::Operator::Elastic::Expression>("bc",value.bc);
+        pp.select<BC::Operator::Elastic::Constant,BC::Operator::Elastic::TensionTest,BC::Operator::Elastic::Expression,BC::Operator::Elastic::ZloRoller321>("bc",value.bc);
 
         pp_query_default("print_model", value.m_print_model, false); // Print out model variables (if enabled by model)
         if (value.m_print_model) value.RegisterGeneralFab(value.model_mf, 1, 2, "model", value.m_time_evolving);
@@ -191,16 +192,16 @@ protected:
         IO::ParmParse pp("elasticop");
         pp_queryclass(elastic_op);
 
-        Set::Scalar tol_rel = 1E-8, tol_abs = 1E-8;
-
         solver.Define(elastic_op);
         if (psi_on) solver.setPsi(psi_mf);
-        solver.solve(disp_mf, rhs_mf, model_mf, tol_rel, tol_abs);
+        solver.solve(disp_mf, rhs_mf, model_mf);
         if (m_print_residual) solver.compLinearSolverResidual(res_mf, disp_mf, rhs_mf);
         solver.Clear();
 
         for (int lev = 0; lev <= disp_mf.finest_level; lev++)
         {
+            Util::RealFillBoundary(*disp_mf[lev], geom[lev]);
+
             amrex::Box domain = geom[lev].Domain();
             domain.convert(amrex::IntVect::TheNodeVector());
 

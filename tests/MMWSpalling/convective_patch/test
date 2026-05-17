@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+# Step 15a: convective Robin surface-patch BC verification.
+#
+# The `convective_patch` run is a 1D semi-infinite solid heated on its surface
+# by a flame-jet Robin BC  q = h_fl*(T_flame - T_surface). This script checks
+# the ALAMO temperature field against the Carslaw & Jaeger analytic solution
+# for a half-space with a convective surface BC.
+#
+# Analytic solution (Carslaw & Jaeger, "Conduction of Heat in Solids", 2nd ed.,
+# section 2.7). With  theta = T - T_i,  theta_inf = T_flame - T_i,
+# diffusivity  kappa = lambda/(rho*cp),  beta = h_fl/lambda,  x = depth below
+# the heated surface:
+#
+#   theta(x,t)/theta_inf = erfc( x/(2 sqrt(kappa t)) )
+#         - exp(beta x + beta^2 kappa t) * erfc( x/(2 sqrt(kappa t)) + beta sqrt(kappa t) )
+#
+# ALAMO is a finite-volume scheme and (matching the existing prescribed_T
+# patch convention) injects the Robin flux using the top *cell-centred*
+# temperature, so the discrete surface BC carries an O(beta*dz) consistency
+# error. The pass criteria therefore compare the FV cell values against the
+# cell-*averaged* analytic solution and allow a tolerance that covers that
+# discretisation error (largest in the top cell, decaying with depth).
+#
+# Pass criteria:
+#   (a) Top-cell temperature transient T_top(t) matches the cell-averaged
+#       analytic solution within TOL_TRANSIENT (fraction of theta_inf), over
+#       every plotfile with t > 0.
+#   (b) Near-surface depth profile at a mid-run time (~ t = 8 s) matches the
+#       cell-averaged analytic solution within TOL_PROFILE over the top
+#       PROFILE_DEPTH of the column.
+#   (c) Robustness: T is bounded in [T_i, T_flame] and the top-cell transient
+#       is monotone non-decreasing.
+#
+# Criterion (c)-extended ("slab trends toward T_flame at long time") is not
+# exercised: at t = 16 s the thermal front has only penetrated ~9 mm of the
+# 192 mm column, so the half-space transient (a)+(b) is the binding check.
+#
+# Usage:
+#   python3 tests/MMWSpalling/convective_patch/test [output_dir]
+
+import sys
+import os
+import glob
+import math
+import numpy as np
+import yt
+
+# --- physical constants: must match tests/MMWSpalling/convective_patch/input ---
+KAPPA_TH = 2.50        # thermal conductivity   [W/(m K)]
+RHO      = 2630.0      # density                [kg/m^3]
+CP       = 800.0       # specific heat          [J/(kg K)]
+ALPHA    = KAPPA_TH / (RHO * CP)   # thermal diffusivity [m^2/s]
+H_FL     = 1000.0      # flame heat-transfer coefficient [W/(m^2 K)]
+T_FLAME  = 1673.15     # flame temperature      [K]
+T_I      = 293.15      # initial temperature    [K]
+Z_TOP    = 0.192       # +z face position       [m]
+DZ       = Z_TOP / 384.0           # cell height [m]
+BETA     = H_FL / KAPPA_TH         # [1/m]
+THETA_INF = T_FLAME - T_I          # [K]
+
+# --- tolerances ---
+# The observed top-cell error is a systematic ~2.6% of theta_inf O(beta*dz)
+# consistency error from the cell-centred Robin flux treatment; 5% leaves
+# headroom for that while still catching sign / factor / dispatch errors.
+TOL_TRANSIENT = 0.05   # fraction of theta_inf, top-cell transient
+TOL_PROFILE   = 0.05   # fraction of theta_inf, near-surface profile
+PROFILE_DEPTH = 0.030  # compare the top 30 mm of the column
+PROFILE_TIME  = 8.0    # s (the profile check uses the plotfile closest to this)
+BOUND_EPS     = 1.0    # K slack on the [T_i, T_flame] bound
+MONO_EPS      = 0.10   # K slack on top-cell monotonicity
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def theta_point(x, t):
+    """Carslaw-Jaeger half-space, convective surface BC. Returns theta/theta_inf
+    at depth x below the surface, time t."""
+    if t <= 0.0:
+        return 0.0
+    s = math.sqrt(ALPHA * t)
+    a = x / (2.0 * s)
+    b = BETA * s
+    # The exp() term can overflow for large beta*x; the product with the tiny
+    # erfc() stays finite. Guard the few cases where it would overflow by
+    # computing in log-space-safe pieces.
+    expo = BETA * x + b * b
+    if expo > 600.0:
+        # erfc(a+b) ~ exp(-(a+b)^2)/((a+b) sqrt(pi)) for large argument;
+        # combine with exp(expo) analytically to avoid inf*0.
+        ab = a + b
+        log_term = expo - ab * ab - math.log(ab * math.sqrt(math.pi))
+        second = math.exp(log_term) if log_term < 600.0 else float("inf")
+    else:
+        second = math.exp(expo) * math.erfc(a + b)
+    return math.erfc(a) - second
+
+
+def _trapz(y, x):
+    """Trapezoidal integral (numpy 2.x dropped np.trapz)."""
+    y = np.asarray(y, dtype=float)
+    x = np.asarray(x, dtype=float)
+    return float(np.sum(0.5 * (y[1:] + y[:-1]) * np.diff(x)))
+
+
+def theta_cell_avg(x_lo, x_hi, t, n=33):
+    """Cell-averaged theta/theta_inf over depth interval [x_lo, x_hi]."""
+    xs = np.linspace(x_lo, x_hi, n)
+    vals = np.array([theta_point(float(x), t) for x in xs])
+    return _trapz(vals, xs) / (x_hi - x_lo)
+
+
+def column_profile(ds):
+    """Return (depth, T) arrays for the 1D column, averaged over x,y at each z.
+    depth is measured downward from the +z surface."""
+    ad = ds.all_data()
+    z = ad["z"].to_value()
+    T = ad["Temp"].to_value()
+    zu = np.unique(np.round(z, 9))
+    zu.sort()
+    Tz = np.array([T[np.isclose(z, zz)].mean() for zz in zu])
+    depth = Z_TOP - zu          # 0 at the surface, increasing downward
+    order = np.argsort(depth)
+    return depth[order], Tz[order]
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "output", "granite")
+print(f"Loading convective_patch run from {outdir}")
+print(f"alpha = {ALPHA:.6e} m^2/s, beta = {BETA:.1f} 1/m, beta*dz = {BETA*DZ:.3f}, "
+      f"theta_inf = {THETA_INF:.2f} K")
+
+plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
+if not plotfiles:
+    print(f"FAIL: no cell plotfiles in {outdir}")
+    sys.exit(1)
+
+times = []
+top_T = []
+top_T_analytic = []
+columns = []   # (depth, Tz) per plotfile, for the profile check
+
+for f in plotfiles:
+    ds = yt.load(f)
+    t = float(ds.current_time)
+    depth, Tz = column_profile(ds)
+    times.append(t)
+    columns.append((depth, Tz))
+    # top cell: smallest depth (cell centre at depth DZ/2)
+    top_T.append(float(Tz[0]))
+    if t > 0.0:
+        ta = T_I + THETA_INF * theta_cell_avg(0.0, DZ, t)
+    else:
+        ta = T_I
+    top_T_analytic.append(ta)
+
+times = np.asarray(times)
+top_T = np.asarray(top_T)
+top_T_analytic = np.asarray(top_T_analytic)
+
+# Profile check: use the plotfile with t > 0 closest to PROFILE_TIME. This
+# stays well-defined for the `args=stop_time=1.0` quick-check (only t = 1 s
+# available) as well as the full 16 s run.
+profile = None
+pos = [k for k, t in enumerate(times) if t > 0.0]
+if pos:
+    k = min(pos, key=lambda kk: abs(times[kk] - PROFILE_TIME))
+    pt = float(times[k])
+    pdepth, pTz = columns[k]
+    pTa = np.empty_like(pTz)
+    for m, d in enumerate(pdepth):
+        x_lo = max(0.0, d - 0.5 * DZ)
+        x_hi = d + 0.5 * DZ
+        pTa[m] = T_I + THETA_INF * theta_cell_avg(x_lo, x_hi, pt)
+    profile = (pt, pdepth.copy(), pTz.copy(), pTa)
+
+ok = True
+
+# --- (a) top-cell transient ---
+print()
+print("Top-cell temperature transient (cell centre at depth dz/2 = "
+      f"{0.5*DZ*1e3:.2f} mm):")
+print(f"  {'t [s]':>7}  {'T_alamo [K]':>12}  {'T_analytic [K]':>14}  "
+      f"{'err/theta_inf':>14}")
+worst_tr = 0.0
+for t, Ta_, Tn_ in zip(times, top_T, top_T_analytic):
+    e = abs(Ta_ - Tn_) / THETA_INF
+    if t > 0.0:
+        worst_tr = max(worst_tr, e)
+    flag = "" if (t == 0.0 or e <= TOL_TRANSIENT) else "  <-- over tol"
+    print(f"  {t:7.2f}  {Ta_:12.3f}  {Tn_:14.3f}  {e:14.4f}{flag}")
+print(f"  worst transient error (t>0): {worst_tr:.4f} "
+      f"(tol {TOL_TRANSIENT:.4f})")
+if worst_tr > TOL_TRANSIENT:
+    ok = False
+    print("FAIL: top-cell transient exceeds tolerance")
+
+# --- (b) near-surface profile ---
+if profile is None:
+    ok = False
+    print(f"FAIL: no plotfile at/after t = {PROFILE_TIME} s for the profile check")
+else:
+    pt, pdepth, pT, pTa = profile
+    mask = pdepth <= PROFILE_DEPTH + 1e-9
+    perr = np.abs(pT[mask] - pTa[mask]) / THETA_INF
+    worst_pr = float(perr.max())
+    print()
+    print(f"Near-surface profile at t = {pt:.2f} s (top {PROFILE_DEPTH*1e3:.0f} mm, "
+          f"{mask.sum()} cells):")
+    print(f"  {'depth [mm]':>11}  {'T_alamo [K]':>12}  {'T_analytic [K]':>14}  "
+          f"{'err/theta_inf':>14}")
+    for d, Ta_, Tn_, e in zip(pdepth[mask], pT[mask], pTa[mask], perr):
+        flag = "" if e <= TOL_PROFILE else "  <-- over tol"
+        print(f"  {d*1e3:11.3f}  {Ta_:12.3f}  {Tn_:14.3f}  {e:14.4f}{flag}")
+    print(f"  worst profile error: {worst_pr:.4f} (tol {TOL_PROFILE:.4f})")
+    if worst_pr > TOL_PROFILE:
+        ok = False
+        print("FAIL: near-surface profile exceeds tolerance")
+
+# --- (c) robustness: bounds + monotonicity ---
+print()
+all_T_min = min(top_T.min(), T_I)
+if top_T.min() < T_I - BOUND_EPS:
+    ok = False
+    print(f"FAIL: top-cell T dipped below T_i ({top_T.min():.3f} < {T_I:.3f})")
+if top_T.max() > T_FLAME + BOUND_EPS:
+    ok = False
+    print(f"FAIL: top-cell T exceeded T_flame ({top_T.max():.3f} > {T_FLAME:.3f})")
+mono_drop = float(np.maximum(0.0, -np.diff(top_T)).max()) if len(top_T) > 1 else 0.0
+if mono_drop > MONO_EPS:
+    ok = False
+    print(f"FAIL: top-cell transient non-monotone, max drop = {mono_drop:.4g} K")
+else:
+    print(f"Robustness: T_top in [{top_T.min():.2f}, {top_T.max():.2f}] K "
+          f"within [T_i, T_flame]; monotone (max drop {mono_drop:.3g} K). OK")
+
+# --- plot ---
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+    ax[0].plot(times, top_T, "C0o-", label="ALAMO top cell", lw=1.6, ms=4)
+    ax[0].plot(times, top_T_analytic, "k--", label="Carslaw-Jaeger (cell avg)", lw=1.6)
+    ax[0].set_xlabel("Time [s]")
+    ax[0].set_ylabel("Top-cell temperature [K]")
+    ax[0].set_title("Convective Robin patch: surface transient")
+    ax[0].legend(loc="best")
+    ax[0].grid(alpha=0.3)
+    if profile is not None:
+        pt, pdepth, pT, pTa = profile
+        m = pdepth <= PROFILE_DEPTH + 1e-9
+        ax[1].plot(pT[m], pdepth[m] * 1e3, "C1o-", label="ALAMO", lw=1.6, ms=4)
+        ax[1].plot(pTa[m], pdepth[m] * 1e3, "k--", label="Carslaw-Jaeger", lw=1.6)
+        ax[1].set_xlabel("Temperature [K]")
+        ax[1].set_ylabel("Depth below surface [mm]")
+        ax[1].set_title(f"Near-surface profile at t = {pt:.1f} s")
+        ax[1].invert_yaxis()
+        ax[1].legend(loc="best")
+        ax[1].grid(alpha=0.3)
+    out_png = os.path.join(ROOT, "output", "comparison.png")
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=120)
+    print(f"Wrote plot: {out_png}")
+except ImportError:
+    print("(matplotlib not installed - skipping PNG plot)")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)
