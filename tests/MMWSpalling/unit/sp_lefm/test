@@ -1,0 +1,417 @@
+#!/usr/bin/env python3
+# LEFM Sp-machinery unit test. Merged from the former sp_onset_kant_closed_form
+# (Step 12c) and sp_weibull_unit (Step 15b/15c) tests: both drove sigma_xx (and
+# T_surface) directly via spallation.sp.prescribed_* and re-implemented the same
+# K_I Tada-weight integral + Nasseri 2007 K_Ic(T) table. That shared machinery
+# now lives in one place (k_i_tada / k_ic_pa_sqrtm below) and drives three
+# self-contained synthetic runs. NOT a physical validation -- the Kant 2017
+# onset case (validation/kant/) is the physical check.
+#
+#   input_kic_table       Sp = K_I/K_Ic(T) closed form vs ALAMO (z-independent
+#                         compressive sigma, ramped T) + the s12b sign
+#                         convention (compressive sigma_xx -> Sp > 0).
+#   input_weibull         depth-resolved per-cell K_I, Weibull flaw statistics
+#                         (a0_gb/a0_ig means), per-cell Sp variation across an
+#                         (x,y)-uniform-sigma slab, determinism, and sign.
+#   input_weibull_regrid  AMR regrid-repair: flaw_a bit-identical across regrids
+#                         (InitializeFlaws keyed on the global cell index).
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.dirname(os.path.abspath(__file__)).split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+# ---- shared LEFM machinery (was duplicated across the two old tests) --------
+N_SEGMENTS = 128            # composite Simpson segments (matches the inputs)
+KIC_SCALE = 1.05            # Central Aare scaling on Nasseri 2007 (1.5/1.43)
+# Nasseri 2007 Table 4 (Westerly granite). Temperatures in K.
+NASSERI_T_K = np.array([298.15, 523.15, 723.15, 923.15, 1123.15])
+NASSERI_KIC_MPA = np.array([1.43, 1.35, 0.98, 0.43, 0.22])
+
+
+def k_ic_pa_sqrtm(T_K):
+    """Piecewise-linear K_Ic(T), endpoint-clamped, scaled, in Pa*sqrt(m)."""
+    return float(KIC_SCALE * np.interp(T_K, NASSERI_T_K, NASSERI_KIC_MPA) * 1.0e6)
+
+
+def k_i_tada(sigma_at_depth, a, n=N_SEGMENTS):
+    """Edge-crack K_I, mirroring SpCriterion::K_I. Composite Simpson on
+    theta in [0, pi/2] via xi = sin(theta); integrand
+    sigma_at_depth(xi*a) * (1.3 - 0.3 xi^1.25), times 2*sqrt(a/pi).
+    `sigma_at_depth(d)` returns the compression-positive integrand (-sigma_xx)
+    at crack-relative depth d, so a compressive sigma_xx gives K_I > 0."""
+    if not (a > 0.0):
+        return 0.0
+    if n % 2 != 0:
+        n += 1
+    h = (0.5 * math.pi) / n
+    acc = 0.0
+    for k in range(n + 1):
+        xi = math.sin(h * k)
+        g_xi = 1.3 - 0.3 * (xi ** 1.25)
+        if k == 0 or k == n:
+            w = 1.0
+        elif k % 2 == 1:
+            w = 4.0
+        else:
+            w = 2.0
+        acc += w * sigma_at_depth(xi * a) * g_xi
+    acc *= h / 3.0
+    return 2.0 * math.sqrt(a / math.pi) * acc
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return cands
+
+
+def run_alamo(input_file, out_root):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(out_root):
+        shutil.rmtree(out_root)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+           BIN, input_file]
+    print("Running:", " ".join(cmd))
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run for {input_file} exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def load_fields(path):
+    ds = yt.load(path)
+    ad = ds.all_data()
+    out = {
+        "t": float(ds.current_time),
+        "x": np.asarray(ad["x"].to_value()),
+        "y": np.asarray(ad["y"].to_value()),
+        "z": np.asarray(ad["z"].to_value()),
+        "Sp_field": np.asarray(ad["Sp_field"].to_value()),
+        "flaw_a": np.asarray(ad["flaw_a"].to_value()),
+        "is_grain_boundary": np.asarray(ad["is_grain_boundary"].to_value()),
+    }
+    try:
+        out["level"] = np.asarray(ad[("index", "grid_level")].to_value()).astype(int)
+    except Exception:
+        out["level"] = np.zeros_like(out["x"], dtype=int)
+    return out
+
+
+# ---- [1/3] input_kic_table: Sp = K_I/K_Ic(T) closed form + sign -------------
+def check_kic_table():
+    INPUT = os.path.join(TEST_DIR, "input_kic_table")
+    OUT = os.path.join(TEST_DIR, "output_kic")
+    A0 = 20.0e-6                # m (deterministic surface flaw length)
+    T_REF_INIT = 298.15         # K, surface T at t=0
+    T_HEAT_RATE = 30.0          # K/s
+    SIGMA_AMP_PA = 50.0e6       # peak |sigma_xx| (Pa); prescribed compressive
+    SIGMA_TAU_S = 5.0           # saturation time constant (s)
+    STOP_TIME = 10.0
+    DT = 0.5
+    REL_TOL = 0.05
+    ABS_TOL = 1.0e-6
+
+    def sigma_xx_input(t):
+        # tension-positive; the input prescribes -50e6*(1-exp(-t/5)).
+        return -SIGMA_AMP_PA * (1.0 - math.exp(-t / SIGMA_TAU_S))
+
+    def T_surface_input(t):
+        return T_REF_INIT + T_HEAT_RATE * t
+
+    def sp_closed_form(t):
+        sigma = -sigma_xx_input(t)            # compression-positive, z-independent
+        k_i = k_i_tada(lambda _d: sigma, A0)
+        return k_i / k_ic_pa_sqrtm(T_surface_input(t))
+
+    def sp_at_top(path):
+        ds = yt.load(path)
+        t = float(ds.current_time)
+        ad = ds.all_data()
+        z = np.asarray(ad["z"].to_value())
+        sp = np.asarray(ad["Sp_field"].to_value())
+        if not np.all(np.isfinite(sp)):
+            raise RuntimeError(f"{path}: non-finite Sp_field values")
+        mask = np.isclose(z, z.max(), atol=1.0e-9)
+        sp_top = sp[mask]
+        if sp_top.size == 0:
+            raise RuntimeError(f"{path}: empty top z-slab")
+        sp_mean = float(np.mean(sp_top))
+        return t, sp_mean, float(np.max(np.abs(sp_top - sp_mean)))
+
+    print("\n[1/3] input_kic_table -- Sp = K_I/K_Ic(T) closed form + sign convention")
+    run_alamo(INPUT, OUT)
+    pf = plotfiles(OUT)
+    if not pf:
+        print(f"FAIL: no cell plotfiles in {OUT}")
+        return 1
+
+    # Sp_field at plotfile <n>cell was computed at t_eval = (n-1)*dt; the
+    # step-0 plotfile has Sp_field at its allocation default of 0.
+    print(f"{'step':>6} {'t_plot':>8} {'t_eval':>8} {'Sp_alamo':>12} "
+          f"{'Sp_closed':>12} {'rel_err':>10} {'col_disp':>10}")
+    failures = 0
+    sign_checked = False
+    for step, path in pf:
+        t, sp_alamo, sp_dev = sp_at_top(path)
+        t_eval = max(0.0, t - DT) if step > 0 else 0.0
+        sp_ref = sp_closed_form(t_eval)
+        denom = max(abs(sp_ref), ABS_TOL)
+        rel = abs(sp_alamo - sp_ref) / denom
+        col_disp = sp_dev / denom
+        flag = "" if rel < REL_TOL and col_disp < REL_TOL else "  <-- FAIL"
+        print(f"{step:>6d} {t:>8.3f} {t_eval:>8.3f} {sp_alamo:>12.5e} "
+              f"{sp_ref:>12.5e} {rel:>10.3e} {col_disp:>10.3e}{flag}")
+        if rel >= REL_TOL or col_disp >= REL_TOL:
+            failures += 1
+        if t_eval > 0.0:
+            sign_checked = True
+            if not (sp_alamo > 0.0 and sp_ref > 0.0):
+                print(f"FAIL: sign convention -- compressive sigma_xx must give "
+                      f"Sp > 0, got Sp_alamo={sp_alamo:.5e}, Sp_closed={sp_ref:.5e} "
+                      f"at t_eval={t_eval:.3f}")
+                failures += 1
+    if not sign_checked:
+        print("FAIL: no plotfile with t_eval > 0 -- sign convention unchecked")
+        failures += 1
+    if failures == 0:
+        print(f"  PASS: Sp_alamo matches closed-form within +/-{REL_TOL*100:.1f}% "
+              f"over t in [0, {STOP_TIME}] s; compressive sigma_xx gives Sp > 0.")
+    return failures
+
+
+# ---- [2/3] input_weibull: depth-resolved K_I, Weibull stats, variation ------
+def check_weibull():
+    INPUT = os.path.join(TEST_DIR, "input_weibull")
+    OUT = os.path.join(TEST_DIR, "output_weibull")
+    T_SURFACE = 298.15          # K, prescribed constant surface T
+    Z_TOP = 0.01                # m, top face (geometry.prob_hi z)
+    SIGMA_AMP_PA = 50.0e6       # peak |sigma_xx| (Pa)
+    SIGMA_DECAY_M = 0.0006      # m, depth decay scale of the prescribed stress
+    A0_GB = 0.26e-3             # m, Weibull scale, grain-boundary cells
+    A0_IG = 0.13e-3             # m, Weibull scale, intragranular cells
+    WEIBULL_M = 15.0            # Weibull shape (modulus)
+    KI_REL_TOL = 1.0e-3
+    STAT_REL_TOL = 0.03
+    SP_CV_MIN = 0.02
+
+    # Mesh-objectivity size effect (mirrors the weibull.V0 feature): the
+    # per-cell Weibull SCALE is multiplied by vol_factor = (V_cell/V0)^(1/m),
+    # so the sample mean is a0 * vol_factor * Gamma(1+1/m). V0 defaults to
+    # (1 mm)^3 and this input does not override weibull.V0; the domain is a
+    # 10 mm cube at 24^3 cells, so vol_factor < 1 here. Keep these mirrored
+    # with the input geometry and the InitializeFlaws scaling law.
+    WEIBULL_V0 = 1.0e-9         # m^3, default reference volume = (1 mm)^3
+    V_CELL = (0.01 / 24) ** 3   # m^3, prob_hi 0.01, n_cell 24 (cubic)
+    VOL_FACTOR = (V_CELL / WEIBULL_V0) ** (1.0 / WEIBULL_M)
+
+    def sigma_at_depth(depth):
+        # input prescribes tension-positive sigma_xx(z) = -SIGMA_AMP*exp(-(Z_TOP-z)/DECAY);
+        # the integrand consumes -sigma_xx (compression-positive).
+        z_phys = Z_TOP - depth
+        sigma_xx = -SIGMA_AMP_PA * math.exp(-(Z_TOP - z_phys) / SIGMA_DECAY_M)
+        return -sigma_xx
+
+    print("\n[2/3] input_weibull -- depth-resolved K_I, Weibull statistics, "
+          "per-cell Sp variation, determinism")
+    run_alamo(INPUT, OUT)
+    pf = plotfiles(OUT)
+    if not pf:
+        print(f"FAIL: no cell plotfiles in {OUT}")
+        return 1
+    last_step, last_path = pf[-1]
+    if last_step < 1:
+        print("FAIL: only the step-0 plotfile exists; Sp_field not computed")
+        return 1
+    F = load_fields(last_path)
+    failures = 0
+
+    # (c) Weibull statistics over ALL cells
+    gb_mask = F["is_grain_boundary"] > 0.5
+    ig_mask = ~gb_mask
+    flaw = F["flaw_a"]
+    n_gb = int(np.count_nonzero(gb_mask))
+    n_ig = int(np.count_nonzero(ig_mask))
+    print(f"cells: {flaw.size} total, {n_gb} grain-boundary, {n_ig} intragranular")
+    if n_gb < 200 or n_ig < 200:
+        print(f"FAIL: too few GB ({n_gb}) or IG ({n_ig}) cells for statistics")
+        return failures + 1
+    if not np.all(np.isfinite(flaw)):
+        print("FAIL: non-finite flaw_a values")
+        return failures + 1
+    if np.any(flaw <= 0.0) or np.any(flaw > 2.0 * A0_GB):
+        print(f"FAIL: flaw_a outside (0, 2*a0_gb]; "
+              f"min={flaw.min():.3e}, max={flaw.max():.3e}")
+        failures += 1
+
+    gamma_factor = math.gamma(1.0 + 1.0 / WEIBULL_M)
+    exp_gb = A0_GB * VOL_FACTOR * gamma_factor
+    exp_ig = A0_IG * VOL_FACTOR * gamma_factor
+    print(f"mesh-objectivity vol_factor (V_cell/V0)^(1/m) = {VOL_FACTOR:.5f}")
+    mean_gb = float(np.mean(flaw[gb_mask]))
+    mean_ig = float(np.mean(flaw[ig_mask]))
+    rel_gb = abs(mean_gb - exp_gb) / exp_gb
+    rel_ig = abs(mean_ig - exp_ig) / exp_ig
+    print(f"flaw_a GB mean {mean_gb:.5e} (expect {exp_gb:.5e}, rel {rel_gb:.3e})")
+    print(f"flaw_a IG mean {mean_ig:.5e} (expect {exp_ig:.5e}, rel {rel_ig:.3e})")
+    if rel_gb >= STAT_REL_TOL:
+        print(f"FAIL: GB flaw_a mean off by {rel_gb*100:.2f}% (tol {STAT_REL_TOL*100:.0f}%)")
+        failures += 1
+    if rel_ig >= STAT_REL_TOL:
+        print(f"FAIL: IG flaw_a mean off by {rel_ig*100:.2f}% (tol {STAT_REL_TOL*100:.0f}%)")
+        failures += 1
+
+    # top-z slab: per-cell K_I / Sp checks
+    z = F["z"]
+    top = np.isclose(z, z.max(), atol=1.0e-9)
+    sp_top = F["Sp_field"][top]
+    a_top = flaw[top]
+    if sp_top.size == 0:
+        print("FAIL: no top-z cells found")
+        return failures + 1
+
+    # (a) sign convention -- compressive sigma_xx must give Sp > 0.
+    n_nonpos = int(np.count_nonzero(sp_top <= 0.0))
+    if n_nonpos > 0:
+        print(f"FAIL: sign convention -- {n_nonpos}/{sp_top.size} top cells "
+              f"have Sp <= 0 under compressive sigma_xx")
+        failures += 1
+    else:
+        print(f"sign: all {sp_top.size} top cells have Sp > 0 (compressive sigma_xx)")
+
+    # (b) depth-resolved K_I -- ALAMO Sp matches the analytic integral with
+    #     each cell's own flaw length a_f.
+    kic = k_ic_pa_sqrtm(T_SURFACE)
+    worst = 0.0
+    for sp_a, a_f in zip(sp_top, a_top):
+        sp_ref = k_i_tada(sigma_at_depth, a_f) / kic
+        denom = max(abs(sp_ref), 1.0e-30)
+        rel = abs(sp_a - sp_ref) / denom
+        if rel > worst:
+            worst = rel
+    print(f"depth-resolved K_I: worst per-cell Sp rel err {worst:.3e} "
+          f"(tol {KI_REL_TOL:.1e})")
+    if worst >= KI_REL_TOL:
+        print(f"FAIL: ALAMO Sp deviates from the analytic integral by {worst:.3e}")
+        failures += 1
+
+    # (d) per-cell Sp variation across the (x,y)-uniform-sigma top slab.
+    sp_mean = float(np.mean(sp_top))
+    sp_cv = float(np.std(sp_top)) / max(abs(sp_mean), 1.0e-30)
+    print(f"top-slab Sp: mean {sp_mean:.5e}, coeff. of variation {sp_cv:.3e}")
+    if sp_cv < SP_CV_MIN:
+        print(f"FAIL: top-slab Sp is nearly uniform (CV {sp_cv:.3e} < {SP_CV_MIN}); "
+              f"per-cell a_f does not propagate into Sp")
+        failures += 1
+
+    # determinism: flaw_a identical across plotfiles
+    if len(pf) >= 2:
+        F0 = load_fields(pf[0][1])
+        o_last = np.lexsort((F["z"], F["y"], F["x"]))
+        o_first = np.lexsort((F0["z"], F0["y"], F0["x"]))
+        if not np.array_equal(F["flaw_a"][o_last], F0["flaw_a"][o_first]):
+            print("FAIL: flaw_a differs between plotfiles -- not deterministic")
+            failures += 1
+        else:
+            print("determinism: flaw_a identical across plotfiles")
+
+    if failures == 0:
+        print("  PASS: sign, depth-resolved K_I, Weibull statistics, per-cell "
+              "Sp variation, and determinism verified.")
+    return failures
+
+
+# ---- [3/3] input_weibull_regrid: AMR regrid-repair of flaw_a ----------------
+def check_amr_regrid_repair():
+    INPUT = os.path.join(TEST_DIR, "input_weibull_regrid")
+    OUT = os.path.join(TEST_DIR, "output_weibull_regrid")
+    print("\n[3/3] input_weibull_regrid -- AMR regrid-repair: flaw_a bit-identity")
+    run_alamo(INPUT, OUT)
+
+    pf = plotfiles(OUT)
+    if len(pf) < 2:
+        print(f"FAIL: regrid test produced fewer than 2 plotfiles in {OUT}")
+        return False
+
+    saw_level_1 = False
+    bit_id_levels = 0
+    F0 = load_fields(pf[0][1])
+    for (_step, path) in pf[1:]:
+        F = load_fields(path)
+        if int(F["level"].max()) > 0:
+            saw_level_1 = True
+        for lvl in sorted(set(F0["level"]).intersection(set(F["level"]))):
+            m0 = (F0["level"] == lvl)
+            m1 = (F["level"] == lvl)
+            o0 = np.lexsort((F0["z"][m0], F0["y"][m0], F0["x"][m0]))
+            o1 = np.lexsort((F["z"][m1], F["y"][m1], F["x"][m1]))
+            x0, y0, z0 = F0["x"][m0][o0], F0["y"][m0][o0], F0["z"][m0][o0]
+            x1, y1, z1 = F["x"][m1][o1], F["y"][m1][o1], F["z"][m1][o1]
+            key0 = list(zip(x0.tolist(), y0.tolist(), z0.tolist()))
+            key1 = list(zip(x1.tolist(), y1.tolist(), z1.tolist()))
+            i0 = {k: i for i, k in enumerate(key0)}
+            i1 = {k: i for i, k in enumerate(key1)}
+            shared = sorted(set(i0.keys()) & set(i1.keys()))
+            if not shared:
+                continue
+            fa0 = F0["flaw_a"][m0][o0]
+            fa1 = F["flaw_a"][m1][o1]
+            i0v = np.array([i0[k] for k in shared])
+            i1v = np.array([i1[k] for k in shared])
+            if not np.array_equal(fa0[i0v], fa1[i1v]):
+                print(f"FAIL: regrid-repair -- flaw_a differs at level {lvl} "
+                      f"between plotfiles {pf[0][1]} and {path} "
+                      f"({np.count_nonzero(fa0[i0v] != fa1[i1v])} of "
+                      f"{len(shared)} cells)")
+                return False
+            bit_id_levels += 1
+
+    if not saw_level_1:
+        print("WARN: regrid test never produced a level-1 patch -- AMR may not "
+              "have refined. The bit-identity check still passes trivially on "
+              "level 0; rerun if you want a stronger AMR exercise.")
+    print(f"  PASS: flaw_a bit-identical across {len(pf) - 1} plotfile "
+          f"transitions ({bit_id_levels} level-pair comparisons, max level "
+          f"observed = {int(F['level'].max())})")
+    return True
+
+
+def main():
+    failures = 0
+    failures += check_kic_table()
+    failures += check_weibull()
+    if not check_amr_regrid_repair():
+        failures += 1
+
+    print()
+    if failures > 0:
+        print(f"FAIL: {failures} sub-check(s) failed")
+        sys.exit(1)
+    print("PASS: K_Ic(T) closed-form, depth-resolved K_I, Weibull statistics, "
+          "per-cell Sp variation, determinism, sign convention, and AMR "
+          "regrid-repair all verified.")
+
+
+if __name__ == "__main__":
+    main()

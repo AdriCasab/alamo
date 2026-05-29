@@ -28,7 +28,7 @@
 
 alamo.program = mmwspalling
 
-plot_file = tests/MMWSpalling/unit/sp_weibull_unit/output
+plot_file = tests/MMWSpalling/unit/sp_lefm/output_weibull
 
 timestep  = 0.5
 stop_time = 1.0

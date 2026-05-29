@@ -98,9 +98,8 @@ Validation and Regression Tests
 -------------------------------
 
 The MMWSpalling tests live in ``tests/MMWSpalling/`` and are organised into
-three tiers by purpose.  See ``tests/MMWSpalling/README.md`` for the full
-per-test index, including what each test checks and the pass/fail status of
-every validation.
+three tiers by purpose.  See ``tests/MMWSpalling/README.md`` for run
+instructions; the full per-test list follows below.
 
 .. code-block:: text
 
@@ -113,24 +112,131 @@ every validation.
        rossi/         spall depth distribution            (Rossi 2018, sp_weibull)
      extensions/    model-extension demos - NOT validations (no reference data)
 
-- **unit/** - 19 component tests (e.g. ``stefan``, ``beam``,
-  ``convective_patch``, ``dp_yield``, ``gb_cohesive``, ``spall_event``,
-  ``sp_weibull_unit``).  These isolate one numerical/physical building block
-  each and run in seconds; they are the first line of defence.
-- **validation/** - literature comparisons.  Currently passing: the Hu chain
-  (``hu_conduction``, ``hu_thermoelastic``, ``hu_breakage_index``,
-  ``hu_spall_onset``, and the canonical ``hu_end_to_end``) and the Kant 2017
-  LEFM cases (``sp_kant_onset``, ``sp_kant_pressure_sweep``).  The Rossi case
-  ``sp_rossi_damage_profile`` is deferred (its mechanics gates pass, but the
-  Rossi depth band is unmet at the working mesh resolution), and
-  ``zhang_oglesby`` is not in the routine rotation.
-- **extensions/** - ``hu_spall_onset_voronoi``, ``hu_spall_onset_mmwbeam``, and
-  ``hu_spall_onset_mmwbeam_lefm`` are sanity/diagnostic runs of model
-  configurations that have no published reference; a pass means "ran and
-  evolved sensibly", not scientific validation.
+Most tests write an ``output/comparison.png`` figure comparing the simulation
+against the analytical or experimental target.
 
-Most validation tests write an ``output/comparison.png`` figure comparing the
-simulation output with the analytical or experimental target.
+Unit tests
+~~~~~~~~~~~
+
+Fast, synthetic or analytic; each isolates one building block and runs in
+seconds (``tests/MMWSpalling/unit/``):
+
+- ``stefan`` - enthalpy formulation + phase change vs the analytic Stefan
+  moving-front solution.
+- ``beam`` - Gaussian / Beer-Lambert MMW source: domain-integrated absorbed
+  energy and in-plane beam centring.
+- ``equilibrium`` - radiation + convection surface losses vs the analytic
+  steady-state energy balance.
+- ``convective_patch`` - convective flame-jet Robin BC vs the Carslaw & Jaeger
+  semi-infinite-solid analytic solution.
+- ``voronoi`` - Voronoi mineral-microstructure generation (phase fractions and
+  topology).
+- ``grain_topology`` - correctness of the ``grain_id``, ``is_grain_boundary``,
+  and ``is_phase_boundary`` flags.
+- ``heterogeneous_kappa`` - per-phase and damage-modified conductivity vs the
+  series-resistance temperature profile.
+- ``heterogeneous_enthalpy`` - per-cell ``H = rho*Cp*(T - T_ref)`` consistency
+  on the microstructure path.
+- ``thermal_stress`` - heterogeneous thermoelastic stress regression.
+- ``dp_yield`` - Drucker-Prager yield, irreversible damage evolution, and
+  stiffness/conductivity degradation.
+- ``gb_cohesive`` - bilinear grain-boundary cohesive-zone law: envelope,
+  irreversibility, and fracture energy.
+- ``alpha_beta_transition`` - quartz alpha-beta transformation eigenstrain.
+- ``amr_microstructure_regrid`` - AMR repair of discrete microstructure and
+  derived fields across a regrid (raw per-level check).
+- ``spall_event`` - deterministic spall detachment and surface advance: ``phi``
+  shift, detached-cell reset, surface-mask migration, closed-form ``h_spall``.
+- ``regime_low_high_power`` - spall-vs-vaporisation regime selection and the
+  unified rate-of-penetration (RoP).
+- ``sp_lefm`` - LEFM Sp machinery on three prescribed-stress inputs: the K_I
+  Tada-weight integrator, the K_Ic(T) Nasseri table closed form, depth-resolved
+  per-cell K_I, the Weibull flaw distribution (including the ``weibull.V0``
+  mesh-objectivity size effect), per-cell Sp variation, determinism, sign
+  convention, and AMR regrid-repair.
+- ``sp_v_n_regime`` - per-cell normal velocity, the ``regime_field`` diagnostic,
+  and the local-Q (Gaussian) RoP reconstruction.
+
+Validation tests
+~~~~~~~~~~~~~~~~~
+
+Quantitative comparisons against published experiments/theory
+(``tests/MMWSpalling/validation/``).  Each group names the paper it reproduces.
+
+**Zhang et al. (2023) / Oglesby et al. (2014) - MMW granite-heating thermal
+model.**  Reproduces the Oglesby flat-granite millimetre-wave heating
+experiment as modelled by Zhang et al.: a time-varying MMW source on a granite
+surface, comparing the surface temperature beneath the beam centre (Zhang
+Fig. 7, measured with a 137 GHz radiometer and emissivity-corrected).
+Exercises the temperature-dependent ``rho``/``kappa``/``Cp`` material model,
+the beam source, surface losses, and the H<->T inversion.
+
+- ``zhang_oglesby`` - **DEFERRED**: long-running and not in the routine
+  rotation; run it to obtain a current verdict.
+
+**Hu et al. (2019) - lowest required surface temperature (LRST) for thermal
+spallation.**  Reproduces Hu et al., "Lowest Required Surface Temperature for
+Thermal Spallation in Granite and Sandstone Specimens: Experiments and
+Simulations" (*Rock Mechanics and Rock Engineering*, 2019), which measured the
+surface temperature and onset time at which a heated rock surface first spalls,
+for Granite 2 and Sandstone 2.  This chain builds the prescribed-temperature
+thermal-spallation pipeline on the ``damage_law`` branch:
+
+- ``hu_conduction`` - prescribed-temperature surface-patch conduction
+  (Granite 2 / Sandstone 2).  **PASS**.
+- ``hu_thermoelastic`` - Granite 2 vs Sandstone 2 thermoelastic surface stress,
+  single level.  **PASS** (documented bottom-clamp / L3 ordering caveats).
+- ``hu_thermoelastic_amr`` - AMR version of the above.  **PASS** (same caveats).
+- ``hu_breakage_index`` - Hu breakage indicator ``f_b = sigma_v / sigma_s``.
+  **PASS** (surface targets; deep L6 relaxed under the bottom clamp).
+- ``hu_spall_onset`` - LRST/onset via the DP-damage threshold proxy
+  (homogeneous, removal off).  **PASS** (v1; sandstone damage-depth
+  warning-only).
+- ``hu_end_to_end`` - the canonical, fully coupled Hu run (conduction ->
+  thermoelastic -> DP damage -> spall removal).  **PASS** (granite onset
+  40.0 s, sandstone 90.5 s; ordering correct).
+
+**Kant (2017) - flame-jet spallation onset, Central Aare granite.**  Reproduces
+Kant's Central Aare granite flame-spallation experiments, in which a convective
+flame jet heats a laterally-confined granite surface to the spalling onset
+temperature.  ALAMO reproduces Kant's Eq. 15 closed-form onset temperature (the
+LEFM ``K_I = K_Ic`` criterion) and its confining-pressure dependence, on the
+``sp_weibull`` branch:
+
+- ``sp_kant_onset`` - onset at confining pressure ``p = 0``; FEM vs Kant Eq. 15
+  plus Weibull patchiness.  **PASS** (6/6 targets; verification onset 461.3
+  degrees C, inside Kant's 390-560 degrees C band).
+- ``sp_kant_pressure_sweep`` - confining-pressure dependence
+  ``p in {0, 27, 48} MPa``.  **PASS** (monotone decreasing; within 8% of
+  Eq. 15 at each pressure).
+
+**Rossi et al. (2018) - spall crack-depth distribution.**  Reproduces Rossi's
+post-cooling measurement of the spatial distribution of distinct thermal-spall
+cracks versus depth (a peak at 100-200 um, falling to baseline by ~520 um), on
+the ``sp_weibull`` branch:
+
+- ``sp_rossi_damage_profile`` - **FAIL / DEFERRED**: the Sp depth-scan
+  mechanics gates (P1-P4) PASS, but the predicted crack-depth peak lands at
+  ~705 um rather than Rossi's 100-200 um.  This is a mesh-resolution limit, not
+  a code bug (see ``rossi-validation-diagnostic-design.md`` section 11).  The
+  test is kept as an ongoing P1-P4 mechanics regression; the depth-band gate
+  (R1) is reported but not enforced.
+
+Extensions
+~~~~~~~~~~
+
+Model-extension demos with **no published reference**, so they are sanity /
+diagnostic runs, not validations - a pass means "ran and evolved sensibly"
+(``tests/MMWSpalling/extensions/``):
+
+- ``hu_spall_onset_voronoi`` - Voronoi-microstructure granite spall-onset and
+  drilling on the DP ``damage_law`` branch (heterogeneous counterpart to the
+  homogeneous ``hu_spall_onset`` validation).
+- ``hu_spall_onset_mmwbeam`` - Voronoi granite drilled by a 50 kW MMW beam
+  (``damage_law``); prints a drilling-progress diagnostic.
+- ``hu_spall_onset_mmwbeam_lefm`` - ``sp_weibull`` LEFM spall under an MMW beam
+  (relaxes the prescribed-T gate so sigma_xx is read from ``stress_mf``);
+  binding code-correctness gates only, drilling metrics informational.
 
 
 Build

@@ -24,7 +24,7 @@
 
 alamo.program = mmwspalling
 
-plot_file = tests/MMWSpalling/unit/sp_weibull_unit/output_regrid
+plot_file = tests/MMWSpalling/unit/sp_lefm/output_weibull_regrid
 
 timestep  = 0.05
 stop_time = 0.2

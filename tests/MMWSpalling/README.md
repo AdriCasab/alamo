@@ -74,7 +74,6 @@ block. These are the first line of defence and should always pass.
 
 | Test | What it checks |
 |---|---|
-| `skeleton` | Executable + integrator smoke test (builds, runs one step). |
 | `stefan` | Enthalpy + phase fractions vs the analytic Stefan moving-front solution. |
 | `beam` | Gaussian / Beer-Lambert MMW source energy deposition. |
 | `equilibrium` | Radiation + convection surface-loss steady state. |
@@ -90,8 +89,7 @@ block. These are the first line of defence and should always pass.
 | `amr_microstructure_regrid` | AMR repair of discrete microstructure/derived fields on regrid. |
 | `spall_event` | Deterministic spall detachment + surface advance (closed-form `h_spall`). |
 | `regime_low_high_power` | Spall-vs-vaporisation regime selection + unified rate-of-penetration. |
-| `sp_weibull_unit` | LEFM `K_I` integrator + Weibull per-cell flaw-distribution statistics. |
-| `sp_onset_kant_closed_form` | Closed-form `Sp = K_I/K_Ic(T)` (prescribed stress/T). |
+| `sp_lefm` | LEFM Sp machinery (3 prescribed-stress inputs): K_I Tada integrator + K_Ic(T) Nasseri-table closed form, depth-resolved per-cell K_I, Weibull flaw-distribution statistics (incl. the `weibull.V0` mesh-objectivity scaling), per-cell Sp variation, determinism, sign convention, and AMR regrid-repair. |
 | `sp_v_n_regime` | Per-cell normal velocity + `regime_field` + local-Q (Gaussian) reconstruction. |
 
 ---
@@ -153,7 +151,7 @@ Do not treat a pass here as scientific validation.
 
 - **Quick smoke (seconds each):** `unit/stefan`, `unit/beam`, `unit/dp_yield`,
   `unit/gb_cohesive`, `unit/spall_event`, `unit/regime_low_high_power`,
-  `unit/sp_weibull_unit`, `unit/sp_onset_kant_closed_form`.
+  `unit/sp_lefm`.
 - **Canonical "is the science right" set:** `validation/hu/hu_end_to_end`
   (damage_law), `validation/kant/sp_kant_pressure_sweep` (LEFM onset),
   `validation/rossi/sp_rossi_damage_profile` (Sp depth mechanics — P1–P4),

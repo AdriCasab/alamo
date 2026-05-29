@@ -206,8 +206,12 @@ hc.bc.temp.constant.val.zhi  = 0.0
 
 # Mechanics: static, free-lateral with bottom clamp (zlo_roller_321),
 # time-evolving so stress_mf is populated for the Step 19 sigma_xx source.
+# el.interval = 5: re-solve the (quasi-static, T-slaved) stress every 5
+# thermal steps = 0.25 s. That lag stays under the within-pulse onset rise
+# (~0.4 s) and the cell thermal-diffusion time (~0.5 s), so it does not blur
+# the spall onset; ~5x cheaper than per-step. See discussion 2026-05-29.
 el.type     = static
-el.interval = 1
+el.interval = 5
 el.time_evolving = 1
 el.bc.type  = zlo_roller_321
 el.print_model = 0
@@ -219,14 +223,22 @@ el.model1.F0 = 0 0 0 0 0 0 0 0 0
 el.solver.verbose       = 0
 el.solver.nriters       = 1
 el.solver.max_iter      = 1000
-el.solver.tol_rel       = 1.0e-3
+# Tier 1 cost fix: loosen the relative tol. The heterogeneous operator floors
+# near 1e-4 and 1e-3 stress accuracy is overkill for a behaviour study; 3e-3
+# cuts MLMG iterations per solve.
+el.solver.tol_rel       = 3.0e-3
 el.solver.tol_abs       = 1.0e-16
 el.solver.bottom_solver = cg
 el.solver.normalize_ddw = 1
 
 el.ref_threshold         = 1.0
 el.eta_ref_threshold     = 1.0
-el.zero_out_displacement = 1
+# Tier 1 cost fix: warm-start. =1 zeroes displacement before every solve, so
+# the MLMG rebuilds the full quasi-static field from scratch each time even
+# though it barely changes between solves. =0 reuses the previous step's
+# displacement as the initial guess -> far fewer iterations, same converged
+# answer. Biggest expected win.
+el.zero_out_displacement = 0
 el.max_coarsening_level = 2
 
 solver = explicit
