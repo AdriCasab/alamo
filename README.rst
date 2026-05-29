@@ -33,6 +33,8 @@ Thermal model
 - Radiation and convection losses on surface cells.
 - Hu-style prescribed-temperature circular surface patch for flame-spallation
   validation.
+- Convective flame-jet Robin surface BC ``q = h_fl (T_flame - T_surface)`` for
+  Kant-style spallation validation.
 
 Relevant files:
 
@@ -72,44 +74,60 @@ Mechanics, Damage, and Spallation
 - Hu breakage indicator ``f_b = sigma_v / sigma_s`` from thermoelastic stress.
 - Bilinear grain-boundary cohesive-zone law with irreversible history and
   diagnostics.
+- LEFM stress-intensity spall criterion ``Sp = K_I / K_Ic(T)`` using the Tada
+  edge-crack weight function, a temperature-dependent fracture-toughness table,
+  and a Weibull per-cell flaw distribution.
+- Confining-pressure-dependent onset via the ``confining.p`` parser key.
+- Lateral / zlo roller boundary conditions for 1-D-confined static
+  thermoelastic validation.
 - Level-set-style ``phi`` field for surface advancement and first-pass spall
   detachment/removal.
+- Vaporisation removal and unified rate-of-penetration (RoP) regime selection
+  (spall vs vapour).
 
 Relevant files:
 
 - ``src/Integrator/MMWSpalling.H``
 - ``src/Numeric/DruckerPrager.H``
 - ``src/Numeric/CohesiveZone.H``
+- ``src/Numeric/SpCriterion.H``
+- ``src/BC/Operator/Elastic/ZloRoller321.H``
 
 
 Validation and Regression Tests
 -------------------------------
 
-The MMWSpalling tests live in ``tests/MMWSpalling/``.  They are staged so each
-piece of the model is verified before the fully coupled thermal-spallation
-pipeline is used.
+The MMWSpalling tests live in ``tests/MMWSpalling/`` and are organised into
+three tiers by purpose.  See ``tests/MMWSpalling/README.md`` for the full
+per-test index, including what each test checks and the pass/fail status of
+every validation.
 
-Implemented test directories include:
+.. code-block:: text
 
-- ``skeleton`` - executable/integrator smoke test.
-- ``stefan`` - enthalpy and phase-fraction verification.
-- ``beam`` - MMW source energy deposition.
-- ``equilibrium`` - radiation/convection equilibrium.
-- ``zhang_oglesby`` - MMW granite-heating thermal validation.
-- ``voronoi`` - mineral microstructure generation.
-- ``heterogeneous_kappa`` - heterogeneous conductivity.
-- ``heterogeneous_enthalpy`` - per-phase enthalpy/table consistency.
-- ``grain_topology`` - grain vs phase boundary flags.
-- ``hu_conduction`` - Hu prescribed-temperature conduction validation.
-- ``thermal_stress`` - thermoelastic stress regression.
-- ``hu_thermoelastic`` - Hu Granite 2 vs Sandstone 2 stress validation.
-- ``hu_thermoelastic_amr`` - AMR version of Hu thermoelastic validation.
-- ``amr_microstructure_regrid`` - AMR repair for microstructure fields.
-- ``dp_yield`` - Drucker-Prager damage evolution.
-- ``hu_breakage_index`` - Hu breakage indicator validation.
-- ``alpha_beta_transition`` - quartz alpha-beta transformation strain.
-- ``gb_cohesive`` - bilinear cohesive-zone law and irreversibility.
-- ``spall_event`` - deterministic spall-detachment and surface-advance event.
+   tests/MMWSpalling/
+     unit/          fast synthetic / analytic checks of one component each
+     validation/    quantitative comparison against published data/theory
+       zhang/         MMW source + thermal model         (Zhang & Oglesby)
+       hu/            prescribed-T thermal spallation     (Hu, damage_law branch)
+       kant/          LEFM Sp onset + confining pressure  (Kant 2017, sp_weibull)
+       rossi/         spall depth distribution            (Rossi 2018, sp_weibull)
+     extensions/    model-extension demos - NOT validations (no reference data)
+
+- **unit/** - 19 component tests (e.g. ``stefan``, ``beam``,
+  ``convective_patch``, ``dp_yield``, ``gb_cohesive``, ``spall_event``,
+  ``sp_weibull_unit``).  These isolate one numerical/physical building block
+  each and run in seconds; they are the first line of defence.
+- **validation/** - literature comparisons.  Currently passing: the Hu chain
+  (``hu_conduction``, ``hu_thermoelastic``, ``hu_breakage_index``,
+  ``hu_spall_onset``, and the canonical ``hu_end_to_end``) and the Kant 2017
+  LEFM cases (``sp_kant_onset``, ``sp_kant_pressure_sweep``).  The Rossi case
+  ``sp_rossi_damage_profile`` is deferred (its mechanics gates pass, but the
+  Rossi depth band is unmet at the working mesh resolution), and
+  ``zhang_oglesby`` is not in the routine rotation.
+- **extensions/** - ``hu_spall_onset_voronoi``, ``hu_spall_onset_mmwbeam``, and
+  ``hu_spall_onset_mmwbeam_lefm`` are sanity/diagnostic runs of model
+  configurations that have no published reference; a pass means "ran and
+  evolved sensibly", not scientific validation.
 
 Most validation tests write an ``output/comparison.png`` figure comparing the
 simulation output with the analytical or experimental target.
@@ -140,17 +158,17 @@ development machine:
 .. code-block:: bash
 
    mpirun --oversubscribe --bind-to none -np 4 \
-     bin/mmwspalling-3d-g++ tests/MMWSpalling/<case>/input
+     bin/mmwspalling-3d-g++ tests/MMWSpalling/<tier>/<case>/input
 
-Examples:
+Examples (note the ``unit/``, ``validation/<source>/``, ``extensions/`` tiers):
 
 .. code-block:: bash
 
    mpirun --oversubscribe --bind-to none -np 4 \
-     bin/mmwspalling-3d-g++ tests/MMWSpalling/hu_breakage_index/input_granite2_37
+     bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/hu/hu_breakage_index/input_granite2_37
 
    mpirun --oversubscribe --bind-to none -np 4 \
-     bin/mmwspalling-3d-g++ tests/MMWSpalling/spall_event/input
+     bin/mmwspalling-3d-g++ tests/MMWSpalling/unit/spall_event/input
 
 
 Run a Regression Test
@@ -161,15 +179,18 @@ machine, use:
 
 .. code-block:: bash
 
-   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/<case>/test
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/<tier>/<case>/test
 
 Examples:
 
 .. code-block:: bash
 
-   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/hu_breakage_index/test
-   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/gb_cohesive/test
-   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/spall_event/test
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/validation/hu/hu_breakage_index/test
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/unit/gb_cohesive/test
+   /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/unit/spall_event/test
+
+The full per-test index, with what each test checks and the pass/fail status of
+every validation, is in ``tests/MMWSpalling/README.md``.
 
 
 Project Context

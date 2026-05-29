@@ -2457,3 +2457,69 @@ Implementation takeaways:
   15b (p=0 onset + Eq. 15 cross-check, 3.5% rel err + Weibull
   patchiness) → 15c (sensitivity sweep, 9/9 central-third) → 18
   (pressure sweep, R1+R2 binding PASS).
+
+## Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate)
+
+Status: done and passing. Accepted by review.
+
+Scope: minimal surgery letting `spallation.model = sp_weibull` + `spall.enabled
+= 1` run under arbitrary heat sources (MMW beam, convective_flame, surface_patch
+off), not just `surface_patch.mode = prescribed_T`. All src changes confined to
+two hunks in `UpdateRemovalAfterCohesive`; no new src/ files, parser keys, or
+plotfile fields.
+
+- Removed the unconditional `surface_patch.mode != PrescribedTemperature` abort.
+- Added runtime flag `sp_weibull_use_T_face = sp_weibull_spall &&
+  surface_patch.enabled && surface_patch.mode == PrescribedTemperature`, plus a
+  fail-fast abort when `sp_weibull_spall && !use_T_face && !have_stress`
+  (actionable message: set `el.type = static` + `el.time_evolving = 1`).
+- Forked `k_i_at_zcrack`'s `sigma_at_depth` lambda: under `use_T_face` keep the
+  byte-identical Step 16d T-derived 1-D-confinement form; otherwise sample σ_xx
+  from `stress_mf` via `Numeric::Interpolate::NodeToCellAverage(sig_node, i, j,
+  k_d, 0)` and return `-sigma(0,0) + sp_conf_offset` (same pattern as
+  `UpdateSpAfterMechanics`). The Step 18 `sp_conf_offset` applies in both
+  branches.
+- New test `tests/MMWSpalling/hu_spall_onset_mmwbeam_lefm/` (model extension, NOT
+  a validation): MMW beam + 3-phase Voronoi granite + `zlo_roller_321` BC,
+  `damage.enabled = 0`, `spallation.model = sp_weibull`. Binding gates G1 (no
+  abort), G2 (max Sp_field > 0), G3 (fields registered); G4-G6 informational.
+
+Results: G1+G2+G3+G4 PASS. First spall_event at t = 2.00 s; Sp_field max 2.91
+over the run; 207 removed cells; h_spall_field max 9.375 mm; drill 7.812 mm.
+Drilling is mostly vapor (T_max 4233 K > T_vap_lo 3233 K) with sparse spall.
+Regressions byte-identical: sp_rossi_damage_profile (P1-P4: 528 cells, 96.0% GB,
+1.5564 mm — the canonical prescribed_T witness for the removal path),
+hu_end_to_end (granite 40.0 s / sandstone 90.5 s), sp_kant_onset verification
+(461.28 °C = Step 18 baseline), plus dp_yield, sp_onset_kant_closed_form,
+spall_event, regime_low_high_power, sp_weibull_unit, sp_v_n_regime.
+
+Takeaways:
+1. **Hidden T_face=∞ bug fixed.** When `surface_patch.enabled = 0`, `mode` still
+   defaults to `PrescribedTemperature` but `T_f` is uncompiled; calling an
+   uncompiled `ParserExecutor<1>` returns `DBL_MAX` (≈1.8e308). Pre-Step-19
+   inputs with `sp_weibull + spall.enabled = 1 + surface_patch.enabled = 0`
+   silently sampled σ_xx at T_face = ∞ in the `[0, dz/2]` surface region. The
+   flag MUST include `surface_patch.enabled` — caught during implementation
+   (Sp_max 4.05 → 2.91 before/after). `sp_v_n_regime` was vapor-driven so its
+   524 firings are unchanged.
+2. Two σ_xx reconstructions behind one flag, forked at one point in
+   `sigma_at_depth`; the non-prescribed_T branch reuses
+   `UpdateSpAfterMechanics`'s proven `stress_mf` sampling rather than inventing
+   a new reconstruction.
+3. Free-lateral σ_xx under MMW is moderate, not weak (Step 16 takeaway #6 warned
+   of ~0.3× under patch+rim; MMW is volumetric with no rim, Sp peaks ~4 and
+   fires).
+4. plot_int=20 sub-samples per-step regime activity (spall_event/vapor_event/
+   regime_field reset each Advance); `removed` is the only reliable cumulative
+   observable. Future richer accounting: plot every step, add a non-resetting
+   counter field, or post-process `removed` diffs.
+5. phase-0 ν/E/β/T_ref captures stay required for `sp_conf_offset` even on the
+   new branch; only their *use* in the T-derived form is gated on `use_T_face`.
+6. Smallest surface area: no new src/ files, parser keys, or plotfile fields.
+7. Step 19b (lateral-roller + MMW for 1-D-confinement σ_xx) stays deferred — G4
+   PASSed, so it is only needed if a future user wants Kant-style confinement
+   under MMW for comparison.
+
+Nit (open): the comment at MMWSpalling.H ~2337-2338 ("Fail fast if surface_patch
+isn't in prescribed_T mode") is stale — the fail-fast it describes was replaced
+by the `sp_weibull_use_T_face` flag. Refresh in a future cleanup pass.

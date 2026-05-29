@@ -259,52 +259,53 @@ Completed and passing:
   confining contribution lives only in the σ_xx-lambda returns
   feeding the K_I integrator. **Kant validation chain (12c →
   15b → 15c → 18) closed; revised-approach Stage 5 complete.**
+- Step 19: sp_weibull spall under MMW beam (relax Step 16d
+  surface_patch gate). Two-hunk src change in
+  `UpdateRemovalAfterCohesive`: removed the unconditional
+  prescribed_T abort, added `sp_weibull_use_T_face` flag
+  (requires `surface_patch.enabled` — fixes a hidden T_face=∞ bug
+  from calling an uncompiled parser) + fail-fast on missing
+  stress, and forked `k_i_at_zcrack`'s σ_xx between the Step 16d
+  T-derived form and `stress_mf` NodeToCellAverage. New
+  model-extension test `hu_spall_onset_mmwbeam_lefm` (NOT a
+  validation). G1+G2+G3+G4 PASS (first spall at t=2.0 s, Sp_max
+  2.91, 207 cells removed); all prescribed_T/damage_law
+  regressions byte-identical. Accepted by review.
 
 Active step:
 
-- **Step 19 — sp_weibull spall under MMW beam (relax Step 16d
-  surface_patch gate).** Lifts the
-  `surface_patch.mode == prescribed_T` hard-abort at
-  [src/Integrator/MMWSpalling.H:2362-2366](src/Integrator/MMWSpalling.H#L2362-L2366)
-  that currently blocks `spallation.model = sp_weibull` +
-  `spall.enabled = 1` under any non-prescribed-T heat source
-  (including the MMW beam). Forks
-  [k_i_at_zcrack's sigma_at_depth lambda](src/Integrator/MMWSpalling.H#L2509-L2573):
-  under prescribed_T it keeps the Step 16d T-derived form
-  (byte-identical); otherwise it reads σ_xx directly from the
-  mechanics solve's `stress_mf` via NodeToCellAverage (same
-  pattern UpdateSpAfterMechanics already uses for Sp_field). New
-  test `tests/MMWSpalling/hu_spall_onset_mmwbeam_lefm/` mirrors
-  the existing `hu_spall_onset_mmwbeam` MMW + Voronoi-granite
-  config with `damage.enabled = 0` and `spallation.model =
-  sp_weibull` + Weibull keys. Binding gates: G1 no abort, G2
-  `max(Sp_field) > 0` somewhere, G3 fields registered, all
-  prescribed_T regressions byte-identical (Step 18 p=0 onset
-  461.3 °C is the canonical witness). G4 (`spall_event > 0`) is
-  informational — free-lateral σ_xx may fall short of K_Ic in the
-  ramp (Step 16 takeaway #6). Step 19 produces model-extension
-  data, NOT a validation — no MMW + LEFM literature reference
-  exists. See `ACTIVE_STEP.md`.
+- **Refactor R1 — extract `UpdateRemovalAfterCohesive` into a
+  partial header.** Behavior-preserving decomposition of the
+  ~4377-line `src/Integrator/MMWSpalling.H`, **without touching its
+  virtual multiple-inheritance graph** (CLAUDE.md Lessons #1).
+  R1 moves the ~957-line `UpdateRemovalAfterCohesive` method
+  (lines ~2092–3053, ≈22% of the file — shared by both
+  `damage_law` and `sp_weibull` removal plus vaporisation) *verbatim*
+  into a new `src/Integrator/MMWSpalling/Removal.H` that is
+  `#include`d back **inside the class body** at the method's original
+  spot. The method stays an inline class member; zero semantic
+  change. Data members, config scalars, and helpers (e.g.
+  `PrincipalStressRatio`) are NOT moved in R1 (deferred to R2).
+  Acceptance: `make` links `bin/mmwspalling-3d-g++` and the
+  removal-exercising regressions stay byte-identical
+  (`sp_rossi_damage_profile` is the canonical witness, plus
+  `hu_end_to_end`, `spall_event`, `regime_low_high_power`,
+  `sp_v_n_regime`, `sp_kant_onset`). See `ACTIVE_STEP.md`.
 
 Previous active step (archived to ARCHIVE_DONE.md):
 
-- Step 18 (Kant 2017 confining-pressure sweep validation,
-  revised-approach Stage 5). One-parser-key src change:
-  `confining.p` (default 0 — preserves all existing tests byte-
-  identical) added to the σ_xx-reconstruction lambdas in both
-  `UpdateSpAfterMechanics` (Sp_field path) and Step 16d's
-  `k_i_at_zcrack` (depth-scan path) — adds `+p·ν/(1−ν)` to the
-  compression-positive return so the K_I integrand sees the
-  Kant Eq. 15 confining contribution. New test
-  `tests/MMWSpalling/sp_kant_pressure_sweep/` with three input
-  files (`p ∈ {0, 27, 48} MPa`) mirroring sp_kant_onset's lateral
-  roller box + frozen K_Ic⁰ verification setup. PASS criteria:
-  (R1, binding) at each `p`, FEM onset ΔT matches Kant Eq.15 with
-  confining term within 8% (same tolerance as §15b target 3);
-  (R2, binding) monotone decreasing across p; (R3, informational)
-  at p=0, ΔT in Kant's 390–560 °C band; (R4, informational)
-  closed-form slope `dΔT/dp = ν/(E·α) ≈ -0.93 K/MPa` matched
-  within 20%. See `ACTIVE_STEP.md`.
+- Step 19 (sp_weibull spall under MMW beam). Removed the
+  prescribed_T hard-abort in `UpdateRemovalAfterCohesive` and
+  forked `k_i_at_zcrack`'s σ_xx reconstruction so `sp_weibull` +
+  `spall.enabled` works under arbitrary heat sources (MMW beam,
+  convective_flame, surface_patch off). `sp_weibull_use_T_face`
+  flag gates the byte-identical Step 16d T-derived branch; the new
+  branch samples `stress_mf` via NodeToCellAverage (the
+  `UpdateSpAfterMechanics` pattern). New model-extension test
+  `tests/MMWSpalling/hu_spall_onset_mmwbeam_lefm/`. No new src/
+  files, parser keys, or plotfile fields. See ARCHIVE_DONE.md
+  Step 19 for full results + the 7 takeaways (esp. #1, the
+  T_face=∞ / uncompiled-parser bug).
 
 Next milestones after the active step:
 
@@ -375,6 +376,22 @@ Next milestones after the active step:
 
 ## Known Stale/Important Notes
 
+- **Refactor track (R-series) is decoupling `src/Integrator/MMWSpalling.H`
+  (~4377 lines) into per-concern pieces WITHOUT changing its virtual
+  multiple-inheritance graph** (CLAUDE.md Lessons #1 — base-class edits caused
+  AMR vtable crashes before). Planned decomposition by field-ownership cluster:
+  Thermal/enthalpy, Microstructure, ContinuousDamage (`damage_law`), Cohesive,
+  LefmSp (`sp_weibull`), Removal. **R1 (active)** extracts the ~957-line
+  `UpdateRemovalAfterCohesive` into `src/Integrator/MMWSpalling/Removal.H`,
+  `#include`d *inside the class body* — the method stays an inline member, pure
+  code-motion, byte-identical regressions. The partial-header trick is safe
+  because the build (Makefile) compiles objects only from `*.cpp` (mindepth ≥2)
+  and top-level `*.cc`; `*.H` files are include-only and never standalone-
+  compiled, and incremental rebuilds still trigger via the generated `.d` deps.
+  Such a fragment must contain NO `#include`/`namespace`/`class` (it is pasted
+  into `class MMWSpalling { ... }`). Data-member / helper relocation is
+  deferred to R2+. New pieces go under `src/Integrator/MMWSpalling/` (mirrors the
+  existing `src/Integrator/Base/` subdir convention).
 - The long plan still contains an old Zhang/Oglesby note with `omega_0 = 0.20 m`.
   The corrected validation reference says `omega_0 = 0.02 m`.
 - Step numbering contains inserted/moved validation steps such as 4b, 6d, 7b,

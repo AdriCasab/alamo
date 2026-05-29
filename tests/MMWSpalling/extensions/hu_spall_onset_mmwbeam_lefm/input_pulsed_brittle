@@ -1,0 +1,232 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Pulsed, brittle-regime spallation-drilling BEHAVIOUR study (NOT a
+# validation). Derived from input_granite2 with four deliberate changes,
+# motivated by the diagnosis that the continuous 10 kW / 2 cm beam drove the
+# surface to ~4160 K (deep into melt/vapour, where the LEFM Sp criterion is
+# invalid and K_Ic is extrapolated 3000 K past the Nasseri table):
+#
+#   1. LOW FLUX + PULSED beam. P0 = 1.2 kW with a 2 s-on / 2 s-off schedule
+#      (beam.schedule.*). Goal: keep the surface peak in the brittle band
+#      (~700-1000 K, inside the K_Ic table, below T_m = 1510 K) so Sp
+#      oscillates around 1 instead of pinning at ~3. Pulsing regenerates the
+#      near-surface thermal gradient each cycle (heat -> stress -> spall ->
+#      expose fresh rock -> reheat), which is what real flame/MMW spallation
+#      drilling does, and prevents the monotonic T runaway.
+#
+#   2. RESOLUTION + QUASI-2D THIN SLAB. Domain shrunk to 5 cm and grid 64 x 4
+#      x 64 -> CUBIC 0.78 mm cells (cells MUST stay cubic; the heterogeneous
+#      elastic MLMG does not converge on anisotropic cells). The earlier
+#      3.125 mm cell could not resolve the thermal skin (sqrt(kappa*t_on) ~
+#      1.5 mm), so the spall depth-scan never found a crack tip a full cell
+#      deep where K_I >= K_Ic still held (h_col = 0 -> no detach even though
+#      surface Sp > 1). The slab is only 4 cells (3.125 mm) thick in y: the
+#      removal code is hardcoded to z = depth and (i,j) = surface, so a true
+#      2D build (SPACEDIM=2, depth would be j) cannot run it -- the thin slab
+#      keeps the validated 3D path while costing ~16x less than 64^3. The
+#      1 cm-waist beam is ~uniform across the 3 mm slab, so this behaves like
+#      a line-source 2D (x-z) problem; the rollered thin y approximates plane
+#      strain. AMR is unusable here (elastic MLMG won't converge on refined
+#      grids), so a uniform fine single-level slab is the way to sub-mm cells.
+#
+#   3. WAIST. omega0 = 1 cm, axis centred, so the beam stays well inside the
+#      5 cm box (no lateral edge clipping into the Neumann walls).
+#
+#   4. spall.h_spall_max = 4 mm. In the brittle regime the depth scan should
+#      find a genuine K_I < K_Ic crossing (thin skin), not peg the cap.
+#
+# What to watch: Sp_field max should cycle through ~1 with the pulses; spall
+# events should recur (not front-load then stall); drill depth should climb
+# in steps rather than plateau. If spalling still barely fires after this,
+# the free-lateral zlo_roller_321 BC is relaxing the subsurface sigma_xx
+# below what a 1-D-confinement Kant flake needs — a physics limit, not a
+# tuning one.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/output/pulsed_brittle
+
+# Explicit forward Euler. dt = 0.05 s is under the explicit-diffusion CFL at
+# dz = 0.78 mm (dz^2 / (6*alpha) ~ 0.089 s). 30 s = 7.5 pulse cycles.
+timestep  = 0.05
+stop_time = 30.0
+
+amr.plot_int        = 20
+amr.max_level       = 0
+amr.n_cell          = 64 4 64
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0        0.0
+geometry.prob_hi     = 0.05  0.003125   0.05
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Voronoi mineral microstructure — same minerals as input_granite2.
+microstructure.mode             = voronoi
+microstructure.number_of_grains = 200
+microstructure.seed             = 1
+microstructure.nphases          = 3
+
+microstructure.phase0.name              = quartz
+microstructure.phase0.fraction          = 0.474
+microstructure.phase0.kappa             = 4.94
+microstructure.phase0.beta              = 1.6e-5
+microstructure.phase0.E                 = 75.0e9
+microstructure.phase0.mu                = 34.7e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 750.0
+microstructure.phase0.alpha_attenuation = 100.0
+microstructure.phase0.A_D               = 0.0003
+microstructure.phase0.T_ref             = 280.15
+microstructure.phase0.T_m               = 1510.5
+microstructure.phase0.fus_width         = 200.0
+microstructure.phase0.L_m               = 3.4e5
+microstructure.phase0.T_vap_lo          = 3233.0
+microstructure.phase0.T_vap_hi          = 3503.0
+microstructure.phase0.L_v               = 4.8e6
+
+microstructure.phase1.name              = kfeldspar
+microstructure.phase1.fraction          = 0.320
+microstructure.phase1.kappa             = 2.34
+microstructure.phase1.beta              = 0.75e-5
+microstructure.phase1.E                 = 53.0e9
+microstructure.phase1.mu                = 23.5e9
+microstructure.phase1.rho               = 2630.0
+microstructure.phase1.Cp                = 711.0
+microstructure.phase1.alpha_attenuation = 100.0
+microstructure.phase1.A_D               = 0.0003
+microstructure.phase1.T_ref             = 280.15
+microstructure.phase1.T_m               = 1510.5
+microstructure.phase1.fus_width         = 200.0
+microstructure.phase1.L_m               = 3.4e5
+microstructure.phase1.T_vap_lo          = 3233.0
+microstructure.phase1.T_vap_hi          = 3503.0
+microstructure.phase1.L_v               = 4.8e6
+
+microstructure.phase2.name              = plagioclase
+microstructure.phase2.fraction          = 0.206
+microstructure.phase2.kappa             = 3.26
+microstructure.phase2.beta              = 1.067e-5
+microstructure.phase2.E                 = 55.0e9
+microstructure.phase2.mu                = 24.6e9
+microstructure.phase2.rho               = 2540.0
+microstructure.phase2.Cp                = 711.0
+microstructure.phase2.alpha_attenuation = 100.0
+microstructure.phase2.A_D               = 0.0003
+microstructure.phase2.T_ref             = 280.15
+microstructure.phase2.T_m               = 1510.5
+microstructure.phase2.fus_width         = 200.0
+microstructure.phase2.L_m               = 3.4e5
+microstructure.phase2.T_vap_lo          = 3233.0
+microstructure.phase2.T_vap_hi          = 3503.0
+microstructure.phase2.L_v               = 4.8e6
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled         = 0
+
+# Spallation: LEFM Sp branch (sp_weibull). Same calibration as granite2.
+spallation.model         = sp_weibull
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.05
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 15.0
+weibull.seed    = 12345
+
+# LEFM spall removal ON. Cap lowered to 4 mm — in the brittle regime the
+# scan should find a real K_I < K_Ic crossing rather than the cap.
+spall.enabled          = 1
+spall.sample           = top_cell
+spall.h_spall_max      = 0.004
+
+# Vapor removal ON. Harmless in the brittle regime (T stays < T_vap), and it
+# keeps the regime-selection path identical to granite2.
+vapor.enabled          = 1
+
+# MMW beam: PULSED, low flux. P0 must stay non-zero so MMWBeam::active() is
+# true; the piecewise schedule (power_at) overrides the magnitude per
+# interval. schedule.P[i] applies while t < schedule.t_end[i]. 2 s on at
+# 1.2 kW, 2 s off, repeating. omega0 = 1 cm; axis centred in the 5 cm box,
+# entering the +z face at z0 = 0.05. alpha = 100 1/m (~1 cm absorption).
+beam.P0     = 1200.0
+beam.omega0 = 0.01
+beam.lambda = 2.19e-3
+beam.x0     = 0.025
+beam.y0     = 0.0015625
+beam.z0     = 0.05
+beam.alpha_expr = 100.0
+beam.R      = 0.2
+beam.schedule.t_end = 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30
+beam.schedule.P     = 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200
+
+# Surface losses ON (radiative + convective at the receding surface).
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 56.0
+losses.T_amb         = 280.15
+
+# Surface patch OFF — the MMW beam is the sole heat source.
+surface_patch.enabled = 0
+
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics: static, free-lateral with bottom clamp (zlo_roller_321),
+# time-evolving so stress_mf is populated for the Step 19 sigma_xx source.
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = zlo_roller_321
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 29.98e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+el.solver.tol_rel       = 1.0e-3
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level = 2
+
+solver = explicit
