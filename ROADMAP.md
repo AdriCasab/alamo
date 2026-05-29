@@ -262,14 +262,29 @@ Completed and passing:
 
 Active step:
 
-- **None** — project at wrap-up. The headline `sp_weibull`
-  validation chain is closed and the headline `damage_law`
-  chain (Hu) was closed at Step 14b. No new code packet is
-  active; the next deliverable is a project-wide summary
-  document for field engineers / geoscientists
-  (`output/PROJECT_SUMMARY.html`). See the prior
-  `ACTIVE_STEP.md` (Step 18) for the most recent completed
-  packet's takeaways and review findings.
+- **Step 19 — sp_weibull spall under MMW beam (relax Step 16d
+  surface_patch gate).** Lifts the
+  `surface_patch.mode == prescribed_T` hard-abort at
+  [src/Integrator/MMWSpalling.H:2362-2366](src/Integrator/MMWSpalling.H#L2362-L2366)
+  that currently blocks `spallation.model = sp_weibull` +
+  `spall.enabled = 1` under any non-prescribed-T heat source
+  (including the MMW beam). Forks
+  [k_i_at_zcrack's sigma_at_depth lambda](src/Integrator/MMWSpalling.H#L2509-L2573):
+  under prescribed_T it keeps the Step 16d T-derived form
+  (byte-identical); otherwise it reads σ_xx directly from the
+  mechanics solve's `stress_mf` via NodeToCellAverage (same
+  pattern UpdateSpAfterMechanics already uses for Sp_field). New
+  test `tests/MMWSpalling/hu_spall_onset_mmwbeam_lefm/` mirrors
+  the existing `hu_spall_onset_mmwbeam` MMW + Voronoi-granite
+  config with `damage.enabled = 0` and `spallation.model =
+  sp_weibull` + Weibull keys. Binding gates: G1 no abort, G2
+  `max(Sp_field) > 0` somewhere, G3 fields registered, all
+  prescribed_T regressions byte-identical (Step 18 p=0 onset
+  461.3 °C is the canonical witness). G4 (`spall_event > 0`) is
+  informational — free-lateral σ_xx may fall short of K_Ic in the
+  ramp (Step 16 takeaway #6). Step 19 produces model-extension
+  data, NOT a validation — no MMW + LEFM literature reference
+  exists. See `ACTIVE_STEP.md`.
 
 Previous active step (archived to ARCHIVE_DONE.md):
 
@@ -293,6 +308,13 @@ Previous active step (archived to ARCHIVE_DONE.md):
 
 Next milestones after the active step:
 
+- **Step 19b (potential follow-on, only if Step 19 G4 FAILs)**: a
+  lateral-roller-box + MMW beam variant that recovers 1-D-confinement
+  σ_xx (Step 16 working geometry but with MMW as the heat source
+  instead of `convective_flame`). Only spin up if Step 19's
+  free-lateral `zlo_roller_321` test informally records "Sp fires but
+  σ_xx too low for spall removal in the ramp" — that finding is the
+  motivation. If Step 19 G4 informally PASSes, no Step 19b needed.
 - Step 13: production AMR refinement criteria + adaptive timestep
   (eq. 40). **Deferred indefinitely** — the AMR-mechanics smoother
   limitation in `hu_spall_onset` is documented as permanent (five
@@ -412,9 +434,12 @@ Next milestones after the active step:
   `tests/MMWSpalling/hu_spall_onset/AMR_FAILURE_ANALYSIS.md` §9–§10 and
   `AMR_SMOOTHER_LIMITATION.md` before re-opening; surviving candidates are
   per-level coefficient consistency and vector-elastic multigrid machinery vs
-  `MLNodeLaplacian`. Diagnostic helpers `DiagnoseAMRResidual` and
-  `ApplyAMRF0Consistency` live in `src/Integrator/MMWSpalling.H` env-var-gated
-  (`ALAMO_AMR_DIAG=1`, `ALAMO_LEV1_F0_FROM_COARSE`); default behavior unchanged.
+  `MLNodeLaplacian`. The in-tree diagnostic toolkit (`DiagnoseAMRResidual`,
+  `ApplyAMRF0Consistency`, `CheckAMRMechanicsFieldsFinite` and the
+  `Check*FieldFinite` family, plus the `mmw.debug_amr_mechanics` /
+  `ALAMO_AMR_DIAG` / `ALAMO_LEV1_F0_FROM_COARSE` gates) was removed during
+  post-Step-18 cleanup — see [git history of `src/Integrator/MMWSpalling.H`]
+  for the prior implementation if reopening this work.
 - `revised-model-approach.md` (Stages 1–5 of the LEFM Sp + Weibull
   re-architecture) is in the repository root and is the authoritative spec
   for the `sp_weibull` branch. The long plan §12–§18 is the implementation
@@ -639,6 +664,19 @@ Next milestones after the active step:
   to shift R3 toward 5:1 — those are calibrated against Kant.
   The 24:1 R3 ratio reflects late-ramp σ_xx skew on this
   geometry, not a model bug.
+- **Step 16d's σ_xx reconstruction is gated to `surface_patch.mode =
+  prescribed_T`** because the T(z) lerp uses `surface_patch.T_f(time)`
+  to pin T at z=0. Step 19 (active) forks this lambda: under
+  prescribed_T it keeps the byte-identical T-derived form; under
+  any other heat source (MMW beam, convective_flame, surface_patch
+  disabled) it reads σ_xx from `stress_mf` via NodeToCellAverage —
+  same pattern as the diagnostic Sp_field path in
+  UpdateSpAfterMechanics. The mechanics solve must be active
+  (`el.time_evolving = 1`) for the non-prescribed_T branch to work;
+  Step 19 adds a fail-fast abort if it isn't. The prescribed_T
+  branch byte-identity is the canonical witness for Step 19
+  correctness (Step 18 `sp_kant_pressure_sweep` p=0 = 461.3 °C
+  must stay unchanged).
 - **Step 17 per-cell v_n + regime_field + local-Q infrastructure.**
   Under `spallation.model = sp_weibull && (spall.enabled ||
   vapor.enabled)`, the vapor-RoP path is a three-branch ladder:

@@ -1,0 +1,236 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Step 19 — Model-extension exploration of the LEFM Sp criterion under MMW
+# volumetric heating. NOT a validation: no MMW + LEFM literature reference
+# exists. Pass criteria are code-correctness invariants (no abort, fields
+# registered, Sp_field non-trivial somewhere). Physical numbers (final
+# spall depth, removed-cell count, regime split) are reported as findings,
+# not banded.
+#
+# Setup mirrors `hu_spall_onset_mmwbeam/input_granite2` (Voronoi granite,
+# MMW beam, surface losses, vapor removal, `zlo_roller_321` BC) with two
+# substitutions:
+#   - `damage.enabled = 0`  (sp_weibull + damage.enabled is a hard parser
+#     abort — see ParseSpallationModel guards).
+#   - `spallation.model = sp_weibull` + Weibull keys (mirrors
+#     `sp_kant_onset/input_weibull`).
+#
+# This is the first test to exercise Step 19's non-prescribed_T branch in
+# `UpdateRemovalAfterCohesive`'s `k_i_at_zcrack` lambda: sigma_xx is
+# sourced from the mechanics solve's `stress_mf` (NodeToCellAverage) rather
+# than from the Step 16d T-derived 1-D-confinement form. Free-lateral
+# `zlo_roller_321` BC means the central-column sigma_xx may be well below
+# the 1-D ideal (Step 16 takeaway #6); whether Sp + spall fires in the
+# 60 s ramp is the empirical question the test is designed to answer.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/hu_spall_onset_mmwbeam_lefm/output/granite2
+
+# Explicit forward Euler. Same dt cap as hu_spall_onset_mmwbeam.
+timestep  = 0.05
+stop_time = 60.0
+
+amr.plot_int        = 20
+amr.max_level       = 0
+amr.n_cell          = 32 32 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Voronoi mineral microstructure — same minerals as hu_spall_onset_mmwbeam.
+# Note: alpha_attenuation is parsed but NOT used (beam.alpha_expr drives the
+# absorption depth). A_D is parsed-but-irrelevant under sp_weibull (the LEFM
+# branch ignores it); kept for input-format compatibility.
+microstructure.mode             = voronoi
+microstructure.number_of_grains = 200
+microstructure.seed             = 1
+microstructure.nphases          = 3
+
+microstructure.phase0.name              = quartz
+microstructure.phase0.fraction          = 0.474
+microstructure.phase0.kappa             = 4.94
+microstructure.phase0.beta              = 1.6e-5
+microstructure.phase0.E                 = 75.0e9
+microstructure.phase0.mu                = 34.7e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 750.0
+microstructure.phase0.alpha_attenuation = 100.0
+microstructure.phase0.A_D               = 0.0003
+microstructure.phase0.T_ref             = 280.15
+microstructure.phase0.T_m               = 1510.5
+microstructure.phase0.fus_width         = 200.0
+microstructure.phase0.L_m               = 3.4e5
+microstructure.phase0.T_vap_lo          = 3233.0
+microstructure.phase0.T_vap_hi          = 3503.0
+microstructure.phase0.L_v               = 4.8e6
+
+microstructure.phase1.name              = kfeldspar
+microstructure.phase1.fraction          = 0.320
+microstructure.phase1.kappa             = 2.34
+microstructure.phase1.beta              = 0.75e-5
+microstructure.phase1.E                 = 53.0e9
+microstructure.phase1.mu                = 23.5e9
+microstructure.phase1.rho               = 2630.0
+microstructure.phase1.Cp                = 711.0
+microstructure.phase1.alpha_attenuation = 100.0
+microstructure.phase1.A_D               = 0.0003
+microstructure.phase1.T_ref             = 280.15
+microstructure.phase1.T_m               = 1510.5
+microstructure.phase1.fus_width         = 200.0
+microstructure.phase1.L_m               = 3.4e5
+microstructure.phase1.T_vap_lo          = 3233.0
+microstructure.phase1.T_vap_hi          = 3503.0
+microstructure.phase1.L_v               = 4.8e6
+
+microstructure.phase2.name              = plagioclase
+microstructure.phase2.fraction          = 0.206
+microstructure.phase2.kappa             = 3.26
+microstructure.phase2.beta              = 1.067e-5
+microstructure.phase2.E                 = 55.0e9
+microstructure.phase2.mu                = 24.6e9
+microstructure.phase2.rho               = 2540.0
+microstructure.phase2.Cp                = 711.0
+microstructure.phase2.alpha_attenuation = 100.0
+microstructure.phase2.A_D               = 0.0003
+microstructure.phase2.T_ref             = 280.15
+microstructure.phase2.T_m               = 1510.5
+microstructure.phase2.fus_width         = 200.0
+microstructure.phase2.L_m               = 3.4e5
+microstructure.phase2.T_vap_lo          = 3233.0
+microstructure.phase2.T_vap_hi          = 3503.0
+microstructure.phase2.L_v               = 4.8e6
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# damage_law continuous damage OFF (sp_weibull + damage.enabled is a hard
+# parser abort — see ParseSpallationModel guards). The LEFM Sp criterion
+# replaces DP damage entirely under sp_weibull.
+damage.enabled         = 0
+
+# Spallation: LEFM Sp branch. Phase-0 ν is used for the Step 18
+# confining-pressure offset (default 0, byte-identical here). Deterministic
+# a0 = 20 µm follows `sp_kant_onset/input_weibull` (Moeri 2003 thin-section
+# largest pre-existing crack — granite-typical scale). Nasseri K_Ic(T)
+# table with the same 1.05 scale used in the production sp_kant_onset model
+# run. Confining.p left at default 0 (no lithostatic load).
+spallation.model         = sp_weibull
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.05
+
+# Weibull per-cell flaw-length distribution. Same parameters as
+# `sp_kant_onset/input_weibull` (Central Aare granite Stage-1 defaults +
+# Rossi 2018 5:1 GB:IG partition). granite_2's mineral phases are different
+# than Central Aare but the flaw-length partitioning is grain-scale, not
+# mineral-scale, so the same calibration applies.
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 15.0
+weibull.seed    = 12345
+
+# LEFM spall removal ON. Step 19 routes sigma_xx through stress_mf
+# (NodeToCellAverage) for the k_i_at_zcrack depth scan; the depth gating
+# is `Sp_cluster_id_mf > 0` (Step 15c labeller). damage_law-only knobs
+# (damage_threshold, xi_s, C_h, t_spall, alpha) are unused under
+# sp_weibull and omitted to keep the input minimal.
+spall.enabled          = 1
+spall.sample           = top_cell
+
+# Vapor removal ON. Under sp_weibull, vapor uses the Step 17 per-cell
+# local-Gaussian Q for the per-cell RoP. Spall has priority over vapor at
+# the same column (Step 17 winner-precedence rule).
+vapor.enabled          = 1
+
+# MMW beam ON. Same parameters as `hu_spall_onset_mmwbeam/input_granite2`:
+# 10 kW, Gaussian waist 2 cm, axis through cube centre, entering +z face.
+# R = 0.2 surface reflectivity, alpha_expr = 100 1/m (~1 cm absorption
+# depth).
+beam.P0     = 10000.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+beam.alpha_expr = 100.0
+beam.R      = 0.2
+
+# Surface losses ON (same as hu_spall_onset_mmwbeam): radiative + convective
+# at the receding surface.
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 56.0
+losses.T_amb         = 280.15
+
+# Surface patch OFF — the MMW beam is the sole heat source. Step 19's new
+# branch in k_i_at_zcrack samples sigma_xx from stress_mf (not from a
+# T-face callable), so prescribed_T is not required.
+surface_patch.enabled = 0
+
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics: el.time_evolving = 1 populates stress_mf — required by Step 19
+# under non-prescribed_T (the fail-fast abort checks have_stress).
+# zlo_roller_321 = free-lateral with bottom clamp (Hu/MMW production BC).
+el.type     = static
+el.interval = 1
+el.time_evolving = 1
+el.bc.type  = zlo_roller_321
+el.print_model = 0
+
+el.nmodels = 1
+el.model1.E  = 29.98e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose       = 0
+el.solver.nriters       = 1
+el.solver.max_iter      = 1000
+# tol_rel = 1e-3 mirrors the Voronoi-elastic budget used by
+# hu_spall_onset_voronoi / hu_spall_onset_mmwbeam — the heterogeneous
+# vector-elastic operator stalls at a ~1e-4 floor; 1e-6 aborts on step 1.
+# Exploratory model-extension run.
+el.solver.tol_rel       = 1.0e-3
+el.solver.tol_abs       = 1.0e-16
+el.solver.bottom_solver = cg
+el.solver.normalize_ddw = 1
+
+el.ref_threshold         = 1.0
+el.eta_ref_threshold     = 1.0
+el.zero_out_displacement = 1
+el.max_coarsening_level = 2
+
+solver = explicit

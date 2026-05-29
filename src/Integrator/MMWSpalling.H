@@ -130,10 +130,6 @@ public:
         // conductivity-only behavior.
         ParseDamageSettings(value, pp);
 
-        int debug_amr_mechanics = 0;
-        pp.query_default("mmw.debug_amr_mechanics", debug_amr_mechanics, 0);
-        value.debug_amr_mechanics = (debug_amr_mechanics != 0);
-
         // Step 9: optional grain-boundary cohesive-zone law. Disabled by
         // default; when enabled, registers gb_* diagnostic fields and runs
         // an irreversible bilinear traction-separation update keyed on
@@ -512,12 +508,7 @@ protected:
         HeatConduction::TimeStepBegin(a_time, a_step);
         if (microstructure_enabled && max_level > 0)
             RefreshMicrostructureDerivedFields(/*announce=*/false);
-        if (debug_amr_mechanics && finest_level > 0)
-            CheckAMRMechanicsFieldsFinite("before mechanics solve", /*include_stress=*/false);
         Mechanics<Model::Solid::Affine::Isotropic>::TimeStepBegin(a_time, a_step);
-        if (debug_amr_mechanics && finest_level > 0)
-            CheckAMRMechanicsFieldsFinite("after mechanics solve", /*include_stress=*/true);
-        DiagnoseAMRResidual(a_time, a_step);
     }
 
     void TimeStepComplete(Set::Scalar a_time, int a_step) override
@@ -538,8 +529,6 @@ protected:
             InitializeMicrostructure(lev, /*announce=*/false,
                                      /*reset_damage=*/!damage_enabled);
         RepairMechanicsAfterRegrid(time);
-        if (debug_amr_mechanics && finest_level > 0)
-            CheckAMRMechanicsFieldsFinite("after regrid repair", /*include_stress=*/true);
     }
 
     void UpdateModel(int a_step, Set::Scalar a_time) override
@@ -681,7 +670,6 @@ protected:
                 }
                 Util::RealFillBoundary(*model_mf[lev], geom[lev]);
             }
-            ApplyAMRF0Consistency();
             return;
         }
 
@@ -719,99 +707,6 @@ protected:
                         F0 += (eta(i, j, k, n) * alpha[n]) * (Tavg - Tref) * Set::Matrix::Identity();
                     }
                     model(i, j, k).F0 = F0;
-                });
-            }
-            Util::RealFillBoundary(*model_mf[lev], geom[lev]);
-        }
-        ApplyAMRF0Consistency();
-    }
-
-    // AMR multi-AMR-level consistency for thermo-elastic eigenstrain F0.
-    //
-    // Per-level UpdateModel builds F0 from each level's local cell-centered
-    // state via CellToNodeAverageInDomain. Even when the underlying cell field
-    // is averaged-down across levels, the cell-to-node stencil produces
-    // different nodal F0 values at coarse-fine overlap (the coarse node
-    // averages 8 coarse cells while the fine node at the same physical
-    // location averages 8 fine cells). The composite MLMG static-elastic
-    // solve cannot reconcile the per-level rhs mismatch (rhs_lev = b_lev -
-    // div(C_lev*F0_lev)) at the AMR overlap, leading to an irreducible
-    // residual floor. See tests/MMWSpalling/hu_spall_onset/AMR_FAILURE_ANALYSIS.md.
-    //
-    // Modes:
-    //   probe      (env ALAMO_LEV1_F0_FROM_COARSE): overwrite lev>=1's F0 with
-    //              InterpFromCoarseLevel of lev-1's F0. Diagnostic only.
-    //   production (default): average-down nodal F0 fine->coarse so each
-    //              coarse level's F0 at AMR overlap matches the fine-level
-    //              restricted view. Standard "state lives on the finest
-    //              covering level" convention.
-    void ApplyAMRF0Consistency()
-    {
-        if (finest_level <= 0) return;
-        const int nF0 = AMREX_SPACEDIM * AMREX_SPACEDIM;
-        const bool probe_mode =
-            (std::getenv("ALAMO_LEV1_F0_FROM_COARSE") != nullptr);
-
-        amrex::Vector<amrex::MultiFab> F0_mf(finest_level + 1);
-        for (int lev = 0; lev <= finest_level; ++lev)
-        {
-            F0_mf[lev].define(model_mf[lev]->boxArray(),
-                              model_mf[lev]->DistributionMap(),
-                              nF0, model_mf[lev]->nGrow());
-            for (MFIter mfi(*model_mf[lev], false); mfi.isValid(); ++mfi)
-            {
-                amrex::Box bx = mfi.grownnodaltilebox();
-                amrex::Array4<Set::Scalar> const& f0a = F0_mf[lev].array(mfi);
-                amrex::Array4<Model::Solid::Affine::Isotropic const> const& m =
-                    model_mf[lev]->const_array(mfi);
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-                    const Set::Matrix& F0 = m(i, j, k).F0;
-                    for (int p = 0; p < AMREX_SPACEDIM; ++p)
-                        for (int q = 0; q < AMREX_SPACEDIM; ++q)
-                            f0a(i, j, k, p * AMREX_SPACEDIM + q) = F0(p, q);
-                });
-            }
-            F0_mf[lev].FillBoundary(geom[lev].periodicity());
-        }
-
-        if (probe_mode)
-        {
-            amrex::PhysBCFunctNoOp cphysbc, fphysbc;
-            amrex::Vector<amrex::BCRec> bcs(nF0, amrex::BCRec());
-            for (int lev = 1; lev <= finest_level; ++lev)
-            {
-                amrex::InterpFromCoarseLevel(
-                    F0_mf[lev], 0.0, F0_mf[lev - 1],
-                    0, 0, nF0, geom[lev - 1], geom[lev],
-                    cphysbc, 0, fphysbc, 0,
-                    refRatio(lev - 1),
-                    &amrex::node_bilinear_interp, bcs, 0);
-            }
-        }
-        else
-        {
-            for (int lev = finest_level; lev >= 1; --lev)
-            {
-                amrex::average_down_nodal(F0_mf[lev], F0_mf[lev - 1],
-                                          refRatio(lev - 1));
-            }
-        }
-
-        for (int lev = 0; lev <= finest_level; ++lev)
-        {
-            for (MFIter mfi(*model_mf[lev], false); mfi.isValid(); ++mfi)
-            {
-                amrex::Box bx = mfi.grownnodaltilebox();
-                amrex::Array4<Model::Solid::Affine::Isotropic> const& m =
-                    model_mf[lev]->array(mfi);
-                amrex::Array4<Set::Scalar const> const& f0a =
-                    F0_mf[lev].const_array(mfi);
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-                    Set::Matrix F0;
-                    for (int p = 0; p < AMREX_SPACEDIM; ++p)
-                        for (int q = 0; q < AMREX_SPACEDIM; ++q)
-                            F0(p, q) = f0a(i, j, k, p * AMREX_SPACEDIM + q);
-                    m(i, j, k).F0 = F0;
                 });
             }
             Util::RealFillBoundary(*model_mf[lev], geom[lev]);
@@ -1508,9 +1403,6 @@ private:
         Util::RealFillBoundary(*is_grain_boundary_mf[lev], geom[lev]);
         if (!damage_prescribed_stress_enabled)
             Util::RealFillBoundary(*stress_mf[lev], geom[lev]);
-        if (debug_amr_mechanics && !damage_prescribed_stress_enabled)
-            CheckMatrixFieldFinite(stress_mf, "stress_mf", lev,
-                                   "before damage update");
 
         const Set::Scalar* DX  = geom[lev].CellSize();
         const Set::Scalar* PLO = geom[lev].ProbLo();
@@ -1541,10 +1433,6 @@ private:
             amrex::Array4<Set::Scalar> const& rateout = (*damage_rate_mf[lev]).array(mfi);
             amrex::Array4<const Set::Matrix> sig_node;
             if (!prescribed) sig_node = (*stress_mf[lev]).array(mfi);
-            amrex::Box valid_node = mfi.validbox();
-            valid_node.convert(amrex::IntVect::TheNodeVector());
-            amrex::Box domain_node = geom[lev].Domain();
-            domain_node.convert(amrex::IntVect::TheNodeVector());
 
             amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
                 Set::Matrix sigma = Set::Matrix::Zero();
@@ -1572,50 +1460,12 @@ private:
                 }
                 else
                 {
-                    if (debug_amr_mechanics)
-                    {
-                        for (int dk = 0; dk <= 1; ++dk)
-                            for (int dj = 0; dj <= 1; ++dj)
-                                for (int di = 0; di <= 1; ++di)
-                                {
-                                    int ii = i + di;
-                                    int jj = j + dj;
-                                    int kk = k + dk;
-                                    if (!FiniteMatrix(sig_node(ii, jj, kk)))
-                                    {
-                                        amrex::IntVect iv(AMREX_D_DECL(ii, jj, kk));
-                                        AbortBadAMRValue("damage stress sampling",
-                                                         "stress_mf", lev, -1,
-                                                         iv, valid_node, domain_node);
-                                    }
-                                }
-                    }
                     sigma = Numeric::Interpolate::NodeToCellAverage(sig_node, i, j, k, 0);
                 }
 
                 if (!FiniteMatrix(sigma))
-                {
-                    if (!prescribed)
-                    {
-                        for (int dk = 0; dk <= 1; ++dk)
-                            for (int dj = 0; dj <= 1; ++dj)
-                                for (int di = 0; di <= 1; ++di)
-                                {
-                                    int ii = i + di;
-                                    int jj = j + dj;
-                                    int kk = k + dk;
-                                    if (!FiniteMatrix(sig_node(ii, jj, kk)))
-                                    {
-                                        amrex::IntVect iv(AMREX_D_DECL(ii, jj, kk));
-                                        AbortBadAMRValue("damage stress sampling",
-                                                         "stress_mf", lev, -1,
-                                                         iv, valid_node, domain_node);
-                                    }
-                                }
-                    }
                     Util::Abort(INFO, "non-finite averaged stress before Drucker-Prager at cell (",
                                 i, ",", j, ",", k, ")");
-                }
 
                 Set::Scalar Fv = Numeric::DruckerPrager::YieldFunction(sigma, alpha_dp, k_dp);
                 Set::Scalar psiv = Fv / k_dp;
@@ -1905,23 +1755,10 @@ private:
         }
     }
 
-    // Step 10: principal-stress ratio for the production spall path. ALAMO
-    // stores tensile stress as positive, so the most compressive principal
-    // stress is the smallest (most negative) eigenvalue. We recast to
-    // compressive-positive (sigma_1 = -e_min, sigma_3 = -e_max). When all
-    // three principals are compressive (sigma_3 > 0), the ratio
-    // sigma_1 / sigma_3 is the canonical Hoek-Brown anisotropy measure.
-    //
-    // Step 14b refinement: when any principal stress is tensile or the
-    // state is degenerate (sigma_3 <= 0, or a non-finite ratio results),
-    // the function returns `TENSILE_RATIO_SENTINEL` instead of 0. Mixed/
-    // tensile states are unconditionally above the Hoek-Brown threshold —
-    // a free surface with tensile sigma_zz (e.g. Hu's prescribed-T patch
-    // generating sigma_zz ~ +55 MPa at the top cell) is *more* susceptible
-    // to mode-I spall, not less, so the spall gate should pass. The
-    // sentinel (1e30) is unconditionally above any plausible `xi_s` and
-    // preserves the existing `if (ratio >= xi_s)` call-site semantics
-    // without a signature change.
+    // Hoek-Brown anisotropy ratio sigma_1 / sigma_3 (compression-positive).
+    // Returns TENSILE_RATIO_SENTINEL (1e30) on mixed/tensile states so the
+    // call-site `ratio >= xi_s` gate passes unconditionally there — tensile
+    // sigma_zz at a free surface is more spall-prone, not less.
     static AMREX_FORCE_INLINE
     Set::Scalar PrincipalStressRatio(const Set::Matrix& sigma)
     {
@@ -1938,33 +1775,12 @@ private:
         return std::isfinite(r) ? r : TENSILE_RATIO_SENTINEL;
     }
 
-    // Step 10/11: per-column unified surface advancement. Computes a
-    // candidate spallation thickness (when spall is enabled) and a
-    // candidate vaporisation thickness (when vapor is enabled) for the
-    // top material cell of each column, advances phi by the larger of
-    // the two, and tags `regime` with the winning mode (1 = spall,
-    // 2 = vapor). Detached cells reset H/T/D/phase fractions exactly as
-    // in Step 10.
-    //
-    // Parallel correctness: domain-wide per-column buffers indexed by
-    // (j*nx_dom + i) carry the global topmost material cell, the
-    // per-column candidate thicknesses, and the chosen regime. A first
-    // Step 12: Sp = K_I/K_Ic(T) surface diagnostic. Runs only under
-    // `spallation.model = sp_weibull`. Writes Sp into the topmost cell of
-    // each (i, j) column and 0 elsewhere; the rest of the integrator's
-    // physics is unchanged (DP/CZM evolution stays off on this branch).
-    //
-    // sigma_xx source per column:
-    //   - sp_prescribed_sigma_enabled: parser sigma_xx(x, y, z, t),
-    //     evaluated at integration depths z = z_top_face - xi * a0. Used by
-    //     the Step 12c verification.
-    //   - else: nodal-stress NodeToCellAverage at the top cell, treated as
-    //     constant over [0, a0]. Valid while a0 << dz; revisit when Step 15
-    //     introduces a-distributions with a0 comparable to dz.
-    //
-    // T_surface source for K_Ic:
-    //   - sp_prescribed_T_surface_enabled: parser T(t).
-    //   - else: temp_mf at the top cell.
+    // Sp = K_I/K_Ic(T) surface diagnostic for `spallation.model = sp_weibull`.
+    // Writes Sp into the topmost cell of each (i, j) column, 0 elsewhere.
+    // sigma_xx source: prescribed parser σ(x,y,z,t) if sp_prescribed_sigma is
+    // enabled (used by the closed-form verification test); otherwise the
+    // depth-resolved physical-path NodeToCellAverage of stress_mf. T_surface
+    // for K_Ic: prescribed T(t) parser if enabled, otherwise temp_mf top cell.
     void UpdateSpAfterMechanics(int lev, Set::Scalar time, Set::Scalar dt)
     {
         if (spallation_model != SpallationModel::SpWeibull) return;
@@ -1991,12 +1807,10 @@ private:
         const Set::Scalar T_ref_kic_  = kic_T_ref;
         const Set::Scalar T_melt_     = kic_T_melt;
 
-        // Step 18: confining-pressure contribution to compression-positive
-        // sigma_xx. Per Kant Eq. 15, p enters as +p·nu/(1-nu) under 1-D-
-        // confined geometry. Phase-0 nu = E/(2·mu) - 1 (single-phase
-        // scope; multi-phase is out of scope per the active step). Exact-
-        // zero short-circuit guarantees byte-identity when confining.p
-        // is unset (the default).
+        // Confining-pressure contribution +p·nu/(1-nu) to compression-positive
+        // sigma_xx (Kant Eq. 15, 1-D-confined geometry). Exact-zero short-
+        // circuit preserves byte-identity when confining.p is unset.
+        // Single-phase scope (uses phases[0]); multi-phase not supported.
         Set::Scalar sp_conf_offset = 0.0;
         if (confining_p != 0.0 && !phases.empty() &&
             phases[0].E > 0.0 && phases[0].mu > 0.0)
@@ -2033,20 +1847,13 @@ private:
 
                 Set::Scalar Tsurf = use_presc_T ? presc_T_f(time) : T_a(i, j, k);
 
-                // Step 15b: the K_I integrand consumes -sigma_xx
-                // (compression-positive). ALAMO's stress_mf and the
-                // prescribed expression are both tension-positive sigma_xx,
-                // so a compressive heated surface (sigma_xx < 0) gives
+                // K_I integrand consumes -sigma_xx (compression-positive).
+                // stress_mf and the prescribed parser are tension-positive,
+                // so a compressive heated surface (sigma_xx < 0) yields
                 // K_I > 0. The physical path samples stress_mf at the cell
                 // containing the requested depth (k_d), clamped into the
-                // owned box (the integration window is assumed to lie
-                // within the top box's z-extent for this packet;
-                // z-decomposition-robust column gather is deferred).
+                // owned box. z-decomposition-robust column gather is deferred.
                 auto sigma_at_depth = [&] (Set::Scalar depth) -> Set::Scalar {
-                    // Step 18: +p·nu/(1-nu) confining-pressure contribution
-                    // added to compression-positive sigma_xx. Default-zero
-                    // short-circuit at the offset capture above keeps every
-                    // pre-Step-18 input byte-identical.
                     if (use_presc_s)
                     {
                         Set::Scalar z_phys = z_top_face - depth;
@@ -2426,19 +2233,9 @@ private:
         }
         amrex::ParallelDescriptor::ReduceIntMax(k_top_global.data(), ncols);
 
-        // PASS 1.5 (Step 14b): per-column max D over the configured scan
-        // window. The window depends on `spall.sample`:
-        //   top_cell    -> single cell at k_top (preserves Step 10/11
-        //                  behaviour byte-identical when this mode is
-        //                  selected by default).
-        //   column_max  -> [box.smallEnd(2), k_top] within each rank's
-        //                  local box; ReduceRealMax collapses across
-        //                  the MPI z-decomposition.
-        //   shallow_max -> [k_top - floor(shallow_depth/dz), k_top]
-        //                  within each rank's local box; same reduction.
-        // Buffers initialise to 0.0 so columns with no contributor land
-        // at 0 (the same effective "no fire" result as the old "skip"
-        // path).
+        // PASS 1.5: per-column max D over `spall.sample`'s scan window
+        // (top_cell | column_max | shallow_max). MPI z-decomposition is
+        // collapsed by ReduceRealMax; empty columns get 0.0 (no-fire).
         amrex::Vector<Set::Scalar> D_max_col(ncols, 0.0);
         if (spall_on)
         {
@@ -2562,18 +2359,39 @@ private:
             if (!(phase_nu_loc > -1.0 && phase_nu_loc < 0.5))
                 Util::Abort(INFO, "Step 16d: phase 0 Poisson's ratio out "
                                   "of physical range; got nu=", phase_nu_loc);
-            if (surface_patch.mode !=
-                SurfacePatch::Mode::PrescribedTemperature)
-                Util::Abort(INFO, "Step 16d (sp_weibull + spall.enabled): "
-                                  "surface_patch.mode = prescribed_T is "
-                                  "required for the T-derived sigma_xx path");
         }
 
-        // Step 18: confining-pressure offset to compression-positive
-        // sigma_xx inside the Step 16d k_i_at_zcrack lambda. Same
-        // formula as the UpdateSpAfterMechanics offset (Kant Eq. 15
-        // +p·nu/(1-nu)). Exact-zero short-circuit preserves byte-
-        // identity when confining.p is unset.
+        // Step 19: sigma_xx-reconstruction selector for k_i_at_zcrack.
+        // The T-derived form is only valid when surface_patch is ENABLED
+        // AND in prescribed_T mode (only then is surface_patch.T_f
+        // compiled to a real parser callable; an uncompiled T_f returns
+        // std::numeric_limits<double>::max() which silently produces
+        // garbage K_I values). Under prescribed_T + enabled we keep the
+        // Step 16d byte-identical path. Under any other configuration
+        // (surface_patch disabled, convective_flame, or no surface_patch
+        // at all — e.g. the MMW beam case) sigma_xx is sampled directly
+        // from the mechanics solve's stress_mf via NodeToCellAverage,
+        // mirroring UpdateSpAfterMechanics's Sp_field diagnostic path.
+        // Mechanics must be active for the stress_mf branch (have_stress
+        // = el.time_evolving = 1); fail-fast otherwise.
+        const bool sp_weibull_use_T_face =
+            sp_weibull_spall &&
+            surface_patch.enabled &&
+            surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature;
+        if (sp_weibull_spall && !sp_weibull_use_T_face && !have_stress)
+            Util::Abort(INFO, "Step 19 (sp_weibull + spall.enabled under "
+                              "non-prescribed_T heat source): mechanics "
+                              "solve must be active to source sigma_xx "
+                              "from stress_mf — set el.type = static and "
+                              "el.time_evolving = 1, or switch to "
+                              "surface_patch.mode = prescribed_T for the "
+                              "Step 16d T-derived path");
+
+        // Confining-pressure offset +p·nu/(1-nu) for the k_i_at_zcrack
+        // lambda (Kant Eq. 15). Default-zero short-circuit preserves
+        // byte-identity when confining.p is unset. Applies in BOTH the
+        // Step 16d prescribed_T branch AND the Step 19 stress_mf branch
+        // (compression-positive sigma_xx convention is the same).
         Set::Scalar sp_conf_offset = 0.0;
         if (sp_weibull_spall && confining_p != 0.0 &&
             phase_nu_loc > -1.0 && phase_nu_loc < 1.0)
@@ -2581,12 +2399,9 @@ private:
             sp_conf_offset = confining_p * phase_nu_loc / (1.0 - phase_nu_loc);
         }
 
-        // Step 16c: per-rank buffer of first-firing CSV events. A column's
-        // event is emitted ONCE per run (on the step its cec(i, j, k_top)
-        // flips 0 -> 1). After PASS 2's MFIter loop ends, each rank in
-        // turn appends its rows to <plot_file>_h_col_events.csv with the
-        // I/O proc writing the header on first call. The buffer holds
-        // (time, col_i, col_j, a_f, h_col, is_gb_at_top, Sp_at_top).
+        // Per-rank buffer of first-firing CSV events. Each column emits
+        // once per run when cec(i, j, k_top) flips 0 -> 1; rows are
+        // appended to <plot_file>_h_col_events.csv after PASS 2.
         struct HColEvent {
             Set::Scalar t, a_f, h_col, sp;
             int col_i, col_j, is_gb;
@@ -2667,25 +2482,15 @@ private:
                                 cec(i, j, k_top);
                             if (std::isfinite(a_f) && a_f > 0.0 && have_stress)
                             {
-                                // Walk z_crack downward from the surface
-                                // in 1-cell strides. Stop at the first
-                                // K_I < K_Ic crossing OR h_spall_max OR
-                                // the bottom of the local box. The
-                                // sigma_at_depth callable samples
-                                // stress_mf at the absolute depth (z_crack
-                                // + xi*a_f) below the surface; the
-                                // compression-positive (-σ_xx) convention
-                                // lives here, matching
-                                // UpdateSpAfterMechanics.
-                                //
-                                // Step 16b: also drives the edge-triggered
-                                // crack_event_count_mf update (a passing
-                                // K_I >= K_Ic at any (i, j, k_tip) cell
-                                // flips that cell's count from 0 to 1,
-                                // never re-tested afterwards — option (ii)
-                                // freeze in rossi-validation-diagnostic-
-                                // design.md §3) and the bisection that
-                                // sharpens h_col below cell resolution.
+                                // Walk z_crack downward from the surface in
+                                // 1-cell strides; stop at the first
+                                // K_I < K_Ic crossing, h_spall_max, or the
+                                // bottom of the local box. Also drives the
+                                // edge-triggered crack_event_count_mf (each
+                                // (i, j, k_tip) flips 0 -> 1 on first pass,
+                                // never re-tested — freeze, option (ii))
+                                // and the sub-cell bisection that refines
+                                // h_col below dz.
                                 Set::Scalar h_col = 0.0;
                                 const int max_steps_cap = static_cast<int>(
                                     std::floor(h_spall_max_loc / dz));
@@ -2714,35 +2519,50 @@ private:
                                         ::MPa_sqrtm_to_Pa_sqrtm(K_Ic_MPa);
                                 };
 
-                                // Local helper: K_I(z_crack; a_f) using
-                                // the same Tada integrator as
-                                // UpdateSpAfterMechanics, with the
-                                // compression-positive (-sigma_xx)
-                                // convention in the caller.
-                                //
-                                // Step 16d: T-derived sigma_xx with the
-                                // prescribed-T face BC (option (a) per
-                                // rossi-validation-diagnostic-design.md
-                                // §8). T(z) is linearly interpolated
-                                // between bracketing T values:
-                                //   z = 0:           sp_T_face_loc(time)
-                                //   z = (n+0.5)*dz:  T_a(i, j, k_top - n)
-                                // sigma_xx(z) from the thermoelastic
-                                // relation under 1-D confinement:
-                                //   sigma_xx = -E * beta * (T - T_ref) / (1 - nu)
-                                // Single-phase Voronoi only — uses
-                                // phases[0] material params captured
-                                // outside the MFIter loop. The surface
-                                // BC recovery (z ∈ [0, dz/2]) is the
-                                // root-cause fix for the Step 16c
-                                // option (L) flat-extrapolation artefact
-                                // documented in design note §7.
+                                // K_I(z_crack; a_f). Two sigma_xx
+                                // reconstructions, selected by
+                                // sp_weibull_use_T_face:
+                                //   (Step 16d, prescribed_T)  T-derived:
+                                //     T(z) lerp between surface_patch.T_f
+                                //     at z=0 and cell-centred T at
+                                //     z=(n+0.5)*dz; sigma_xx = -E*beta*
+                                //     dT/(1-nu) under 1-D confinement
+                                //     (single-phase, phases[0] only).
+                                //   (Step 19, non-prescribed_T)  stress_mf:
+                                //     sigma_xx sampled from the mechanics
+                                //     solve at the cell containing
+                                //     z_crack + d, same pattern as
+                                //     UpdateSpAfterMechanics's Sp_field
+                                //     diagnostic. Captures the full FEM
+                                //     stress state (lateral free-BC
+                                //     effects, heterogeneous Voronoi,
+                                //     etc.) — no 1-D-confinement
+                                //     assumption.
+                                // sp_conf_offset (Step 18) applies to
+                                // both branches (compression-positive
+                                // convention is the same).
                                 auto k_i_at_zcrack =
                                     [&] (Set::Scalar z_crack) -> Set::Scalar {
                                     auto sigma_at_depth =
                                         [&] (Set::Scalar d) -> Set::Scalar {
                                         const Set::Scalar z_abs =
                                             z_crack + d;
+                                        if (!sp_weibull_use_T_face)
+                                        {
+                                            // Step 19: stress_mf path.
+                                            int k_d = k_top -
+                                                static_cast<int>(
+                                                    std::floor(z_abs / dz));
+                                            if (k_d > k_top)   k_d = k_top;
+                                            if (k_d < klo_loc) k_d = klo_loc;
+                                            if (k_d > khi_loc) k_d = khi_loc;
+                                            Set::Matrix sigma =
+                                                Numeric::Interpolate
+                                                ::NodeToCellAverage(
+                                                    sig_node, i, j, k_d, 0);
+                                            return -sigma(0, 0)
+                                                   + sp_conf_offset;
+                                        }
                                         const Set::Scalar half_dz =
                                             0.5 * dz;
                                         Set::Scalar T_z;
@@ -2787,24 +2607,12 @@ private:
                                                 +        alpha
                                                   * T_a(i, j, k_below);
                                         }
-                                        // Thermoelastic relation under
-                                        // 1-D confinement: the actual
-                                        // sigma_xx is -E*beta*dT/(1-nu)
-                                        // (negative = compressive when
-                                        // T > T_ref). The K_I integrator
-                                        // expects the compression-positive
-                                        // value (= -sigma_xx_mechanics),
-                                        // matching UpdateSpAfterMechanics's
-                                        // "return -sigma(0, 0)" pattern.
-                                        // So we negate twice → return the
-                                        // positive E*beta*dT/(1-nu).
-                                        //
-                                        // Step 18: + p·nu/(1-nu)
-                                        // confining-pressure contribution
-                                        // (Kant Eq. 15). Captured as
-                                        // sp_conf_offset outside the
-                                        // MFIter; default 0 short-circuit
-                                        // preserves byte-identity.
+                                        // 1-D confinement: physical sigma_xx
+                                        // = -E*beta*dT/(1-nu). K_I integrator
+                                        // wants compression-positive, so the
+                                        // double-negation returns +E*beta*dT/
+                                        // (1-nu). + sp_conf_offset adds the
+                                        // confining-pressure contribution.
                                         return phase_E_loc * phase_beta_loc
                                                * (T_z - phase_T_ref_loc)
                                                / (1.0 - phase_nu_loc)
@@ -3489,13 +3297,6 @@ private:
         }
     }
 
-    static bool FiniteVector(const Set::Vector& v)
-    {
-        for (int n = 0; n < AMREX_SPACEDIM; ++n)
-            if (!std::isfinite(v(n))) return false;
-        return true;
-    }
-
     static bool FiniteMatrix(const Set::Matrix& m)
     {
         for (int i = 0; i < AMREX_SPACEDIM; ++i)
@@ -3504,353 +3305,6 @@ private:
         return true;
     }
 
-    static bool FiniteModel(const Model::Solid::Affine::Isotropic& model)
-    {
-        return std::isfinite(model.ddw.Lambda())
-            && std::isfinite(model.ddw.Mu())
-            && FiniteMatrix(model.F0);
-    }
-
-    std::string AMRLocationLabel(int lev,
-                                 const amrex::IntVect& iv,
-                                 const amrex::Box& valid,
-                                 const amrex::Box& domain) const
-    {
-        if (valid.contains(iv)) return "valid";
-        if (!domain.contains(iv)) return "physical-boundary ghost";
-        if (lev > 0) return "coarse-fine/box ghost";
-        return "box ghost";
-    }
-
-    void AbortBadAMRValue(const char* stage,
-                          const char* field,
-                          int lev,
-                          int comp,
-                          const amrex::IntVect& iv,
-                          const amrex::Box& valid,
-                          const amrex::Box& domain) const
-    {
-        Util::Abort(INFO, "non-finite ", field, " during ", stage,
-                    " at level ", lev, ", comp ", comp,
-                    ", index (", iv[0], ",", iv[1], ",", iv[2], ") [",
-                    AMRLocationLabel(lev, iv, valid, domain), "]");
-    }
-
-    void CheckScalarFieldFinite(const Set::Field<Set::Scalar>& field,
-                                const char* name,
-                                int lev,
-                                const char* stage,
-                                bool nodal) const
-    {
-        amrex::Box domain = geom[lev].Domain();
-        if (nodal) domain.convert(amrex::IntVect::TheNodeVector());
-        for (amrex::MFIter mfi(*field[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box valid = mfi.validbox();
-            const amrex::Box scan = (*field[lev])[mfi].box();
-            amrex::Array4<const Set::Scalar> const& arr = field[lev]->array(mfi);
-            const int ncomp = field[lev]->nComp();
-            amrex::LoopOnCpu(scan, [&] (int i, int j, int k) {
-                amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                for (int n = 0; n < ncomp; ++n)
-                    if (!std::isfinite(arr(i, j, k, n)))
-                        AbortBadAMRValue(stage, name, lev, n, iv, valid, domain);
-            });
-        }
-    }
-
-    void CheckVectorFieldFinite(const Set::Field<Set::Vector>& field,
-                                const char* name,
-                                int lev,
-                                const char* stage) const
-    {
-        amrex::Box domain = geom[lev].Domain();
-        domain.convert(amrex::IntVect::TheNodeVector());
-        for (amrex::MFIter mfi(*field[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box valid = mfi.validbox();
-            const amrex::Box scan = valid;
-            amrex::Array4<const Set::Vector> const& arr = field[lev]->array(mfi);
-            amrex::LoopOnCpu(scan, [&] (int i, int j, int k) {
-                amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                for (int n = 0; n < AMREX_SPACEDIM; ++n)
-                    if (!std::isfinite(arr(i, j, k)(n)))
-                        AbortBadAMRValue(stage, name, lev, n, iv, valid, domain);
-            });
-        }
-    }
-
-    void CheckMatrixFieldFinite(const Set::Field<Set::Matrix>& field,
-                                const char* name,
-                                int lev,
-                                const char* stage) const
-    {
-        amrex::Box domain = geom[lev].Domain();
-        domain.convert(amrex::IntVect::TheNodeVector());
-        for (amrex::MFIter mfi(*field[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box valid = mfi.validbox();
-            const amrex::Box scan = valid;
-            amrex::Array4<const Set::Matrix> const& arr = field[lev]->array(mfi);
-            amrex::LoopOnCpu(scan, [&] (int i, int j, int k) {
-                amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                const Set::Matrix& m = arr(i, j, k);
-                for (int r = 0; r < AMREX_SPACEDIM; ++r)
-                    for (int c = 0; c < AMREX_SPACEDIM; ++c)
-                        if (!std::isfinite(m(r, c)))
-                            AbortBadAMRValue(stage, name, lev,
-                                             r * AMREX_SPACEDIM + c,
-                                             iv, valid, domain);
-            });
-        }
-    }
-
-    void CheckModelFieldFinite(const char* stage) const
-    {
-        for (int lev = 0; lev <= finest_level; ++lev)
-        {
-            amrex::Box domain = geom[lev].Domain();
-            domain.convert(amrex::IntVect::TheNodeVector());
-            for (amrex::MFIter mfi(*model_mf[lev], false); mfi.isValid(); ++mfi)
-            {
-                const amrex::Box valid = mfi.validbox();
-                amrex::Box scan = valid;
-                scan.grow(1);
-                scan &= domain;
-                amrex::Array4<const Model::Solid::Affine::Isotropic> const& arr =
-                    model_mf[lev]->array(mfi);
-                amrex::LoopOnCpu(scan, [&] (int i, int j, int k) {
-                    amrex::IntVect iv(AMREX_D_DECL(i, j, k));
-                    const auto& model = arr(i, j, k);
-                    if (!std::isfinite(model.ddw.Lambda()) ||
-                        std::abs(model.ddw.Lambda()) > 1.0e13)
-                        AbortBadAMRValue(stage, "model_mf(lambda)", lev, 0,
-                                         iv, valid, domain);
-                    if (!std::isfinite(model.ddw.Mu()) ||
-                        std::abs(model.ddw.Mu()) > 1.0e13)
-                        AbortBadAMRValue(stage, "model_mf(mu)", lev, 1,
-                                         iv, valid, domain);
-                    for (int r = 0; r < AMREX_SPACEDIM; ++r)
-                        for (int c = 0; c < AMREX_SPACEDIM; ++c)
-                            if (!std::isfinite(model.F0(r, c)) ||
-                                std::abs(model.F0(r, c)) > 1.0)
-                                AbortBadAMRValue(stage, "model_mf(F0)", lev,
-                                                 2 + r * AMREX_SPACEDIM + c,
-                                                 iv, valid, domain);
-                });
-            }
-        }
-    }
-
-    void CheckAMRMechanicsFieldsFinite(const char* stage, bool include_stress) const
-    {
-        for (int lev = 0; lev <= finest_level; ++lev)
-        {
-            CheckVectorFieldFinite(disp_mf, "disp_mf", lev, stage);
-            if (microstructure_enabled)
-            {
-                CheckScalarFieldFinite(D_mf, "D_mf", lev, stage, /*nodal=*/false);
-                CheckScalarFieldFinite(thermal_free_strain_mf,
-                                       "thermal_free_strain_mf",
-                                       lev, stage, /*nodal=*/false);
-            }
-            if (include_stress)
-            {
-                CheckMatrixFieldFinite(stress_mf, "stress_mf", lev, stage);
-                CheckMatrixFieldFinite(strain_mf, "strain_mf", lev, stage);
-            }
-        }
-        CheckModelFieldFinite(stage);
-    }
-
-    // §4.4 diagnostic: post-mechanics-solve residual analysis.
-    // Gated on env var ALAMO_AMR_DIAG=1 + el.print_residual=1.
-    // Reports per-level L2(res), per-z-slab L2 on finest level, and
-    // rigid-body-mode projection of the finest-level residual.
-    // See tests/MMWSpalling/hu_spall_onset/AMR_FAILURE_ANALYSIS.md §4.4.
-    void DiagnoseAMRResidual(Set::Scalar a_time, int a_step) const
-    {
-        if (std::getenv("ALAMO_AMR_DIAG") == nullptr) return;
-        if (!m_print_residual) return;
-        if (finest_level == 0) return;
-
-        std::stringstream ss;
-        ss << "=== AMR residual diag STEP " << a_step
-           << " (t=" << a_time << ") ===\n";
-
-        // Per-level L2 norm and max
-        for (int lev = 0; lev <= finest_level; ++lev)
-        {
-            Set::Scalar l2sq = 0.0;
-            Set::Scalar maxabs = 0.0;
-            Set::Scalar maxx = 0.0, maxy = 0.0, maxz = 0.0;
-            const auto* dx  = geom[lev].CellSize();
-            const auto* plo = geom[lev].ProbLo();
-            for (amrex::MFIter mfi(*res_mf[lev], false); mfi.isValid(); ++mfi)
-            {
-                const amrex::Box bx = mfi.validbox();
-                amrex::Array4<const Set::Vector> const& res =
-                    res_mf[lev]->array(mfi);
-                amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
-                    const Set::Vector& r = res(i, j, k);
-                    Set::Scalar n2 = r.dot(r);
-                    l2sq += n2;
-                    Set::Scalar n = std::sqrt(n2);
-                    if (n > maxabs) {
-                        maxabs = n;
-                        maxx = plo[0] + Set::Scalar(i) * dx[0];
-                        maxy = plo[1] + Set::Scalar(j) * dx[1];
-                        maxz = plo[2] + Set::Scalar(k) * dx[2];
-                    }
-                });
-            }
-            amrex::ParallelDescriptor::ReduceRealSum(l2sq);
-            amrex::ParallelDescriptor::ReduceRealMax(maxabs);
-            ss << "  L" << lev << ": L2(res)=" << std::sqrt(l2sq)
-               << "  max|res|=" << maxabs
-               << " at (" << maxx << "," << maxy << "," << maxz << ")\n";
-        }
-
-        // Per-z-slab L2 on finest level
-        const int lev = finest_level;
-        amrex::Box dom_lev = geom[lev].Domain();
-        dom_lev.convert(amrex::IntVect::TheNodeVector());
-        const int kmin = dom_lev.smallEnd(2);
-        const int kmax = dom_lev.bigEnd(2);
-        const int nk = kmax - kmin + 1;
-        const auto* dx  = geom[lev].CellSize();
-        const auto* plo = geom[lev].ProbLo();
-        std::vector<Set::Scalar> z_l2sq(nk, 0.0);
-        for (amrex::MFIter mfi(*res_mf[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box bx = mfi.validbox();
-            amrex::Array4<const Set::Vector> const& res =
-                res_mf[lev]->array(mfi);
-            amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
-                if (k >= kmin && k <= kmax) {
-                    const Set::Vector& r = res(i, j, k);
-                    z_l2sq[k - kmin] += r.dot(r);
-                }
-            });
-        }
-        for (int k = 0; k < nk; ++k)
-            amrex::ParallelDescriptor::ReduceRealSum(z_l2sq[k]);
-        ss << "  L" << lev << " z-slab L2(res):\n";
-        for (int k = 0; k < nk; ++k) {
-            Set::Scalar zc = plo[2] + Set::Scalar(kmin + k) * dx[2];
-            ss << "    z=" << zc << "  L2=" << std::sqrt(z_l2sq[k]) << "\n";
-        }
-
-        // Rigid-body-mode projection on finest-level residual
-        Set::Scalar dot_m[6] = {0,0,0,0,0,0};
-        Set::Scalar nrm_m[6] = {0,0,0,0,0,0};
-        Set::Scalar res_l2sq = 0.0;
-        for (amrex::MFIter mfi(*res_mf[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box bx = mfi.validbox();
-            amrex::Array4<const Set::Vector> const& res =
-                res_mf[lev]->array(mfi);
-            amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
-                Set::Scalar x = plo[0] + Set::Scalar(i) * dx[0];
-                Set::Scalar y = plo[1] + Set::Scalar(j) * dx[1];
-                Set::Scalar z = plo[2] + Set::Scalar(k) * dx[2];
-                const Set::Vector& r = res(i, j, k);
-                res_l2sq += r.dot(r);
-                // Translation modes (mode_norm per node = 1)
-                dot_m[0] += r(0); nrm_m[0] += 1.0;
-                dot_m[1] += r(1); nrm_m[1] += 1.0;
-                dot_m[2] += r(2); nrm_m[2] += 1.0;
-                // Rotation about x: u = (0, -z, y)
-                dot_m[3] += -z * r(1) + y * r(2); nrm_m[3] += z*z + y*y;
-                // Rotation about y: u = (z, 0, -x)
-                dot_m[4] += z * r(0) - x * r(2);  nrm_m[4] += z*z + x*x;
-                // Rotation about z: u = (-y, x, 0)
-                dot_m[5] += -y * r(0) + x * r(1); nrm_m[5] += y*y + x*x;
-            });
-        }
-        for (int m = 0; m < 6; ++m) {
-            amrex::ParallelDescriptor::ReduceRealSum(dot_m[m]);
-            amrex::ParallelDescriptor::ReduceRealSum(nrm_m[m]);
-        }
-        amrex::ParallelDescriptor::ReduceRealSum(res_l2sq);
-        const char* names[6] = {"TX","TY","TZ","RX","RY","RZ"};
-        ss << "  L" << lev << " RBM projection (||proj*mode||^2 / ||res||^2):\n";
-        Set::Scalar total_rbm = 0.0;
-        for (int m = 0; m < 6; ++m) {
-            Set::Scalar proj = (nrm_m[m] > 0.0) ? dot_m[m] / nrm_m[m] : 0.0;
-            Set::Scalar contrib = proj * proj * nrm_m[m];
-            total_rbm += contrib;
-            Set::Scalar pct = (res_l2sq > 0.0)
-                ? 100.0 * contrib / res_l2sq : 0.0;
-            ss << "    " << names[m]
-               << ": proj=" << proj
-               << "  contrib=" << contrib
-               << "  (" << pct << "% of res^2)\n";
-        }
-        Set::Scalar tot_pct = (res_l2sq > 0.0)
-            ? 100.0 * total_rbm / res_l2sq : 0.0;
-        ss << "  Total RBM: " << total_rbm
-           << " / ||res||^2=" << res_l2sq
-           << " = " << tot_pct << "%\n";
-
-        // §9.5 hypothesis test: dump disp_mf at Level_1's zhi physical
-        // boundary (k=hi_z, the topmost valid nodes) and the ghost row
-        // above (k=hi_z+1). If the ghost row is uninitialized/zero
-        // while the valid row is meaningful, alamo's RealFillBoundary
-        // is failing to fill physical-BC ghosts on Level_1.
-        const int kbnd  = dom_lev.bigEnd(2);
-        const int kghst = kbnd + 1;
-        Set::Scalar disp_l2_at_kbnd  = 0.0;
-        Set::Scalar disp_l2_at_kghst = 0.0;
-        Set::Scalar disp_z_max_kbnd  = 0.0;
-        Set::Scalar disp_z_max_kghst = 0.0;
-        int n_kbnd = 0, n_kghst = 0;
-        const int ngrow = disp_mf[lev]->nGrow();
-        ss << "  L" << lev << " ghost-fill probe (nGrow=" << ngrow
-           << "  k_valid_top=" << kbnd << "  k_ghost=" << kghst << "):\n";
-        for (amrex::MFIter mfi(*disp_mf[lev], false); mfi.isValid(); ++mfi)
-        {
-            amrex::Box bx = mfi.validbox();
-            bx.grow(amrex::IntVect(0, 0, ngrow));  // include ghosts in z
-            amrex::Array4<const Set::Vector> const& d =
-                disp_mf[lev]->const_array(mfi);
-            const int klo = bx.smallEnd(2), khi = bx.bigEnd(2);
-            const int jlo = bx.smallEnd(1), jhi = bx.bigEnd(1);
-            const int ilo = bx.smallEnd(0), ihi = bx.bigEnd(0);
-            for (int k = klo; k <= khi; ++k) {
-                if (k != kbnd && k != kghst) continue;
-                for (int j = jlo; j <= jhi; ++j)
-                    for (int i = ilo; i <= ihi; ++i) {
-                        const Set::Vector& v = d(i, j, k);
-                        Set::Scalar n2 = v.dot(v);
-                        Set::Scalar zmag = std::abs(v(2));
-                        if (k == kbnd) {
-                            disp_l2_at_kbnd += n2;
-                            disp_z_max_kbnd = std::max(disp_z_max_kbnd, zmag);
-                            ++n_kbnd;
-                        } else {
-                            disp_l2_at_kghst += n2;
-                            disp_z_max_kghst = std::max(disp_z_max_kghst, zmag);
-                            ++n_kghst;
-                        }
-                    }
-            }
-        }
-        amrex::ParallelDescriptor::ReduceRealSum(disp_l2_at_kbnd);
-        amrex::ParallelDescriptor::ReduceRealSum(disp_l2_at_kghst);
-        amrex::ParallelDescriptor::ReduceRealMax(disp_z_max_kbnd);
-        amrex::ParallelDescriptor::ReduceRealMax(disp_z_max_kghst);
-        amrex::ParallelDescriptor::ReduceIntSum(n_kbnd);
-        amrex::ParallelDescriptor::ReduceIntSum(n_kghst);
-        ss << "    k=" << kbnd << " (valid zhi top): n=" << n_kbnd
-           << "  L2(disp)=" << std::sqrt(disp_l2_at_kbnd)
-           << "  max|disp_z|=" << disp_z_max_kbnd << "\n"
-           << "    k=" << kghst << " (ghost above zhi): n=" << n_kghst
-           << "  L2(disp)=" << std::sqrt(disp_l2_at_kghst)
-           << "  max|disp_z|=" << disp_z_max_kghst << "\n";
-
-        Util::Message(INFO, ss.str());
-    }
 
     static AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     Set::Scalar AlphaBetaFraction(Set::Scalar T, Set::Scalar T0,
@@ -4559,7 +4013,6 @@ private:
     amrex::Parser damage_sxy_parser, damage_syz_parser, damage_szx_parser;
     amrex::ParserExecutor<4> damage_sxx_f, damage_syy_f, damage_szz_f;
     amrex::ParserExecutor<4> damage_sxy_f, damage_syz_f, damage_szx_f;
-    bool debug_amr_mechanics = false;
 
     // Step 9: bilinear grain-boundary cohesive-zone law. Default-off; only
     // active when cohesive.enabled = 1 with a valid microstructure.
@@ -4677,18 +4130,10 @@ private:
     Set::Scalar sp_a0 = 0.0;
     int         sp_n_segments = 64;     // composite Simpson segments
 
-    // Step 18: lithostatic confining pressure (Pa). Positive value =
-    // compressive pre-stress on side faces (Kant convention). Enters the
-    // K_I integrand via the compression-positive sigma_xx offset
-    // +p·nu/(1-nu) per Kant Eq. 15 (kant-2017-central-aare-validation-
-    // reference.md line 96). Default 0 = byte-identical to all
-    // pre-Step-18 tests. Phase-0 nu is used (single-phase scope, same
-    // as Step 16d's T-derived sigma_xx path); multi-phase Voronoi is
-    // out of scope. Applied as a POST-SOLVE offset in BOTH sigma_xx
-    // lambdas (UpdateSpAfterMechanics's Sp_field path AND Step 16d's
-    // k_i_at_zcrack depth-scan path), NOT as a new BC on the elastic
-    // solver — avoids reopening the MLMG limitations from Step 16
-    // takeaway #1.
+    // Lithostatic confining pressure (Pa, Kant sign convention: positive =
+    // compressive). Applied as +p·nu/(1-nu) offset in both sigma_xx lambdas
+    // (UpdateSpAfterMechanics and the k_i_at_zcrack depth scan), NOT as an
+    // elastic-solver BC. Default 0 short-circuits to byte-identical.
     Set::Scalar confining_p = 0.0;
 
     enum class KIcLaw { NasseriTable, Linear };
