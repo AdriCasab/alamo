@@ -55,8 +55,17 @@
         }
         const bool spall_prescribed = spall_prescribed_ratio_enabled;
         auto ratio_f = spall_ratio_f;
+        // stress_mf is only registered/populated when the elastic solve runs.
+        // With el.type = disable (e.g. spall.stress_source =
+        // local_thermoelastic), it must not be touched; the depth scan still
+        // runs via the T-derived sigma_xx path. mech_disabled gates every
+        // stress_mf access; have_stress still gates whether the scan runs at
+        // all (a stress source — T-derived or stress_mf — exists).
+        const bool mech_disabled =
+            (m_type == Mechanics<Model::Solid::Affine::Isotropic>::Type::Disable);
         const bool have_stress = spall_on && !spall_prescribed;
-        if (have_stress) Util::RealFillBoundary(*stress_mf[lev], geom[lev]);
+        if (have_stress && !mech_disabled)
+            Util::RealFillBoundary(*stress_mf[lev], geom[lev]);
 
         // Vapor calibration ---------------------------------------------
         const bool vapor_on = vapor_enabled;
@@ -116,7 +125,6 @@
         const Numeric::Material::Table *ptabs =
             phase_tables.empty() ? nullptr : phase_tables.data();
         const int n_phases = static_cast<int>(phase_tables.size());
-        const Set::Scalar T_amb_local = T_amb;
         const Set::Scalar dt_local = dt;
 
         auto col_index = [=](int i, int j) {
@@ -294,18 +302,27 @@
         // mirroring UpdateSpAfterMechanics's Sp_field diagnostic path.
         // Mechanics must be active for the stress_mf branch (have_stress
         // = el.time_evolving = 1); fail-fast otherwise.
-        const bool sp_weibull_use_T_face =
-            sp_weibull_spall &&
+        // Surface temperature for the T-face surface region: the prescribed-T
+        // parser when surface_patch is in prescribed_T mode, else (e.g. the
+        // local_thermoelastic flag under an MMW beam / computed-T source) the
+        // top-cell temp_mf value. sp_weibull_use_T_face fires for EITHER
+        // prescribed_T OR spall.stress_source = local_thermoelastic, so the
+        // same T-derived sigma_xx path serves both without an MLMG solve.
+        const bool sp_weibull_presc_T_face =
             surface_patch.enabled &&
             surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature;
-        if (sp_weibull_spall && !sp_weibull_use_T_face && !have_stress)
+        const bool sp_weibull_use_T_face =
+            sp_weibull_spall &&
+            (sp_weibull_presc_T_face || sp_local_thermoelastic);
+        if (sp_weibull_spall && !sp_weibull_use_T_face &&
+            (!have_stress || mech_disabled))
             Util::Abort(INFO, "Step 19 (sp_weibull + spall.enabled under "
                               "non-prescribed_T heat source): mechanics "
                               "solve must be active to source sigma_xx "
                               "from stress_mf — set el.type = static and "
-                              "el.time_evolving = 1, or switch to "
-                              "surface_patch.mode = prescribed_T for the "
-                              "Step 16d T-derived path");
+                              "el.time_evolving = 1, switch to "
+                              "surface_patch.mode = prescribed_T, or set "
+                              "spall.stress_source = local_thermoelastic");
 
         // Confining-pressure offset +p·nu/(1-nu) for the k_i_at_zcrack
         // lambda (Kant Eq. 15). Default-zero short-circuit preserves
@@ -328,6 +345,52 @@
         };
         std::vector<HColEvent> local_h_col_events;
 
+        // PASS 1b (depth-scan z-gather): collect each column's temperature
+        // profile for a window of up to max_steps_cap cells below its surface,
+        // collapsed across MPI z-decomposition via ReduceRealSum (each (i,j,k)
+        // is owned by exactly one validbox; non-owning ranks contribute 0). The
+        // K_I-vs-depth scan below then walks the FULL physical column instead of
+        // clamping at the local z-box floor (k_top - klo) — that clamp otherwise
+        // makes the detected flake thickness, and hence crater depth, depend on
+        // amr.max_grid_size / rank count. Only the T-derived (local_thermoelastic
+        // / prescribed_T) scan path consumes this; the stress_mf path keeps its
+        // box-local read (sig_node is not gathered).
+        const int dom_klo_z = domain.smallEnd(2);
+        int Dmax_col = static_cast<int>(std::floor(h_spall_max_loc / dz));
+        if (Dmax_col < 1) Dmax_col = 1;
+        if (Dmax_col > domain.bigEnd(2) - dom_klo_z)
+            Dmax_col = domain.bigEnd(2) - dom_klo_z;
+        const int colw = Dmax_col + 1;
+        amrex::Vector<Set::Scalar> T_col_prof;
+        if (sp_weibull_use_T_face)
+        {
+            T_col_prof.assign(static_cast<std::size_t>(ncols) * colw, 0.0);
+            for (amrex::MFIter mfi(*temp_mf[lev], false); mfi.isValid(); ++mfi)
+            {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::Array4<const Set::Scalar> const& T = (*temp_mf[lev]).array(mfi);
+                const int klo = bx.smallEnd(2), khi = bx.bigEnd(2);
+                const int ilo = bx.smallEnd(0), ihi = bx.bigEnd(0);
+                const int jlo = bx.smallEnd(1), jhi = bx.bigEnd(1);
+                for (int j = jlo; j <= jhi; ++j)
+                for (int i = ilo; i <= ihi; ++i)
+                {
+                    const int idx = col_index(i, j);
+                    const int ktop = k_top_global[idx];
+                    if (ktop == std::numeric_limits<int>::min()) continue;
+                    for (int d = 0; d <= Dmax_col; ++d)
+                    {
+                        const int k = ktop - d;
+                        if (k < klo || k > khi) continue;
+                        T_col_prof[static_cast<std::size_t>(idx) * colw + d] = T(i, j, k);
+                    }
+                }
+            }
+            amrex::ParallelDescriptor::ReduceRealSum(
+                T_col_prof.data(), static_cast<int>(T_col_prof.size()));
+        }
+        const Set::Scalar* T_col_p = T_col_prof.empty() ? nullptr : T_col_prof.data();
+
         for (amrex::MFIter mfi(*phi_mf[lev], false); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.validbox();
@@ -335,7 +398,7 @@
             amrex::Array4<const Set::Scalar> const& H   = (*H_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> const& ph  = (*phase_mf[lev]).array(mfi);
             amrex::Array4<const Set::Matrix> sig_node;
-            if (have_stress) sig_node = (*stress_mf[lev]).array(mfi);
+            if (have_stress && !mech_disabled) sig_node = (*stress_mf[lev]).array(mfi);
             // Step 16: per-cell h_spall diagnostic write target + the
             // Sp_cluster_id detach gate / flaw_a / temperature reads for
             // the depth scan. All four fields exist iff sp_weibull_spall
@@ -414,17 +477,40 @@
                                 Set::Scalar h_col = 0.0;
                                 const int max_steps_cap = static_cast<int>(
                                     std::floor(h_spall_max_loc / dz));
-                                const int max_steps_box = k_top - klo;
-                                const int max_steps =
-                                    std::min(max_steps_cap, max_steps_box);
                                 const int klo_loc = klo;
                                 const int khi_loc = khi;
+                                // T-derived path walks the gathered full column
+                                // down to the domain floor (box-independent);
+                                // stress_mf path stays box-local. See PASS 1b.
+                                const int scan_kbot =
+                                    sp_weibull_use_T_face ? dom_klo_z : klo;
+                                const int max_steps =
+                                    std::min(max_steps_cap, k_top - scan_kbot);
+                                // Column temperature by depth-below-surface index
+                                // (cells): gathered profile for the T-path (box-
+                                // independent), box-local T_a otherwise.
+                                const Set::Scalar* Tcol_i =
+                                    (T_col_p && sp_weibull_use_T_face)
+                                      ? (T_col_p + static_cast<std::size_t>(idx) * colw)
+                                      : nullptr;
+                                auto T_at_didx = [&] (int d) -> Set::Scalar {
+                                    if (Tcol_i)
+                                    {
+                                        if (d < 0)         d = 0;
+                                        if (d > Dmax_col)  d = Dmax_col;
+                                        return Tcol_i[d];
+                                    }
+                                    int kk = k_top - d;
+                                    if (kk < klo_loc) kk = klo_loc;
+                                    if (kk > khi_loc) kk = khi_loc;
+                                    return T_a(i, j, kk);
+                                };
 
                                 // Local helper: K_Ic(T) under the
                                 // configured law, in Pa·m^0.5.
                                 auto kic_pa_at_cell =
                                     [&] (int k_cell) -> Set::Scalar {
-                                    Set::Scalar T_at = T_a(i, j, k_cell);
+                                    Set::Scalar T_at = T_at_didx(k_top - k_cell);
                                     Set::Scalar K_Ic_MPa;
                                     if (law_loc == KIcLaw::NasseriTable)
                                         K_Ic_MPa =
@@ -488,13 +574,18 @@
                                         Set::Scalar T_z;
                                         if (z_abs <= half_dz)
                                         {
-                                            // Surface region: lerp
-                                            // between T_face (prescribed)
-                                            // and top-cell-centre T.
-                                            const Set::Scalar T_face =
-                                                sp_T_face_loc(time);
+                                            // Surface region: lerp between the
+                                            // surface T and the top-cell-centre
+                                            // T. Surface T is the prescribed-T
+                                            // parser when in prescribed_T mode,
+                                            // else (local_thermoelastic under a
+                                            // computed-T source) the top cell.
                                             const Set::Scalar T_top =
-                                                T_a(i, j, k_top);
+                                                T_at_didx(0);
+                                            const Set::Scalar T_face =
+                                                sp_weibull_presc_T_face
+                                                ? sp_T_face_loc(time)
+                                                : T_top;
                                             Set::Scalar alpha =
                                                 z_abs / half_dz;
                                             if (alpha < 0.0) alpha = 0.0;
@@ -512,20 +603,16 @@
                                             const Set::Scalar uf =
                                                 std::floor(u);
                                             int n = static_cast<int>(uf);
-                                            int k_above = k_top - n;
-                                            int k_below = k_above - 1;
-                                            if (k_above > k_top)   k_above = k_top;
-                                            if (k_above < klo_loc) k_above = klo_loc;
-                                            if (k_above > khi_loc) k_above = khi_loc;
-                                            if (k_below > k_top)   k_below = k_top;
-                                            if (k_below < klo_loc) k_below = klo_loc;
-                                            if (k_below > khi_loc) k_below = khi_loc;
+                                            if (n < 0) n = 0;
                                             const Set::Scalar alpha =
                                                 u - uf;  // in [0, 1)
+                                            // Depth-below-surface indices n,
+                                            // n+1; T_at_didx clamps and reads the
+                                            // gathered column (box-independent).
                                             T_z = (1.0 - alpha)
-                                                  * T_a(i, j, k_above)
+                                                  * T_at_didx(n)
                                                 +        alpha
-                                                  * T_a(i, j, k_below);
+                                                  * T_at_didx(n + 1);
                                         }
                                         // 1-D confinement: physical sigma_xx
                                         // = -E*beta*dT/(1-nu). K_I integrator
@@ -550,7 +637,7 @@
                                     const Set::Scalar z_crack =
                                         Set::Scalar(s) * dz;
                                     const int k_tip = k_top - s;
-                                    if (k_tip < klo) break;
+                                    if (k_tip < scan_kbot) break;
 
                                     Set::Scalar K_Ic_Pa =
                                         kic_pa_at_cell(k_tip);
@@ -562,8 +649,15 @@
                                         s_last_pass = s;
                                         h_col       = z_crack;
                                         // Step 16b: edge-triggered event
-                                        // count at (i, j, k_tip).
-                                        if (cec(i, j, k_tip) < 0.5)
+                                        // count at (i, j, k_tip). Only writable
+                                        // for cells in the surface-owning box;
+                                        // under the depth-scan z-gather k_tip may
+                                        // descend into a box this rank does not
+                                        // own, so guard against an OOB write
+                                        // (deep crossings simply go uncounted in
+                                        // this secondary diagnostic).
+                                        if (k_tip >= klo && k_tip <= khi &&
+                                            cec(i, j, k_tip) < 0.5)
                                             cec(i, j, k_tip) = 1.0;
                                     }
                                     else
@@ -582,7 +676,7 @@
                                 // quantization fix from design note §4.
                                 if (found_failure && s_last_pass >= 0 &&
                                     s_last_pass < max_steps &&
-                                    (k_top - (s_last_pass + 1)) >= klo)
+                                    (k_top - (s_last_pass + 1)) >= scan_kbot)
                                 {
                                     Set::Scalar z_lo = Set::Scalar(s_last_pass)
                                                        * dz;       // pass
@@ -595,8 +689,12 @@
                                         int k_mid = k_top -
                                             static_cast<int>(
                                                 std::floor(z_mid / dz));
-                                        if (k_mid < klo) k_mid = klo;
-                                        if (k_mid > khi) k_mid = khi;
+                                        // kic_pa_at_cell reads via T_at_didx,
+                                        // which is box-independent on the T-path;
+                                        // clamp to [scan_kbot, k_top] (== box on
+                                        // the stress_mf path).
+                                        if (k_mid < scan_kbot) k_mid = scan_kbot;
+                                        if (k_mid > k_top)      k_mid = k_top;
                                         Set::Scalar K_Ic_mid =
                                             kic_pa_at_cell(k_mid);
                                         Set::Scalar K_I_mid =
@@ -759,6 +857,51 @@
             amrex::ParallelDescriptor::ReduceRealSum(rop_v_cand_col.data(), ncols);
         }
 
+        // Flake coherence-length cap (rock-mechanics cavity-wall coherence):
+        // a firing column may recede at most coh_cells below its shallowest
+        // live 4-neighbour. Bounds the cavity-wall slope so a smooth bowl can
+        // descend gradually but a free-standing high-aspect-ratio needle cannot
+        // form. Uses k_top_global (the gathered per-column live surface) so it
+        // is decomposition-independent. k_top is the topmost live cell index
+        // (higher k = shallower); a column at k_top removing thickness h lands
+        // at k_top - h/dz, which must stay >= (shallowest-neighbour k_top) -
+        // coh_cells.
+        const int coh_cells = (spall_flake_coh_len > 0.0)
+            ? std::max(1, static_cast<int>(std::lround(spall_flake_coh_len / dz)))
+            : 0;
+        if (coh_cells > 0)
+        {
+            for (int j = dom_jlo; j <= dom_jhi; ++j)
+            for (int i = dom_ilo; i <= dom_ihi; ++i)
+            {
+                const int idx = col_index(i, j);
+                if (spall_fires_col[idx] == 0 || h_s_cand_col[idx] <= 0.0) continue;
+                const int kt = k_top_global[idx];
+                if (kt == std::numeric_limits<int>::min()) continue;
+                int nbr_max = std::numeric_limits<int>::min();
+                const int nb[4][2] = {{i-1,j},{i+1,j},{i,j-1},{i,j+1}};
+                for (int n = 0; n < 4; ++n)
+                {
+                    const int ni = nb[n][0], nj = nb[n][1];
+                    if (ni < dom_ilo || ni > dom_ihi || nj < dom_jlo || nj > dom_jhi)
+                        continue;
+                    const int nkt = k_top_global[col_index(ni, nj)];
+                    if (nkt > nbr_max) nbr_max = nkt;
+                }
+                if (nbr_max == std::numeric_limits<int>::min()) continue;
+                const int floor_k = nbr_max - coh_cells;     // deepest allowed surface
+                Set::Scalar cap_h = static_cast<Set::Scalar>(kt - floor_k) * dz;
+                if (cap_h < 0.0) cap_h = 0.0;
+                if (h_s_cand_col[idx] > cap_h)
+                {
+                    h_s_cand_col[idx]   = cap_h;
+                    rop_s_cand_col[idx] = (dt_local > 0.0 && cap_h > 0.0)
+                                        ? cap_h / dt_local : 0.0;
+                    if (cap_h <= 0.0) spall_fires_col[idx] = 0;
+                }
+            }
+        }
+
         // Step 16c: rank-ordered append of per-column first-firing events
         // to <plot_file>_h_col_events.csv. Each rank writes its own
         // subset; barriers serialize the file writes so the header (from
@@ -766,7 +909,7 @@
         // interleave. Append mode preserves cross-step accumulation; the
         // I/O proc latch ensures the header is emitted exactly once per
         // run (re-runs of the same plot_file truncate-and-rewrite).
-        if (sp_weibull_spall && lev == 0)
+        if (sp_weibull_spall && lev == 0 && sp_emit_h_col_events_csv)
         {
             const std::string csv_path =
                 plot_file + "_h_col_events.csv";
@@ -809,6 +952,45 @@
             }
         }
 
+        // Step 19: mechanical bit feed. Within bit_radius of the axis, force
+        // every column's surface down to the descending flat bit floor
+        // z_bit(t) = bit_z0 - feed*(t - start), quantized to the cell whose
+        // index is target_k. The recession needed is (k_top - target_k) cells.
+        // NOT coherence-capped (the rigid bit cuts a flat floor); folded into
+        // the winner loop below as max(spall, vapor, bit), so spallation may
+        // still remove material AHEAD of (below) the bit. Uses k_top_global so
+        // it is decomposition-independent.
+        amrex::Vector<Set::Scalar> h_bit_col(ncols, 0.0);
+        if (bit_enabled && time >= bit_start_time)
+        {
+            const Set::Scalar z_bit  = bit_z0 - bit_feed_rate * (time - bit_start_time);
+            const int target_k = static_cast<int>(std::floor((z_bit - PLO[2]) / dz));
+            const Set::Scalar r2_max = bit_radius * bit_radius;
+            for (int j = dom_jlo; j <= dom_jhi; ++j)
+            for (int i = dom_ilo; i <= dom_ihi; ++i)
+            {
+                const int idx = col_index(i, j);
+                const int kt  = k_top_global[idx];
+                if (kt == std::numeric_limits<int>::min()) continue;
+                if (kt <= target_k) continue;            // already at/below bit
+                // GATE: the bit advances only into spall-ready rock (the
+                // spallation criterion fired this column this step). If the
+                // beam has not heated the floor to Sp >= 1, the bit waits, so
+                // ROP falls below the feed -- making ROP an emergent
+                // prediction rather than an assumption. vapor counts too.
+                if (spall_fires_col[idx] == 0 && vapor_fires_col[idx] == 0) continue;
+                const Set::Scalar xc = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
+                const Set::Scalar yc = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
+                const Set::Scalar r2 = (xc - bit_x0) * (xc - bit_x0)
+                                     + (yc - bit_y0) * (yc - bit_y0);
+                if (r2 > r2_max) continue;
+                // Rate cap: the bit floor descends at the feed, so the
+                // recession is bounded by (k_top - target_k) cells even when
+                // the rock could spall faster -- the drawworks controls ROP.
+                h_bit_col[idx] = static_cast<Set::Scalar>(kt - target_k) * dz;
+            }
+        }
+
         // Per-column winner from reduced data (deterministic on every rank).
         // Step 17: under sp_weibull, spall has priority over vap when both
         // gates fire at the same column. Under damage_law, the
@@ -841,6 +1023,16 @@
                 }
                 else if (sf) { reg_choice = 1; h_c = hs; }
                 else if (vf) { reg_choice = 2; h_c = hv; }
+            }
+            // Step 19: when the bit is enabled it CONTROLS the surface (the
+            // drawworks sets the rate; the flame rides with the bit, so the
+            // surface cannot run ahead of it). The bit is the sole remover;
+            // spallation/vapor remain as DIAGNOSTICS (Sp_field, computed
+            // elsewhere) confirming the floor is spall-ready at this feed.
+            if (bit_enabled)
+            {
+                reg_choice = (h_bit_col[idx] > 0.0) ? 3 : 0;
+                h_c        = h_bit_col[idx];
             }
             regime_col[idx]     = reg_choice;
             h_chosen_col[idx]   = h_c;
@@ -941,26 +1133,22 @@
                             rop_v(i, j, k) = rop_v_c;
                         }
                         D(i, j, k) = 0.0;
-                        T(i, j, k) = T_amb_local;
-                        if (ptabs)
-                        {
-                            int p = static_cast<int>(std::round(ph(i, j, k)));
-                            if (p < 0 || p >= n_phases) p = 0;
-                            Set::Scalar Hv = ptabs[p].H_of_T(T_amb_local);
-                            Set::Scalar Tdummy, ls, ll, lv;
-                            ptabs[p].Invert(Hv, Tdummy, ls, ll, lv);
-                            H(i, j, k)  = Hv;
-                            LS(i, j, k) = ls;
-                            LL(i, j, k) = ll;
-                            LV(i, j, k) = lv;
-                        }
-                        else
-                        {
-                            H(i, j, k)  = 0.0;
-                            LS(i, j, k) = 1.0;
-                            LL(i, j, k) = 0.0;
-                            LV(i, j, k) = 0.0;
-                        }
+                        // Do NOT reset the voided cell's thermal state to
+                        // ambient. The cell now holds no material and is
+                        // insulating (the void-aware conduction stencil carries
+                        // zero flux across any void face and zeroes the void's
+                        // own conductivity), so its stored T/H/latent state is
+                        // physically inert. Resetting it to T_amb only created a
+                        // spurious cold (280 K) value that showed up as a
+                        // checkerboard in temperature plotfiles next to the
+                        // un-spalled hot cells at the rough drill front. Keeping
+                        // the prior thermal state leaves the temperature field
+                        // continuous; the cavity is delineated for visualization
+                        // by the `removed` mask (threshold removed < 0.5 to
+                        // carve the hole). NaN-masking is avoided because
+                        // UpdateSpAfterMechanics reads the absolute domain-top
+                        // cell, which becomes a void after drilling — a NaN
+                        // there would poison the Sp = K_I/K_Ic gate.
                     }
                 }
             }

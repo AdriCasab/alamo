@@ -1076,7 +1076,7 @@ Integrator::Evolve()
             WritePlotFile();
             IO::WriteMetaData(plot_file, IO::Status::Running, (int)(100.0 * cur_time / stop_time));
         }
-        else if (std::fabs(std::remainder(cur_time, plot_dt)) < 0.5 * dt[0])
+        else if (plot_dt > 0.0 && std::fabs(std::remainder(cur_time, plot_dt)) < 0.5 * dt[0])
         {
             last_plot_file_step = step + 1;
             WritePlotFile();

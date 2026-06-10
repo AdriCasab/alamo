@@ -51,6 +51,22 @@ public:
         // earlier "incident == absorbed" convention used in steps 1–4.
         pp.query_default("R",      v.R,      0.0);
 
+        // Radial intensity profile. `gaussian` (default) is the focused-beam
+        // P_GB(x,y,z) above (eqs. 2-3). `uniform` is a flat-top disk of radius
+        // `beam.radius`: I = P_0/(π radius²) for r ≤ radius, 0 outside, with no
+        // Gaussian waist evolution. The uniform profile models an impinging
+        // flame jet (flat stagnation-zone heat flux) far better than a laser
+        // Gaussian -- it avoids the central hot-spot that overheats the surface.
+        std::string prof = "gaussian";
+        pp.query_default("profile", prof, "gaussian");
+        if      (prof == "gaussian")                    v.profile = Gaussian;
+        else if (prof == "uniform" || prof == "tophat") v.profile = Uniform;
+        else Util::Abort(INFO, "beam.profile must be 'gaussian' or 'uniform', got ", prof);
+        // Disk radius [m]; required and used only for the uniform profile.
+        pp.query_default("radius", v.radius, std::string("0.0"), Unit::Length());
+        if (v.profile == Uniform && v.radius <= 0.0)
+            Util::Abort(INFO, "beam.profile = uniform requires beam.radius > 0");
+
         // Attenuation α(T) in m^-1 — parsed as an expression of T so a
         // temperature-dependent loss tangent can be plugged in without code
         // changes. Default 10 m^-1.
@@ -88,12 +104,21 @@ public:
     {
         Set::Scalar dz = z0 - z;
         if (dz < 0.0) return 0.0;
-        Set::Scalar zR = M_PI * omega0 * omega0 / lambda;
-        Set::Scalar w  = omega0 * std::sqrt(1.0 + (dz / zR) * (dz / zR));
         Set::Scalar r2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
-        Set::Scalar P_int = (2.0 * P0 / (M_PI * omega0 * omega0))
-                          * (omega0 / w) * (omega0 / w)
-                          * std::exp(-2.0 * r2 / (w * w));
+        Set::Scalar P_int;
+        if (profile == Uniform)
+        {
+            if (r2 > radius * radius) return 0.0;
+            P_int = P0 / (M_PI * radius * radius);
+        }
+        else
+        {
+            Set::Scalar zR = M_PI * omega0 * omega0 / lambda;
+            Set::Scalar w  = omega0 * std::sqrt(1.0 + (dz / zR) * (dz / zR));
+            P_int = (2.0 * P0 / (M_PI * omega0 * omega0))
+                  * (omega0 / w) * (omega0 / w)
+                  * std::exp(-2.0 * r2 / (w * w));
+        }
         Set::Scalar a = alpha_f(T);
         return (1.0 - R) * P_int * a * std::exp(-a * dz);
     }
@@ -107,6 +132,10 @@ public:
     Set::Scalar y0     = 0.0;
     Set::Scalar z0     = 0.0;
     Set::Scalar R      = 0.0;   // surface reflectivity (0 = full absorption)
+
+    enum ProfileType { Gaussian = 0, Uniform = 1 };
+    int         profile = Gaussian; // radial intensity profile
+    Set::Scalar radius  = 0.0;      // flat-top disk radius [m] (uniform only)
 
     amrex::Parser alpha_parser;
     amrex::ParserExecutor<1> alpha_f;

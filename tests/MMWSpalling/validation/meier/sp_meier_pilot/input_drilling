@@ -1,0 +1,193 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# Meier 2017 Grimsel pilot flame-jet drilling -- SUSTAINED DRILLING case.
+# ============================================================================
+#
+# Reference packet: meier-2017-pilot-660kg-validation-reference.md
+# Scored by tests/MMWSpalling/validation/meier/sp_meier_pilot/test (case B).
+#
+# WHAT THIS SCORES: sustained spallation drilling with an Sp-GATED mechanical
+# bit feed (drawworks model) at 30% efficiency-corrected power. Targets:
+#   1. Emergent ROP within +-20% of Meier's measured 1.5 m/h, with NO decay
+#      over the run (packet binding target #1: a monotonically decaying ROP
+#      is wrong, not just imprecise).
+#   2. Floor stays in the spallation regime: Sp >= 1 at the drill face at
+#      every sampled time after spin-up (spallation, not the bit, is the
+#      active removal mechanism -- the bit only paces it).
+#   3. TSE within +-30% of the packet's enthalpy-to-rock band (4-6 J/mm^3;
+#      scored band 2.8-7.8) -- the convention matching 30% power input.
+#   4. No thermal runaway: Tmax stays far below the 5000 K enthalpy-table
+#      ceiling (scored < 4500 K).
+#
+# --- Energy partition --------------------------------------------------------
+# Meier's TSE = 15.4 J/mm^3 divides COMBUSTION enthalpy (38 kW HHV) by cavity
+# volume; 50-80% of that energy leaves with the exhaust gases (packet section
+# 8, the single largest uncertainty). Feeding the full 38 kW into the rock
+# with only spallation as a sink cannot reach steady state (the surface bakes
+# to the vaporisation range). This case feeds the packet's efficiency-
+# corrected option: 0.30 x 38 kW = 11.4 kW into the rock, scored against the
+# matching enthalpy-to-rock TSE ~ 4-6 J/mm^3 (NOT against 15.4).
+#
+# --- Bit feed (Step 19) ------------------------------------------------------
+# bit.* models the drawworks: a flat bit floor descends at the measured feed
+# (1.5 m/h) and removes material within bit.radius, GATED per column on the
+# spall criterion having fired that step (Sp >= 1). The gate makes ROP an
+# EMERGENT PREDICTION: if heating cannot keep the floor spall-ready, the bit
+# waits and ROP falls below the feed. Observed: ROP self-limits to ~1.4 m/h
+# and holds. The bit supplies the mechanical advance + wall sweeping the
+# thermomechanical kernel lacks (see KNOWN LIMITATION below).
+#
+# --- Footprint ---------------------------------------------------------------
+# radius = 42 mm matches Meier's as-drilled ~85 mm hole (the swept
+# heat-delivery area), the right scale for volume/TSE scoring. The 25 mm
+# thermal-footprint variant (input_drilling_25mm) shows the narrow-footprint
+# sensitivity: same emergent ROP, but the hole tapers and TSE drifts high.
+#
+# --- KNOWN LIMITATION (documented, not scored) -------------------------------
+# Without the bit, the stationary beam bores a self-limiting cone that stalls
+# (~48 mm) because the column-based removal scheme cannot spall the sloped
+# cavity wall: rim columns sit at Sp ~ 6 and bake instead of spalling -- a
+# code artifact of strictly-vertical column removal, not physics. The bit is
+# the documented mechanical stand-in until a surface-normal removal kernel
+# exists. Cylindrical hole shape (packet target #4) and total excavated
+# volume over the full 1383 s (#3) are therefore NOT scored here.
+#
+# Heat source / material / failure model otherwise identical to input_energy
+# (uniform-disk beam surrogate, Grimsel Table-7.1 properties, sp_weibull with
+# Kant-template defaults a0 = 20 um, Nasseri K_Ic(T) x1.0, Weibull m = 20).
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/validation/meier/sp_meier_pilot/output/drilling
+
+timestep  = 0.001
+stop_time = 56.0
+
+amr.plot_int        = 8000      # every 8 s of sim time
+amr.max_level       = 0
+amr.n_cell          = 70 70 60
+amr.blocking_factor = 2
+amr.max_grid_size   = 20
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+# 140 x 140 x 120 mm block, dx = dy = dz = 2 mm. Disk edge (r = 42 mm) is
+# 28 mm clear of the lateral boundaries; depth 120 mm >> the ~25 mm drilled
+# by t = 56 s (no floor interference).
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.14  0.14  0.120
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, Kant-template defaults ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 20.0
+weibull.seed    = 12345
+
+# Moving boundary + detachment.
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.004
+
+vapor.enabled = 0
+
+# Lateral confinement SHmin = SHmax ~ 1 MPa (Meier symmetric pads).
+confining.p = 1.0e6
+
+# --- Beam: 30% of 38 kW (efficiency-corrected), uniform 84 mm disk ---
+beam.P0         = 11400.0
+beam.profile    = uniform
+beam.radius     = 0.042
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.07
+beam.y0         = 0.07
+beam.z0         = 0.120
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+# --- Step 19: Sp-gated mechanical bit feed at the measured 1.5 m/h ---
+bit.enabled    = 1
+bit.feed_rate  = 4.166667e-4
+bit.radius     = 0.042
+bit.x0         = 0.07
+bit.y0         = 0.07
+bit.z0         = 0.120
+bit.start_time = 0.0
+
+# --- Surface losses to lab air ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+surface_patch.enabled = 0
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics inert: local_thermoelastic stress source needs no global solve.
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

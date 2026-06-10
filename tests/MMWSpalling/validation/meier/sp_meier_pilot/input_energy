@@ -1,0 +1,187 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# Meier 2017 Grimsel pilot flame-jet drilling -- ENERGY / TSE case.
+# ============================================================================
+#
+# Reference packet: meier-2017-pilot-660kg-validation-reference.md
+# Scored by tests/MMWSpalling/validation/meier/sp_meier_pilot/test (case A).
+#
+# WHAT THIS SCORES: the early-window energy balance of free (un-assisted)
+# spallation under the full 38 kW combustion power, in Meier's own HHV
+# convention. Targets (packet section 7, both +-30%):
+#   - volumetric removal rate dV/dt ~ 2.47 cm^3/s
+#   - TSE = P0*t / V(t)         ~ 15.4 J/mm^3
+# Scored over t <= 10 s only. Beyond ~15 s the crater degenerates into a
+# self-limiting cone (see KNOWN LIMITATION below) and the energy balance
+# drifts; the early window is the physically meaningful comparison.
+#
+# --- Heat-source surrogate ---------------------------------------------------
+# Meier's source is a CH4/air flame jet. The convective surface patch is
+# pinned to the fixed +z face and cannot follow a receding floor, so this case
+# uses the MMW beam as a surface-flux surrogate: UNIFORM (flat-top) disk
+# profile, Beer-Lambert absorption with a 0.5 mm e-folding depth (alpha =
+# 2000 1/m), surface-following by construction (BeamSource measures the
+# optical path from the current surface via phi). A Gaussian profile is NOT
+# usable here: its ~60 MW/m^2 central hot-spot pins the surface at the
+# enthalpy-table ceiling (5000 K) and silently breaks energy conservation.
+# The uniform 50 mm disk delivers ~19 MW/m^2, keeping the surface in the
+# spallation regime. Footprint radius 25 mm is INFERRED (packet section 2:
+# 30-50 mm diameter; 12-deg turbulent-jet spread over SOD = 50 mm gives
+# ~28 mm core) -- it is a sweep parameter, not a measured constant.
+#
+# Full 38 kW (HHV) is fed so the model's energy input matches the convention
+# behind TSE = 15.4 J/mm^3 (Meier divides combustion enthalpy by cavity
+# volume). With beam.R = 0 the input is exactly P0 * t.
+#
+# --- KNOWN LIMITATION (documented, not scored) -------------------------------
+# With a stationary beam and no mechanical advance, the crater bores a
+# self-limiting ~47-deg cone that freezes at ~48 mm depth: the cold rim
+# outside the disk anchors the cavity wall through the column-based removal
+# scheme's slope cap (spall.flake_coherence_length), the rim columns bake at
+# Sp >> 1 without being allowed to recede, and once the floor stops the thin
+# thermal skin soaks in and all spalling stops. The rim behaviour is a CODE
+# ARTIFACT of strictly-vertical column removal (real spallation pops flakes
+# off the sloped wall along its normal); a surface-normal removal kernel is
+# the planned fix. Until then, sustained drilling is validated separately
+# with the mechanical bit feed (input_drilling).
+#
+# --- Material: Grimsel granite, T-independent (Meier Table 7.1) --------------
+# k = 1.5 W/mK, rho = 2750, Cp = 790, E = 30 GPa, nu = 0.3, alpha = 8e-6.
+# Homogeneous one-phase microstructure (sp_weibull requires one);
+# mu = E/(2(1+nu)) = 11.538 GPa.
+#
+# --- Failure / removal: Kant-template defaults -------------------------------
+# LEFM Sp = K_I/K_Ic branch, a0 = 20 um, K_Ic(T) = Nasseri 2007 Westerly
+# table at scale 1.0 (no Grimsel K_Ic is reported -- documented
+# substitution), Weibull on with m = 20 (packet band 20-25),
+# local_thermoelastic stress source (no global elastic solve needed).
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/validation/meier/sp_meier_pilot/output/energy
+
+# Explicit forward Euler. dz = 2 mm; conduction limit dz^2/(6 alpha) ~ 0.97 s.
+# The binding constraint is the beam source heating rate: dt = 1e-3 s keeps
+# the per-step surface-cell temperature rise to a few tens of K.
+timestep  = 0.001
+stop_time = 12.0
+
+amr.plot_int        = 1000      # every 1 s of sim time
+amr.max_level       = 0
+amr.n_cell          = 40 40 26
+amr.blocking_factor = 2
+amr.max_grid_size   = 20
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+# 80 x 80 x 52 mm block, dx = dy = dz = 2 mm. The disk edge (r = 25 mm) is
+# 15 mm clear of the lateral boundaries; thermal diffusion length over 12 s
+# (~2.9 mm) never reaches them. Depth 52 mm >> the ~25 mm drilled by t = 10 s.
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.08  0.08  0.052
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, Kant-template defaults ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 20.0
+weibull.seed    = 12345
+
+# Moving boundary + detachment (free spallation; no bit in this case).
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.004
+
+vapor.enabled = 0
+
+# Lateral confinement SHmin = SHmax ~ 1 MPa (Meier symmetric pads).
+confining.p = 1.0e6
+
+# --- Beam as surface-flux surrogate: 38 kW HHV, uniform 50 mm disk ---
+beam.P0         = 38000.0
+beam.profile    = uniform
+beam.radius     = 0.025
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.04
+beam.y0         = 0.04
+beam.z0         = 0.052
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+# --- Surface losses to lab air ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+surface_patch.enabled = 0
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics inert: local_thermoelastic stress source needs no global solve.
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

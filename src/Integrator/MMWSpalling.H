@@ -160,6 +160,10 @@ public:
         // `cohesive.enabled = 1` immediately.
         ParseSpallationModel(value, pp);
 
+        // Step 19: optional mechanical bit feed (drawworks). Default-off.
+        // Parsed after spall/vapor so it can require one of them.
+        ParseBitSettings(value, pp);
+
         // Solver choice for the diffusion term: "explicit" forward Euler
         // (default; matches steps 2-4) or "implicit" backward Euler (built
         // on amrex::MLABecLaplacian + MLMG). The source Q and surface loss
@@ -382,7 +386,13 @@ public:
                 // removal modes; per-mode diagnostics are registered only
                 // when their owning mode is enabled.
                 value.RegisterNewFab(value.phi_mf,             nullptr, 1, 0, "phi",             true);
-                value.RegisterNewFab(value.removed_mf,         nullptr, 1, 0, "removed",         true);
+                // 1 ghost: the void-aware conduction face stencil reads
+                // `removed` at neighbour cells (i+-1, ...) to zero the flux
+                // across void faces. With 0 ghosts those neighbour reads hit
+                // unallocated memory at box seams -> decomposition-dependent
+                // temperature once cells void (catastrophic under the no-reset
+                // void behaviour, where void cells retain their hot enthalpy).
+                value.RegisterNewFab(value.removed_mf,         nullptr, 1, 1, "removed",         true);
                 value.RegisterNewFab(value.regime_mf,          nullptr, 1, 0, "regime",          true);
                 value.RegisterNewFab(value.RoP_mf,             nullptr, 1, 0, "RoP",             true);
             }
@@ -756,6 +766,8 @@ protected:
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const int         bprof = beam.profile;
+        const Set::Scalar brad  = beam.radius;
         auto alpha_f = beam.alpha_f;
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
@@ -775,7 +787,7 @@ protected:
                 Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
                 Set::Scalar Tv = T_old(i, j, k);
                 Set::Scalar Q  = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                            bR, alpha_f, x, y, z, Tv);
+                                            bR, bprof, brad, alpha_f, x, y, z, Tv);
                 Set::Scalar eps = (Tv <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
                                    * (eps * sig_SB * (Tv*Tv*Tv*Tv - T_a*T_a*T_a*T_a)
@@ -794,6 +806,8 @@ protected:
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const int         bprof = beam.profile;
+        const Set::Scalar brad  = beam.radius;
         auto alpha_f = beam.alpha_f;
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
@@ -801,6 +815,17 @@ protected:
         const Set::Scalar inv_dx2 = 1.0 / (DX[0] * DX[0]);
         const Set::Scalar inv_dy2 = 1.0 / (DX[1] * DX[1]);
         const Set::Scalar inv_dz2 = 1.0 / (DX[2] * DX[2]);
+
+        // Removed cells are void and must not exchange heat with surviving
+        // material (mirrors AdvanceMicrostructure). Without this, a voided cell
+        // — reset to T_amb on removal — would act as a full-conductivity cold
+        // sink for its neighbours. Fill the `removed` ghost layer so the
+        // stencil can detect void neighbours.
+        const bool void_aware = removal_enabled();
+        if (void_aware) Util::RealFillBoundary(*removed_mf[lev], geom[lev]);
+        const amrex::Box& vdomain = geom[lev].Domain();
+        const int vdlo[3] = {vdomain.smallEnd(0), vdomain.smallEnd(1), vdomain.smallEnd(2)};
+        const int vdhi[3] = {vdomain.bigEnd(0),   vdomain.bigEnd(1),   vdomain.bigEnd(2)};
 
         // Step 6d / Step 15a: surface patch on the +z face. prescribed_T
         // injects the Dirichlet face flux; convective_flame injects the Robin
@@ -824,24 +849,39 @@ protected:
             Set::Patch<Set::Scalar>       H     = H_mf.Patch(lev, mfi);
             Set::Patch<const Set::Scalar> T_old = temp_old_mf.Patch(lev, mfi);
             Set::Patch<const Set::Scalar> surf  = surface_mf.Patch(lev, mfi);
+            Set::Patch<const Set::Scalar> rem   =
+                void_aware ? removed_mf.Patch(lev, mfi) : surface_mf.Patch(lev, mfi);
             amrex::ParallelFor(bx, [=] (int i, int j, int k) {
                 Set::Scalar Tc = T_old(i, j, k);
+                // Void cells (already removed) hold no material: freeze them at
+                // their reset state and exchange no heat with neighbours.
+                const bool self_void = void_aware && rem(i, j, k) > 0.5;
+                if (self_void) { H(i, j, k) = H_old(i, j, k); return; }
                 Set::Scalar Txm = T_old(i-1, j, k), Txp = T_old(i+1, j, k);
                 Set::Scalar Tym = T_old(i, j-1, k), Typ = T_old(i, j+1, k);
                 Set::Scalar Tzm = T_old(i, j, k-1), Tzp = T_old(i, j, k+1);
                 Set::Scalar kc  = mat->kappa(Tc);
                 // Harmonic-average κ on faces (handles discontinuous κ across
                 // interfaces correctly; degenerates to arithmetic mean for
-                // smooth κ(T)).
+                // smooth κ(T)). A face touching a void neighbour carries zero
+                // flux (insulating cavity wall); domain-boundary faces keep the
+                // normal stencil (rem ghosts there are not meaningful).
                 auto kface = [](Set::Scalar a, Set::Scalar b) {
                     return (a + b > 0.0) ? 2.0 * a * b / (a + b) : 0.0;
                 };
-                Set::Scalar fxp = kface(kc, mat->kappa(Txp)) * (Txp - Tc) * inv_dx2;
-                Set::Scalar fxm = kface(kc, mat->kappa(Txm)) * (Tc - Txm) * inv_dx2;
-                Set::Scalar fyp = kface(kc, mat->kappa(Typ)) * (Typ - Tc) * inv_dy2;
-                Set::Scalar fym = kface(kc, mat->kappa(Tym)) * (Tc - Tym) * inv_dy2;
-                Set::Scalar fzp = kface(kc, mat->kappa(Tzp)) * (Tzp - Tc) * inv_dz2;
-                Set::Scalar fzm = kface(kc, mat->kappa(Tzm)) * (Tc - Tzm) * inv_dz2;
+                auto nvoid = [&](int di, int dj, int dk) -> bool {
+                    const int ii = i+di, jj = j+dj, kk = k+dk;
+                    if (!void_aware) return false;
+                    if (ii < vdlo[0] || ii > vdhi[0] || jj < vdlo[1] ||
+                        jj > vdhi[1] || kk < vdlo[2] || kk > vdhi[2]) return false;
+                    return rem(ii, jj, kk) > 0.5;
+                };
+                Set::Scalar fxp = nvoid( 1,0,0) ? 0.0 : kface(kc, mat->kappa(Txp)) * (Txp - Tc) * inv_dx2;
+                Set::Scalar fxm = nvoid(-1,0,0) ? 0.0 : kface(kc, mat->kappa(Txm)) * (Tc - Txm) * inv_dx2;
+                Set::Scalar fyp = nvoid(0, 1,0) ? 0.0 : kface(kc, mat->kappa(Typ)) * (Typ - Tc) * inv_dy2;
+                Set::Scalar fym = nvoid(0,-1,0) ? 0.0 : kface(kc, mat->kappa(Tym)) * (Tc - Tym) * inv_dy2;
+                Set::Scalar fzp = nvoid(0,0, 1) ? 0.0 : kface(kc, mat->kappa(Tzp)) * (Tzp - Tc) * inv_dz2;
+                Set::Scalar fzm = nvoid(0,0,-1) ? 0.0 : kface(kc, mat->kappa(Tzm)) * (Tc - Tzm) * inv_dz2;
                 Set::Scalar div_kgrad = (fxp - fxm) + (fyp - fym) + (fzp - fzm);
 
                 Set::Scalar x = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
@@ -866,7 +906,7 @@ protected:
                 }
 
                 Set::Scalar Q = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                           bR, alpha_f, x, y, z, Tc);
+                                           bR, bprof, brad, alpha_f, x, y, z, Tc);
 
                 Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
@@ -897,6 +937,8 @@ protected:
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const int         bprof = beam.profile;
+        const Set::Scalar brad  = beam.radius;
         auto alpha_f = beam.alpha_f;
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
@@ -939,7 +981,7 @@ protected:
                 Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
                 Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
                 Set::Scalar Q = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                           bR, alpha_f, x, y, z, Tc);
+                                           bR, bprof, brad, alpha_f, x, y, z, Tc);
                 Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
                                    * (eps * sig_SB * (Tc*Tc*Tc*Tc - T_a*T_a*T_a*T_a)
@@ -1055,6 +1097,8 @@ protected:
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const int         bprof = beam.profile;
+        const Set::Scalar brad  = beam.radius;
         auto alpha_f = beam.alpha_f;
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
@@ -1180,7 +1224,7 @@ protected:
                 // a no-op until the surface actually recedes.
                 Set::Scalar Q = self_void ? Set::Scalar(0.0)
                                           : BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                                       bR, alpha_f, x, y, z, Tc,
+                                                       bR, bprof, brad, alpha_f, x, y, z, Tc,
                                                        void_aware
                                                          ? std::max(Set::Scalar(0.0), phi(i, j, k))
                                                          : Set::Scalar(-1.0));
@@ -1218,7 +1262,7 @@ protected:
     AMREX_GPU_HOST_DEVICE
     static Set::Scalar BeamSource(Set::Scalar P, Set::Scalar w0, Set::Scalar lam,
                                   Set::Scalar x0, Set::Scalar y0, Set::Scalar z0,
-                                  Set::Scalar R,
+                                  Set::Scalar R, int profile, Set::Scalar radius,
                                   amrex::ParserExecutor<1> alpha_f,
                                   Set::Scalar x, Set::Scalar y, Set::Scalar z,
                                   Set::Scalar T,
@@ -1226,11 +1270,23 @@ protected:
     {
         Set::Scalar dz = z0 - z;
         if (dz < 0.0 || P == 0.0) return 0.0;
-        Set::Scalar zR = M_PI * w0 * w0 / lam;
-        Set::Scalar w  = w0 * std::sqrt(1.0 + (dz / zR) * (dz / zR));
         Set::Scalar r2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
-        Set::Scalar Pi = (2.0 * P / (M_PI * w0 * w0)) * (w0 / w) * (w0 / w)
-                       * std::exp(-2.0 * r2 / (w * w));
+        Set::Scalar Pi;
+        if (profile == Numeric::MMWBeam::Uniform)
+        {
+            // Flat-top disk: uniform intensity P/(π radius²) inside the disk,
+            // zero outside. No Gaussian waist evolution (the beam propagates
+            // geometrically through the void cavity as a collimated column).
+            if (r2 > radius * radius) return 0.0;
+            Pi = P / (M_PI * radius * radius);
+        }
+        else
+        {
+            Set::Scalar zR = M_PI * w0 * w0 / lam;
+            Set::Scalar w  = w0 * std::sqrt(1.0 + (dz / zR) * (dz / zR));
+            Pi = (2.0 * P / (M_PI * w0 * w0)) * (w0 / w) * (w0 / w)
+               * std::exp(-2.0 * r2 / (w * w));
+        }
         Set::Scalar a    = alpha_f(T);
         Set::Scalar path = (dz_abs >= 0.0) ? dz_abs : dz;
         return (1.0 - R) * Pi * a * std::exp(-a * path);
@@ -1636,6 +1692,36 @@ private:
         int on = 0;
         pp.query_default("spall.enabled", on, 0);
         value.spall_enabled = (on != 0);
+
+        // Stress source for the Sp = K_I/K_Ic criterion. Parsed BEFORE the
+        // spall.enabled early-return because it also governs the Sp_field
+        // ONSET diagnostic (UpdateSpAfterMechanics), which runs under
+        // spallation.model = sp_weibull even when material removal is off
+        // (e.g. the Kant onset verification runs). Default `mechanics`
+        // (stress_mf from the elastic MLMG solve) preserves existing
+        // behaviour. `local_thermoelastic` reconstructs sigma_xx from the
+        // temperature field (Kant 1-D confinement), letting el.type = disable.
+        std::string stress_src;
+        pp.query_default("spall.stress_source", stress_src,
+                         std::string("mechanics"));
+        if (stress_src == "mechanics")
+            value.sp_local_thermoelastic = false;
+        else if (stress_src == "local_thermoelastic")
+            value.sp_local_thermoelastic = true;
+        else
+            Util::Abort(INFO, "spall.stress_source must be 'mechanics' or "
+                              "'local_thermoelastic', got ", stress_src);
+
+        // CSV diagnostic toggles (default off). Parsed before the early-return
+        // because the clusters CSV is emitted by UpdateSpClusters under
+        // sp_weibull even when material removal is off.
+        int csv_on = 0;
+        pp.query_default("spall.clusters_csv", csv_on, 0);
+        value.sp_emit_clusters_csv = (csv_on != 0);
+        csv_on = 0;
+        pp.query_default("spall.h_col_events_csv", csv_on, 0);
+        value.sp_emit_h_col_events_csv = (csv_on != 0);
+
         if (!value.spall_enabled) return;
 
         pp.query_default("spall.damage_threshold", value.spall_damage_threshold, 0.99);
@@ -1717,6 +1803,11 @@ private:
         if (value.spall_h_spall_n_segments < 0)
             Util::Abort(INFO, "spall.h_spall_n_segments must be >= 0, got ",
                         value.spall_h_spall_n_segments);
+
+        pp.query_default("spall.flake_coherence_length", value.spall_flake_coh_len, 0.0);
+        if (!(std::isfinite(value.spall_flake_coh_len) && value.spall_flake_coh_len >= 0.0))
+            Util::Abort(INFO, "spall.flake_coherence_length must be finite and >= 0, got ",
+                        value.spall_flake_coh_len);
     }
 
     static void ParseVaporSettings(MMWSpalling& value, IO::ParmParse& pp)
@@ -1755,6 +1846,36 @@ private:
         }
     }
 
+    // Step 19: mechanical bit feed (drawworks). A rigid flat bit face descends
+    // along the axis at `bit.feed_rate` and forces every column within
+    // `bit.radius` down to the bit floor z_bit(t) = bit.z0 - feed*(t - start).
+    // Requires the spall/removal machinery (phi/removed); abort if neither
+    // spall nor vapor is enabled. Axis/floor default to the beam's.
+    static void ParseBitSettings(MMWSpalling& value, IO::ParmParse& pp)
+    {
+        int on = 0;
+        pp.query_default("bit.enabled", on, 0);
+        value.bit_enabled = (on != 0);
+        if (!value.bit_enabled) return;
+
+        if (!value.spall_enabled && !value.vapor_enabled)
+            Util::Abort(INFO, "bit.enabled requires spall.enabled or vapor.enabled "
+                              "(the bit reuses the phi/removed surface machinery)");
+
+        pp.query_required("bit.feed_rate", value.bit_feed_rate);
+        if (!(std::isfinite(value.bit_feed_rate) && value.bit_feed_rate >= 0.0))
+            Util::Abort(INFO, "bit.feed_rate must be finite and >= 0, got ",
+                        value.bit_feed_rate);
+        pp.query_required("bit.radius", value.bit_radius);
+        if (!(std::isfinite(value.bit_radius) && value.bit_radius > 0.0))
+            Util::Abort(INFO, "bit.radius must be finite and > 0, got ",
+                        value.bit_radius);
+        pp.query_default("bit.x0",         value.bit_x0,         value.beam.x0);
+        pp.query_default("bit.y0",         value.bit_y0,         value.beam.y0);
+        pp.query_default("bit.z0",         value.bit_z0,         value.beam.z0);
+        pp.query_default("bit.start_time", value.bit_start_time, 0.0);
+    }
+
     // Hoek-Brown anisotropy ratio sigma_1 / sigma_3 (compression-positive).
     // Returns TENSILE_RATIO_SENTINEL (1e30) on mixed/tensile states so the
     // call-site `ratio >= xi_s` gate passes unconditionally there — tensile
@@ -1775,8 +1896,52 @@ private:
         return std::isfinite(r) ? r : TENSILE_RATIO_SENTINEL;
     }
 
+    // Fill k_top_col[ncols] with the topmost live (non-void, phi >= 0) cell of
+    // each (i, j) column, gathered across MPI z-decomposition via ReduceIntMax
+    // (mirrors UpdateRemovalAfterCohesive PASS 1). Without removal active every
+    // entry is the fixed domain top `top_k`; with removal it tracks the receded
+    // surface so the surface diagnostics (Sp_field, Sp clusters) follow the
+    // drilled face instead of reporting 0 over every spalled column. A column
+    // that is fully removed gets the INT_MIN sentinel (no live surface ->
+    // nothing written there).
+    void GatherColumnSurface(int lev, amrex::Vector<int>& k_top_col,
+                             int dom_ilo, int dom_jlo, int nx_dom, int top_k)
+    {
+        const int ncols = static_cast<int>(k_top_col.size());
+        if (!removal_enabled())
+        {
+            for (int c = 0; c < ncols; ++c) k_top_col[c] = top_k;
+            return;
+        }
+        for (int c = 0; c < ncols; ++c) k_top_col[c] = std::numeric_limits<int>::min();
+        for (amrex::MFIter mfi(*phi_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& phi = (*phi_mf[lev]).array(mfi);
+            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).array(mfi);
+            const int klo = bx.smallEnd(2), khi = bx.bigEnd(2);
+            const int ilo = bx.smallEnd(0), ihi = bx.bigEnd(0);
+            const int jlo = bx.smallEnd(1), jhi = bx.bigEnd(1);
+            for (int j = jlo; j <= jhi; ++j)
+            for (int i = ilo; i <= ihi; ++i)
+            {
+                int ktl = std::numeric_limits<int>::min();
+                for (int k = khi; k >= klo; --k)
+                    if (rem(i, j, k) <= 0.5 && phi(i, j, k) >= 0.0) { ktl = k; break; }
+                if (ktl > std::numeric_limits<int>::min())
+                {
+                    const int idx = (j - dom_jlo) * nx_dom + (i - dom_ilo);
+                    if (ktl > k_top_col[idx]) k_top_col[idx] = ktl;
+                }
+            }
+        }
+        amrex::ParallelDescriptor::ReduceIntMax(k_top_col.data(), ncols);
+    }
+
     // Sp = K_I/K_Ic(T) surface diagnostic for `spallation.model = sp_weibull`.
-    // Writes Sp into the topmost cell of each (i, j) column, 0 elsewhere.
+    // Writes Sp into the topmost LIVE cell of each (i, j) column, 0 elsewhere.
+    // Under active removal the surface recedes, so the write tracks the drilled
+    // face (GatherColumnSurface); with no removal it is the fixed domain top.
     // sigma_xx source: prescribed parser σ(x,y,z,t) if sp_prescribed_sigma is
     // enabled (used by the closed-form verification test); otherwise the
     // depth-resolved physical-path NodeToCellAverage of stress_mf. T_surface
@@ -1799,6 +1964,26 @@ private:
         auto              presc_s_f   = sp_prescribed_sigma_f;
         auto              presc_T_f   = sp_prescribed_T_surface_f;
         const bool        use_weibull = weibull_enabled;
+
+        // local_thermoelastic stress source: reconstruct sigma_xx from T(z)
+        // instead of sampling stress_mf. Phase-0 params validated here at
+        // first use. Mutually exclusive with the prescribed-sigma verification
+        // path (use_presc_s wins, preserving that test byte-for-byte).
+        const bool        use_local_TE = sp_local_thermoelastic && !use_presc_s;
+        Set::Scalar te_E = 0.0, te_beta = 0.0, te_nu = 0.0, te_Tref = 0.0;
+        if (use_local_TE)
+        {
+            if (phases.empty() || !(phases[0].E > 0.0 && phases[0].mu > 0.0))
+                Util::Abort(INFO, "spall.stress_source = local_thermoelastic "
+                                  "needs phase 0 with E > 0 and mu > 0");
+            te_E    = phases[0].E;
+            te_beta = phases[0].beta;
+            te_nu   = phases[0].E / (2.0 * phases[0].mu) - 1.0;
+            te_Tref = phases[0].T_ref;
+            if (!(te_nu > -1.0 && te_nu < 0.5))
+                Util::Abort(INFO, "local_thermoelastic: phase 0 Poisson's "
+                                  "ratio out of physical range, got ", te_nu);
+        }
         const Set::Scalar a0_loc      = sp_a0;
         const int         n_seg       = sp_n_segments;
         const KIcLaw      law         = kic_law;
@@ -1821,8 +2006,25 @@ private:
                 sp_conf_offset = confining_p * nu_local / (1.0 - nu_local);
         }
 
-        if (!use_presc_s)
+        if (!use_presc_s && !use_local_TE)
             Util::RealFillBoundary(*stress_mf[lev], geom[lev]);
+
+        // Per-column live surface: with removal active the surface recedes from
+        // the fixed domain top, so the Sp diagnostic must be written at the
+        // topmost surviving cell of each column (else every spalled column
+        // reads 0 and looks inactive). Gathered z-decomposition-safe.
+        const int dom_ilo = domain.smallEnd(0), dom_ihi = domain.bigEnd(0);
+        const int dom_jlo = domain.smallEnd(1), dom_jhi = domain.bigEnd(1);
+        const int nx_dom = dom_ihi - dom_ilo + 1;
+        const int ny_dom = dom_jhi - dom_jlo + 1;
+        const int ncols  = nx_dom * ny_dom;
+        amrex::Vector<int> k_top_col(ncols, top_k);
+        GatherColumnSurface(lev, k_top_col, dom_ilo, dom_jlo, nx_dom, top_k);
+        const int dom_ilo_l = dom_ilo, dom_jlo_l = dom_jlo, nx_dom_l = nx_dom;
+        const int* k_top_col_p = k_top_col.data();
+        auto col_index_sp = [=] (int i, int j) {
+            return (j - dom_jlo_l) * nx_dom_l + (i - dom_ilo_l);
+        };
 
         // Sp is a per-column diagnostic; clear everywhere first so cells
         // below the top z-slab stay zero on plotfiles.
@@ -1835,12 +2037,17 @@ private:
             amrex::Array4<Set::Scalar>       const& Sp_a  = (*Sp_field_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> const& T_a   = (*temp_mf[lev]).array(mfi);
             amrex::Array4<const Set::Matrix> sig_node;
-            if (!use_presc_s) sig_node = (*stress_mf[lev]).array(mfi);
+            if (!use_presc_s && !use_local_TE) sig_node = (*stress_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> flaw_a;
             if (use_weibull) flaw_a = (*flaw_a_mf[lev]).array(mfi);
 
             amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
-                if (k != top_k) return;
+                const int ksurf = k_top_col_p[col_index_sp(i, j)];
+                if (k != ksurf) return;
+                // Receded surface top face (== domain top z when nothing above
+                // this column has been removed, since then ksurf == top_k).
+                const Set::Scalar z_surf_face =
+                    z_top_face - Set::Scalar(top_k - ksurf) * dz;
 
                 Set::Scalar xc = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
                 Set::Scalar yc = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
@@ -1856,11 +2063,24 @@ private:
                 auto sigma_at_depth = [&] (Set::Scalar depth) -> Set::Scalar {
                     if (use_presc_s)
                     {
-                        Set::Scalar z_phys = z_top_face - depth;
+                        Set::Scalar z_phys = z_surf_face - depth;
                         return -presc_s_f(xc, yc, z_phys, time) + sp_conf_offset;
                     }
-                    int k_d = top_k - static_cast<int>(std::floor(depth / dz));
-                    if (k_d > top_k)    k_d = top_k;
+                    if (use_local_TE)
+                    {
+                        // 1-D-confined thermoelastic sigma_xx from T(z), same
+                        // form and compression-positive convention as the
+                        // h_spall scan (Removal.H). Sample temp_mf at the cell
+                        // containing the requested depth below the (receded)
+                        // surface, clamped into the box.
+                        int k_d = ksurf - static_cast<int>(std::floor(depth / dz));
+                        if (k_d > ksurf)    k_d = ksurf;
+                        if (k_d < vbx_lo_k) k_d = vbx_lo_k;
+                        return te_E * te_beta * (T_a(i, j, k_d) - te_Tref)
+                               / (1.0 - te_nu) + sp_conf_offset;
+                    }
+                    int k_d = ksurf - static_cast<int>(std::floor(depth / dz));
+                    if (k_d > ksurf)    k_d = ksurf;
                     if (k_d < vbx_lo_k) k_d = vbx_lo_k;
                     Set::Matrix sigma =
                         Numeric::Interpolate::NodeToCellAverage(sig_node, i, j, k_d, 0);
@@ -1914,23 +2134,30 @@ private:
             return (j - dom_jlo) * nx_dom + (i - dom_ilo);
         };
 
-        // Domain-wide firing buffer: 1 on firing top-cells, 0 elsewhere.
-        // ReduceIntMax across ranks (the rank that owns the (i, j, top_k)
-        // cell writes the value, others stay at 0 — max collapses cleanly).
+        // Per-column live surface (receded under active removal); used to write
+        // the cluster-id field at the drilled face so it aligns with Sp_field.
+        amrex::Vector<int> k_top_col(ncols, top_k);
+        GatherColumnSurface(lev, k_top_col, dom_ilo, dom_jlo, nx_dom, top_k);
+
+        // Domain-wide firing buffer: 1 on firing surface-cells, 0 elsewhere.
+        // ReduceIntMax across ranks (the rank that owns a firing cell writes 1,
+        // others stay 0 — max collapses cleanly). Sp_field is nonzero only at
+        // each column's live surface cell, so scanning the full z-extent finds
+        // exactly the firing surfaces (pre-removal that is the domain-top row).
         amrex::Vector<int> fire(ncols, 0);
         for (amrex::MFIter mfi(*Sp_field_mf[lev], false); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.validbox();
             const int klo = bx.smallEnd(2), khi = bx.bigEnd(2);
-            if (top_k < klo || top_k > khi) continue;
             const int ilo = bx.smallEnd(0), ihi = bx.bigEnd(0);
             const int jlo = bx.smallEnd(1), jhi = bx.bigEnd(1);
             amrex::Array4<const Set::Scalar> const& Sp_a =
                 (*Sp_field_mf[lev]).array(mfi);
             for (int j = jlo; j <= jhi; ++j)
             for (int i = ilo; i <= ihi; ++i)
+            for (int k = klo; k <= khi; ++k)
             {
-                if (Sp_a(i, j, top_k) >= 1.0)
+                if (Sp_a(i, j, k) >= 1.0)
                     fire[col_idx(i, j)] = 1;
             }
         }
@@ -2042,9 +2269,11 @@ private:
         amrex::ParallelDescriptor::Bcast(&total_firing_area, 1,
                                          amrex::ParallelDescriptor::IOProcessorNumber());
 
-        // Write Sp_cluster_id_mf everywhere on this level: top-z plane gets
-        // the cluster ID (or 0 for filtered-out / non-firing cells); 0
-        // elsewhere.
+        // Write Sp_cluster_id_mf everywhere on this level: each column's live
+        // (possibly receded) surface cell gets the cluster ID (or 0 for
+        // filtered-out / non-firing cells); 0 elsewhere. Tracks the drilled
+        // face so the field aligns with Sp_field.
+        const int* k_top_col_p = k_top_col.data();
         Sp_cluster_id_mf[lev]->setVal(0.0);
         for (amrex::MFIter mfi(*Sp_cluster_id_mf[lev], amrex::TilingIfNotGPU());
              mfi.isValid(); ++mfi)
@@ -2053,7 +2282,7 @@ private:
             amrex::Array4<Set::Scalar> const& cl =
                 (*Sp_cluster_id_mf[lev]).array(mfi);
             amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
-                if (k != top_k) return;
+                if (k != k_top_col_p[col_idx(i, j)]) return;
                 cl(i, j, k) = static_cast<Set::Scalar>(labels[col_idx(i, j)]);
             });
         }
@@ -2065,7 +2294,7 @@ private:
         // so it persists across runs of one binary invocation but is
         // truncated and re-written on the first labeller call of a fresh
         // run (sp_clusters_csv_header_written is per-MMWSpalling-instance).
-        if (lev == 0 && cluster_count > 0 &&
+        if (lev == 0 && cluster_count > 0 && sp_emit_clusters_csv &&
             amrex::ParallelDescriptor::IOProcessor())
         {
             std::string csv_path = plot_file + "_clusters.csv";
@@ -2790,20 +3019,25 @@ private:
         const std::uint64_t seed =
             static_cast<std::uint64_t>(static_cast<std::uint32_t>(weibull_seed));
 
-        // Mesh-objectivity (weakest-link size effect). A single Weibull draw
-        // per cell is NOT mesh-invariant: refining adds independent draws, so
-        // the governing (largest) flaw among hot cells — which sets onset,
-        // ΔT_onset ∝ a^(-1/2) — drifts with cell count. Bake the size effect
-        // into each cell by scaling the characteristic flaw length by
-        // (V_cell / V_0)^(1/m): a cell of volume V_cell then carries the
-        // governing flaw of that volume's sub-population, so the Weibull
-        // failure-probability integral over a fixed physical region converges
-        // under refinement (a bigger cell -> bigger typical flaw -> weaker,
-        // matching the σ_0,elem = σ_0 (V_0/V_elem)^(1/m) strength rescaling).
-        // V_0 is a FIXED physical reference volume — NOT the run's own cell
-        // volume — so runs at different resolutions share one calibration.
-        // Default V_0 = (1 mm)^3 = 1e-9 m^3 is the design resolution, making
-        // this exactly unity there (existing 1 mm regressions stay identical).
+        // Mesh-objective flaw assignment, split by physical population:
+        //
+        //   GB cells -> per-FACET. One Weibull draw per adjacent grain pair
+        //     (gA, gB), keyed by a hash of the SORTED pair + seed. Grains are
+        //     seed-fixed, so a facet draws the same flaw at any resolution and
+        //     the facet population (hence the max surface flaw that sets onset,
+        //     ΔT_onset ∝ a^(-1/2)) is mesh-invariant. A cell touching several
+        //     grains takes the MAX (weakest-link) facet flaw. No vol_factor:
+        //     the facet, not the cell, is the physical unit.
+        //   IG cells -> per-CELL Weibull (hash of i,j,k + seed) scaled by the
+        //     weakest-link size factor (V_cell/V_0)^(1/m); intragranular cracks
+        //     are a volumetric population. V_0 (default (1 mm)^3) makes this
+        //     exactly 1 at the calibration mesh, so 1 mm IG draws are identical.
+        //
+        // This removes the per-cell GB tag's mesh-dependence (tagged GB
+        // fraction ~ dx/grain -> 0 as dx->0, which drove onset toward the wrong
+        // all-IG limit). grain_id carries 1 ghost (ngrow=1) and is ghost-filled
+        // below, so the 6-face neighbour grain lookup is valid across ranks;
+        // the facet hash needs no MPI communication.
         const Set::Scalar* DX = geom[lev].CellSize();
         const Set::Scalar V_cell = DX[0] * DX[1] * DX[2];
         const Set::Scalar vol_factor = std::pow(V_cell / weibull_V0, inv_m);
@@ -2826,22 +3060,79 @@ private:
             weibull_A_crit_warned = true;
         }
 
+        // grain_id ghosts must be current for the 6-face neighbour lookup.
+        Util::RealFillBoundary(*grain_id_mf[lev], geom[lev]);
+        const amrex::Box& domain = geom[lev].Domain();
+        const auto dlo = domain.smallEnd();
+        const auto dhi = domain.bigEnd();
+
+        // Uniform U in (0, 1) from a 64-bit hash (53-bit mantissa).
+        auto u_of = [] (std::uint64_t key) -> Set::Scalar {
+            return (static_cast<Set::Scalar>(key >> 11) + 0.5)
+                   * (1.0 / 9007199254740992.0);
+        };
+        auto u32 = [] (int v) -> std::uint64_t {
+            return static_cast<std::uint64_t>(static_cast<std::uint32_t>(v));
+        };
+
         for (amrex::MFIter mfi(*flaw_a_mf[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.tilebox();
             amrex::Array4<Set::Scalar>       const& fa = (*flaw_a_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> const& gb =
                 (*is_grain_boundary_mf[lev]).array(mfi);
+            amrex::Array4<const Set::Scalar> const& gid =
+                (*grain_id_mf[lev]).array(mfi);
             amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
-                std::uint64_t key = SplitMix64(seed);
-                key = SplitMix64(key ^ static_cast<std::uint64_t>(static_cast<std::uint32_t>(i)));
-                key = SplitMix64(key ^ static_cast<std::uint64_t>(static_cast<std::uint32_t>(j)));
-                key = SplitMix64(key ^ static_cast<std::uint64_t>(static_cast<std::uint32_t>(k)));
-                // 53-bit mantissa -> U in the open interval (0, 1).
-                Set::Scalar U = (static_cast<Set::Scalar>(key >> 11) + 0.5)
-                                * (1.0 / 9007199254740992.0);
-                Set::Scalar a_scale = ((gb(i, j, k) > 0.5) ? a0_gb : a0_ig) * vol_factor;
-                fa(i, j, k) = a_scale * std::pow(-std::log(U), inv_m);
+                if (gb(i, j, k) > 0.5)
+                {
+                    // GRAIN-BOUNDARY cell -> per-facet, weakest adjacent facet.
+                    const int g_self = static_cast<int>(gid(i, j, k));
+                    const int di[6] = {-1, 1, 0, 0, 0, 0};
+                    const int dj[6] = { 0, 0,-1, 1, 0, 0};
+                    const int dk[6] = { 0, 0, 0, 0,-1, 1};
+                    Set::Scalar a_max = 0.0;
+                    for (int n = 0; n < 6; ++n)
+                    {
+                        int ii = i + di[n], jj = j + dj[n], kk = k + dk[n];
+                        if (ii < dlo[0] || ii > dhi[0] ||
+                            jj < dlo[1] || jj > dhi[1] ||
+                            kk < dlo[2] || kk > dhi[2]) continue;
+                        int g_n = static_cast<int>(gid(ii, jj, kk));
+                        if (g_n < 0 || g_n == g_self) continue;
+                        // Sorted pair -> both sides of the facet draw alike.
+                        int gA = g_self < g_n ? g_self : g_n;
+                        int gB = g_self < g_n ? g_n : g_self;
+                        std::uint64_t key = SplitMix64(seed);
+                        key = SplitMix64(key ^ u32(gA));
+                        key = SplitMix64(key ^ u32(gB));
+                        Set::Scalar a_f =
+                            a0_gb * std::pow(-std::log(u_of(key)), inv_m);
+                        if (a_f > a_max) a_max = a_f;
+                    }
+                    if (a_max <= 0.0)
+                    {
+                        // A GB-tagged cell should always have a different-grain
+                        // face neighbour; if not (shouldn't happen), fall back
+                        // to a per-cell GB draw so flaw_a is never left at 0.
+                        std::uint64_t key = SplitMix64(seed);
+                        key = SplitMix64(key ^ u32(i));
+                        key = SplitMix64(key ^ u32(j));
+                        key = SplitMix64(key ^ u32(k));
+                        a_max = a0_gb * std::pow(-std::log(u_of(key)), inv_m);
+                    }
+                    fa(i, j, k) = a_max;
+                }
+                else
+                {
+                    // INTRAGRANULAR cell -> per-cell volumetric (size effect).
+                    std::uint64_t key = SplitMix64(seed);
+                    key = SplitMix64(key ^ u32(i));
+                    key = SplitMix64(key ^ u32(j));
+                    key = SplitMix64(key ^ u32(k));
+                    fa(i, j, k) =
+                        a0_ig * vol_factor * std::pow(-std::log(u_of(key)), inv_m);
+                }
             });
         }
     }
@@ -3138,6 +3429,15 @@ private:
     SpallSampleMode spall_sample_mode  = SpallSampleMode::TopCell;
     Set::Scalar     spall_shallow_depth = 0.006;
 
+    // Flake coherence length [m] (rock-mechanics cavity-wall coherence). Default
+    // 0 = off. When > 0, a firing column may recede at most this far below its
+    // shallowest live 4-neighbour, so the spall cavity floor has a bounded wall
+    // slope: a smooth bowl can descend gradually (<= L_coh per lateral cell) but
+    // a free-standing high-aspect-ratio needle cannot form (the runaway column
+    // is capped until its neighbours catch up). Decomposition-independent
+    // (operates on the gathered per-column surface heights).
+    Set::Scalar spall_flake_coh_len = 0.0;
+
     // Step 16: Sp-vs-depth h_spall scan parameters (sp_weibull branch only).
     // `spall.h_spall_max` caps the downward column scan in metres (safety
     // stop; in practice the K_I < K_Ic crossing always fires first). The
@@ -3146,6 +3446,18 @@ private:
     // resolution as `UpdateSpAfterMechanics`'s surface Sp.
     Set::Scalar spall_h_spall_max         = 0.010;
     int         spall_h_spall_n_segments  = 0;
+    // Stress source for the Sp = K_I/K_Ic criterion (both the Sp_field surface
+    // diagnostic/gate AND the h_spall depth scan). Default `mechanics` samples
+    // the elastic MLMG solve's stress_mf. `local_thermoelastic` reconstructs
+    // sigma_xx algebraically from the temperature field via the 1-D-confined
+    // relation sigma_xx = -E*beta*(T - T_ref)/(1 - nu) (phases[0]), so the
+    // criterion runs with mechanics disabled (el.type = disable) — no MLMG
+    // solve, no convergence cliff, no max_level = 0 resolution ceiling. Valid
+    // for the brittle-spallation regime where the constrained heated skin is
+    // the dominant stress driver (Kant/von Rohr formulation). Loses grain-scale
+    // stress heterogeneity and cavity stress redistribution; see
+    // mlmg-shelved-local-thermoelastic-notes.md.
+    bool sp_local_thermoelastic = false;
     // Cell-centred per-column h_spall diagnostic, written at (i, j, k_top)
     // on the step the column fires under sp_weibull. Registered only when
     // spallation_model == SpWeibull && spall_enabled.
@@ -3182,6 +3494,21 @@ private:
     bool vapor_prescribed_rop_enabled = false;
     amrex::Parser vapor_rop_parser;
     amrex::ParserExecutor<4> vapor_rop_f;
+
+    // Step 19: mechanical bit feed (drawworks). When bit.enabled, a rigid flat
+    // bit face descends along the beam axis at bit.feed_rate and removes any
+    // material above it within bit.radius -- forcing a flat, advancing,
+    // cylindrical floor that keeps refreshing the thin thermal skin so
+    // spallation does not stall into a self-limiting cone. Spallation/vapor may
+    // still remove material AHEAD of (below) the bit; the surface recession per
+    // column is max(spall, vapor, bit). The bit cut is NOT coherence-capped.
+    bool        bit_enabled    = false;
+    Set::Scalar bit_feed_rate  = 0.0;   // [m/s] downward feed (ROP)
+    Set::Scalar bit_radius     = 0.0;   // [m] bit footprint radius
+    Set::Scalar bit_x0         = 0.0;   // [m] bit axis x (default beam.x0)
+    Set::Scalar bit_y0         = 0.0;   // [m] bit axis y (default beam.y0)
+    Set::Scalar bit_z0         = 0.0;   // [m] initial bit floor (default beam.z0)
+    Set::Scalar bit_start_time = 0.0;   // [s] time the feed begins
     Set::Field<Set::Scalar> vapor_event_mf;
     Set::Field<Set::Scalar> vapor_thickness_mf;
     Set::Field<Set::Scalar> RoP_vap_mf;
@@ -3280,6 +3607,12 @@ private:
     // directory (re-opening with std::ios::app keeps existing data on
     // restart-style runs).
     bool sp_clusters_csv_header_written = false;
+    // CSV emission toggles (default OFF — most runs are behaviour studies that
+    // only need plotfiles). Enable per-input where a test consumes the file:
+    // `spall.clusters_csv` (kant A/B cluster onset) and `spall.h_col_events_csv`
+    // (rossi depth-profile). Avoids littering output dirs with unused CSVs.
+    bool sp_emit_clusters_csv = false;
+    bool sp_emit_h_col_events_csv = false;
 
     // Step 16c: per-column h_col first-firing event log. Same I/O-proc
     // header-latch pattern as the clusters CSV above; written to

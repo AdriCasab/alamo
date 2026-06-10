@@ -1,0 +1,161 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# Meier 2017 Grimsel pilot -- 25 mm narrow-footprint SENSITIVITY (not scored).
+# ============================================================================
+#
+# Variant of input_drilling with the beam/bit radius at the 25 mm THERMAL
+# footprint (direct flame impingement, packet section 2) instead of the 42 mm
+# as-drilled hole radius. Run for the footprint sensitivity the packet asks
+# for (section 4: "sweep both").
+#
+# Observed behaviour (2026-06-08, 80 s): emergent ROP self-limits to the same
+# ~1.4 m/h and holds, Sp ~ 14-16 at the floor, Tmax stable ~2400-2700 K (no
+# runaway). BUT the hole tapers into a funnel (top ~50 mm narrowing to
+# ~25 mm): the uniform disk's sharp edge lets rim columns fall below the
+# Sp >= 1 gate, the gated bit then refuses to advance them, and volume rate
+# decays (TSE drifts 16 -> 26 J/mm^3). Same root cause as the no-bit cone
+# stall: the column-based removal scheme cannot spall the cavity wall
+# laterally. Documented kernel limitation; see input_drilling header.
+# NOT scored by the `test` script -- kept as a reproducible sensitivity case.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/validation/meier/sp_meier_pilot/output/drilling_25mm
+
+# Explicit forward Euler. dz = 2 mm, alpha_th = 6.90e-7 m^2/s ->
+# conduction limit dz^2/(6 alpha) ~ 0.97 s. The binding limit here is the
+# beam source heating rate, not conduction: dt = 1e-3 s keeps the per-step
+# temperature rise in the surface cell to a few tens of K. Bring-up is 20 s.
+timestep  = 0.001
+stop_time = 80.0
+
+amr.plot_int        = 8000      # every 1 s of sim time
+amr.max_level       = 0
+amr.n_cell          = 40 40 60
+amr.blocking_factor = 2
+amr.max_grid_size   = 20
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+# 80 x 80 x 50 mm block, dx = dy = dz = 2 mm. The beam (omega0 = 20 mm) decays
+# to exp(-8) ~ 3e-4 of peak at the 40 mm-distant side walls, so the heated
+# footprint is well clear of the lateral boundaries. Adiabatic sides; thermal
+# diffusion length over 20 s (~3.7 mm) never reaches them.
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.08  0.08  0.120
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, Kant-template defaults ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 20.0
+weibull.seed    = 12345
+
+# Moving boundary + detachment.
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.004
+
+# Spallation only for the bring-up; no vaporisation relief (watch for runaway T).
+vapor.enabled = 0
+
+# Lateral confinement SHmin = SHmax ~ 1 MPa (Meier symmetric pads).
+confining.p = 1.0e6
+
+# --- Beam as surface-flux surrogate (38 kW HHV, continuous, uniform disk) ---
+beam.P0         = 11400.0
+beam.profile    = uniform
+beam.radius     = 0.025
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.04
+beam.y0         = 0.04
+beam.z0         = 0.120
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+# --- Surface losses to lab air (radiative + weak natural convection) ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+# --- Step 19: mechanical bit feed (drawworks) at measured ROP = 1.5 m/h ---
+bit.enabled    = 1
+bit.feed_rate  = 4.166667e-4
+bit.radius     = 0.025
+bit.x0         = 0.04
+bit.y0         = 0.04
+bit.z0         = 0.120
+bit.start_time = 0.0
+
+surface_patch.enabled = 0
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics inert: local_thermoelastic stress source needs no global solve.
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit
