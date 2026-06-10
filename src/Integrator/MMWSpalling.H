@@ -787,7 +787,8 @@ protected:
                 Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
                 Set::Scalar Tv = T_old(i, j, k);
                 Set::Scalar Q  = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                            bR, bprof, brad, alpha_f, x, y, z, Tv);
+                                            bR, bprof, brad, alpha_f, x, y, z, Tv,
+                                            DX[2]);
                 Set::Scalar eps = (Tv <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
                                    * (eps * sig_SB * (Tv*Tv*Tv*Tv - T_a*T_a*T_a*T_a)
@@ -906,7 +907,8 @@ protected:
                 }
 
                 Set::Scalar Q = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                           bR, bprof, brad, alpha_f, x, y, z, Tc);
+                                           bR, bprof, brad, alpha_f, x, y, z, Tc,
+                                           DX[2]);
 
                 Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
@@ -981,7 +983,8 @@ protected:
                 Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
                 Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
                 Set::Scalar Q = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                           bR, bprof, brad, alpha_f, x, y, z, Tc);
+                                           bR, bprof, brad, alpha_f, x, y, z, Tc,
+                                           DX[2]);
                 Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
                                    * (eps * sig_SB * (Tc*Tc*Tc*Tc - T_a*T_a*T_a*T_a)
@@ -1225,6 +1228,7 @@ protected:
                 Set::Scalar Q = self_void ? Set::Scalar(0.0)
                                           : BeamSource(P_now, bw0, blam, bx0, by0, bz0,
                                                        bR, bprof, brad, alpha_f, x, y, z, Tc,
+                                                       DX[2],
                                                        void_aware
                                                          ? std::max(Set::Scalar(0.0), phi(i, j, k))
                                                          : Set::Scalar(-1.0));
@@ -1260,12 +1264,23 @@ protected:
     // still evolves with the geometric distance z_0 - z regardless, since the
     // beam propagates geometrically through the void cavity.
     AMREX_GPU_HOST_DEVICE
+    // `dz_cell` (> 0) enables ENERGY-CONSERVING per-cell deposition: the
+    // Beer-Lambert profile is integrated analytically over the cell's
+    // material-path interval [path - dz/2, path + dz/2] and divided by dz,
+    // instead of sampled pointwise at the cell centre. Pointwise sampling
+    // under-deposits by a factor ~ (alpha*dz)*exp(-alpha*dz/2)/(1-e^{-alpha*dz})
+    // once the absorption depth 1/alpha is smaller than the cell -- at
+    // alpha*dz = 4 (Meier surrogate: alpha = 2000/m, dz = 2 mm) only 54% of
+    // the beam power reached the rock; at alpha*dz = 40 essentially none.
+    // The integrated form reduces to the pointwise one as alpha*dz -> 0.
+    // dz_cell <= 0 keeps the legacy pointwise sample.
     static Set::Scalar BeamSource(Set::Scalar P, Set::Scalar w0, Set::Scalar lam,
                                   Set::Scalar x0, Set::Scalar y0, Set::Scalar z0,
                                   Set::Scalar R, int profile, Set::Scalar radius,
                                   amrex::ParserExecutor<1> alpha_f,
                                   Set::Scalar x, Set::Scalar y, Set::Scalar z,
                                   Set::Scalar T,
+                                  Set::Scalar dz_cell = 0.0,
                                   Set::Scalar dz_abs = -1.0)
     {
         Set::Scalar dz = z0 - z;
@@ -1289,6 +1304,18 @@ protected:
         }
         Set::Scalar a    = alpha_f(T);
         Set::Scalar path = (dz_abs >= 0.0) ? dz_abs : dz;
+        if (dz_cell > 0.0)
+        {
+            // Analytic cell integral of I*a*exp(-a*s) over the material
+            // path spanned by this cell, / dz_cell. s_top clamps at 0 so
+            // the surface cell absorbs from the true surface even when the
+            // (possibly receded) surface lies inside the cell.
+            Set::Scalar s_top = path - 0.5 * dz_cell;
+            if (s_top < 0.0) s_top = 0.0;
+            Set::Scalar s_bot = path + 0.5 * dz_cell;
+            return (1.0 - R) * Pi
+                   * (std::exp(-a * s_top) - std::exp(-a * s_bot)) / dz_cell;
+        }
         return (1.0 - R) * Pi * a * std::exp(-a * path);
     }
 

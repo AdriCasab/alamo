@@ -1,0 +1,158 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# Meier 2017 -- 2D DEVELOPMENT HARNESS (fast iteration loop; not scored).
+# ============================================================================
+#
+# Pseudo-2D slab (4 cells / 8 mm thick in y) of the no-bit Meier drilling
+# prediction: 30% of 38 kW (11.4 kW) into the rock, uniform 42 mm-radius
+# flux (2.06 MW/m^2), Step-20 surface-normal kernel, NO bit -- ROP is fully
+# emergent. ~1 min on 4 ranks (16.8k cells, 56k steps). See
+# tests/MMWSpalling/validation/meier/TODO.md for the workflow this serves.
+#
+# The slab reproduces the 3D run's ROP to ~13-20% at ~17x less compute
+# (README section 3d). Trench geometry: do NOT score volume/TSE against
+# Meier's cylinder numbers from this input.
+#
+# --- BASELINE (2026-06-10, post Step-20 + Beer-Lambert energy fix) ---------
+# Update this table whenever an accepted physics change moves it.
+#
+#   central-column ROP (t = 16-56 s) : ~2.9 m/h   (3D twin: 2.70)
+#   max Sp at floor                  : rides ~1.00 (threshold attractor)
+#   Tmax                             : ~850 K (no runaway; 5000 K = table cap)
+#   behaviour                        : steady advance, no stall, trench walls
+#                                      near-vertical at the flux edge
+#
+# Physics deltas expected from TODO items: P4 (debris shielding) should move
+# ROP toward ~1.5; P1/P2 (melt) inert at this flux; P5 (subcritical) small
+# here; P6 (wall anisotropy) affects wall angle, not floor ROP.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/validation/meier/sp_meier_pilot/output/dev2d
+
+timestep  = 0.001
+stop_time = 56.0
+
+amr.plot_int        = 8000      # every 8 s of sim time
+amr.max_level       = 0
+amr.n_cell          = 70 4 60
+amr.blocking_factor = 2
+amr.max_grid_size   = 20
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+# 140 x 140 x 120 mm block, dx = dy = dz = 2 mm. Disk edge (r = 42 mm) is
+# 28 mm clear of the lateral boundaries; depth 120 mm >> the ~25 mm drilled
+# by t = 56 s (no floor interference).
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.14  0.008 0.120
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, Kant-template defaults ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 20.0
+weibull.seed    = 12345
+
+# Moving boundary + detachment.
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.004
+
+vapor.enabled = 0
+
+# Step 20: surface-normal spall kernel (slope-aware criterion + recession).
+spall.surface_normal = 1
+
+# Lateral confinement SHmin = SHmax ~ 1 MPa (Meier symmetric pads).
+confining.p = 1.0e6
+
+# --- Beam: 30% of 38 kW (efficiency-corrected), uniform 84 mm disk ---
+beam.P0         = 11400.0
+beam.profile    = uniform
+beam.radius     = 0.042
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.07
+beam.y0         = 0.004
+beam.z0         = 0.120
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+
+# --- Surface losses to lab air ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+surface_patch.enabled = 0
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics inert: local_thermoelastic stress source needs no global solve.
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit
