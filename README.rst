@@ -218,7 +218,7 @@ the ``sp_weibull`` branch:
 - ``sp_rossi_damage_profile`` - **FAIL / DEFERRED**: the Sp depth-scan
   mechanics gates (P1-P4) PASS, but the predicted crack-depth peak lands at
   ~705 um rather than Rossi's 100-200 um.  This is a mesh-resolution limit, not
-  a code bug (see ``rossi-validation-diagnostic-design.md`` section 11).  The
+  a code bug (see ``tests/MMWSpalling/validation/rossi/rossi-validation-diagnostic-design.md`` section 11).  The
   test is kept as an ongoing P1-P4 mechanics regression; the depth-band gate
   (R1) is reported but not enforced.
 
@@ -312,8 +312,8 @@ For this fork's staged implementation notes and task history, see:
 
 - ``ROADMAP.md`` - short status map.
 - ``ACTIVE_STEP.md`` - current coding packet.
-- ``ARCHIVE_DONE.md`` - completed-step history.
-- ``in-main-tex-you-will-quizzical-treasure.md`` - long historical plan.
+- ``docs/project/ARCHIVE_DONE.md`` - completed-step history.
+- ``docs/project/in-main-tex-you-will-quizzical-treasure.md`` - long historical plan.
 - ``main.tex`` - physics proposal and equations.
 
 

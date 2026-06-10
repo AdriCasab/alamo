@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 This file is the small entry point for Claude. Keep it short. The long project
-plan remains in `in-main-tex-you-will-quizzical-treasure.md`, but Claude should
-not read that file by default.
+plan remains in `docs/project/in-main-tex-you-will-quizzical-treasure.md`, but
+Claude should not read that file by default.
 
 ## Three-Phase Workflow
 
@@ -47,23 +47,23 @@ Then use the project rules, commands, ALAMO gotchas, and guardrails below.
 Open the long/reference files only when the active phase explicitly requires
 them or the user asks:
 
-- `in-main-tex-you-will-quizzical-treasure.md` — full historical plan and
-  checklist. The planner phase reads slices of this; the implementer should
-  not need it.
+- `docs/project/in-main-tex-you-will-quizzical-treasure.md` — full historical
+  plan and checklist. The planner phase reads slices of this; the implementer
+  should not need it.
 - `main.tex` — full physics proposal and equations. Prefer the relevant
   excerpts already distilled into `ACTIVE_STEP.md`.
-- `zhang_oglesby_mmw_validation_summary.txt` — Zhang/Oglesby MMW thermal
-  validation reference.
-- `hu_thermal_spallation_validation_tests_augmented_vv_framework.txt` — Hu
-  prescribed-temperature, thermoelastic, breakage, and LRST validation data.
-- `kant_von_rohr_validation_test_for_mmwspalling_plan.txt` — Kant/von Rohr
-  flame-spallation threshold validation data.
+- `tests/MMWSpalling/validation/zhang/zhang_oglesby_mmw_validation_summary.txt`
+  — Zhang/Oglesby MMW thermal validation reference.
+- `tests/MMWSpalling/validation/hu/hu_thermal_spallation_validation_tests_augmented_vv_framework.txt`
+  — Hu prescribed-temperature, thermoelastic, breakage, and LRST validation data.
+- `tests/MMWSpalling/validation/kant/kant_von_rohr_validation_test_for_mmwspalling_plan.txt`
+  — Kant/von Rohr flame-spallation threshold validation data.
 - `docs/paper/paper.md` — ALAMO architecture paper; use only for ALAMO design
   background.
-- `ARCHIVE_DONE.md` — completed-step history. Read only for debugging
-  regressions or when the planner is updating project context.
-- `AGENTS.md` — historical record of the prior Codex+Claude split workflow.
-  Kept for reference; not active.
+- `docs/project/ARCHIVE_DONE.md` — completed-step history. Read only for
+  debugging regressions or when the planner is updating project context.
+- `docs/project/AGENTS.md` — historical record of the prior Codex+Claude split
+  workflow. Kept for reference; not active.
 
 ## Project Goal
 
@@ -145,9 +145,10 @@ python3 tests/MMWSpalling/<step>/test tests/MMWSpalling/<step>/output
 
 - Keep `CLAUDE.md` short and operational.
 - Keep `ROADMAP.md` short enough to read every session.
-- Put detailed completed history in `ARCHIVE_DONE.md`, not `ROADMAP.md`.
+- Put detailed completed history in `docs/project/ARCHIVE_DONE.md`, not
+  `ROADMAP.md`.
 - Keep each completed-step summary in
-  `in-main-tex-you-will-quizzical-treasure.md` to 20 lines or fewer.
+  `docs/project/in-main-tex-you-will-quizzical-treasure.md` to 20 lines or fewer.
 - Put only the current coding packet in `ACTIVE_STEP.md`.
 - Include equations, constants, file paths, validation criteria, and guardrails
   in `ACTIVE_STEP.md` when the implementer needs them.
