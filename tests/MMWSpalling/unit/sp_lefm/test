@@ -213,15 +213,23 @@ def check_weibull():
     A0_IG = 0.13e-3             # m, Weibull scale, intragranular cells
     WEIBULL_M = 15.0            # Weibull shape (modulus)
     KI_REL_TOL = 1.0e-3
-    STAT_REL_TOL = 0.03
+    STAT_REL_TOL = 0.03      # IG (per-cell volumetric) mean tolerance
+    # GB flaws are per-facet (max over a cell's grain-pair facets), which adds a
+    # small systematic positive bias over the single-draw mean a0_gb*Gamma; a
+    # slightly wider tolerance absorbs that bias plus grain-structure variation.
+    GB_STAT_REL_TOL = 0.05
     SP_CV_MIN = 0.02
 
-    # Mesh-objectivity size effect (mirrors the weibull.V0 feature): the
-    # per-cell Weibull SCALE is multiplied by vol_factor = (V_cell/V0)^(1/m),
-    # so the sample mean is a0 * vol_factor * Gamma(1+1/m). V0 defaults to
-    # (1 mm)^3 and this input does not override weibull.V0; the domain is a
-    # 10 mm cube at 24^3 cells, so vol_factor < 1 here. Keep these mirrored
-    # with the input geometry and the InitializeFlaws scaling law.
+    # Mesh-objectivity size effect (mirrors the weibull.V0 feature), applies to
+    # the INTRAGRANULAR (per-cell, volumetric) flaws only: their Weibull SCALE is
+    # multiplied by vol_factor = (V_cell/V0)^(1/m), so the IG sample mean is
+    # a0_ig * vol_factor * Gamma(1+1/m). GRAIN-BOUNDARY flaws are assigned
+    # per-facet (on the 2-D Voronoi interfaces) and do NOT carry vol_factor (a
+    # facet population is set by grain geometry, not cell volume), so the GB mean
+    # is a0_gb * Gamma(1+1/m). V0 defaults to (1 mm)^3 and this input does not
+    # override weibull.V0; the domain is a 10 mm cube at 24^3 cells, so
+    # vol_factor < 1 here. Keep these mirrored with the input geometry and the
+    # InitializeFlaws scaling law.
     WEIBULL_V0 = 1.0e-9         # m^3, default reference volume = (1 mm)^3
     V_CELL = (0.01 / 24) ** 3   # m^3, prob_hi 0.01, n_cell 24 (cubic)
     VOL_FACTOR = (V_CELL / WEIBULL_V0) ** (1.0 / WEIBULL_M)
@@ -266,7 +274,8 @@ def check_weibull():
         failures += 1
 
     gamma_factor = math.gamma(1.0 + 1.0 / WEIBULL_M)
-    exp_gb = A0_GB * VOL_FACTOR * gamma_factor
+    # GB: per-facet, no vol_factor.   IG: per-cell volumetric, with vol_factor.
+    exp_gb = A0_GB * gamma_factor
     exp_ig = A0_IG * VOL_FACTOR * gamma_factor
     print(f"mesh-objectivity vol_factor (V_cell/V0)^(1/m) = {VOL_FACTOR:.5f}")
     mean_gb = float(np.mean(flaw[gb_mask]))
@@ -275,8 +284,8 @@ def check_weibull():
     rel_ig = abs(mean_ig - exp_ig) / exp_ig
     print(f"flaw_a GB mean {mean_gb:.5e} (expect {exp_gb:.5e}, rel {rel_gb:.3e})")
     print(f"flaw_a IG mean {mean_ig:.5e} (expect {exp_ig:.5e}, rel {rel_ig:.3e})")
-    if rel_gb >= STAT_REL_TOL:
-        print(f"FAIL: GB flaw_a mean off by {rel_gb*100:.2f}% (tol {STAT_REL_TOL*100:.0f}%)")
+    if rel_gb >= GB_STAT_REL_TOL:
+        print(f"FAIL: GB flaw_a mean off by {rel_gb*100:.2f}% (tol {GB_STAT_REL_TOL*100:.0f}%)")
         failures += 1
     if rel_ig >= STAT_REL_TOL:
         print(f"FAIL: IG flaw_a mean off by {rel_ig*100:.2f}% (tol {STAT_REL_TOL*100:.0f}%)")

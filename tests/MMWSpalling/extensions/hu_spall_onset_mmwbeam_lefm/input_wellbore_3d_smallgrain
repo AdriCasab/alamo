@@ -1,0 +1,190 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# Pulsed brittle-regime spallation drilling — HIGH RESOLUTION twin of
+# input_pulsed_brittle. Identical physics, identical schedule, identical
+# slab; ONLY the discretisation changes:
+#
+#   n_cell : 64 x 4 x 64       ->  128 x 8 x 128       (cubic dx = 0.39 mm)
+#   dt     : 0.05 s            ->  0.0125 s            (explicit CFL at dx/2)
+#   plot   : every 20 steps    ->  every 80 steps      (= 1 s, same as baseline)
+#   el.int : 5 (= 0.25 s lag)  ->  20 (= 0.25 s lag)   (same PHYSICAL stress lag)
+#
+# Purpose: see how mesh resolution influences the brittle spallation rate
+# (depth-per-pulse, drill depth vs time, event count). Diagnosis: at 0.78 mm
+# the thermal skin (~1.5 mm) is only ~2 cells deep, so the K_I-vs-depth scan
+# only has ~2 sample points and barely resolves the crack-tip K_I < K_Ic
+# crossing. At 0.39 mm the skin is ~4 cells deep -> a much finer scan, plus
+# the per-facet GB flaw count doubles in surface area but the maximum surface
+# flaw stays mesh-invariant (validated in /tmp/gbsweep).
+#
+# Side effect to expect: per-cell removed volume is 8x smaller, so the depth
+# step PER spall event is roughly halved. Compare CUMULATIVE drill depth and
+# events-per-pulse, not single-event depth.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/output/wellbore_3d_smallgrain
+
+# Explicit forward Euler. dz^2 / (6*alpha) ~ 0.022 s at dz = 0.39 mm;
+# dt = 0.0125 s keeps CFL ~0.56, the same margin as the baseline.
+timestep  = 0.002
+stop_time = 30.0
+
+# Plot every 1 s of sim time (= every 80 steps), matching baseline cadence.
+amr.plot_int        = 500
+amr.max_level       = 0
+amr.n_cell          = 100 100 120
+amr.blocking_factor = 2
+amr.max_grid_size   = 32
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0        0.0
+geometry.prob_hi     = 0.02  0.02  0.024
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Voronoi mineral microstructure — SAME seed as the baseline so the grain
+# layout is identical (only the rasterisation onto the finer mesh differs).
+microstructure.mode             = voronoi
+microstructure.number_of_grains = 500
+microstructure.seed             = 1
+microstructure.nphases          = 3
+
+microstructure.phase0.name              = quartz
+microstructure.phase0.fraction          = 0.474
+microstructure.phase0.kappa             = 4.94
+microstructure.phase0.beta              = 1.6e-5
+microstructure.phase0.E                 = 75.0e9
+microstructure.phase0.mu                = 34.7e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 750.0
+microstructure.phase0.alpha_attenuation = 100.0
+microstructure.phase0.A_D               = 0.0003
+microstructure.phase0.T_ref             = 280.15
+microstructure.phase0.T_m               = 1510.5
+microstructure.phase0.fus_width         = 200.0
+microstructure.phase0.L_m               = 3.4e5
+microstructure.phase0.T_vap_lo          = 3233.0
+microstructure.phase0.T_vap_hi          = 3503.0
+microstructure.phase0.L_v               = 4.8e6
+
+microstructure.phase1.name              = kfeldspar
+microstructure.phase1.fraction          = 0.320
+microstructure.phase1.kappa             = 2.34
+microstructure.phase1.beta              = 0.75e-5
+microstructure.phase1.E                 = 53.0e9
+microstructure.phase1.mu                = 23.5e9
+microstructure.phase1.rho               = 2630.0
+microstructure.phase1.Cp                = 711.0
+microstructure.phase1.alpha_attenuation = 100.0
+microstructure.phase1.A_D               = 0.0003
+microstructure.phase1.T_ref             = 280.15
+microstructure.phase1.T_m               = 1510.5
+microstructure.phase1.fus_width         = 200.0
+microstructure.phase1.L_m               = 3.4e5
+microstructure.phase1.T_vap_lo          = 3233.0
+microstructure.phase1.T_vap_hi          = 3503.0
+microstructure.phase1.L_v               = 4.8e6
+
+microstructure.phase2.name              = plagioclase
+microstructure.phase2.fraction          = 0.206
+microstructure.phase2.kappa             = 3.26
+microstructure.phase2.beta              = 1.067e-5
+microstructure.phase2.E                 = 55.0e9
+microstructure.phase2.mu                = 24.6e9
+microstructure.phase2.rho               = 2540.0
+microstructure.phase2.Cp                = 711.0
+microstructure.phase2.alpha_attenuation = 100.0
+microstructure.phase2.A_D               = 0.0003
+microstructure.phase2.T_ref             = 280.15
+microstructure.phase2.T_m               = 1510.5
+microstructure.phase2.fus_width         = 200.0
+microstructure.phase2.L_m               = 3.4e5
+microstructure.phase2.T_vap_lo          = 3233.0
+microstructure.phase2.T_vap_hi          = 3503.0
+microstructure.phase2.L_v               = 4.8e6
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled         = 0
+
+spallation.model         = sp_weibull
+spall.stress_source       = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.05
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 15.0
+weibull.seed    = 12345
+
+spall.enabled          = 1
+spall.sample           = top_cell
+spall.h_spall_max      = 0.015
+# Rock-mechanics cavity-wall coherence: a firing column may recede at most this
+# far below its shallowest neighbour, so the spall cavity is a smooth coherent
+# bowl (bounded wall slope) instead of per-column needles. ~Voronoi grain scale.
+spall.flake_coherence_length = 0.002
+
+vapor.enabled          = 1
+
+beam.P0     = 220.0
+beam.omega0 = 0.004
+beam.lambda = 2.19e-3
+beam.x0     = 0.01
+beam.y0     = 0.01
+beam.z0     = 0.024
+beam.alpha_expr = 100.0
+beam.R      = 0.2
+beam.schedule.t_end = 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30
+beam.schedule.P     = 220 0 220 0 220 0 220 0 220 0 220 0 220 0 220
+
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 51.0
+losses.T_amb         = 280.15
+
+surface_patch.enabled = 0
+
+hc.heat.alpha = 1.143e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+# Match the BASELINE's PHYSICAL stress lag of 0.25 s: at dt = 0.0125 s,
+# number of mechanics solves over the 30 s window.
+
+el.nmodels = 1
+el.model1.E  = 29.98e9
+el.model1.nu = 0.19
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

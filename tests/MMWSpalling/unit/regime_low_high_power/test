@@ -220,10 +220,18 @@ if float(np.max(np.abs(final_high["RoP"][non_hi]))) > 0.0:
     ok = False
     print("FAIL: high-power unified RoP nonzero outside detached cells")
 
-# Detached cells should reset Temp -> T_amb, D -> 0.
-if not np.all(np.isclose(final_high["Temp"][det_hi], T_AMB, atol=1.0e-9)):
+# Detached cells reset D -> 0 but RETAIN their pre-removal temperature (a voided
+# cell is inert and insulating; it is no longer reset to T_amb — that reset only
+# produced a spurious cold value in plots. See the no-reset change in
+# src/Integrator/MMWSpalling/Removal.H). This run is adiabatic (losses off) with
+# a uniform IC, so the retained temperature is exactly the IC value.
+T_RETAINED = 2500.0   # hc.ic.constant.value in input_high_power
+T_det_hi = final_high["Temp"][det_hi]
+if not np.all(np.isclose(T_det_hi, T_RETAINED, atol=1.0e-6)):
     ok = False
-    print("FAIL: high-power detached cells did not reset Temp to T_amb")
+    print(f"FAIL: high-power detached cells should RETAIN their pre-removal T "
+          f"({T_RETAINED} K), not reset to T_amb ({T_AMB} K); got range "
+          f"[{T_det_hi.min():.3f}, {T_det_hi.max():.3f}]")
 if float(np.max(np.abs(final_high["D"][det_hi]))) > 1.0e-12:
     ok = False
     print("FAIL: high-power detached cells did not reset D")

@@ -131,7 +131,7 @@ hc.bc.temp.constant.val.zhi  = 0.0
 # is still parsed by Mechanics::Parse before Base::Mechanics::Parse's
 # early-return on type=disable takes effect, so el.nmodels / el.model1.*
 # must be present; they are unused once the disable branch is taken.
-el.type = disable
+el.type     = disable
 el.nmodels = 1
 el.model1.E  = 35.0e9
 el.model1.nu = 0.19

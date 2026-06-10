@@ -128,27 +128,12 @@ hc.bc.temp.constant.val.yhi  = 0.0
 hc.bc.temp.constant.val.zlo  = 0.0
 hc.bc.temp.constant.val.zhi  = 0.0
 
-el.type     = static
-el.interval = 1
-el.time_evolving = 1
-el.bc.type  = zlo_roller_321
-el.print_model = 0
+el.type     = disable
 
 el.nmodels = 1
 el.model1.E  = 35.0e9
 el.model1.nu = 0.19
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
-el.solver.verbose       = 0
-el.solver.nriters       = 1
-el.solver.max_iter      = 1000
-el.solver.tol_rel       = 1.0e-6
-el.solver.tol_abs       = 1.0e-16
-el.solver.bottom_solver = cg
-el.solver.normalize_ddw = 1
 
-el.ref_threshold         = 1.0
-el.eta_ref_threshold     = 1.0
-el.zero_out_displacement = 1
-el.max_coarsening_level  = 2
 
 solver = explicit

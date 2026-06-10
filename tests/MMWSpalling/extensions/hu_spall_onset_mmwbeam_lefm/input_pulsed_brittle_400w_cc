@@ -5,58 +5,40 @@
 #@ exe=mmwspalling
 #@
 
-# Pulsed, brittle-regime spallation-drilling BEHAVIOUR study (NOT a
-# validation). Derived from input_granite2 with four deliberate changes,
-# motivated by the diagnosis that the continuous 10 kW / 2 cm beam drove the
-# surface to ~4160 K (deep into melt/vapour, where the LEFM Sp criterion is
-# invalid and K_Ic is extrapolated 3000 K past the Nasseri table):
+# Pulsed brittle-regime spallation drilling — HIGH RESOLUTION twin of
+# input_pulsed_brittle. Identical physics, identical schedule, identical
+# slab; ONLY the discretisation changes:
 #
-#   1. LOW FLUX + PULSED beam. P0 = 1.2 kW with a 2 s-on / 2 s-off schedule
-#      (beam.schedule.*). Goal: keep the surface peak in the brittle band
-#      (~700-1000 K, inside the K_Ic table, below T_m = 1510 K) so Sp
-#      oscillates around 1 instead of pinning at ~3. Pulsing regenerates the
-#      near-surface thermal gradient each cycle (heat -> stress -> spall ->
-#      expose fresh rock -> reheat), which is what real flame/MMW spallation
-#      drilling does, and prevents the monotonic T runaway.
+#   n_cell : 64 x 4 x 64       ->  128 x 8 x 128       (cubic dx = 0.39 mm)
+#   dt     : 0.05 s            ->  0.0125 s            (explicit CFL at dx/2)
+#   plot   : every 20 steps    ->  every 80 steps      (= 1 s, same as baseline)
+#   el.int : 5 (= 0.25 s lag)  ->  20 (= 0.25 s lag)   (same PHYSICAL stress lag)
 #
-#   2. RESOLUTION + QUASI-2D THIN SLAB. Domain shrunk to 5 cm and grid 64 x 4
-#      x 64 -> CUBIC 0.78 mm cells (cells MUST stay cubic; the heterogeneous
-#      3.125 mm cell could not resolve the thermal skin (sqrt(kappa*t_on) ~
-#      1.5 mm), so the spall depth-scan never found a crack tip a full cell
-#      deep where K_I >= K_Ic still held (h_col = 0 -> no detach even though
-#      surface Sp > 1). The slab is only 4 cells (3.125 mm) thick in y: the
-#      removal code is hardcoded to z = depth and (i,j) = surface, so a true
-#      2D build (SPACEDIM=2, depth would be j) cannot run it -- the thin slab
-#      keeps the validated 3D path while costing ~16x less than 64^3. The
-#      1 cm-waist beam is ~uniform across the 3 mm slab, so this behaves like
-#      a line-source 2D (x-z) problem; the rollered thin y approximates plane
-#      grids), so a uniform fine single-level slab is the way to sub-mm cells.
+# Purpose: see how mesh resolution influences the brittle spallation rate
+# (depth-per-pulse, drill depth vs time, event count). Diagnosis: at 0.78 mm
+# the thermal skin (~1.5 mm) is only ~2 cells deep, so the K_I-vs-depth scan
+# only has ~2 sample points and barely resolves the crack-tip K_I < K_Ic
+# crossing. At 0.39 mm the skin is ~4 cells deep -> a much finer scan, plus
+# the per-facet GB flaw count doubles in surface area but the maximum surface
+# flaw stays mesh-invariant (validated in /tmp/gbsweep).
 #
-#   3. WAIST. omega0 = 1 cm, axis centred, so the beam stays well inside the
-#      5 cm box (no lateral edge clipping into the Neumann walls).
-#
-#   4. spall.h_spall_max = 4 mm. In the brittle regime the depth scan should
-#      find a genuine K_I < K_Ic crossing (thin skin), not peg the cap.
-#
-# What to watch: Sp_field max should cycle through ~1 with the pulses; spall
-# events should recur (not front-load then stall); drill depth should climb
-# in steps rather than plateau. If spalling still barely fires after this,
-# the free-lateral zlo_roller_321 BC is relaxing the subsurface sigma_xx
-# below what a 1-D-confinement Kant flake needs — a physics limit, not a
-# tuning one.
+# Side effect to expect: per-cell removed volume is 8x smaller, so the depth
+# step PER spall event is roughly halved. Compare CUMULATIVE drill depth and
+# events-per-pulse, not single-event depth.
 
 alamo.program = mmwspalling
 
-plot_file = tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/output/pulsed_brittle
+plot_file = tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/output/pulsed_brittle_400w_cc
 
-# Explicit forward Euler. dt = 0.05 s is under the explicit-diffusion CFL at
-# dz = 0.78 mm (dz^2 / (6*alpha) ~ 0.089 s). 30 s = 7.5 pulse cycles.
-timestep  = 0.02
+# Explicit forward Euler. dz^2 / (6*alpha) ~ 0.022 s at dz = 0.39 mm;
+# dt = 0.0125 s keeps CFL ~0.56, the same margin as the baseline.
+timestep  = 0.005
 stop_time = 30.0
 
-amr.plot_int        = 50
+# Plot every 1 s of sim time (= every 80 steps), matching baseline cadence.
+amr.plot_int        = 200
 amr.max_level       = 0
-amr.n_cell          = 64 4 64
+amr.n_cell          = 128 8 128
 amr.blocking_factor = 2
 amr.max_grid_size   = 16
 amr.regrid_int      = 1000000
@@ -70,7 +52,8 @@ geometry.is_periodic = 0 0 0
 
 alpha = 0.0 0.0
 
-# Voronoi mineral microstructure — same minerals as input_granite2.
+# Voronoi mineral microstructure — SAME seed as the baseline so the grain
+# layout is identical (only the rasterisation onto the finer mesh differs).
 microstructure.mode             = voronoi
 microstructure.number_of_grains = 200
 microstructure.seed             = 1
@@ -135,7 +118,6 @@ conductivity.h_gb0              = 0.0
 
 damage.enabled         = 0
 
-# Spallation: LEFM Sp branch (sp_weibull). Same calibration as granite2.
 spallation.model         = sp_weibull
 spall.stress_source       = local_thermoelastic
 spallation.sp.a0         = 20.0e-6
@@ -149,22 +131,21 @@ weibull.a0_ig   = 4.0e-6
 weibull.m       = 15.0
 weibull.seed    = 12345
 
-# LEFM spall removal ON. Cap lowered to 4 mm — in the brittle regime the
-# scan should find a real K_I < K_Ic crossing rather than the cap.
+# Connected-flake detachment: a firing surface cell only detaches if it belongs
+# to a 4-connected cluster of area >= A_crit. Suppresses unphysical lone-column
+# (single large-flaw) specks; forces spalling to act on coherent flakes. At
+# dx = 0.39 mm one x-column across the 8-cell y-slab is 1.22e-6 m^2, so
+# A_crit = 2.0e-6 requires >= 2 connected x-columns (~0.8 mm minimum flake).
+weibull.detach_mode = connected_cluster
+weibull.A_crit      = 2.0e-6
+
 spall.enabled          = 1
 spall.sample           = top_cell
-spall.h_spall_max      = 0.004
+spall.h_spall_max      = 0.015
 
-# Vapor removal ON. Harmless in the brittle regime (T stays < T_vap), and it
-# keeps the regime-selection path identical to granite2.
 vapor.enabled          = 1
 
-# MMW beam: PULSED, low flux. P0 must stay non-zero so MMWBeam::active() is
-# true; the piecewise schedule (power_at) overrides the magnitude per
-# interval. schedule.P[i] applies while t < schedule.t_end[i]. 2 s on at
-# 1.2 kW, 2 s off, repeating. omega0 = 1 cm; axis centred in the 5 cm box,
-# entering the +z face at z0 = 0.05. alpha = 100 1/m (~1 cm absorption).
-beam.P0     = 1200.0
+beam.P0     = 400.0
 beam.omega0 = 0.01
 beam.lambda = 2.19e-3
 beam.x0     = 0.025
@@ -173,9 +154,8 @@ beam.z0     = 0.05
 beam.alpha_expr = 100.0
 beam.R      = 0.2
 beam.schedule.t_end = 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30
-beam.schedule.P     = 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200
+beam.schedule.P     = 400 0 400 0 400 0 400 0 400 0 400 0 400 0 400
 
-# Surface losses ON (radiative + convective at the receding surface).
 losses.epsilon       = 0.8
 losses.epsilon_high  = 0.8
 losses.T_eps_break   = 1.0e30
@@ -183,7 +163,6 @@ losses.sigma_SB      = 5.670374e-8
 losses.h_conv        = 51.0
 losses.T_amb         = 280.15
 
-# Surface patch OFF — the MMW beam is the sole heat source.
 surface_patch.enabled = 0
 
 hc.heat.alpha = 1.143e-6
@@ -203,23 +182,13 @@ hc.bc.temp.constant.val.yhi  = 0.0
 hc.bc.temp.constant.val.zlo  = 0.0
 hc.bc.temp.constant.val.zhi  = 0.0
 
-# Mechanics: static, free-lateral with bottom clamp (zlo_roller_321),
-# time-evolving so stress_mf is populated for the Step 19 sigma_xx source.
-# thermal steps = 0.25 s. That lag stays under the within-pulse onset rise
-# (~0.4 s) and the cell thermal-diffusion time (~0.5 s), so it does not blur
-# the spall onset; ~5x cheaper than per-step. See discussion 2026-05-29.
 el.type     = disable
+# Match the BASELINE's PHYSICAL stress lag of 0.25 s: at dt = 0.0125 s,
+# number of mechanics solves over the 30 s window.
 
 el.nmodels = 1
 el.model1.E  = 29.98e9
 el.model1.nu = 0.19
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
-# Tier 1 cost fix: loosen the relative tol. The heterogeneous operator floors
-# near 1e-4 and 1e-3 stress accuracy is overkill for a behaviour study; 3e-3
-
-# Tier 1 cost fix: warm-start. =1 zeroes displacement before every solve, so
-# though it barely changes between solves. =0 reuses the previous step's
-# displacement as the initial guess -> far fewer iterations, same converged
-# answer. Biggest expected win.
 
 solver = explicit

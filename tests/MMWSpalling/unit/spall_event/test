@@ -4,7 +4,8 @@
 # Event case: prescribed Hoek-Brown ratio = 10 > xi_s = 8 so every (i,j)
 # column triggers a single spall event. Calibration gives h_spall = 2*dz,
 # detaching the top two cells of every column. Verifies phi shift, the
-# detached-cell reset (D=0, Temp=T_amb), surface mask migration, and the
+# detached-cell state (D=0, Temp RETAINED — not reset to T_amb), surface mask
+# migration, and the
 # diagnostic fields. No-event companion holds the ratio below threshold
 # and verifies all spall fields stay zero and the surface mask stays at
 # the original top row.
@@ -157,7 +158,16 @@ if (float(np.max(np.abs(ev[non_mask]))) > 0.0
     ok = False
     print("FAIL: spall diagnostics nonzero outside detached cells")
 
-# Detached cells must have D = 0 and Temp = T_amb.
+# Detached cells must have D = 0 and must RETAIN their pre-removal temperature
+# (NOT reset to T_amb). A voided cell holds no material and is insulating (the
+# void-aware conduction stencil carries zero flux across any void face), so its
+# stored temperature is physically inert; resetting it to ambient only produced
+# a spurious cold value that showed up as a checkerboard in temperature plots
+# next to un-spalled hot cells at the drill front. See the no-reset change in
+# src/Integrator/MMWSpalling/Removal.H and mlmg-shelved-local-thermoelastic-
+# notes.md. This run is adiabatic (no beam, no losses) with a uniform IC, so the
+# retained temperature is exactly the IC value.
+T_RETAINED = 500.0   # hc.ic.constant.value in input
 D_det = final["D"][det_mask]
 T_det = final["T"][det_mask]
 print(f"detached D range: [{D_det.min():.3e}, {D_det.max():.3e}]; "
@@ -165,9 +175,11 @@ print(f"detached D range: [{D_det.min():.3e}, {D_det.max():.3e}]; "
 if float(np.max(np.abs(D_det))) > 1.0e-12:
     ok = False
     print("FAIL: detached cells did not reset D to 0")
-if not np.all(np.isclose(T_det, T_AMB, atol=1.0e-9)):
+if not np.all(np.isclose(T_det, T_RETAINED, atol=1.0e-6)):
     ok = False
-    print("FAIL: detached cells did not reset Temp to T_amb")
+    print(f"FAIL: detached cells should RETAIN their pre-removal T "
+          f"({T_RETAINED} K), not reset to T_amb ({T_AMB} K); got range "
+          f"[{T_det.min():.3f}, {T_det.max():.3f}]")
 
 # Non-detached cells must keep their initial-condition state. The damage IC
 # is D=1 in z>=0.5 and 0 below. zc index 4 corresponds to z=0.5625, so

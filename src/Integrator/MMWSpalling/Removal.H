@@ -161,6 +161,17 @@
         }
         amrex::ParallelDescriptor::ReduceIntMax(k_top_global.data(), ncols);
 
+        // Step 20: per-column cos(theta) of the cavity-wall inclination for
+        // the surface-normal spall frame (computed from the gathered tops,
+        // so identical on every rank). nullptr when the flag is off -- every
+        // conversion below then multiplies by exactly 1.0 (bit-identical).
+        amrex::Vector<Set::Scalar> sn_cos_col;
+        if (spall_surface_normal && sp_weibull_spall)
+            ColumnSurfaceCos(k_top_global.data(), nx_dom, ny_dom,
+                             DX[0], DX[1], dz, domain.smallEnd(2), sn_cos_col);
+        const Set::Scalar* sn_cos_p =
+            sn_cos_col.empty() ? nullptr : sn_cos_col.data();
+
         // PASS 1.5: per-column max D over `spall.sample`'s scan window
         // (top_cell | column_max | shallow_max). MPI z-decomposition is
         // collapsed by ReduceRealMax; empty columns get 0.0 (no-fire).
@@ -475,6 +486,15 @@
                                 // and the sub-cell bisection that refines
                                 // h_col below dz.
                                 Set::Scalar h_col = 0.0;
+                                // Step 20: surface-normal frame factors.
+                                // Depth variables in this scan (z_crack, d,
+                                // h_col) are NORMAL distances when the flag
+                                // is on; the cell at k_top - s sits at
+                                // normal depth s*dz*cos(theta). Exactly 1.0
+                                // when off (bit-identical arithmetic).
+                                const Set::Scalar sn_cth =
+                                    sn_cos_p ? sn_cos_p[idx] : 1.0;
+                                const Set::Scalar sn_icth = 1.0 / sn_cth;
                                 const int max_steps_cap = static_cast<int>(
                                     std::floor(h_spall_max_loc / dz));
                                 const int klo_loc = klo;
@@ -551,14 +571,20 @@
                                     [&] (Set::Scalar z_crack) -> Set::Scalar {
                                     auto sigma_at_depth =
                                         [&] (Set::Scalar d) -> Set::Scalar {
+                                        // z_abs is a NORMAL distance under
+                                        // Step 20; z_v is the vertical depth
+                                        // at which the column profile holds
+                                        // the same material point.
                                         const Set::Scalar z_abs =
                                             z_crack + d;
+                                        const Set::Scalar z_v =
+                                            z_abs * sn_icth;
                                         if (!sp_weibull_use_T_face)
                                         {
                                             // Step 19: stress_mf path.
                                             int k_d = k_top -
                                                 static_cast<int>(
-                                                    std::floor(z_abs / dz));
+                                                    std::floor(z_v / dz));
                                             if (k_d > k_top)   k_d = k_top;
                                             if (k_d < klo_loc) k_d = klo_loc;
                                             if (k_d > khi_loc) k_d = khi_loc;
@@ -572,7 +598,7 @@
                                         const Set::Scalar half_dz =
                                             0.5 * dz;
                                         Set::Scalar T_z;
-                                        if (z_abs <= half_dz)
+                                        if (z_v <= half_dz)
                                         {
                                             // Surface region: lerp between the
                                             // surface T and the top-cell-centre
@@ -587,7 +613,7 @@
                                                 ? sp_T_face_loc(time)
                                                 : T_top;
                                             Set::Scalar alpha =
-                                                z_abs / half_dz;
+                                                z_v / half_dz;
                                             if (alpha < 0.0) alpha = 0.0;
                                             if (alpha > 1.0) alpha = 1.0;
                                             T_z = (1.0 - alpha) * T_face
@@ -599,7 +625,7 @@
                                             // between adjacent cell
                                             // centres at z = (k + 0.5)*dz.
                                             const Set::Scalar u =
-                                                z_abs / dz - 0.5;
+                                                z_v / dz - 0.5;
                                             const Set::Scalar uf =
                                                 std::floor(u);
                                             int n = static_cast<int>(uf);
@@ -634,8 +660,11 @@
                                 bool found_failure = false;
                                 for (int s = 0; s <= max_steps; ++s)
                                 {
+                                    // Cell k_top - s sits at normal depth
+                                    // s*dz*cos(theta) below the inclined
+                                    // surface (s*dz vertical).
                                     const Set::Scalar z_crack =
-                                        Set::Scalar(s) * dz;
+                                        Set::Scalar(s) * dz * sn_cth;
                                     const int k_tip = k_top - s;
                                     if (k_tip < scan_kbot) break;
 
@@ -679,16 +708,16 @@
                                     (k_top - (s_last_pass + 1)) >= scan_kbot)
                                 {
                                     Set::Scalar z_lo = Set::Scalar(s_last_pass)
-                                                       * dz;       // pass
+                                                       * dz * sn_cth; // pass
                                     Set::Scalar z_hi = Set::Scalar(s_last_pass + 1)
-                                                       * dz;       // fail
+                                                       * dz * sn_cth; // fail
                                     for (int b = 0; b < 8; ++b)
                                     {
                                         Set::Scalar z_mid =
                                             0.5 * (z_lo + z_hi);
                                         int k_mid = k_top -
                                             static_cast<int>(
-                                                std::floor(z_mid / dz));
+                                                std::floor(z_mid * sn_icth / dz));
                                         // kic_pa_at_cell reads via T_at_didx,
                                         // which is box-independent on the T-path;
                                         // clamp to [scan_kbot, k_top] (== box on
@@ -709,10 +738,20 @@
 
                                 if (h_col > 0.0)
                                 {
+                                    // Step 20: h_col is the flake thickness
+                                    // along the surface normal; the column
+                                    // (height-function) representation must
+                                    // recede VERTICALLY by h_col/cos(theta)
+                                    // to remove that flake. The graph form
+                                    // of dphi/dt = -v_n*|grad phi|. The CSV
+                                    // and h_spall_field diagnostics keep the
+                                    // physical (normal) thickness.
+                                    const Set::Scalar h_vert =
+                                        h_col * sn_icth;
                                     spall_fires_col[idx] = 1;
-                                    h_s_cand_col[idx]    = h_col;
+                                    h_s_cand_col[idx]    = h_vert;
                                     rop_s_cand_col[idx]  =
-                                        (dt_local > 0.0) ? h_col / dt_local : 0.0;
+                                        (dt_local > 0.0) ? h_vert / dt_local : 0.0;
                                     // Running max at the INITIAL top-z
                                     // slice (immovable; column anchor for
                                     // the Rossi depth-profile post-process).
@@ -866,7 +905,18 @@
         // (higher k = shallower); a column at k_top removing thickness h lands
         // at k_top - h/dz, which must stay >= (shallowest-neighbour k_top) -
         // coh_cells.
-        const int coh_cells = (spall_flake_coh_len > 0.0)
+        // Step 20: under the surface-normal kernel the coherence cap is
+        // BYPASSED -- it is superseded, not just relaxed. The cap was a
+        // needle regularizer for the vertical-only law; it also hard-limits
+        // the cavity-wall slope to coh_len/dx, which is exactly what froze
+        // the cone (every wall column cap-saturated against the cold rim).
+        // Slope-aware normal motion is self-regularizing: steeper walls see
+        // a thinner normal skin (fire more easily) AND recede further per
+        // flake (h/cos(theta)), so slopes erode preferentially and needles
+        // heal without a hard cap. Per-step removal stays bounded by the
+        // scan window: h_vert = h_col/cos <= max_steps*dz = h_spall_max.
+        const bool sn_active = (sn_cos_p != nullptr);
+        const int coh_cells = (spall_flake_coh_len > 0.0 && !sn_active)
             ? std::max(1, static_cast<int>(std::lround(spall_flake_coh_len / dz)))
             : 0;
         if (coh_cells > 0)

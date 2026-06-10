@@ -76,7 +76,7 @@ losses.epsilon       = 0.8
 losses.epsilon_high  = 0.8
 losses.T_eps_break   = 1510.5
 losses.sigma_SB      = 5.670374419e-8
-losses.h_conv        = 56.0
+losses.h_conv        = 51.0
 losses.T_amb         = 297.5
 
 #

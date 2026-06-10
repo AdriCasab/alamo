@@ -57,6 +57,8 @@ conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 spallation.model          = sp_weibull
+spall.stress_source       = local_thermoelastic
+spall.clusters_csv        = 1
 spallation.sp.a0          = 20.0e-6
 spallation.sp.n_segments  = 128
 
@@ -114,54 +116,13 @@ hc.bc.temp.constant.val.yhi  = 0.0
 hc.bc.temp.constant.val.zlo  = 0.0
 hc.bc.temp.constant.val.zhi  = 0.0
 
-el.type     = static
-el.interval = 1
-el.time_evolving = 1
-el.print_model = 0
+el.type     = disable
 
-el.bc.type = constant
-el.bc.constant.type.xlo = disp trac trac
-el.bc.constant.type.xhi = disp trac trac
-el.bc.constant.type.ylo = trac disp trac
-el.bc.constant.type.yhi = trac disp trac
-el.bc.constant.type.zlo = trac trac disp
-el.bc.constant.type.zhi = trac trac trac
-el.bc.constant.type.xloylo = disp disp trac
-el.bc.constant.type.xloyhi = disp disp trac
-el.bc.constant.type.xhiylo = disp disp trac
-el.bc.constant.type.xhiyhi = disp disp trac
-el.bc.constant.type.ylozlo = trac disp disp
-el.bc.constant.type.ylozhi = trac disp trac
-el.bc.constant.type.yhizlo = trac disp disp
-el.bc.constant.type.yhizhi = trac disp trac
-el.bc.constant.type.zloxlo = disp trac disp
-el.bc.constant.type.zloxhi = disp trac disp
-el.bc.constant.type.zhixlo = disp trac trac
-el.bc.constant.type.zhixhi = disp trac trac
-el.bc.constant.type.xloylozlo = disp disp disp
-el.bc.constant.type.xloylozhi = disp disp trac
-el.bc.constant.type.xloyhizlo = disp disp disp
-el.bc.constant.type.xloyhizhi = disp disp trac
-el.bc.constant.type.xhiylozlo = disp disp disp
-el.bc.constant.type.xhiylozhi = disp disp trac
-el.bc.constant.type.xhiyhizlo = disp disp disp
-el.bc.constant.type.xhiyhizhi = disp disp trac
 
 el.nmodels = 1
 el.model1.E  = 35.0e9
 el.model1.nu = 0.26
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
-el.solver.verbose       = 0
-el.solver.nriters       = 1
-el.solver.max_iter      = 1000
-el.solver.tol_rel       = 1.0e-6
-el.solver.tol_abs       = 1.0e-16
-el.solver.bottom_solver = cg
-el.solver.normalize_ddw = 1
 
-el.ref_threshold         = 1.0
-el.eta_ref_threshold     = 1.0
-el.zero_out_displacement = 1
-el.max_coarsening_level  = 2
 
 solver = explicit

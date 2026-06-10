@@ -47,8 +47,15 @@
 
 alamo.program = mmwspalling
 
-plot_file = tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/output/pulsed_brittle
+plot_file = tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/output/pulsed_brittle_400w
 
+# 400 W tuned-brittle twin of input_pulsed_brittle: only the beam power is
+# lowered (1200 W -> 400 W). At 400 W the surface peak settles near ~958 K,
+# which stays BELOW T_m = 1510 K and below the Nasseri K_Ic table ceiling
+# (~1123 K), so Sp oscillates around 1 in a genuine brittle regime (no
+# vaporisation, no melt). This is the physically valid spallation case; the
+# 1200 W canonical run goes super-melt and is contaminated by vapour removal.
+#
 # Explicit forward Euler. dt = 0.05 s is under the explicit-diffusion CFL at
 # dz = 0.78 mm (dz^2 / (6*alpha) ~ 0.089 s). 30 s = 7.5 pulse cycles.
 timestep  = 0.02
@@ -153,7 +160,11 @@ weibull.seed    = 12345
 # scan should find a real K_I < K_Ic crossing rather than the cap.
 spall.enabled          = 1
 spall.sample           = top_cell
-spall.h_spall_max      = 0.004
+spall.h_spall_max      = 0.015
+# Rock-mechanics cavity-wall coherence: a firing column may recede at most this
+# far below its shallowest neighbour, so the spall cavity is a smooth coherent
+# bowl (bounded wall slope) instead of per-column needles. ~Voronoi grain scale.
+spall.flake_coherence_length = 0.002
 
 # Vapor removal ON. Harmless in the brittle regime (T stays < T_vap), and it
 # keeps the regime-selection path identical to granite2.
@@ -164,7 +175,7 @@ vapor.enabled          = 1
 # interval. schedule.P[i] applies while t < schedule.t_end[i]. 2 s on at
 # 1.2 kW, 2 s off, repeating. omega0 = 1 cm; axis centred in the 5 cm box,
 # entering the +z face at z0 = 0.05. alpha = 100 1/m (~1 cm absorption).
-beam.P0     = 1200.0
+beam.P0     = 400.0
 beam.omega0 = 0.01
 beam.lambda = 2.19e-3
 beam.x0     = 0.025
@@ -173,7 +184,7 @@ beam.z0     = 0.05
 beam.alpha_expr = 100.0
 beam.R      = 0.2
 beam.schedule.t_end = 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30
-beam.schedule.P     = 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200
+beam.schedule.P     = 400 0 400 0 400 0 400 0 400 0 400 0 400 0 400
 
 # Surface losses ON (radiative + convective at the receding surface).
 losses.epsilon       = 0.8

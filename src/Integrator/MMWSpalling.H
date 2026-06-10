@@ -1712,6 +1712,26 @@ private:
             Util::Abort(INFO, "spall.stress_source must be 'mechanics' or "
                               "'local_thermoelastic', got ", stress_src);
 
+        // Step 20: surface-normal (slope-aware) spall criterion + removal.
+        // Default off (existing behaviour: criterion and recession strictly
+        // vertical). When on, each column's local cavity-wall inclination
+        // theta is computed from the gathered column tops; the Sp/K_I depth
+        // scan is evaluated along the surface NORMAL (the vertical T profile
+        // is compressed by cos(theta) -- the physically correct crack frame,
+        // Kant's 1-D model applies normal to the surface), and a flake of
+        // normal thickness h recedes the column vertically by h/cos(theta).
+        // This is the graph form of level-set normal motion
+        // (dh/dt = -v_n*sqrt(1+|grad h|^2)) and lets inclined cavity walls
+        // keep spalling instead of freezing into a cone (the rim-baking
+        // artifact). Parsed before the early-return because it also governs
+        // the Sp_field gate diagnostic (UpdateSpAfterMechanics). Under
+        // local_thermoelastic the tangential stress magnitude is orientation-
+        // independent (isotropic biaxial), so no tensor rotation is needed --
+        // only the scan direction changes.
+        int sn_on = 0;
+        pp.query_default("spall.surface_normal", sn_on, 0);
+        value.spall_surface_normal = (sn_on != 0);
+
         // CSV diagnostic toggles (default off). Parsed before the early-return
         // because the clusters CSV is emitted by UpdateSpClusters under
         // sp_weibull even when material removal is off.
@@ -1946,6 +1966,48 @@ private:
     // enabled (used by the closed-form verification test); otherwise the
     // depth-resolved physical-path NodeToCellAverage of stress_mf. T_surface
     // for K_Ic: prescribed T(t) parser if enabled, otherwise temp_mf top cell.
+    // Step 20: per-column cos(theta) of the local cavity-wall inclination,
+    // from a domain-gathered column-top array (so the result is identical on
+    // every rank regardless of decomposition). Surface height h = (k_top+1)*dz
+    // (the constant offset cancels in the gradient); central differences where
+    // both neighbours are valid, one-sided at edges/voided columns, slope 0
+    // when no valid neighbour. cos = 1/sqrt(1+|grad h|^2), clamped to
+    // >= SP_SN_COS_MIN. Columns with k_top < k_valid_min (fully removed /
+    // sentinel) get cos = 1 (unused -- they have no surface to scan).
+    static void ColumnSurfaceCos(const int* k_top, int nx, int ny,
+                                 Set::Scalar dx, Set::Scalar dy, Set::Scalar dz,
+                                 int k_valid_min,
+                                 amrex::Vector<Set::Scalar>& cos_out)
+    {
+        cos_out.assign(static_cast<std::size_t>(nx) * ny, 1.0);
+        auto h_at = [&](int ci, int cj) -> Set::Scalar {
+            return (Set::Scalar(k_top[cj * nx + ci]) + 1.0) * dz;
+        };
+        auto valid = [&](int ci, int cj) -> bool {
+            if (ci < 0 || ci >= nx || cj < 0 || cj >= ny) return false;
+            return k_top[cj * nx + ci] >= k_valid_min;
+        };
+        for (int cj = 0; cj < ny; ++cj)
+        for (int ci = 0; ci < nx; ++ci)
+        {
+            if (!valid(ci, cj)) continue;
+            const Set::Scalar h0 = h_at(ci, cj);
+            auto slope1d = [&](int im, int jm, int ip, int jp,
+                               Set::Scalar dl) -> Set::Scalar {
+                const bool vm = valid(im, jm), vp = valid(ip, jp);
+                if (vm && vp) return (h_at(ip, jp) - h_at(im, jm)) / (2.0 * dl);
+                if (vp)       return (h_at(ip, jp) - h0) / dl;
+                if (vm)       return (h0 - h_at(im, jm)) / dl;
+                return 0.0;
+            };
+            const Set::Scalar gx = slope1d(ci - 1, cj, ci + 1, cj, dx);
+            const Set::Scalar gy = slope1d(ci, cj - 1, ci, cj + 1, dy);
+            Set::Scalar c = 1.0 / std::sqrt(1.0 + gx * gx + gy * gy);
+            if (c < SP_SN_COS_MIN) c = SP_SN_COS_MIN;
+            cos_out[static_cast<std::size_t>(cj) * nx + ci] = c;
+        }
+    }
+
     void UpdateSpAfterMechanics(int lev, Set::Scalar time, Set::Scalar dt)
     {
         if (spallation_model != SpallationModel::SpWeibull) return;
@@ -2026,6 +2088,17 @@ private:
             return (j - dom_jlo_l) * nx_dom_l + (i - dom_ilo_l);
         };
 
+        // Step 20: surface-normal frame -- per-column cos(theta) so the K_I
+        // scan below samples the vertical T/stress profile at depth/cos(theta)
+        // (the crack runs along the local surface normal). nullptr when off:
+        // the conversion multiplies by exactly 1.0 and stays bit-identical.
+        amrex::Vector<Set::Scalar> sn_cos_col;
+        if (spall_surface_normal)
+            ColumnSurfaceCos(k_top_col.data(), nx_dom, ny_dom,
+                             DX[0], DX[1], dz, domain.smallEnd(2), sn_cos_col);
+        const Set::Scalar* sn_cos_p =
+            sn_cos_col.empty() ? nullptr : sn_cos_col.data();
+
         // Sp is a per-column diagnostic; clear everywhere first so cells
         // below the top z-slab stay zero on plotfiles.
         Sp_field_mf[lev]->setVal(0.0);
@@ -2054,6 +2127,13 @@ private:
 
                 Set::Scalar Tsurf = use_presc_T ? presc_T_f(time) : T_a(i, j, k);
 
+                // Step 20: under surface_normal the crack frame is the local
+                // surface normal; `depth` below is a NORMAL distance and the
+                // vertical profile is sampled at depth/cos(theta). icth = 1
+                // exactly when the flag is off (bit-identical).
+                const Set::Scalar icth = sn_cos_p
+                    ? 1.0 / sn_cos_p[col_index_sp(i, j)] : 1.0;
+
                 // K_I integrand consumes -sigma_xx (compression-positive).
                 // stress_mf and the prescribed parser are tension-positive,
                 // so a compressive heated surface (sigma_xx < 0) yields
@@ -2061,9 +2141,10 @@ private:
                 // containing the requested depth (k_d), clamped into the
                 // owned box. z-decomposition-robust column gather is deferred.
                 auto sigma_at_depth = [&] (Set::Scalar depth) -> Set::Scalar {
+                    const Set::Scalar dv = depth * icth;  // vertical sample depth
                     if (use_presc_s)
                     {
-                        Set::Scalar z_phys = z_surf_face - depth;
+                        Set::Scalar z_phys = z_surf_face - dv;
                         return -presc_s_f(xc, yc, z_phys, time) + sp_conf_offset;
                     }
                     if (use_local_TE)
@@ -2073,13 +2154,13 @@ private:
                         // h_spall scan (Removal.H). Sample temp_mf at the cell
                         // containing the requested depth below the (receded)
                         // surface, clamped into the box.
-                        int k_d = ksurf - static_cast<int>(std::floor(depth / dz));
+                        int k_d = ksurf - static_cast<int>(std::floor(dv / dz));
                         if (k_d > ksurf)    k_d = ksurf;
                         if (k_d < vbx_lo_k) k_d = vbx_lo_k;
                         return te_E * te_beta * (T_a(i, j, k_d) - te_Tref)
                                / (1.0 - te_nu) + sp_conf_offset;
                     }
-                    int k_d = ksurf - static_cast<int>(std::floor(depth / dz));
+                    int k_d = ksurf - static_cast<int>(std::floor(dv / dz));
                     if (k_d > ksurf)    k_d = ksurf;
                     if (k_d < vbx_lo_k) k_d = vbx_lo_k;
                     Set::Matrix sigma =
@@ -3458,6 +3539,16 @@ private:
     // stress heterogeneity and cavity stress redistribution; see
     // mlmg-shelved-local-thermoelastic-notes.md.
     bool sp_local_thermoelastic = false;
+    // Step 20: surface-normal (slope-aware) spall criterion + removal. When
+    // true, the K_I depth scan runs in the local surface-normal frame and a
+    // flake of normal thickness h recedes its column by h/cos(theta) -- the
+    // graph form of level-set normal motion. Default false (vertical-only,
+    // bit-identical to all pre-Step-20 behaviour).
+    bool spall_surface_normal = false;
+    // Floor on cos(theta) when surface_normal is on: walls steeper than
+    // ~81 deg keep a finite normal frame instead of diverging. The column
+    // (height-function) representation cannot represent overhangs anyway.
+    static constexpr Set::Scalar SP_SN_COS_MIN = 0.15;
     // Cell-centred per-column h_spall diagnostic, written at (i, j, k_top)
     // on the step the column fires under sp_weibull. Registered only when
     // spallation_model == SpWeibull && spall_enabled.

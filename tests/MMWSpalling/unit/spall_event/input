@@ -14,9 +14,10 @@
 #
 # Calibration: dz = 1/8 = 0.125, alpha = 1.0, t_spall = 1.0, C_h = 0.25,
 # so h_spall = 0.25 = 2*dz. The top two cells of every column detach: their
-# new phi falls below zero, removed flips to 1, D resets to 0, and Temp
-# resets to T_amb. The new surface mask sits at k = 5 (formerly the third
-# cell from the top).
+# new phi falls below zero, removed flips to 1, D resets to 0, and Temp is
+# RETAINED at its pre-removal value (a voided cell is inert/insulating; it is
+# no longer reset to T_amb). The new surface mask sits at k = 5 (formerly the
+# third cell from the top).
 #
 # Damage evolution is disabled — D is held at the IC value — so this test
 # isolates the geometry/removal bookkeeping from the elastic-stress driver.
