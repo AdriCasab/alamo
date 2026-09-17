@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+# D2b: burner-on-feet descent (surface_patch.nozzle_descent = feet) and exhaust
+# recirculation (surface_patch.jet_T_ent_mode = exhaust).
+#
+# Inputs:
+#   input_feet    D2a2 drilling quarter disk (24 x 24 x 40 at 2 mm), feet on the
+#                 annulus [28, 40] mm, 50 mm stand-off, 3 pads at the 0.9
+#                 quantile, exhaust recirculation, 20 s.
+#   input_column  one column 34 mm off-axis: the whole annulus and the jet's
+#                 only bin (1 pad), h = 1500, 60 s.
+#   ../jet_enthalpy/input_quarter   the D2a2 input (defaults check).
+# Runs (1 rank unless noted):
+#   D0, D1  input_quarter, 5 s; D1 adds nozzle_descent = prescribed and
+#           jet_T_ent_mode = fixed explicitly
+#   F       input_feet;  F3 = F on 3 ranks
+#   FM, FA  F with foot_rule = max / mean, 10 s
+#   FC      F with nozzle_feed_max = 1e-4 m/s (0.36 m/h, below the ring rate)
+#   SM, SP  F with the flame switched off on ring column (15, 0) (r = 31 mm),
+#           foot_rule = max / pads (0.9)
+#   H       input_column
+#   A1-A8   parse aborts;  R1, R2  runtime aborts
+# Checks:
+#   (a) D1 == D0: Level_0 Cell_D, removal_events.csv, whole thermo.dat text.
+#   (b) F, F3, FC, FM, FA, SM, SP, H: nozzle_z is non-increasing; F: on every
+#       stepped row nozzle_z - foot_z == foot_standoff (print precision).
+#   (c) F, FM, FA: foot_z and foot_carry_cols on every stepped row equal the
+#       hand pad rule applied to the column tops rebuilt from
+#       removal_events.csv (rows at t use events with time <= t - dt):
+#       azimuth sectors of the observed range, nearest-rank quantile
+#       ceil(q n) - 1, mean over pads; max / mean over the whole annulus.
+#       foot_cols == the live annulus count (162).
+#   (d) FC: the feet lift off (nozzle_z - foot_z > foot_standoff) and, on the
+#       lifted rows, nozzle_z falls at exactly the cap (fit, 0.1 %).
+#   (e) SM: column (15, 0) never fires, nozzle_z stays at its first value,
+#       foot_stall_time == (steps - 1) dt, rc = 0. SP: the burner descends and
+#       foot_stall_time returns to 0 on descending steps.
+#   (f) Each abort returns rc != 0 with its message.
+#   (g) F3 == F: removal_events.csv, Level_0 FABs (box-index order via
+#       Cell_H FabOnDisk), new thermo text (nozzle_z .. jet_P_recirc).
+#   (h) H: burner ROP (fit of nozzle_z, 30-60 s) == the pinned closed form at
+#       the window-mean jet_T_stag and T_fire (mean regime-1 T_top), within 2 %.
+#   (i) F, H: jet_T_rec on each row == the previous row's jet_T_exhaust (text);
+#       jet_P_face + jet_P_exhaust == jet_mdot cp (T_nozzle - T_ent) +
+#       jet_P_recirc and jet_P_decay == 0 (print precision). H steady (30-60 s):
+#       jet_P_face == jet_mdot cp (T_nozzle - jet_T_exhaust) within 1 %.
+#   (j) F: jet_T_exhaust decreases on some rows (no ratchet) and never falls
+#       below jet_T_ent.
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import filecmp
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = TEST_DIR.split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+MPI = lambda n: ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(n)]
+IN_F = os.path.join(TEST_DIR, "input_feet")
+IN_H = os.path.join(TEST_DIR, "input_column")
+UNIT = os.path.dirname(TEST_DIR)
+IN_Q = os.path.join(UNIT, "jet_enthalpy", "input_quarter")
+IN_C = os.path.join(UNIT, "robin_pinned", "input_pinned")
+TOL_PRINT = 1.0e-5
+RHOCP = 2750.0 * 790.0
+SIG, EPS, HC, TA = 5.670374e-8, 0.8, 10.0, 293.15
+# quarter
+DZ, NX, NZ, TOP = 2.0e-3, 24, 40, 0.080
+RI, RO, STANDOFF, NPADS, QUANT = 0.028, 0.040, 0.050, 3, 0.9
+DT_F, MDOT_F, T_NOZ, CP, T_ENT = 2.0e-3, 1.0e-3, 1900.0, 1250.0, 293.15
+CAP = 1.0e-4
+# column
+DT_H, MDOT_H, H_H = 1.0e-3, 1.0e-3, 1500.0
+
+DEAD = ('surface_patch.h_expr="1500.0*0.01875/max(0.01875, r)'
+        '*(1.0-(x>0.030)*(x<0.032)*(y<0.002))"')
+RUNS = {
+    "D0": (IN_Q, ["stop_time=5.0"], 1),
+    "D1": (IN_Q, ["stop_time=5.0", "surface_patch.nozzle_descent=prescribed",
+                  "surface_patch.jet_T_ent_mode=fixed"], 1),
+    "F":  (IN_F, [], 1),
+    "F3": (IN_F, [], 3),
+    "FM": (IN_F, ["surface_patch.foot_rule=max", "stop_time=10.0"], 1),
+    "FA": (IN_F, ["surface_patch.foot_rule=mean", "stop_time=10.0"], 1),
+    "FC": (IN_F, [f"surface_patch.nozzle_feed_max={CAP!r}"], 1),
+    "SM": (IN_F, [DEAD, "surface_patch.foot_rule=max"], 1),
+    "SP": (IN_F, [DEAD], 1),
+    "H":  (IN_H, [], 1),
+    "A1": (IN_F, ["surface_patch.nozzle_z0=0.13", "stop_time=0.002"], 1),
+    "A2": (IN_F, ["surface_patch.nozzle_feed=0.0", "stop_time=0.002"], 1),
+    "A3": (IN_F, ["surface_patch.foot_r_inner=0.05", "stop_time=0.002"], 1),
+    "A4": (IN_F, ["surface_patch.foot_standoff=0.0", "stop_time=0.002"], 1),
+    "A5": (IN_F, ["surface_patch.foot_npads=0", "stop_time=0.002"], 1),
+    "A6": (IN_F, ["surface_patch.foot_pad_quantile=1.5", "stop_time=0.002"], 1),
+    "A7": (IN_C, ["surface_patch.nozzle_descent=feet", "surface_patch.pinned_idle_cycles=2.0",
+                  "stop_time=0.002"], 1),
+    "A8": (IN_F, ["surface_patch.jet_entrained_mass=0", "stop_time=0.002"], 1),
+    "R1": (IN_F, ["surface_patch.foot_r_inner=0.2", "surface_patch.foot_r_outer=0.3",
+                  "stop_time=0.004"], 1),
+    "R2": (IN_F, ["surface_patch.foot_npads=1000", "stop_time=0.004"], 1),
+}
+EXPECT_FAIL = {
+    "A1": "cannot be given with nozzle_descent = feet",
+    "A2": "cannot be given with nozzle_descent = feet",
+    "A3": "need 0 <= foot_r_inner < foot_r_outer",
+    "A4": "foot_standoff must be finite and > 0",
+    "A5": "foot_npads must be >= 1",
+    "A6": "foot_pad_quantile must be in (0, 1]",
+    "A7": "nozzle_descent = feet requires the flame expressions",
+    "A8": "jet_T_ent_mode = exhaust requires surface_patch.jet_entrained_mass = 1",
+    "R1": "has no live column",
+    "R2": "has no live column in the foot annulus",
+}
+NEW_COLS = ["nozzle_z", "foot_z", "foot_cols", "foot_carry_cols", "foot_stall_time",
+            "jet_T_rec", "jet_P_recirc"]
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+def run(name, outroot):
+    inp, extra, nranks = RUNS[name]
+    pf = os.path.join(outroot, name)
+    for p in (pf, pf + "_h_col_events.csv", pf + "_removal_events.csv", pf + "_jet_profile.csv"):
+        if os.path.isdir(p):
+            shutil.rmtree(p)
+        elif os.path.exists(p):
+            os.remove(p)
+    cmd = ([] if nranks == 1 else MPI(nranks)) + [BIN, inp, f"plot_file={pf}"] + extra
+    print("Running:", " ".join(cmd), flush=True)
+    with open(pf + ".log", "w") as log:
+        return subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+
+
+def thermo_text(pf):
+    lines = [l.split() for l in open(os.path.join(pf, "thermo.dat")) if l.strip()]
+    return lines[0], lines[1:]
+
+
+def thermo(pf):
+    names, rows = thermo_text(pf)
+    a = np.array(rows, dtype=float)
+    return {n: a[:, i] for i, n in enumerate(names)}
+
+
+def events(pf):
+    return np.genfromtxt(pf + "_removal_events.csv", delimiter=",", names=True, ndmin=1)
+
+
+def same_files(a, b):
+    return os.path.exists(a) and os.path.exists(b) and filecmp.cmp(a, b, shallow=False)
+
+
+def cell_d_bytes(pf):
+    out = {}
+    for p in sorted(glob.glob(os.path.join(pf, "*cell"))):
+        lev = os.path.join(p, "Level_0")
+        blobs = []
+        for l in open(os.path.join(lev, "Cell_H")):
+            if not l.startswith("FabOnDisk:"):
+                continue
+            fname, off = l.split()[1], int(l.split()[2])
+            with open(os.path.join(lev, fname), "rb") as f:
+                f.seek(off)
+                hdr = f.readline().decode()
+                m = re.search(r"\(\((\d+),(\d+),(\d+)\) \((\d+),(\d+),(\d+)\)", hdr)
+                lo = np.array(m.groups()[:3], int)
+                hi = np.array(m.groups()[3:], int)
+                nc = int(hdr.split()[-1])
+                blobs.append(hdr.encode() + f.read(8 * nc * int(np.prod(hi - lo + 1))))
+        out[os.path.basename(p)] = b"".join(blobs)
+    return out
+
+
+def cols_text(pf, cols):
+    n, rows = thermo_text(pf)
+    idx = [n.index(c) for c in cols if c in n]
+    return [[r[i] for i in idx] for r in rows]
+
+
+def loss(T):
+    return EPS * SIG * (T ** 4 - TA ** 4) + HC * (T - TA)
+
+
+outroot = sys.argv[1] if len(sys.argv) > 1 else os.path.join(TEST_DIR, "output")
+rcs = {}
+if len(sys.argv) <= 1:
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    os.makedirs(outroot, exist_ok=True)
+    for n in RUNS:
+        rcs[n] = run(n, outroot)
+        if rcs[n] != 0 and n not in EXPECT_FAIL:
+            print(f"FAIL: run {n} exited with {rcs[n]}")
+            sys.exit(1)
+P = {n: os.path.join(outroot, n) for n in RUNS}
+
+# (a) defaults
+c0, c1 = cell_d_bytes(P["D0"]), cell_d_bytes(P["D1"])
+check("a defaults bit-identical (Cell_D, removal_events, thermo.dat)",
+      len(c0) > 0 and c0.keys() == c1.keys() and all(c0[k] == c1[k] for k in c0)
+      and same_files(P["D0"] + "_removal_events.csv", P["D1"] + "_removal_events.csv")
+      and same_files(os.path.join(P["D0"], "thermo.dat"), os.path.join(P["D1"], "thermo.dat"))
+      and not any(c in thermo_text(P["D0"])[0] for c in NEW_COLS),
+      f"{len(c0)} plotfiles, {events(P['D0']).size} removal rows, no D2b column")
+
+# (b) kinematics
+lines = []
+mono = True
+for n in ("F", "F3", "FC", "FM", "FA", "SM", "SP", "H"):
+    th = thermo(P[n])
+    st = th["time"] > 0.0
+    d = np.diff(th["nozzle_z"][st])
+    mono = mono and bool(np.all(d <= 0.0))
+    lines.append(f"{n} max rise {max(d.max(), 0.0):.1e}")
+thF = thermo(P["F"])
+stF = thF["time"] > 0.0
+gap = np.abs(thF["nozzle_z"][stF] - thF["foot_z"][stF] - STANDOFF)
+check("b nozzle_z non-increasing; F: nozzle_z - foot_z == foot_standoff",
+      mono and gap.max() <= 2e-6,
+      "; ".join(lines) + f"; F max |gap - 50 mm| {gap.max():.1e} m on {int(stF.sum())} rows, "
+      f"descent {1e3 * (thF['nozzle_z'][stF][0] - thF['nozzle_z'][-1]):.1f} mm")
+
+
+# (c) pad rule rebuilt from the removal events
+def geometry():
+    xc = (np.arange(NX) + 0.5) * DZ
+    X, Y = np.meshgrid(xc, xc, indexing="xy")      # [j, i]
+    r, a = np.hypot(X, Y).ravel(), np.arctan2(Y, X).ravel()
+    ann = np.nonzero((r * r >= RI * RI) & (r * r <= RO * RO))[0]
+    return r, a, ann
+
+
+def pad_rule(z, ann, a, rule, npads, q):
+    zf = z[ann]
+    if rule == "pads" and npads > 1:
+        am, aM = a[ann].min(), a[ann].max()
+        pad = np.minimum(npads - 1, np.floor((a[ann] - am) / (aM - am) * npads).astype(int))
+    else:
+        pad, npads = np.zeros(ann.size, int), 1
+    hts = np.zeros(npads)
+    for p in range(npads):
+        v = np.sort(zf[pad == p])
+        if rule == "max":
+            hts[p] = v[-1]
+        elif rule == "mean":
+            acc = 0.0
+            for zz in v:            # the code's sequential ascending sum
+                acc += float(zz)
+            hts[p] = acc / v.size
+        else:
+            hts[p] = v[max(0, min(int(np.ceil(q * v.size)) - 1, v.size - 1))]
+    return hts.mean(), int(np.sum(zf >= hts[pad]))
+
+
+r_c, a_c, ann = geometry()
+lines = []
+cond_c = True
+for n, rule, dt in (("F", "pads", DT_F), ("FM", "max", DT_F), ("FA", "mean", DT_F)):
+    th, ev = thermo(P[n]), events(P[n])
+    ktop = np.full(NX * NX, NZ - 1)
+    col = ev["col_j"].astype(int) * NX + ev["col_i"].astype(int)
+    kafter = (ev["k_top"] - ev["n_voided"]).astype(int)
+    e = 0
+    err_z, bad_carry = 0.0, 0
+    rows = np.nonzero(th["time"] > 0.0)[0]
+    for i in rows:
+        t_use = th["time"][i] - dt + 1e-9
+        while e < ev.size and ev["time"][e] <= t_use:
+            ktop[col[e]] = kafter[e]
+            e += 1
+        z = (ktop + 1) * DZ
+        zf, carry = pad_rule(z, ann, a_c, rule, NPADS, QUANT)
+        err_z = max(err_z, abs(th["foot_z"][i] - zf) / zf)
+        bad_carry += int(th["foot_carry_cols"][i] != carry)
+    cols_ok = bool(np.all(th["foot_cols"][rows] == ann.size))
+    cond_c = cond_c and err_z <= TOL_PRINT and bad_carry == 0 and cols_ok
+    lines.append(f"{n} ({rule}): {rows.size} rows, max rel foot_z err {err_z:.1e}, "
+                 f"carry mismatches {bad_carry}, foot_cols {int(th['foot_cols'][rows][0])} "
+                 f"(hand {ann.size}), final foot_z {th['foot_z'][-1] * 1e3:.3f} mm")
+check("c pad / max / mean rules == hand reconstruction", cond_c, "; ".join(lines))
+
+# (d) operator cap
+thC = thermo(P["FC"])
+lift = thC["nozzle_z"] - thC["foot_z"] - STANDOFF
+# while lifted, z_n = z_n_prev - cap*dt exactly: fit the lifted stretch
+up = np.nonzero(lift > 1e-6)[0]
+sel = up[up >= up[0]] if up.size else up
+slope = -np.polyfit(thC["time"][sel], thC["nozzle_z"][sel], 1)[0] if sel.size > 10 else 0.0
+check("d nozzle_feed_max caps the descent and the feet lift off",
+      abs(slope / CAP - 1.0) <= 1e-3 and lift.max() > 1e-4,
+      f"descent rate {slope:.6e} m/s vs cap {CAP:g} (rel {slope / CAP - 1.0:+.1e}); "
+      f"max lift-off {lift.max() * 1e3:.2f} mm; F ring rate "
+      f"{(thF['foot_z'][1] - thF['foot_z'][-1]) / (thF['time'][-1] - thF['time'][1]):.2e} m/s")
+
+# (e) stall
+thM, thP = thermo(P["SM"]), thermo(P["SP"])
+evM = events(P["SM"])
+dead_fired = int(np.sum((evM["col_i"] == 15) & (evM["col_j"] == 0) & (evM["regime"] == 1)))
+stM = thM["time"] > 0.0
+nsteps = int(stM.sum())
+dtM = float(np.median(np.diff(thM["time"][stM])))
+stall_want = (nsteps - 1) * dtM
+stP = thP["time"] > 0.0
+desc = np.nonzero(np.diff(thP["nozzle_z"][stP]) < 0.0)[0] + 1
+resetP = bool(desc.size) and bool(np.all(thP["foot_stall_time"][stP][desc] == 0.0))
+check("e stall is logged, not aborted (max); pads descend past a dead column",
+      dead_fired == 0 and np.all(thM["nozzle_z"][stM] == thM["nozzle_z"][stM][0])
+      and abs(thM["foot_stall_time"][-1] - stall_want) <= 1e-6 * max(1.0, stall_want)
+      and rcs.get("SM", 0) == 0
+      and thP["nozzle_z"][-1] < thP["nozzle_z"][1] - 1e-3 and resetP,
+      f"SM: dead column firings {dead_fired}, nozzle_z held at {thM['nozzle_z'][-1]:g} m, "
+      f"foot_stall_time {thM['foot_stall_time'][-1]:.6g} s vs {stall_want:.6g} s ({nsteps} rows); "
+      f"SP: descent {1e3 * (thP['nozzle_z'][1] - thP['nozzle_z'][-1]):.1f} mm, "
+      f"stall time reset on {desc.size} descending rows: {resetP}")
+
+# (f) aborts
+for n, msg in EXPECT_FAIL.items():
+    log = open(P[n] + ".log", errors="replace").read()
+    rc = rcs.get(n)
+    check(f"f {n} aborts", (rc is None or rc != 0) and msg in log,
+          f"rc = {rc if rc is not None else '(not rerun)'}; '{msg}' {'found' if msg in log else 'MISSING'}")
+
+# (g) rank identity
+cF, cF3 = cell_d_bytes(P["F"]), cell_d_bytes(P["F3"])
+check("g F3 (3 ranks) == F",
+      same_files(P["F"] + "_removal_events.csv", P["F3"] + "_removal_events.csv")
+      and len(cF) > 0 and cF.keys() == cF3.keys() and all(cF[k] == cF3[k] for k in cF)
+      and cols_text(P["F"], NEW_COLS) == cols_text(P["F3"], NEW_COLS),
+      f"removal_events ({events(P['F']).size} rows), {len(cF)} plotfiles, "
+      f"{len(cols_text(P['F'], NEW_COLS))} rows of the new thermo columns")
+
+# (h) single ring column vs the closed form
+thH, evH = thermo(P["H"]), events(P["H"])
+w = (thH["time"] > 30.0)
+rop = -np.polyfit(thH["time"][w], thH["nozzle_z"][w], 1)[0] * 3600.0
+f = evH[(evH["regime"] == 1) & (evH["time"] > 30.0)]
+T_f = float(np.mean(f["T_top"]))
+T_st = float(np.mean(thH["jet_T_stag"][w]))
+cf = (H_H * (T_st - T_f) - loss(T_f)) / (RHOCP * (T_f - TA)) * 3600.0
+fit_col = np.polyfit(evH["time"][evH["time"] > 30.0], np.cumsum(evH["h_applied"])[evH["time"] > 30.0], 1)[0] * 3600.0
+check("h single ring column: burner ROP == pinned closed form (2 %)",
+      abs(rop / cf - 1.0) <= 0.02 and abs(fit_col / rop - 1.0) <= 0.02,
+      f"burner {rop:.4f} m/h, column h_applied fit {fit_col:.4f} m/h, closed form {cf:.4f} m/h "
+      f"(T_stag {T_st:.1f} K, T_fire {T_f:.1f} K, s_c {thH['jet_s_c'][-1] * 1e3:.1f} mm), "
+      f"ratio {rop / cf:.4f}")
+
+# (i) exhaust identities
+lines = []
+cond_i = True
+for n, mdot in (("F", MDOT_F), ("H", MDOT_H)):
+    names, rows = thermo_text(P[n])
+    iR, iE = names.index("jet_T_rec"), names.index("jet_T_exhaust")
+    lag = all(rows[k][iR] == rows[k - 1][iE] for k in range(2, len(rows)))
+    th = thermo(P[n])
+    st = th["time"] > 0.0
+    budget = mdot * CP * (T_NOZ - T_ENT) + th["jet_P_recirc"][st]
+    r1 = np.max(np.abs(th["jet_P_face"][st] + th["jet_P_exhaust"][st] - budget) / budget)
+    r2 = np.max(np.abs(th["jet_P_decay"][st])) / (mdot * CP * T_NOZ)
+    cond_i = cond_i and lag and r1 <= TOL_PRINT and r2 <= TOL_PRINT
+    lines.append(f"{n}: T_rec == previous T_exhaust on {len(rows) - 2} rows: {lag}; budget {r1:.0e}; "
+                 f"decay {r2:.0e}")
+wH = thH["time"] > 30.0
+ss = np.abs(thH["jet_P_face"][wH] / (MDOT_H * CP * (T_NOZ - thH["jet_T_exhaust"][wH])) - 1.0)
+cond_i = cond_i and ss.max() <= 0.01
+lines.append(f"H steady P_face / (mdot cp (T_noz - T_exh)) - 1: max {ss.max():.1e}")
+check("i exhaust recirculation identities", cond_i, "; ".join(lines))
+
+# (j) no ratchet
+tx = thF["jet_T_exhaust"][stF]
+ndec = int(np.sum(np.diff(tx) < 0.0))
+check("j jet_T_exhaust can decrease (floor is T_ent, not T_rec)",
+      ndec > 0 and tx.min() >= T_ENT,
+      f"{ndec} of {tx.size - 1} row-to-row decreases; range {tx.min():.1f}-{tx.max():.1f} K")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

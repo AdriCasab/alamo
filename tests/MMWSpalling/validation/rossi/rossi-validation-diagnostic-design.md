@@ -1,5 +1,18 @@
 # Rossi 2018 damage-profile validation — diagnostic design
 
+> **Scope note (2026-09-15, A1).** The Rossi case runs
+> `surface_patch.mode = prescribed_T`, a face temperature ramp of ~5 K/s.
+> In that setting the `h_col` depth scan computes a well-defined isotherm
+> depth (where K_I(z; a_f) still reaches K_Ic(T(z)) under the imposed
+> profile). The Rossi test therefore stays valid as a **prescribed-T
+> mechanics regression**.
+>
+> `h_col` is **not** a flake size in self-heated (beam or Robin) runs. S1
+> showed that there the criterion fires at a cell-average temperature and
+> `h_col ≈ dz/2 − a_f` is a removal increment. Flake and PSD claims are
+> retired for the drilling regime (see
+> `tests/MMWSpalling/studies/s1_surface_resolution/README.md`).
+
 Step 16 shipped the `h_spall` mechanics under `sp_weibull` and deferred the
 Rossi 2018 quantitative validation. This note captures the design
 decisions for the follow-up packet that wires the Rossi-comparable

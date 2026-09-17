@@ -1,0 +1,158 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# P1 unit test: melt-aware spallation (load-bearing skeleton).
+# ============================================================================
+#
+# Boundary-free, thermostat-free A/B isolation of spall.melt_aware. The state
+# is IMPOSED by a non-uniform initial condition rather than reached by heating
+# -- because with spall removal active a *heated* surface spalls at the ~854 K
+# onset long before it can reach T_m = 1473 K (the spall thermostat), and the
+# prescribed-T patch does not follow the receding surface. So the only way to
+# put a molten cell next to a criterion that wants to fire is to start there.
+#
+# Initial T(z), 50 mm cubic-cell block (dz = 1.5625 mm), top face at z = 0.05:
+#   top 2 cells  (z > 0.0469 m) : 2500 K  -> MOLTEN cap   (Lambda_L = 1)
+#   next 3 cells (0.0422..0.0469): 1100 K  -> HOT SOLID    (spall-able: Sp >> 1)
+#   below        (z < 0.0422 m) :  293 K  -> cold rock     (not spall-able)
+#
+# The test python runs this input TWICE via command-line override:
+#   spall.melt_aware = 1  (ON)  -- the molten cap's skeleton f(Lambda_L) -> 0
+#                                  kills the crack-driving stress; the depth
+#                                  scan breaks at the cap, so the hot solid
+#                                  beneath is protected (the melt blanket).
+#                                  removed ~ 0; ZERO spall at molten columns.
+#   spall.melt_aware = 0  (OFF) -- the criterion spalls the liquid cap and
+#                                  drills the 3-cell hot-solid layer; removal
+#                                  then stops at the cold rock. removed ~ 3072.
+# Expected: removed_OFF >> removed_ON ~ 0.
+#
+# No heating (beam off, surface_patch off): the imposed state simply relaxes by
+# conduction over the short run, so the cap stays molten in the ON case.
+# Mechanics: local_thermoelastic (sigma_xx = -E*beta*dT/(1-nu) per cell, the
+# Step 19 path) -> no MLMG solve. Lateral roller box for 1-D confinement.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/sp_melt_skeleton/output/melt
+
+# Short run: a few steps is enough; keep it short so conduction does not cool
+# the imposed molten cap below T_m in the ON case. dt small for stability with
+# the strong initial gradient (alpha_th*dt/dx^2 ~ 0.005 << 0.5).
+timestep  = 0.01
+stop_time = 0.30
+
+amr.plot_int        = 5         # every 0.05 s -> 6 plotfiles
+amr.max_level       = 0
+amr.n_cell          = 32 32 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.050 0.050 0.050
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Central Aare granite (Kant 2017 Table 1) + granite fusion (P1).
+microstructure.number_of_grains = 250
+microstructure.seed             = 11
+microstructure.nphases          = 1
+
+microstructure.phase0.name              = central_aare
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 2.50
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 35.0e9
+microstructure.phase0.mu                = 13.8888888889e9
+microstructure.phase0.rho               = 2630.0
+microstructure.phase0.Cp                = 800.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+# Granite fusion: builds the melt plateau in the per-phase enthalpy table so
+# Lambda_L rises as H crosses it. T_m = 1473 K, smoothing 50 K, L_m = 335 kJ/kg.
+microstructure.phase0.T_m               = 1473.0
+microstructure.phase0.fus_width         = 50.0
+microstructure.phase0.L_m               = 335000.0
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+# LEFM Sp branch + material removal.
+spallation.model          = sp_weibull
+spallation.sp.a0          = 20.0e-6
+spallation.sp.n_segments  = 128
+spallation.sp.kic.law     = nasseri_table
+spallation.sp.kic.scale   = 1.05
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 15.0
+weibull.seed    = 12345
+
+spall.enabled       = 1
+spall.stress_source = local_thermoelastic
+
+# P1 default-off; the test python overrides spall.melt_aware on the command
+# line (1 = ON, 0 = OFF). lambda_crit = 0.4 (rigidity percolation).
+spall.melt_aware = 0
+melt.lambda_crit = 0.4
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.025
+beam.y0     = 0.025
+beam.z0     = 0.050
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 293.15
+
+# No surface heating -- the molten cap is imposed by the IC, not the patch.
+surface_patch.enabled = 0
+
+hc.heat.alpha = 1.1882129e-6
+hc.heat.refinement_threshold = 1.0
+# Imposed T(z): molten cap (top 2 cells) over a hot-solid layer (3 cells) over
+# cold rock. (cond) parses to 1.0/0.0; products are logical AND. No commas.
+hc.ic.type           = expression
+hc.ic.expression.region0 = "293.15+2207.0*(z>0.0469)+807.0*(z>0.0422)*(z<0.0469)"
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Static thermoelastic mechanics, Kant-style lateral roller box (1-D
+# confinement). el.type = disable -> local_thermoelastic, no MLMG solve.
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 35.0e9
+el.model1.nu = 0.26
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

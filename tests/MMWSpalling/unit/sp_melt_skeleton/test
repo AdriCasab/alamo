@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+# P1 unit test: melt-aware spallation (load-bearing skeleton).
+#
+# A/B isolation of spall.melt_aware on an IMPOSED state: a 2-cell molten cap
+# (Lambda_L = 1) over a 3-cell hot-solid layer (1100 K, spall-able) over cold
+# rock. The same input is run twice via command-line override:
+#
+#   ON  (spall.melt_aware = 1): the molten cap's skeleton f(Lambda_L) -> 0
+#       kills the crack-driving stress; the depth scan breaks at the cap and
+#       the hot solid beneath is protected. removed == 0 (the melt blanket).
+#   OFF (spall.melt_aware = 0): the criterion spalls the liquid cap and drills
+#       the hot-solid layer, stopping at the cold rock. removed ~ 5*1024.
+#
+# The diagnostic Sp_field is melt-blind (computed in UpdateSpAfterMechanics,
+# untouched by P1) and reads ~34 at the molten cap in BOTH runs -- i.e. the
+# criterion strongly "wants" to fire. The split between removed_ON ~ 0 and
+# removed_OFF >> 0 at identical Sp is the signature that the skeleton acts on
+# the removal driving stress (Removal.H) only.
+#
+# Why an imposed state and not heating: with spall removal active a heated
+# surface spalls at the ~854 K onset before it can reach T_m = 1473 K (the
+# spall thermostat), and the prescribed-T patch does not follow the receding
+# surface -- so a molten surface cannot be produced by drilling in this model
+# (until alpha(T), TODO P3). See README/ACTIVE_STEP notes.
+
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.dirname(os.path.abspath(__file__)).split(
+    os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT = os.path.join(TEST_DIR, "input")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+NCOL = 32 * 32  # columns (32x32 lateral)
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo(melt_aware, outroot):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(outroot):
+        shutil.rmtree(outroot)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+           BIN, INPUT,
+           f"spall.melt_aware={melt_aware}",
+           f"plot_file={os.path.join(outroot, 'melt')}"]
+    print("Running:", " ".join(cmd))
+    res = subprocess.run(cmd, cwd=ROOT)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run (melt_aware={melt_aware}) exited "
+              f"with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+def final_state(outdir):
+    files = plotfiles(outdir)
+    if not files:
+        print("FAIL: no cell plotfiles in", outdir)
+        sys.exit(1)
+    ds = yt.load(files[-1])
+    cg = ds.covering_grid(level=0, left_edge=ds.domain_left_edge,
+                          dims=ds.domain_dimensions)
+    rem = np.asarray(cg["removed"])
+    LL = np.asarray(cg["Lambda_L"])
+    Sp = np.asarray(cg["Sp_field"])
+    cap_LL = LL[:, :, -1]   # top-z cell of every column
+    cap_Sp = Sp[:, :, -1]
+    return {
+        "removed": float(rem.sum()),
+        "cap_LL_max": float(cap_LL.max()),
+        "molten_cols": int((cap_LL > 0.4).sum()),
+        "cap_Sp_max": float(cap_Sp.max()),
+        "time": float(ds.current_time),
+    }
+
+
+# Allow `test <dir_on> <dir_off>` to score pre-run output; default runs both.
+if len(sys.argv) > 2:
+    out_on, out_off = sys.argv[1], sys.argv[2]
+else:
+    out_on = os.path.join(TEST_DIR, "output_on")
+    out_off = os.path.join(TEST_DIR, "output_off")
+    run_alamo(1, out_on)
+    run_alamo(0, out_off)
+
+on = final_state(os.path.join(out_on, "melt") if os.path.isdir(
+    os.path.join(out_on, "melt")) else out_on)
+off = final_state(os.path.join(out_off, "melt") if os.path.isdir(
+    os.path.join(out_off, "melt")) else out_off)
+
+print()
+print(f"ON  (melt_aware=1): removed={on['removed']:.0f}  "
+      f"cap_LL_max={on['cap_LL_max']:.2f}  molten_cols={on['molten_cols']}  "
+      f"cap_Sp_max={on['cap_Sp_max']:.2f}  t={on['time']:.2f}")
+print(f"OFF (melt_aware=0): removed={off['removed']:.0f}  "
+      f"cap_LL_max={off['cap_LL_max']:.2f}  molten_cols={off['molten_cols']}  "
+      f"cap_Sp_max={off['cap_Sp_max']:.2f}  t={off['time']:.2f}")
+print()
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+# 1. The regime is exercised: a molten cap exists on every column in BOTH runs
+#    (P1 must not alter the thermal state -> identical melt field).
+check("molten cap present (ON)", on["molten_cols"] == NCOL,
+      f"molten columns {on['molten_cols']}/{NCOL}, cap_LL {on['cap_LL_max']:.2f}")
+check("molten cap present (OFF)", off["molten_cols"] == NCOL,
+      f"molten columns {off['molten_cols']}/{NCOL}, cap_LL {off['cap_LL_max']:.2f}")
+
+# 2. The criterion strongly WANTS to fire at the molten cap: the diagnostic
+#    Sp_field (melt-blind -- computed in UpdateSpAfterMechanics, untouched by
+#    P1) reads >> 1 at the intact ON cap, yet ON removes nothing (check 3). So
+#    the suppression is real, not an absence of driving force. (OFF's top-cell
+#    Sp reads 0 here precisely because OFF spalled that cap away -- check 4.)
+check("criterion super-threshold at molten cap (Sp>>1)",
+      on["cap_Sp_max"] > 5.0,
+      f"cap Sp_field at intact ON molten cap = {on['cap_Sp_max']:.2f} (>> 1)")
+
+# 3. THE P1 CLAIM: melt_aware ON refuses to spall the liquid -> the melt blanket
+#    protects the whole column. removed must be exactly 0.
+check("ON spalls no liquid (melt blanket)", on["removed"] == 0.0,
+      f"removed_ON = {on['removed']:.0f} (expect 0)")
+
+# 4. Control: melt_aware OFF DOES spall the liquid cap + hot solid (>= 3 cells
+#    per column drilled past the 2-cell cap). Confirms the regime is removable
+#    absent the skeleton, so check 3 is a real suppression, not a dead path.
+check("OFF spalls the liquid + hot solid", off["removed"] >= 3 * NCOL,
+      f"removed_OFF = {off['removed']:.0f} (expect >= {3*NCOL})")
+
+# 5. The split is decisive.
+check("OFF removes vastly more than ON",
+      off["removed"] - on["removed"] >= 3 * NCOL,
+      f"removed_OFF - removed_ON = {off['removed'] - on['removed']:.0f}")
+
+print()
+print("=" * 60)
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

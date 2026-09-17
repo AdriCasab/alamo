@@ -356,6 +356,30 @@
         };
         std::vector<HColEvent> local_h_col_events;
 
+        // A1: every-removal event log (spall.removal_events_csv). Per-column
+        // buffers, decomposition-independent: owner-only values reduced by
+        // ReduceRealSum (non-owners contribute 0), n_voided by ReduceIntSum
+        // after the void flip; the I/O rank writes one row per column with
+        // regime_col != 0, ordered by (col_j, col_i). Level 0 only.
+        // C1: the same per-column gather also feeds the pinned-surface closure
+        // (surface_patch.robin_form = pinned), even with the CSV off; the CSV
+        // itself stays gated on spall.removal_events_csv.
+        const bool pin_on = sp_weibull_spall && lev == 0 && surface_patch.enabled &&
+                            surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;
+        const bool rev_on = sp_weibull_spall && lev == 0 &&
+                            (sp_emit_removal_events_csv || pin_on);
+        amrex::Vector<Set::Scalar> rev_T_top, rev_a_f, rev_Sp, rev_h_scan, rev_rhoCp;
+        amrex::Vector<int>         rev_nvoid;
+        if (rev_on)
+        {
+            rev_rhoCp.assign(ncols, 0.0);
+            rev_T_top.assign(ncols, 0.0);
+            rev_a_f.assign(ncols, 0.0);
+            rev_Sp.assign(ncols, 0.0);
+            rev_h_scan.assign(ncols, 0.0);
+            rev_nvoid.assign(ncols, 0);
+        }
+
         // PASS 1b (depth-scan z-gather): collect each column's temperature
         // profile for a window of up to max_steps_cap cells below its surface,
         // collapsed across MPI z-decomposition via ReduceRealSum (each (i,j,k)
@@ -402,6 +426,48 @@
         }
         const Set::Scalar* T_col_p = T_col_prof.empty() ? nullptr : T_col_prof.data();
 
+        // P1 (melt-aware): gather each column's liquid-fraction profile the
+        // same z-decomposition-safe way as the temperature profile above, so
+        // the sp_weibull driving stress can be scaled by the load-bearing
+        // skeleton f(Lambda_L) at the crack-tip depth on the box-independent
+        // full column. Only when melt_aware && sp_weibull_spall; off => empty
+        // buffer and every skeleton factor below is exactly 1.0 (byte-
+        // identical). Lambda_L_mf has 0 ghosts; the gather reads validbox
+        // cells only (each (i,j,k) owned by exactly one box), ReduceRealSum
+        // collapses the z-decomposition.
+        amrex::Vector<Set::Scalar> LL_col_prof;
+        if (melt_aware && sp_weibull_spall)
+        {
+            LL_col_prof.assign(static_cast<std::size_t>(ncols) * colw, 0.0);
+            for (amrex::MFIter mfi(*Lambda_L_mf[lev], false); mfi.isValid(); ++mfi)
+            {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::Array4<const Set::Scalar> const& LLa =
+                    (*Lambda_L_mf[lev]).array(mfi);
+                const int klo = bx.smallEnd(2), khi = bx.bigEnd(2);
+                const int ilo = bx.smallEnd(0), ihi = bx.bigEnd(0);
+                const int jlo = bx.smallEnd(1), jhi = bx.bigEnd(1);
+                for (int j = jlo; j <= jhi; ++j)
+                for (int i = ilo; i <= ihi; ++i)
+                {
+                    const int idx = col_index(i, j);
+                    const int ktop = k_top_global[idx];
+                    if (ktop == std::numeric_limits<int>::min()) continue;
+                    for (int d = 0; d <= Dmax_col; ++d)
+                    {
+                        const int k = ktop - d;
+                        if (k < klo || k > khi) continue;
+                        LL_col_prof[static_cast<std::size_t>(idx) * colw + d] =
+                            LLa(i, j, k);
+                    }
+                }
+            }
+            amrex::ParallelDescriptor::ReduceRealSum(
+                LL_col_prof.data(), static_cast<int>(LL_col_prof.size()));
+        }
+        const Set::Scalar* LL_col_p =
+            LL_col_prof.empty() ? nullptr : LL_col_prof.data();
+
         for (amrex::MFIter mfi(*phi_mf[lev], false); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.validbox();
@@ -426,8 +492,13 @@
             {
                 hsf       = (*h_spall_field_mf[lev]).array(mfi);
                 cec       = (*crack_event_count_mf[lev]).array(mfi);
-                clu       = (*Sp_cluster_id_mf[lev]).array(mfi);
-                fa_a      = (*flaw_a_mf[lev]).array(mfi);
+                // A1: Sp_cluster_id / flaw_a exist only with weibull.enabled
+                // (Parse register block); the scalar-flaw path reads neither.
+                if (weibull_enabled)
+                {
+                    clu   = (*Sp_cluster_id_mf[lev]).array(mfi);
+                    fa_a  = (*flaw_a_mf[lev]).array(mfi);
+                }
                 T_a       = (*temp_mf[lev]).array(mfi);
                 Sp_top    = (*Sp_field_mf[lev]).array(mfi);
                 is_gb_top = (*is_grain_boundary_mf[lev]).array(mfi);
@@ -444,6 +515,18 @@
                 int k_top = k_top_global[idx];
                 if (k_top == std::numeric_limits<int>::min()) continue;
                 if (k_top < klo || k_top > khi) continue; // not owned here
+
+                // A1: owner-only per-column values for the removal-event log
+                // (non-owners leave 0; ReduceRealSum after PASS 2).
+                if (rev_on)
+                {
+                    rev_T_top[idx] = T_a(i, j, k_top);
+                    rev_a_f[idx]   = weibull_enabled ? fa_a(i, j, k_top) : sp_a0;
+                    rev_Sp[idx]    = Sp_top(i, j, k_top);
+                    int p_pin = static_cast<int>(std::round(ph(i, j, k_top)));
+                    if (p_pin < 0 || p_pin >= static_cast<int>(phases.size())) p_pin = 0;
+                    rev_rhoCp[idx] = phases[p_pin].rho * phases[p_pin].Cp;
+                }
 
                 int p_top = static_cast<int>(std::round(ph(i, j, k_top)));
                 if (p_top < 0 || p_top >= n_phases) p_top = 0;
@@ -464,10 +547,16 @@
                         // z_crack at which K_I(z_crack; a_f) >= K_Ic(T(z))
                         // for the hypothetical edge crack of fixed length
                         // a_f starting at z_crack below the surface.
-                        Set::Scalar cluster_id = clu(i, j, k_top);
-                        if (cluster_id > 0.0)
+                        // A1: without weibull.enabled there is no cluster
+                        // labeller; its per_face gate is Sp_field >= 1 at the
+                        // column's surface cell, and the flaw is the scalar
+                        // spallation.sp.a0 (as in UpdateSpAfterMechanics).
+                        const bool detach_gate = weibull_enabled
+                            ? (clu(i, j, k_top) > 0.0)
+                            : (Sp_top(i, j, k_top) >= 1.0);
+                        if (detach_gate)
                         {
-                            Set::Scalar a_f = fa_a(i, j, k_top);
+                            Set::Scalar a_f = weibull_enabled ? fa_a(i, j, k_top) : sp_a0;
                             // Step 16c: capture cec(i, j, k_top) BEFORE the
                             // scan modifies it, so the post-scan check can
                             // detect a 0 -> 1 transition (i.e. this column's
@@ -526,6 +615,26 @@
                                     return T_a(i, j, kk);
                                 };
 
+                                // P1: liquid fraction Lambda_L by depth-below-
+                                // surface index from the gathered column (box-
+                                // independent). nullptr unless melt_aware, in
+                                // which case LL_at_didx is never called and the
+                                // skeleton factor stays 1.0.
+                                const Set::Scalar* LLcol_i =
+                                    (LL_col_p && melt_aware)
+                                      ? (LL_col_p +
+                                         static_cast<std::size_t>(idx) * colw)
+                                      : nullptr;
+                                auto LL_at_didx = [&] (int d) -> Set::Scalar {
+                                    if (LLcol_i)
+                                    {
+                                        if (d < 0)        d = 0;
+                                        if (d > Dmax_col) d = Dmax_col;
+                                        return LLcol_i[d];
+                                    }
+                                    return 0.0;
+                                };
+
                                 // Local helper: K_Ic(T) under the
                                 // configured law, in Pa·m^0.5.
                                 auto kic_pa_at_cell =
@@ -579,6 +688,22 @@
                                             z_crack + d;
                                         const Set::Scalar z_v =
                                             z_abs * sn_icth;
+                                        // P1: load-bearing skeleton factor at
+                                        // this depth's cell. f == 1.0 (off)
+                                        // leaves every return byte-identical;
+                                        // in melt f -> 0 kills the elastic
+                                        // driving stress (equivalently
+                                        // E_eff = f*E), so a liquid cell carries
+                                        // no crack-driving stress and the scan
+                                        // breaks there instead of spalling it.
+                                        Set::Scalar f_skel = 1.0;
+                                        if (melt_aware)
+                                        {
+                                            int d_ll = static_cast<int>(
+                                                std::floor(z_v / dz));
+                                            f_skel = MeltSkeleton(
+                                                LL_at_didx(d_ll));
+                                        }
                                         if (!sp_weibull_use_T_face)
                                         {
                                             // Step 19: stress_mf path.
@@ -592,8 +717,8 @@
                                                 Numeric::Interpolate
                                                 ::NodeToCellAverage(
                                                     sig_node, i, j, k_d, 0);
-                                            return -sigma(0, 0)
-                                                   + sp_conf_offset;
+                                            return f_skel * (-sigma(0, 0)
+                                                   + sp_conf_offset);
                                         }
                                         const Set::Scalar half_dz =
                                             0.5 * dz;
@@ -646,10 +771,11 @@
                                         // double-negation returns +E*beta*dT/
                                         // (1-nu). + sp_conf_offset adds the
                                         // confining-pressure contribution.
-                                        return phase_E_loc * phase_beta_loc
+                                        return f_skel * (phase_E_loc
+                                               * phase_beta_loc
                                                * (T_z - phase_T_ref_loc)
                                                / (1.0 - phase_nu_loc)
-                                               + sp_conf_offset;
+                                               + sp_conf_offset);
                                     };
                                     return Numeric::SpCriterion::K_I(
                                         sigma_at_depth, a_f,
@@ -663,6 +789,14 @@
                                     // Cell k_top - s sits at normal depth
                                     // s*dz*cos(theta) below the inclined
                                     // surface (s*dz vertical).
+                                    // E1: z_crack = 0 is the TOP FACE of
+                                    // k_top (cell-quantised; T lerps to the
+                                    // k_top centre at dz/2), while h_col is
+                                    // applied to the level set phi, which
+                                    // sits within dz of that face. The beam
+                                    // path now also starts at that face. The
+                                    // <= dz offset between phi and the crack
+                                    // origin is DELIBERATE: do not harmonise.
                                     const Set::Scalar z_crack =
                                         Set::Scalar(s) * dz * sn_cth;
                                     const int k_tip = k_top - s;
@@ -750,6 +884,7 @@
                                         h_col * sn_icth;
                                     spall_fires_col[idx] = 1;
                                     h_s_cand_col[idx]    = h_vert;
+                                    if (rev_on) rev_h_scan[idx] = h_col;
                                     rop_s_cand_col[idx]  =
                                         (dt_local > 0.0) ? h_vert / dt_local : 0.0;
                                     // Running max at the INITIAL top-z
@@ -894,6 +1029,14 @@
             amrex::ParallelDescriptor::ReduceRealSum(h_v_cand_col.data(),   ncols);
             amrex::ParallelDescriptor::ReduceRealSum(rop_s_cand_col.data(), ncols);
             amrex::ParallelDescriptor::ReduceRealSum(rop_v_cand_col.data(), ncols);
+        }
+        if (rev_on && ncols > 0)
+        {
+            amrex::ParallelDescriptor::ReduceRealSum(rev_T_top.data(),  ncols);
+            amrex::ParallelDescriptor::ReduceRealSum(rev_a_f.data(),    ncols);
+            amrex::ParallelDescriptor::ReduceRealSum(rev_Sp.data(),     ncols);
+            amrex::ParallelDescriptor::ReduceRealSum(rev_h_scan.data(), ncols);
+            amrex::ParallelDescriptor::ReduceRealSum(rev_rhoCp.data(),  ncols);
         }
 
         // Flake coherence-length cap (rock-mechanics cavity-wall coherence):
@@ -1089,6 +1232,25 @@
             rop_chosen_col[idx] = (dt_local > 0.0) ? h_c / dt_local : 0.0;
         }
 
+        // C1: record each spall firing's top-cell T as the column's pin
+        // (identical on every rank: all inputs are reduced per-column buffers).
+        if (pin_on)
+        {
+            if (pin_T.size() != static_cast<std::size_t>(ncols))
+            {
+                pin_T.assign(ncols, 0.0);
+                pin_t.assign(ncols, 0.0);
+                pin_rhoCp.assign(ncols, 0.0);
+            }
+            for (int idx = 0; idx < ncols; ++idx)
+            {
+                if (regime_col[idx] != 1) continue;
+                pin_T[idx]     = rev_T_top[idx];
+                pin_t[idx]     = time;
+                pin_rhoCp[idx] = rev_rhoCp[idx];
+            }
+        }
+
         // PASS 3: every rank applies the per-column phi shift to its
         // local cells and writes per-cell detach diagnostics. Both
         // tasks read from the reduced per-column buffers, so the
@@ -1157,6 +1319,7 @@
                     if (rem(i, j, k) > 0.5) continue;
                     if (phi_old >= 0.0 && phi_new < 0.0)
                     {
+                        if (rev_on) ++rev_nvoid[idx];
                         rem(i, j, k)  = 1.0;
                         reg(i, j, k)  = static_cast<Set::Scalar>(reg_choice);
                         ropU(i, j, k) = rop_c;
@@ -1202,6 +1365,47 @@
                     }
                 }
             }
+        }
+
+        // A1: every-removal event log, written by the I/O rank after the void
+        // flip. Rows ordered by column index (col_j, then col_i); the file
+        // is identical for any rank count / box layout. Reals are printed
+        // with 17 significant digits (exact round trip).
+        //   T_top, a_f, Sp_top : at k_top (k_top_global, `removed` mask +
+        //                        phi >= 0) before removal
+        //   h_scan    : depth-scan h_col (0 if the scan did not fire)
+        //   h_applied : h_chosen_col, the phi shift actually applied
+        //   n_voided  : cells flipped to removed in the column this step
+        if (rev_on && sp_emit_removal_events_csv)
+        {
+            if (ncols > 0)
+                amrex::ParallelDescriptor::ReduceIntSum(rev_nvoid.data(), ncols);
+            if (amrex::ParallelDescriptor::IOProcessor())
+            {
+                const std::string csv_path = plot_file + "_removal_events.csv";
+                const bool need_header = !sp_removal_events_csv_header_written;
+                std::ofstream ofs(csv_path, (need_header ? std::ios::trunc : std::ios::app)
+                                            | std::ios::out);
+                if (ofs.is_open())
+                {
+                    if (need_header)
+                        ofs << "time,col_i,col_j,regime,k_top,T_top,a_f,Sp_top,"
+                               "h_scan,h_applied,n_voided\n";
+                    ofs.setf(std::ios::scientific);
+                    ofs.precision(16);
+                    for (int idx = 0; idx < ncols; ++idx)
+                    {
+                        if (regime_col[idx] == 0) continue;
+                        ofs << time << "," << (idx % nx_dom + dom_ilo) << ","
+                            << (idx / nx_dom + dom_jlo) << "," << regime_col[idx] << ","
+                            << k_top_global[idx] << "," << rev_T_top[idx] << ","
+                            << rev_a_f[idx] << "," << rev_Sp[idx] << ","
+                            << rev_h_scan[idx] << "," << h_chosen_col[idx] << ","
+                            << rev_nvoid[idx] << "\n";
+                    }
+                }
+            }
+            sp_removal_events_csv_header_written = true;
         }
 
         // Rebuild diagnostics that depend on the new mask/D field.

@@ -1,0 +1,490 @@
+#!/usr/bin/env python3
+# D2a2: wall-jet enthalpy closure, surface_patch.jet_closure = enthalpy.
+# T_gas(r) is marched outward from the stagnation temperature T_stag (free-jet
+# centreline decay phi = min(1, jet_core_length*jet_D/s_c) by default); each
+# radial bin (width jet_dr) takes its face absorption
+# sum max(0, h*(T_gas - T_s))*dx*dy out of the jet.
+#
+# Inputs:
+#   input_strip    320 x 1 x 4 strip, dx = 0.25 mm, r = 0-80 mm, one step from
+#                  a uniform 500 K IC, cell form, no losses; h = 5000*min(1,
+#                  0.02/r) carries the annulus weight 2*pi*r/dy. s_c = 50 mm,
+#                  phi = 0.75, T_stag = 1198.2875 K; continuous march: core
+#                  exp(-pi r^2 h_ref/(m cp)), then exp(-(r - r_core)/L),
+#                  L = 19.89 mm.
+#   input_quarter  24 x 24 x 40 drilling quarter disk at 2 mm, pinned, 30 s.
+#   ../robin_jet/input_jet   the D2a expression column.
+# Runs (1 rank unless noted):
+#   N0, N1  robin_jet stand-off run (its B case, 10 s); N1 adds jet_closure = none
+#   B4 B2 B1 B05   strip at jet_dr = 4, 2, 1, 0.5 mm (decay, nozzle mass)
+#   B1e, B1n       B1 with jet_entrained_mass = 1 / jet_stagnation = nozzle
+#   B3             B1 on 3 ranks
+#   G, Gbug  strip with the axis inside it (x0 = 20 mm), jet_stagnation =
+#            nozzle, h = 100/max(0.02, r) and the AMReX-trap order
+#            h = 100/max(r, 0.02)
+#   E, Eon   strip with losses on; E has the nozzle 4 mm BELOW the top
+#            (s < 0 everywhere, collision radius 0), Eon 50 mm above
+#   Q, Qh    quarter disk (decay) at jet_dr = 2 mm (default) and 1 mm;
+#   Q3       Q on 3 ranks;  QN, QE  Q with nozzle / entrained mass, 10 s
+#   QF       quarter disk with a descending nozzle (30 mm above the top,
+#            1 mm/s, collision radius 10 mm, 45 s): phi = 1 at the start, the
+#            outer top ends above the nozzle plane
+#   P1-P3    parse aborts: T_flame_expr under enthalpy; enthalpy on the C1
+#            constants input (../robin_pinned/input_pinned, no h_expr); a bad
+#            jet_stagnation value
+# Checks:
+#   (a) N1 == N0: Level_0 Cell_D, removal_events.csv, whole thermo.dat text;
+#       neither has a jet_* column; Q's last eight columns are the jet_* set.
+#   (b) Strip: T_gas per column from the step's top-cell rise (cell form:
+#       dT = dt*h*(T_gas - 500)/(dz*rho*Cp)) equals the discrete march
+#       (excess *= 1 - 2 pi h_ref min(r_mid, r_core) dr/(m cp) per bin) to 1e-9,
+#       for B4-B05, B1e (m = mdot/phi) and B1n (T_stag = T_nozzle); against
+#       the continuous solution at each bin's inner edge (r <= r_core + 3 L)
+#       the error falls with jet_dr at first order (each halving: ratio
+#       1.8-2.2) and is <= 5 % at 0.5 mm; jet_T_exhaust matches the recursion
+#       to print precision; the jet_profile.csv row per bin carries the
+#       recursion's inlet T_gas (1e-12) and its P_share sums to jet_P_face.
+#   (c) Every row of every enthalpy run (6-digit print, 1e-5; ALAMO aborts at
+#       1e-9): jet_P_face + jet_P_exhaust == jet_P_cap, jet_P_face <= jet_P_cap,
+#       jet_P_face + jet_P_exhaust + jet_P_decay == jet_mdot*cp*(T_nozzle -
+#       T_ent); jet_P_decay == 0 for nozzle / entrained-mass runs.
+#   (c2) jet_T_stag == T_ent + (T_nozzle - T_ent)*min(1, 5 D/jet_s_c) on every
+#       row (T_nozzle for jet_stagnation = nozzle); QF has rows on both sides of
+#       s_c = 5 D.
+#   (d) Q vs Qh: ROP (cumulative h_applied fit, 15-30 s) of the centre column
+#       and of the reference column (10, 10) at r = 29.7 mm; |change| <= 2 %.
+#   (e) E: jet_P_face = patch_P_robin = 0, jet_T_exhaust = jet_T_stag =
+#       jet_T_nozzle (no column marches, s_c = 0), every top cell cools by
+#       exactly the cell-form loss; Eon: jet_P_face > 0.
+#       QF: completes past the top crossing (30 s), columns with s <= 0 exist
+#       at the end, patch_min_standoff > 0.
+#   (f) B3 == B1 and Q3 == Q: removal_events.csv, Level_0 FABs (box-index
+#       order via Cell_H FabOnDisk), jet_* thermo text; B3 == B1 jet_profile.csv.
+#   (g) AMReX parser trap guard: G's jet_P_face equals a numpy replica of the
+#       march with h = 100/max(0.02, r) to 1e-5. Gbug is classified against
+#       the correct replica and the rewritten one (h = 100*max(r, -0.02)):
+#       either is reported (the latter = AMReX 25.12 bug still present);
+#       matching neither FAILs.
+#   (h) P1-P3 abort with their messages.
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import filecmp
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = TEST_DIR.split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+MPI = lambda n: ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(n)]
+IN_S = os.path.join(TEST_DIR, "input_strip")
+IN_Q = os.path.join(TEST_DIR, "input_quarter")
+IN_J = os.path.join(os.path.dirname(TEST_DIR), "robin_jet", "input_jet")
+IN_C = os.path.join(os.path.dirname(TEST_DIR), "robin_pinned", "input_pinned")
+TOL_PRINT = 1.0e-5
+RHOCP = 2750.0 * 790.0
+SIG, EPS, HC, TA = 5.670374e-8, 0.8, 10.0, 293.15
+# strip
+DT_S, DX_S, DZ_S, TOP_S, NX_S = 1.0e-3, 0.25e-3, 2.0e-3, 0.008, 320
+T_S, T_NOZ_S, MDOT_S, CP_S, T_ENT = 500.0, 1500.0, 0.01, 1250.0, 293.15
+R_CORE_S, H_REF_S, DY_S = 0.02, 5000.0, 0.1
+JET_D, L_CORE, S_C_S = 7.5e-3, 5.0, 0.05
+PHI_S = L_CORE * JET_D / S_C_S
+T_STAG_S = T_ENT + (T_NOZ_S - T_ENT) * PHI_S
+DRS = {"B4": 0.004, "B2": 0.002, "B1": 0.001, "B05": 0.0005}
+# name -> (jet_dr, T_stag, march mass)
+STRIPS = {**{n: (d, T_STAG_S, MDOT_S) for n, d in DRS.items()},
+          "B1e": (0.001, T_STAG_S, MDOT_S / PHI_S), "B1n": (0.001, T_NOZ_S, MDOT_S)}
+# quarter
+T_QF_CROSS, T_QF_END = 30.0, 45.0
+MDOT_Q, T_NOZ_Q = 0.001, 1900.0
+NOZZLE_RUNS = {"B1n", "G", "Gbug", "QN"}
+ENTRAINED_RUNS = {"B1e", "QE"}
+
+LOSSES = ["losses.epsilon=0.8", "losses.epsilon_high=0.8", "losses.h_conv=10.0"]
+G_COMMON = ["surface_patch.x0=0.02", "surface_patch.jet_stagnation=nozzle"]
+PROFILE = "surface_patch.jet_profile_interval=1.0"
+RUNS = {
+    "N0":  (IN_J, ["surface_patch.pinned_idle_cycles=2.0", "stop_time=10.0",
+                   'surface_patch.T_flame_expr="293.15+700*min(1,0.05/s)"',
+                   "surface_patch.nozzle_z0=0.27"], 1),
+    "N1":  (IN_J, ["surface_patch.pinned_idle_cycles=2.0", "stop_time=10.0",
+                   'surface_patch.T_flame_expr="293.15+700*min(1,0.05/s)"',
+                   "surface_patch.nozzle_z0=0.27", "surface_patch.jet_closure=none"], 1),
+    **{n: (IN_S, [f"surface_patch.jet_dr={d!r}", PROFILE], 1) for n, d in DRS.items()},
+    "B1e": (IN_S, ["surface_patch.jet_entrained_mass=1", PROFILE], 1),
+    "B1n": (IN_S, ["surface_patch.jet_stagnation=nozzle", PROFILE], 1),
+    "B3":  (IN_S, ["surface_patch.jet_dr=0.001", PROFILE], 3),
+    "G":   (IN_S, G_COMMON + ['surface_patch.h_expr="100.0/max(0.02, r)"'], 1),
+    "Gbug": (IN_S, G_COMMON + ['surface_patch.h_expr="100.0/max(r, 0.02)"'], 1),
+    "E":   (IN_S, LOSSES + ["surface_patch.nozzle_z0=0.004",
+                            "surface_patch.nozzle_collision_radius=0.0"], 1),
+    "Eon": (IN_S, LOSSES, 1),
+    "Q":   (IN_Q, [], 1),
+    "Qh":  (IN_Q, ["surface_patch.jet_dr=0.001"], 1),
+    "Q3":  (IN_Q, [], 3),
+    "QN":  (IN_Q, ["surface_patch.jet_stagnation=nozzle", "stop_time=10.0"], 1),
+    "QE":  (IN_Q, ["surface_patch.jet_entrained_mass=1", "stop_time=10.0"], 1),
+    "QF":  (IN_Q, ["surface_patch.nozzle_z0=0.110", "surface_patch.nozzle_feed=0.001",
+                   "surface_patch.nozzle_collision_radius=0.01", f"stop_time={T_QF_END!r}"], 1),
+    "P1":  (IN_S, ['surface_patch.T_flame_expr="1000.0"', "stop_time=0.001"], 1),
+    "P2":  (IN_C, ["surface_patch.pinned_idle_cycles=2.0", "surface_patch.jet_closure=enthalpy",
+                   "surface_patch.jet_mdot=0.01", "surface_patch.jet_cp=1250.0",
+                   "surface_patch.jet_T_nozzle=1500.0", "surface_patch.jet_D=0.0075",
+                   "stop_time=0.001"], 1),
+    "P3":  (IN_S, ["surface_patch.jet_stagnation=centre", "stop_time=0.001"], 1),
+}
+EXPECT_FAIL = {"P1": "T_flame_expr is not read under jet_closure = enthalpy",
+               "P2": "jet_closure = enthalpy requires surface_patch.h_expr",
+               "P3": "jet_stagnation must be 'decay' or 'nozzle'"}
+JET_COLS = ["jet_P_face", "jet_P_cap", "jet_T_stag", "jet_s_c", "jet_P_decay",
+            "jet_T_exhaust", "jet_P_exhaust", "jet_r_reach"]
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+def run(name, outroot):
+    inp, extra, nranks = RUNS[name]
+    pf = os.path.join(outroot, name)
+    for p in (pf, pf + "_h_col_events.csv", pf + "_removal_events.csv", pf + "_jet_profile.csv"):
+        if os.path.isdir(p):
+            shutil.rmtree(p)
+        elif os.path.exists(p):
+            os.remove(p)
+    cmd = ([] if nranks == 1 else MPI(nranks)) + [BIN, inp, f"plot_file={pf}"] + extra
+    print("Running:", " ".join(cmd), flush=True)
+    with open(pf + ".log", "w") as log:
+        return subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+
+
+def thermo_text(pf):
+    lines = [l.split() for l in open(os.path.join(pf, "thermo.dat")) if l.strip()]
+    return lines[0], lines[1:]
+
+
+def thermo(pf):
+    names, rows = thermo_text(pf)
+    a = np.array(rows, dtype=float)
+    return {n: a[:, i] for i, n in enumerate(names)}
+
+
+def events(pf):
+    return np.genfromtxt(pf + "_removal_events.csv", delimiter=",", names=True, ndmin=1)
+
+
+def fabs(p):
+    """[(box lo, box hi, ncomp, bytes)] of a Level_0 plotfile in box-index order."""
+    lev = os.path.join(p, "Level_0")
+    out = []
+    for l in open(os.path.join(lev, "Cell_H")):
+        if not l.startswith("FabOnDisk:"):
+            continue
+        fname, off = l.split()[1], int(l.split()[2])
+        with open(os.path.join(lev, fname), "rb") as f:
+            f.seek(off)
+            hdr = f.readline().decode()
+            m = re.search(r"\(\((\d+),(\d+),(\d+)\) \((\d+),(\d+),(\d+)\)", hdr)
+            lo = np.array(m.groups()[:3], int)
+            hi = np.array(m.groups()[3:], int)
+            nc = int(hdr.split()[-1])
+            out.append((lo, hi, nc, hdr.encode() + f.read(8 * nc * int(np.prod(hi - lo + 1)))))
+    return out
+
+
+def cell_d_bytes(pf):
+    return {os.path.basename(p): b"".join(x[3] for x in fabs(p))
+            for p in sorted(glob.glob(os.path.join(pf, "*cell")))}
+
+
+def field(p, var):
+    """{(i, j, k): value} of one plotfile variable at Level_0."""
+    names = open(os.path.join(p, "Header")).read().split("\n")
+    ic = names[2:2 + int(names[1])].index(var)
+    vals = {}
+    for lo, hi, nc, blob in fabs(p):
+        sh = hi - lo + 1
+        data = np.frombuffer(blob[blob.index(b"\n") + 1:], "<f8").reshape(nc, sh[2], sh[1], sh[0])
+        for k in range(sh[2]):
+            for j in range(sh[1]):
+                for i in range(sh[0]):
+                    vals[(lo[0] + i, lo[1] + j, lo[2] + k)] = data[ic, k, j, i]
+    return vals
+
+
+def plot_time(p):
+    hdr = open(os.path.join(p, "Header")).read().split("\n")
+    return float(hdr[int(hdr[1]) + 3])
+
+
+def same_files(a, b):
+    return os.path.exists(a) and os.path.exists(b) and filecmp.cmp(a, b, shallow=False)
+
+
+def jet_text(pf):
+    n, rows = thermo_text(pf)
+    idx = [n.index(c) for c in JET_COLS]
+    return [[r[i] for i in idx] for r in rows]
+
+
+def fit_rop(ev, t0, t1):
+    cum = np.cumsum(ev["h_applied"])
+    sel = (ev["time"] > t0) & (ev["time"] <= t1)
+    if sel.sum() < 3:
+        return 0.0
+    return float(np.polyfit(ev["time"][sel], cum[sel], 1)[0]) * 3600.0
+
+
+def strip_tgas(pf, h_of_r=None):
+    """Per-column T_gas and r from the step-1 top-cell rise (cell form, no losses)."""
+    T = field(os.path.join(pf, "00001cell"), "Temp")
+    i = np.arange(NX_S)
+    dT = np.array([T[(ii, 0, 3)] - T_S for ii in i])
+    below = max(abs(T[(ii, 0, k)] - T_S) for ii in i for k in range(3))
+    return i, dT, below
+
+
+def replica(r, h, dr, T_noz, T_s, mcp, dA):
+    """The explicit march (cell form, uniform T_s, no losses) -> jet_P_face."""
+    b = np.floor(r / dr).astype(int)
+    T, P = T_noz, 0.0
+    for bb in np.unique(b):
+        q = h[b == bb] * (T - T_s)
+        Pb = float(np.sum(q[q > 0.0])) * dA
+        avail = mcp * (T - 293.15)
+        if Pb >= avail:
+            P, T = P + avail, 293.15
+        else:
+            P, T = P + Pb, T - Pb / mcp
+    return P, T
+
+
+outroot = sys.argv[1] if len(sys.argv) > 1 else os.path.join(TEST_DIR, "output")
+rcs = {}
+if len(sys.argv) <= 1:
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    os.makedirs(outroot, exist_ok=True)
+    for n in RUNS:
+        rcs[n] = run(n, outroot)
+        if rcs[n] != 0 and n not in EXPECT_FAIL:
+            print(f"FAIL: run {n} exited with {rcs[n]}")
+            sys.exit(1)
+P = {n: os.path.join(outroot, n) for n in RUNS}
+
+# (a) jet_closure = none is D2a
+c0, c1 = cell_d_bytes(P["N0"]), cell_d_bytes(P["N1"])
+check("a Cell_D N1 == N0", len(c0) > 0 and c0.keys() == c1.keys() and all(c0[k] == c1[k] for k in c0),
+      f"{len(c0)} plotfiles")
+check("a removal_events N1 == N0",
+      same_files(P["N0"] + "_removal_events.csv", P["N1"] + "_removal_events.csv"),
+      f"{events(P['N0']).size} rows")
+nN0, _ = thermo_text(P["N0"])
+check("a thermo.dat N1 == N0 and no jet_* column",
+      same_files(os.path.join(P["N0"], "thermo.dat"), os.path.join(P["N1"], "thermo.dat"))
+      and not any(c.startswith("jet_") for c in nN0), f"{len(nN0)} columns")
+nQ, _ = thermo_text(P["Q"])
+check("a enthalpy run: jet_* are the last eight columns", nQ[-8:] == JET_COLS,
+      f"Q last eight = {nQ[-8:]}")
+
+# (b) analytic decay on the strip
+def strip_march(dr, T_stag, m, nb):
+    """Discrete explicit march on the aligned strip: per-bin inlet excess."""
+    ex = np.empty(nb)
+    e = T_stag - T_S
+    for k in range(nb):
+        ex[k] = e
+        rho = min((k + 0.5) * dr, R_CORE_S)
+        e = e * (1.0 - 2.0 * np.pi * H_REF_S * rho * dr / (m * CP_S))
+    return ex, e
+
+
+def strip_exact(r, T_stag, m):
+    a = np.pi * H_REF_S / (m * CP_S)
+    L = m * CP_S / (2.0 * np.pi * H_REF_S * R_CORE_S)
+    core = np.exp(-a * np.minimum(r, R_CORE_S) ** 2)
+    return (T_stag - T_S) * core * np.exp(-np.maximum(r - R_CORE_S, 0.0) / L), L
+
+
+lines, errs = [], []
+cond_b = True
+for n, (dr, T_stag, m) in STRIPS.items():
+    i, dT, below = strip_tgas(P[n])
+    r = (i + 0.5) * DX_S
+    h_col = 2.0 * np.pi * H_REF_S * np.minimum(r, R_CORE_S) / DY_S
+    Tg = T_S + dT * DZ_S * RHOCP / (DT_S * h_col)
+    nb = int(round(0.08 / dr))
+    ex, ex_end = strip_march(dr, T_stag, m, nb)
+    k = np.floor(r / dr + 1e-9).astype(int)
+    e_disc = float(np.max(np.abs(Tg - (T_S + ex[k])) / ex[k]))
+    r_lo = k * dr
+    exact, L = strip_exact(r_lo, T_stag, m)
+    sel = r_lo <= R_CORE_S + 3.0 * L
+    e_ana = float(np.max(np.abs((Tg - T_S) / exact - 1.0)[sel]))
+    th = thermo(P[n])
+    T_exh = T_S + ex_end
+    e_exh = abs(th["jet_T_exhaust"][1] - T_exh) / T_exh
+    e_stag = abs(th["jet_T_stag"][1] - T_stag) / T_stag
+    prof = np.genfromtxt(P[n] + "_jet_profile.csv", delimiter=",", names=True, ndmin=1)
+    mb = np.round(prof["r_lo"] / dr).astype(int)
+    e_prof = float(np.max(np.abs(prof["T_gas"] - (T_S + ex[mb])) / prof["T_gas"]))
+    e_sum = abs(np.sum(prof["P_share"]) / th["jet_P_face"][1] - 1.0)
+    cond_b = (cond_b and e_disc <= 1e-9 and below == 0.0 and e_exh <= TOL_PRINT
+              and e_stag <= TOL_PRINT and np.all(prof["time"] == 0.0) and prof.size == nb
+              and e_prof <= 1e-12 and e_sum <= TOL_PRINT)
+    if n in DRS:
+        errs.append(e_ana)
+    lines.append(f"{n} dr {dr * 1e3:g} mm, T_stag {th['jet_T_stag'][1]:g}, L {L * 1e3:.2f} mm: "
+                 f"vs recursion {e_disc:.1e}, vs continuous {e_ana * 100:.2f} %, "
+                 f"T_exhaust {th['jet_T_exhaust'][1]:g} (recursion {T_exh:.3f}), "
+                 f"profile {prof.size} bins {e_prof:.0e}, sum P_share {e_sum:.0e}")
+ratios = [errs[k] / errs[k + 1] for k in range(len(errs) - 1)]
+check("b strip T_gas == discrete march (1e-9), T_stag / T_exhaust (print), profile", cond_b,
+      "; ".join(lines))
+check("b error vs the continuous march falls at first order",
+      all(1.8 <= x <= 2.2 for x in ratios) and errs[-1] <= 0.05,
+      f"max excess error over r_core + 3 L (decay, nozzle mass): "
+      f"{', '.join(f'{e * 100:.2f} %' for e in errs)}; halving ratios {[round(x, 3) for x in ratios]}")
+
+# (c) conservation on every row, (c2) stagnation decay
+lines, lines2 = [], []
+cond_c = cond_c2 = True
+both_sides = False
+ENTH = list(STRIPS) + ["B3", "G", "Gbug", "E", "Eon", "Q", "Qh", "Q3", "QN", "QE", "QF"]
+for n in ENTH:
+    th = thermo(P[n])
+    quarter = n.startswith("Q")
+    mdot, T_noz = (MDOT_Q, T_NOZ_Q) if quarter else (MDOT_S, T_NOZ_S)
+    P_noz = mdot * CP_S * (T_noz - T_ENT)
+    st = th["time"] > 0.0
+    cap = th["jet_P_cap"][st]
+    r1 = np.abs(th["jet_P_face"] + th["jet_P_exhaust"] - th["jet_P_cap"])[st] / P_noz
+    r2 = np.abs(th["jet_P_face"] + th["jet_P_exhaust"] + th["jet_P_decay"] - P_noz)[st] / P_noz
+    le = bool(np.all(th["jet_P_face"][st] <= cap * (1.0 + TOL_PRINT)))
+    zero_decay = n in NOZZLE_RUNS or n in ENTRAINED_RUNS or n == "E"
+    rd = float(np.max(np.abs(th["jet_P_decay"][st]))) / P_noz
+    cond_c = (cond_c and r1.max() <= TOL_PRINT and r2.max() <= TOL_PRINT and le
+              and (rd <= TOL_PRINT if zero_decay else np.all(th["jet_P_decay"][st] >= 0.0)))
+    lines.append(f"{n} {int(st.sum())} rows {max(r1.max(), r2.max()):.0e}"
+                 + (f" decay {rd:.0e}" if zero_decay else ""))
+    sc = th["jet_s_c"][st]
+    if n in NOZZLE_RUNS or n == "E":
+        want = np.full_like(sc, T_noz)
+    else:
+        want = T_ENT + (T_noz - T_ENT) * np.minimum(1.0, L_CORE * JET_D / sc)
+    rs = np.abs(th["jet_T_stag"][st] / want - 1.0)
+    cond_c2 = cond_c2 and rs.max() <= TOL_PRINT
+    if n == "QF":
+        inside, outside = int(np.sum(sc <= L_CORE * JET_D)), int(np.sum(sc > L_CORE * JET_D))
+        both_sides = inside > 0 and outside > 0
+        lines2.append(f"QF rows s_c <= 5D: {inside}, > 5D: {outside}")
+    lines2.append(f"{n} {rs.max():.0e}")
+check("c jet_P_face + jet_P_exhaust == jet_P_cap; + jet_P_decay == nozzle budget", cond_c,
+      "; ".join(lines))
+check("c2 jet_T_stag == T_ent + (T_nozzle - T_ent) min(1, 5D/s_c)", cond_c2 and both_sides,
+      "; ".join(lines2))
+
+# (d) bin-width independence
+evQ, evQh = events(P["Q"]), events(P["Qh"])
+lines = []
+cond_d = True
+for (ci, cj), lab in (((0, 0), "centre r = 1.4 mm"), ((10, 10), "reference r = 29.7 mm")):
+    a = fit_rop(evQ[(evQ["col_i"] == ci) & (evQ["col_j"] == cj)], 15.0, 30.0)
+    b = fit_rop(evQh[(evQh["col_i"] == ci) & (evQh["col_j"] == cj)], 15.0, 30.0)
+    ch = b / a - 1.0 if a > 0 else np.inf
+    cond_d = cond_d and a > 0 and abs(ch) <= 0.02
+    lines.append(f"{lab}: {a:.4f} -> {b:.4f} m/h ({ch * 100:+.3f} %)")
+thQ, thQh = thermo(P["Q"]), thermo(P["Qh"])
+lines.append(f"jet_P_face at 30 s {thQ['jet_P_face'][-1]:g} -> {thQh['jet_P_face'][-1]:g} W")
+check("d jet_dr 2 -> 1 mm moves ROP <= 2 %", cond_d, "; ".join(lines))
+
+# (e) no jet flux above the nozzle plane
+thE, thEon = thermo(P["E"]), thermo(P["Eon"])
+TE = field(os.path.join(P["E"], "00001cell"), "Temp")
+q_loss = EPS * SIG * (T_S ** 4 - TA ** 4) + HC * (T_S - TA)
+dT_loss = -DT_S * q_loss / (DZ_S * RHOCP)
+dev = max(abs((TE[(ii, 0, 3)] - T_S) / dT_loss - 1.0) for ii in range(NX_S))
+check("e s <= 0: no flame flux, losses kept, not in the march",
+      thE["jet_P_face"][1] == 0.0 and thE["patch_P_robin"][1] == 0.0
+      and thE["jet_T_exhaust"][1] == T_NOZ_S and thE["jet_T_stag"][1] == T_NOZ_S
+      and thE["jet_s_c"][1] == 0.0 and thE["ledger_P_loss"][1] > 0.0 and dev <= 1e-9
+      and thEon["jet_P_face"][1] > 0.0,
+      f"E (nozzle 4 mm below the top): jet_P_face {thE['jet_P_face'][1]:g}, "
+      f"patch_P_robin {thE['patch_P_robin'][1]:g}, T_exhaust {thE['jet_T_exhaust'][1]:g}, "
+      f"top-cell rise / loss closed form ({dT_loss:.4e} K) - 1 <= {dev:.1e}, "
+      f"ledger_P_loss {thE['ledger_P_loss'][1]:g} W; Eon jet_P_face {thEon['jet_P_face'][1]:g} W")
+thF = thermo(P["QF"])
+pF = sorted(glob.glob(os.path.join(P["QF"], "*cell")))[-1]
+rem = field(pF, "removed")
+nzq, dzq = 40, 0.002
+t_last = plot_time(pF)
+z_n = 0.110 - 0.001 * t_last
+n_above = 0
+for ci in range(24):
+    for cj in range(24):
+        ks = [k for k in range(nzq) if rem[(ci, cj, k)] < 0.5]
+        if ks and (max(ks) + 1) * dzq - z_n >= 0.0:
+            n_above += 1
+check("e QF: descending nozzle passes the outer top",
+      thF["time"][-1] >= T_QF_END - 2e-3 - 1e-9 and n_above > 0
+      and np.all(thF["patch_min_standoff"][thF["time"] > 0] > 0.0),
+      f"reached t = {thF['time'][-1]:g} s (crossing at {T_QF_CROSS:g} s); at t = {t_last:g} s "
+      f"{n_above}/576 columns have s <= 0; min patch_min_standoff "
+      f"{thF['patch_min_standoff'][thF['time'] > 0].min() * 1e3:.1f} mm; "
+      f"jet_P_face {thF['jet_P_face'][-1]:g} W, patch_P_robin {thF['patch_P_robin'][-1]:g} W")
+
+# (f) rank identity
+for a, b in (("B1", "B3"), ("Q", "Q3")):
+    ca, cb = cell_d_bytes(P[a]), cell_d_bytes(P[b])
+    check(f"f {b} == {a}",
+          same_files(P[a] + "_removal_events.csv", P[b] + "_removal_events.csv")
+          and len(ca) > 0 and ca.keys() == cb.keys() and all(ca[k] == cb[k] for k in ca)
+          and jet_text(P[a]) == jet_text(P[b])
+          and (a != "B1" or same_files(P[a] + "_jet_profile.csv", P[b] + "_jet_profile.csv")),
+          f"removal_events ({events(P[a]).size} rows), {len(ca)} plotfiles (FABs in box-index "
+          f"order), jet_* thermo text ({len(jet_text(P[a]))} rows)")
+
+# (g) parser trap guard
+xg = (np.arange(NX_S) + 0.5) * DX_S
+rg = np.abs(xg - 0.02)
+dA = DX_S * DY_S
+good = replica(rg, 100.0 / np.maximum(0.02, rg), 0.001, T_NOZ_S, T_S, MDOT_S * CP_S, dA)
+bad = replica(rg, 100.0 * np.maximum(rg, -0.02), 0.001, T_NOZ_S, T_S, MDOT_S * CP_S, dA)
+thG, thGb = thermo(P["G"]), thermo(P["Gbug"])
+eg = abs(thG["jet_P_face"][1] / good[0] - 1.0)
+check("g h = a/max(c, r) evaluates correctly in ALAMO", eg <= TOL_PRINT,
+      f"jet_P_face {thG['jet_P_face'][1]:g} W vs replica {good[0]:.3f} W (rel {eg:.1e})")
+eb_good = abs(thGb["jet_P_face"][1] / good[0] - 1.0)
+eb_bad = abs(thGb["jet_P_face"][1] / bad[0] - 1.0)
+state = ("AMReX rewrite trap still present (a/max(r, c) -> a*max(r, -c)); keep numbers first"
+         if eb_bad <= TOL_PRINT else
+         "AMReX evaluates a/max(r, c) correctly now (trap fixed upstream)"
+         if eb_good <= TOL_PRINT else "matches neither replica")
+check("g trap-order form classified", eb_bad <= TOL_PRINT or eb_good <= TOL_PRINT,
+      f"Gbug jet_P_face {thGb['jet_P_face'][1]:g} W; correct {good[0]:.3f}, rewritten "
+      f"{bad[0]:.3f}: {state}")
+
+# (h) parse aborts
+for n, msg in EXPECT_FAIL.items():
+    log = open(P[n] + ".log", errors="replace").read()
+    rc = rcs.get(n)
+    check(f"h {n} aborts", (rc is None or rc != 0) and msg in log,
+          f"rc = {rc if rc is not None else '(not rerun)'}; '{msg}' {'found' if msg in log else 'MISSING'}")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

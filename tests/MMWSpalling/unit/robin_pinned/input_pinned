@@ -1,0 +1,144 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# C1: pinned-surface Robin closure (surface_patch.robin_form = pinned).
+#
+# The S1 column at dz = 2 mm (1 x 1 x 125 cells, 250 mm, Neumann-0) with a
+# laterally uniform flame h = 1e4 W/m^2K, T_gas = 1000 K on the mask top
+# (surface.follow_mask), scalar flaw a0 = 20 um (weibull.enabled = 0), no beam.
+# After a column's first spall firing the surface is pinned at that firing's
+# top-cell T: q = h(T_gas - T_pin) - losses(T_pin), with the face form as the
+# min-rule fallback. surface_patch.pinned_idle_cycles is set by the `test`
+# on the command line (it is a pinned-only key; face runs must not carry it).
+# thermo.dat every step carries pinned_cols_pinned / pinned_cols_face /
+# pinned_q_mean and the energy ledger.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/robin_pinned/output/P
+
+timestep  = 0.001
+stop_time = 20.0
+
+amr.plot_int        = 1000      # every 1 s
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 1 1 125
+amr.blocking_factor = 1
+amr.max_grid_size   = 32        # 4 z-boxes (decomposition exercised on 4 ranks)
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.002 0.002 0.250
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase, with fusion (as the S1 base) ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+microstructure.phase0.T_m               = 1473.0
+microstructure.phase0.fus_width         = 50.0
+microstructure.phase0.L_m               = 335000.0
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, scalar flaw ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 0
+
+spall.enabled            = 1
+spall.sample             = top_cell
+spall.surface_normal     = 0
+spall.h_spall_max        = 0.015
+spall.melt_aware         = 1
+melt.lambda_crit         = 0.4
+spall.h_col_events_csv   = 1
+spall.removal_events_csv = 1
+vapor.enabled            = 0
+confining.p              = 1.0e6
+
+surface.follow_mask   = 1
+energy_ledger.enabled = 1
+
+# --- F1 beam: uniform disk (radius >> column), q = 2.06 MW/m^2 ---
+beam.P0         = 0.0
+beam.profile    = uniform
+beam.radius     = 0.1
+beam.x0         = 0.001
+beam.y0         = 0.001
+beam.z0         = 0.250
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+surface_patch.enabled    = 1
+surface_patch.mode       = convective_flame
+surface_patch.robin_form = pinned
+surface_patch.face       = zhi
+surface_patch.x0         = 0.001
+surface_patch.y0         = 0.001
+surface_patch.radius     = 0.1
+surface_patch.h_conv     = 1.0e4
+surface_patch.T_flame    = 1000.0
+
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

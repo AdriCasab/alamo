@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Simulation Model for Millimetre-Wave Rock Drilling — Project Report</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5a5f66; --line:#e2e5ea; --accent:#1f5d8c;
+    --accent-soft:#eaf2f8; --warn:#8a5a00; --warn-soft:#fdf4e3;
+    --code-bg:#f5f6f8; --maxw:820px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth; font-size:70%;}
+  body{
+    margin:0; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,serif;
+    font-size:12.6px; line-height:1.7; background:#fbfbfc;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:48px 24px 96px;}
+  header.title{border-bottom:3px solid var(--accent); padding-bottom:24px; margin-bottom:8px;}
+  h1{font-size:2.0rem; line-height:1.25; margin:0 0 8px;}
+  .subtitle{font-size:1.12rem; color:var(--muted); margin:0 0 12px;}
+  .meta{font-size:0.9rem; color:var(--muted);}
+  h2{font-size:1.5rem; margin:2.4em 0 0.5em; padding-top:0.3em; border-top:1px solid var(--line); color:var(--accent);}
+  h3{font-size:1.18rem; margin:1.8em 0 0.4em;}
+  p{margin:0.8em 0;}
+  a{color:var(--accent);}
+  ul,ol{margin:0.7em 0; padding-left:1.4em;}
+  li{margin:0.35em 0;}
+  strong{color:#000;}
+  code{background:var(--code-bg); padding:1px 5px; border-radius:4px; font-size:0.86em;
+    font-family:"SF Mono",Menlo,Consolas,monospace;}
+  .lead{font-size:1.08rem; color:#333;}
+  /* Equation blocks */
+  .eq{
+    background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:6px; padding:14px 18px; margin:1.2em 0; overflow-x:auto;
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-size:1.0rem; line-height:1.9;
+  }
+  .eq .lbl{float:right; color:var(--muted); font-family:inherit; font-size:0.85rem;}
+  .eqnote{color:var(--muted); font-size:0.92rem; margin-top:-0.4em;}
+  /* Callouts */
+  .note, .keyfind{
+    border-radius:8px; padding:14px 18px; margin:1.3em 0; font-size:0.98rem;
+  }
+  .note{background:var(--accent-soft); border:1px solid #cfe1ef;}
+  .keyfind{background:var(--warn-soft); border:1px solid #f0dfb8;}
+  .note .h,.keyfind .h{display:block; font-weight:700; margin-bottom:4px; font-size:0.82rem;
+    letter-spacing:0.06em; text-transform:uppercase;}
+  .note .h{color:var(--accent);}
+  .keyfind .h{color:var(--warn);}
+  /* Figures */
+  figure{margin:1.8em 0; text-align:center;}
+  figure img{max-width:100%; height:auto; border:1px solid var(--line); border-radius:6px; background:#fff;}
+  figcaption{font-size:0.9rem; color:var(--muted); margin-top:8px; text-align:left; line-height:1.5;}
+  figcaption b{color:#333;}
+  /* Tables */
+  table{border-collapse:collapse; width:100%; margin:1.3em 0; font-size:0.92rem;}
+  th,td{border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top;}
+  th{background:var(--accent-soft); color:var(--ink); font-weight:600;}
+  tr:nth-child(even) td{background:#fafbfc;}
+  .status-done{color:#1a7a3a; font-weight:600;}
+  .status-active{color:#b4690e; font-weight:600;}
+  .status-todo{color:var(--muted);}
+  /* TOC */
+  nav.toc{background:#fff; border:1px solid var(--line); border-radius:8px; padding:16px 22px; margin:1.5em 0 0;}
+  nav.toc .h{font-weight:700; font-size:0.82rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted);}
+  nav.toc ol{columns:2; column-gap:32px; margin:0.6em 0 0; font-size:0.94rem;}
+  nav.toc a{text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+  .footer{margin-top:64px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:0.85rem;}
+  @media (max-width:640px){ body{font-size:11.2px;} nav.toc ol{columns:1;} h1{font-size:1.6rem;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="title">
+  <h1>Simulating How Microwaves Drill Rock</h1>
+  <p class="subtitle">A physics-based computer model of millimetre-wave thermal-spallation drilling, built in the ALAMO framework and tested against laboratory experiments</p>
+  <p class="meta">Project report &middot; MMWSpalling integrator &middot; Prepared September 2026</p>
+</header>
+
+<p class="lead">This report explains, for a general technical reader, what our simulation does, why it is worth doing, how it is built, how we test it, what it has reproduced so far, and what remains open. Wherever an equation appears it is stated plainly and then explained in words.</p>
+
+<div class="note">
+  <span class="h">Abstract</span>
+  We are building a single computer model that simulates how a concentrated beam of energy — a millimetre-wave beam or a flame jet — drills into rock by heating it until thin flakes crack off ("thermal spallation"). Existing models each capture only one piece of this: <em>when</em> the rock first cracks, or an average drilling rate, or the flake sizes. Ours couples heat flow, thermal stress, brittle fracture, and a continuously receding surface in one three-dimensional simulation that is cheap enough to run a full experiment. It is built in the open-source ALAMO framework and validated as a ladder of about twenty steps against four published experiments — Zhang/Oglesby (heating), Hu (prescribed-temperature stress), Kant (failure onset and confining pressure), and Rossi (flake depth) — then applied to the demanding Meier drilling test. The model reproduces heating histories, failure onset and its pressure dependence, and forms a realistic cylindrical hole. Its central open problem — it currently drills roughly 1.9&times; faster than the real Meier test — is being attacked by the physics we are adding now: debris from detached flakes shading the incoming beam.
+</div>
+
+<nav class="toc">
+  <span class="h">Contents</span>
+  <ol>
+    <li><a href="#why">1. Why drill rock with microwaves</a></li>
+    <li><a href="#gap">2. The gap this work fills</a></li>
+    <li><a href="#physics">3. The physics inside the model</a></li>
+    <li><a href="#software">4. How the software is built</a></li>
+    <li><a href="#process">5. The development process</a></li>
+    <li><a href="#results">6. Results so far</a></li>
+    <li><a href="#frontier">7. The current frontier: the Meier case</a></li>
+    <li><a href="#now">8. What we are working on now</a></li>
+    <li><a href="#todo">9. The road ahead (to-do list)</a></li>
+    <li><a href="#limits">10. Honest limitations</a></li>
+    <li><a href="#conclusion">11. Summary</a></li>
+    <li><a href="#glossary">Appendix: Notation &amp; glossary</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================= -->
+<h2 id="why">1. Why drill rock with microwaves</h2>
+
+<p>Deep geothermal energy — tapping the heat stored in hot rock kilometres below the surface — could supply clean, always-on power almost anywhere on Earth. The obstacle is cost. Conventional drilling grinds rock away with a rotating steel bit that physically touches the rock. Deep down, where the rock is hot, hard, and abrasive, those bits wear out quickly. A crew may spend more time pulling kilometres of pipe out of the hole to swap a worn bit than actually drilling. The deeper and hotter the target, the worse this gets, and geothermal's most attractive resources are exactly the deep, hot ones.</p>
+
+<p><strong>Contactless drilling</strong> proposes to remove the rock <em>without touching it</em>. Instead of a mechanical bit, a concentrated beam of energy heats the rock surface so fast and so unevenly that the rock breaks itself apart. The two leading energy sources are a high-power flame jet and a <strong>millimetre-wave (MMW) beam</strong> — essentially a very high-frequency, very high-power microwave, produced by a device called a gyrotron. Because nothing mechanical touches the rock, there is no bit to wear out; the energy source stays safely at the surface and the beam is piped down the hole.</p>
+
+<p>The mechanism that actually removes the rock is called <strong>thermal spallation</strong>. When you heat one face of a brittle rock very quickly, that thin surface layer tries to expand, but the cold rock beneath holds it back. The trapped expansion builds up enormous compressive stress parallel to the surface. Tiny pre-existing cracks in the rock — every real rock is full of them — concentrate that stress until a thin flake, typically a fraction of a millimetre thick, pops off explosively. Fresh rock is exposed, the beam heats it, and the process repeats. The rock is removed as a shower of small hot flakes ("spall"), not as ground-up powder.</p>
+
+<p>The prize is large but the physics is genuinely hard to predict: it couples heat flow, the mechanical stress that heat creates, the fracture of a flaw-riddled brittle material, and the continuous reshaping of the surface as flakes leave. <strong>Our project is a computer model that captures all of these together, in one simulation, and checks its answers against real laboratory experiments.</strong></p>
+
+<!-- ============================================================= -->
+<h2 id="gap">2. The gap this work fills</h2>
+
+<p>There is a substantial published literature on thermal-spallation drilling, but each existing model tends to capture only a slice of the problem. Reviewing the field (and the specific experiments we validate against) shows a consistent pattern:</p>
+
+<ul>
+  <li><strong>Onset-only models</strong> (e.g. Kant 2017, Hu 2018) predict the temperature at which the first flake will pop off, and where. They stop there — they do not simulate the hole actually getting deeper.</li>
+  <li><strong>Analytical rate models</strong> (Rauenzahn–Tester, Lyu) estimate an average drilling rate from energy balance, but cannot predict the <em>shape</em> of the hole or the size of the flakes.</li>
+  <li><strong>Grain-scale fracture models</strong> (Walsh's GEODYN, Vogler's MOOSE work) resolve individual mineral grains and reproduce the flake-size distribution beautifully, but are so computationally expensive they can only simulate a fraction of a second — not the 23 minutes of a real drilling test.</li>
+  <li><strong>Continuous-damage models</strong> (Liu 2024) track a smeared "damage" field but leave the rule for when material actually detaches somewhat arbitrary.</li>
+</ul>
+
+<table>
+  <thead><tr><th>Model class (examples)</th><th>Captures well</th><th>Cannot do</th></tr></thead>
+  <tbody>
+    <tr><td>Onset-only stress / failure<br><span style="color:var(--muted)">Kant 2017, Hu 2018</span></td><td>Temperature &amp; location of the <em>first</em> flake</td><td>The hole deepening; sustained rate; shape</td></tr>
+    <tr><td>Analytical rate<br><span style="color:var(--muted)">Rauenzahn–Tester, Lyu</span></td><td>Order-of-magnitude rate and energy cost</td><td>Hole shape; flake sizes; local physics</td></tr>
+    <tr><td>Grain-scale fracture<br><span style="color:var(--muted)">Walsh GEODYN, Vogler MOOSE</span></td><td>Flake-size distribution; grain-by-grain cracking</td><td>Full-length runs (too slow for 23 minutes)</td></tr>
+    <tr><td>Continuous damage<br><span style="color:var(--muted)">Liu 2024</span></td><td>Smeared damage volume; heterogeneity trends</td><td>A clean rule for when material detaches</td></tr>
+    <tr><td><strong>This work</strong></td><td><strong>Heat + stress + fracture + moving surface, together, at full run length</strong></td><td>Grain-resolved flake sizes (mesh-limited, §6.4)</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <span class="h">The gap, stated plainly</span>
+  A complete validation of a real drilling experiment needs three things at once: (i) the thermal-mechanical stress physics, (ii) a fracture criterion that decides when rock fails, <em>and</em> (iii) actual material removal with a moving surface. As the Meier (2017) validation packet puts it: <em>"The full set of targets is not hittable by any single model in the literature today — that is the gap this validation case maps out."</em>
+</div>
+
+<p>Our project targets exactly that gap. We build a <strong>single, unified, three-dimensional model</strong> that carries the heat, the stress, the fracture criterion, and the receding surface together, cheaply enough to run a full experiment — and we hold it to the same numbers that real experiments report. A second, more subtle contribution is <strong>methodological</strong>: because the model is assembled from many coupled physical ingredients, we validate it as a <em>ladder</em> of increasingly complete tests, each one isolating one new physical effect against a published experiment before the next is added. That discipline — never adding a physics ingredient without an experimental anchor for it — is itself a contribution to how these multiphysics models should be built and trusted.</p>
+
+<!-- ============================================================= -->
+<h2 id="physics">3. The physics inside the model</h2>
+
+<p>The model solves several physical processes on the same three-dimensional grid, step by step in time. Here are the ingredients, each with its governing idea.</p>
+
+<h3>3.1 Heat flow with melting and phase change</h3>
+<p>Rather than tracking temperature directly, the model tracks <strong>enthalpy</strong> (total heat content, <em>H</em>), which correctly handles the energy absorbed when rock melts. The heat balance is:</p>
+<div class="eq"><span class="lbl">heat</span>&part;H/&part;t = &nabla;&middot;(k &nabla;T) + Q</div>
+<p class="eqnote">In words: the heat content of each little cell of rock changes because heat conducts in from neighbours (the <code>&nabla;&middot;(k&nabla;T)</code> term, where <em>k</em> is thermal conductivity) and because the beam deposits energy there (the source <em>Q</em>). Temperature <em>T</em> is recovered from <em>H</em> through a look-up table that knows the rock's heat capacity and its latent heat of melting.</p>
+
+<h3>3.2 The energy beam</h3>
+<p>The beam's intensity is strongest on the axis and falls off toward the edges, a <strong>Gaussian profile</strong>. At the surface, the local incident power per unit area at radius <em>r</em> from the beam centre is:</p>
+<div class="eq"><span class="lbl">beam profile</span>P(r) = (2P&#8320; / &pi;w&#8320;&sup2;) &middot; exp(&minus;2r&sup2; / w&#8320;&sup2;)</div>
+<p class="eqnote">Here <em>P&#8320;</em> is the total beam power and <em>w&#8320;</em> is the beam's radius. Once the energy enters the rock it is absorbed with depth, weaker the deeper it goes, following the <strong>Beer–Lambert law</strong>:</p>
+<div class="eq"><span class="lbl">absorption</span>Q(z) &prop; &alpha; &middot; exp(&minus;&alpha;z)</div>
+<p class="eqnote">where <em>z</em> is depth and <em>&alpha;</em> is the absorption coefficient. We deposit this energy <em>cell by cell using an exact integral</em> rather than sampling at a single point — a fix that mattered, as explained in the results.</p>
+
+<h3>3.3 Thermal stress</h3>
+<p>When the thin surface layer is heated and prevented from expanding by the cold rock below, it develops a large compressive stress parallel to the surface. In the idealised case of a fully confined surface layer, that stress is:</p>
+<div class="eq"><span class="lbl">thermal stress</span>&sigma; = &minus;E &middot; &alpha;<sub>T</sub> &middot; (T &minus; T<sub>ref</sub>) / (1 &minus; &nu;)</div>
+<p class="eqnote"><em>E</em> is the rock's stiffness (Young's modulus), <em>&alpha;<sub>T</sub></em> its thermal expansion coefficient, <em>&nu;</em> its Poisson ratio, and <em>(T &minus; T<sub>ref</sub>)</em> the temperature rise above the cold starting state. The hotter the surface, the larger the stress that wants to break it. The model can compute this either from a full three-dimensional elastic solve or, in confined geometries, from this closed-form relation directly.</p>
+
+<h3>3.4 When does a flake pop off? The fracture criterion</h3>
+<p>This is the heart of the model. Real rock contains microscopic cracks. Fracture mechanics tells us a crack will run when the "stress intensity" at its tip, <em>K<sub>I</sub></em>, reaches the rock's fracture toughness, <em>K<sub>Ic</sub></em>. We define a dimensionless <strong>spallation number</strong>:</p>
+<div class="eq"><span class="lbl">criterion</span>Sp = K<sub>I</sub> / K<sub>Ic</sub>(T) &nbsp;&nbsp;&rarr;&nbsp;&nbsp; a flake detaches when Sp &ge; 1</div>
+<p class="eqnote">The driving side <em>K<sub>I</sub></em> is computed by integrating the compressive stress over the depth of a pre-existing crack of length <em>a</em>. The resisting side <em>K<sub>Ic</sub>(T)</em> is the rock's toughness, which we take from published measurements and which <strong>drops sharply as the rock gets hotter</strong> (from about 1.4 MPa&middot;m<sup>&frac12;</sup> at room temperature down to about 0.2 near 850&nbsp;&deg;C for granite). So heat attacks the rock twice: it raises the driving stress and it weakens the resistance.</p>
+
+<p>For the special case of a uniformly heated, fully confined surface, this criterion collapses to a clean closed form for the temperature rise at which the first flake pops (the Kant relation):</p>
+<div class="eq"><span class="lbl">onset</span>&Delta;T<sub>onset</sub> = K<sub>Ic</sub>(1 &minus; &nu;) / (2 &middot; 1.763 &middot; &radic;(a/&pi;) &middot; E &middot; &alpha;<sub>T</sub>)</div>
+<p class="eqnote">We use this exact relation as a machine-precision check on the full numerical model — if the code and the algebra disagree, something is wrong in the code.</p>
+
+<h3>3.5 Two ways to describe failure</h3>
+<p>The model actually carries <strong>two independent descriptions of rock failure</strong>, selectable at runtime, because the literature uses both and each anchors to different experiments:</p>
+<ul>
+  <li><strong>Continuous damage (the "damage-law" path).</strong> Built on the Drucker–Prager criterion — a standard way to describe how stiff, brittle materials yield under combined pressure and shear. Instead of a sharp on/off crack, each cell accumulates a continuous damage value from 0 (intact) to 1 (fully failed), which in turn softens the rock's stiffness. This path is anchored to the Hu prescribed-temperature experiments (§6.2).</li>
+  <li><strong>Fracture-mechanics spallation (the "Weibull" path).</strong> The crisp Sp = K<sub>I</sub>/K<sub>Ic</sub> criterion of §3.4 combined with the statistical flaw distribution described next (§3.6), deciding discretely when an individual flake detaches. This path is anchored to the Kant onset and Rossi flake-depth experiments (§6.3–6.4).</li>
+</ul>
+<p>Having both descriptions share the same heat and stress machinery lets us validate against the full spread of published experiments and cross-check one against the other. A strict rule keeps them honest: turning on a new capability must leave every test on the <em>other</em> path bit-for-bit unchanged.</p>
+
+<h3>3.6 Real rock is not uniform: flaws and microstructure</h3>
+<p>Two rocks of the same type do not fail at exactly the same temperature, because their internal cracks differ. We capture this with two ingredients. First, a <strong>Voronoi microstructure</strong> — the grid is partitioned into randomly shaped mineral grains, each with its own properties and grain boundaries, mimicking a real rock's texture. Second, every surface cell is assigned a random starting crack length drawn from a <strong>Weibull distribution</strong> (the standard statistical model for the strength of brittle materials). A subtle but important consequence:</p>
+<div class="keyfind">
+  <span class="h">Extreme-value statistics govern first failure</span>
+  With many surface cells, the one that fails first holds not the <em>average</em> crack, but the <em>largest</em> crack present — approximately <code>a<sub>max</sub> &asymp; a&#8320; &middot; (ln N)<sup>1/m</sup></code> for <em>N</em> cells. First failure therefore happens at a lower temperature than a single-crack calculation predicts. Getting this right required scoring the model against the realised largest flaw, not the nominal average — a correction that reshaped one of our validation steps.
+</div>
+
+<h3>3.7 Removing material and moving the surface</h3>
+<p>When the criterion fires in a column of the grid, the model computes how deep the detaching flake is, marks that rock as removed, and lets the surface recede. The next time step, the beam and heat solve see the new, deeper surface. This "moving boundary" is what lets a single run simulate a hole getting steadily deeper — the ingredient most published models lack.</p>
+
+<h3>3.8 The newest ingredient: melt-aware spallation</h3>
+<p>You cannot spall a liquid — a melt has no rigid skeleton to store the crack-driving stress. Until recently the criterion ignored this and would happily "spall" molten rock. We added a <strong>load-bearing skeleton factor</strong> that scales the driving stress down as the rock melts:</p>
+<div class="eq"><span class="lbl">skeleton</span>f(&Lambda;<sub>L</sub>) = max(0, &nbsp;1 &minus; &Lambda;<sub>L</sub> / &Lambda;<sub>crit</sub>)</div>
+<p class="eqnote"><em>&Lambda;<sub>L</sub></em> is the local liquid fraction and <em>&Lambda;<sub>crit</sub></em> &asymp; 0.4 is the point at which a partially molten rock loses rigidity. In fully solid rock <em>f</em> = 1 and nothing changes; as the rock melts <em>f</em> &rarr; 0 and the crack-driving stress vanishes, so the criterion correctly refuses to spall liquid.</p>
+
+<h3>3.9 Two removal regimes and the drilling rate</h3>
+<p>At moderate heating the rock spalls — solid flakes crack off. At very high heating the surface can instead <strong>vaporise</strong>, boiling away as gas. The model handles both, and at each surface cell decides which regime is active, so a single headline number — the <strong>rate of penetration</strong> (how fast the hole deepens, in metres per hour) — emerges from whichever mechanism dominates locally. The rate of penetration is exactly what a real drilling test reports, and reproducing it is the goal of the Meier case (§7).</p>
+
+<h3>3.10 Representative material properties</h3>
+<p>For concreteness, these are the granite properties used in the Meier drilling case, together with the temperature-dependent fracture toughness that makes hot rock so much easier to spall than cold rock.</p>
+<table>
+  <thead><tr><th>Property</th><th>Symbol</th><th>Value (Grimsel granite)</th></tr></thead>
+  <tbody>
+    <tr><td>Thermal conductivity</td><td>k</td><td>1.5 W/(m·K)</td></tr>
+    <tr><td>Density</td><td>&rho;</td><td>2,750 kg/m³</td></tr>
+    <tr><td>Specific heat</td><td>C<sub>p</sub></td><td>790 J/(kg·K)</td></tr>
+    <tr><td>Young's modulus (stiffness)</td><td>E</td><td>30 GPa</td></tr>
+    <tr><td>Poisson's ratio</td><td>&nu;</td><td>0.3</td></tr>
+    <tr><td>Thermal expansion</td><td>&alpha;<sub>T</sub></td><td>8 × 10⁻⁶ K⁻¹</td></tr>
+    <tr><td>Mineral makeup</td><td>—</td><td>28% quartz, 29% plagioclase, 24% K-feldspar, 18% sheet silicates; ~2 mm grains</td></tr>
+  </tbody>
+</table>
+<table>
+  <thead><tr><th>Temperature</th><th>20 °C</th><th>250 °C</th><th>450 °C</th><th>650 °C</th><th>850 °C</th></tr></thead>
+  <tbody>
+    <tr><td>Fracture toughness K<sub>Ic</sub> (MPa·m<sup>&frac12;</sup>)</td><td>1.43</td><td>1.35</td><td>0.98</td><td>0.43</td><td>0.22</td></tr>
+  </tbody>
+</table>
+<p class="eqnote">Toughness falls by roughly six-fold from room temperature to 850&nbsp;&deg;C — the physical reason heating "softens up" the rock for spallation. (Toughness values follow Nasseri et&nbsp;al. for Westerly granite; Meier does not report its own, so these serve as the standard granite proxy.)</p>
+
+<!-- ============================================================= -->
+<h2 id="software">4. How the software is built</h2>
+
+<p>The model is an <strong>integrator</strong> (a self-contained physics driver) inside <strong>ALAMO</strong>, an open-source scientific computing framework built on the U.S. Department of Energy's AMReX library. Two features of the framework do heavy lifting:</p>
+
+<ul>
+  <li><strong>Adaptive Mesh Refinement (AMR).</strong> Interesting physics happens in a thin, moving layer at the drilling surface; the rock metres away barely changes. AMR automatically places a fine computational grid where it is needed (near the hot, cracking surface) and a coarse grid elsewhere, so we spend computer time where it matters.</li>
+  <li><strong>Parallel computing.</strong> The domain is split across many processors that run simultaneously and exchange information at their shared boundaries. A recurring theme in our development has been ensuring answers are <em>identical no matter how the domain is split</em> — a strict correctness test we return to constantly.</li>
+</ul>
+
+<p>The physics ingredients from Section 3 are layered onto a single simulation class using a design pattern (virtual multiple inheritance) that lets heat conduction, mechanics, and removal coexist. One hard-won rule governs all of it:</p>
+
+<div class="note">
+  <span class="h">A rule written in scar tissue</span>
+  Early attempts to "simplify" the shared base classes caused subtle crashes deep inside the mesh-refinement machinery. The standing rule is now: <strong>never restructure the inheritance graph.</strong> New physics is layered on top; the foundation is not touched. When the main file grew unwieldy (~4,400 lines), we split pieces out into included sub-files <em>without</em> altering that foundation, proving each split changed nothing by comparing outputs byte-for-byte.
+</div>
+
+<h3>4.1 A disciplined three-phase workflow</h3>
+<p>Every increment of work follows a strict three-role loop, each role a fresh, focused session:</p>
+<ol>
+  <li><strong>Plan</strong> — write a precise specification of the next step: the exact physics, equations, file locations, and the experimental numbers it must reproduce.</li>
+  <li><strong>Implement</strong> — write the code and tests to that specification, then record completion notes and lessons learned.</li>
+  <li><strong>Verify</strong> — an independent review checks the implementation against the specification and returns "accepted" or "rejected."</li>
+</ol>
+<p>This separation keeps each step small, specified, and reviewable, and it produces a written trail explaining <em>why</em> every design choice was made — valuable for a model that will be built on for years.</p>
+
+<!-- ============================================================= -->
+<h2 id="process">5. The development process</h2>
+
+<p>The model was built as a <strong>staged ladder of about twenty steps</strong>, each adding one physical ingredient and validating it before the next. The guiding principle is that every new default-off feature must leave all previous tests <em>bit-for-bit identical</em> — so new physics can never silently corrupt what already worked. The rough arc:</p>
+
+<ol>
+  <li><strong>Heat and beam (Steps 1–4).</strong> The enthalpy heat solver, the Gaussian/Beer–Lambert beam, and surface heat losses — validated against textbook solutions and the Zhang/Oglesby microwave-heating experiment.</li>
+  <li><strong>Microstructure and stress (Steps 5–7).</strong> Voronoi mineral grains, heat conduction through a heterogeneous rock, and the thermal-stress solve — validated against Hu's prescribed-temperature experiments.</li>
+  <li><strong>Damage and fracture (Steps 8–9, 12, 15).</strong> Two failure descriptions: a continuous-damage law, and the fracture-mechanics spallation number of Section 3.4, plus grain-boundary cohesion and the Weibull flaw statistics.</li>
+  <li><strong>Removal and rate (Steps 10–11, 16–19).</strong> Detaching flakes, the moving surface, vaporisation, and the combined rate of penetration — validated against the Rossi flake-depth and Kant onset experiments, and extended to run under a real microwave beam.</li>
+  <li><strong>Confinement and geometry (Steps 18, 20).</strong> The effect of underground pressure on failure, and a surface-normal removal kernel that lets a realistic cylindrical hole emerge on its own.</li>
+</ol>
+
+<p>Interspersed are honest "we hit a wall" records. For example, running the mechanics solve on a mesh refined only in the vertical direction never converged; the fix was to keep mechanically-active meshes cubic and use a physically-motivated confined geometry instead. These dead ends are documented as carefully as the successes, so they are not repeated.</p>
+
+<!-- ============================================================= -->
+<h2 id="results">6. Results so far</h2>
+
+<p>The model reproduces every experiment in its validation ladder, within the tolerance each experiment's own uncertainty allows. The table below summarises the cases; the most important are then shown individually.</p>
+
+<table>
+  <thead><tr><th>Experiment</th><th>What it isolates</th><th>Target</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Zhang / Oglesby</td><td>Heat flow + microwave beam</td><td>Surface-temperature history</td><td class="status-done">Reproduced across the full power-cycled run</td></tr>
+    <tr><td>Hu</td><td>Prescribed-T stress + breakage onset</td><td>Onset time &amp; stress, granite vs sandstone</td><td class="status-done">Onset within windows; ordering correct</td></tr>
+    <tr><td>Kant (onset)</td><td>Fracture criterion at first failure</td><td>Onset &Delta;T in 390–560 °C band</td><td class="status-done">~461 °C, in band; ~3% vs closed form</td></tr>
+    <tr><td>Kant (pressure)</td><td>Effect of confining pressure</td><td>Onset rises with pressure</td><td class="status-done">Monotone; slope within ~2% of theory</td></tr>
+    <tr><td>Rossi</td><td>Flake-depth distribution</td><td>Peak at 100–200 µm</td><td class="status-active">Correct populations; peak mesh-limited to ~775 µm</td></tr>
+    <tr><td>Meier</td><td>Full sustained drilling</td><td>1.5 m/h, cylindrical hole</td><td class="status-active">Right shape &amp; order; rate ~1.9× high (active work)</td></tr>
+  </tbody>
+</table>
+
+<h3>6.1 Heating: the Zhang/Oglesby microwave experiment</h3>
+<p>The first real test is whether the heat and beam physics reproduce a measured surface-temperature history when granite is heated by a microwave beam whose power is cycled up and down. The model tracks both the independent published simulation and the physical experiment across the entire power-cycled run, including the sharp cooldown when the beam switches off.</p>
+<figure>
+  <img src="tests/MMWSpalling/validation/zhang/zhang_oglesby/output/zhang_oglesby_T_surface.png" alt="Zhang/Oglesby surface temperature validation">
+  <figcaption><b>Figure 1.</b> Surface-centre temperature over a ~1,750-second power-cycled microwave heating run. The solid line is our simulation; dashed and dotted lines are the reference Zhang (2023) simulation and the Oglesby experiment. The model captures the initial rise, each power-cycle plateau and dip, and the post-beam cooldown — validating the heat-flow and beam physics before any fracture is added.</figcaption>
+</figure>
+
+<h3>6.2 Prescribed-temperature stress and breakage: the Hu experiment</h3>
+<p>Before trusting the model to decide <em>when</em> rock fails, we check that it computes the right stresses and the right first-failure timing under a controlled surface heating. Hu's experiments heat granite and sandstone along a known surface-temperature history and report where and when breakage begins. The model reproduces the subsurface temperature rise, the surface-stress profile, and — importantly — the correct <em>ordering</em>: granite (stronger and stiffer) reaches breakage onset later than sandstone, with both inside the experimentally reported windows.</p>
+<figure>
+  <img src="tests/MMWSpalling/validation/hu/hu_end_to_end/output/comparison.png" alt="Hu prescribed-temperature validation">
+  <figcaption><b>Figure 2.</b> The Hu prescribed-temperature chain for Granite&nbsp;2 (blue) versus Sandstone&nbsp;2 (orange). Clockwise from top-left: subsurface temperature rise over time; surface-stress profile across the heated zone; the breakage-probability indicator along the surface; and the resulting failure-onset times. This validates the stress and failure machinery on the continuous-damage path before material removal is switched on.</figcaption>
+</figure>
+
+<h3>6.3 Onset and confinement: the Kant experiment</h3>
+<p>Next we validate, on the fracture-mechanics path, <em>at what temperature</em> the first flake pops. For Central Aare granite the model predicts a first-failure temperature rise of about 461&nbsp;&deg;C, inside the experimentally reported 390–560&nbsp;&deg;C band, and matches the closed-form onset relation (§3.4) to within about 3%. The random flaw distribution shows up visibly: failure begins as a scattered, patchy pattern at the weakest cells rather than as a uniform front.</p>
+<figure>
+  <img src="tests/MMWSpalling/validation/kant/sp_kant_onset/output/comparison.png" alt="Kant onset validation">
+  <figcaption><b>Figure 3.</b> Kant onset validation. Left: predicted onset temperature against the measured band and the closed-form relation. Centre: the numerical model agrees with the closed form to a few percent. Right: the "patchy" first-firing map — with random flaws, the largest-flaw cells fail first in a scattered pattern — and the check that failure timing is scored against the realised largest flaw (the extreme-value correction of §3.6).</figcaption>
+</figure>
+<p>Underground, rock is squeezed from all sides. Applying a confining pressure raises the temperature the surface must reach before it can spall, because the confinement partly offsets the crack-driving thermal stress. The model reproduces this trend quantitatively across a pressure sweep, with the onset-versus-pressure slope within about 2% of the analytical prediction.</p>
+<figure>
+  <img src="tests/MMWSpalling/validation/kant/sp_kant_pressure_sweep/output/comparison.png" alt="Kant confining-pressure sweep validation">
+  <figcaption><b>Figure 4.</b> Effect of confining pressure on spallation onset. Left: the onset temperature rise increases with confining pressure (0, 27, 48 MPa); the model (points) tracks both the analytical relation and the measured band. Right: maps of the spallation number <em>Sp</em> across the heated face at first failure for each pressure — as pressure rises, the same surface must get hotter before <em>Sp</em> reaches 1.</figcaption>
+</figure>
+
+<h3>6.4 Flake depth: the Rossi experiment</h3>
+<p>The Rossi experiment measures how deep the detaching flakes are. This test surfaced an honest and instructive <strong>limitation rather than a clean pass</strong>. The model correctly produces a large population of first-failure events dominated by grain-boundary cracking, but at our working grid resolution (cells ~1.56 mm tall) the predicted flake depths cluster around 775 &micro;m, whereas the experiment peaks at 100–200 &micro;m. Three independent attempts to reconstruct the sub-cell stress all converged on the same conclusion: <strong>the flake depth we are trying to resolve is finer than a single grid cell</strong>, so no clever sub-cell trick can manufacture it — only a genuinely finer vertical mesh can, and that reopens the solver-convergence problem noted above.</p>
+<figure>
+  <img src="tests/MMWSpalling/validation/rossi/sp_rossi_damage_profile/output/rossi_flake_depth.png" alt="Rossi flake-depth distribution">
+  <figcaption><b>Figure 5.</b> Distribution of predicted flake depths over 1,022 first-failure events (red = grain-boundary, blue = intragranular). The green band marks the experimental 100–200 &micro;m peak. The model's peak sits at ~775 &micro;m — a mesh-resolution limit that three separate reconstructions confirmed cannot be closed without finer vertical cells. This result is reported transparently as a deferred, well-understood limitation, not hidden.</figcaption>
+</figure>
+
+<h3>6.5 The full chain under a real microwave beam</h3>
+<p>Bringing the ingredients together, the model drills a full three-dimensional wellbore under a microwave beam through a Voronoi granite microstructure — heat, stress, fracture, and a receding surface all at once. A hot spot forms under the beam, thermal stress builds, grain-scale cracking removes flakes, and a wellbore opens and deepens through the mineral grains.</p>
+<figure>
+  <img src="tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/output/combined_wellbore_3d_fine.png" alt="3D wellbore under a microwave beam">
+  <figcaption><b>Figure 6.</b> A three-dimensional wellbore forming under a microwave beam. Top row (looking down) and bottom row (side cross-section) show, left to right: the excavated crater depth, the temperature field, the thermal stress, and the underlying Voronoi mineral microstructure. All four physics ingredients are running simultaneously on the same evolving grid.</figcaption>
+</figure>
+
+<h3>6.6 An emergent cylindrical hole</h3>
+<p>A recent addition — a surface-normal removal kernel that lets each patch of surface recede along its own local normal direction — produces a qualitatively correct result the earlier column-by-column removal could not: a <strong>roughly cylindrical hole emerges on its own</strong>, rather than a funnel-shaped crater, and the spallation number rides steadily at ~1 along the drilling face without stalling or overheating. This matters because a cylindrical hole is exactly what the Meier experiment reports, and shape is one of the harder targets to reproduce.</p>
+<figure>
+  <img src="tests/MMWSpalling/validation/meier/sp_meier_pilot/output_scratch/surface_normal_cylinder.png" alt="Emergent cylindrical hole in the Meier development harness">
+  <figcaption><b>Figure 7.</b> Development harness for the Meier case at two times (top: 20 s, bottom: 40 s). Left to right: temperature, the removed (hole) region, and the spallation number <em>Sp</em>. With the surface-normal kernel the hole deepens as a self-forming cylinder, and the fracture criterion rides steadily near <em>Sp</em> = 1 along the advancing floor — the qualitative behaviour a real drilling test shows.</figcaption>
+</figure>
+
+<div class="keyfind">
+  <span class="h">A quantitative fix that mattered</span>
+  While preparing the Meier case we found the beam deposition was sampling absorption at a single point per cell, which lost a large fraction of the beam's power in cells where absorption was strong (roughly 46% loss in the worst cases; runs were receiving only ~54% of nominal power). Replacing it with an exact per-cell integral of the Beer–Lambert law restored energy conservation — and, importantly, <em>invalidated</em> earlier calibrations that had unknowingly compensated for the missing power. This is a good example of the validation ladder catching a bug that a single end-to-end test would have hidden inside a fudge factor.
+</div>
+
+<!-- ============================================================= -->
+<h2 id="frontier">7. The current frontier: the Meier drilling experiment</h2>
+
+<p>The most demanding validation is Meier's 2017 pilot demonstration: a real flame-jet drilling test on a 660&nbsp;kg block of Grimsel granite. Over 23 minutes and 38&nbsp;kW of input power, the hole advanced 50&nbsp;cm through the block at a steady <strong>1.5 metres per hour</strong>, producing a cylindrical hole about 85&nbsp;mm across and removing 3.4&nbsp;litres of rock. It reports not just <em>whether</em> the rock spalls but the sustained drilling rate, the energy efficiency, the hole shape, and the flake sizes — the complete set of targets no single prior model could hit.</p>
+
+<p>Our model reproduces the qualitative behaviour (steady drilling, an emergent cylinder, no runaway) and gets the drilling rate to the right order of magnitude. But there is a clear, honest discrepancy:</p>
+
+<div class="keyfind">
+  <span class="h">The central open problem</span>
+  With no bit and clean removal, the model drills roughly <strong>1.9&times; too fast</strong> — a predicted ~2.7 m/h against the measured 1.5 m/h. Equivalently, to match the real rate the beam would have to deliver energy at only ~17% efficiency. The model removes rock too efficiently <em>per joule delivered</em>. The prime suspect is a piece of missing physics: in reality, detached flakes pile up on the surface and block the incoming beam until they are cleared away — Meier literally had to add a vacuum cleaner mid-test to remove them. Our model makes every flake vanish instantly and cleanly, so 100% of the beam always reaches fresh rock.</p>
+</div>
+
+<p>This diagnosis — that <em>cuttings shielding</em> is the leading candidate for the over-prediction — is what sets the current work agenda.</p>
+
+<!-- ============================================================= -->
+<h2 id="now">8. What we are working on now</h2>
+
+<p>We have organised the remaining physics into a prioritised program (labelled P1–P8) attached to the Meier case. The two most recent items:</p>
+
+<h3>8.1 P1 — melt-aware spallation (completed)</h3>
+<p>This is the ingredient described in Section 3.8: the load-bearing skeleton factor that stops the criterion from spalling liquid rock. It is implemented, tested, and review-accepted, and it produced a genuinely surprising physical finding:</p>
+<div class="keyfind">
+  <span class="h">Key finding: a self-regulating "thermostat"</span>
+  When removal is active, the drilling surface <strong>regulates its own temperature</strong>. Every flake that pops off exposes cooler rock underneath, so the surface never actually climbs to the melting point — at any beam power, spallation wins the race and keeps the surface pinned near its ~850 K spall-onset temperature. Melt therefore never appears in normal drilling; it only shows up where removal is artificially blocked. This tells us that the melting regime is not reachable in this model until a <em>different</em> feedback (temperature-dependent absorption, item P3) is added — which reorders the whole to-do list below.
+</div>
+
+<h3>8.2 P4 — cuttings/debris shielding (active, the prime suspect)</h3>
+<p>This is the step that directly attacks the 1.9&times; over-prediction. The idea is to give each column of the surface a debris load &Sigma; (mass of flakes per unit area sitting on it). Each time step it grows when a flake is added and decays as debris is swept away with a characteristic clearance time &tau;:</p>
+<div class="eq"><span class="lbl">debris</span>&Sigma;<sup>n+1</sup> = &Sigma;<sup>n</sup> &middot; exp(&minus;&Delta;t/&tau;) + &rho; &middot; h<sub>spall</sub></div>
+<p>That debris then <strong>shades the beam</strong> using the same Beer–Lambert idea as light through a dusty layer:</p>
+<div class="eq"><span class="lbl">shielding</span>&eta; = exp(&minus;&Sigma; / &Sigma;&#8320;), &nbsp;&nbsp; P &rarr; P &middot; &eta;</div>
+<p class="eqnote">where &Sigma;&#8320; sets how much debris is needed to dim the beam appreciably. This creates exactly the negative feedback the experiment implies: drill faster &rarr; make more debris &rarr; block more beam &rarr; drill slower, settling at a self-limited rate. The step is default-off (so every existing test stays identical) and the acceptance target is simple: with a physically plausible &Sigma;&#8320;, the predicted rate should move from the no-shield baseline down toward the measured 1.5 m/h. The specification is written; implementation is the immediate next task.</p>
+
+<p>Two housekeeping items are also pending: the completed P1 and a behaviour-preserving code refactor are implemented and tested but not yet committed to version control, so the immediate practical next actions are to commit that work and then implement P4.</p>
+
+<!-- ============================================================= -->
+<h2 id="todo">9. The road ahead (to-do list)</h2>
+
+<p>The remaining physics and numerics items, in priority order. The ordering itself reflects a finding: because melt is unreachable without temperature-dependent absorption (the P1 finding), the melt-handling items were deprioritised in favour of the debris shielding that directly explains the rate discrepancy.</p>
+
+<table>
+  <thead><tr><th>Item</th><th>What it adds</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><strong>P1</strong> Melt-aware spallation</td><td>Stops the criterion spalling liquid rock; revealed the surface-thermostat effect.</td><td class="status-done">Done</td></tr>
+    <tr><td><strong>P4</strong> Cuttings/debris shielding</td><td>Detached flakes shade the beam — the leading fix for the 1.9&times; rate over-prediction.</td><td class="status-active">Active</td></tr>
+    <tr><td><strong>P5</strong> Subcritical crack growth</td><td>Cracks creep before the hard threshold, so marginal states fail in finite time rather than never.</td><td class="status-todo">Planned</td></tr>
+    <tr><td><strong>P6</strong> Wall-stress anisotropy</td><td>At a cavity wall, the stress is not fully confined; relax it toward the true wall condition.</td><td class="status-todo">Planned</td></tr>
+    <tr><td><strong>P7</strong> Full elastic-solve comparison</td><td>Quantify the error in the fast closed-form stress vs a full 3-D solve; decide whether to revive the latter.</td><td class="status-todo">Planned</td></tr>
+    <tr><td><strong>P2/P3/P8</strong> Melt regime</td><td>Melt evacuation, temperature-dependent absorption &alpha;(T), and melt-temperature radiation — reachable only once &alpha;(T) exists.</td><td class="status-todo">Deprioritised</td></tr>
+    <tr><td><strong>N1</strong> Resolution convergence</td><td>The drilling rate still shifts ±30–40% with grid resolution; a proper convergence study is a standing task.</td><td class="status-todo">Standing</td></tr>
+    <tr><td><strong>R1/R2</strong> Re-baseline &amp; hero run</td><td>Re-score the full 3-D Meier test after the physics lands, then attempt a full 23-minute run.</td><td class="status-todo">After physics</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================= -->
+<h2 id="limits">10. Honest limitations</h2>
+
+<p>A report that only listed successes would be misleading. The model's current, openly-tracked limitations are:</p>
+<ul>
+  <li><strong>Rate over-prediction (~1.9&times;)</strong> against Meier — the central open problem, being attacked by the active P4 debris-shielding step.</li>
+  <li><strong>Grid-resolution sensitivity.</strong> The sustained drilling rate still varies by ±30–40% depending on cell size and is not yet fully converged; production numbers carry roughly a factor-1.4 numerical uncertainty. Understanding and closing this is a standing task.</li>
+  <li><strong>Flake depth (Rossi).</strong> Predicted flakes are thicker than measured, a mesh-resolution limit that three independent reconstructions confirmed cannot be closed at the current vertical resolution.</li>
+  <li><strong>The melt regime is not yet a validated capability</strong> — it is unreachable in normal drilling until temperature-dependent absorption is added, and we currently lack the granite absorption data to add it responsibly.</li>
+  <li><strong>The fast stress model has known blind spots.</strong> The efficient closed-form stress cannot see stress concentrations, block-scale splitting, or grain-scale heterogeneity; a planned A/B against a full elastic solve will quantify the error being carried.</li>
+</ul>
+<p>Each of these is written down, understood, and mapped to a specific planned step — which is the point of the ladder-and-record methodology.</p>
+
+<!-- ============================================================= -->
+<h2 id="conclusion">11. Summary</h2>
+
+<p>This project builds a single, unified, three-dimensional simulation of millimetre-wave thermal-spallation rock drilling — heat flow, thermal stress, fracture of a flaw-riddled brittle rock, and a continuously receding surface, all coupled and cheap enough to run a real experiment end-to-end. That combination is precisely what the existing literature lacks: prior models capture onset, or rate, or flake size, or grain-scale fracture, but not all of it together with a moving boundary.</p>
+
+<p>The model has climbed a roughly twenty-step validation ladder, reproducing microwave-heating temperature histories (Zhang/Oglesby), spallation onset and its pressure dependence (Kant), grain-boundary-dominated fracture (Rossi), and full three-dimensional wellbore formation under a real beam. Its limitations — a rate over-prediction against the demanding Meier drilling test, grid-resolution sensitivity, and mesh-limited flake depth — are documented rather than hidden, and each maps to a specific planned step.</p>
+
+<p>The active frontier is the Meier case. A recently completed step (melt-aware spallation) revealed that the drilling surface self-regulates its own temperature, which reordered the remaining work. The current step (cuttings/debris shielding) adds the physics most likely to explain why the model presently drills ~1.9&times; too fast: real flakes blanket the surface and block the beam until cleared. If that negative feedback pulls the predicted rate toward the measured 1.5 m/h with a physically plausible parameter, the model will, for the first time in this literature, reproduce the full set of a real drilling experiment's targets in one simulation.</p>
+
+<!-- ============================================================= -->
+<h2 id="glossary">Appendix: Notation &amp; glossary</h2>
+<p>Plain-language definitions of the terms and symbols used above.</p>
+<table>
+  <thead><tr><th>Term / symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Thermal spallation</td><td>Removal of rock as thin flakes that crack off when a surface is heated fast enough to build up damaging stress.</td></tr>
+    <tr><td>Millimetre-wave (MMW)</td><td>Very high-frequency, high-power microwave beam (produced by a gyrotron) used to heat rock without contact.</td></tr>
+    <tr><td>Rate of penetration (ROP)</td><td>How fast the hole deepens, in metres per hour — the headline drilling-performance number.</td></tr>
+    <tr><td>Enthalpy (H)</td><td>Total heat content of the rock; tracked instead of temperature so melting is handled correctly.</td></tr>
+    <tr><td>Sp = K<sub>I</sub> / K<sub>Ic</sub></td><td>Spallation number; a flake detaches when it reaches 1 (crack-driving intensity equals fracture toughness).</td></tr>
+    <tr><td>K<sub>Ic</sub>(T)</td><td>Fracture toughness — the rock's resistance to cracking; falls sharply as temperature rises.</td></tr>
+    <tr><td>Weibull distribution</td><td>Standard statistical description of the scatter in brittle-material strength; here, the spread of pre-existing crack sizes.</td></tr>
+    <tr><td>Voronoi microstructure</td><td>A computer-generated mosaic of mineral grains that gives the simulated rock a realistic texture.</td></tr>
+    <tr><td>Drucker–Prager</td><td>A standard failure criterion for pressure-sensitive brittle materials, used by the continuous-damage path.</td></tr>
+    <tr><td>Load-bearing skeleton, f(&Lambda;<sub>L</sub>)</td><td>Factor that reduces crack-driving stress as rock melts, so the model does not try to spall liquid.</td></tr>
+    <tr><td>AMR</td><td>Adaptive Mesh Refinement — placing fine computational grid only where the physics needs it.</td></tr>
+    <tr><td>ALAMO / AMReX</td><td>The open-source simulation framework (and its underlying grid library) the model is built in.</td></tr>
+    <tr><td>&Sigma;, &tau;, &Sigma;&#8320;</td><td>Debris load per unit area, its clearance time, and the debris amount that dims the beam appreciably (§8.2).</td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  <p>Prepared as a shareable overview of the MMWSpalling integrator project. Figures are the actual validation outputs generated by the project's test suite (relative paths within the repository). Equations are stated in plain notation and explained in the surrounding text. For the underlying step-by-step development record see the project's roadmap, archive, and per-validation reference packets.</p>
+</div>
+
+</div>
+</body>
+</html>

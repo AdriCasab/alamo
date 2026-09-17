@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+# A1: scalar-flaw removal path + every-removal event log.
+#
+# Runs (S1 column, dz = 2 mm, F1 beam, 20 s):
+#   S     input as written: weibull.enabled = 0, spallation.sp.a0 = 20e-6 (1 rank)
+#   D     S1 degenerate draw: weibull.enabled = 1, a0_gb = a0_ig = 20e-6,
+#         m = 1e12, seed = 1 (1 rank)
+#   S4    S on 4 ranks (amr.max_grid_size = 32 -> 4 z-boxes)
+# Checks:
+#   (a) S completes (before A1: segfault in UpdateRemovalAfterCohesive).
+#   (b) S vs D: identical removal step times, columns and n_voided; Level_0 T
+#       and H at every plotfile within 1e-9 relative; |ledger_err| <= 1e-9
+#       in both. (a differs from a0 by <= 5e-11 under D.)
+#   (c) In S and D, removal_events.csv is a complete log:
+#       - one row per (step, column) removal: unique (time, col), every row
+#         h_applied > 0, and every h_col first-firing row appears in it;
+#       - sum n_voided == removed cells in the final plotfile;
+#       - sum h_applied == level-set recession of the column (<= 1e-12 m);
+#       - T_top of rows with n_voided == 1 == frozen T of the voided cell
+#         k_top in the final plotfile.
+#   (d) h_col_events.csv of S and D has the same rows.
+#   (e) S4: removal_events.csv cmp-identical to S; Level_0 Cell_D bytes
+#       identical (4 ranks write one Cell_D per rank/box, so their
+#       rank-ordered concatenation is compared with the 1-rank file).
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import filecmp
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = TEST_DIR.split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+MPI4 = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+
+DZ, DEPTH = 0.002, 0.250
+TOL_TH = 1.0e-9
+TOL_REC = 1.0e-12
+
+RUNS = {
+    "S": ([], 1),
+    "D": (["weibull.enabled=1", "weibull.a0_gb=20.0e-6", "weibull.a0_ig=20.0e-6",
+           "weibull.m=1.0e12", "weibull.seed=1"], 1),
+    "S4": ([], 4),
+}
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+def run(name, outroot):
+    extra, nranks = RUNS[name]
+    pf = os.path.join(outroot, name)
+    for p in (pf, pf + "_h_col_events.csv", pf + "_removal_events.csv"):
+        if os.path.isdir(p):
+            shutil.rmtree(p)
+        elif os.path.exists(p):
+            os.remove(p)
+    cmd = ([] if nranks == 1 else MPI4) + [BIN, os.path.join(TEST_DIR, "input"),
+                                           f"plot_file={pf}"] + extra
+    print("Running:", " ".join(cmd))
+    with open(pf + ".log", "w") as log:
+        rc = subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+    return rc
+
+
+def plotfiles(pf):
+    out = []
+    for p in glob.glob(os.path.join(pf, "*cell")):
+        m = re.search(r"(\d+)cell$", os.path.basename(p))
+        if m:
+            out.append((int(m.group(1)), p))
+    return [p for _, p in sorted(out)]
+
+
+def fields(p, names=None):
+    ds = yt.load(p)
+    cg = ds.covering_grid(0, ds.domain_left_edge, ds.domain_dimensions)
+    names = names or [f[1] for f in ds.field_list if f[0] == "boxlib"]
+    return {n: np.asarray(cg[n])[0, 0, :] for n in names}
+
+
+def removal_rows(pf):
+    return np.genfromtxt(pf + "_removal_events.csv", delimiter=",", names=True, ndmin=1)
+
+
+def h_col_rows(pf):
+    return np.genfromtxt(pf + "_h_col_events.csv", delimiter=",", names=True, ndmin=1)
+
+
+def thermo(pf):
+    path = os.path.join(pf, "thermo.dat")
+    with open(path) as f:
+        names = f.readline().split()
+    rows = np.loadtxt(path, skiprows=1, ndmin=2)
+    return {n: rows[:, i] for i, n in enumerate(names)}
+
+
+outroot = sys.argv[1] if len(sys.argv) > 1 else os.path.join(TEST_DIR, "output")
+do_run = len(sys.argv) <= 1
+if do_run:
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    os.makedirs(outroot, exist_ok=True)
+    rcs = {n: run(n, outroot) for n in RUNS}
+else:
+    rcs = {n: 0 for n in RUNS}
+P = {n: os.path.join(outroot, n) for n in RUNS}
+
+# (a)
+done_S = rcs["S"] == 0 and len(plotfiles(P["S"])) > 0 and \
+    abs(float(yt.load(plotfiles(P["S"])[-1]).current_time) - 20.0) < 1e-6
+check("a scalar-flaw run completes", done_S,
+      f"rc = {rcs['S']}, final plotfile t = "
+      f"{float(yt.load(plotfiles(P['S'])[-1]).current_time) if plotfiles(P['S']) else 'none'}")
+for n in ("D", "S4"):
+    if rcs[n] != 0:
+        check(f"run {n}", False, f"rc = {rcs[n]} (see {P[n]}.log)")
+if not ok:
+    print("FAIL")
+    sys.exit(1)
+
+# (b) S vs D
+rS, rD = removal_rows(P["S"]), removal_rows(P["D"])
+same_ev = (rS.size == rD.size and np.array_equal(rS["time"], rD["time"])
+           and np.array_equal(rS["col_i"], rD["col_i"]) and np.array_equal(rS["col_j"], rD["col_j"])
+           and np.array_equal(rS["n_voided"], rD["n_voided"]))
+if not same_ev:
+    n = min(rS.size, rD.size)
+    diff = np.nonzero((rS["time"][:n] != rD["time"][:n]) | (rS["n_voided"][:n] != rD["n_voided"][:n]))[0]
+    print(f"       first differing removal row: {diff[:1]} of S {rS.size} / D {rD.size}")
+check("b removal steps + n_voided S == D", same_ev,
+      f"{rS.size} removal rows, {int(rS['n_voided'].sum())} cells voided")
+pS, pD = plotfiles(P["S"]), plotfiles(P["D"])
+worst = 0.0
+same_pf = len(pS) == len(pD) and len(pS) > 0
+for a, b in zip(pS, pD):
+    fa, fb = fields(a, ["Temp", "H"]), fields(b, ["Temp", "H"])
+    worst = max(worst, float(np.max(np.abs(fa["Temp"] - fb["Temp"]) / np.abs(fb["Temp"]))),
+                float(np.max(np.abs(fa["H"] - fb["H"]) / np.maximum(np.abs(fb["H"]), 1.0))))
+check("b T, H at every plotfile S ~ D", same_pf and worst <= TOL_TH,
+      f"{len(pS)} plotfiles, max rel diff {worst:.2e} (tol {TOL_TH:g})")
+for n in ("S", "D"):
+    le = np.max(np.abs(thermo(P[n])["ledger_err"]))
+    check(f"b ledger {n}", le <= TOL_TH, f"max |ledger_err| = {le:.2e}")
+
+# (c) completeness of the removal log
+for n in ("S", "D"):
+    r = removal_rows(P[n])
+    h = h_col_rows(P[n])
+    keys = set(zip(r["time"].tolist(), r["col_i"].tolist(), r["col_j"].tolist()))
+    unique = len(keys) == r.size
+    hcol_t = set(np.round(h["time"], 9).tolist())
+    rem_t = set(np.round(r["time"], 9).tolist())
+    check(f"c {n} one row per (step, column) removal",
+          unique and np.all(r["h_applied"] > 0.0) and hcol_t <= rem_t and r.size > h.size,
+          f"{r.size} rows (unique {unique}), min h_applied {r['h_applied'].min():.3e} m, "
+          f"all {h.size} h_col first-firing times present: {hcol_t <= rem_t}")
+    last = fields(plotfiles(P[n])[-1], ["Temp", "removed", "phi"])
+    rem = last["removed"] > 0.5
+    check(f"c {n} sum n_voided == removed cells",
+          int(r["n_voided"].sum()) == int(rem.sum()),
+          f"sum n_voided {int(r['n_voided'].sum())}, removed cells {int(rem.sum())}")
+    zc = (np.arange(rem.size) + 0.5) * DZ
+    ktop = int(np.nonzero(~rem)[0].max())
+    recession = DEPTH - (zc[ktop] + last["phi"][ktop])
+    check(f"c {n} sum h_applied == phi recession",
+          abs(float(r["h_applied"].sum()) - recession) <= TOL_REC,
+          f"sum h_applied {r['h_applied'].sum():.15e} m, recession {recession:.15e} m, "
+          f"|diff| {abs(float(r['h_applied'].sum()) - recession):.2e}")
+    one = r[r["n_voided"] == 1]
+    ks = one["k_top"].astype(int)
+    frozen = last["Temp"][ks]
+    all_void = bool(np.all(rem[ks]))
+    dT = float(np.max(np.abs(frozen - one["T_top"]) / one["T_top"])) if one.size else float("nan")
+    check(f"c {n} T_top == frozen T of the voided cell",
+          one.size > 0 and all_void and dT <= 1e-12,
+          f"{one.size} single-cell rows, cells voided {all_void}, max rel diff {dT:.2e}")
+
+# (d) edge-triggered h_col CSV unchanged between S and D
+hS, hD = h_col_rows(P["S"]), h_col_rows(P["D"])
+same_h = (hS.size == hD.size and
+          all(np.array_equal(hS[c], hD[c]) for c in ("time", "col_i", "col_j", "h_col", "is_gb_at_top")) and
+          np.allclose(hS["a_f"], hD["a_f"], rtol=1e-7, atol=0) and
+          np.allclose(hS["Sp_field_at_top"], hD["Sp_field_at_top"], rtol=1e-7, atol=0))
+check("d h_col_events rows S == D", same_h,
+      f"{hS.size} vs {hD.size} rows (time, col, h_col, is_gb exact; a_f, Sp to 1e-7 of the 9-digit print)")
+
+# (e) 4 ranks
+same_csv = filecmp.cmp(P["S"] + "_removal_events.csv", P["S4"] + "_removal_events.csv", shallow=False)
+check("e removal_events.csv 1 vs 4 ranks", same_csv, "cmp-identical" if same_csv else "DIFFERENT")
+p1, p4 = plotfiles(P["S"]), plotfiles(P["S4"])
+layout = "byte (Cell_D)"
+same_cells = [os.path.basename(p) for p in p1] == [os.path.basename(p) for p in p4] and len(p1) > 0
+for a, b in zip(p1, p4):
+    d1 = sorted(glob.glob(os.path.join(a, "Level_0", "Cell_D_*")))
+    d4 = sorted(glob.glob(os.path.join(b, "Level_0", "Cell_D_*")))
+    if [os.path.basename(x) for x in d1] == [os.path.basename(x) for x in d4]:
+        if not all(filecmp.cmp(x, y, shallow=False) for x, y in zip(d1, d4)):
+            same_cells = False
+    else:
+        # VisMF writes one Cell_D file per rank (one box each here), so the
+        # rank-ordered concatenation must equal the 1-rank Cell_D bytes.
+        layout = "bytes of the rank-ordered Cell_D concatenation"
+        b1 = b"".join(open(x, "rb").read() for x in d1)
+        b4 = b"".join(open(y, "rb").read() for y in d4)
+        if b1 != b4:
+            same_cells = False
+check("e Level_0 cell data 1 vs 4 ranks", same_cells, f"{len(p1)} plotfiles identical by {layout}")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

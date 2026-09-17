@@ -9,6 +9,56 @@ sources: [[[sources/meier-2017]], [[validation/meier-2017__pilot-scale-grimsel-6
 
 # Meier 2017 Grimsel pilot demo (660 kg block) — validation reference packet
 
+> **Errata (2026-09-17, from a full reread of the thesis; page-cited notes in
+> `Claude_markdowns/meier_thesis_notes.md`; printed page = PDF page − 27).**
+> Everything below was written before the thesis itself was checked. The
+> following statements in this packet are wrong or misleading and are
+> superseded:
+>
+> 1. **§2 "Nozzle outlet Ø 7.1 mm."** The thesis text says 7.1 mm (p. 212);
+>    the burner drawing set (VT5 sheet 14/17, linked in thesis appendix A.2)
+>    gives the outlet bore as **7.5 mm** and the throat as 6 mm (pp. 212, 222,
+>    "Laval" nozzle). The drawing wins; D2a2/D2b use 7.5 mm. Because the
+>    nozzle is a choked converging–diverging nozzle, **the jet is
+>    supersonic**; Martin's correlation (subsonic) is an extrapolation.
+> 2. **§7 target 7 "Combustion chamber T plateau ~1163 °C" and §4 "T_flame …
+>    Bracket 1200–1700 K".** The 1163 °C is the *igniter thermocouple*, the
+>    ignition coil's own sensor 33 mm from the fuel injector, reported
+>    uncorrected (p. 215) and calibrated to 1000 °C. It peaked at 1163 °C
+>    during the flow ramp with the flame attached and read **≈ 0.45 × 1163 °C
+>    ≈ 550 °C throughout both drilling phases** (Fig. 8.7, p. 220) because it
+>    sits upstream of the lifted flame. **It is not a gas temperature and not a
+>    lower bound on the nozzle gas.** The nozzle gas temperature is unmeasured:
+>    adiabatic ≈ 1900 K is the upper bound; the burner's cooling water ran at
+>    160 L/h (p. 208) but its temperature rise is not reported.
+> 3. **§2 "Heated patch Ø ≈ 50 mm … impingement zone 30–50 mm."** A guess, not
+>    Meier's. The hole is cut by the jet spreading over the face; the burner
+>    rests on feet (p. 212) and ROP is the recession at the foot ring. See
+>    D2/D2b.
+> 4. **§4 Option A "h ∈ [5, 30] kW/(m² K)", "h = 10 kW/(m² K) Meier's choice".**
+>    10 kW/m² K appears in the thesis only as an assumption borrowed from
+>    Potter Drilling for his Chapter 7 model (p. 193). The only impingement heat
+>    transfer *measured* in the thesis (Ch. 3 calibration air jets, Ø 5.33 mm,
+>    Re ~ 1–3 × 10⁴, SOD 2–6) is **0.4–1.6 kW/m² K** (Fig. 3.12, p. 91). Martin
+>    (1977) at the pilot's measured flow gives 1449 W/m² K; D2b showed the
+>    5–10 kW/m² K values drill 2× too fast.
+> 5. **§7 target 3 "V = 3.42 L".** Measured **by filling the finished hole with
+>    water** (p. 221), so it includes any widening at the mouth. Score the
+>    model's whole excavation against it, not the volume inside the nominal
+>    hole diameter.
+> 6. **§7 target 4 "Ø ≈ 85 mm".** Source: Table 8.2, p. 222. Fig. 8.8 (p. 224)
+>    shows a near-cylindrical hole to within a few cm of the surface, with a
+>    local underream at ≈ 10 cm caused by holding the burner still (p. 223).
+>    No collar funnel.
+> 7. **§6 timeline / §8 "gravity-driven self-feeding".** Partly: the burner
+>    hung from the crane, the hook load showed whether it rested on the rock
+>    (p. 221), and the drawworks gave intermittent pushes "to keep the drill
+>    free" (p. 219); the operator set the advance rate (p. 223). ROP was
+>    "average and constant" 1.5 m/h; self-consistent band 1.3–1.6 m/h (see
+>    `Claude_markdowns/2026-09-15b.md`).
+> 8. **§4 "SOD = 7 × D".** With D = 7.5 mm the drawing's 50 mm is 6.67 D.
+> 9. Author: **Thierry** Meier.
+
 Self-contained data for reproducing the Ch. 8 pilot-scale flame-jet demonstration on a 660 kg Grimsel granite block. Distilled from [[sources/meier-2017]] (Chapter 8) and the two related validation cases — read those for narrative context and conflict tracking. Everything an implementer needs to set up and score the run is here.
 
 ## 1. What this validates

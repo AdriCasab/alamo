@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+# SCOPE (2026-09-15, A1): this case runs surface_patch.mode = prescribed_T
+# (face ramp ~5 K/s). There the h_col depth scan measures a well-defined
+# isotherm depth, so the test stays valid as a prescribed-T mechanics
+# regression. h_col is NOT a flake size in self-heated (beam/Robin) runs,
+# where the criterion fires at a cell-average temperature and
+# h_col ~ dz/2 - a_f is a removal increment (S1; see
+# tests/MMWSpalling/studies/s1_surface_resolution/README.md). Assertions
+# are unchanged.
+#
 # Step 16c — Rossi 2018 damage-profile validation via the per-step h_col
 # event CSV log.
 #

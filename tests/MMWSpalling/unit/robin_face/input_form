@@ -1,0 +1,111 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# S1 (a): discrete-exact check of the convective_flame Robin source forms
+# (surface_patch.robin_form = cell | face) on the microstructure path.
+#
+# 1-D column: 1 x 1 x 20 cells, dz = 1 mm, Neumann-0 on every face, no beam,
+# no removal (the domain top IS the mask top, so surface.follow_mask is not
+# used). Robin top h = 2e4 W/m^2K, T_gas = 1000 K, k = 1.5 W/mK:
+# Bi = h*dz/(2k) = 6.67, so the first-step face flux is 1/(1+Bi) = 0.13 of the
+# cell flux. The `test` runs cell/face x losses off/on via CLI overrides and
+# replays the same explicit FV update in Python.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/robin_face/output/form
+
+timestep  = 0.01
+stop_time = 20.0
+
+amr.plot_int        = 100
+amr.thermo.int      = 1
+amr.thermo.plot_int = 100
+amr.max_level       = 0
+amr.n_cell          = 1 1 20
+amr.blocking_factor = 1
+amr.max_grid_size   = 20
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.001 0.001 0.020
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- Robin flame source on the top face ---
+surface_patch.enabled    = 1
+surface_patch.mode       = convective_flame
+surface_patch.robin_form = cell
+surface_patch.face       = zhi
+surface_patch.x0         = 0.0005
+surface_patch.y0         = 0.0005
+surface_patch.radius     = 1.0
+surface_patch.h_conv     = 2.0e4
+surface_patch.T_flame    = 1000.0
+
+# --- Surface losses: OFF here; the test turns them on with
+#     losses.epsilon=0.8 losses.epsilon_high=0.9 losses.T_eps_break=600
+#     losses.sigma_SB=5.670374e-8 losses.h_conv=10 ---
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 293.15
+
+energy_ledger.enabled = 1
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

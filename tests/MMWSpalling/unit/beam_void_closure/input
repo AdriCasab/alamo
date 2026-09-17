@@ -1,0 +1,140 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# E1: beam/void gap energy-closure regression.
+#
+# Short pseudo-2D derivative of the Meier dev harness
+# (validation/meier/sp_meier_pilot/input_2d_dev): same Grimsel granite,
+# sp_weibull + surface-normal kernel, uniform disk, alpha = 2000/m,
+# dx = dz = 2 mm (alpha*dz = 4, the leak-maximising regime), removal on.
+# Smaller slab (40 x 4 x 30 cells, 80 x 8 x 60 mm), 20 s.
+#
+# Surface losses are OFF so every joule of beam energy must show up as stored
+# (H - H0) in solid cells or frozen H in voided cells: the plotfile audit (T2)
+# closes to round-off instead of to the ~1% loss budget.
+#
+# thermo.dat (amr.thermo.*) carries the E1 counter: beam_P_inc/dep/trans,
+# beam_E_*, beam_closure_err, beam_invariant_viol.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/beam_void_closure/output
+
+timestep  = 0.001
+stop_time = 20.0
+
+amr.plot_int        = 1000      # every 1 s
+amr.thermo.int      = 1
+amr.thermo.plot_int = 100
+amr.max_level       = 0
+amr.n_cell          = 40 4 30
+amr.blocking_factor = 2
+amr.max_grid_size   = 20
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.08  0.008 0.060
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase (as input_2d_dev) ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 20.0
+weibull.seed    = 12345
+
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.004
+
+vapor.enabled = 0
+
+spall.surface_normal = 1
+
+confining.p = 1.0e6
+
+# --- Beam: uniform 30 mm-radius disk, same flux as input_2d_dev ---
+# 2.057 MW/m^2 * pi * 0.03^2 = 5816 W.
+beam.P0         = 5816.0
+beam.profile    = uniform
+beam.radius     = 0.030
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.04
+beam.y0         = 0.004
+beam.z0         = 0.060
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+# --- Surface losses OFF (see header) ---
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 0.0
+losses.T_amb         = 293.15
+
+surface_patch.enabled = 0
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

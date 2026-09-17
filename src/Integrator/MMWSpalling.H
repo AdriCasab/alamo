@@ -53,6 +53,7 @@
 #include <cmath>
 #include <cstdint>
 #include <fstream>
+#include <sstream>
 #include <ios>
 #include <limits>
 #include <random>
@@ -83,6 +84,17 @@ public:
         pp.queryclass<HeatConduction>("hc", value);
         pp.queryclass<Mechanics<Model::Solid::Affine::Isotropic>>("el", value);
         pp.queryclass<Numeric::MMWBeam>("beam", value.beam);
+
+        // E1: beam-deposition closure counter (see BeamEnergyBalance).
+        // Non-extensive: the Integrator neither zeroes nor MPI-sums these.
+        value.RegisterIntegratedVariable(&value.beam_P_inc,          "beam_P_inc",          false);
+        value.RegisterIntegratedVariable(&value.beam_P_dep,          "beam_P_dep",          false);
+        value.RegisterIntegratedVariable(&value.beam_P_trans,        "beam_P_trans",        false);
+        value.RegisterIntegratedVariable(&value.beam_E_inc,          "beam_E_inc",          false);
+        value.RegisterIntegratedVariable(&value.beam_E_dep,          "beam_E_dep",          false);
+        value.RegisterIntegratedVariable(&value.beam_E_trans,        "beam_E_trans",        false);
+        value.RegisterIntegratedVariable(&value.beam_closure_err,    "beam_closure_err",    false);
+        value.RegisterIntegratedVariable(&value.beam_invariant_viol, "beam_invariant_viol", false);
 
         // Cache the diffusivity for use in Advance (HeatConduction's alpha is
         // private; cheaper than another queryclass).
@@ -473,6 +485,146 @@ public:
             Util::Abort(INFO, "MMWSpalling: spallation.model = sp_weibull requires "
                               "microstructure.nphases (Step 15 Weibull samples will key "
                               "on grain-boundary faces)");
+
+        // S1: surface-resolution study switches (default-off; microstructure
+        // path, single level).
+        {
+            int fm = 0, le = 0;
+            pp.query_default("surface.follow_mask",   fm, 0);
+            pp.query_default("energy_ledger.enabled", le, 0);
+            value.surface_follow_mask = (fm != 0);
+            value.ledger_enabled      = (le != 0);
+            if (value.surface_follow_mask)
+            {
+                if (!value.removal_enabled())
+                    Util::Abort(INFO, "surface.follow_mask = 1 requires spall.enabled "
+                                      "or vapor.enabled");
+                if (value.surface_patch.enabled &&
+                    value.surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature)
+                    Util::Abort(INFO, "surface.follow_mask = 1 is not supported with "
+                                      "surface_patch.mode = prescribed_T");
+            }
+            if ((value.surface_follow_mask || value.ledger_enabled) &&
+                !value.microstructure_enabled)
+                Util::Abort(INFO, "surface.follow_mask / energy_ledger.enabled require "
+                                  "the microstructure path (microstructure.nphases)");
+            if ((value.surface_follow_mask || value.ledger_enabled) && value.max_level > 0)
+                Util::Abort(INFO, "surface.follow_mask / energy_ledger.enabled are "
+                                  "single-level only (amr.max_level = 0)");
+            if (value.surface_patch.enabled &&
+                value.surface_patch.robin_form == SurfacePatch::RobinForm::Face &&
+                !value.microstructure_enabled)
+                Util::Abort(INFO, "surface_patch.robin_form = face is implemented on "
+                                  "the microstructure path only");
+            // A1: the face-form Newton (SurfaceCellFlux) relies on a residual
+            // that is monotone increasing in T_f. With epsilon_high < epsilon
+            // the radiation term steps DOWN at T_eps_break, so the face
+            // balance can have more than one root.
+            if (value.surface_patch.enabled &&
+                value.surface_patch.robin_form == SurfacePatch::RobinForm::Face &&
+                value.eps_rad_hi < value.eps_rad)
+                Util::Abort(INFO, "surface_patch.robin_form = face requires "
+                                  "losses.epsilon_high >= losses.epsilon (got ", value.eps_rad_hi,
+                                  " < ", value.eps_rad, "): the face-temperature Newton assumes a "
+                                  "monotone residual with a unique root");
+            // C1: pinned-surface closure prerequisites (the pin comes from the
+            // removal pipeline's per-column firing T at the mask top).
+            if (value.surface_patch.enabled &&
+                value.surface_patch.robin_form == SurfacePatch::RobinForm::Pinned)
+            {
+                if (!value.microstructure_enabled)
+                    Util::Abort(INFO, "surface_patch.robin_form = pinned is implemented on "
+                                      "the microstructure path only");
+                if (!value.surface_follow_mask)
+                    Util::Abort(INFO, "surface_patch.robin_form = pinned requires "
+                                      "surface.follow_mask = 1");
+                if (!(value.spall_enabled &&
+                      value.spallation_model == SpallationModel::SpWeibull))
+                    Util::Abort(INFO, "surface_patch.robin_form = pinned requires spall.enabled = 1 "
+                                      "and spallation.model = sp_weibull");
+                if (value.max_level > 0)
+                    Util::Abort(INFO, "surface_patch.robin_form = pinned is single-level only "
+                                      "(amr.max_level = 0)");
+                if (value.eps_rad_hi < value.eps_rad)
+                    Util::Abort(INFO, "surface_patch.robin_form = pinned requires "
+                                      "losses.epsilon_high >= losses.epsilon (got ", value.eps_rad_hi,
+                                      " < ", value.eps_rad, "): the face-temperature Newton assumes a "
+                                      "monotone residual with a unique root");
+                value.RegisterIntegratedVariable(&value.pinned_cols_pinned, "pinned_cols_pinned", false);
+                value.RegisterIntegratedVariable(&value.pinned_cols_face,   "pinned_cols_face",   false);
+                value.RegisterIntegratedVariable(&value.pinned_q_mean,      "pinned_q_mean",      false);
+            }
+            // A1: removal-event log validity.
+            if (value.sp_emit_removal_events_csv)
+            {
+                if (!(value.spall_enabled &&
+                      value.spallation_model == SpallationModel::SpWeibull))
+                    Util::Abort(INFO, "spall.removal_events_csv = 1 requires spall.enabled = 1 "
+                                      "and spallation.model = sp_weibull");
+                if (value.max_level > 0)
+                    Util::Abort(INFO, "spall.removal_events_csv is single-level only "
+                                      "(amr.max_level = 0)");
+            }
+            if (value.ledger_enabled)
+            {
+                value.RegisterIntegratedVariable(&value.ledger_E_H,     "ledger_E_H",     false);
+                value.RegisterIntegratedVariable(&value.ledger_E_src,   "ledger_E_src",   false);
+                value.RegisterIntegratedVariable(&value.ledger_err,     "ledger_err",     false);
+                value.RegisterIntegratedVariable(&value.ledger_P_beam,  "ledger_P_beam",  false);
+                value.RegisterIntegratedVariable(&value.ledger_P_robin, "ledger_P_robin", false);
+                value.RegisterIntegratedVariable(&value.ledger_P_loss,  "ledger_P_loss",  false);
+                value.RegisterIntegratedVariable(&value.ledger_surface_missing_cols,
+                                                 "ledger_surface_missing_cols", false);
+            }
+            // D2a: pinned branch-reason counters (sum = pinned_cols_face) and the
+            // spatial-flame diagnostics. Registered after every pre-D2a variable
+            // so existing thermo.dat columns keep their positions.
+            if (value.surface_patch.enabled &&
+                value.surface_patch.robin_form == SurfacePatch::RobinForm::Pinned)
+            {
+                value.RegisterIntegratedVariable(&value.pinned_cols_face_unset,   "pinned_cols_face_unset",   false);
+                value.RegisterIntegratedVariable(&value.pinned_cols_face_idle,    "pinned_cols_face_idle",    false);
+                value.RegisterIntegratedVariable(&value.pinned_cols_face_qneg,    "pinned_cols_face_qneg",    false);
+                value.RegisterIntegratedVariable(&value.pinned_cols_face_minrule, "pinned_cols_face_minrule", false);
+            }
+            if (value.surface_patch.enabled && value.surface_patch.use_expr)
+            {
+                if (!value.surface_follow_mask)
+                    Util::Abort(INFO, "surface_patch.h_expr / T_flame_expr require "
+                                      "surface.follow_mask = 1");
+                value.RegisterIntegratedVariable(&value.patch_min_standoff, "patch_min_standoff", false);
+                value.RegisterIntegratedVariable(&value.patch_P_robin,      "patch_P_robin",      false);
+            }
+            // D2a2: wall-jet enthalpy closure diagnostics, after every
+            // pre-D2a2 variable.
+            if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy)
+            {
+                value.RegisterIntegratedVariable(&value.jet_P_face,    "jet_P_face",    false);
+                value.RegisterIntegratedVariable(&value.jet_P_cap,     "jet_P_cap",     false);
+                value.RegisterIntegratedVariable(&value.jet_T_stag,    "jet_T_stag",    false);
+                value.RegisterIntegratedVariable(&value.jet_s_c,       "jet_s_c",       false);
+                value.RegisterIntegratedVariable(&value.jet_P_decay,   "jet_P_decay",   false);
+                value.RegisterIntegratedVariable(&value.jet_T_exhaust, "jet_T_exhaust", false);
+                value.RegisterIntegratedVariable(&value.jet_P_exhaust, "jet_P_exhaust", false);
+                value.RegisterIntegratedVariable(&value.jet_r_reach,   "jet_r_reach",   false);
+            }
+            // D2b: feet descent and exhaust recirculation, after every pre-D2b
+            // variable.
+            if (value.surface_patch.enabled && value.surface_patch.feet)
+            {
+                value.RegisterIntegratedVariable(&value.nozzle_z,           "nozzle_z",           false);
+                value.RegisterIntegratedVariable(&value.foot_z,             "foot_z",             false);
+                value.RegisterIntegratedVariable(&value.foot_cols,          "foot_cols",          false);
+                value.RegisterIntegratedVariable(&value.foot_carry_cols,    "foot_carry_cols",    false);
+                value.RegisterIntegratedVariable(&value.foot_stall_time,    "foot_stall_time",    false);
+            }
+            if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy &&
+                value.surface_patch.jet_T_ent_exhaust)
+            {
+                value.RegisterIntegratedVariable(&value.jet_T_rec,    "jet_T_rec",    false);
+                value.RegisterIntegratedVariable(&value.jet_P_recirc, "jet_P_recirc", false);
+            }
+        }
 
         if (value.vapor_enabled && !value.vapor_A_beam_override)
         {
@@ -1094,9 +1246,19 @@ protected:
         const int dlo[3] = {domain.smallEnd(0), domain.smallEnd(1), domain.smallEnd(2)};
         const int dhi[3] = {domain.bigEnd(0),   domain.bigEnd(1),   domain.bigEnd(2)};
 
+        // E1: global top solid cell per (i, j) column for the beam path (see
+        // the BeamSource call below). Empty unless void-aware with the beam on,
+        // or (S1) with surface.follow_mask / the energy ledger on.
+        const Set::Scalar P_now = beam.power_at(time);
+        const bool follow_mask = surface_follow_mask;
+        const amrex::Vector<int> k_top_col =
+            (void_aware && (P_now > 0.0 || follow_mask || ledger_enabled))
+            ? ColumnTopSolid(lev) : amrex::Vector<int>();
+        const int* ktc = k_top_col.data();
+        const int ncx = dhi[0] - dlo[0] + 1;
+
         const Set::Scalar* DX  = geom[lev].CellSize();
         const Set::Scalar* PLO = geom[lev].ProbLo();
-        const Set::Scalar P_now = beam.power_at(time);
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
@@ -1127,8 +1289,18 @@ protected:
         const Set::Scalar sp_r2    = surface_patch.radius * surface_patch.radius;
         const Set::Scalar sp_T     = (sp_on && sp_presc)
                                    ? surface_patch.T_at(time) : 0.0;
-        const Set::Scalar sp_hfl   = surface_patch.h_conv;
-        const Set::Scalar sp_Tfl   = surface_patch.T_flame;
+        // D2a: one per-column (h, T_gas) evaluation per call, shared by the
+        // kernel, the pin rule, the ledger and the diagnostics.
+        if (sp_on) BuildFlameColumns(lev, time, dt, k_top_col);
+        const Set::Scalar* fh  = sp_on ? flame_h.data()  : nullptr;
+        const Set::Scalar* fTg = sp_on ? flame_Tg.data() : nullptr;
+        // C1: pinned runs the face Newton (face_form = true) plus the pin.
+        const bool        sp_pinned = sp_on && surface_patch.robin_form ==
+                                      SurfacePatch::RobinForm::Pinned;
+        const bool        sp_face  = surface_patch.robin_form ==
+                                     SurfacePatch::RobinForm::Face || sp_pinned;
+        if (sp_pinned && lev == 0) BuildPinEffective(lev, time);
+        const Set::Scalar* tpe = (sp_pinned && lev == 0) ? pin_T_eff.data() : nullptr;
 
         for (amrex::MFIter mfi(*H_mf[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
@@ -1211,41 +1383,1025 @@ protected:
                 Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
                 Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
 
-                if (!self_void && sp_on && k == sp_topk) {
+                // S1: with surface.follow_mask the patch and the losses sit on
+                // the mask column top; otherwise the fixed domain top and the
+                // phi-window surface_mf (unchanged).
+                const int k_top_c = (follow_mask && ktc)
+                                  ? ktc[(j - dlo[1]) * ncx + (i - dlo[0])] : sp_topk;
+                const Set::Scalar surf_c = follow_mask
+                                         ? Set::Scalar(k == k_top_c ? 1.0 : 0.0)
+                                         : surf(i, j, k);
+                bool in_patch = false;
+                if (!self_void && sp_on && k == k_top_c) {
                     Set::Scalar dxp = x - sp_x0, dyp = y - sp_y0;
                     if (dxp * dxp + dyp * dyp <= sp_r2) {
                         if (sp_presc)
                             div_kgrad += kc * (sp_T - Tc) * inv_dz2;
                         else
-                            div_kgrad += sp_hfl * (sp_Tfl - Tc) * inv_dz;
+                            in_patch = true;
                     }
                 }
+                Set::Scalar q_in = 0.0, q_out = 0.0, q_rob = 0.0, q_los = 0.0;
+                const int col_c = (j - dlo[1]) * ncx + (i - dlo[0]);
+                if (!self_void)
+                    SurfaceCellFlux(in_patch, sp_face, surf_c,
+                                    fh  ? fh[col_c]  : Set::Scalar(0.0),
+                                    fTg ? fTg[col_c] : Set::Scalar(0.0),
+                                    kc, DX[2], Tc,
+                                    eps_lo, eps_hi, T_eps_b, sig_SB, h_c, T_a,
+                                    q_in, q_out, q_rob, q_los,
+                                    tpe ? tpe[col_c] : Set::Scalar(0.0));
+                if (in_patch) div_kgrad += q_in * inv_dz;
 
-                // Beer-Lambert path is measured through material from the
-                // current (receding) surface: phi(i,j,k) = z_surface - z.
-                // Before any removal in this column phi == z0 - z, so this is
-                // a no-op until the surface actually recedes.
+                // E1: Beer-Lambert path is measured through material from the
+                // TOP FACE OF THE FIRST SOLID CELL, so it matches the `removed`
+                // mask. Removal keeps solid <=> phi >= 0 with phi linear down
+                // the column, so the top solid cell has phi in [0, dz) and a
+                // cell m cells below it has n_above = floor(phi/dz) == m; its
+                // path interval [m*dz, (m+1)*dz] tiles the column with no gap
+                // and no overlap for ANY phi_top. Passing raw phi instead left
+                // the slice between the level set and the top solid face inside
+                // a void cell (Q = 0): attenuated but never deposited. Before any
+                // removal phi = (n + 1/2)*dz, so path == phi to round-off.
+                // n_above is taken from the mask (k_top - k), which equals
+                // floor(phi/dz) except at round-off ties phi_top ~ 0 / ~ dz,
+                // where the floor picks the wrong cell (see SolidFacePath).
                 Set::Scalar Q = self_void ? Set::Scalar(0.0)
                                           : BeamSource(P_now, bw0, blam, bx0, by0, bz0,
                                                        bR, bprof, brad, alpha_f, x, y, z, Tc,
                                                        DX[2],
-                                                       void_aware
-                                                         ? std::max(Set::Scalar(0.0), phi(i, j, k))
+                                                       // ktc is null unless void-aware (Q = 0 when P_now == 0).
+                                                       (void_aware && ktc)
+                                                         ? SolidFacePath(ktc[(j - dlo[1]) * ncx + (i - dlo[0])] - k, DX[2])
                                                          : Set::Scalar(-1.0));
 
-                Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
-                Set::Scalar q_loss = self_void ? Set::Scalar(0.0)
-                                               : surf(i, j, k)
-                                                 * (eps * sig_SB * (Tc*Tc*Tc*Tc - T_a*T_a*T_a*T_a)
-                                                    + h_c * (Tc - T_a));
+                (void)q_rob; (void)q_los;
+                const Set::Scalar q_loss = q_out;
 
                 // Conservative H update; T is recovered in InvertHtoT
                 // using the per-phase Numeric::Material::Table. Detached
-                // (void) cells exchange no heat with neighbours, so their
-                // H stays at the ambient value written by the spall reset.
+                // (void) cells exchange no heat and get no source, so their
+                // H stays frozen at its value when voided (removal never
+                // writes H).
                 H(i, j, k) = H_old(i, j, k) + dt * (div_kgrad + Q - q_loss * inv_dz);
                 keff_out(i, j, k) = kc; // diagnostic, refreshed each step
             });
+        }
+
+        // E1: standing beam-deposition closure counter (thermo.dat).
+        if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, k_top_col);
+        // S1: whole-domain energy ledger (thermo.dat), after the H update.
+        if (ledger_enabled) EnergyLedger(lev, time, dt, k_top_col);
+        // C1/D2a: pinned-closure branch counts and spatial-flame diagnostics.
+        if (lev == 0 && (sp_pinned || (sp_on && surface_patch.use_expr)))
+            PatchDiagnostics(lev, k_top_col);
+    }
+
+    // D2a: per-column flame for this AdvanceMicrostructure call.
+    //   constants: flame_h = h_conv, flame_Tg = T_flame (bit-identical path).
+    //   expressions: at the column centre (x, y), r = |(x, y) - (x0, y0)|,
+    //     z_face = PLO_z + (k_top + 1)*dz (mask top face), z_n = FeetDescent
+    //     (D2b, nozzle_descent = feet) or nozzle_z0 -
+    //     nozzle_feed*time, s = z_n - z_face; h = h_expr(x,y,r,s,t),
+    //     T_gas = T_flame_expr(...). Columns with no solid cell get 0.
+    // Aborts if a live column with r <= nozzle_collision_radius (default: the
+    // patch radius) has s <= 0 (nozzle in the rock), or if an in-patch column
+    // gets a non-finite / non-positive h or T_gas. patch_min_standoff is the
+    // min s over live columns with r <= nozzle_collision_radius (in the patch).
+    // k_top_col is the reduced
+    // ColumnTopSolid, so every rank builds identical vectors.
+    void BuildFlameColumns(int lev, Set::Scalar time, Set::Scalar dt,
+                           const amrex::Vector<int>& k_top_col)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int nx = domain.length(0), ny = domain.length(1);
+        const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
+        if (!surface_patch.use_expr)
+        {
+            flame_h.assign(ncols, surface_patch.h_conv);
+            flame_Tg.assign(ncols, surface_patch.T_flame);
+            flame_s.assign(ncols, 0.0);
+            return;
+        }
+        flame_h.assign(ncols, 0.0);
+        flame_Tg.assign(ncols, 0.0);
+        flame_s.assign(ncols, 0.0);
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;
+        const Set::Scalar rc2   = surface_patch.nozzle_collision_radius *
+                                  surface_patch.nozzle_collision_radius;
+        const Set::Scalar z_n = surface_patch.feet
+                              ? FeetDescent(lev, dt, k_top_col)
+                              : surface_patch.nozzle_z0 - surface_patch.nozzle_feed * time;
+        Set::Scalar s_min = std::numeric_limits<Set::Scalar>::infinity();
+        for (int j = 0; j < ny; ++j)
+        for (int i = 0; i < nx; ++i)
+        {
+            const std::size_t col = static_cast<std::size_t>(j) * nx + i;
+            const int k_top = k_top_col[col];
+            if (k_top == std::numeric_limits<int>::min()) continue;
+            const Set::Scalar x = PLO[0] + (Set::Scalar(i + domain.smallEnd(0)) + 0.5) * DX[0];
+            const Set::Scalar y = PLO[1] + (Set::Scalar(j + domain.smallEnd(1)) + 0.5) * DX[1];
+            const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+            const Set::Scalar r2 = dxp * dxp + dyp * dyp;
+            const Set::Scalar r = std::sqrt(r2);
+            const Set::Scalar z_face = PLO[2] + Set::Scalar(k_top + 1) * DX[2];
+            const Set::Scalar s = z_n - z_face;
+            flame_s[col] = s;
+            if (r2 > r2max) continue;
+            const bool in_coll = r2 <= rc2;
+            if (in_coll && !(s > 0.0))
+                Util::Abort(INFO, "surface_patch nozzle collision: stand-off s = ", s,
+                            " <= 0 at column (i, j) = (", i + domain.smallEnd(0), ", ",
+                            j + domain.smallEnd(1), "), time = ", time,
+                            " (z_nozzle = ", z_n, ", z_face = ", z_face, ")");
+            if (surface_patch.jet_enthalpy)
+            {
+                // D2a2: no jet flux above the nozzle plane (s <= 0); T_gas is
+                // set by JetEnthalpyMarch (T_ent here, a harmless finite value).
+                const Set::Scalar hj = (s > 0.0) ? surface_patch.h_f(x, y, r, s, time)
+                                                 : Set::Scalar(0.0);
+                if (!(std::isfinite(hj) && hj >= 0.0))
+                    Util::Abort(INFO, "surface_patch.h_expr must be finite and >= 0 in the "
+                                "patch; got h = ", hj, " at column (", i + domain.smallEnd(0),
+                                ", ", j + domain.smallEnd(1), "), r = ", r, ", s = ", s,
+                                ", time = ", time);
+                flame_h[col]  = hj;
+                flame_Tg[col] = surface_patch.jet_T_ent;
+                if (in_coll) s_min = std::min(s_min, s);
+                continue;
+            }
+            const Set::Scalar h  = surface_patch.h_f(x, y, r, s, time);
+            const Set::Scalar Tg = surface_patch.Tg_f(x, y, r, s, time);
+            if (!(std::isfinite(h) && h > 0.0 && std::isfinite(Tg) && Tg > 0.0))
+                Util::Abort(INFO, "surface_patch.h_expr / T_flame_expr must be finite and > 0 "
+                            "in the patch; got h = ", h, ", T_gas = ", Tg, " at column (",
+                            i + domain.smallEnd(0), ", ", j + domain.smallEnd(1), "), r = ", r,
+                            ", s = ", s, ", time = ", time);
+            flame_h[col]  = h;
+            flame_Tg[col] = Tg;
+            if (in_coll) s_min = std::min(s_min, s);
+        }
+        patch_min_standoff = std::isfinite(s_min) ? s_min : 0.0;
+        if (surface_patch.jet_enthalpy) JetEnthalpyMarch(lev, time, k_top_col);
+    }
+
+    // D2b: burner-on-feet descent (surface_patch.nozzle_descent = feet), lev 0,
+    // once per step, before the stand-offs are computed. The foot annulus is
+    // the live columns with r in [foot_r_inner, foot_r_outer] about (x0, y0);
+    // z_face = PLO_z + (k_top + 1)*dz.
+    //   pads: the annulus is split into foot_npads equal sectors of its
+    //     observed azimuth range [a_min, a_max] (atan2 about (x0, y0)); pad
+    //     p = min(npads - 1, floor((a - a_min)/(a_max - a_min)*npads)) (all in
+    //     pad 0 if a_max == a_min). A pad's height is the nearest-rank
+    //     quantile of its z_face values: sorted ascending, index
+    //     ceil(q*n) - 1 (q = foot_pad_quantile; q = 1 is the max). z_foot =
+    //     the mean of the pad heights.
+    //   max / mean: the whole-annulus reduction (one "pad").
+    // z_target = z_foot + foot_standoff; z_n = min(z_n_prev, max(z_target,
+    // z_n_prev - nozzle_feed_max*dt)) (never rises; first step z_n =
+    // z_target). foot_carry_cols counts columns with z_face >= their pad's
+    // height; foot_stall_time is the simulated time since z_n last decreased
+    // (0 on a step that descends). A stall is logged, never aborted. k_top_col is the domain-wide reduced
+    // mask top, so every rank computes the same z_n. Aborts if the annulus or
+    // a pad has no live column. nozzle_z is NOT checkpointed.
+    Set::Scalar FeetDescent(int lev, Set::Scalar dt, const amrex::Vector<int>& k_top_col)
+    {
+        if (lev != 0)
+            Util::Abort(INFO, "surface_patch.nozzle_descent = feet is single-level only");
+        const amrex::Box& domain = geom[lev].Domain();
+        const int nx = domain.length(0), ny = domain.length(1);
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const auto& sp = surface_patch;
+        const Set::Scalar ri2 = sp.foot_r_inner * sp.foot_r_inner;
+        const Set::Scalar ro2 = sp.foot_r_outer * sp.foot_r_outer;
+        std::vector<Set::Scalar> zf, az;
+        for (int j = 0; j < ny; ++j)
+        for (int i = 0; i < nx; ++i)
+        {
+            const std::size_t col = static_cast<std::size_t>(j) * nx + i;
+            const int k_top = k_top_col[col];
+            if (k_top == std::numeric_limits<int>::min()) continue;
+            const Set::Scalar x = PLO[0] + (Set::Scalar(i + domain.smallEnd(0)) + 0.5) * DX[0];
+            const Set::Scalar y = PLO[1] + (Set::Scalar(j + domain.smallEnd(1)) + 0.5) * DX[1];
+            const Set::Scalar dxp = x - sp.x0, dyp = y - sp.y0;
+            const Set::Scalar r2 = dxp * dxp + dyp * dyp;
+            if (r2 < ri2 || r2 > ro2) continue;
+            zf.push_back(PLO[2] + Set::Scalar(k_top + 1) * DX[2]);
+            az.push_back(std::atan2(dyp, dxp));
+        }
+        if (zf.empty())
+            Util::Abort(INFO, "surface_patch feet: the foot annulus [", sp.foot_r_inner, ", ",
+                        sp.foot_r_outer, "] m has no live column");
+        const bool pads = sp.foot_rule == SurfacePatch::FootRule::Pads;
+        const int npads = pads ? sp.foot_npads : 1;
+        std::vector<int> pad(zf.size(), 0);
+        if (pads && npads > 1)
+        {
+            const Set::Scalar a_min = *std::min_element(az.begin(), az.end());
+            const Set::Scalar a_max = *std::max_element(az.begin(), az.end());
+            if (a_max > a_min)
+                for (std::size_t c = 0; c < zf.size(); ++c)
+                    pad[c] = std::min(npads - 1, static_cast<int>(
+                                 std::floor((az[c] - a_min) / (a_max - a_min) * npads)));
+        }
+        std::vector<Set::Scalar> pad_h(npads, 0.0);
+        Set::Scalar z_foot = 0.0;
+        for (int p = 0; p < npads; ++p)
+        {
+            std::vector<Set::Scalar> v;
+            for (std::size_t c = 0; c < zf.size(); ++c) if (pad[c] == p) v.push_back(zf[c]);
+            if (v.empty())
+                Util::Abort(INFO, "surface_patch feet: pad ", p, " of ", npads,
+                            " has no live column in the foot annulus");
+            std::sort(v.begin(), v.end());
+            Set::Scalar hp = 0.0;
+            if (sp.foot_rule == SurfacePatch::FootRule::Max)
+                hp = v.back();
+            else if (sp.foot_rule == SurfacePatch::FootRule::Mean)
+            {
+                for (Set::Scalar z : v) hp += z;
+                hp /= Set::Scalar(v.size());
+            }
+            else
+            {
+                long idx = static_cast<long>(std::ceil(sp.foot_pad_quantile * Set::Scalar(v.size()))) - 1;
+                idx = std::max(0L, std::min(idx, static_cast<long>(v.size()) - 1));
+                hp = v[static_cast<std::size_t>(idx)];
+            }
+            pad_h[p] = hp;
+            z_foot += hp;
+        }
+        z_foot /= Set::Scalar(npads);
+        Set::Scalar carry = 0.0;
+        for (std::size_t c = 0; c < zf.size(); ++c) if (zf[c] >= pad_h[pad[c]]) carry += 1.0;
+        const Set::Scalar z_target = z_foot + sp.foot_standoff;
+        if (!feet_init)
+        {
+            nozzle_z  = z_target;
+            feet_init = true;
+        }
+        else
+        {
+            const Set::Scalar z_prev = nozzle_z;
+            nozzle_z = std::min(nozzle_z, std::max(z_target, nozzle_z - sp.nozzle_feed_max * dt));
+            // pad heights move in whole cells, so a per-step "no descent"
+            // count grows on almost every step; time since the last descent
+            // is the stall signal
+            foot_stall_time = (nozzle_z < z_prev) ? 0.0 : foot_stall_time + dt;
+        }
+        foot_z          = z_foot;
+        foot_cols       = Set::Scalar(zf.size());
+        foot_carry_cols = carry;
+        return nozzle_z;
+    }
+
+    // D2a2: wall-jet enthalpy closure (surface_patch.jet_closure = enthalpy).
+    // Live in-patch columns with s > 0 are binned by r into bins of width
+    // jet_dr (default max(dx, dy)). Stagnation (free-jet centreline decay):
+    //   s_c    = mean s over the innermost non-empty bin
+    //   phi    = min(1, jet_core_length*jet_D/s_c)   (1 for jet_stagnation =
+    //            nozzle, or when no column marches: s_c = 0)
+    //   T_stag = T_mix + (jet_T_nozzle - T_mix)*phi, T_mix = T_ent, or (D2b,
+    //            jet_T_ent_mode = exhaust) the previous step's T_exhaust
+    //   m      = jet_mdot, or jet_mdot/phi with jet_entrained_mass = 1
+    // then marching outward from the innermost bin with T_gas = T_stag
+    // (explicit in r):
+    //   P_bin   = sum_bin max(0, q_robin(c; T_gas)) * dx*dy
+    //   flame_Tg[c] = T_gas for the bin's columns
+    //   share   = min(P_bin, m*cp*(T_gas - T_ent))
+    //   T_gas  <- T_gas - share/(m*cp)             (>= T_ent)
+    // q_robin is SurfaceCellFlux's h*(T_gas - T_s) with the same inputs as the
+    // H update (top-cell T_old and k_c, robin_form, and, for pinned, the pin
+    // from PinRule at this h and T_gas), so the surface temperature and branch
+    // match the kernel: BuildPinEffective, which runs next, reproduces the pin
+    // exactly from the final flame vectors. Columns hotter than the gas
+    // (q_robin < 0) neither absorb nor return enthalpy. jet_P_face = sum share
+    // is the enthalpy taken from the nozzle stream; if a bin would overdraw
+    // (share < P_bin), the excess is supplied by the T_ent floor (the
+    // recirculation reservoir) and is not counted. With jet_P_cap =
+    // m*cp*(T_stag - T_ent) and jet_P_decay = jet_mdot*cp*(jet_T_nozzle - T_ent)
+    // - jet_P_cap (the excess the decay line discards; 0 for nozzle or
+    // entrained mass), the invariant (abort) is jet_P_face <= jet_P_cap,
+    // jet_P_face + jet_P_exhaust == jet_P_cap, jet_P_decay >= 0 (== 0 unless
+    // decay without entrained mass), all to 1e-9 of the nozzle budget. Under
+    // exhaust the budget is jet_mdot*cp*(jet_T_nozzle - T_ent) + jet_P_recirc,
+    // jet_P_recirc = (m - jet_mdot)*cp*(T_rec - T_ent), and the march floor
+    // stays T_ent (a T_rec floor would ratchet T_exhaust upward).
+    // jet_r_reach = max column r over bins with P_bin > 0. Every rank gathers the same top-cell data and runs the same
+    // serial march, so the vectors are rank-identical. With
+    // jet_profile_interval > 0, rank 0 appends one row per non-empty bin
+    // (time,bin,r_lo,n_cols,T_gas,P_bin,P_share) to <plot_file>_jet_profile.csv
+    // at the first step of each interval (T_gas = the bin's inlet value, the
+    // one its columns receive). Not checkpointed.
+    void JetEnthalpyMarch(int lev, Set::Scalar time, const amrex::Vector<int>& k_top_col)
+    {
+        if (lev != 0)
+            Util::Abort(INFO, "surface_patch.jet_closure = enthalpy is single-level only");
+        const amrex::Box& domain = geom[lev].Domain();
+        const int nx = domain.length(0), ny = domain.length(1);
+        const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
+        const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;
+        const bool pinned = surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;
+        const bool face   = surface_patch.robin_form == SurfacePatch::RobinForm::Face || pinned;
+
+        // Top-cell T_old and k_c per column (one owner per column; exact sum).
+        std::vector<Set::Scalar> jTc(ncols, 0.0), jkc(ncols, 0.0);
+        for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& kp    = (*kappa_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& Df    = (*D_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                const std::size_t col = static_cast<std::size_t>(j - jlo_dom) * nx + (i - ilo_dom);
+                const int k = k_top_col[col];
+                if (k < lo.z || k > hi.z) continue;
+                jTc[col] = T_old(i, j, k);
+                jkc[col] = kp(i, j, k) * std::exp(-kappa_damage_alpha * Df(i, j, k));
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(jTc.data(), static_cast<int>(ncols));
+        amrex::ParallelDescriptor::ReduceRealSum(jkc.data(), static_cast<int>(ncols));
+
+        // Bin the marching columns by r.
+        const Set::Scalar dr = surface_patch.jet_dr > 0.0 ? surface_patch.jet_dr
+                                                          : std::max(DX[0], DX[1]);
+        std::vector<std::vector<std::size_t>> bins;
+        std::vector<Set::Scalar> col_r(ncols, 0.0);
+        for (int j = 0; j < ny; ++j)
+        for (int i = 0; i < nx; ++i)
+        {
+            const std::size_t col = static_cast<std::size_t>(j) * nx + i;
+            if (k_top_col[col] == std::numeric_limits<int>::min()) continue;
+            if (!(flame_s[col] > 0.0)) continue;
+            const Set::Scalar x = PLO[0] + (Set::Scalar(i + ilo_dom) + 0.5) * DX[0];
+            const Set::Scalar y = PLO[1] + (Set::Scalar(j + jlo_dom) + 0.5) * DX[1];
+            const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+            const Set::Scalar r2 = dxp * dxp + dyp * dyp;
+            if (r2 > r2max) continue;
+            const Set::Scalar r = std::sqrt(r2);
+            const std::size_t b = static_cast<std::size_t>(std::floor(r / dr));
+            if (b >= bins.size()) bins.resize(b + 1);
+            bins[b].push_back(col);
+            col_r[col] = r;
+        }
+
+        // Stagnation: s_c = mean s over the innermost non-empty bin (bin 0
+        // unless the axis columns are excluded); phi = min(1, L_core*D/s_c)
+        // (1 under jet_stagnation = nozzle, or when no column marches);
+        // T_stag = T_ent + (T_nozzle - T_ent)*phi; march mass m = mdot, or
+        // mdot/phi under jet_entrained_mass = 1.
+        const Set::Scalar T_ent = surface_patch.jet_T_ent;
+        Set::Scalar s_c = 0.0;
+        for (const auto& bin : bins)
+        {
+            if (bin.empty()) continue;
+            for (std::size_t c : bin) s_c += flame_s[c];
+            s_c /= Set::Scalar(bin.size());
+            break;
+        }
+        Set::Scalar phi = 1.0;
+        if (surface_patch.jet_stag_decay && s_c > 0.0)
+            phi = std::min(Set::Scalar(1.0),
+                           surface_patch.jet_core_length * surface_patch.jet_D / s_c);
+        // D2b: exhaust recirculation mixes the nozzle flow with the previous
+        // step's exhaust (T_rec) instead of T_ent; the floor stays T_ent.
+        const bool exhaust = surface_patch.jet_T_ent_exhaust;
+        if (exhaust && !jet_rec_init) { jet_T_rec_next = T_ent; jet_rec_init = true; }
+        const Set::Scalar T_mix = exhaust ? jet_T_rec_next : T_ent;
+        const Set::Scalar T_stag = T_mix + (surface_patch.jet_T_nozzle - T_mix) * phi;
+        const Set::Scalar m_jet  = surface_patch.jet_entrained_mass
+                                 ? surface_patch.jet_mdot / phi : surface_patch.jet_mdot;
+        const bool have_pin = pinned && pin_T.size() == ncols;
+        const Set::Scalar mcp   = m_jet * surface_patch.jet_cp;
+        const Set::Scalar dA    = DX[0] * DX[1];
+        Set::Scalar T_gas = T_stag;
+        Set::Scalar P_face = 0.0, r_reach = 0.0;
+        // Optional profile log: one row per non-empty bin (inlet T_gas, P_bin,
+        // the jet's share), rank 0, at the first step of each interval.
+        bool prof = false;
+        std::ostringstream prow;
+        if (surface_patch.jet_profile_interval > 0.0)
+        {
+            const long idx = static_cast<long>(std::floor(time / surface_patch.jet_profile_interval));
+            if (idx > jet_profile_last) { prof = true; jet_profile_last = idx; }
+            prow.setf(std::ios::scientific);
+            prow.precision(16);
+        }
+        for (std::size_t ib = 0; ib < bins.size(); ++ib)
+        {
+            const auto& bin = bins[ib];
+            if (bin.empty()) continue;
+            const Set::Scalar T_in = T_gas;
+            Set::Scalar P_bin = 0.0;
+            for (std::size_t c : bin)
+            {
+                flame_Tg[c] = T_gas;
+                int reason = 0;
+                const Set::Scalar Tpin = have_pin
+                    ? PinRule(c, flame_h[c], T_gas, time, DX[2], reason) : Set::Scalar(0.0);
+                Set::Scalar q_in = 0.0, q_out = 0.0, q_rob = 0.0, q_los = 0.0;
+                SurfaceCellFlux(true, face, 1.0, flame_h[c], T_gas,
+                                jkc[c], DX[2], jTc[c], eps_rad, eps_rad_hi, T_eps_break,
+                                sigma_SB, h_conv, T_amb, q_in, q_out, q_rob, q_los, Tpin);
+                if (q_rob > 0.0) P_bin += q_rob;
+            }
+            P_bin *= dA;
+            if (P_bin > 0.0)
+                for (std::size_t c : bin) r_reach = std::max(r_reach, col_r[c]);
+            const Set::Scalar avail = mcp * (T_gas - T_ent);
+            const Set::Scalar share = (P_bin >= avail) ? avail : P_bin;
+            if (P_bin >= avail) { P_face += avail; T_gas = T_ent; }
+            else                { P_face += P_bin; T_gas = T_gas - P_bin / mcp; }
+            if (prof)
+                prow << time << "," << ib << "," << Set::Scalar(ib) * dr << "," << bin.size()
+                     << "," << T_in << "," << P_bin << "," << share << "\n";
+        }
+        if (prof && amrex::ParallelDescriptor::IOProcessor())
+        {
+            const std::string path = plot_file + "_jet_profile.csv";
+            const bool first = !jet_profile_header_written;
+            std::ofstream ofs(path, (first ? std::ios::trunc : std::ios::app) | std::ios::out);
+            if (ofs.is_open())
+            {
+                if (first) ofs << "time,bin,r_lo,n_cols,T_gas,P_bin,P_share\n";
+                ofs << prow.str();
+            }
+        }
+        if (prof) jet_profile_header_written = true;
+        const Set::Scalar P_nozzle = surface_patch.jet_mdot * surface_patch.jet_cp
+                                   * (surface_patch.jet_T_nozzle - T_ent);
+        jet_P_cap     = mcp * (T_stag - T_ent);
+        jet_T_stag    = T_stag;
+        jet_s_c       = s_c;
+        Set::Scalar P_budget = P_nozzle;
+        if (exhaust)
+        {
+            // P_face + P_exhaust = mdot*cp*(T_nozzle - T_ent) + P_recirc
+            jet_T_rec    = T_mix;
+            jet_P_recirc = (m_jet - surface_patch.jet_mdot) * surface_patch.jet_cp * (T_mix - T_ent);
+            P_budget     = P_nozzle + jet_P_recirc;
+            jet_T_rec_next = T_gas;
+        }
+        jet_P_decay   = P_budget - jet_P_cap;
+        jet_P_face    = P_face;
+        jet_T_exhaust = T_gas;
+        jet_P_exhaust = mcp * (T_gas - T_ent);
+        jet_r_reach   = r_reach;
+        const Set::Scalar tol = 1.0e-9 * std::max(P_budget, Set::Scalar(1.0));
+        if (!(std::isfinite(P_face) && P_face >= 0.0 && P_face <= jet_P_cap + tol &&
+              std::abs(P_face + jet_P_exhaust - jet_P_cap) <= tol &&
+              jet_P_decay >= -tol &&
+              (surface_patch.jet_stag_decay && !surface_patch.jet_entrained_mass
+                   ? true : std::abs(jet_P_decay) <= tol)))
+            Util::Abort(INFO, "jet enthalpy invariant violated at time ", time,
+                        ": jet_P_face = ", P_face, ", jet_P_exhaust = ", jet_P_exhaust,
+                        ", jet_P_cap = ", jet_P_cap, ", jet_P_decay = ", jet_P_decay,
+                        ", nozzle budget = ", P_nozzle);
+    }
+
+    // C1: per-column pin used by this step: pin_T_eff[col] = pin_T[col] unless
+    //   the column never fired (pin_T == 0), the flame cannot heat it past
+    //   the pin (q_pin = h(T_gas - pin_T) <= 0), or it has been idle for
+    //   time - pin_t >= pinned_idle_cycles * t_cell, with the cell heating
+    //   time t_cell = pin_rhoCp*dz*(pin_T - T_amb)/q_pin.
+    // Removal (which updates pin_T/pin_t) runs before the thermal advance in
+    // Advance(), so a column that fired this step has time - pin_t = 0 and
+    // pinned_idle_cycles = 0 never pins (face-identical test hook).
+    void BuildPinEffective(int lev, Set::Scalar time)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const std::size_t ncols = static_cast<std::size_t>(domain.length(0)) * domain.length(1);
+        if (pin_T.size() != ncols)
+        {
+            pin_T.assign(ncols, 0.0);
+            pin_t.assign(ncols, 0.0);
+            pin_rhoCp.assign(ncols, 0.0);
+        }
+        pin_T_eff.assign(ncols, 0.0);
+        pin_reason.assign(ncols, 0);
+        const Set::Scalar dz = geom[lev].CellSize()[2];
+        for (std::size_t c = 0; c < ncols; ++c)
+            // D2a: this column's flame (h, T_gas), from BuildFlameColumns.
+            pin_T_eff[c] = PinRule(c, flame_h[c], flame_Tg[c], time, dz, pin_reason[c]);
+    }
+
+    // C1 pin rule for one column at flame (h, T_gas); returns the pin (0 = face
+    // form) and sets reason (see pin_reason). Shared by BuildPinEffective and
+    // the D2a2 JetEnthalpyMarch. pin_T/pin_t/pin_rhoCp must be sized.
+    Set::Scalar PinRule(std::size_t c, Set::Scalar h, Set::Scalar T_gas,
+                        Set::Scalar time, Set::Scalar dz, int& reason) const
+    {
+        reason = 0;
+        if (pin_T[c] <= 0.0) return 0.0;                                // reason 0: unset
+        const Set::Scalar q_pin = h * (T_gas - pin_T[c]);
+        if (q_pin <= 0.0) { reason = 2; return 0.0; }                   // q_pin <= 0
+        const Set::Scalar t_cell = pin_rhoCp[c] * dz * (pin_T[c] - T_amb) / q_pin;
+        if (time - pin_t[c] >= surface_patch.pinned_idle_cycles * t_cell)
+        { reason = 1; return 0.0; }                                     // idle
+        reason = 3;
+        return pin_T[c];
+    }
+
+    // C1: thermo diagnostics for the pinned closure. Re-evaluates
+    // SurfaceCellFlux on the in-patch top cells with the H update's inputs
+    // (T_old, k_c, flame_h/Tg, pin_T_eff), so the branch taken matches the H
+    // update. D2a: face-branch reason counters (pin_reason + branch flag) and,
+    // with expressions, patch_P_robin = sum q_robin*dx*dy (any robin_form).
+    void PatchDiagnostics(int lev, const amrex::Vector<int>& k_top_col)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
+        const int ncx = domain.length(0);
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;
+        const bool pinned = surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;
+        const bool face   = surface_patch.robin_form == SurfacePatch::RobinForm::Face || pinned;
+        Set::Scalar n_pin = 0.0, n_face = 0.0, q_sum = 0.0;
+        Set::Scalar n_unset = 0.0, n_idle = 0.0, n_qneg = 0.0, n_min = 0.0;
+        for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& kp    = (*kappa_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& Df    = (*D_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                const int col = (j - jlo_dom) * ncx + (i - ilo_dom);
+                const int k = k_top_col[col];
+                if (k < lo.z || k > hi.z) continue;   // top cell not owned here
+                const Set::Scalar x = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
+                const Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
+                const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+                if (dxp * dxp + dyp * dyp > r2max) continue;
+                const Set::Scalar Tc = T_old(i, j, k);
+                const Set::Scalar kc = kp(i, j, k) * std::exp(-kappa_damage_alpha * Df(i, j, k));
+                Set::Scalar q_in = 0.0, q_out = 0.0, q_rob = 0.0, q_los = 0.0;
+                int branch = 0;
+                SurfaceCellFlux(true, face, 1.0, flame_h[col], flame_Tg[col],
+                                kc, DX[2], Tc, eps_rad, eps_rad_hi, T_eps_break, sigma_SB,
+                                h_conv, T_amb, q_in, q_out, q_rob, q_los,
+                                pinned ? pin_T_eff[col] : Set::Scalar(0.0), &branch);
+                if (branch == 1) n_pin += 1.0;
+                else
+                {
+                    n_face += 1.0;
+                    if (pinned)
+                    {
+                        switch (pin_reason[col])
+                        {
+                        case 0:  n_unset += 1.0; break;
+                        case 1:  n_idle  += 1.0; break;
+                        case 2:  n_qneg  += 1.0; break;
+                        default: n_min   += 1.0; break;
+                        }
+                    }
+                }
+                q_sum += q_rob;
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(n_pin);
+        amrex::ParallelDescriptor::ReduceRealSum(n_face);
+        amrex::ParallelDescriptor::ReduceRealSum(q_sum);
+        if (pinned)
+        {
+            amrex::ParallelDescriptor::ReduceRealSum(n_unset);
+            amrex::ParallelDescriptor::ReduceRealSum(n_idle);
+            amrex::ParallelDescriptor::ReduceRealSum(n_qneg);
+            amrex::ParallelDescriptor::ReduceRealSum(n_min);
+            pinned_cols_pinned = n_pin;
+            pinned_cols_face   = n_face;
+            pinned_q_mean      = (n_pin + n_face > 0.0) ? q_sum / (n_pin + n_face) : 0.0;
+            pinned_cols_face_unset   = n_unset;
+            pinned_cols_face_idle    = n_idle;
+            pinned_cols_face_qneg    = n_qneg;
+            pinned_cols_face_minrule = n_min;
+        }
+        patch_P_robin = q_sum * DX[0] * DX[1];
+    }
+
+    // S1: per-cell surface heat flux [W/m^2] for the microstructure path,
+    // shared by the H update and EnergyLedger so both use identical
+    // arithmetic. Called for every non-void cell.
+    //   q_in    added to the cell as q_in/dz   (nonzero only when in_patch)
+    //   q_out   removed from the cell as q_out/dz
+    //   q_robin, q_loss   the ledger split, with q_robin - q_loss == q_in - q_out
+    //
+    // Cell form (default, and all cells outside the patch):
+    //   q_in = q_robin = h*(T_gas - T_c)   [in_patch]
+    //   q_out = q_loss = surf*(eps(T_c)*sigma*(T_c^4 - T_a^4) + h_c*(T_c - T_a))
+    // (byte-identical to the pre-S1 inline expressions).
+    //
+    // Face form (in_patch && face): the top solid cell centre is dz/2 below
+    // its top face. Solve
+    //   (2k_c/dz)(T_f - T_c) = h(T_gas - T_f) - eps(T_f)*sigma*(T_f^4 - T_a^4) - h_c(T_f - T_a)
+    // for T_f with safeguarded Newton (start T_c, <= 10 iterations, stop when
+    // |dT| <= 1e-9*T_c). The residual is monotone increasing in T_f, so the
+    // root is bracketed by [min, max](T_c, T_gas, T_a); T_a is needed in the
+    // bracket once losses can pull T_f below T_c. A Newton step leaving the
+    // bracket is replaced by bisection. The cell receives the net face flux
+    // q_in = (2k_c/dz)(T_f - T_c) and no cell-centred loss (q_out = 0);
+    // q_robin = h(T_gas - T_f), and q_loss = q_robin - q_in (= the face
+    // losses at T_f to Newton tolerance, but the ledger closes to round-off).
+    //
+    // C1 pinned form (face_form = true and T_pin > 0, robin_form = pinned):
+    // the same face Newton runs first; T_s = min(T_f, T_pin). If T_f <= T_pin
+    // (weak flame, or T_pin = 0: column never fired / idle) the face-form
+    // outputs are returned unchanged (*branch = 0). Otherwise the surface is
+    // pinned at the column's last firing temperature (*branch = 1): the flame
+    // flux AND the losses are both evaluated at T_s = T_pin,
+    //   q_robin = h(T_gas - T_s),  q_loss = eps(T_s)*sigma*(T_s^4 - T_a^4) + h_c(T_s - T_a),
+    // and the cell absorbs the net q_in = q_robin - q_loss (q_out = 0). The
+    // conduction consistency G(T_s - T_c) = q_in is deliberately NOT enforced:
+    // that is the closure (the resolved surface rides at T_fire while the
+    // coarse cell average lags below it). Non-pinned callers pass T_pin = 0,
+    // so the cell and face arithmetic are untouched.
+    AMREX_GPU_HOST_DEVICE
+    static void SurfaceCellFlux(bool in_patch, bool face_form, Set::Scalar surf_c,
+                                Set::Scalar h, Set::Scalar T_gas,
+                                Set::Scalar kc, Set::Scalar dz, Set::Scalar Tc,
+                                Set::Scalar eps_lo, Set::Scalar eps_hi, Set::Scalar T_eps_b,
+                                Set::Scalar sig_SB, Set::Scalar h_c, Set::Scalar T_a,
+                                Set::Scalar& q_in, Set::Scalar& q_out,
+                                Set::Scalar& q_robin, Set::Scalar& q_loss,
+                                Set::Scalar T_pin = 0.0, int* branch = nullptr)
+    {
+        if (in_patch && face_form)
+        {
+            const Set::Scalar G = 2.0 * kc / dz;
+            Set::Scalar lo = std::min(std::min(Tc, T_gas), T_a);
+            Set::Scalar hi = std::max(std::max(Tc, T_gas), T_a);
+            Set::Scalar Tf = Tc;
+            for (int it = 0; it < 10; ++it)
+            {
+                const Set::Scalar eps = (Tf <= T_eps_b) ? eps_lo : eps_hi;
+                const Set::Scalar T3  = Tf * Tf * Tf;
+                const Set::Scalar F   = G * (Tf - Tc) - h * (T_gas - Tf)
+                                      + eps * sig_SB * (T3 * Tf - T_a * T_a * T_a * T_a)
+                                      + h_c * (Tf - T_a);
+                if (F == 0.0) break;
+                if (F > 0.0) hi = Tf; else lo = Tf;
+                const Set::Scalar dF = G + h + 4.0 * eps * sig_SB * T3 + h_c;
+                Set::Scalar Tn = Tf - F / dF;
+                if (!(Tn >= lo && Tn <= hi)) Tn = 0.5 * (lo + hi);
+                const Set::Scalar step = Tn - Tf;
+                Tf = Tn;
+                if (std::abs(step) <= 1.0e-9 * Tc) break;
+            }
+            if (!(T_pin > 0.0 && Tf > T_pin))
+            {
+                q_in    = G * (Tf - Tc);
+                q_out   = 0.0;
+                q_robin = h * (T_gas - Tf);
+                q_loss  = q_robin - q_in;
+                if (branch) *branch = 0;
+                return;
+            }
+            // C1 pinned branch: T_s = min(T_f, T_pin) = T_pin.
+            const Set::Scalar Ts   = T_pin;
+            const Set::Scalar eps_s = (Ts <= T_eps_b) ? eps_lo : eps_hi;
+            q_robin = h * (T_gas - Ts);
+            q_loss  = eps_s * sig_SB * (Ts * Ts * Ts * Ts - T_a * T_a * T_a * T_a)
+                    + h_c * (Ts - T_a);
+            q_in    = q_robin - q_loss;
+            q_out   = 0.0;
+            if (branch) *branch = 1;
+            return;
+        }
+        const Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
+        q_in    = in_patch ? h * (T_gas - Tc) : Set::Scalar(0.0);
+        q_out   = surf_c * (eps * sig_SB * (Tc*Tc*Tc*Tc - T_a*T_a*T_a*T_a)
+                            + h_c * (Tc - T_a));
+        q_robin = q_in;
+        q_loss  = q_out;
+    }
+
+    // S1: whole-domain energy ledger at level 0, called after the H update.
+    //   E_H   = sum_all H*V (void cells included; their H is frozen)
+    //   E_src += dt*(P_beam + P_robin - P_loss)
+    //   ledger_err = (E_H - E_H0 - E_src)/max(|E_src|, 1e-30)
+    // P_beam reuses the E1 BeamEnergyBalance sum (same BeamSource calls);
+    // P_robin/P_loss re-evaluate SurfaceCellFlux with the H update's inputs
+    // (prescribed_T patch flux, if any, is counted in P_robin).
+    // EXACT only with Neumann-0 outer temperature BCs on every face: a
+    // Dirichlet/Robin domain BC puts a flux through the boundary faces that
+    // the ledger does not count. The ledger state (ledger_started, E_H0,
+    // E_src) is NOT checkpointed: a restarted run re-baselines at its first
+    // step. Likewise the C1 pin state (pin_T/pin_t/pin_rhoCp) is not
+    // checkpointed: after a restart every column uses the face form until it
+    // fires again. E_H is a compensated (Neumaier) sum so the
+    // difference E_H - E_H0 keeps the small per-step increments.
+    // surface_missing_cols counts columns that have a mask-top solid cell but
+    // no surface_mf cell (the phi-window dropout at phi_top ~ dz ties).
+    void EnergyLedger(int lev, Set::Scalar time, Set::Scalar dt,
+                      const amrex::Vector<int>& k_top_col)
+    {
+        if (lev != 0) return;
+        const bool void_aware  = removal_enabled();
+        const bool follow_mask = surface_follow_mask;
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
+        const int khi_dom = domain.bigEnd(2);
+        const int ncx = domain.length(0), ncy = domain.length(1);
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar dz = DX[2];
+        const Set::Scalar A  = DX[0] * DX[1];
+        const Set::Scalar V  = A * dz;
+        const Set::Scalar inv_dz2 = 1.0 / (dz * dz);
+        const Set::Scalar a_D = kappa_damage_alpha;
+
+        const bool        sp_on    = surface_patch.enabled;
+        const bool        sp_presc = surface_patch.mode ==
+                                     SurfacePatch::Mode::PrescribedTemperature;
+        const bool        sp_pinned = sp_on && surface_patch.robin_form ==
+                                      SurfacePatch::RobinForm::Pinned && lev == 0;
+        const bool        sp_face  = surface_patch.robin_form ==
+                                     SurfacePatch::RobinForm::Face || sp_pinned;
+        const Set::Scalar sp_r2    = surface_patch.radius * surface_patch.radius;
+        const Set::Scalar sp_T     = (sp_on && sp_presc) ? surface_patch.T_at(time) : 0.0;
+
+        auto neumaier = [](Set::Scalar& s, Set::Scalar& c, Set::Scalar x) {
+            const Set::Scalar t = s + x;
+            if (std::abs(s) >= std::abs(x)) c += (s - t) + x;
+            else                            c += (x - t) + s;
+            s = t;
+        };
+
+        Set::Scalar EH_s = 0.0, EH_c = 0.0, EH0_s = 0.0, EH0_c = 0.0;
+        Set::Scalar P_robin = 0.0, P_loss = 0.0;
+        std::vector<int> has_surf(static_cast<std::size_t>(ncx) * ncy, 0);
+        for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& H     = (*H_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& H_old = (*H_old_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& kp    = (*kappa_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& Df    = (*D_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& surf  = (*surface_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& rem   =
+                void_aware ? (*removed_mf[lev]).const_array(mfi) : (*surface_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                neumaier(EH_s, EH_c, H(i, j, k) * V);
+                if (!ledger_started) neumaier(EH0_s, EH0_c, H_old(i, j, k) * V);
+                const int col = (j - jlo_dom) * ncx + (i - ilo_dom);
+                if (surf(i, j, k) > 0.5) has_surf[col] = 1;
+                const bool self_void = void_aware && rem(i, j, k) > 0.5;
+                if (self_void) continue;
+
+                const Set::Scalar Tc = T_old(i, j, k);
+                const Set::Scalar kc = kp(i, j, k) * std::exp(-a_D * Df(i, j, k));
+                const Set::Scalar x = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
+                const Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
+                const int k_top_c = (follow_mask && void_aware) ? k_top_col[col] : khi_dom;
+                const Set::Scalar surf_c = follow_mask
+                                         ? Set::Scalar(k == k_top_c ? 1.0 : 0.0)
+                                         : surf(i, j, k);
+                bool in_patch = false;
+                if (sp_on && k == k_top_c)
+                {
+                    const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+                    if (dxp * dxp + dyp * dyp <= sp_r2)
+                    {
+                        if (sp_presc) P_robin += kc * (sp_T - Tc) * inv_dz2 * V;
+                        else          in_patch = true;
+                    }
+                }
+                Set::Scalar q_in = 0.0, q_out = 0.0, q_rob = 0.0, q_los = 0.0;
+                SurfaceCellFlux(in_patch, sp_face, surf_c,
+                                sp_on ? flame_h[col]  : Set::Scalar(0.0),
+                                sp_on ? flame_Tg[col] : Set::Scalar(0.0), kc, dz, Tc,
+                                eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,
+                                q_in, q_out, q_rob, q_los,
+                                sp_pinned ? pin_T_eff[col] : Set::Scalar(0.0));
+                P_robin += q_rob * A;
+                P_loss  += q_los * A;
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(EH_s);
+        amrex::ParallelDescriptor::ReduceRealSum(EH_c);
+        amrex::ParallelDescriptor::ReduceRealSum(P_robin);
+        amrex::ParallelDescriptor::ReduceRealSum(P_loss);
+        amrex::ParallelDescriptor::ReduceIntMax(has_surf.data(), static_cast<int>(has_surf.size()));
+        if (!ledger_started)
+        {
+            amrex::ParallelDescriptor::ReduceRealSum(EH0_s);
+            amrex::ParallelDescriptor::ReduceRealSum(EH0_c);
+            ledger_E_H0_s  = EH0_s;
+            ledger_E_H0_c  = EH0_c;
+            ledger_started = true;
+        }
+
+        int n_missing = 0;
+        for (std::size_t c = 0; c < has_surf.size(); ++c)
+        {
+            const bool has_solid = void_aware ? (k_top_col[c] != std::numeric_limits<int>::min())
+                                              : true;
+            if (has_solid && !has_surf[c]) ++n_missing;
+        }
+
+        const Set::Scalar P_beam = (beam.power_at(time) > 0.0) ? beam_P_dep : 0.0;
+        ledger_P_beam  = P_beam;
+        ledger_P_robin = P_robin;
+        ledger_P_loss  = P_loss;
+        ledger_E_src  += dt * (P_beam + P_robin - P_loss);
+        ledger_E_H     = EH_s + EH_c;
+        const Set::Scalar dE = (EH_s - ledger_E_H0_s) + (EH_c - ledger_E_H0_c);
+        ledger_err = (dE - ledger_E_src) / std::max(std::abs(ledger_E_src), Set::Scalar(1.0e-30));
+        ledger_surface_missing_cols = Set::Scalar(n_missing);
+    }
+
+    // E1: optical path from the top face of the first solid cell to the
+    // centre of a cell with n_above solid cells above it in its column (see
+    // the BeamSource call in AdvanceMicrostructure). With the removal
+    // invariant n_above == floor(phi/dz), but the packet formula
+    // (floor(phi/dz) + 1/2)*dz is NOT evaluated from phi: at a round-off tie
+    // the column shift leaves e.g. phi = -5e-18 (voided) above phi = dz
+    // exactly (top solid), floor gives 1, and the whole top slice (98% of the
+    // column power at alpha*dz = 4) is lost -- seen on the Meier dev harness,
+    // where it stalled one column for 22 s. Counting solid cells from the
+    // `removed` mask is exact by construction. Do NOT use
+    // floor((phi - dz/2)/dz) either: for phi_top in [0, dz/2) the top and
+    // second cells both get path dz/2 and the surface slice is deposited twice.
+    AMREX_GPU_HOST_DEVICE
+    static Set::Scalar SolidFacePath(int n_above, Set::Scalar dz)
+    {
+        return (Set::Scalar(n_above) + 0.5) * dz;
+    }
+
+    // E1: global topmost solid (removed <= 0.5) cell index per (i, j)
+    // column at level lev, INT_MIN for fully removed columns. Index is
+    // (j - dlo_y)*nx + (i - dlo_x). MPI-reduced, so identical on every rank
+    // and independent of the z box decomposition (cf. Removal.H PASS 1,
+    // which additionally requires phi >= 0).
+    amrex::Vector<int> ColumnTopSolid(int lev)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo = domain.smallEnd(0), jlo = domain.smallEnd(1);
+        const int nx = domain.length(0), ny = domain.length(1);
+        amrex::Vector<int> k_top(static_cast<std::size_t>(nx) * ny,
+                                 std::numeric_limits<int>::min());
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                int& kt = k_top[(j - jlo) * nx + (i - ilo)];
+                for (int k = hi.z; k >= lo.z && k > kt; --k)
+                    if (rem(i, j, k) <= 0.5) { kt = k; break; }
+            }
+        }
+        amrex::ParallelDescriptor::ReduceIntMax(k_top.data(), static_cast<int>(k_top.size()));
+        return k_top;
+    }
+
+    // E1: per-step closure of the microstructure-path beam deposition.
+    //
+    //   P_inc   = sum over lit columns of (1-R)*Pi*dx*dy at the top solid cell
+    //   P_dep   = sum over solid cells of Q*dx*dy*dz  (same BeamSource call)
+    //   P_trans = (1-R)*Pi*exp(-a*s_bot)*dx*dy at k == domain bottom
+    //   closure : P_dep + P_trans == P_inc
+    //
+    // Exact (to round-off) only for CONSTANT alpha and the UNIFORM profile.
+    // With alpha(T) each cell uses its own a_k, the column sum no longer
+    // telescopes and P_dep can exceed P_inc; a correct alpha(T) deposition
+    // needs the cumulative optical depth tau = sum_k a_k*dz (follow-on step,
+    // required before real alpha(T) MMW work). A Gaussian profile adds an
+    // O((dz/z_R)^2) deviation because Pi evolves with the geometric depth, so
+    // the P_dep <= P_inc double-count guard is applied to the uniform profile
+    // only.
+    //
+    // Invariant (void-aware runs), per solid cell with n = k_top - k:
+    //   (a) contiguity: "cell above is void or k is the domain top" <=> n == 0
+    //       (a mismatch is a hole or floating solid in the column);
+    //   (b) phi/mask sync: phi - n*dz in [0, dz), with a 1e-6*dz round-off
+    //       band, i.e. floor(phi/dz) == n up to ties. A violation means phi
+    //       and the `removed` mask disagree by more than round-off.
+    // Single level: lev == 0 only (multi-level unsupported; composite sums
+    // would double-count covered cells).
+    void BeamEnergyBalance(int lev, Set::Scalar time, Set::Scalar dt,
+                           const amrex::Vector<int>& k_top_col)
+    {
+        if (lev != 0) return;
+        const bool void_aware = removal_enabled();
+        const amrex::Box& domain = geom[lev].Domain();
+        const int klo_dom = domain.smallEnd(2), khi_dom = domain.bigEnd(2);
+        const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
+        const int ncx = domain.length(0);
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar dz = DX[2];
+        const Set::Scalar A  = DX[0] * DX[1];
+        const Set::Scalar V  = A * dz;
+        const Set::Scalar P_now = beam.power_at(time);
+        auto alpha_f = beam.alpha_f;
+
+        Set::Scalar P_inc = 0.0, P_dep = 0.0, P_trans = 0.0, n_viol = 0.0;
+        for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).array(mfi);
+            // Placeholders as in AdvanceMicrostructure when not void-aware.
+            amrex::Array4<const Set::Scalar> const& rem =
+                void_aware ? (*removed_mf[lev]).const_array(mfi) : (*surface_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& phi =
+                void_aware ? (*phi_mf[lev]).const_array(mfi) : (*surface_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                if (void_aware && rem(i, j, k) > 0.5) continue;
+                const int n_above = void_aware
+                    ? k_top_col[(j - jlo_dom) * ncx + (i - ilo_dom)] - k : 0;
+                const Set::Scalar path = void_aware ? SolidFacePath(n_above, dz)
+                                                    : Set::Scalar(-1.0);
+                // removed_mf ghosts were filled at the top of
+                // AdvanceMicrostructure, so rem(k+1) is valid at box seams.
+                const bool is_top_solid =
+                    (k == khi_dom) || (void_aware && rem(i, j, k + 1) > 0.5);
+                if (void_aware)
+                {
+                    if (is_top_solid != (n_above == 0)) n_viol += 1.0;        // (a)
+                    const Set::Scalar d = phi(i, j, k) - Set::Scalar(n_above) * dz;
+                    if (d < -1.0e-6 * dz || d >= (1.0 + 1.0e-6) * dz) n_viol += 1.0; // (b)
+                }
+
+                const Set::Scalar x = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
+                const Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
+                const Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
+                const Set::Scalar Pi = BeamIncidentIntensity(P_now, beam.omega0, beam.lambda,
+                                                             beam.x0, beam.y0, beam.z0,
+                                                             beam.profile, beam.radius, x, y, z);
+                if (Pi == 0.0) continue;
+
+                const Set::Scalar Tc = T_old(i, j, k);
+                const Set::Scalar Q = BeamSource(P_now, beam.omega0, beam.lambda,
+                                                 beam.x0, beam.y0, beam.z0, beam.R,
+                                                 beam.profile, beam.radius, alpha_f,
+                                                 x, y, z, Tc, dz, path);
+                P_dep += Q * V;
+                if (is_top_solid) P_inc += (1.0 - beam.R) * Pi * A;
+                if (k == klo_dom)
+                {
+                    const Set::Scalar a = alpha_f(Tc);
+                    const Set::Scalar s_bot = (path >= 0.0 ? path : (beam.z0 - z)) + 0.5 * dz;
+                    P_trans += (1.0 - beam.R) * Pi * std::exp(-a * s_bot) * A;
+                }
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(P_inc);
+        amrex::ParallelDescriptor::ReduceRealSum(P_dep);
+        amrex::ParallelDescriptor::ReduceRealSum(P_trans);
+        amrex::ParallelDescriptor::ReduceRealSum(n_viol);
+
+        // Double-count guard (uniform profile only; see header comment).
+        if (beam.profile == Numeric::MMWBeam::Uniform &&
+            P_dep > P_inc * (1.0 + 1.0e-9)) n_viol += 1.0;
+
+        beam_P_inc   = P_inc;
+        beam_P_dep   = P_dep;
+        beam_P_trans = P_trans;
+        beam_E_inc   += dt * P_inc;
+        beam_E_dep   += dt * P_dep;
+        beam_E_trans += dt * P_trans;
+        beam_closure_err = (P_inc > 0.0) ? (P_dep + P_trans - P_inc) / P_inc : 0.0;
+
+        if (n_viol > 0.0)
+        {
+#ifdef AMREX_DEBUG
+            Util::Abort(INFO, "E1 beam closure violation at t = ", time,
+                        ": invariant/double-count count = ", n_viol,
+                        ", P_inc = ", P_inc, ", P_dep = ", P_dep, ", P_trans = ", P_trans);
+#endif
+            if (beam_invariant_viol == 0.0 || (beam_viol_steps % 1000) == 0)
+                Util::Warning(INFO, "E1 beam closure violation at t = ", time,
+                              ": invariant/double-count count = ", n_viol,
+                              " (cumulative ", beam_invariant_viol + n_viol,
+                              "), P_inc = ", P_inc, ", P_dep = ", P_dep,
+                              ", P_trans = ", P_trans);
+            beam_invariant_viol += n_viol;
+            ++beam_viol_steps;
         }
     }
 
@@ -1256,8 +2412,12 @@ protected:
     // `dz_abs` is the optical path the beam travels through *material* to
     // reach this cell. When removal is active and the surface has receded,
     // the beam crosses the void cavity unattenuated, so the Beer-Lambert
-    // attenuation must be measured from the current surface — pass
-    // dz_abs = z_surface(x,y) - z there (equivalently phi at this cell).
+    // attenuation must be measured from the current surface. E1: that surface
+    // is the TOP FACE OF THE FIRST SOLID CELL (the `removed` mask), not the
+    // level set -- pass dz_abs = SolidFacePath(n_above, dz) = (n_above+1/2)*dz,
+    // with n_above = solid cells above in the column (== floor(phi/dz), since
+    // removal keeps the top solid cell at phi in [0, dz)).
+    // Raw phi leaks the slice between the level set and that face.
     // dz_abs < 0 (the default) falls back to the geometric depth z_0 - z,
     // which is correct whenever no material above this cell has been removed
     // (then z_surface == z_0 and phi == z_0 - z exactly). The Gaussian waist
@@ -1284,6 +2444,38 @@ protected:
                                   Set::Scalar dz_abs = -1.0)
     {
         Set::Scalar dz = z0 - z;
+        Set::Scalar Pi = BeamIncidentIntensity(P, w0, lam, x0, y0, z0,
+                                               profile, radius, x, y, z);
+        if (Pi == 0.0) return 0.0;
+        Set::Scalar a    = alpha_f(T);
+        Set::Scalar path = (dz_abs >= 0.0) ? dz_abs : dz;
+        if (dz_cell > 0.0)
+        {
+            // Analytic cell integral of I*a*exp(-a*s) over the material
+            // path spanned by this cell, / dz_cell. s_top clamps at 0 so
+            // the surface cell absorbs from the true surface even when the
+            // (possibly receded) surface lies inside the cell.
+            Set::Scalar s_top = path - 0.5 * dz_cell;
+            if (s_top < 0.0) s_top = 0.0;
+            Set::Scalar s_bot = path + 0.5 * dz_cell;
+            return (1.0 - R) * Pi
+                   * (std::exp(-a * s_top) - std::exp(-a * s_bot)) / dz_cell;
+        }
+        return (1.0 - R) * Pi * a * std::exp(-a * path);
+    }
+
+    // E1: incident beam intensity Pi [W/m^2] at (x, y), before reflection and
+    // Beer-Lambert attenuation. Factored out of BeamSource with the same
+    // arithmetic in the same order (BeamSource output is bit-identical).
+    // Returns 0 above the beam origin (z > z0), for P == 0, and outside the
+    // uniform disk. The Gaussian waist evolves with the geometric z0 - z.
+    AMREX_GPU_HOST_DEVICE
+    static Set::Scalar BeamIncidentIntensity(Set::Scalar P, Set::Scalar w0, Set::Scalar lam,
+                                             Set::Scalar x0, Set::Scalar y0, Set::Scalar z0,
+                                             int profile, Set::Scalar radius,
+                                             Set::Scalar x, Set::Scalar y, Set::Scalar z)
+    {
+        Set::Scalar dz = z0 - z;
         if (dz < 0.0 || P == 0.0) return 0.0;
         Set::Scalar r2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
         Set::Scalar Pi;
@@ -1302,21 +2494,7 @@ protected:
             Pi = (2.0 * P / (M_PI * w0 * w0)) * (w0 / w) * (w0 / w)
                * std::exp(-2.0 * r2 / (w * w));
         }
-        Set::Scalar a    = alpha_f(T);
-        Set::Scalar path = (dz_abs >= 0.0) ? dz_abs : dz;
-        if (dz_cell > 0.0)
-        {
-            // Analytic cell integral of I*a*exp(-a*s) over the material
-            // path spanned by this cell, / dz_cell. s_top clamps at 0 so
-            // the surface cell absorbs from the true surface even when the
-            // (possibly receded) surface lies inside the cell.
-            Set::Scalar s_top = path - 0.5 * dz_cell;
-            if (s_top < 0.0) s_top = 0.0;
-            Set::Scalar s_bot = path + 0.5 * dz_cell;
-            return (1.0 - R) * Pi
-                   * (std::exp(-a * s_top) - std::exp(-a * s_bot)) / dz_cell;
-        }
-        return (1.0 - R) * Pi * a * std::exp(-a * path);
+        return Pi;
     }
 
     void TagCellsForRefinement(int lev, amrex::TagBoxArray& a_tags, Set::Scalar time, int ngrow) override
@@ -1759,6 +2937,32 @@ private:
         pp.query_default("spall.surface_normal", sn_on, 0);
         value.spall_surface_normal = (sn_on != 0);
 
+        // P1: melt-aware spallation (default off, byte-identical when off).
+        // A melt has no load-bearing skeleton, so under sp_weibull the K_I
+        // driving stress sigma_xx is scaled by the skeleton function
+        // f(Lambda_L) = max(0, 1 - Lambda_L/lambda_crit) (1 in solid, 0 at the
+        // rheologically critical melt fraction lambda_crit ~ 0.4, rigidity
+        // percolation). The lever is the DRIVING STRESS, not K_Ic. This alone
+        // makes the depth scan self-anchor at the solid-liquid interface: the
+        // scan breaks at the first K_I < K_Ic, and f -> 0 zeros K_I in melt, so
+        // a molten surface cell stops the scan (h_col = 0, no spall = stall)
+        // while a melt cell *below* solid stops it there (h_col = the solid
+        // thickness). No separate "anchor at the topmost solid cell" pass is
+        // needed (an explicit one would evacuate the melt cap with the flake --
+        // that is P2's job, and it would destroy the P1 melt-blanket stall).
+        // Parsed before the spall.enabled early-return so the keys are always
+        // consumed if present; the feature only acts on the sp_weibull removal
+        // path.
+        int melt_on = 0;
+        pp.query_default("spall.melt_aware", melt_on, 0);
+        value.melt_aware = (melt_on != 0);
+        pp.query_default("melt.lambda_crit", value.melt_lambda_crit, 0.4);
+        if (!(std::isfinite(value.melt_lambda_crit) &&
+              value.melt_lambda_crit > 0.0 &&
+              value.melt_lambda_crit <= 1.0))
+            Util::Abort(INFO, "melt.lambda_crit must be in (0, 1], got ",
+                        value.melt_lambda_crit);
+
         // CSV diagnostic toggles (default off). Parsed before the early-return
         // because the clusters CSV is emitted by UpdateSpClusters under
         // sp_weibull even when material removal is off.
@@ -1768,6 +2972,11 @@ private:
         csv_on = 0;
         pp.query_default("spall.h_col_events_csv", csv_on, 0);
         value.sp_emit_h_col_events_csv = (csv_on != 0);
+        // A1: every-removal event log (validated at the end of Parse, once
+        // spallation.model is known).
+        csv_on = 0;
+        pp.query_default("spall.removal_events_csv", csv_on, 0);
+        value.sp_emit_removal_events_csv = (csv_on != 0);
 
         if (!value.spall_enabled) return;
 
@@ -3283,6 +4492,93 @@ private:
 
     Numeric::MMWBeam beam; // Beer-Lambert + Gaussian volumetric source (step 3)
 
+    // E1: beam-deposition closure counter (BeamEnergyBalance), written to
+    // thermo.dat as non-extensive vars (reduced by BeamEnergyBalance itself).
+    // Powers [W] are per step; energies [J] and the violation count are
+    // cumulative. Microstructure path, level 0 only.
+    Set::Scalar beam_P_inc          = 0.0;
+    Set::Scalar beam_P_dep          = 0.0;
+    Set::Scalar beam_P_trans        = 0.0;
+    Set::Scalar beam_E_inc          = 0.0;
+    Set::Scalar beam_E_dep          = 0.0;
+    Set::Scalar beam_E_trans        = 0.0;
+    Set::Scalar beam_closure_err    = 0.0;
+    Set::Scalar beam_invariant_viol = 0.0;
+    long        beam_viol_steps     = 0;
+
+    // S1: surface.follow_mask applies the convective_flame patch and the
+    // surface losses at the `removed`-mask column top (ColumnTopSolid)
+    // instead of the fixed domain top / the phi-window surface_mf.
+    bool surface_follow_mask = false;
+
+    // S1: whole-domain energy ledger (EnergyLedger), thermo.dat vars.
+    // E_H [J] is sum(H*V) over all level-0 cells (void included), E_src [J]
+    // the cumulative applied energy, P_* [W] per step. The compensated-sum
+    // state (ledger_E_H0_s/c) is internal.
+    bool        ledger_enabled               = false;
+    // C1: pinned-surface closure state (lev 0, ncols-sized host vectors,
+    // identical on every rank). pin_T = top-cell T at the column's last spall
+    // firing (0 = never fired), pin_t = that time, pin_rhoCp = rho*Cp of the
+    // top-cell phase then. pin_T_eff = the pin used by this step's H update
+    // and ledger (0 = face form), built at the start of AdvanceMicrostructure.
+    // NOT checkpointed: a restart falls back to face until each column fires.
+    std::vector<Set::Scalar> pin_T, pin_t, pin_rhoCp, pin_T_eff;
+    Set::Scalar pinned_cols_pinned = 0.0; // thermo: in-patch top cells pinned
+    Set::Scalar pinned_cols_face   = 0.0; // thermo: in-patch top cells on face
+    Set::Scalar pinned_q_mean      = 0.0; // thermo: mean in-patch q_robin [W/m^2]
+    // D2a: why a pinned-run in-patch top cell took the face branch. pin_reason
+    // per column from BuildPinEffective: 0 never fired, 1 idle-expired,
+    // 2 q_pin <= 0, 3 pin active (face then means T_f <= T_pin, the min rule).
+    std::vector<int> pin_reason;
+    Set::Scalar pinned_cols_face_unset   = 0.0;
+    Set::Scalar pinned_cols_face_idle    = 0.0;
+    Set::Scalar pinned_cols_face_qneg    = 0.0;
+    Set::Scalar pinned_cols_face_minrule = 0.0;
+    // D2a: per-column flame (h, T_gas) and nozzle stand-off s for the current
+    // AdvanceMicrostructure call (BuildFlameColumns). Constants path: h_conv /
+    // T_flame everywhere. Read by the kernel, BuildPinEffective, EnergyLedger
+    // and PatchDiagnostics.
+    std::vector<Set::Scalar> flame_h, flame_Tg, flame_s;
+    Set::Scalar patch_min_standoff = 0.0; // thermo: min s over in-patch live columns [m]
+    Set::Scalar patch_P_robin      = 0.0; // thermo: sum q_robin*dx*dy over patch top cells [W]
+    // D2a2: jet_closure = enthalpy diagnostics (JetEnthalpyMarch).
+    Set::Scalar jet_P_face    = 0.0; // thermo: enthalpy taken from the jet stream [W]
+    Set::Scalar jet_P_cap     = 0.0; // thermo: m*cp*(T_stag - T_ent) [W]
+    Set::Scalar jet_T_stag    = 0.0; // thermo: gas temperature entering the axis bin [K]
+    Set::Scalar jet_s_c       = 0.0; // thermo: mean stand-off of the axis bin [m]
+    Set::Scalar jet_P_decay   = 0.0; // thermo: nozzle excess discarded by the decay line [W]
+    Set::Scalar jet_T_exhaust = 0.0; // thermo: T_gas after the outermost bin [K]
+    Set::Scalar jet_P_exhaust = 0.0; // thermo: m*cp*(T_exhaust - T_ent) [W]
+    Set::Scalar jet_r_reach   = 0.0; // thermo: max column r in a bin with P_bin > 0 [m]
+    // D2b: exhaust recirculation (jet_T_ent_mode = exhaust). jet_T_rec = the
+    // entrained-gas temperature used this step (= the previous step's
+    // jet_T_exhaust; jet_T_ent on the first step). Host state, NOT checkpointed.
+    Set::Scalar jet_T_rec     = 0.0; // thermo [K]
+    Set::Scalar jet_P_recirc  = 0.0; // thermo: (m - mdot)*cp*(T_rec - T_ent) [W]
+    bool        jet_rec_init  = false;
+    Set::Scalar jet_T_rec_next = 0.0;
+    // D2b: burner-on-feet state (nozzle_descent = feet). nozzle_z is host
+    // state, NOT checkpointed (a restart re-lands the burner on the feet).
+    bool        feet_init           = false;
+    Set::Scalar nozzle_z            = 0.0; // thermo: nozzle exit height [m]
+    Set::Scalar foot_z              = 0.0; // thermo: foot (tripod) height [m]
+    Set::Scalar foot_cols           = 0.0; // thermo: live annulus columns
+    Set::Scalar foot_carry_cols     = 0.0; // thermo: columns at or above their pad height
+    Set::Scalar foot_stall_time     = 0.0; // thermo: simulated time since z_n last decreased [s]
+    long        jet_profile_last = -1; // last jet_profile_interval index written
+    bool        jet_profile_header_written = false;
+
+    bool        ledger_started               = false;
+    Set::Scalar ledger_E_H0_s                = 0.0;
+    Set::Scalar ledger_E_H0_c                = 0.0;
+    Set::Scalar ledger_E_H                   = 0.0;
+    Set::Scalar ledger_E_src                 = 0.0;
+    Set::Scalar ledger_err                   = 0.0;
+    Set::Scalar ledger_P_beam                = 0.0;
+    Set::Scalar ledger_P_robin               = 0.0;
+    Set::Scalar ledger_P_loss                = 0.0;
+    Set::Scalar ledger_surface_missing_cols  = 0.0;
+
     // Step 6d / Step 15a: surface patch driver. A circular patch on the +z
     // face applies one of two heat-load modes inside the patch footprint:
     //   mode = prescribed_T (default, Step 6d) — holds T = T_expr(t) and
@@ -3300,15 +4596,38 @@ private:
         static constexpr const char *name = "surface_patch";
 
         enum class Mode { PrescribedTemperature, ConvectiveFlame };
+        enum class RobinForm { Cell, Face, Pinned };
 
         bool enabled = false;
         Mode mode = Mode::PrescribedTemperature;
+        RobinForm robin_form = RobinForm::Cell;
+        Set::Scalar pinned_idle_cycles = 2.0; // C1: robin_form = pinned only
         Set::Scalar x0 = 0.0, y0 = 0.0, radius = 0.0;
         Set::Scalar T_ext   = 0.0;
         Set::Scalar h_conv  = 0.0;  // convective_flame: flame coefficient h_fl
         Set::Scalar T_flame = 0.0;  // convective_flame: flame temperature
         amrex::Parser            T_parser;
         amrex::ParserExecutor<1> T_f;
+        // D2a: spatial flame expressions (x, y, r, s, t); use_expr = both given.
+        bool use_expr = false;
+        Set::Scalar nozzle_z0 = 0.0, nozzle_feed = 0.0, nozzle_collision_radius = 0.0;
+        amrex::Parser            h_parser, Tg_parser;
+        amrex::ParserExecutor<5> h_f, Tg_f;
+        // D2a2: jet_closure = enthalpy (T_flame_expr not read, Tg_f uncompiled).
+        bool jet_enthalpy = false;
+        Set::Scalar jet_mdot = 0.0, jet_T_nozzle = 0.0, jet_cp = 0.0;
+        Set::Scalar jet_T_ent = 293.15, jet_dr = 0.0, jet_profile_interval = 0.0;
+        Set::Scalar jet_D = 0.0, jet_core_length = 5.0;
+        bool jet_stag_decay = true, jet_entrained_mass = false;
+        bool jet_T_ent_exhaust = false;     // D2b: jet_T_ent_mode = exhaust
+        // D2b: burner-on-feet descent (nozzle_descent = feet).
+        enum class FootRule { Pads, Max, Mean };
+        bool feet = false;
+        FootRule foot_rule = FootRule::Pads;
+        Set::Scalar foot_r_inner = 0.0, foot_r_outer = 0.0, foot_standoff = 0.0;
+        int foot_npads = 3;
+        Set::Scalar foot_pad_quantile = 0.9;
+        Set::Scalar nozzle_feed_max = std::numeric_limits<Set::Scalar>::infinity();
 
         // prescribed_T only: patch surface temperature at time t. Not valid
         // under convective_flame (T_f is left uncompiled in that mode).
@@ -3341,6 +4660,34 @@ private:
                 Util::Abort(INFO, "surface_patch.type must be "
                                   "'prescribed_temperature', got: ", type);
 
+            // S1: Robin discretisation for convective_flame (microstructure
+            // path only; see SurfaceCellFlux). `cell` (default) applies
+            // h*(T_flame - T_cell) and cell-centred losses; `face` solves the
+            // top-face balance for T_f and injects (2k/dz)*(T_f - T_cell).
+            std::string robin_str;
+            pp.query_default("robin_form", robin_str, std::string("cell"));
+            if      (robin_str == "cell")   v.robin_form = RobinForm::Cell;
+            else if (robin_str == "face")   v.robin_form = RobinForm::Face;
+            else if (robin_str == "pinned") v.robin_form = RobinForm::Pinned;
+            else Util::Abort(INFO, "surface_patch.robin_form must be 'cell', 'face' "
+                                   "or 'pinned', got: ", robin_str);
+            if (v.robin_form == RobinForm::Face && v.mode != Mode::ConvectiveFlame)
+                Util::Abort(INFO, "surface_patch.robin_form = face requires "
+                                  "surface_patch.mode = convective_flame");
+            // C1: pinned-surface closure (see SurfaceCellFlux). A column that
+            // has not fired for pinned_idle_cycles x (its own cell heating time)
+            // falls back to the face form.
+            if (v.robin_form == RobinForm::Pinned)
+            {
+                if (v.mode != Mode::ConvectiveFlame)
+                    Util::Abort(INFO, "surface_patch.robin_form = pinned requires "
+                                      "surface_patch.mode = convective_flame");
+                pp.query_default("pinned_idle_cycles", v.pinned_idle_cycles, 2.0);
+                if (!(std::isfinite(v.pinned_idle_cycles) && v.pinned_idle_cycles >= 0.0))
+                    Util::Abort(INFO, "surface_patch.pinned_idle_cycles must be finite "
+                                      "and >= 0, got: ", v.pinned_idle_cycles);
+            }
+
             std::string face;
             pp.query_default("face", face, std::string("zhi"));
             if (face != "zhi")
@@ -3370,6 +4717,169 @@ private:
             // temperature: q = h_fl*(T_flame - T_surface). Under prescribed_T
             // they are reserved/unused.
             pp.query_default("T_ext",   v.T_ext,   0.0);
+
+            // D2a: spatial flame, h_expr / T_flame_expr in (x, y, r, s, t) [SI],
+            // r = distance of the column centre from (x0, y0), s = stand-off of
+            // the nozzle z_n(t) = nozzle_z0 - nozzle_feed*t above the column's
+            // mask top face. convective_flame only; both expressions or both
+            // constants, never a mix. (surface.follow_mask = 1 is checked in
+            // MMWSpalling::Parse.)
+            const bool has_hx = pp.contains("h_expr");
+            const bool has_Tx = pp.contains("T_flame_expr");
+            // D2a2: wall-jet enthalpy closure. none (default) = D2a; enthalpy =
+            // T_gas(r) marched outward from jet_T_nozzle, taking the face
+            // absorption out of the jet (see BuildFlameColumns). Under enthalpy
+            // h_expr is required and T_flame_expr is forbidden.
+            std::string closure_str;
+            pp.query_default("jet_closure", closure_str, std::string("none"));
+            if      (closure_str == "none")     v.jet_enthalpy = false;
+            else if (closure_str == "enthalpy") v.jet_enthalpy = true;
+            else Util::Abort(INFO, "surface_patch.jet_closure must be 'none' or "
+                                   "'enthalpy', got: ", closure_str);
+            if (v.jet_enthalpy)
+            {
+                if (!has_hx)
+                    Util::Abort(INFO, "surface_patch.jet_closure = enthalpy requires "
+                                      "surface_patch.h_expr");
+                if (has_Tx)
+                    Util::Abort(INFO, "surface_patch.T_flame_expr is not read under "
+                                      "jet_closure = enthalpy (T_gas is marched); remove it");
+                pp.query_required("jet_mdot",     v.jet_mdot);
+                pp.query_required("jet_T_nozzle", v.jet_T_nozzle);
+                pp.query_required("jet_cp",       v.jet_cp);
+                pp.query_required("jet_D",        v.jet_D);
+                pp.query_default("jet_T_ent",     v.jet_T_ent, 293.15);
+                // Free-jet centreline decay at the stagnation bin (default) or
+                // the nozzle temperature there; optionally carry the diluted mass.
+                pp.query_default("jet_core_length", v.jet_core_length, 5.0);
+                std::string stag_str;
+                pp.query_default("jet_stagnation", stag_str, std::string("decay"));
+                if      (stag_str == "decay")  v.jet_stag_decay = true;
+                else if (stag_str == "nozzle") v.jet_stag_decay = false;
+                else Util::Abort(INFO, "surface_patch.jet_stagnation must be 'decay' or "
+                                       "'nozzle', got: ", stag_str);
+                int ent = 0;
+                pp.query_default("jet_entrained_mass", ent, 0);
+                if (ent != 0 && ent != 1)
+                    Util::Abort(INFO, "surface_patch.jet_entrained_mass must be 0 or 1, got: ", ent);
+                v.jet_entrained_mass = (ent == 1);
+                // D2b: temperature of the entrained gas at the stagnation mix.
+                // fixed (default) = jet_T_ent; exhaust = the previous step's
+                // jet_T_exhaust (blind-hole recirculation; needs entrained mass).
+                std::string tem;
+                pp.query_default("jet_T_ent_mode", tem, std::string("fixed"));
+                if      (tem == "fixed")   v.jet_T_ent_exhaust = false;
+                else if (tem == "exhaust") v.jet_T_ent_exhaust = true;
+                else Util::Abort(INFO, "surface_patch.jet_T_ent_mode must be 'fixed' or "
+                                       "'exhaust', got: ", tem);
+                if (v.jet_T_ent_exhaust && !v.jet_entrained_mass)
+                    Util::Abort(INFO, "surface_patch.jet_T_ent_mode = exhaust requires "
+                                      "surface_patch.jet_entrained_mass = 1");
+                pp.query_default("jet_dr",        v.jet_dr,    0.0); // 0 -> max(dx, dy)
+                // Optional per-bin profile log <plot_file>_jet_profile.csv every
+                // jet_profile_interval seconds of simulated time (0 = off).
+                pp.query_default("jet_profile_interval", v.jet_profile_interval, 0.0);
+                if (!(std::isfinite(v.jet_mdot) && v.jet_mdot > 0.0 &&
+                      std::isfinite(v.jet_cp) && v.jet_cp > 0.0 &&
+                      std::isfinite(v.jet_T_ent) && v.jet_T_ent > 0.0 &&
+                      std::isfinite(v.jet_T_nozzle) && v.jet_T_nozzle >= v.jet_T_ent &&
+                      std::isfinite(v.jet_D) && v.jet_D > 0.0 &&
+                      std::isfinite(v.jet_core_length) && v.jet_core_length > 0.0 &&
+                      std::isfinite(v.jet_dr) && v.jet_dr >= 0.0 &&
+                      std::isfinite(v.jet_profile_interval) && v.jet_profile_interval >= 0.0))
+                    Util::Abort(INFO, "surface_patch.jet_*: need jet_mdot > 0, jet_cp > 0, "
+                                      "jet_T_nozzle >= jet_T_ent > 0, jet_D > 0, "
+                                      "jet_core_length > 0, jet_dr >= 0, "
+                                      "jet_profile_interval >= 0 (all finite)");
+            }
+            // D2b: nozzle path. prescribed (default) = D2a nozzle_z0 -
+            // nozzle_feed*t; feet = the burner rests on a foot annulus and
+            // descends with the rock under it (see FeetDescent).
+            std::string desc;
+            pp.query_default("nozzle_descent", desc, std::string("prescribed"));
+            if      (desc == "prescribed") v.feet = false;
+            else if (desc == "feet")       v.feet = true;
+            else Util::Abort(INFO, "surface_patch.nozzle_descent must be 'prescribed' or "
+                                   "'feet', got: ", desc);
+            if (v.feet && !(has_hx || has_Tx))
+                Util::Abort(INFO, "surface_patch.nozzle_descent = feet requires the flame "
+                                  "expressions (surface_patch.h_expr)");
+            if (has_hx || has_Tx)
+            {
+                if (v.mode != Mode::ConvectiveFlame)
+                    Util::Abort(INFO, "surface_patch.h_expr / T_flame_expr require "
+                                      "surface_patch.mode = convective_flame");
+                if (!(has_hx && (has_Tx || v.jet_enthalpy)))
+                    Util::Abort(INFO, "surface_patch.h_expr and surface_patch.T_flame_expr "
+                                      "must be given together");
+                if (pp.contains("h_conv") || pp.contains("T_flame"))
+                    Util::Abort(INFO, "surface_patch.h_expr / T_flame_expr cannot be combined "
+                                      "with surface_patch.h_conv / T_flame");
+                std::string h_expr, Tg_expr;
+                pp.query_required("h_expr",       h_expr);
+                v.h_parser = amrex::Parser(h_expr);
+                v.h_parser.registerVariables({"x", "y", "r", "s", "t"});
+                v.h_f = v.h_parser.compile<5>();
+                if (!v.jet_enthalpy)
+                {
+                    pp.query_required("T_flame_expr", Tg_expr);
+                    v.Tg_parser = amrex::Parser(Tg_expr);
+                    v.Tg_parser.registerVariables({"x", "y", "r", "s", "t"});
+                    v.Tg_f = v.Tg_parser.compile<5>();
+                }
+                if (v.feet)
+                {
+                    if (pp.contains("nozzle_z0") || pp.contains("nozzle_feed"))
+                        Util::Abort(INFO, "surface_patch.nozzle_z0 / nozzle_feed cannot be "
+                                          "given with nozzle_descent = feet");
+                    pp.query_required("foot_r_inner",  v.foot_r_inner);
+                    pp.query_required("foot_r_outer",  v.foot_r_outer);
+                    pp.query_required("foot_standoff", v.foot_standoff);
+                    if (!(std::isfinite(v.foot_r_inner) && std::isfinite(v.foot_r_outer) &&
+                          v.foot_r_inner >= 0.0 && v.foot_r_inner < v.foot_r_outer))
+                        Util::Abort(INFO, "surface_patch.foot_r_inner / foot_r_outer: need "
+                                          "0 <= foot_r_inner < foot_r_outer (finite)");
+                    if (!(std::isfinite(v.foot_standoff) && v.foot_standoff > 0.0))
+                        Util::Abort(INFO, "surface_patch.foot_standoff must be finite and > 0");
+                    std::string rule;
+                    pp.query_default("foot_rule", rule, std::string("pads"));
+                    if      (rule == "pads") v.foot_rule = FootRule::Pads;
+                    else if (rule == "max")  v.foot_rule = FootRule::Max;
+                    else if (rule == "mean") v.foot_rule = FootRule::Mean;
+                    else Util::Abort(INFO, "surface_patch.foot_rule must be 'pads', 'max' or "
+                                           "'mean', got: ", rule);
+                    pp.query_default("foot_npads", v.foot_npads, 3);
+                    if (v.foot_npads < 1)
+                        Util::Abort(INFO, "surface_patch.foot_npads must be >= 1");
+                    pp.query_default("foot_pad_quantile", v.foot_pad_quantile, 0.9);
+                    if (!(v.foot_pad_quantile > 0.0 && v.foot_pad_quantile <= 1.0))
+                        Util::Abort(INFO, "surface_patch.foot_pad_quantile must be in (0, 1]");
+                    pp.query_default("nozzle_feed_max", v.nozzle_feed_max,
+                                     std::numeric_limits<Set::Scalar>::infinity());
+                    if (!(v.nozzle_feed_max > 0.0))
+                        Util::Abort(INFO, "surface_patch.nozzle_feed_max must be > 0");
+                }
+                else
+                {
+                    pp.query_required("nozzle_z0", v.nozzle_z0);
+                    pp.query_default("nozzle_feed", v.nozzle_feed, 0.0);
+                    if (!(std::isfinite(v.nozzle_z0) && std::isfinite(v.nozzle_feed)))
+                        Util::Abort(INFO, "surface_patch.nozzle_z0 / nozzle_feed must be finite");
+                }
+                // Columns with r <= nozzle_collision_radius abort on s <= 0 (the
+                // nozzle is in the rock). Default = the patch radius. Outside it a
+                // column may sit above the descending nozzle (unrecessed rock
+                // beside the hole); s <= 0 is then passed to the expressions,
+                // which must stay finite and > 0.
+                // D2b: under feet the default is foot_r_inner (inside the collar).
+                pp.query_default("nozzle_collision_radius", v.nozzle_collision_radius,
+                                 v.feet ? v.foot_r_inner : v.radius);
+                if (!(std::isfinite(v.nozzle_collision_radius) && v.nozzle_collision_radius >= 0.0))
+                    Util::Abort(INFO, "surface_patch.nozzle_collision_radius must be finite and >= 0");
+                v.use_expr = true;
+                return;
+            }
+
             pp.query_default("h_conv",  v.h_conv,  0.0);
             pp.query_default("T_flame", v.T_flame, 0.0);
             if (v.mode == Mode::ConvectiveFlame)
@@ -3572,6 +5082,26 @@ private:
     // graph form of level-set normal motion. Default false (vertical-only,
     // bit-identical to all pre-Step-20 behaviour).
     bool spall_surface_normal = false;
+    // P1: melt-aware spallation. When melt_aware is true, the sp_weibull
+    // driving stress is scaled by MeltSkeleton(Lambda_L) in k_i_at_zcrack so a
+    // molten cell carries no crack-driving stress (the depth scan then breaks
+    // at the solid-liquid interface on its own). Default false => f == 1
+    // everywhere (byte-identical).
+    bool        melt_aware       = false;
+    Set::Scalar melt_lambda_crit = 0.4;
+    // Load-bearing skeleton fraction f(Lambda_L) = max(0, 1 - Lambda_L/
+    // lambda_crit): 1 in solid, 0 at the rheologically critical melt fraction
+    // (rigidity percolation) and above. Multiplies the elastic driving stress
+    // (equivalently E_eff = f*E) so a melt cannot store the stress that drives
+    // a crack. lambda_crit is validated in (0, 1] at Parse.
+    AMREX_FORCE_INLINE
+    Set::Scalar MeltSkeleton(Set::Scalar LL) const
+    {
+        Set::Scalar f = 1.0 - LL / melt_lambda_crit;
+        if (f < 0.0) f = 0.0;
+        if (f > 1.0) f = 1.0;
+        return f;
+    }
     // Floor on cos(theta) when surface_normal is on: walls steeper than
     // ~81 deg keep a finite normal frame instead of diverging. The column
     // (height-function) representation cannot represent overhangs anyway.
@@ -3740,6 +5270,14 @@ private:
     // re-emit). Columns: time, col_i, col_j, a_f, h_col, is_gb_at_top,
     // Sp_field_at_top.
     bool sp_h_col_events_csv_header_written = false;
+
+    // A1: every-removal event log `<plot_file>_removal_events.csv`
+    // (spall.removal_events_csv; sp_weibull + spall.enabled, level 0). One
+    // row per (step, column) whose surface moved: time, col_i, col_j, regime,
+    // k_top, T_top, a_f, Sp_top, h_scan, h_applied, n_voided. Unlike the
+    // edge-triggered h_col CSV above, it is a complete removal record.
+    bool sp_emit_removal_events_csv = false;
+    bool sp_removal_events_csv_header_written = false;
 
     // splitmix64 finalizer — deterministic 64-bit hash used to seed the
     // per-cell Weibull RNG from the GLOBAL cell index so flaw_a_mf is

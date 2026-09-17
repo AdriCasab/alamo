@@ -272,25 +272,139 @@ Completed and passing:
   2.91, 207 cells removed); all prescribed_T/damage_law
   regressions byte-identical. Accepted by review.
 
+- **Refactor R1 — extract `UpdateRemovalAfterCohesive` into a partial
+  header (COMPLETED, archived).** Moved the ~957-line method *verbatim*
+  into `src/Integrator/MMWSpalling/Removal.H` (`#include`d inside the
+  class body; stays an inline member). Byte-exactness proven by
+  range-diffs vs HEAD; all removal witnesses byte-identical
+  (`sp_rossi_damage_profile`, `hu_end_to_end`, `spall_event`,
+  `regime_low_high_power`, `sp_v_n_regime`, `sp_kant_onset`). Data members
+  + `PrincipalStressRatio` deferred to R2. See `docs/project/ARCHIVE_DONE.md`.
+
+- **P1 — Melt-aware spallation (COMPLETED, archived).** Default-off
+  `spall.melt_aware` + `melt.lambda_crit` scale the sp_weibull driving stress
+  σ_xx by a load-bearing skeleton `f(Λ_L)=max(0,1−Λ_L/Λ_crit)` (Λ_crit=0.4) in
+  `Removal.H`'s `k_i_at_zcrack` (both branches) so the criterion stops spalling
+  liquid; the scan self-anchors at the solid–liquid interface (explicit anchor
+  dropped — would evacuate the melt cap = P2). Byte-identical when off (6
+  witnesses PASS). New clean A/B unit test `unit/sp_melt_skeleton/`. KEY
+  finding: the spall thermostat pins the surface at ~850 K, so mid-block melt is
+  unreachable without α(T) (P3) — the Meier melt demo is bottom-confounded.
+  See `docs/project/ARCHIVE_DONE.md`.
+
+- **E1 — Beam/void gap energy leak fix + deposition closure counter (COMPLETED,
+  review-accepted, archived).** Beam path = `(n_above+½)·dz` with n_above
+  counted from the `removed` mask (`ColumnTopSolid` + `SolidFacePath`). The
+  `floor(φ/dz)` form failed at round-off ties (φ = dz exactly, which is
+  common). Per-step `BeamEnergyBalance` thermo counter (closure ~1e-15), φ/mask
+  invariant check, and new `unit/beam_void_closure`. Meier 2D: closure 0.995,
+  ROP flat 6.3 m/h (was 3.4 m/h and declining); ROP = f_flake·q/(ρ·Cp·ΔT_rem)
+  holds to ratio 1.00 at ΔT_rem = 519 K. Kant/Rossi/Hu byte-identical. See
+  `docs/project/ARCHIVE_DONE.md`.
+
+- **S1 — 1-D surface-resolution study (COMPLETED, review-accepted, archived).**
+  Default-off `surface.follow_mask`, `surface_patch.robin_form = cell|face`,
+  `energy_ledger.enabled` (exact H ledger), new `unit/robin_face`, study
+  harness `studies/s1_surface_resolution/` (35 runs). Findings:
+  - the criterion is a cell-average T threshold (656 K at a = 20 µm);
+  - h_col is a removal increment ∝ dz, not a flake;
+  - fixed-flux ROP is converged at 2 mm;
+  - Robin is not converged at 2 mm (cell +42 %, face −82 %; finest-dz bracket
+    14.0–18.6 m/h), and the converged form is the pinned surface
+    q = h(T_gas − T_fire);
+  - no melt anywhere, so P1 stands.
+  See `docs/project/ARCHIVE_DONE.md` and `Claude_markdowns/2026-09-15b.md`.
+
+- **A1 — Removal fixes + S1b firing temperature (COMPLETED, review-accepted,
+  archived).**
+  - `weibull.enabled = 0` + removal works (scalar `a_f`, `Sp_top >= 1` gate;
+    bit-identical to the degenerate draw).
+  - New `spall.removal_events_csv` logs every removal (rank-count identical;
+    key on `regime`).
+  - Face form aborts if ε_high < ε.
+  - S1b: the Meier Weibull block fires at 810.8 K at 2 mm (Meier 2D 812 K).
+    V0 = 1e-9 drifts +9–11 K per halving; V0 = dz³ is flat at ≈ 821.6 K.
+  - **User decision: V0 = V_cell for all C/D inputs** (defaults unchanged).
+  - See `docs/project/ARCHIVE_DONE.md`.
+
+- **C1 — Pinned-surface Robin closure (COMPLETED, review-accepted,
+  archived).**
+  - `surface_patch.robin_form = pinned`: T_s = min(T_face, T_pin(col)),
+    face fallback after `pinned_idle_cycles` (default 2).
+  - 1-D 2 mm: 15.67 m/h, inside S1's 14.0–18.6 bracket and 0.999× closed
+    form, < 0.6 % per halving.
+  - 2-D Meier harness (V0 = V_cell): T_fire 821–823 K, centre ROP = closed
+    form, 2 → 1 mm −0.7 %.
+  - Caveats: the closed-form match is mostly a consistency check; the min rule
+    was barely exercised; a sharp patch edge leaves a never-firing rim pair.
+  - See `docs/project/ARCHIVE_DONE.md`.
+
+- **D2a — Impinging-jet face source, prescribed nozzle path (COMPLETED,
+  review-accepted, archived).**
+  - `surface_patch.h_expr` / `T_flame_expr` in (x, y, r, s, t);
+    `nozzle_z0`, `nozzle_feed`, `nozzle_collision_radius`;
+    `BuildFlameColumns` evaluates once per column per step and the kernel,
+    pin rule, ledger and diagnostics all read those vectors.
+  - New thermo `patch_min_standoff`, `patch_P_robin`,
+    `pinned_cols_face_unset/idle/qneg/minrule`. New `unit/robin_jet`.
+    25,887 witness files hash-identical.
+  - Study `studies/d2a_jet_face/`: Martin (1977) h(r, s), anchors J-M / J-5 /
+    J-10, 7 × 2-D + 5 × 3-D quarter-domain runs.
+  - **Findings:** under a prescribed feed the centre ROP is an identity and
+    carries no information about h or T_gas; steady bowls form at 1.5 and
+    3 m/h after ~150 s; C1's min-rule and rim nits closed; the AMReX
+    `a/max(x,c)` parser bug found.
+  - **Two readings superseded by the 09-16 review** — see the wall-jet note
+    in Known Notes.
+  - See `docs/project/ARCHIVE_DONE.md`.
+
+- **D2a2 — Energy-conserving wall-jet T_gas(r, s) (COMPLETED,
+  review-accepted, archived).**
+  - `surface_patch.jet_closure = enthalpy` (default `none`): `JetEnthalpyMarch`
+    marches `m·cp·dT_gas/dr = −q·2πr` from `T_stag = T_ent + (T_noz −
+    T_ent)·min(1, 5D/s_c)`; `jet_stagnation = decay | nozzle`,
+    `jet_entrained_mass`; s ≤ 0 → no flux; in-code energy invariant; shared
+    `PinRule`; 8 `jet_*` thermo columns. New `unit/jet_enthalpy`. 26,327
+    witness files hash-identical.
+  - **Findings:** the stagnation decay is essential (without it the centre
+    runs away); face power 5.5–8.3 kW vs D2a's 21–29; in 3-D the centre leads
+    the nozzle (s_c 60–90 mm), so hand tables at s_c = SOD overstate the ring
+    flux 2–3×; ring ROP at r = 40 mm 0.5–1.3 m/h (early transient window,
+    below Meier's band); 1900 K holes Ø 84–103 mm (≥ burner), 1436 K Ø 71–79.
+  - **Recommended for D2b, before D2b:** `decay` + entrained mass.
+  - See `docs/project/ARCHIVE_DONE.md`.
+
 Active step:
 
-- **Refactor R1 — extract `UpdateRemovalAfterCohesive` into a
-  partial header.** Behavior-preserving decomposition of the
-  ~4377-line `src/Integrator/MMWSpalling.H`, **without touching its
-  virtual multiple-inheritance graph** (CLAUDE.md Lessons #1).
-  R1 moves the ~957-line `UpdateRemovalAfterCohesive` method
-  (lines ~2092–3053, ≈22% of the file — shared by both
-  `damage_law` and `sp_weibull` removal plus vaporisation) *verbatim*
-  into a new `src/Integrator/MMWSpalling/Removal.H` that is
-  `#include`d back **inside the class body** at the method's original
-  spot. The method stays an inline class member; zero semantic
-  change. Data members, config scalars, and helpers (e.g.
-  `PrincipalStressRatio`) are NOT moved in R1 (deferred to R2).
-  Acceptance: `make` links `bin/mmwspalling-3d-g++` and the
-  removal-exercising regressions stay byte-identical
-  (`sp_rossi_damage_profile` is the canonical witness, plus
-  `hu_end_to_end`, `spall_event`, `regime_low_high_power`,
-  `sp_v_n_regime`, `sp_kant_onset`). See `ACTIVE_STEP.md`.
+- **D2b — Burner-on-feet descent and the scored Meier test.**
+  - `surface_patch.nozzle_descent = feet`: `z_n = z_foot + foot_standoff`,
+    monotone; `z_foot` = mean over 3 azimuth pads of each pad's 0.9 quantile
+    face height over the foot annulus **[0.028, 0.040] m** (a rigid tripod, so
+    one never-fired column cannot stall the burner); optional operator cap.
+  - `jet_T_ent_mode = exhaust`: the jet entrains its own lagged exhaust (blind
+    hole, jet confined in the feet collar); **scored baseline**, decided
+    before any run, with the ambient case in the same verdict table.
+  - New `unit/robin_feet`. Hand prediction (feet equilibrium + hole depth
+    profile) with `walljet.py` **before** any run.
+  - 3-D quarter domain, decay + entrained mass + exhaust, 1900 K. Stage A
+    picks the wall treatment by a pre-stated rule with a pre-decided
+    tie-break (violations outside the ring are carried as caveats); then
+    B (score **J-M**, report J-5/J-10), D (required 1 mm check on a
+    r ≤ 60 mm trim), C (ambient entrainment, nozzle mass, 1436 K).
+  - Hole diameter is scored depth-mean and read as a check of geometry
+    (feet + 50 mm stand-off + profile shape), not of the anchor. A stall is
+    where Meier's operator pushed, not "cannot drill".
+  - New scored `sp_meier_pilot/test_feet`; the uniform-beam test is marked
+    superseded.
+  - No tuning; J-M is scored as it comes out. See `ACTIVE_STEP.md`.
+
+Withdrawn (not implemented):
+
+- **P4 — Cuttings/debris shielding.** Premise ("model ~1.9× too fast") invalid:
+  the leak biased ROP low. Also, shielding η is exactly degenerate with delivery
+  efficiency under a fixed-flux BC, so Meier cannot calibrate Σ₀ or show that
+  shielding exists. Design kept in Known Notes for a future case with an
+  independent anchor.
 
 Previous active step (archived to ARCHIVE_DONE.md):
 
@@ -309,6 +423,35 @@ Previous active step (archived to ARCHIVE_DONE.md):
 
 Next milestones after the active step:
 
+Programme source: `Claude_markdowns/2026-09-15b.md`, with the planner
+amendments noted here (user decisions 2026-09-15: flake size retired, Meier ROP
+next, MMW after):
+
+- **D3 — Report rewrite**: drop the 1.9×/P4 and flake/PSD drilling claims,
+  state the 09-15b §1 energy accounting, and reposition as a validated
+  moving-boundary thermoelastic ablation model with Weibull onset statistics.
+  Must also state: the D2a/D2a2 supersessions and the 09-16 corrections to
+  09-15b §1; `V0 = V_cell` switches the size effect off; the slope area factor
+  and side-wall/exhaust heating omitted; face-form mesh sensitivity of the
+  jet march; `T_ent` and entrainment as first-order unknowns; the D2b verdict
+  as it came out.
+- **Then MMW**: known-power anchor (Woskov/Oglesby), E2 α(T), R(T). MMW melt
+  needs missing physics (S1 Q3), not resolution.
+- **E2 — α(T) optical-depth closure**: per-cell `a_k` breaks column telescoping
+  (closure not exact, can create energy). Accumulate τ = Σ α_k·dz down the
+  column. Required before any real-α(T) MMW work.
+- **Sub-cell *criterion* closure (flake size): RETIRED** with the flake claim.
+  AMR + removal is not needed for ROP (S1 decision (i)).
+- `input_2d_dev` drills ~100 of 120 mm in 56 s, and its header (~2.9 m/h,
+  depth margin) is stale. Fix it before any longer Meier 2D runs.
+- **Meier physics program (remaining)** — `tests/MMWSpalling/validation/meier/TODO.md`.
+  P4 withdrawn (above). **P2 melt evacuation and P3 α(T) remain deprioritized**
+  for Meier (both gated on the melt regime being reachable). P3 is now
+  motivated from the MMW side (see E2). P5 subcritical crack growth; P6 wall
+  stress anisotropy; P7 elastic-solve A/B; P8 melt-regime radiation.
+- **Scope decision pending (user)**: commit to grain-scale (revive elastic
+  solve P7, close CZM loop, sub-mm AMR) vs reposition as a "validated
+  moving-boundary LEFM ablation model". See review Finding 3.
 - **Step 19b (potential follow-on, only if Step 19 G4 FAILs)**: a
   lateral-roller-box + MMW beam variant that recovers 1-D-confinement
   σ_xx (Step 16 working geometry but with MMW as the heat source
@@ -358,7 +501,12 @@ Next milestones after the active step:
   on the `sp_weibull` branch: 12c integrator unit -> 15b `p = 0` onset
   + Eq. 15 cross-check + Weibull patchiness (done) -> 15c labeller +
   sensitivity sweep (active) -> 18 confining-pressure sweep.
-- Rossi 2018 validates Sp spall-depth profile (Step 16, `sp_weibull`).
+- Rossi 2018: a prescribed-T mechanics regression of the Sp depth scan
+  (isotherm depth; Step 16, `sp_weibull`). It is **not** a flake-size
+  validation for self-heated drilling (retired 2026-09-15, S1).
+- Meier 2017 pilot: the ROP and hole-diameter validation, once the D2
+  face-source + burner-descent model exists. Until then only volume rate and
+  ΔT_fire are meaningful.
 - The final depth scan is exploratory; it has no direct experimental
   validation.
 
@@ -376,6 +524,208 @@ Next milestones after the active step:
 
 ## Known Stale/Important Notes
 
+- **P1 melt-aware spallation is DONE (default-off `spall.melt_aware`).** The lever
+  is the DRIVING STRESS, not K_Ic: σ_xx scaled by `f(Λ_L)=max(0,1−Λ_L/Λ_crit)`
+  (Λ_crit=0.4) in `Removal.H`'s `k_i_at_zcrack` (≡ `E_eff=f·E`). Do NOT reduce
+  K_Ic in melt (backwards). KEY finding for all melt work: **the spall thermostat
+  pins the surface at the ~850 K spall onset, so melt is unreachable in real
+  drilling without α(T)** — melt only appears where removal is throttled (domain
+  bottom, confounding the Meier melt demo) or via an imposed IC (the clean
+  `unit/sp_melt_skeleton/` A/B test). `prescribed_T` applies at the FACE and does
+  NOT follow surface recession. Test the removal split (`removed`), not the
+  melt-blind `Sp_field`. See `mmwspalling-melt-aware-p1` memory + ARCHIVE_DONE.
+- **Beam/void gap energy leak — FIXED by E1.** Every beam+removal result from
+  before E1 deposited only 56–70% of beam energy: old Meier ROPs, the
+  "1.9× too fast" framing, the N1 numbers, and memory's "implied efficiency
+  ~17%" are all biased LOW or confounded. Invariant: solid ⇔ φ ≥ 0, so
+  φ_top ∈ [0, dz]. **Round-off ties φ_top = dz are common**, so any new
+  "top solid cell" logic must use the `removed` mask (`ColumnTopSolid`), never
+  `floor(φ/dz)` or a φ-window. **The criterion and the beam now share one depth
+  origin**: the K_I scan's `z_crack = 0` is the top face of `k_top` (E1
+  takeaway 3), so the older "criterion measures from the level set" note was
+  wrong. Deposition closure is exact only for constant α + uniform profile
+  (see E2). `Claude_markdowns/scripts/phi_gap.py` still models the pre-E1
+  formula; `energy_audit.py` is still valid. `unit/beam_void_closure` T3 (lower
+  half-cell hit) is fragile: re-check it if that input changes. The
+  `AMREX_DEBUG` Abort branch has never been compiled.
+- **`surface_mf` is φ-windowed** (`UpdateSurfaceMaskFromPhi`, φ ∈ [0, dz),
+  refreshed each step at Removal.H ~1295). At a φ_top = dz tie a column has NO
+  surface cell, so radiation/convection losses drop out for that step.
+  **Measured by S1 as negligible**: on Meier 2D, 1 of 280 columns for ~1.1 s,
+  7e-5 of column-steps, ~0.03 J of 77 kJ. Use `surface.follow_mask = 1` whenever
+  a source must track the receding surface.
+- **The S1 criterion finding (2026-09-15).**
+  - `sp_weibull` + `spall.sample = top_cell` + `local_thermoelastic` fires at
+    a fixed **cell-average** T: 656 K at a = 20 µm, p = 1 MPa; ≈ 812 K for the
+    Meier Weibull draw (to be confirmed by A1).
+  - **h_col ≈ dz/2 − a_f is a removal increment, not a flake.** Two firings
+    empty one cell. Flake/PSD claims are retired for self-heated drilling.
+    Rossi (prescribed_T) keeps its isotherm-depth reading.
+  - At fixed flux, ROP = q/(ρ·Cp·ΔT_fire) at any dz.
+  - Robin at 2 mm is not converged (cell +42 %, face −82 %). The converged
+    1-D answer is the pinned surface q = h(T_gas − T_fire) − εσ(T_fire⁴ −
+    T_a⁴).
+  - **Quote Robin as a bracket.** The finest-dz data bracket is 14.0–18.6 m/h
+    at (1e4, 1000 K); "15–16 m/h" is an extrapolation.
+  - Do not reconstruct a sub-cell T from the 2 mm cell average for the Robin
+    flux (it gives ~3000 K).
+- **Overshoot time-step rule for removal runs** (binding over the conduction
+  limit): ΔT_step = q·dt/(ρ·Cp·dz) ≤ 5 K. That means dt ≤ 11 ms at 2 mm and
+  2 MW/m²; ≤ 1.4 ms at 2 mm and 15 MW/m²; ≤ 0.7 ms at 0.125 mm and 2 MW/m².
+- **`spall.h_col_events_csv` is edge-triggered.** It logs only the first firing
+  per new top cell, so never sum it for recession (≈ 2× undercount). Rossi's
+  test depends on these semantics. Use `spall.removal_events_csv` (A1) for
+  recession and T_fire: one row per (step, column) removal. Key on `regime`,
+  because `h_scan` can be nonzero on regime 2/3 rows.
+- **`weibull.enabled = 0` + `spall.enabled` segfault — FIXED by A1.** The
+  scalar path's per_face gate is `Sp_field(k_top) >= 1`. `connected_cluster`
+  still needs Weibull. The S1 degenerate-draw workaround is now optional.
+- **Weibull `V0` (user decision 2026-09-15): use `weibull.V0 = V_cell` in all
+  C/D inputs.**
+  - With the default 1e-9, T_fire drifts ~+10 K per halving and never
+    converges (S1b).
+  - The default is left unchanged, so Kant/Rossi/Meier existing inputs are
+    unchanged.
+  - The IG vol_factor applies only to IG cells (GB = per-facet).
+  - The Meier 2D 812 K / 6.3 m/h numbers are V0 = 1e-9; with V_cell, 2 mm
+    fires at ≈ 820 K.
+- **Pinned Robin closure (C1) caveats.**
+  - The closed-form match is mostly a consistency check; the independent
+    evidence is that the result lies inside S1's fine-mesh bracket.
+  - A sharp uniform patch edge leaves a never-firing rim column pair, so score
+    non-rim columns or use a smooth profile.
+  - Time to first firing is face-form and mesh-dependent: score by windows and
+    `removal_events.csv` `h_applied` fits, never by end depth or plotfile
+    staircases.
+  - Pin state is not checkpointed.
+  - `pinned_idle_cycles` (default 2) is not a knob: 1-D refire gap
+    1.004·t_cell, 2-D up to 1.32·t_cell.
+- **Burner drawings (planner, 2026-09-16) — the D2b blocker is RESOLVED.**
+  Source: `thierrymeier.ch/documents/drillBabydrill_VT5_R4.pdf`
+  ("Zusammenstellung Drill baby drill VT5", CATIA V5, 19.11.2015, 17 A2
+  sheets, 797 mm long, ca. 14 kg). **Not in the repo** — re-download to
+  re-check.
+  - Sheet 15/17 **"Abstand Halter F VT5"** = the feet: **OD Ø 80 mm**, bore
+    Ø 45 (+0.2/+0.05), plus Ø 56 and a Ø 68 bolt circle with Ø 6.2 holes;
+    overall length **58 mm** with an **8 mm** collar, so it protrudes
+    **50 mm**; the isometric shows **3 slots**, so the bearing surface is an
+    interrupted annulus (a tripod), not a continuous ring.
+  - Sheet 14/17 **"Flame jet nozzle D VT5"**: flange **OD Ø 80 mm**, Ø 68
+    bolt circle, Ø 6.2 holes at 120° (it bolts to the holder); central bore
+    **Ø 7.5 mm** at the outlet; converging contour R12/R20/R10 from a Ø 46
+    bore, Ø 56 f7 spigot.
+  - Sheet 1/17 assembly, section A-A: confirms the Ø 7.5 bore and a **50 mm**
+    nozzle-exit-to-foot-tip dimension. The mantle above the nozzle is a
+    67 × 2.5 tube (Ø 67), narrower than the Ø 80 drilling end.
+  - **Derived:** burner Ø at the drilling end **80 mm** (r = 0.040 m); foot
+    annulus **[0.028, 0.040] m** — section N-N, re-read at higher resolution,
+    shows the feet are a **tube OD Ø 80 / ID Ø 56** running 50 mm below an
+    8 mm flange (bore Ø 45), with 3 slots at the bolt positions (the earlier
+    [0.034, 0.040] "nominal" misread the Ø 68 bolt circle). The jet expands
+    inside this collar for its full 50 mm and exhausts through the slots;
+    `foot_standoff` **0.050 m**; `D = 7.5e-3 m`, so `SOD/D = 6.67` (not 7).
+    Meier's Ø 85–93 mm hole is 5–13 mm larger than the burner, consistent
+    with thesis p. 223.
+  - **Two discrepancies, do not silently resolve.** (1) The drawing's
+    **D = 7.5 mm** vs the reference `.md`'s **7.1 mm** (thesis text): the
+    drawing wins; consequences are Re ≈ 5.66e4, h_Martin ~8 % lower
+    (h ∝ D^−1.5), potential core 5D = 37.5 mm. D2a's `jet.py` used 7.1 mm.
+    (2) The drawing's flows (50 + 5 m³ₙ/h ≈ 62–64 + 3.4–3.6 kg/h) are
+    **design** values, above the thesis's **measured** 52 + 2.47 kg/h. Use
+    the measured `ṁ = 0.01513 kg/s`.
+- **D2a's wall jet violated the jet energy budget — D2a2 fixes it**
+  (reviewer, `Claude_markdowns/2026-09-16.md`; planner-verified arithmetic).
+  - D2a's study `T_gas` depended on **stand-off only**, with `s` clamped to
+    [2D, 12D]. So rock far off-axis but close to the nozzle plane received
+    potential-core gas. The reported J-5/J-10 `R_h` (149/170 mm) is
+    reproduced exactly by the closed form **at the clamp** — the `RESULTS.md`
+    explanation ("h at r = 100 mm is still ≈ 2 kW/m²K") is not the mechanism.
+  - With `h ∝ 1/r` and a radially uniform `(T_gas − T_s)`, `∫q·2πr dr` grows
+    **linearly** with radius, so face power is unbounded. D2a's 20.9–29.0 kW
+    exceeds the cap `ṁ·cp·(T_nozzle − T_s)` ≈ **20.4 kW** at 1900 K and
+    **11.6 kW** at the 1436 K chamber TC. Meier's rock-side removal power is
+    **2.83 kW**.
+  - **Both readings are superseded.** D2a's machinery, the "centre ROP is an
+    identity under a prescribed feed" result, the steady-bowl timing, the
+    closed C1 nits and the parser-bug find all stand.
+  - Also corrects 09-15b §1: "low-bracket stagnation flux fits the volume
+    rate within 35 % untuned" was a **stagnation-point** statement; integrated
+    over the Ø 85 face the bracket anchors give 2.4–2.5× the data and Martin
+    1.4×.
+  - **Report face power against the jet cap in kW, never as a % of 38 kW.**
+- **D2a2 lessons that constrain D2b and later jet work (2026-09-16).**
+  - **Keep the stagnation decay.** Without it the centre runs away from any
+    feed. Baseline treatment for D2b: `jet_stagnation = decay` +
+    `jet_entrained_mass = 1` (energy-conserving; nozzle mass discards 12–17 kW
+    of the 30.4 kW nozzle budget as `jet_P_decay`).
+  - **The centre leads the nozzle** (s_c 60–90 mm, T_stag 1000–1270 K at
+    1900 K). Hand predictions must use the centre's equilibrium stand-off
+    (`walljet.py` `s_equilibrium`), never s_c = SOD.
+  - **Planner hand-table errors, recorded.** D2a2's first table used a
+    non-computable criterion (T_gas decays exponentially toward T_s and never
+    reaches T_fire) and a linear in-core depletion; the revised table's decay
+    rows were computed at **D = 7.1 mm** (`jet.py`), not 7.5. Hand numbers go
+    through `walljet.py` (D = 7.5 mm) and are written by the implementer
+    before runs.
+  - **Cold entrainment lowers flux at every radius** (reviewer, integrated):
+    neglecting it is an upper bound on flux and on removal reach.
+  - `jet_mdot` is the modelled sector's share (quarter domain = mdot/4).
+  - **Wall treatment is open:** `input_drilling`'s
+    `spall.flake_coherence_length = 0.004` caps walls at 63–65° and capped
+    cells overheat under the pinned flux; `spall.surface_normal = 1` recedes by
+    h/cos θ with no matching flux on horizontal area. D2b decides by a
+    pre-stated energy-consistency rule.
+  - **Most of the march is face-form uptake by unfired rock** (pinned share
+    0.01–0.12), so T_gas(r) and the ring flux carry the 2 mm face-form mesh
+    sensitivity.
+  - Under a prescribed feed the flank freezes once the nozzle plane passes
+    it; read prescribed-feed runs before that time. The feet rule removes it.
+  - `jet_dr = dx` is first-order in the march (16 % excess-T error at 2 mm in
+    a strip) but moves the quarter-disk ROP only 0.4–1.4 % per halving.
+  - `patch_P_robin − jet_P_face` is not a clean overdraw measure; a direct
+    counter is deferred.
+- **Process (planner decision 2026-09-16, from D2a2 takeaway 12).** Per step:
+  targeted bit-identity witnesses for the touched paths, with the full
+  26k-file sweep once at commit; no 2-D slab parts for jet closures (the slab
+  needs an invented jet share); a few 3-D runs rather than full grids; sparse
+  `amr.plot_int` (D2a2 wrote 11 GB). Implementers re-read `ACTIVE_STEP.md`
+  before long runs (D2a2 was revised mid-phase).
+- **AMReX 25.12 parser bug (in `ext/`, not touched; found by D2a).**
+  `parser_ast_optimize` rewrites `f / F2(x, number)` as `f * F2(x, −number)`
+  for **every** two-argument function, not just `pow`. So `1527/max(r, 0.5)`
+  evaluates to 0, silently. **Numeric arguments must come first.** D2a's first
+  probe and Part 1 set ran with the flame effectively off and were discarded.
+  D2a2 adds an in-ALAMO regression guard in `unit/jet_enthalpy`.
+- **`weibull.V0 = V_cell` switches the size effect off, not just its mesh
+  dependence** (reviewer, 2026-09-16). `vol_factor ≡ 1`, so `a0_ig` becomes
+  "the characteristic flaw of a cell". The right choice, but **D3 must not
+  describe the model as size-scaling.**
+- **Jet h magnitude conflict (planner, 2026-09-15; D2a2 narrowed it, D2b settles).** Under the D2a2 closure every anchor drilled the r = 40 mm ring at only 0.5–1.3 m/h, so the Martin-vs-bracket difference is now a factor ~2 in ring ROP, not in face power. Martin
+  (1977) with Meier's ṁ = 0.0151 kg/s, D = 7.1 mm, Re ≈ 5×10⁴ gives
+  h ≈ 1.5 kW/m²K at 2.5 D, SOD 7 D. The reference bracket is 5–30 kW/m²K, and
+  Ch. 7's 10 kW/m²K comes from Potter Drilling, not measured. Correlation
+  constants were quoted from memory; D2a must verify them against the source.
+- **AMReX rank-count identity:** Cell_D is written one file per rank. Compare
+  the rank-ordered concatenation or the field arrays, not a file-by-file `cmp`.
+- **Energy ledger (`energy_ledger.enabled`)** is exact only with Neumann-0
+  outer BCs, and its state is not checkpointed (it re-baselines on restart).
+- **Kant p = 0 onset now prints 446.1 °C** (Eq. 15 445.6 °C) in
+  `sp_kant_pressure_sweep` (reported by E1), both pre and post E1 on the
+  current tree, vs the 461.3 °C quoted in older notes. The cause has not been
+  identified (it predates E1). Treat the live test output as authoritative
+  until reconciled.
+- **P4 cuttings/debris shielding — WITHDRAWN 2026-09-15 (design kept for
+  reference; premise invalid, Σ₀ uncalibratable on Meier).** Default-off `shield.*`.
+  Per-column debris areal mass Σ(i,j) [kg/m²]: `Σ ← Σ·exp(−dt/τ) + ρ·h_spall`
+  each step (SPALL only, not vapor — vaporized rock leaves as gas); the beam is
+  attenuated `Pi → Pi·exp(−Σ/Σ₀)` in `AdvanceMicrostructure` only (the sole
+  surface-following/removal path). Removal runs BEFORE the beam in `Advance()`
+  (747 vs 1229), so the beam reads fresh debris (stable — `h_spall` derives from
+  the prior-step temperature, no implicit loop). Σ stored broadcast down each
+  column so the per-cell beam read is z-decomposition-safe; `h_s_cand_col` is
+  already MPI-gathered. Single-level only (max_level=0 dev harness); AMR debris
+  repair deferred. Steady η is set by τ/Σ₀ (degenerate at steady state; τ also
+  sets the smoothing timescale — pick τ physical ~1 s, calibrate Σ₀).
 - **Refactor track (R-series) is decoupling `src/Integrator/MMWSpalling.H`
   (~4377 lines) into per-concern pieces WITHOUT changing its virtual
   multiple-inheritance graph** (CLAUDE.md Lessons #1 — base-class edits caused

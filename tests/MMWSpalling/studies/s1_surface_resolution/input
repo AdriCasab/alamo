@@ -1,0 +1,137 @@
+# S1 surface-resolution study -- BASE input (not a regression; no `test`).
+#
+# 1-D column: 1 x 1 x N cubic cells, depth 250 mm, Neumann-0 on every face,
+# sp_weibull top_cell spallation with melt_aware, surface losses on,
+# surface.follow_mask = 1, energy_ledger.enabled = 1, h_col event CSV.
+# run_sweep.py sets dz (n_cell / prob_hi / box size), the source (beam or
+# Robin patch), stop_time and plot_file per case via CLI key=value overrides.
+# The values below are the dz = 2 mm defaults with every source OFF.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/studies/s1_surface_resolution/output/base
+
+timestep  = 0.001
+stop_time = 60.0
+
+amr.plot_int        = 2000      # every 2 s
+amr.thermo.int      = 1
+amr.thermo.plot_int = 100       # every 0.1 s
+amr.max_level       = 0
+amr.n_cell          = 1 1 125
+amr.blocking_factor = 1
+amr.max_grid_size   = 32
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.002 0.002 0.250
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase, with fusion (P1 melt keys) ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+microstructure.phase0.T_m               = 1473.0
+microstructure.phase0.fus_width         = 50.0
+microstructure.phase0.L_m               = 335000.0
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+# Scalar flaw a = a0 (packet: weibull.enabled = 0). sp_weibull removal needs
+# the flaw_a / Sp_cluster_id fields that only weibull.enabled = 1 registers
+# (weibull.enabled = 0 + spall.enabled segfaults in UpdateRemovalAfterCohesive),
+# so use a degenerate draw: a0_gb = a0_ig = a0, m = 1e12 -> a = a0*(1 +- 5e-11)
+# in every cell and (V_cell/V0)^(1/m) = 1 to 1e-11 (no volume scaling).
+# detach_mode defaults to per_face.
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 20.0e-6
+weibull.m       = 1.0e12
+weibull.seed    = 1
+
+spall.enabled          = 1
+spall.sample           = top_cell
+spall.surface_normal   = 0
+spall.h_spall_max      = 0.015
+spall.melt_aware       = 1
+melt.lambda_crit       = 0.4
+spall.h_col_events_csv = 1
+vapor.enabled          = 0
+confining.p            = 1.0e6
+
+# --- S1 switches ---
+surface.follow_mask   = 1
+energy_ledger.enabled = 1
+
+# --- Sources (all off here; run_sweep.py turns one on) ---
+beam.P0         = 0.0
+beam.profile    = uniform
+beam.radius     = 0.1
+beam.x0         = 0.001
+beam.y0         = 0.001
+beam.z0         = 0.250
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+surface_patch.enabled = 0
+
+# --- Surface losses to lab air ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

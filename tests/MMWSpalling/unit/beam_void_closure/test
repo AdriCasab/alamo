@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+# E1: beam/void gap energy-closure regression.
+#
+# Before E1 the microstructure beam path measured the Beer-Lambert optical
+# path from the level set phi, while removal voids a cell when phi crosses its
+# CENTRE. The slice between the level set and the top solid cell's top face
+# sat inside a void cell (Q = 0) and its energy was attenuated but never
+# deposited (30-60% of the beam in Meier removal runs). E1 passes
+# path = (floor(phi/dz) + 1/2)*dz and adds a thermo.dat closure counter.
+#
+# Checks:
+#   T1 (counter)  every thermo.dat row: |beam_closure_err| <= 1e-9,
+#                 beam_P_dep <= beam_P_inc*(1+1e-9); final
+#                 beam_invariant_viol == 0; beam_E_inc == flux*A_lit*t.
+#   T2 (audit)    independent of the counter, from plotfiles only:
+#                 E_in = flux*A_lit*t vs stored (H-H0)*V in solid cells + frozen
+#                 (H-H0)*V in void cells, within 2% cumulatively at every
+#                 plotfile and over the LAST interval. (Losses are off in the
+#                 input and transmission through 60 mm at alpha=2000/m is nil.)
+#   T3 (bug case) across plotfiles the phi_top histogram of lit columns is
+#                 non-empty in BOTH [0, dz/2) and [dz/2, dz). The rejected
+#                 formula floor((phi-dz/2)/dz) double-deposits in the lower
+#                 half; the original leak lived in the upper half.
+#   T4 (removal)  the central lit columns lost >= 3 cell layers.
+#
+# Usage: test            (runs ALAMO on 4 ranks, then checks)
+#        test <outdir>   (checks an existing output directory)
+
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.dirname(os.path.abspath(__file__)).split(
+    os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT = os.path.join(TEST_DIR, "input")
+DEFAULT_OUT = os.path.join(TEST_DIR, "output")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+# Must match input.
+P0, RBEAM, X0, Y0 = 5816.0, 0.030, 0.04, 0.004
+FLUX = P0 / (np.pi * RBEAM ** 2)
+DZ = 0.002
+NLAYERS_MIN = 3
+CENTRAL_HALFWIDTH = 0.010   # T4 scores lit columns within 10 mm of x0
+TOL_COUNTER = 1.0e-9
+TOL_AUDIT = 0.02
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo(outdir):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+           BIN, INPUT, f"plot_file={outdir}"]
+    print("Running:", " ".join(cmd))
+    res = subprocess.run(cmd, cwd=ROOT)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
+if len(sys.argv) <= 1:
+    run_alamo(outdir)
+
+# ----------------------------------------------------------------------------
+# T1: thermo.dat counter
+# ----------------------------------------------------------------------------
+thermo = os.path.join(outdir, "thermo.dat")
+if not os.path.exists(thermo):
+    print(f"FAIL: missing {thermo}")
+    sys.exit(1)
+with open(thermo) as f:
+    names = f.readline().split()
+rows = np.loadtxt(thermo, skiprows=1, ndmin=2)
+col = {n: i for i, n in enumerate(names)}
+for n in ("beam_P_inc", "beam_P_dep", "beam_P_trans", "beam_E_inc",
+          "beam_closure_err", "beam_invariant_viol"):
+    if n not in col:
+        print(f"FAIL: thermo.dat has no column {n}")
+        sys.exit(1)
+lit_rows = rows[rows[:, col["beam_P_inc"]] > 0.0]
+cerr = lit_rows[:, col["beam_closure_err"]]
+check("T1a closure_err", lit_rows.shape[0] > 0 and np.all(np.abs(cerr) <= TOL_COUNTER),
+      f"{lit_rows.shape[0]} rows, max |closure_err| = {np.max(np.abs(cerr)):.3e} "
+      f"(tol {TOL_COUNTER:g})")
+pinc, pdep = lit_rows[:, col["beam_P_inc"]], lit_rows[:, col["beam_P_dep"]]
+check("T1b P_dep <= P_inc", np.all(pdep <= pinc * (1.0 + TOL_COUNTER)),
+      f"max P_dep/P_inc - 1 = {np.max(pdep / pinc - 1.0):.3e}")
+viol = rows[-1, col["beam_invariant_viol"]]
+check("T1c invariant", viol == 0.0, f"final beam_invariant_viol = {viol:g}")
+print(f"       P_inc = {pinc[-1]:.3f} W, P_dep = {pdep[-1]:.3f} W, "
+      f"P_trans = {lit_rows[-1, col['beam_P_trans']]:.3e} W")
+
+# ----------------------------------------------------------------------------
+# Plotfile pass (T2-T4)
+# ----------------------------------------------------------------------------
+files = plotfiles(outdir)
+if len(files) < 3:
+    print(f"FAIL: need >= 3 cell plotfiles in {outdir}, found {len(files)}")
+    sys.exit(1)
+
+H0 = None
+records = []
+hist_lo = hist_hi = 0
+n_lit_cols = None
+for pf in files:
+    ds = yt.load(pf)
+    cg = ds.covering_grid(level=0, left_edge=ds.domain_left_edge,
+                          dims=ds.domain_dimensions)
+    t = float(ds.current_time)
+    dx = np.array((ds.domain_width / ds.domain_dimensions).to_value(), dtype=float)
+    Vc = float(dx.prod())
+    H = np.asarray(cg["H"])
+    rem = np.asarray(cg["removed"]) > 0.5
+    phi = np.asarray(cg["phi"])
+    x = np.asarray(cg["boxlib", "x"])[:, :, 0]
+    y = np.asarray(cg["boxlib", "y"])[:, :, 0]
+    if H0 is None:
+        H0 = float(np.median(H))
+        if not np.allclose(H, H0, rtol=0.0, atol=1e-9 * abs(H0) + 1e-9):
+            print("FAIL: t=0 enthalpy is not uniform; audit baseline invalid")
+            sys.exit(1)
+    lit = (x - X0) ** 2 + (y - Y0) ** 2 <= RBEAM ** 2       # (nx, ny) columns
+    n_lit_cols = int(lit.sum())
+    DX_AREA = dx[0] * dx[1]
+    central = lit & (np.abs(x - X0) <= CENTRAL_HALFWIDTH)
+    A_lit = n_lit_cols * dx[0] * dx[1]
+    E_in = FLUX * A_lit * t
+    E_solid = float(np.sum(H[~rem] - H0)) * Vc
+    E_void = float(np.sum(H[rem] - H0)) * Vc
+    # Top solid cell per lit column and its phi.
+    nz = H.shape[2]
+    solid = ~rem
+    k_top = np.where(solid.any(axis=2),
+                     nz - 1 - np.argmax(solid[:, :, ::-1], axis=2), -1)
+    ii, jj = np.nonzero(lit & (k_top >= 0))
+    phit = phi[ii, jj, k_top[ii, jj]]
+    ic, jc = np.nonzero(central & (k_top >= 0))
+    removed_layers = (nz - 1 - k_top[ic, jc])
+    if t > 0.0:
+        hist_lo += int(np.count_nonzero((phit >= 0.0) & (phit < 0.5 * DZ)))
+        hist_hi += int(np.count_nonzero((phit >= 0.5 * DZ) & (phit < DZ)))
+    records.append(dict(t=t, E_in=E_in, E_solid=E_solid, E_void=E_void,
+                        layers_min=int(removed_layers.min()),
+                        layers_max=int(removed_layers.max()),
+                        phit_min=float(phit.min()), phit_max=float(phit.max())))
+
+print()
+print(f"  {'t[s]':>6} {'E_in[kJ]':>9} {'E_solid':>9} {'E_void':>9} {'closure':>9} "
+      f"{'layers':>9} {'phi_top[mm]':>14}")
+for r in records:
+    c = (r["E_solid"] + r["E_void"]) / r["E_in"] if r["E_in"] > 0 else float("nan")
+    r["closure"] = c
+    print(f"  {r['t']:6.1f} {r['E_in']/1e3:9.3f} {r['E_solid']/1e3:9.3f} "
+          f"{r['E_void']/1e3:9.3f} {c:9.5f} {r['layers_min']:4d}-{r['layers_max']:<4d} "
+          f"{r['phit_min']*1e3:6.3f}-{r['phit_max']*1e3:<6.3f}")
+print()
+
+# T1d: counter energy matches the analytic incident energy flux*A_lit*t on
+# every thermo row (rows are written before the step's advance, so the row at
+# time t holds the energy of the steps that ended at t). thermo.dat is printed
+# with the default 6 significant digits, so the tolerance is 1e-5 relative.
+A_lit = n_lit_cols * DX_AREA
+E_an = FLUX * A_lit * rows[:, 0]
+E_ctr = rows[:, col["beam_E_inc"]]
+rel = np.abs(E_ctr - E_an) / np.maximum(E_an, 1e-30)
+rel[E_an == 0.0] = 0.0
+check("T1d E_inc counter vs flux*A*t", np.all(rel <= 1e-5),
+      f"max rel diff {rel.max():.3e}; final counter {E_ctr[-1]:.3f} J vs "
+      f"{E_an[-1]:.3f} J at t={rows[-1, 0]:g}")
+
+cum = [r["closure"] for r in records if r["E_in"] > 0]
+check("T2a cumulative audit closure", all(abs(c - 1.0) <= TOL_AUDIT for c in cum),
+      f"closure range [{min(cum):.5f}, {max(cum):.5f}] (tol {TOL_AUDIT:g})")
+a, b = records[-2], records[-1]
+dE_in = b["E_in"] - a["E_in"]
+dE_st = (b["E_solid"] + b["E_void"]) - (a["E_solid"] + a["E_void"])
+c_last = dE_st / dE_in
+check("T2b last-interval audit closure", abs(c_last - 1.0) <= TOL_AUDIT,
+      f"[{a['t']:g}, {b['t']:g}] s: {c_last:.5f}")
+
+check("T3 phi_top in both half-cells", hist_lo > 0 and hist_hi > 0,
+      f"lit-column samples: [0, dz/2) = {hist_lo}, [dz/2, dz) = {hist_hi}")
+
+check("T4 removal happened", records[-1]["layers_min"] >= NLAYERS_MIN,
+      f"central lit columns removed {records[-1]['layers_min']}-{records[-1]['layers_max']} "
+      f"layers (need >= {NLAYERS_MIN})")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

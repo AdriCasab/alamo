@@ -1,0 +1,191 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# Meier 2017 -- 2D MELT-AWARE DEMONSTRATION (P1; not scored).
+# ============================================================================
+#
+# Variant of input_2d_dev that turns ON melt-aware spallation (spall.melt_aware
+# = 1) and configures granite fusion (microstructure.phase0.T_m / fus_width /
+# L_m) so a melt phase can actually form, then pushes the flux high enough that
+# the floor crosses T_m. Demonstrates TODO item P1: the K_I/K_Ic criterion
+# stops spalling liquid -- as the floor melts the load-bearing skeleton
+# f(Lambda_L) -> 0 kills the crack-driving stress, spall removal at the floor
+# falls to zero, and (with vapor.enabled = 0 here) drilling stalls into a
+# melt-limited regime -- the predicted insulating "glassy plug". This is the
+# correct P1-alone signal, not a bug: melt evacuation is P2, and with
+# vapor.enabled = 1 the existing vapor channel would remove the melt pool once
+# it reaches T_vap and re-expose solid (the spall -> melt-stall -> vaporize
+# ladder).
+#
+# UNSCORED demonstration only. The base input_2d_dev defines no fusion, so
+# Lambda_L == 0 there and P1 is byte-identical; this variant is where the melt
+# regime is exercised. The high flux below is tuned for the demonstration, not
+# for ROP comparison against Meier.
+#
+# CONFOUND (read before drawing A/B conclusions from THIS input): with spall
+# removal active the floor self-regulates at the ~850 K spall attractor and
+# does NOT melt mid-block at any flux -- it only crosses T_m once drilling
+# nears the domain bottom and the thin remaining rock can no longer shed heat.
+# But a floor cell at the bottom also has k_top == scan_kbot, so the depth scan
+# yields h_col = 0 (cannot spall the last cell) regardless of melt_aware. So
+# melt_aware ON vs OFF give an IDENTICAL stall here -- the skeleton effect is
+# masked by the boundary. This input is therefore a QUALITATIVE regime demo
+# (it shows Sp_field riding ~20 at the molten floor while removal has stopped,
+# i.e. no runaway liquid-spalling). The clean, boundary-free A/B isolation of
+# spall.melt_aware is the unit test tests/MMWSpalling/unit/sp_melt_skeleton/.
+# Mid-block melt becomes physically reachable once alpha(T) localization (TODO
+# P3) is added; until then this confound is intrinsic to the surrogate.
+#
+# --- EXPECTED BEHAVIOUR (P1, melt enabled, vapor off) ----------------------
+#   early (solid floor, T < T_m)  : normal Sp-gated spall, floor advances
+#   onset of melt (T -> ~1473 K)  : Lambda_L rises, f(Lambda_L) -> 0, floor
+#                                   spall events -> 0
+#   late (melt blanket)           : no removal, floor bakes toward the table
+#                                   cap == melt-limited STALL
+# Diagnostics to read: Lambda_L (floor cell), Sp_field/h_spall_field (-> 0 at
+# the floor once molten), removed (column advance plateaus).
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/validation/meier/sp_meier_pilot/output/dev2d_melt
+
+timestep  = 0.001
+stop_time = 56.0
+
+amr.plot_int        = 2000      # every 2 s of sim time (catch the melt onset)
+amr.max_level       = 0
+amr.n_cell          = 70 4 60
+amr.blocking_factor = 2
+amr.max_grid_size   = 20
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+# 140 x 140 x 120 mm block, dx = dy = dz = 2 mm. Disk edge (r = 42 mm) is
+# 28 mm clear of the lateral boundaries; depth 120 mm >> the ~25 mm drilled
+# by t = 56 s (no floor interference).
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.14  0.008 0.120
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+# Granite fusion (P1): builds a melt plateau in the per-phase enthalpy table so
+# Lambda_L rises as H crosses it. T_m ~ 1473 K, fusion smoothing 50 K, latent
+# heat 335 kJ/kg. Vaporization left at defaults (1e30) -> no vapor plateau.
+microstructure.phase0.T_m               = 1473.0
+microstructure.phase0.fus_width         = 50.0
+microstructure.phase0.L_m               = 335000.0
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, Kant-template defaults ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 20.0
+weibull.seed    = 12345
+
+# Moving boundary + detachment.
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.004
+
+vapor.enabled = 0
+
+# P1: melt-aware spallation. Once Lambda_L crosses lambda_crit the load-bearing
+# skeleton f -> 0 and the criterion stops spalling liquid. Default lambda_crit
+# = 0.4 (rigidity percolation).
+spall.melt_aware  = 1
+melt.lambda_crit  = 0.4
+
+# Step 20: surface-normal spall kernel (slope-aware criterion + recession).
+spall.surface_normal = 1
+
+# Lateral confinement SHmin = SHmax ~ 1 MPa (Meier symmetric pads).
+confining.p = 1.0e6
+
+# --- Beam: high flux to force the floor across T_m (P1 demonstration) ---
+# 60 kW over the 84 mm disk ~ 10.8 MW/m^2 (vs 2.06 in the base harness). At
+# this flux the Sp-gated floor heats past the ~850 K spall attractor to T_m;
+# tune up/down to move the melt onset. NOT an ROP-comparison flux.
+beam.P0         = 60000.0
+beam.profile    = uniform
+beam.radius     = 0.042
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.07
+beam.y0         = 0.004
+beam.z0         = 0.120
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+
+# --- Surface losses to lab air ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+surface_patch.enabled = 0
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics inert: local_thermoelastic stress source needs no global solve.
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit
