@@ -33,10 +33,18 @@ Model (full jet, axisymmetric, steady descent at rate v):
     wall is at D(r). r_wall(z) = max{r : D(r) > z}, with r_wall >= r_q.
     Depth-mean diameter = mean over z of 2 r_wall(z).
 `python feetmodel.py` prints everything RESULTS.md section 0 quotes.
+
+D2c extension (studies/d2c_steady): every model function takes an optional
+cfg = Cfg(far, n, core, De_ref). The default Cfg() is the D2b model exactly
+(clamped h, nozzle diameter D, core 5): h = walljet.h_py(..., far, n),
+phi = min(1, core D_dec/s_c) with D_dec = D, or (De_ref given) the momentum
+diameter De_ref sqrt(T_mix/T_ent).
 """
 import math
 import os
 import sys
+from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -49,6 +57,29 @@ RI, RO, STANDOFF, QUANT = 0.028, 0.040, 0.050, 0.9
 R_Q = math.sqrt(RI * RI + QUANT * (RO * RO - RI * RI))
 T_ENT = wj.TA
 BLOCK = 0.50
+
+
+@dataclass(frozen=True)
+class Cfg:
+    far: str = "clamp"               # walljet far law: clamp | power
+    n: float = 1.0                   # power-law exponent beyond 12 D
+    core: float = 5.0                # core length in decay-diameter units
+    De_ref: Optional[float] = None   # None: nozzle D; else D_e at T_ENT [m]
+
+
+DEF = Cfg()
+
+
+def h_of(cfg, h_ref, r, s):
+    return wj.h_py(h_ref, r, s, cfg.far, cfg.n)
+
+
+def d_dec(cfg, T_mix):
+    return D if cfg.De_ref is None else cfg.De_ref * math.sqrt(T_mix / T_ENT)
+
+
+def phi_of(cfg, s_c, T_mix):
+    return min(1.0, cfg.core * d_dec(cfg, T_mix) / s_c)
 
 
 def s_of_r(r, s_c):
@@ -64,79 +95,81 @@ def s_profile(r, s_c, s_beyond=STANDOFF):
     return np.where(r >= R_Q, s_beyond, s)
 
 
-def march(h_ref, T_stag, m, s_c, r_end, n=2001, s_beyond=STANDOFF, r_start=0.0, T0=None):
+def march(h_ref, T_stag, m, s_c, r_end, n=2001, s_beyond=STANDOFF, r_start=0.0, T0=None, cfg=DEF):
     """T_gas(r) on [r_start, r_end]: the excess over T_fire decays as
     exp(-int 2 pi r h / (m cp) dr) (midpoint rule)."""
     r = np.linspace(r_start, r_end, n)
     dr = r[1] - r[0]
     rm = r[:-1] + 0.5 * dr
-    h = wj.h_py(h_ref, rm, s_profile(rm, s_c, s_beyond))
+    h = h_of(cfg, h_ref, rm, s_profile(rm, s_c, s_beyond))
     a = 2.0 * math.pi * rm * h / (m * wj.CP) * dr
     ex0 = max(0.0, (T_stag if T0 is None else T0) - wj.T_FIRE)
     T = wj.T_FIRE + ex0 * np.exp(-np.concatenate(([0.0], np.cumsum(a))))
     return r, T
 
 
-def stag(T_nozzle, s_c, T_mix, entrained=True):
-    phi = min(1.0, 5.0 * D / s_c)
+def stag(T_nozzle, s_c, T_mix, entrained=True, cfg=DEF):
+    phi = phi_of(cfg, s_c, T_mix)
     T_stag = T_mix + (T_nozzle - T_mix) * phi
     m = wj.MDOT / phi if entrained else wj.MDOT
     return T_stag, m
 
 
-def centre_rop_at(h_ref, T_nozzle, s_c, T_mix, entrained):
-    T_stag, _ = stag(T_nozzle, s_c, T_mix, entrained)
-    return float(wj.rop_closed(wj.h_py(h_ref, 0.0, s_c), T_stag))
+def centre_rop_at(h_ref, T_nozzle, s_c, T_mix, entrained, cfg=DEF):
+    T_stag, _ = stag(T_nozzle, s_c, T_mix, entrained, cfg)
+    return float(wj.rop_closed(h_of(cfg, h_ref, 0.0, s_c), T_stag))
 
 
 S_C_MAX = 2.0   # deep-pit limit: s_c at the bisection bound means "no centre equilibrium"
 
 
-def s_c_for(h_ref, T_nozzle, v, T_mix, entrained):
+def s_c_for(h_ref, T_nozzle, v, T_mix, entrained, cfg=DEF):
     """Centre stand-off with centre ROP = v (bisection on s_c in [2D, 2 m]);
     None if the centre cannot reach v even at s_c = 2D."""
     lo, hi = 2.0 * D, S_C_MAX
-    if centre_rop_at(h_ref, T_nozzle, lo, T_mix, entrained) < v:
+    if centre_rop_at(h_ref, T_nozzle, lo, T_mix, entrained, cfg) < v:
         return None
-    if centre_rop_at(h_ref, T_nozzle, hi, T_mix, entrained) > v:
+    if centre_rop_at(h_ref, T_nozzle, hi, T_mix, entrained, cfg) > v:
         return hi
     for _ in range(50):
         mid = 0.5 * (lo + hi)
-        if centre_rop_at(h_ref, T_nozzle, mid, T_mix, entrained) > v:
+        if centre_rop_at(h_ref, T_nozzle, mid, T_mix, entrained, cfg) > v:
             lo = mid
         else:
             hi = mid
     return 0.5 * (lo + hi)
 
 
-def state(h_ref, T_nozzle, v, mode="exhaust", entrained=True):
+def state(h_ref, T_nozzle, v, mode="exhaust", entrained=True, cfg=DEF):
     """Fixed point in T_rec for a given v. Returns dict or None."""
     T_rec = T_ENT
     for _ in range(400):
         T_mix = T_rec if mode == "exhaust" else T_ENT
-        s_c = s_c_for(h_ref, T_nozzle, v, T_mix, entrained)
+        s_c = s_c_for(h_ref, T_nozzle, v, T_mix, entrained, cfg)
         if s_c is None:
             return None
-        T_stag, m = stag(T_nozzle, s_c, T_mix, entrained)
-        r, T = march(h_ref, T_stag, m, s_c, R_Q)
+        T_stag, m = stag(T_nozzle, s_c, T_mix, entrained, cfg)
+        r, T = march(h_ref, T_stag, m, s_c, R_Q, cfg=cfg)
         T_new = T[-1]
         if mode != "exhaust" or abs(T_new - T_rec) < 1e-6:
             T_rec = T_new
             break
         T_rec = 0.5 * T_rec + 0.5 * T_new
-    ring = float(wj.rop_closed(wj.h_py(h_ref, R_Q, STANDOFF), T[-1]))
+    ring = float(wj.rop_closed(h_of(cfg, h_ref, R_Q, STANDOFF), T[-1]))
     P_face = m * wj.CP * (T_stag - T[-1])
+    T_mix = T_rec if mode == "exhaust" else T_ENT
     return dict(v=v, s_c=s_c, T_stag=T_stag, T_rec=T_rec if mode == "exhaust" else T_ENT,
-                T_ring=T[-1], ring=ring, m=m, P_face=P_face, phi=min(1.0, 5.0 * D / s_c))
+                T_ring=T[-1], ring=ring, m=m, P_face=P_face, phi=phi_of(cfg, s_c, T_mix),
+                D_e=d_dec(cfg, T_mix))
 
 
-def equilibria(h_ref, T_nozzle, mode="exhaust", entrained=True, vmin=0.05, vmax=30.0, n=80):
+def equilibria(h_ref, T_nozzle, mode="exhaust", entrained=True, vmin=0.05, vmax=30.0, n=80, cfg=DEF):
     """Roots of g(v) = ring(v) - v on a log grid, refined by bisection.
     Stability: d ring/dv < 1 at the root (a faster burner slows the ring)."""
     vs = np.geomspace(vmin, vmax, n)
     g, st = [], []
     for v in vs:
-        s = state(h_ref, T_nozzle, v, mode, entrained)
+        s = state(h_ref, T_nozzle, v, mode, entrained, cfg)
         st.append(s)
         g.append(np.nan if s is None else s["ring"] - v)
     g = np.array(g)
@@ -146,22 +179,23 @@ def equilibria(h_ref, T_nozzle, mode="exhaust", entrained=True, vmin=0.05, vmax=
             lo, hi, glo = vs[i], vs[i + 1], g[i]
             for _ in range(30):
                 mid = math.sqrt(lo * hi)
-                sm = state(h_ref, T_nozzle, mid, mode, entrained)
+                sm = state(h_ref, T_nozzle, mid, mode, entrained, cfg)
                 gm = sm["ring"] - mid
                 if gm * glo > 0.0:
                     lo, glo = mid, gm
                 else:
                     hi = mid
-            s = state(h_ref, T_nozzle, math.sqrt(lo * hi), mode, entrained)
+            s = state(h_ref, T_nozzle, math.sqrt(lo * hi), mode, entrained, cfg)
             s["stable"] = bool(g[i] > 0.0 > g[i + 1])
             roots.append(s)
     return roots, vs, g
 
 
-def depth_profile(h_ref, eq, r_max=0.20, n=2001, z_max=BLOCK):
+def depth_profile(h_ref, eq, r_max=0.20, n=2001, z_max=BLOCK, cfg=DEF):
     """v(r) beyond r_q, freeze depth D(r) and r_wall(z)."""
-    r, T = march(h_ref, eq["T_stag"], eq["m"], eq["s_c"], r_max, n=n, r_start=R_Q, T0=eq["T_ring"])
-    vr = wj.rop_closed(wj.h_py(h_ref, r, STANDOFF), T)
+    r, T = march(h_ref, eq["T_stag"], eq["m"], eq["s_c"], r_max, n=n, r_start=R_Q, T0=eq["T_ring"],
+                 cfg=cfg)
+    vr = wj.rop_closed(h_of(cfg, h_ref, r, STANDOFF), T)
     v = eq["v"]
     with np.errstate(divide="ignore"):
         Dz = np.where(vr < v, STANDOFF * vr / np.maximum(v - vr, 1e-30), np.inf)

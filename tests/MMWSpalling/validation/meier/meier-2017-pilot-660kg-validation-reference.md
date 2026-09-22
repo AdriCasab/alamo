@@ -58,6 +58,22 @@ sources: [[[sources/meier-2017]], [[validation/meier-2017__pilot-scale-grimsel-6
 >    `Claude_markdowns/2026-09-15b.md`).
 > 8. **§4 "SOD = 7 × D".** With D = 7.5 mm the drawing's 50 mm is 6.67 D.
 > 9. Author: **Thierry** Meier.
+> 10. **(D2c, 2026-09-17) Item 6 refined.** The digitised Fig. 8.8 profile
+>     (`meier_fig8_8_hole_profile.csv`) is a visible width, so it is a lower
+>     bound on Ø (±5 mm). It shows a **mild collar**: 96 mm at 10 mm depth,
+>     92 at 25, 88 at 50, 87 from 75 to 125 mm, then tapering to 84 at 300 mm
+>     and 78 at the exit. "No collar funnel" therefore means a widening of
+>     about 10 mm over the top 75 mm, not none.
+> 11. **(D2c) Nozzle state** (items 1–2). The isentropic Laval state at the
+>     measured ṁ and 1900 K is computed in `studies/d2c_steady/nozzle.py`
+>     (γ 1.3, R 290 J/kg K):
+>     - p0 5.95 bar, exit Mach 1.86, p_e 0.97 bar, u_e 1277 m/s;
+>     - J = 19.15 N including the pressure thrust (ṁ·u_e alone = 19.33 N);
+>     - momentum diameter D_e = 3.56 mm in 293 K air and 8.0 mm in 1500 K
+>       exhaust.
+>
+>     The chamber temperature (item 2) is not an input anywhere. The nozzle
+>     temperature is swept as an inference (1600 / 1750 / 1900 K).
 
 Self-contained data for reproducing the Ch. 8 pilot-scale flame-jet demonstration on a 660 kg Grimsel granite block. Distilled from [[sources/meier-2017]] (Chapter 8) and the two related validation cases — read those for narrative context and conflict tracking. Everything an implementer needs to set up and score the run is here.
 

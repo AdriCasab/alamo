@@ -1,12 +1,93 @@
 # Meier 2017 Grimsel pilot — validation case: status summary
 
-Updated **2026-09-17**. Sections 1–5 below the line are the pre-D2 history
+Updated **2026-09-21**. **Read the status block first**; the D2c/D2d blocks and
+everything below them are history.
+
+## Status (2026-09-21): where the Meier comparison stands
+
+**Configuration:** D2f support rule (pads, q 0.9, no clearance clip) with the pinned
+closure's idle clock off per input, D2c gas closures unchanged, 0.40 m domain, 2 mm and 1 mm.
+Runs `studies/d2i_gate/output/LI0_2mm`, `LI0_1mm`. **Every D2b–D2d number is superseded** (they
+used the clearance clip, which D2e identified as the mesh seed).
+
+**Comparison window 150–350 s** (both meshes agree there; after it the 1 mm ring rate is not
+converged, see below):
+
+| quantity | model 2 mm / 1 mm | Meier | reading |
+|---|---|---|---|
+| burner ROP | 1.50 / 1.46 m/h | 1.30 time-averaged, 1.5 quoted steady | consistent (one-sided: the model is a contact limit) |
+| whole volume rate | 4.11 / 3.80 cm³/s | 2.47 | too high 55–65 %: the funnel |
+| T_fire / ΔT_fire | 821 K / 528 K | 300–900 °C band | within |
+| Ø at 25 / 50 mm | 129 / 113 mm | 92 / 88 | too wide (formed < 150 s; Meier's mouth was under a wellhead) |
+| Ø at 125 mm | 88 / 87 mm | 87 | matches |
+| min Ø to the feet | 78 mm | 85–93 (burner 80) | hole = burner; no side-wall heating |
+| bottom shape | pit ≈ 105 mm below the feet, 80° cone | spheroid | wrong: gas closures |
+
+**Rate uncertainty:** mesh −4 %, q ±3 %, dt < 1 %, height +4 % (clip config); nozzle
+temperature dominant and **not re-swept** under this rule (D2d: ≈ 0.25 m/h per 100 K).
+
+**Limitations stated as results:** (1) no steady state and no long-time mesh convergence of
+the ring rate — traced through D2e (clearance clip), D2h (idle clock) and D2i (thermal
+knife-edge at the pad rim beside the cold cone, lateral loss ∝ 1/dx) to a per-column
+hard-threshold surface model at lateral edges; refinement will not fix it. (2) Shape: flux per
+horizontal area and no side-wall heating. (3) Gas temperature unmeasured. (4) Supersonic jet,
+Martin out of range. Full statement: `Claude_markdowns/2026-09-21a.md`; diagnoses:
+`2026-09-20.md`, `2026-09-21.md`; run records: `studies/d2e_mesh` … `d2i_gate/RESULTS.md`.
+
+**Next (decided 2026-09-21):** D3 writes the comparison as above; the surface model is then
+reformulated as a continuous ablation front (design to follow) before more gas physics.
+
+---
+
+Previous header (2026-09-17): Sections 1–5 below the line are the pre-D2 history
 (June 2026) and are kept for the record; several of their numbers and
 statements are stale and are flagged in the status block. The physics work
 program and development workflow live in [TODO.md](TODO.md). Reference data:
 `meier-2017-pilot-660kg-validation-reference.md` (read its **Errata** block
 first). Page-cited thesis notes: `Claude_markdowns/meier_thesis_notes.md`.
 Reader-facing write-up: `Claude_markdowns/meier_validation_report.html` / `.pdf`.
+
+**D2d campaign (2026-09-18; awaiting verify):** check-only regression
+`sp_meier_pilot/test_feet_d2c` re-scores R1 and the mesh pair from
+`studies/d2c_steady/output/`. R1 has a steady window (470–694 s), ROP
+1.65 m/h PASS and volume PASS; the mouth (130/114 mm) and depth-mean Ø
+(101 mm) are expected-fails. The **mesh check fails**: the 1 mm run is 43 %
+faster over 150–300 s, so the 2 mm agreement is not converged. Verdict:
+`studies/d2c_steady/RESULTS.md` §7.
+
+## D2c: closures and pre-registration (2026-09-17; code only, campaign = D2d)
+
+- **New, default-off closures** (`src/Integrator/MMWSpalling.H`, `Removal.H`;
+  unit test `tests/MMWSpalling/unit/jet_d2c`):
+  - `walljet.h_expr(..., far="power", n)`: h ∝ (12 D/s)^n beyond 12 D. It
+    replaces the 12 D clip that ran the D2b centre pit to the bottom; the
+    scored value is n = 1.
+  - `surface_patch.jet_decay_diameter = momentum` with `jet_De_ref` (the
+    full-jet momentum diameter, `studies/d2c_steady/nozzle.py`) and
+    `jet_core_length = 8`.
+  - `jet_free_surface = 1`: ambient dilution of the wall jet over the
+    original surface, the no-funnel closure.
+  - `jet_bin_update = exponential` and `jet_negative_flux = count`.
+  - `foot_body_clearance = 1`: rock proud of a pad is removed mechanically
+    and logged as regime 4.
+- **Scored configuration for D2d:** `sp_meier_pilot/input_feet_d2c`, written by
+  `studies/d2c_steady/run.py --write-input`. `input_feet` / `test_feet` (D2b)
+  are unchanged.
+- **Target profile:** Fig. 8.8 digitised in `meier_fig8_8_hole_profile.csv`
+  (visible width = lower bound). It has a mild collar: 96 mm at 10 mm,
+  88 mm at 50 mm, 87 mm from 75 to 125 mm.
+- **Scoring:** `studies/d2c_steady/score.py`.
+  - A steady window is required.
+  - Whole-excavation volume (water filling).
+  - The mouth against Fig. 8.8 at 25 and 50 mm.
+  - Drilled-depth Ø with the 2 mm resolution rule.
+  - Full-domain mesh check.
+- **Hand predictions**, hashed before any D2d run:
+  `studies/d2c_steady/PREDICTIONS.md`.
+  - Steady ring ROP 1.93 m/h with s_c ≈ 180 mm.
+  - No steady window before the bottom of a 0.40 m domain; a 0.65 m domain
+    would be needed.
+  - The mouth is predicted to stay too wide (≈ 134 / 118 mm at 25 / 50 mm).
 
 ## Current status (D2b, review-accepted 2026-09-16; corrections 2026-09-17)
 

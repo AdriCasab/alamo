@@ -67,6 +67,11 @@ Constant::FillBoundary (amrex::BaseFab<Set::Scalar> &a_in,
 
     amrex::Box box = a_box;
     box.grow(ngrow);
+    // Perf (2026-09-18): every kernel below writes only cells outside the
+    // domain (glevel != 0, or i/j beyond lo/hi in the corner pass). A grown
+    // box that lies entirely inside the domain has no such cell, so return
+    // before sweeping it. On a 720-box grid this sweep was ~6 % of the step.
+    if (m_geom.Domain().contains(box)) return;
     const amrex::Dim3 lo= amrex::lbound(m_geom.Domain()), hi = amrex::ubound(m_geom.Domain());
 
     amrex::Array4<amrex::Real> const& in = a_in.array();

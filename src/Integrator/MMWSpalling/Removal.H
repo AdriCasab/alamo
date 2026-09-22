@@ -21,6 +21,9 @@
     {
         if (!removal_enabled()) return;
         Util::Assert(INFO, TEST(microstructure_enabled));
+        // AMR: removal is decided and applied on the surface-owning level
+        // only; coarser levels receive phi/removed by average-down.
+        if (!SurfaceOwner(lev)) return;
 
         const Set::Scalar* DX  = geom[lev].CellSize();
         const Set::Scalar* PLO = geom[lev].ProbLo();
@@ -130,6 +133,90 @@
         auto col_index = [=](int i, int j) {
             return (j - dom_jlo) * nx_dom + (i - dom_ilo);
         };
+
+        // D2c: burner-body clearance (surface_patch.foot_body_clearance).
+        // FeetDescent (inside the previous step's thermal advance, which runs
+        // after this pass) recorded, per annulus column standing proud of its
+        // pad, the pad height's cell index k_c (foot_clear_k). Here, before
+        // PASS 1, every solid cell of that column with k > k_c is flipped to
+        // removed -- regime 4 (mechanical), D = 0, thermal state kept (void H
+        // is frozen and still counted by EnergyLedger) -- and the column's phi
+        // is shifted by n*dz, n = k_top - k_c, so the new top is k_c with its
+        // sub-cell phi unchanged. Cells are flipped by index, not by the sign
+        // of phi (round-off ties phi_top = 0 / dz would otherwise miss or add
+        // one); a flipped cell left at phi >= 0 by a tie gets phi = -tiny,
+        // and k_c is held at phi >= 0. The pin state (pin_T/pin_t) is left
+        // untouched. The thermal passes below then see the cleared surface.
+        // foot_mech_vol / foot_mech_cols log the flips; removal_events.csv
+        // gets one regime-4 row per cleared column (k_top = the top before
+        // the cut, h_applied = n*dz, n_voided = cells flipped, other fields 0).
+        const bool mech_on = surface_patch.enabled && surface_patch.feet &&
+                             surface_patch.foot_body_clearance;
+        amrex::Vector<int> mech_n(mech_on ? ncols : 0, 0);
+        amrex::Vector<int> mech_ktop(mech_on ? ncols : 0, std::numeric_limits<int>::min());
+        amrex::Vector<int> mech_flip(mech_on ? ncols : 0, 0);
+        if (mech_on)
+        {
+            if (!SurfaceOwner(lev))
+                Util::Abort(INFO, "surface_patch.foot_body_clearance runs on the surface-owning level only");
+            foot_mech_cols = 0.0;
+            if (foot_clear_k.size() == static_cast<std::size_t>(ncols))
+            {
+                const amrex::Vector<int> kt = ColumnTopSolid(lev);
+                for (int idx = 0; idx < ncols; ++idx)
+                {
+                    const int kc = foot_clear_k[idx];
+                    if (kc == std::numeric_limits<int>::min() || kt[idx] <= kc) continue;
+                    mech_n[idx]    = kt[idx] - kc;
+                    mech_ktop[idx] = kt[idx];
+                }
+                for (amrex::MFIter mfi(*phi_mf[lev], false); mfi.isValid(); ++mfi)
+                {
+                    const amrex::Box& bx = mfi.validbox();
+                    amrex::Array4<Set::Scalar> const& phi = (*phi_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& rem = (*removed_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& reg = (*regime_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& D   = (*D_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> regf;
+                    if (sp_weibull_spall) regf = (*regime_field_mf[lev]).array(mfi);
+                    const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+                    for (int j = lo.y; j <= hi.y; ++j)
+                    for (int i = lo.x; i <= hi.x; ++i)
+                    {
+                        const int idx = col_index(i, j);
+                        const int n = mech_n[idx];
+                        if (n == 0) continue;
+                        const int kc = foot_clear_k[idx];
+                        const Set::Scalar h = Set::Scalar(n) * dz;
+                        for (int k = lo.z; k <= hi.z; ++k)
+                        {
+                            phi(i, j, k) -= h;
+                            if (k > kc && rem(i, j, k) <= 0.5)
+                            {
+                                rem(i, j, k) = 1.0;
+                                reg(i, j, k) = 4.0;
+                                if (sp_weibull_spall) regf(i, j, k) = 4.0;
+                                D(i, j, k)   = 0.0;
+                                if (phi(i, j, k) >= 0.0)
+                                    phi(i, j, k) = -std::numeric_limits<Set::Scalar>::min();
+                                ++mech_flip[idx];
+                            }
+                            else if (k == kc && phi(i, j, k) < 0.0)
+                                phi(i, j, k) = 0.0;
+                        }
+                    }
+                }
+                amrex::ParallelDescriptor::ReduceIntSum(mech_flip.data(), ncols);
+                long nflip = 0;
+                for (int idx = 0; idx < ncols; ++idx)
+                {
+                    nflip += mech_flip[idx];
+                    if (mech_flip[idx] > 0) foot_mech_cols += 1.0;
+                }
+                foot_mech_vol += Set::Scalar(nflip) * DX[0] * DX[1] * dz;
+            }
+            foot_clear_k.clear();   // consumed; FeetDescent re-arms it
+        }
 
         // PASS 1: each rank fills its local maximum k_top per column,
         // sentinel INT_MIN for columns it does not own at all. ReduceIntMax
@@ -364,9 +451,9 @@
         // C1: the same per-column gather also feeds the pinned-surface closure
         // (surface_patch.robin_form = pinned), even with the CSV off; the CSV
         // itself stays gated on spall.removal_events_csv.
-        const bool pin_on = sp_weibull_spall && lev == 0 && surface_patch.enabled &&
+        const bool pin_on = sp_weibull_spall && SurfaceOwner(lev) && surface_patch.enabled &&
                             surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;
-        const bool rev_on = sp_weibull_spall && lev == 0 &&
+        const bool rev_on = sp_weibull_spall && SurfaceOwner(lev) &&
                             (sp_emit_removal_events_csv || pin_on);
         amrex::Vector<Set::Scalar> rev_T_top, rev_a_f, rev_Sp, rev_h_scan, rev_rhoCp;
         amrex::Vector<int>         rev_nvoid;
@@ -1102,7 +1189,7 @@
         // interleave. Append mode preserves cross-step accumulation; the
         // I/O proc latch ensures the header is emitted exactly once per
         // run (re-runs of the same plot_file truncate-and-rewrite).
-        if (sp_weibull_spall && lev == 0 && sp_emit_h_col_events_csv)
+        if (sp_weibull_spall && SurfaceOwner(lev) && sp_emit_h_col_events_csv)
         {
             const std::string csv_path =
                 plot_file + "_h_col_events.csv";
@@ -1395,6 +1482,12 @@
                     ofs.precision(16);
                     for (int idx = 0; idx < ncols; ++idx)
                     {
+                        if (mech_on && mech_n[idx] > 0)
+                            ofs << time << "," << (idx % nx_dom + dom_ilo) << ","
+                                << (idx / nx_dom + dom_jlo) << ",4,"
+                                << mech_ktop[idx] << ",0,0,0,0,"
+                                << Set::Scalar(mech_n[idx]) * dz << ","
+                                << mech_flip[idx] << "\n";
                         if (regime_col[idx] == 0) continue;
                         ofs << time << "," << (idx % nx_dom + dom_ilo) << ","
                             << (idx / nx_dom + dom_jlo) << "," << regime_col[idx] << ","
@@ -1407,6 +1500,9 @@
             }
             sp_removal_events_csv_header_written = true;
         }
+
+        // AMR: the band must still hold the surface and the scan window.
+        if (max_level > 0) CheckSurfaceCovered(lev, time);
 
         // Rebuild diagnostics that depend on the new mask/D field.
         UpdateSurfaceMaskFromPhi(lev);

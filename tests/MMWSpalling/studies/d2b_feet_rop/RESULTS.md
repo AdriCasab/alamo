@@ -162,6 +162,14 @@ where the Meier numbers are measured, not the bands.
   real error (free-surface wall jet never entrains ambient air; exhaust
   recirculation from t = 0), to be fixed in the next packet.
 - Full page-cited notes: `Claude_markdowns/meier_thesis_notes.md`.
+- **(D2c, 2026-09-17) Additions.**
+  - The digitised Fig. 8.8 (`validation/meier/meier_fig8_8_hole_profile.csv`,
+    visible width = lower bound) has a **mild collar** (96 → 87 mm over the top
+    75 mm), so "no collar funnel" means about 10 mm of widening, not none.
+  - B_JM_A2 re-scored with the D2c rules (whole excavation, azimuth-mean
+    profile against Fig. 8.8, drilled-depth Ø with the 2 mm rule):
+    `studies/d2c_steady/RESULTS.md` §Dry run. The tables below are not
+    rewritten.
 
 <!-- RESULTS -->
 

@@ -58,16 +58,32 @@ def h_anchor(key, T_nozzle):
 NORM = jet.hloc_shape(2.5 * D, SOD)
 
 
-def h_expr(h_ref):
+FAR_S = 12.0 * D                    # end of Martin's stand-off range (D2c far law)
+
+
+def h_expr(h_ref, far="clamp", n=1.0):
     """h(r, s) = h_ref h_loc(max(r, 2.5D), clamp(s, 2D, 12D)) / h_loc(2.5D, SOD).
-    Numeric arguments first in every min/max (AMReX 25.12 rewrite trap)."""
+    D2c far law: far = "clamp" (default, D2a2/D2b string unchanged) or
+    "power", which multiplies by (12D/max(12D, s))^n (continuous at 12 D;
+    radial shape unchanged). Numeric arguments first in every min/max
+    (AMReX 25.12 rewrite trap)."""
     R = f"max({2.5 * D!r},r)"
     S = f"min({12.0 * D!r},max({2.0 * D!r},s))"
-    return f"{float(h_ref)!r}*{jet._hl(R, S)}/{NORM!r}"
+    base = f"{float(h_ref)!r}*{jet._hl(R, S)}/{NORM!r}"
+    if far == "clamp":
+        return base
+    if far == "power":
+        return f"{base}*pow({FAR_S!r}/max({FAR_S!r},s),{float(n)!r})"
+    raise ValueError(f"far must be 'clamp' or 'power', got {far!r}")
 
 
-def h_py(h_ref, r, s):
-    return h_ref * jet.hloc_shape(np.maximum(r, 2.5 * D), np.clip(s, 2.0 * D, 12.0 * D)) / NORM
+def h_py(h_ref, r, s, far="clamp", n=1.0):
+    h = h_ref * jet.hloc_shape(np.maximum(r, 2.5 * D), np.clip(s, 2.0 * D, 12.0 * D)) / NORM
+    if far == "clamp":
+        return h
+    if far == "power":
+        return h * (FAR_S / np.maximum(FAR_S, s)) ** float(n)
+    raise ValueError(f"far must be 'clamp' or 'power', got {far!r}")
 
 
 CORE_LEN = 5.0

@@ -6196,3 +6196,4546 @@ logs agree with the notes.
   - the process suggestions in takeaway 12 (targeted witnesses, drop the
     slab part, fewer 3-D runs), which are the planner's call.
 
+
+
+## D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted)
+
+**Archived 2026-09-17 by /plan. Verdict: accepted (non-blocking findings below).**
+The packet was revised once before implementation (tripod pad rule, annulus
+[0.028, 0.040] from drawing section N-N, exhaust baseline, depth-mean Ø,
+Stage A tie-break, order B → D → C, stall meaning). The implementer read the
+revised packet and it was unchanged at close-out.
+
+**Summary.**
+- `surface_patch.nozzle_descent = prescribed | feet` (`FeetDescent`,
+  `MMWSpalling.H` ~1569): `z_n = z_foot + foot_standoff`, never rises;
+  `foot_rule = pads | max | mean` (pads: equal azimuth sectors of the observed
+  range, nearest-rank quantile ceil(qn)−1, mean over pads); keys
+  `foot_r_inner`, `foot_r_outer`, `foot_standoff`, `foot_npads` (3),
+  `foot_pad_quantile` (0.9), `nozzle_feed_max`. Collision radius defaults to
+  `foot_r_inner` under feet.
+- `jet_T_ent_mode = fixed | exhaust` (exhaust requires entrained mass;
+  T_rec = previous step's T_exhaust; floor stays at fixed `jet_T_ent`).
+- Thermo (feet): `nozzle_z`, `foot_z`, `foot_cols`, `foot_carry_cols`,
+  `foot_stall_time` (replaced the packet's `foot_stalled_steps`, which counted
+  almost every 2 mm step; user-directed). Exhaust: `jet_T_rec`, `jet_P_recirc`.
+- New `unit/robin_feet` (20/20). Targeted witnesses 2501/2501 identical. Full
+  sweep deferred to the commit. New `sp_meier_pilot/input_feet` + check-only
+  `test_feet` (PASS with 4 expected-fails); uniform-beam test marked superseded.
+- Study `studies/d2b_feet_rop/` (`feetmodel.py`, `run.py`, `analyze.py`,
+  `RESULTS.md`; 6.4 GB output): Stage A (3), probes, B (3), D (2, trimmed
+  r ≤ 60 mm), C (3).
+
+**Key findings.**
+- **J-M scored untuned (B_JM_A2, window 171–342 s): ROP 1.36 m/h in band;
+  ΔT_fire 528 K pass; min Ø 84.9 (0.5 m block) pass; depth-mean Ø 104.3 fail;
+  volume inside Ø 93 3.27 cm³/s fail; no steady window (jet_s_c drift
+  0.39 mm/s) fail.** J-5 2.43, J-10 2.82 m/h (above band); J-M at 1436 K
+  0.67 m/h; both fixed-293 K runs stalled after 6–12 mm of descent.
+- **Every exhaust run hit the bottom watchdog.** Cause: the 12 D stand-off clip
+  in the `h_expr` string written by `walljet.h_expr` (not in C++); clipped, the
+  centre keeps 1.86× the ring's h beyond 90 mm. Unclipped Martin puts the J-M
+  centre equilibrium at s_c ≈ 0.40 m. The ROP was still rising (1.20 → 1.40)
+  toward the hand deep-pit limit 1.82 m/h.
+- **The closure is right; the gap is in the gas reaching the ring:** with the
+  run's own ring T_gas the closed form gives 1.30 vs 1.31 m/h simulated (75 s).
+- **Freeze depth correction:** the wall sits at the column's own depth
+  50·v(r)/(v − v(r)); the packet's 50·v/(v − v(r)) is the feet depth.
+- **Hand wall profile has a mouth funnel** (r_wall 122 mm at 20 mm depth,
+  74 mm at 50 mm); the simulation shows it too. Meier Fig. 8.8 shows none.
+- Stage A: all three wall treatments failed criterion 3 (71–89 never-fired
+  columns outside the ring); rule 5 chose A2 (no coherence cap). **A3
+  (`surface_normal`) is inert under the pinned closure** (= A2).
+- Mesh (trimmed): ring −4.8 %, burner −6.4 %, T_fire 0.00 % (fixed by
+  construction under pinned), pinned share 0.82 / 0.72.
+- Cost: 600 s alone ≈ 1.2 h at 2 mm; 1 mm trimmed ≈ 80 min to 295 s.
+  Relinking `bin/` while runs use it is unsafe on macOS.
+
+**Review findings (non-blocking), carried into D2c.**
+- The trimmed mesh domain is not like-for-like under exhaust (T_rec 1579 K
+  trimmed vs 1484 K full).
+- The min-Ø pass is a 0.5 m-block artefact: over the drilled depth the minimum
+  is 78.2 mm, below the burner; no burner-body collision exists.
+- Scoring moved mid-study (volume/face power inside Ø 93, 18:38 addendum);
+  disclosed; verdict unchanged. **Withdrawn 09-17:** Meier measured volume by
+  water filling, so volume is scored on the whole excavation (5.68 cm³/s =
+  2.3× measured).
+- The ROP pass is a transient-window score; do not call 1.36 m/h the model's
+  prediction until a steady window exists.
+- 88 % of in-hole J-M columns are outside Martin's validity range at t_end.
+
+**09-17 thesis reread (`Claude_markdowns/meier_thesis_notes.md`).** The
+igniter thermocouple sat upstream of the lifted flame, so "1436 K" is not a gas
+temperature (the lower bound is void); 1900 K adiabatic is the upper bound,
+lowered by the unreported 160 L/h cooling-water ΔT. The nozzle is a Laval
+(6 mm throat, 7.5 mm exit): supersonic, Martin out of range.
+
+### D2b packet (verbatim, Context → Review findings)
+
+## Context
+
+**This is the step that turns ROP into a prediction.** D2a and D2a2 moved
+the nozzle on a **prescribed** path. Under a prescribed feed the centre ROP is
+an identity: the face settles at whatever stand-off supplies
+`rho*Cp*dT_fire*v_feed`, so it says nothing about the jet. Meier's burner
+instead **rests on feet** on the rock. It can drop only as the rock under the
+feet is removed, so **ROP = the recession rate of the face at the foot
+ring**, where the jet flux is lowest.
+
+**What D2a2 left (accepted 2026-09-16):**
+- The energy-conserving wall-jet closure (`jet_closure = enthalpy`) with the
+  free-jet stagnation decay; D2a2 recommended `jet_stagnation = decay` +
+  `jet_entrained_mass = 1` before D2b. This step keeps both.
+- In 3-D the centre **leads** the nozzle (`s_c` 60-90 mm, `T_stag`
+  1000-1270 K at 1900 K with 293 K entrainment). Ring ROP at r = 40 mm was
+  **0.5-1.3 m/h, below Meier's band**, from an early transient window; no run
+  reached a steady bowl.
+- All 1900 K holes were Ø 84-103 mm at 10 mm depth; at 1436 K, Ø 71-79 mm.
+- Open flag: `input_drilling`'s `spall.flake_coherence_length = 0.004` caps
+  walls at 63-65 deg, and capped cells overheat under the pinned flux.
+- 6-23 never-fired rim columns in the bracket decay runs.
+
+**Four physics points fixed before any run (user review, 2026-09-16):**
+
+1. **The feet are a rigid tripod.** It rests on the plane through its three
+   contact points: the highest rock under each pad, averaged across the pads.
+   A max over every 2 mm column in the annulus would let one never-fired
+   column freeze the burner for the whole run - a discretisation artefact
+   recorded as physics. **Baseline: per-pad high quantile, mean across pads.**
+
+2. **Hole diameter under the feet rule is mostly geometry.**
+   - Any column receding slower than the ring falls behind the burner. Once
+     it is `foot_standoff` (50 mm) behind, it is at the nozzle plane, gets no
+     flux (the D2a2 `s <= 0` rule) and freezes.
+   - A column at radius `r` therefore freezes at depth
+     `d(r) ~= foot_standoff * v / (v - v(r))`.
+   - With a flux falling roughly as `1/r`, `v(r)` drops a few % per mm at the
+     foot radius (user estimate ~2.5 %/mm). That puts the Ø 93 wall at a few
+     hundred mm depth and the Ø 85 wall below the 0.5 m block.
+   - So **the hole narrows with depth toward the 80 mm burner**, and Meier's
+     85-93 mm follows from the feet, the 50 mm stand-off and the profile shape
+     almost regardless of `h`.
+   - **A hole-diameter pass is therefore a check of the profile shape and the
+     above-nozzle rule, not support for the anchor.** Score the depth-mean
+     diameter and pre-register the depth profile.
+
+3. **In a blind hole the jet entrains its own exhaust, not 293 K air.**
+   - Below the first few centimetres the only gas available is the exhaust
+     flowing back up. The drawing makes this stronger: the jet expands for its
+     whole 50 mm inside the burner's feet collar (flange bore Ø 45, tube ID
+     Ø 56), and the exhaust leaves through three slots.
+   - Feeding the march's own exhaust temperature back as the entrained
+     temperature is **mass and energy conservation, not a fit**. D2a2's slab
+     measured ~30 % ring-ROP sensitivity to this temperature.
+   - **This is the scored baseline** (new `jet_T_ent_mode = exhaust`).
+   - **Stated risk:** this choice raises ROP, the direction of D2a2's
+     shortfall. It is decided here, **before** any D2b run, on the confinement
+     geometry alone. The 293 K case is the first Stage C run, and it is
+     reported in the same verdict table.
+
+4. **A stall is where Meier's operator pushed.** The crane drove the burner
+   with "intermittent and rough axial displacement" (thesis pp. 219-220). A
+   model stall marks where a real operator would have pushed weakly attached
+   rock away - the old Step 19 Sp-gated bit was exactly that push. It stays
+   out of the baseline. **A stall must be reported as "the jet alone does not
+   clear the ring here", not as "the physics says it cannot drill".**
+
+**No tuning.** The scored anchor is **J-M**: Martin `h` at the measured mass
+flow, `T_nozzle` = 1900 K (adiabatic), exhaust recirculation. J-5 and J-10 (the
+reference bracket) are reported as the bracket's implication. **If J-M misses
+Meier's band, report the miss.** Do not change the anchor, `h_ref`,
+`T_nozzle`, the entrainment mode, the foot geometry or rule, or the wall
+treatment (beyond the pre-stated Stage A rule) to pass.
+
+**Caveats carried forward:**
+- (C1) Pin state is not checkpointed; `pinned_idle_cycles` stays **2**.
+- (C1/D2a) Score by time windows and fits (nozzle height,
+  `removal_events.csv` `h_applied`), never by end depth or plotfile
+  staircases.
+- (D2a/D2a2) **2 mm is not shown mesh-converged.** Most of the march is
+  face-form uptake by unfired rock (pinned share 0.01-0.12), which S1/C1
+  showed is mesh-dependent at 2 mm. If J-M misses low, that is the leading
+  suspect, and only Stage D tests it.
+- (D2a) Flux is applied on horizontal cell area; no `1/cos(theta)`, no
+  side-wall Robin.
+- (D2a) **AMReX 25.12 parser bug:** numeric arguments first in every
+  `max`/`min`; `unit/jet_enthalpy` (g) guards it.
+- (S1b) `V0 = V_cell` switches the Weibull size effect off.
+- (D2a2) `jet_mdot` is the modelled sector's share: quarter domain = mdot/4.
+- (D2a2) **The planner's hand tables were wrong twice** (a non-computable
+  criterion, then decay rows at D = 7.1 mm with `s_c = SOD`). Hand predictions
+  here are computed by the implementer with `walljet.py` at D = 7.5 mm,
+  **before** any run (deliverable 5). This packet gives no planner numbers.
+
+## Sources
+
+Line numbers are approximate. The tree carries uncommitted
+P1 + R1 + E1 + S1 + A1 + C1 + D2a + D2a2 edits.
+
+### Burner geometry (drawings; full record in `ROADMAP.md` Known Notes "Burner drawings")
+
+- **Sheet 15/17, "Abstand Halter F VT5", section N-N (re-read 2026-09-16 at
+  higher resolution):**
+  - an 8 mm flange (OD Ø 80, bore Ø 45 +0.2/+0.05, Ø 6.2 bolt holes with Ø 10
+    counterbores on a Ø 68 circle);
+  - a **tube OD Ø 80 / ID Ø 56** running 58 - 8 = **50 mm** below it;
+  - **three slots** cut into the tube at the bolt positions.
+  - The tube's lower rim is the foot.
+- **Foot annulus: r in [0.028, 0.040] m** (Ø 56-80). This corrects the first
+  packet's [0.034, 0.040] "nominal", which misread the Ø 68 bolt circle as a
+  wall. The slots remove part of the rim; their angular width is not
+  dimensioned.
+- **`foot_standoff = 0.050 m`** (sheet 1/17: nozzle exit to foot tips);
+  nozzle bore **D = 7.5e-3 m**, `SOD/D = 6.67`; burner Ø at the drilling end
+  **80 mm**.
+- **Confinement:** the jet leaves the Ø 7.5 bore and travels its 50 mm inside
+  the Ø 45 / Ø 56 collar; the exhaust leaves through the three slots and, once
+  rock under the rim is removed, under it.
+- **Model limitations to state, not fix:**
+  - in reality rock under a steel pad is covered and gets no gas; the model
+    heats every ring column with the full wall-jet flux;
+  - a quarter domain with two symmetry planes is 4-fold symmetric, so three
+    "pads" in it are a proxy for a tripod, not a tripod.
+
+### Meier targets (`validation/meier/meier-2017-pilot-660kg-validation-reference.md`, `Claude_markdowns/2026-09-15b.md` §1, §5)
+
+| target | criterion |
+|---|---|
+| ROP | 1.3-1.6 m/h +/-20 %, i.e. **[1.04, 1.92]** |
+| hole diameter (depth-mean over the 0.5 m block) | **85-93 mm**, and >= 80 mm everywhere |
+| volume rate | 2.47 cm3/s +/-20 %, i.e. **[1.98, 2.96]** |
+| `dT_fire` | 500-560 K |
+| ROP flatness | steady-window sub-fits within +/-10 % of the mean |
+| ledger | closed to round-off |
+| mesh | ring ROP and `T_fire` within 5 % between 2 and 1 mm, on a steady window |
+
+- 3.42 L / 0.50 m is exactly Ø 93 mm: **the volume is the depth-mean
+  diameter restated.** Since the simulation drills only part of the block, the
+  0-0.5 m depth-mean comes from the hand depth profile (deliverable 5)
+  **checked against** the simulated profile over the depth actually drilled.
+- The consistent data triples are (2.47 cm3/s, Ø 93, 1.3 m/h) and
+  (2.47, Ø 85, 1.57). Rock-side removal power from the data: **2.83 kW**.
+- Wall temperature is **not** a target.
+
+### Code this step touches (`src/Integrator/MMWSpalling.H`)
+
+- `BuildFlameColumns(lev, time, k_top_col)` ~1499-1527: per column `r`,
+  `z_face = PLO_z + (k_top_col+1)*dz`, and `s = z_n - z_face` with
+  **`z_n = nozzle_z0 - nozzle_feed*time`** (the line the feet rule
+  generalises). Then the D2a expression path or, under `enthalpy`,
+  `JetEnthalpyMarch`.
+- **`JetEnthalpyMarch`** ~1564-1721:
+  - gathers top-cell T_old / k_c;
+  - bins by r and takes `s_c` from the innermost non-empty bin;
+  - `phi = min(1, core*D/s_c)`,
+    `T_stag = T_ent + (T_nozzle - T_ent)*phi`, `m = mdot` or `mdot/phi`;
+  - marches `T_gas <- max(T_ent, T_gas - P_bin/(m*cp))`;
+  - checks the invariant (abort at 1e-9);
+  - sets the 8 `jet_*` thermo values.
+  - **Deliverable 2 changes this function, and only under the new mode.**
+- `PinRule` ~1752 (shared with `BuildPinEffective` ~1731); do not change.
+- `SurfacePatch::Parse` ~4561-4608 (D2a2 `jet_*` keys), plus the D2a keys
+  `nozzle_z0` (required with expressions), `nozzle_feed` (default 0) and
+  `nozzle_collision_radius`.
+- Thermo registration ~602 (`jet_*` appended after every older column).
+- **Pattern to mirror:** the Step 19 bit feed, `bit.*`, parse ~2725-2751,
+  members ~4606-4619. **Do not change `bit.*`.**
+- **Wall treatment** (selected, not edited):
+  - `spall.flake_coherence_length` (parse ~2914; applied at `Removal.H:1062`
+    only when `surface_normal` is off);
+  - `spall.surface_normal` (parse ~2788; per-column `cos(theta)` at
+    `Removal.H` ~169, floor 0.15). Under it a firing recedes the column by
+    `h/cos(theta)` **with no matching increase** in the flux per horizontal
+    area, so its energy ratio exceeds 1 on slopes by construction.
+- `k_top_col` is the removed-mask top (`ColumnTopSolid`); per-column
+  reductions must be domain-wide MPI reductions.
+- `removal_events.csv`:
+  `time,col_i,col_j,regime,k_top,T_top,a_f,Sp_top,h_scan,h_applied,n_voided`;
+  `k_top` is the **pre-removal** top.
+
+### Study helpers
+
+- `tests/MMWSpalling/studies/d2a2_walljet/walljet.py` (D = 7.5e-3):
+  `martin`, `h_anchor`, `h_expr`, `h_py`, `phi_of`, `t_stag`, `loss`,
+  `rop_closed`, `march(h_ref, T_nozzle, cp, s, ..., mdot)`, `centre_rop`,
+  `s_equilibrium(h_ref, T_nozzle, feed_mh, stag)`.
+- `run.py` there builds the CLI overrides (`flame_keys`, quarter domain,
+  `jet_mdot = MDOT/4`, dt from the stagnation flux).
+- `d2a_jet_face/jet.py` keeps D = 7.1e-3 and `walljet.py` overrides it. Do not
+  edit `jet.py`.
+
+## Goal
+
+### Code (default-off; microstructure path; single level)
+
+1. **Feet descent rule.** New key
+   `surface_patch.nozzle_descent = prescribed | feet`, default `prescribed`
+   (D2a/D2a2 behaviour, bit-identical).
+
+   Under `feet`, required:
+   - `surface_patch.foot_r_inner`, `surface_patch.foot_r_outer` [m], the
+     bearing annulus about `(x0, y0)`;
+   - `surface_patch.foot_standoff` [m].
+
+   Optional:
+   - `surface_patch.foot_rule = pads | max | mean`, default `pads`;
+   - `surface_patch.foot_npads` (default 3);
+   - `surface_patch.foot_pad_quantile` (default 0.9);
+   - `surface_patch.nozzle_feed_max` [m/s], default `+inf` (no operator cap).
+
+   **`pads` rule**, evaluated at lev 0, once per step, in `BuildFlameColumns`
+   **before** `s` is computed:
+   - live columns with `r in [foot_r_inner, foot_r_outer]` are split into
+     `foot_npads` equal azimuth sectors of the annulus's **observed** azimuth
+     range (`atan2` about `(x0, y0)`, so a quarter domain splits its 90 deg);
+   - each pad's height is the `foot_pad_quantile` quantile of `z_face` over its
+     columns, using a deterministic rank rule (state it);
+   - `z_foot` is the mean of the pad heights.
+   - `max` and `mean` are the whole-annulus reductions, kept for unit tests
+     and comparison.
+   - All reductions are domain-wide and rank-independent (gather the annulus
+     `z_face` values, then sort).
+
+   Descent, for every rule:
+   - `z_target = z_foot + foot_standoff`;
+   - `z_n = min(z_n_prev, max(z_target, z_n_prev - nozzle_feed_max*dt))`; the
+     burner never rises;
+   - first step: `z_n = z_target`;
+   - `z_n` is host state and **not checkpointed** (same class as the C1 pin
+     state); say so in the takeaways.
+
+   Aborts:
+   - parse, under `feet`:
+     - `nozzle_z0` or `nozzle_feed` given;
+     - bad radii (`foot_r_inner >= foot_r_outer`, non-finite or negative);
+     - `foot_standoff <= 0`;
+     - `foot_npads < 1`;
+     - quantile outside `(0, 1]`;
+     - flame expressions not enabled;
+   - runtime:
+     - the annulus has no live column;
+     - a pad has no live column.
+
+   A **stall** is a result: log it, do not abort, do not add a fallback
+   descent.
+
+2. **Exhaust-recirculation entrainment.** New key
+   `surface_patch.jet_T_ent_mode = fixed | exhaust`, default `fixed`
+   (D2a2 behaviour, bit-identical).
+   - Under `exhaust`, the temperature of the entrained gas is
+     `T_rec = jet_T_exhaust` from the **previous** step (first step:
+     `jet_T_ent`). The stagnation mixture is
+     `T_stag = T_rec + (T_nozzle - T_rec)*phi` with `m = mdot/phi`.
+   - **Requires `jet_entrained_mass = 1`** (abort otherwise). Only then is the
+     mixture energy-consistent: the stagnation enthalpy is the nozzle flow
+     plus `(m - mdot)` of recirculated gas.
+   - **The march floor stays at the fixed `jet_T_ent`, never `T_rec`.**
+     Flooring at the lagged exhaust temperature would make `T_exhaust`
+     non-decreasing step to step (a ratchet), and the gas could never cool.
+     Unit test (j) checks this.
+   - Invariants, all referenced to the fixed `jet_T_ent`:
+     - `P_face + P_exhaust = P_cap = m*cp*(T_stag - T_ent)`, as today;
+     - `P_face + P_exhaust = mdot*cp*(T_nozzle - T_ent) + P_recirc`, with
+       `P_recirc = (m - mdot)*cp*(T_rec - T_ent)`.
+     - At steady state this implies
+       `P_face = mdot*cp*(T_nozzle - T_exhaust)`: the net enthalpy leaving the
+       hole is the nozzle flow at `T_exhaust`.
+   - `T_rec` is host state, not checkpointed.
+   - **Limitation to state:** near the surface (the first few cm) the real
+     entrained gas is ambient air; the mode applies from t = 0.
+
+3. **Collision radius under `feet`.** The default `nozzle_collision_radius`
+   becomes `foot_r_inner`. Keep it overridable and document it.
+
+4. **Thermo**, registered **after** every pre-D2b column:
+   - under `feet`:
+     - `nozzle_z` [m], `foot_z` [m];
+     - `foot_cols` (live annulus columns);
+     - `foot_carry_cols` (columns with `z_face >=` their pad's height, i.e.
+       the ones carrying the burner);
+     - `foot_stalled_steps` (cumulative steps with `z_target >= z_n_prev`);
+   - under `jet_T_ent_mode = exhaust`:
+     - `jet_T_rec` [K], `jet_P_recirc` [W].
+
+### Hand prediction (before any run)
+
+5. **Pre-registered feet prediction, computed with `walljet.py`** and written
+   into `RESULTS.md` §0 before any D2b run, together with the code that
+   produced it. Setup: exhaust recirculation (iterate `T_rec` to its fixed
+   point), entrained mass, `cp = 1250`, D = 7.5 mm, full jet.
+   - **Feet equilibrium:**
+     - the ring (the annulus, reduced like the pad rule) sits at
+       `s = foot_standoff`, and the centre at its own `s_c`;
+     - find `(v, s_c)` such that the centre ROP at `s_c` equals `v` **and**
+       the ring ROP from the march started at `T_stag(s_c, T_rec)` equals `v`;
+     - state how `s` is interpolated between centre and ring.
+   - **Depth profile:**
+     - freeze depth `d(r) = foot_standoff * v / (v - v(r))` for `r` beyond
+       the ring;
+     - wall profile `r_wall(z)`;
+     - **depth-mean hole Ø over 0-0.5 m**, and over the depth Stage B will
+       actually drill.
+   - Report `v`, `s_c`, `T_stag`, `T_rec`, `r_wall(z)` and the depth-mean Ø
+     for J-M, J-5 and J-10 at 1900 K, plus J-M with fixed 293 K entrainment
+     and J-M at 1436 K.
+   - Feed the model D2a2's measured `s_c` and say whether it reproduces D2a2's
+     early-window ring ROPs.
+
+### Tests
+
+6. **New `tests/MMWSpalling/unit/robin_feet/`** (`input_*` + `test`, the
+   `robin_jet` / `jet_enthalpy` pattern, 1 rank unless noted). **Re-run the
+   test after any edit to it and keep the passing log** in
+   `output/test_pass.log`.
+   - **(a) Defaults are bit-identical.** `prescribed` + `fixed` reproduce a
+     `jet_enthalpy` input's Cell_D, `removal_events.csv` and every thermo
+     column exactly.
+   - **(b) Kinematics.** On every row, `nozzle_z - foot_z == foot_standoff`
+     (print precision) whenever the feet are down, and `nozzle_z` is
+     non-increasing.
+   - **(c) Pad rule.** Held column heights give `foot_z` equal to the hand
+     value of the pad quantiles' mean, and `foot_carry_cols` equals the hand
+     count. Check `max` and `mean` the same way.
+   - **(d) Operator cap.** With `nozzle_feed_max` below the ring recession
+     rate, `-d(nozzle_z)/dt` equals the cap and the feet lift off.
+   - **(e) Stall.** One ring column that never fires:
+     - under `max` it freezes `nozzle_z` and increments
+       `foot_stalled_steps`, with no abort;
+     - under `pads` with quantile 0.9 the burner keeps descending.
+   - **(f) Aborts.** Each parse abort (including exhaust mode without
+     entrained mass) and each runtime abort returns `rc != 0` with its
+     message.
+   - **(g) Rank identity.** A `feet` + `exhaust` run on 3 ranks gives
+     identical `removal_events.csv`, identical new thermo text, and identical
+     Level_0 FABs compared **through `Cell_H` FabOnDisk offsets**.
+   - **(h) Closed form.** A single-ring-column feet run reaches a steady ROP
+     matching `rop_closed` at `s = foot_standoff` and the march's `T_gas`,
+     within 2 %.
+   - **(i) Exhaust identities.** On every row, `jet_T_rec` equals the previous
+     row's `jet_T_exhaust` (at thermo interval 1) and the `P_recirc` identity
+     holds to round-off. At steady state,
+     `P_face = mdot*cp*(T_nozzle - T_exhaust)` within 1 %.
+   - **(j) No ratchet.** A run in which the face cools the gas more over time
+     (e.g. a growing unfired area) shows `jet_T_exhaust` **decreasing** on some
+     rows.
+
+### Study and scored test (3-D only)
+
+7. **Harness `tests/MMWSpalling/studies/d2b_feet_rop/`**: `run.py`,
+   `analyze.py`, `RESULTS.md`, `README.md`. **No 2-D slab part.**
+
+   **Common settings** (`input_drilling` + CLI overrides):
+   - **Domain:** quarter domain with the axis at the xlo/ylo corner
+     (Neumann-0 = symmetry); 2 mm; 0.12 x 0.12 x **0.30 m** (60x60x150);
+     initial top z = 0.30.
+   - **Off:** `beam.P0 = 0`, `bit.enabled = 0`.
+   - **Removal and ledger:** `weibull.V0 = V_cell`; `robin_form = pinned`,
+     `pinned_idle_cycles = 2`; `surface.follow_mask = 1`; energy ledger and
+     `removal_events_csv` on.
+   - **Jet:** `jet_closure = enthalpy`, `jet_stagnation = decay`,
+     `jet_entrained_mass = 1`, **`jet_T_ent_mode = exhaust`**,
+     `jet_T_ent = 293.15`, `jet_mdot = mdot/4`, `jet_cp = 1250`,
+     `jet_D = 7.5e-3`, `jet_T_nozzle = 1900`, `jet_profile_interval` on.
+   - **Feet:** `nozzle_descent = feet`, annulus **[0.028, 0.040]**,
+     `foot_standoff = 0.050`, `foot_rule = pads`, `foot_npads = 3`,
+     `foot_pad_quantile = 0.9`.
+   - **Time and output:** dt by the overshoot rule (4 ms cap);
+     **`amr.plot_int` sparse** (every 50-100 s).
+   - **Stall watchdog (in `run.py`):** stop a run cleanly and mark it
+     `stalled` if `nozzle_z` has not descended for 60 s of simulated time.
+     Keep the data up to the stop.
+
+   **Stage A: wall-treatment decision** (J-M, ~150 s each), comparing:
+   - **A1** `flake_coherence_length = 0.004` (as in `input_drilling`);
+   - **A2** `flake_coherence_length = 0`;
+   - **A3** `spall.surface_normal = 1`.
+
+   **Decision rule, written into `RESULTS.md` before Stage A runs:**
+   1. **Energy ratio over the whole hole:**
+      `R = rho*Cp*dT_fire*(removed volume rate) / (absorbed face power)`
+      must be <= 1.05. Also report `R` per radial bin; a rim bin can
+      legitimately exceed 1 through lateral conduction from the hotter bowl.
+   2. **Overheating:** removal `T_top` p99 no more than 50 K above the pinned
+      `T_fire` band.
+   3. **Artefacts:** no needles (single-column spikes), no never-fired columns.
+   4. **If a treatment passes 1-3,** choose among passers in the order
+      A2 > A3 > A1.
+   5. **Tie-break, if none passes 1-3:** ring recession is the scored
+      quantity. Accept the treatments whose violations of 1-3 do **not**
+      touch the foot-annulus bins (ring-bin `R <= 1.05`, no overheated or
+      never-fired ring columns, no needles in the ring), choose among them in
+      the order A2 > A3 > A1, and carry the violation as a caveat into the
+      verdict.
+   6. **Stop and report only if every treatment violates inside the ring.**
+   - **Do not look at ROP proximity to Meier.**
+
+   **Then run the stages in the order B, D, C.**
+
+   **Stage B: scored runs** (chosen wall treatment; stop at 600 s, at the
+   watchdog, or when the centre is 40 mm above the domain bottom):
+   - **J-M** (scored), **J-5**, **J-10**.
+   - Run the cost probe first. D2a2 measured 20-38 min per 300 s at depth
+     0.20 m. If a run would exceed ~2 h on 4 ranks, shorten it but keep a
+     steady window of >= 150 s, and say so.
+   - **Steady** means `nozzle_z` descent-rate sub-fits within +/-10 % and
+     `jet_s_c` drift under 0.02 mm/s.
+
+   **Stage D: mesh check (required)**, J-M at 1 mm.
+   - **Trimmed domain:** the quarter domain cut to **r <= 0.06 m**, with depth
+     sized to the steady window. The march is outward, so rock beyond the
+     60 mm edge cannot change the gas that reaches the 40 mm ring; the trim
+     changes only the outer hole shape and the lateral boundary.
+   - Report the trimmed 2 mm counterpart as well, so the mesh comparison is
+     like for like.
+   - Stop once >= 60 s of steady window exists.
+   - **Budget:** probe first. If the probe exceeds ~4 h on 4 ranks, shorten to
+     the minimum steady window. If it still exceeds 4 h, report the probe and
+     mark the mesh target "not evaluated", with the numbers. **Do not
+     substitute a 2-D check.**
+   - **Score:** ring ROP and `T_fire`; also report the pinned share and
+     face-form uptake between 2 and 1 mm (the D2a2 review's open question).
+
+   **Stage C: sensitivities** (J-M, three runs):
+   - `jet_T_ent_mode = fixed` (293 K ambient entrainment; D2a2's treatment);
+   - `jet_entrained_mass = 0` with `jet_T_ent_mode = fixed` (exhaust mode
+     requires entrained mass);
+   - `jet_T_nozzle = 1436 K`.
+
+8. **`RESULTS.md`.**
+   - **§0, written before the runs it governs:** the hand prediction
+     (deliverable 5) and the Stage A decision rule.
+   - **Per run:**
+     - **ROP:** least-squares fit of `-d(nozzle_z)/dt` over the steady
+       window, cross-checked against the ring columns' `h_applied` fits.
+     - **Flatness:** fits over 50 s sub-windows.
+     - **Stall:** `foot_carry_cols` over time, `foot_stalled_steps`, and the
+       watchdog status.
+     - **Hole wall profile** `r_wall(z) = max{r : that column has receded
+       below z}` over the drilled depth, compared with the hand `r_wall(z)`.
+       Also the depth-mean Ø over the drilled depth, the hand-extrapolated
+       depth-mean Ø over 0-0.5 m, and the minimum `2*r_wall` vs the 80 mm
+       burner.
+     - **Volume rate:** `d/dt` of `integral(pi*r_wall(z)^2 dz)` over the
+       steady window (quarter-domain `r_wall` is already a radius), and the
+       0-0.5 m volume from the extrapolated profile.
+     - **Temperatures and jet:** `T_fire` mean/p10/p90 and `dT_fire`;
+       `jet_s_c`, `jet_T_stag`, `jet_T_rec`, `nozzle_z - foot_z`.
+     - **Power:** face power `jet_P_face` x4 against `jet_P_cap` x4, against
+       `mdot*cp*(T_nozzle - T_exhaust)` and against Meier's 2.83 kW (in kW,
+       not % of 38 kW).
+     - **Checks:** `R` over the hole and per radial bin, branch-reason
+       fractions, rim check, ledger, maximum face slope, and in-hole area
+       outside Martin's validity range.
+   - **Scored table for J-M**, pass or fail as it comes out, next to the hand
+     prediction. Then the same table for J-5 and J-10 as the bracket's
+     implication.
+   - **Discussion:**
+     - (i) The verdict, stated plainly. **A hole-diameter or volume pass is
+       read as a check of the profile shape and the above-nozzle rule, not as
+       support for the anchor. The ROP line is the test of the jet.**
+     - (ii) Hand prediction vs simulation, and what the difference is made
+       of.
+     - (iii) Sensitivities (%/unit) and which could move the verdict. The
+       fixed-293 K run is shown **in the verdict table**, not only here.
+     - (iv) Stalls, interpreted as in Context point 4.
+     - (v) What D3 must say:
+       - the slope area factor;
+       - side-wall and exhaust heating;
+       - pad-covered rock heated in the model;
+       - the quarter-domain "tripod";
+       - face-form mesh sensitivity and the Stage D result;
+       - entrainment near the surface;
+       - the out-of-range correlation area;
+       - the size effect switched off.
+     - (vi) The sentence **"no parameter was adjusted toward Meier's ROP,
+       hole diameter or volume rate"**, plus every number taken from outside
+       the repo with its source.
+
+9. **Retarget the stale Meier scored test.**
+   - Add `validation/meier/sp_meier_pilot/input_feet` (the Stage B J-M
+     configuration, shortened if needed) and a new scored `test_feet`.
+   - `test_feet` checks the J-M table's criteria **as they came out**. A
+     failing criterion is recorded as an expected-fail with its numbers, not
+     loosened.
+   - Leave `input_drilling` and `test` untouched, and add a note at the top of
+     `validation/meier/README.md` that the uniform-beam test is superseded.
+   - If the configuration is too expensive for a regression, make
+     `test_feet` a check-only script over the Stage B output, and say so.
+
+## Guardrails
+
+- **No tuning.** J-M is scored whatever it gives. The following are all set
+  as stated **before** any run:
+  - the anchor grid, `h_ref`, `T_nozzle`, `cp`;
+  - the closure treatment (decay + entrained mass + exhaust recirculation);
+  - the foot geometry, pad rule and quantile;
+  - `pinned_idle_cycles`.
+
+  The wall treatment is chosen **only** by the Stage A rule.
+- **Bit identity**, with `nozzle_descent = prescribed` and
+  `jet_T_ent_mode = fixed` (the defaults). Use targeted witnesses:
+  - unit: `robin_face`, `robin_pinned`, `robin_jet`, `jet_enthalpy`,
+    `beam_void_closure`, `scalar_flaw`, `spall_event`;
+  - Meier `input_2d_dev`;
+  - S1 `run_sweep.py --smoke --force`.
+
+  Hash Level_0 Cell_D and CSVs pre/post for these. New modes only add thermo
+  columns. **The full 26k-file sweep is deferred to the commit** that
+  includes D2b.
+- **Do not change:**
+  - `SurfaceCellFlux`, `PinRule`, `BuildPinEffective`, `EnergyLedger`,
+    `PatchDiagnostics`;
+  - `JetEnthalpyMarch` other than the `exhaust` branch of deliverable 2;
+  - the removal cadence, phi shift and void flip, K_I scan;
+  - the coherence cap and surface-normal code (they are selected, not
+    edited);
+  - E1, S1, A1, C1, D2a, D2a2 keys and defaults;
+  - `bit.*`;
+  - the `weibull.V0` default;
+  - any existing input or assertion (deliverable 9 adds files only).
+- **Top-cell logic** uses the `removed` mask, never `floor(phi/dz)`.
+- **Column-top patch only.** Flux on `dx*dy`; no `1/cos(theta)`; no flux for
+  `s <= 0`.
+- **Out of scope:**
+  - a slope area factor;
+  - side-wall or exhaust heating of the wall;
+  - pad shielding of the rock under the feet;
+  - a depth-dependent blend of ambient and exhaust entrainment;
+  - an operator push in the baseline;
+  - AMR, `alpha(T)`, MMW;
+  - D3;
+  - an overdraw counter (deferred).
+- **Do Not Touch** (CLAUDE.md): `ext/`, `bin/`, `obj/`, `build/`,
+  `compile_commands.json`, `configure`, `LICENSE`, unrelated integrators,
+  the inheritance graph.
+- **Git:** build on the uncommitted tree (do not revert or commit). If the
+  user has committed, use that commit as the baseline.
+- **Re-read `ACTIVE_STEP.md` (check its mtime) before the long Stage B/D runs
+  and before writing notes** (D2a2 takeaway 1).
+
+## Commands
+
+```bash
+# Build from /Users/tzetze20/amr_tools/alamo. Save a pre-change binary first.
+cp bin/mmwspalling-3d-g++ <scratchpad>/mmwspalling-preD2b
+EIGEN=$PWD/ext \
+  CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current \
+  make -j8
+
+VENV=/Users/tzetze20/Desktop/code/.venv/bin/python
+RUN="mpirun --oversubscribe --bind-to none -np 4"
+
+# New unit test
+$VENV tests/MMWSpalling/unit/robin_feet/test
+
+# Targeted bit-identity witnesses (hash Level_0 Cell_D_* and CSVs pre/post)
+for t in unit/robin_face unit/robin_pinned unit/robin_jet unit/jet_enthalpy \
+         unit/beam_void_closure unit/scalar_flaw unit/spall_event; do
+  $VENV tests/MMWSpalling/$t/test
+done
+$RUN bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/meier/sp_meier_pilot/input_2d_dev
+$VENV tests/MMWSpalling/studies/s1_surface_resolution/run_sweep.py --smoke --force
+
+# Study (order: predict, A, probe, B, D, C)
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/run.py --predict     # deliverable 5, RESULTS §0
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/run.py --stage A
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/run.py --probe
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/run.py --stage B
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/run.py --probe-1mm
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/run.py --stage D
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/run.py --stage C
+$VENV tests/MMWSpalling/studies/d2b_feet_rop/analyze.py           # writes RESULTS.md
+
+# Scored Meier test (deliverable 9)
+$VENV tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet
+```
+
+## Claude completion notes
+
+Implementer, 2026-09-16. The packet was read at 16:49 and unchanged at
+close-out (mtime 16:49:55). Stage A was decided at 18:20; Stages B, D and C
+ran 18:23–21:27; the final regressions ran 21:28–21:38.
+
+### Files changed
+
+- `src/Integrator/MMWSpalling.H`: the only source file.
+  - `nozzle_descent = feet` (`FeetDescent`) and its keys.
+  - `jet_T_ent_mode = fixed | exhaust` (in `JetEnthalpyMarch`).
+  - The collision-radius default under `feet`.
+  - New thermo columns: `nozzle_z`, `foot_z`, `foot_cols`,
+    `foot_carry_cols`, `foot_stall_time`, `jet_T_rec`, `jet_P_recirc`.
+  - `BuildFlameColumns` now takes `dt`.
+- `tests/MMWSpalling/unit/robin_feet/` (new): `input_feet`, `input_column`,
+  `test`; the passing log is `output/test_pass.log`.
+- `tests/MMWSpalling/studies/d2b_feet_rop/` (new): `feetmodel.py`, `run.py`,
+  `analyze.py`, `README.md`, `RESULTS.md`, `stageA.png`, `stageB.png`,
+  `stageC.png`, `stageD.png`, and `output/` (6.4 GB; runs A_*, B_*, C_*,
+  D_*, probe, probe_1mm).
+- `tests/MMWSpalling/validation/meier/sp_meier_pilot/input_feet` (new):
+  generated by `run.py --write-input-feet --wall A2 --stop-feet 340`.
+- `tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet` (new):
+  check-only scoring of the study's B_JM_A2 output.
+- `tests/MMWSpalling/validation/meier/README.md`: a "superseded
+  uniform-beam test" note at the top. `input_drilling` and `test` are
+  untouched.
+- `Claude_markdowns/2026-09-16_imp.md`: the status note the user asked for.
+
+### Tests run
+
+All on 4 ranks, against the final binary (built 21:28:19).
+
+| test | result |
+|---|---|
+| `unit/robin_feet/test` | **PASS 20/20**, checks (a)–(j) plus the aborts |
+| `unit/robin_face`, `robin_pinned`, `robin_jet`, `jet_enthalpy`, `beam_void_closure`, `scalar_flaw`, `spall_event` | **PASS** (all rc 0) |
+| Meier `input_2d_dev` run and the S1 smoke (`run_sweep.py --smoke`) | rc 0 |
+| **Hash witness** over the targeted outputs (Level_0 Cell_D, events, clusters, jet profile, thermo) | **2501 / 2501 files identical** to the pre-D2b baseline |
+| `validation/meier/sp_meier_pilot/test_feet` | **PASS**: every outcome as recorded, 4 of them expected-fail (below) |
+| `input_feet` smoke (0.2 s) | runs; its t = 0.1 s thermo row equals B_JM_A2's |
+| Study | Stage A (3 runs), cost probes (2 mm, 1 mm), Stage B (3), Stage D (2), Stage C (3); all completed, statuses in the `.done` files |
+
+**Scored J-M result (B_JM_A2, stopped at the bottom watchdog at 341.6 s;
+window 171–342 s):**
+
+| criterion | result | verdict |
+|---|---|---|
+| ROP | 1.36 m/h | PASS |
+| hole Ø, depth-mean over 0–0.5 m | 104.3 mm | FAIL |
+| hole Ø, minimum | 84.9 mm | PASS |
+| volume rate inside Ø 93 | 3.27 cm³/s | FAIL |
+| ΔT_fire | 528 K | PASS |
+| flatness | sub-fits 2.5 %, but `jet_s_c` drifts 0.39 mm/s | FAIL |
+| ledger | 1.8e-14 | PASS |
+| mesh | ring −4.8 %, T_fire 0.00 %, but no steady window | FAIL |
+
+J-5 and J-10 are above the band (2.43 and 2.82 m/h). J-M at 1436 K is below
+it (0.67 m/h). Both fixed-293 K runs stalled. The full tables and the
+discussion are in `studies/d2b_feet_rop/RESULTS.md`.
+
+### Tests not run
+
+- **Full MMWSpalling regression sweep:** deferred to the commit, per the
+  packet's targeted-witness rule.
+- **`test_feet` is check-only**, not a regression run. The 340 s 3-D
+  configuration takes about 40 min with three jobs in parallel (over an hour
+  alone).
+- **The study runs used the binary built at 16:54**, before `foot_stall_time`
+  replaced `foot_stalled_steps` (see takeaways). The change is diagnostic
+  only: the witness hashes and `robin_feet` (a) and (g) are unchanged. The
+  study tables compute the longest hold from `nozzle_z` instead.
+
+## Implementation takeaways
+
+- **Input keys** (all `surface_patch.`):
+  - `nozzle_descent = prescribed | feet`, `foot_r_inner`, `foot_r_outer`,
+    `foot_standoff`, `foot_rule = pads | max | mean` (default pads),
+    `foot_npads` (default 3), `foot_pad_quantile` (default 0.9),
+    `nozzle_feed_max` (default +inf);
+  - `jet_T_ent_mode = fixed | exhaust` (exhaust requires
+    `jet_entrained_mass = 1`).
+  - Under `feet`, `nozzle_z0` and `nozzle_feed` abort, and
+    `nozzle_collision_radius` defaults to `foot_r_inner`.
+- **Not checkpointed:** `nozzle_z`, the feet init flag and T_rec. A restart
+  re-lands the burner on the feet and restarts T_rec from T_ent.
+- **Stall counter replaced (user direction during review).** The packet's
+  `foot_stalled_steps` increments on almost every step at 2 mm, because pad
+  heights move in whole cells (18,710 at 75 s; 37,399 of about 37,500 steps
+  in Stage A).
+  - It is replaced by `foot_stall_time`: simulated time since `nozzle_z`
+    last decreased, 0 on a descending step.
+  - `robin_feet` (e) checks it equals (steps − 1)·dt for a held burner and
+    resets on descent.
+- **The packet's freeze depth is off by the stand-off.** d(r) = 50·v/(v −
+  v(r)) is the feet depth when column r freezes. The wall sits at the
+  column's own depth, 50·v(r)/(v − v(r)). The hand model and analysis use
+  the latter.
+- **The centre pit runs away because of the 12 D stand-off clip in
+  `h_expr`,** not because of exhaust recirculation alone.
+  - Clipped, the centre keeps 1.86× the ring's h beyond 90 mm. The hand
+    model with the unclipped Martin shape finds a J-M centre equilibrium at
+    s_c ≈ 0.40 m (1.93 m/h).
+  - Every exhaust run hit the bottom watchdog: J-M at 342 s, J-5 at 150 s,
+    J-10 at 103 s, D at about 290 s. The 1436 K run was the only one to
+    reach 600 s.
+  - As a result **no run has a steady window** (`jet_s_c` drift 0.17–1.4
+    mm/s against the 0.02 limit).
+  - The J-M ROP is still rising slowly (1.20 → 1.40 m/h) as face power
+    falls (12.4 → 6.4 kW ×4) and T_rec rises (1247 → 1561 K), toward the
+    hand model's deep-pit limit of 1.82 m/h at 1679 K.
+  - A planner who wants a steady scored window needs a taller domain or an
+    h shape that decays beyond 12 D. Either is a model decision, not
+    tuning.
+- **Scoring decisions**, recorded in the RESULTS §0 addendum at 18:38,
+  before any Stage B result, following review feedback:
+  - volume rate and rock-side power are taken inside Ø 93 (Meier's numbers
+    are ROP × nominal area; whole-top removal is 5.68 against 3.27 inside);
+  - hole Ø is scored over the 0.5 m block, as the packet's target table
+    says: columns above the nozzle keep their depth, active columns are
+    projected with the run's own v(r) until the nozzle reaches them;
+  - the depth-mean over the drilled depth alone (≈ 0.12 m, mostly mouth
+    crater) is reported but not scored.
+- **Stage A.**
+  - The needle definition was kept (deeper than *every* 4-neighbour by
+    more than 2 dz). No run has any, whether depth comes from k_top or
+    summed h_applied.
+  - A review count of 36 matches "deeper than some neighbour": wall steps
+    steeper than 63°, which A2 has (74 at 150 s, 6 in the ring). Recorded as
+    a caveat.
+  - All three runs failed criterion 3 on never-fired columns outside the
+    ring (71–89). A1 also had whole-hole T_top p99 887 K (ring maximum
+    862 K). Rule 5 chose A2.
+  - **A3 (`spall.surface_normal = 1`) is inert under the pinned closure**:
+    the cos θ normal thickness is divided back out by the applied
+    recession, so A3 = A2.
+- **The fixed-293 K stall came out as predicted.** Both mass treatments
+  stalled (at 162 s and 118 s) after 12 and 6 mm of burner descent. Read as
+  "the jet alone does not clear the ring here".
+- **Mesh (Stage D, trimmed to r ≤ 60 mm).**
+  - Ring −4.8 %, burner −6.4 %, T_fire 0.00 % from 2 to 1 mm.
+  - Pinned share 0.82 at 2 mm and 0.72 at 1 mm; unset face 0.02 and 0.01.
+  - The trimmed domain recedes all the way to its 60 mm edge, so its hole
+    shape is not meaningful.
+- **Cost.** A 600 s run alone takes about 1.2 h (J-10 at 2 ms: about
+  2.4 h). In practice the bottom watchdog ends runs at 25–42 min with three
+  jobs in parallel. The 1 mm trimmed run took about 80 min to 295 s.
+- **Hand model vs simulation.**
+  - The hand model is a deep-pit limit. J-M is 25 % below it (1.36 vs
+    1.82), 1436 K is 31 % below, and J-5 / J-10 are 44–52 % below (short
+    runs, far from the limit).
+  - A review check at 75 s: with the run's own ring gas temperature, the
+    closed form gives 1.30 m/h against a 1.31 m/h ring recession. The
+    closure is right; the gap is in the gas that reaches the ring.
+- **`analyze.py` notes.**
+  - `thermo.dat` is written every 0.1 s, not every step.
+  - The t = 0 row has zeros in the D2b columns (it is written before the
+    feet are placed) and is excluded from the plots.
+  - `mesh_result()` is shared with `test_feet`.
+- **Relinking `bin/` while study runs use it is unsafe on macOS.** The
+  rebuild waited until all runs had finished; a syntax-only compile checked
+  the source before that.
+
+## Review findings
+
+Verdict: accepted
+
+Reviewer, 2026-09-16. No simulation or build was rerun. One analysis-only
+script was run, for the reason given under Tests.
+
+### What was checked
+
+- **Scope (deliverables 1-9).** All are present:
+  - `FeetDescent`, the exhaust mode, the collision default and the thermo
+    columns;
+  - the §0 hand prediction and Stage A rule;
+  - `unit/robin_feet` with checks (a)-(j) and the aborts;
+  - the study harness with Stages A, B, D and C, run in that order
+    (`stageA.log` / `stageBDC.log`: B 18:23, D 19:05, C 20:23, done
+    21:27);
+  - `input_feet`, `test_feet` and the README note.
+  - `input_drilling` and `test` are unchanged (not in `git status`).
+  - One deviation, `foot_stalled_steps` → `foot_stall_time`, was
+    user-directed and is documented.
+- **Source diff.** I diffed against the implementer's saved
+  `scratchpad/d2b/MMWSpalling.H.preD2b` (262 changed lines). The diff
+  touches only:
+  - the thermo registration;
+  - the `BuildFlameColumns` signature and its `z_n` line;
+  - the new `FeetDescent`;
+  - the `exhaust` branch of `JetEnthalpyMarch` (T_mix, P_recirc, P_budget
+    and the tolerance);
+  - members and parse.
+
+  `SurfaceCellFlux`, `PinRule`, `BuildPinEffective`, `EnergyLedger`,
+  `PatchDiagnostics`, `bit.*` and `Removal.H` (mtime 09-15) are untouched.
+  Under `fixed`, T_mix = T_ent and P_budget = P_nozzle, so the default path
+  is the same arithmetic.
+- **Correctness.**
+  - `FeetDescent` (`MMWSpalling.H:1569`) matches the packet:
+    - inclusive annulus;
+    - sectors over the observed atan2 range;
+    - nearest-rank quantile ceil(qn)−1;
+    - mean over pads;
+    - never-rise min/max descent with the feed cap;
+    - runtime aborts;
+    - it runs before `s` is computed (`:1494`).
+  - The exhaust budget checks out by algebra: with m = mdot/φ,
+    m·cp·(T_stag − T_ent) = mdot·cp·(T_n − T_ent) + (m − mdot)·cp·(T_mix − T_ent),
+    so `jet_P_decay` = 0 holds.
+  - The march floor stays T_ent, and T_rec is the previous step's T_gas
+    (`:1780`, `:1853`).
+  - Parse aborts are at `:4775` and `:4804-4860`; the collision default is
+    at `:4875`.
+- **Tests ran against the final code.**
+  - `robin_feet/output/test_pass.log` (21:38): 20 PASS, 0 FAIL. Its outputs
+    (21:29-21:32) are newer than the test edit (18:35) and the binary
+    (21:28:19). The run metadata says it was compiled at 21:27:57.
+  - The witness hashes `scratchpad/d2b/pre.md5` vs `post.md5` (17:00) and
+    vs `post2.md5` (21:38) show 2501/2501 identical. They cover all 7
+    listed units, Meier `dev2d` and the S1 smoke. `final_checks.log` shows
+    every witness at rc 0.
+- **Study binary.** The study used the pre-rename binary. I diffed the
+  `diff.patch` embedded in `B_JM_A2` (identical in A_A1, D_1mm and C_1436)
+  against the one in `robin_feet/output/F`. In `MMWSpalling.H` they differ
+  only in the stall-counter lines, so the study numbers stand for the final
+  code.
+- **Numbers.** I recomputed from `B_JM_A2/thermo.dat` over 171-342 s:
+  - burner ROP 1.363 m/h;
+  - T_rec 1484 K;
+  - face power ×4 7.87 kW;
+  - ledger 1.8e-14;
+  - gap to foot_standoff 4e-17, with no lift-off.
+
+  D_1mm and D_2mm (1.334 / 1.426 m/h, so −6.4 %) and C_1436 (0.666 m/h)
+  also match `RESULTS.md`.
+- **Tests: one analysis-only run.** I ran `test_feet` because no passing
+  log of it exists. It reads existing output only and ran no simulation.
+  Result: PASS, rc 0, with every outcome as recorded (4 expected-fails).
+- **Guardrails and caveats.**
+  - No tuning: the anchor, mode, feet and quantile are as stated, and Stage
+    A was decided by rule 5.
+  - pinned_idle_cycles is 2.
+  - The mask top is used for z_face.
+  - There is no flux at s ≤ 0.
+  - There are no edits to `ext/`, `bin/` and so on.
+  - The non-checkpointed state is documented.
+- **Takeaways.** They are thorough and usable. The freeze-depth correction,
+  the 12 D clip cause, the fact that A3 is inert under pinned, the stall
+  counter and the cost figures are all recorded.
+
+### Findings for the planner (non-blocking)
+
+- **The trimmed mesh check is not like for like under exhaust mode.** The
+  packet assumed rock beyond 60 mm cannot change the ring gas. Under
+  `exhaust` it does: T_rec is the end-of-march T_gas, fed back into T_stag.
+  - The trimmed 2 mm run has T_rec 1579 K; the full-domain J-M run has
+    1484 K.
+  - The 2 vs 1 mm comparison is like for like (both trimmed), but "1 mm J-M
+    ≈ 1.27 m/h" is an extrapolation to the full domain.
+- **The minimum-Ø pass is a 0.5 m-block artefact.**
+  - Over the drilled depth the minimum is 78.2 mm, below the 80 mm burner.
+  - The hand model narrows toward 2·r_q = 78 mm.
+  - The model has no burner-body collision; the collision radius is only
+    28 mm. A deeper hole would fail ≥ 80 mm. D3 should say so.
+- **Scoring changed mid-study.** The volume rate and face power were moved
+  inside Ø 93 by the 18:38 addendum.
+  - It was written after Stage A (which showed 2.99 inside Ø 93, near the
+    band), while Stage B was already running.
+  - It is disclosed and review-directed, and the packet's own
+    wall-profile rate (5.67) fails too, so the verdict does not change.
+  - Hole-Ø block extrapolation uses the run's own v(r) instead of the hand
+    profile. Both fail (104.3 vs 112.1).
+- **The ROP pass is a transient-window score.**
+  - `jet_s_c` drifts 0.39 mm/s, and the rate rises from 1.20 to 1.40 m/h
+    toward the 1.82 deep-pit limit.
+  - A converged J-M could leave the band (1.92 is the band top).
+  - The next packet should resolve the 12 D h-clip or domain height before
+    treating 1.36 m/h as the model's prediction.
+- **The mesh line is soft.** T_fire at +0.00 % is fixed by construction
+  under the pinned closure, so the only real mesh number is ring −4.8 %
+  (burner −6.4 %).
+- **Stage A picked A2 by the tie-break, not a clean pass.** It carries:
+  - 71 never-fired columns in the hole;
+  - 74 wall steps steeper than 63° (6 in the ring).
+- **Martin validity.** 88 % of J-M in-hole columns are outside the
+  correlation's validity range at t_end, so the h shape there is
+  extrapolated.
+
+
+
+## D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted)
+
+**Archived 2026-09-17 by /plan. Verdict: accepted (non-blocking findings for D2d below).**
+Planned the same day from `Claude_markdowns/2026-09-17.md` §4 and two user review rounds.
+No scored run was made; the campaign is D2d.
+
+**Summary.**
+- `MMWSpalling.H` (all default-off, lev 0): `jet_decay_diameter = nozzle | momentum`
+  + `jet_De_ref` (full-jet D_e at `jet_T_ent`; D_e = De_ref·√(T_mix/T_ent));
+  `jet_free_surface` + `jet_fs_aspect` / `jet_fs_exponent` (columns outside
+  `foot_r_outer` with depth ≤ aspect·(r − r_outer); m ← m·(r_hi/r_lo)^(e·n_fs/n)
+  after the bin's heat; T_rec = mouth inlet T); `jet_bin_update = exponential`
+  (T_eff with −expm1(−N)/N, P_bin re-evaluated); `jet_negative_flux = count`;
+  `foot_body_clearance` (FeetDescent arms `foot_clear_k`; `Removal.H` pre-pass
+  flips by index before PASS 1, regime 4, φ shift n·dz, pin state untouched).
+- Thermo (on only): `jet_D_e`; `jet_fs_cols`, `jet_m_ratio`, `jet_T_mouth`;
+  `jet_P_neg`; `foot_mech_vol`, `foot_mech_cols`. Profile CSV extras `T_eff`,
+  `n_fs`, `m_ratio`, `P_neg`. Not checkpointed: `jet_fs_z0`, `foot_clear_k`.
+- Helpers: `walljet.h_expr/h_py(far, n)` (power factor `pow(0.09/max(0.09,s),n)`,
+  default unchanged); `feetmodel.Cfg` (default output byte-identical).
+- New `unit/jet_d2c` 26/26; targeted witnesses 2639/2639 hash-identical;
+  reviewer re-ran `test_feet` (PASS, 4 expected-fails).
+- Study `studies/d2c_steady/`: `nozzle.py`, `handmodel.py`, `predict.py`,
+  `PREDICTIONS.md` (sha256 a28f1987…5bd651, 13:54:01), `score.py`, `run.py`
+  (`--stage D2d` defined, not run), `RESULTS.md`; new
+  `sp_meier_pilot/input_feet_d2c`. Errata in the Meier reference (items 10–11).
+
+**Key results / pre-registered predictions (not results).**
+- Nozzle state reproduced (1900 K: p0 5.95 bar, M 1.86, p_e 0.97 bar, J 19.15 N
+  incl. pressure thrust; jet_De_ref 3.556 mm; 1600 K 3.751, 1750 K 3.647).
+- Hand model check vs D2b B_JM_A2: ROP +13 %, centre depth +11 %, s_c +6 %,
+  T_rec +1 % → P6 bands ±27 % on rates, ±20 mm on Ø / s_c.
+- **Scored steady state:** ring ROP 1.93 m/h (just above band 1.92), s_c 180 mm,
+  T_rec 1733 K, T_stag 1797 K. Steady window from 750 s; needs a ≥ 0.65 m
+  domain; at 0.40 m run 1 stops at the bottom at ≈ 498 s with no window.
+  Transient ROP 150 s → 0.40 m bottom 1.79 m/h.
+- Ring barely feels n (n = 0.5 +1.2 %, clamp −5.7 %); n = 0.5 needs ≥ 1.55 m
+  (not runnable); clamp has no centre equilibrium.
+- T sweep: steady 1.34 / 1.64 / 1.93 m/h at 1600 / 1750 / 1900 K; 1.6 m/h at
+  ≈ 1732 K, 1.3 m/h below the swept range (conditional, never reused).
+- **Mouth predicted to fail** (134 / 118 mm at 25 / 50 mm vs Fig. 8.8 92 / 88);
+  D2b closures + n = 1 give 174 mm at 25 mm. Depth-mean 111 mm, min 94,
+  whole volume 4.33 cm³/s, mechanical share 0.04 %.
+- Probes (not scored): 2 mm 6.7 wall-s per sim-s at 0.40 m; 1 mm full domain
+  55.6; dt 4 ms at both. Free surface active early (m_exit/m_stag ≈ 4, diluted
+  exhaust 520–585 K, mouth T_rec ≈ 1600 K); 90 regime-4 cells in 30 s.
+  Run 7 cannot reach a steady window in 14 h (≈ 24 h at 0.65 m).
+
+**Takeaways worth keeping.** `query_default` inserts the default (read
+`contains` first); free surface only acts while the nozzle plane is above the
+original surface; D2b `run.py` overwrote `wall` in `.done` metadata;
+`np.trapz` is gone (use `np.trapezoid`); regime value 4 is new in `regime` /
+`regime_field`.
+
+**Review findings for D2d (non-blocking).** Min-Ø window excludes the 50 mm
+feet zone (dry run 117 mm vs `test_feet` 78.2 mm); `run.py` CAP_1MM 1200 s vs
+RESULTS' 750 s; the campaign as designed cannot produce a steady window or a
+steady mesh check at 0.40 m; free-surface lever only acts early and P4 mouth
+numbers are the least reliable (hand dilution weaker than the probe's); run 6
+keeps exponential / count / clearance (label it); the P3 range's lower end is
+outside the sweep.
+
+### D2c packet (verbatim, Context → Review findings)
+
+## Context
+
+**Where D2b left the Meier test (accepted 09-16).** Every input from the
+experiment, the drawings or a correlation, J-M, 1900 K, burner on feet,
+exhaust recirculation:
+- ROP 1.36 m/h is in Meier's band, and ΔT_fire 528 K passes.
+- **No steady window.** The centre pit ran into the domain bottom in every
+  exhaust run. Cause: the 12 D stand-off clip in the `h_expr` string
+  (`walljet.h_expr`, not C++). Clipped, the centre keeps 1.86× the ring's h
+  beyond 90 mm. The ROP was still rising (1.20 → 1.40) toward the hand
+  deep-pit limit of 1.82. **1.36 m/h is a transient score, not the model's
+  prediction.**
+- **Mouth funnel.** The hand profile and the runs both show it (hand
+  r_wall 122 mm at 20 mm depth, 74 mm at 50 mm). Meier's sawn block
+  (Fig. 8.8) is near-cylindrical top to bottom. Whole-excavation volume is
+  5.68 cm³/s, 2.3× the measurement.
+- Over the drilled depth the minimum Ø is 78.2 mm, below the Ø 80 burner:
+  the model has no burner body.
+- The mesh check ran on a domain trimmed to r ≤ 60 mm. That is not like
+  for like under exhaust mode (T_rec 1579 K trimmed vs 1484 K full).
+
+**What the 09-17 thesis reread changed** (`Claude_markdowns/meier_thesis_notes.md`):
+- The nozzle gas temperature is **unmeasured**. The igniter thermocouple sat
+  upstream of the lifted flame, so the "1436 K lower bound" is void.
+- 1900 K (adiabatic) is an upper bound, lowered by the unreported cooling-water
+  ΔT (160 L/h; 10 K ≈ 1.9 kW ≈ 100 K).
+- Meier measured volume by **water filling**, so volume is scored on the whole
+  excavation.
+- The nozzle is a **Laval** nozzle (6 mm throat, 7.5 mm exit), so the jet is
+  supersonic and Martin is out of range. That stays a caveat.
+- Hot free jets dilute strongly (p. 79).
+
+**The physics changes, as agreed with the user:**
+1. **Far-field stagnation heating (h law).** Replace the 12 D clip with a power
+   law beyond 12 D: h ∝ (12 D/s)^n.
+   - **n = 1 is scored.** Centreline velocity falls as 1/s and the jet widens
+     as s, so the stagnation velocity gradient falls as 1/s², and stagnation h
+     goes as its square root.
+   - n = 0.5 is the alternative. Continuing Martin is dropped (its centre
+     equilibrium is at ≈ 0.40 m).
+   - The clip stays available for identity.
+   - This is an **input change**, made in the Python helper and the hand
+     model only.
+2. **Free-surface dilution (scored).**
+   - Outside the tube, where the gas has reached the original surface, the
+     wall jet entrains ambient air.
+   - Inside the tube-to-wall gap it does not.
+   - **Feet-depth blending of the stagnation gas is dropped entirely.** The
+     jet runs inside the Ø 56 collar from t = 0, so its stagnation zone is
+     confined before any hole exists. A blend that starts at ambient
+     reproduces the setting that stalled both D2b 293 K runs.
+3. **Momentum-equivalent decay diameter.** `D_e = 2ṁ/√(π ρ_surr J)` replaces
+   the nozzle bore in the stagnation decay. One formula covers the hot-jet
+   density ratio and the supersonic exit.
+   - The core length becomes a parameter in D_e units, with two values:
+     **8 (scored)** from cold supersonic data (4.2 + 1.1 M², M ≈ 1.86), and
+     5 (subsonic) as the sensitivity.
+4. **Burner-body clearance.** Rock standing proud of a pad is removed
+   mechanically and its volume is logged. **More than 5 % of the excavation
+   is a finding, not a pass.** Meier's operator did push.
+5. **Ride-alongs (small).**
+   - An exact exponential per-bin update in the march.
+   - Rock-to-gas heat is counted in the gas; today it is dropped.
+6. **Ricou–Spalding entrainment** (mixed-mean, m/ṁ ≈ 0.32·s/D_e). In the
+   single-temperature march this is exactly `jet_core_length = 3.125` under
+   the momentum diameter with entrained mass. **It needs no code.**
+   - It is one D2d sensitivity run and may slip.
+   - The existing top-hat (centreline temperature plus the enthalpy-conserving
+     mass) is internally consistent, not an error.
+
+**Not in D2c (recorded for D3):**
+- supersonic correction to Martin;
+- pad shielding (covered rock gets no gas);
+- side-wall Robin and the slope area factor;
+- cp(T) (±8 %);
+- recovery temperature (70–80 K below stagnation off the axis);
+- wall-jet entrainment inside the gap;
+- checkpointing of `nozzle_z`, T_rec and the new host state;
+- feet-depth blending.
+
+**No tuning.** The scored configuration is fixed in this packet (§Scored
+configuration). The nozzle temperature is a **sweep** in D2d (1600, 1750,
+1900 K), read as an inference with its dependencies stated, never reused as an
+input. J-5 and J-10 are retired (literature guesses that drilled 2× too fast).
+
+**Caveats carried forward:**
+- (C1) Pin state is not checkpointed; `pinned_idle_cycles` stays **2**.
+- (C1/D2a) Score by time windows and fits, never by end depth or plotfile
+  staircases.
+- (D2a) Flux is applied on horizontal cell area.
+- (D2a) **AMReX 25.12 parser bug:** numeric arguments first in every
+  `min`/`max` (`a/max(x, c)` is rewritten).
+- (S1b) `V0 = V_cell` switches the Weibull size effect off.
+- (D2a2) `jet_mdot` is the sector's share (quarter domain = mdot/4).
+  **`jet_De_ref` is a full-jet length and must not be scaled** (see
+  deliverable 1).
+- (D2b) A3 (`surface_normal`) is inert under the pinned closure. The wall
+  treatment is A2 (no coherence cap).
+- (D2b) T_fire mesh change is 0 % by construction under pinned; do not use it
+  as a mesh metric.
+- (D2b) **Planner hand numbers have been wrong twice.** This packet quotes only
+  numbers that the planner and the user both reproduced (nozzle state, D_e).
+  Every prediction is computed by the implementer.
+- (D2b) Relinking `bin/` while runs use it is unsafe on macOS.
+
+## Sources
+
+Line numbers are approximate. The tree is **uncommitted** from Step 20 on
+(E1 … D2b). Commit before D2c starts is a pending user decision; do not commit
+unless asked.
+
+### Geometry (drawings; `ROADMAP.md` Known Notes "Burner drawings")
+- Foot annulus r ∈ **[0.028, 0.040] m** (tube OD Ø 80 / ID Ø 56, 50 mm long,
+  three slots). `foot_standoff = 0.050 m`.
+- Nozzle: Laval, throat **Ø 6 mm** (thesis), exit **Ø 7.5 mm** (sheet 14).
+  Martin h keeps `D = 7.5e-3`.
+- Burner body Ø 80 at the drilling end; mantle Ø 67 above.
+
+### Nozzle state (planner and user both reproduced)
+Isentropic, γ = 1.3, R = 290 J/kg K, ṁ = 0.01513 kg/s, T0 = 1900 K:
+
+| quantity | value |
+|---|---|
+| p0 | 5.95 bar |
+| exit Mach | 1.86 |
+| exit pressure | 0.97 bar (essentially perfectly expanded) |
+| exit static T | ≈ 1250 K |
+| exit velocity | ≈ 1277 m/s |
+| J | ≈ 19.3 N |
+
+`D_e = 2ṁ/√(π ρ_surr J)`, with ρ_surr = p_amb/(287·T_surr):
+
+| surroundings | D_e | 5·D_e | 8·D_e |
+|---|---|---|---|
+| 293 K | 3.5–3.6 mm | 18 mm | 28–29 mm |
+| 800 K | 5.8 mm | 29 mm | 47 mm |
+| 1500 K | 8.0 mm | 40 mm | 64 mm |
+| today (nozzle bore, 5·D) | — | 37.5 mm | — |
+
+- D_e ∝ √T_surr at fixed ṁ and J.
+- **Planner correction to the review note:** in ambient surroundings the
+  scored 8·D_e is **≈ 29 mm, not ≈ 37 mm**. In exhaust it is 60–80 mm.
+- Supersonic core length, cold jets: `L/D_e ≈ 4.2 + 1.1·M² ≈ 8.0`.
+
+### Far-field law (input only)
+- Today (`tests/MMWSpalling/studies/d2a2_walljet/walljet.py:61`):
+  `h = h_ref·h_loc(max(r, 2.5D), min(12D, max(2D, s)))/NORM`.
+- New:
+  - `far = "clamp"` (today);
+  - `far = "power"` multiplies by `pow(12D/max(12D, s), n)`, written
+    numeric-first: `pow(0.09/max(0.09,s),n)` with 12D = 0.09 m.
+  - Continuous at 12 D; radial shape unchanged.
+
+### Meier targets and the corrected scoring (fixed now; applied in D2d)
+
+| criterion | definition | pass |
+|---|---|---|
+| steady window | ≥ 150 s with abs(d jet_s_c/dt) < 0.02 mm/s, and 50 s sub-fits of burner descent within ±10 % of the mean | exists |
+| ROP | `nozzle_z` descent rate over the steady window | [1.04, 1.92] m/h |
+| volume rate | **whole excavation** (thermal + mechanical) over the window | [1.98, 2.96] cm³/s; inside-Ø 93 reported, not scored |
+| mechanical share | `foot_mech_vol` / excavated volume, over the window | ≤ 5 %; above = finding |
+| wall profile | model Ø(z) = 2 × azimuth-mean r_wall(z), vs the Fig. 8.8 visible width (`meier_fig8_8_hole_profile.csv`) | abs(ΔØ) ≤ 10 mm at z = 25 and 50 mm (the mouth); RMS over the CSV rows inside the drilled depth reported; model Ø below the visible width is a fail, because the width is a lower bound |
+| depth-mean Ø | over the drilled depth (0 to the nozzle-plane depth at window end) | 85–93 mm |
+| minimum Ø | over the drilled depth | ≥ 80 mm; 76–80 = "unresolved at 2 mm" (one cell = 4 mm in Ø) |
+| ΔT_fire | as D2b | 500–560 K |
+| removal power | ρCp·ΔT_fire × whole volume rate, vs 2.83 kW; whole-hole R ≤ 1.05 | reported / R pass |
+| ledger | as D2b | round-off |
+| mesh (D2d run 7) | **full domain** 1 mm vs 2 mm, both on steady windows | burner ROP within 5 %; pinned share reported |
+| T sweep | ROP(T_nozzle) at 1600, 1750, 1900 K | report the T range giving 1.3–1.6 m/h, conditional on J-M, n = 1, free-surface dilution, core 8; check it against adiabatic minus the cooling-water loss when known; never reuse it |
+
+- Meier's hole: Ø 85–93 mm; Fig. 8.8 (sawn block, printed p. 224 = **PDF
+  p. 251** of `/Users/tzetze20/Downloads/ThierryMeier_PhD.pdf`; the notes say
+  printed = PDF − 27, so verify the page).
+- The Fig. 8.8 profile is digitised in
+  `validation/meier/meier_fig8_8_hole_profile.csv` (deliverable 9).
+- The underream at ≈ 10 cm comes from the operator holding the burner still
+  (p. 223). The CSV lists it separately, outside the width column.
+- Rock-side removal power from the data: 2.83 kW. ROP band 1.3–1.6 ±20 %.
+
+### Scored configuration (pre-registered design choices; the implementer adds no numbers here)
+- Anchor J-M: Martin h_ref at measured ṁ, `T_nozzle` 1900 K.
+- `jet_closure = enthalpy`, `jet_stagnation = decay`, `jet_entrained_mass = 1`,
+  `jet_T_ent_mode = exhaust`.
+- `jet_decay_diameter = momentum`, `jet_core_length = 8`, `jet_De_ref` from
+  `nozzle.py` at 1900 K.
+- h far law `power`, n = 1.
+- `jet_free_surface = 1`, `jet_fs_aspect = 1`, `jet_fs_exponent = 1`.
+- `jet_bin_update = exponential`, `jet_negative_flux = count`.
+- `nozzle_descent = feet`, `foot_rule = pads`, annulus [0.028, 0.040],
+  quantile 0.9, `foot_body_clearance = 1`.
+- Wall treatment A2 (no coherence cap), `pinned_idle_cycles = 2`.
+- 3-D quarter domain 0.12 × 0.12 m at 2 mm; depth 0.30 or 0.40 m per the
+  deliverable 8 rule.
+
+**Why aspect 1 and exponent 1.**
+- `jet_fs_aspect = 1` is the shallow/deep cavity boundary: a gap deeper than
+  it is wide is confined.
+- `jet_fs_exponent = 1`: radial wall-jet mass flux grows roughly ∝ r
+  (Poreh, Tsuei & Cermak 1967 give volume flux ∝ r^0.8–1).
+- Hand sensitivities: aspect 0.5 and 2; exponent 0.8.
+- **Do not change the scored values after seeing any result.** If the
+  literature check disagrees, record it; don't switch.
+
+### Code this step touches (`src/Integrator/MMWSpalling.H`, `MMWSpalling/Removal.H`)
+- **`JetEnthalpyMarch` ~1699-1870.**
+  - φ at ~1772-1775: `phi = min(1, jet_core_length*jet_D/s_c)`.
+  - T_mix at ~1780: `exhaust ? jet_T_rec_next : T_ent`.
+  - Bin loop ~1800-1828: `flame_Tg[c] = T_gas`, `SurfaceCellFlux(...)`,
+    `if (q_rob > 0) P_bin += q_rob`, then clamp at `avail`.
+  - Budget and invariant ~1841-1869; T_rec_next = T_gas at ~1853.
+- **`SurfaceCellFlux` ~2030:** `q_robin = h*(T_gas - Tf)` can be negative.
+- **`FeetDescent` ~1569:** pad sectors, nearest-rank quantile, mean.
+  **`BuildFlameColumns` ~1473-1547:** calls `FeetDescent` (~1495), then the
+  march (~1547).
+- **Removal:** `UpdateRemovalAfterCohesive` (`Removal.H:20`); PASS 3 (~1255)
+  flips cells per column from reduced per-column buffers. `Advance` ~882-899.
+  **Verify and state the order** of removal vs `BuildFlameColumns` within a
+  step; the clearance acts on the next removal pass if that comes first.
+- **EnergyLedger ~2091:** `E_H` sums void cells too (their H is frozen), so a
+  mechanical flip is ledger-neutral. Confirm in a test.
+- **Thermo registration ~598-626:** D2a2/D2b blocks are registered only when
+  their feature is on. Mirror this: every new column is registered only when
+  its key is non-default, appended after all older columns.
+- `SurfacePatch::Parse`: D2a2/D2b `jet_*` / `foot_*` keys (parse aborts
+  ~4775-4875).
+- **Do not change:** `PinRule`, `BuildPinEffective`, `SurfaceCellFlux`,
+  `EnergyLedger`, `bit.*`, the thermal removal criterion, `FeetDescent`'s
+  existing arithmetic.
+
+### Helpers
+- `studies/d2a2_walljet/walljet.py`: `h_expr`, `h_py`, `phi_of`, `t_stag`,
+  `march`, `CORE_LEN = 5`.
+- `studies/d2b_feet_rop/feetmodel.py`: `march(h_ref, T_stag, m, s_c, r_end,
+  ...)`, `stag`, `s_c_for`, `state`, `equilibria`, `depth_profile`,
+  `depth_mean`.
+- `studies/d2b_feet_rop/run.py`: `keys(...)`, watchdogs "stalled" (60 s no
+  descent) and "bottom" (centre ≤ 40 mm above the domain bottom).
+- `analyze.py`: `mesh_result()` (shared with `test_feet`).
+- Do not edit `d2a_jet_face/jet.py` or the D2b study outputs.
+  Extend `walljet.py` / `feetmodel.py` with defaults that reproduce today's
+  output, or import them from the new study.
+
+## Goal
+
+### Code (all default-off and bit-identical at defaults; lev 0 only)
+
+1. **Momentum decay diameter.** New `surface_patch.jet_decay_diameter =
+   nozzle | momentum` (default `nozzle`).
+   - Under `momentum`:
+     - `surface_patch.jet_De_ref` [m] is required: D_e of the **full** jet in
+       surroundings at `jet_T_ent`, from `nozzle.py`.
+     - `jet_core_length` must be given explicitly (units of D_e).
+     - `D_e = jet_De_ref*sqrt(T_mix/jet_T_ent)`, with T_mix as today
+       (lagged T_rec under exhaust, else `jet_T_ent`);
+       `phi = min(1, jet_core_length*D_e/s_c)`.
+     - Why the √ form: D_e = 2ṁ/√(πρJ) at fixed ṁ and J, with ρ ∝ 1/T.
+       Passing the full-jet length keeps the quarter-domain mdot/4 from
+       halving it.
+   - Thermo (momentum only): `jet_D_e`.
+   - Parse aborts: `jet_De_ref <= 0` or non-finite; `jet_core_length` missing;
+     `momentum` without `jet_closure = enthalpy` or with
+     `jet_stagnation = nozzle`.
+   - Ricou–Spalding = `momentum` + `jet_core_length = 3.125` +
+     `jet_entrained_mass = 1`. Document it; add no key.
+
+2. **Free-surface dilution.** New `surface_patch.jet_free_surface = 0 | 1`
+   (default 0), `jet_fs_aspect` (default 1.0) and `jet_fs_exponent`
+   (default 1.0).
+   - Requires `nozzle_descent = feet` and `jet_closure = enthalpy`.
+   - **Original surface:** per column, `z0[col]` = the face height at the
+     first march call (host state, not checkpointed; say so).
+   - **Free-surface column:** `r > foot_r_outer` and
+     `z0[col] - z_face[col] <= jet_fs_aspect*(r - foot_r_outer)`.
+   - **Per bin** `[r_lo, r_hi) = [ib*dr, (ib+1)*dr)` with `n_fs` free-surface
+     columns out of `n`:
+     1. remove the bin's heat at the current mass m (as today, or by
+        deliverable 3);
+     2. then dilute: `m_out = m*(r_hi/r_lo)^(jet_fs_exponent*n_fs/n)` and
+        `T_gas <- T_ent + (T_gas - T_ent)*m/m_out`.
+     - The excess enthalpy flux is conserved, so the ambient enthalpy enters
+       at `T_ent`.
+     - Abort if `r_lo == 0` with `n_fs > 0`.
+     - `mcp` follows m.
+   - **Recirculation temperature under dilution:** T_rec (next step) = the
+     gas temperature at the **inlet of the first bin containing a
+     free-surface column** (the mouth). With no such bin, it is `T_exhaust`
+     as in D2b.
+     - State this as a modelling choice: the gas that recirculates is the
+       gas in the hole, not the diluted gas leaving over the surface.
+   - **Invariants:** `P_face + P_exhaust = P_cap` is unchanged, with
+     `P_exhaust = m_exit*cp*(T_exhaust - T_ent)`. The exhaust budget
+     identity keeps `P_recirc = (m_stag - mdot)*cp*(T_mix - T_ent)`.
+   - Thermo (on only): `jet_fs_cols`, `jet_m_ratio` (m_exit/m_stag),
+     `jet_T_mouth`.
+
+3. **Exact per-bin update.** New `surface_patch.jet_bin_update = explicit |
+   exponential` (default `explicit`).
+   - Under `exponential`, per bin:
+     - evaluate each column's `q_rob` at `T_in` and `T_in - 1 K` (same
+       `PinRule` / `SurfaceCellFlux` calls);
+     - `G = sum(dq)*dA`, `P_in = sum q(T_in)*dA`;
+     - if `G > 0`:
+       - `T_eq = T_in - P_in/G`, `N = G/mcp`;
+       - `T_eff = T_eq + (T_in - T_eq)*(1 - exp(-N))/N`;
+       - set `flame_Tg[c] = T_eff` for every column in the bin;
+       - `P_bin = sum q(T_eff)*dA`, re-evaluated so the accounting stays
+         exact;
+       - `T_out = T_in - P_bin/mcp`;
+     - otherwise fall back to explicit.
+   - Keep the `avail` clamp and the floor.
+   - Why: when q is affine in T_gas, `P_bin(T_eff) = mcp*(T_in - T_out)`
+     exactly, and the kernel sees the bin-mean gas temperature.
+   - Expected effect ≈ 1 % (G/mcp ≈ 0.01 per 2 mm bin near the ring). Report
+     the measured effect; do not expect it to move ROP.
+
+4. **Rock-to-gas heat.** New `surface_patch.jet_negative_flux = drop | count`
+   (default `drop`).
+   - Under `count`, `P_bin` sums the signed `q_rob`, so the gas gains heat
+     where the rock is hotter.
+   - Thermo (count only): `jet_P_neg` (sum of negative `q_rob*dA`, ≤ 0).
+   - The `avail` clamp applies only when `P_bin > 0`. The floor stays.
+   - Restate the invariant set for `count`:
+     - `P_face` is the signed net;
+     - `P_face + P_exhaust = P_cap` holds exactly;
+     - replace `P_face >= 0` with `P_face - jet_P_neg >= 0`;
+     - keep `P_face <= P_cap + tol`.
+     - Write the set in a code comment.
+
+5. **Burner-body clearance.** New `surface_patch.foot_body_clearance = 0 | 1`
+   (default 0). Requires `nozzle_descent = feet` and `foot_rule = pads`.
+   - After `FeetDescent`, record per annulus column the pad height `z_p` of
+     its pad.
+   - At the next removal pass (or this step's, per the order you verify),
+     flip every solid cell of that column whose top face is above `z_p` to
+     removed, so the column's `z_face == z_p`.
+     - Cells are whole, and `z_p` is itself a column face height, so this is
+       exact.
+     - Use the same flip as thermal removal.
+     - **Leave the pin state untouched** and document it.
+   - **No ratchet:** clipping the top (1 − q) of a pad to its nearest-rank
+     quantile leaves that quantile unchanged. The unit test checks this.
+   - Logging:
+     - `removal_events.csv` rows with a new, documented regime code for
+       mechanical removal (on only);
+     - thermo (on only): `foot_mech_vol` (cumulative m³, modelled sector) and
+       `foot_mech_cols` (columns cleared this step).
+   - The ledger must stay closed (void H is frozen and counted). The test
+     confirms it.
+   - Parse aborts: clearance without `feet` or with `foot_rule != pads`.
+
+6. **Far-field h law (helpers, no C++).**
+   - `walljet.h_expr(h_ref, far="clamp", n=1.0)` and `h_py(..., far, n)`.
+     `far="power"` as in §Sources; the defaults reproduce today's string
+     exactly (assert it).
+   - `feetmodel` gets the same law.
+
+### Unit test `tests/MMWSpalling/unit/jet_d2c/` (new; mirror `robin_feet` / `jet_enthalpy`)
+
+- **(a) Default identity.** Every new key at its default gives outputs equal
+  to D2b's (covered by the witnesses; also assert that no new thermo column
+  exists).
+- **(b) Momentum.** `jet_D_e == jet_De_ref*sqrt(T_mix/T_ent)` from thermo;
+  φ reproduces from `jet_T_stag`. Under `fixed`, `jet_D_e == jet_De_ref`.
+- **(c) Momentum reduces to nozzle.** `momentum` with `jet_De_ref = jet_D`,
+  core 5, `fixed` is bit-identical to `nozzle` (√1 = 1). If the arithmetic
+  order breaks bit identity, assert 1e-14 and say why.
+- **(d) Free surface, energy.** Invariants hold; `jet_m_ratio` equals the
+  product of per-bin factors recomputed from `jet_profile.csv`. A geometry
+  with no free-surface column is identical to off.
+- **(e) Free surface, classification.** On a flat start every column with
+  `r > foot_r_outer` is free-surface. On a constructed step (a deep column
+  just outside the ring) it is not.
+- **(f) Exponential update.** On a single-bin Robin strip, `T_out` matches
+  `T_eq + (T_in - T_eq)*exp(-N)` to 1e-10. The explicit error falls with
+  `jet_dr`.
+- **(g) Negative flux.** Hot rock and cooler gas give `jet_P_neg < 0` and a
+  rising `T_gas`; invariants hold. `drop` is identical to D2b.
+- **(h) Clearance.** A proud annulus column is cut to its pad height;
+  `foot_mech_vol` equals the flipped-cell volume; the next step's pad
+  heights are unchanged (no ratchet); the ledger closes; the regime code
+  appears.
+- **(i) Parse aborts** for every rule in deliverables 1-5.
+- **(j) Far-field expression.** The parsed `power` h (via the `jet_enthalpy`
+  (g) pattern) matches `h_py` at s = 6, 12, 18, 30 D to 1e-12 relative, is
+  continuous at 12 D, and is written numeric-first.
+
+### Study `tests/MMWSpalling/studies/d2c_steady/` (pre-registration; no scored runs)
+
+7. **`nozzle.py`.** Isentropic Laval state at T0 ∈ {1600, 1750, 1900} K:
+   - inputs: throat Ø 6, exit Ø 7.5, ṁ = 0.01513, γ = 1.3 (report 1.25 and
+     1.35 too), R = 290, p_amb = 1.013 bar;
+   - outputs: p0, M_e, p_e, T_e, u_e, and J including the pressure thrust
+     `(p_e - p_amb)*A_e`;
+   - D_e at 293 / 800 / 1500 K and **`jet_De_ref`** (at `jet_T_ent`);
+   - core lengths 5 and 8 in mm.
+   - Must reproduce the §Sources table at 1900 K.
+
+8. **Hand predictions, `PREDICTIONS.md`**, written and hashed (sha256 +
+   mtime recorded in `RESULTS.md`) **before any D2d run**. Extend
+   `feetmodel` with the far law, the D_e decay (T_mix-dependent),
+   free-surface dilution and the core length. For the scored configuration
+   unless noted:
+   - **P1.** Centre equilibrium `s_c` for n = 1 and n = 0.5, and the clamp's
+     deep-pit limit.
+     - Time to a steady window, with the estimate method stated.
+     - **Domain-height rule:** use 0.30 m if the nozzle-plane depth at the
+       end of the steady window + `s_c` + 40 mm ≤ 0.30 m, else 0.40 m.
+       State which.
+     - Whether n = 0.5 fits the chosen domain. If it does not, D2d reports
+       n = 0.5 from the hand model only.
+   - **P2.** Ring ROP for n = 1, n = 0.5 and clamp. **State the ring's
+     sensitivity to n as computed**, not as an expectation.
+   - **P3.** ROP at T_nozzle 1600, 1750 and 1900 K, with D_e and `jet_De_ref`
+     per temperature.
+   - **P4.** Mouth Ø at z = 20 and 50 mm, the depth-mean Ø over the
+     predicted drilled depth, the minimum Ø, and the whole-excavation volume
+     rate.
+   - **P5.** The same rows for:
+     - core length 5;
+     - Ricou (3.125);
+     - "D2b closures + n = 1" (nozzle diameter, core 5, no free surface);
+     - aspect 0.5 and 2, exponent 0.8.
+   - **P6.** One line on each P1-P5 row that D2d would refute.
+
+9. **Fig. 8.8 profile: already digitised; use it, do not redo it.**
+   - The file is `tests/MMWSpalling/validation/meier/meier_fig8_8_hole_profile.csv`
+     (09-17): `depth_mm, visible_width_mm, note`, rows at 10–480 mm, ±5 mm.
+     Values: 96 at 10, 92 at 25, 88 at 50, 87 from 75 to 125, then tapering
+     to 84 at 300 and 78 at 480 (exit).
+   - Its header states three limits:
+     - it is a **visible width** (the saw cut need not pass through the
+       axis), so it is a **lower bound** on the diameter;
+     - the underream streak (80–90 mm depth, one side) is listed separately;
+     - the hole centre is off the photo's mid-width.
+   - Deliverable: `score.py` reads this file.
+     - Optionally, add an overlay PNG (render PDF p. 251 after verifying the
+       page) to check the reading.
+     - **Do not edit the CSV.** If you disagree with a reading, record it in
+       `RESULTS.md`.
+   - Note for the D2d reading: the data have a **mild collar** (96 → 87 mm
+     over the top 75 mm), so "no funnel" means a widening of about 10 mm, not
+     zero.
+
+10. **`score.py`.**
+    - Implements the §Sources scoring table exactly, including the
+      whole-excavation volume, mechanical share, azimuth-mean wall profile,
+      drilled-depth Ø metrics with the 2 mm resolution rule, and the
+      steady-window finder.
+    - **Dry run on D2b's `B_JM_A2`.** Put the re-scored D2b table in
+      `RESULTS.md` §Dry run. It should report "no steady window", and show
+      how whole-excavation volume and the profile metric read.
+    - Reuse `analyze.py` functions by import.
+
+11. **`run.py` for D2d** (define it; run only the probes). Matrix:
+
+    | # | run |
+    |---|---|
+    | 1 | scored |
+    | 2 | clamp |
+    | 3 | n = 0.5 (only if P1 says it fits) |
+    | 4 | 1600 K |
+    | 5 | 1750 K |
+    | 6 | D2b closures + n = 1 (momentum → nozzle, core 5, no free surface) |
+    | 7 | 1 mm full domain |
+    | opt-a | core 5 |
+    | opt-b | Ricou |
+
+    - Per-temperature `jet_De_ref` and Martin h_ref come from the helpers.
+    - Watchdogs: stalled (60 s), bottom, and **steady-stop** (end 50 s after
+      a 150 s steady window is found, with a cap per run).
+    - Sparse `plot_int`; `jet_profile_interval` on.
+    - `--write-input` regenerates `sp_meier_pilot/input_feet_d2c` (do not
+      touch `input_feet`).
+
+12. **Cost probes** (not scored): the scored configuration at 2 mm for
+    30 s simulated, and at 1 mm on the full domain for 10 s, at the chosen
+    domain height.
+    - From these and P1, project wall-clock for each D2d run, alone and three
+      at a time.
+    - Propose the D2d schedule: which runs share a night, and the cap for
+      run 7.
+    - **If run 7 cannot reach a steady window within about 14 h alone, say
+      so.** D2d then decides; do not trim the domain.
+
+13. **`README.md`** for the study, plus a note in
+    `validation/meier/README.md` (the D2c closures and the Fig. 8.8 target).
+
+14. **Errata** (docs, no code):
+    - `validation/meier/meier-2017-pilot-660kg-validation-reference.md`:
+      - the chamber T is not a gas temperature;
+      - D = 7.5 mm per the drawings, Laval with a 6 mm throat;
+      - volume by water filling;
+      - the h bracket is literature; Ch. 3 measured 0.4–1.6 kW/m²K.
+    - `studies/d2b_feet_rop/RESULTS.md` §0: an addendum, dated 09-17, saying
+      volume is scored on the whole excavation and 1436 K is relabelled as
+      not a gas temperature. Do not rewrite the D2b tables.
+
+## Guardrails
+
+- **Default identity.** Every new key at its default leaves the targeted
+  witnesses hash-identical. Hash pre/post (Level_0 `Cell_D_*`, events,
+  clusters, jet profile, thermo) for:
+  - `unit/robin_face`, `robin_pinned`, `robin_jet`, `jet_enthalpy`,
+    `robin_feet`, `beam_void_closure`, `scalar_flaw`, `spall_event`;
+  - Meier `input_2d_dev`;
+  - the S1 smoke (`run_sweep.py --smoke`).
+
+  Save a pre-change binary and source copy first. The full sweep is deferred
+  to the commit.
+- **New thermo columns** are registered only when their feature is on,
+  appended after every older column.
+- **Do not change:** `PinRule`, `BuildPinEffective`, `SurfaceCellFlux`,
+  `EnergyLedger`, `bit.*`, the thermal removal criterion, or the existing
+  arithmetic of `FeetDescent` and `JetEnthalpyMarch` under default keys. The
+  march changes only inside the new branches.
+- **No scored runs in D2c.** Only unit tests, witnesses, the two cost probes
+  (≤ 30 s and ≤ 10 s simulated) and the dry-run scoring on existing D2b
+  output.
+- **Order:**
+  1. code and unit tests;
+  2. `nozzle.py`;
+  3. `PREDICTIONS.md`, hashed;
+  4. `score.py` with the dry run (reads the existing Fig. 8.8 CSV);
+  5. the probes.
+
+  The probes use the scored configuration, so run them after the
+  predictions are hashed.
+- **No tuning.** The scored configuration is fixed above. The aspect,
+  exponent, core length and n are not to be changed after any output. A
+  literature disagreement is recorded, not acted on.
+- **Do not reintroduce** feet-depth blending, J-5/J-10, the 1436 K anchor,
+  a trimmed-domain mesh check, or the inside-Ø 93 volume as the score.
+- **Do not edit** `jet.py`, `input_drilling`, `test`, `input_feet`,
+  `test_feet`, or the D2b study outputs.
+- Do not touch `ext/`, `bin/` (except via `make`), `obj/`, `build/`,
+  `compile_commands.json`, `configure`, `LICENSE`, or unrelated integrators.
+  Do not commit.
+- **Re-read this packet** (check its mtime) before the probes. If it changed,
+  follow the new version.
+- **New host state** (`z0` per column, pad heights, T_rec source) is not
+  checkpointed. Document it with the D2b list.
+
+## Commands
+
+```bash
+# Build from /Users/tzetze20/amr_tools/alamo. Save a pre-change binary + source first.
+cp bin/mmwspalling-3d-g++ $SCRATCH/d2c/mmwspalling-3d-g++.preD2c
+cp src/Integrator/MMWSpalling.H src/Integrator/MMWSpalling/Removal.H $SCRATCH/d2c/
+EIGEN=$PWD/ext \
+  CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current \
+  make -j8
+
+# New unit test
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/unit/jet_d2c/test
+
+# Targeted witnesses (hash pre/post; same list as D2b plus robin_feet)
+for t in robin_face robin_pinned robin_jet jet_enthalpy robin_feet \
+         beam_void_closure scalar_flaw spall_event; do
+  /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/unit/$t/test
+done
+# plus Meier input_2d_dev and: python3 tests/MMWSpalling/studies/s1_surface_resolution/run_sweep.py --smoke
+
+# Study (order matters)
+S=tests/MMWSpalling/studies/d2c_steady
+/Users/tzetze20/Desktop/code/.venv/bin/python $S/nozzle.py
+/Users/tzetze20/Desktop/code/.venv/bin/python $S/predict.py      # writes + hashes PREDICTIONS.md
+# optional overlay check only (the CSV exists): pdftoppm -png -r 200 -f 251 -l 251 ~/Downloads/ThierryMeier_PhD.pdf $S/fig8_8
+/Users/tzetze20/Desktop/code/.venv/bin/python $S/score.py --dry-run \
+  tests/MMWSpalling/studies/d2b_feet_rop/output/B_JM_A2
+/Users/tzetze20/Desktop/code/.venv/bin/python $S/run.py --probe 2mm   # 30 s
+/Users/tzetze20/Desktop/code/.venv/bin/python $S/run.py --probe 1mm   # 10 s, full domain
+# (run.py --stage D2d exists but is NOT run in this step)
+```
+
+## Claude completion notes
+
+Implemented 2026-09-17. No scored run was made, and nothing is committed.
+
+### Files changed
+- **`src/Integrator/MMWSpalling.H`**, all default-off, level 0:
+  - `SurfacePatch` fields and parsing for `jet_decay_diameter` /
+    `jet_De_ref`, `jet_free_surface` / `jet_fs_aspect` / `jet_fs_exponent`,
+    `jet_bin_update`, `jet_negative_flux` and `foot_body_clearance`, with
+    their aborts;
+  - thermo registration (only when on; after every older column);
+  - `JetEnthalpyMarch` branches for the momentum D_e, the exponential bin
+    update, the signed flux and free-surface dilution (T_rec from the
+    mouth), plus the extra profile CSV columns;
+  - `FeetDescent` arms clearance targets (`foot_clear_k`);
+  - new host state and thermo members.
+- **`src/Integrator/MMWSpalling/Removal.H`:**
+  - a clearance pre-pass before PASS 1 (flip by index, regime 4, φ shift,
+    `foot_mech_vol` / `foot_mech_cols`);
+  - regime-4 rows in `removal_events.csv`.
+- **New `tests/MMWSpalling/unit/jet_d2c/test`:** checks (a)–(j) as in the
+  packet. The inputs are reused from `robin_feet`, `jet_enthalpy` and
+  `robin_jet`.
+- **`studies/d2a2_walljet/walljet.py`:** `h_expr(h_ref, far, n)` and
+  `h_py(..., far, n)`, plus `FAR_S`. The default is unchanged.
+- **`studies/d2b_feet_rop/feetmodel.py`:** a `Cfg` (far, n, core, De_ref)
+  threaded through the model. The default output is byte-identical to the
+  pre-change output (diffed).
+- **New study `studies/d2c_steady/`:** `nozzle.py`, `handmodel.py`,
+  `predict.py`, `PREDICTIONS.md` (hashed), `score.py`, `run.py`,
+  `README.md`, `RESULTS.md` (§0 hash, §1 nozzle, §2 dry run, §3 probes and
+  schedule, §4 notes), and `output/` (probes, dry-run profile CSV;
+  git-ignored; `probe_1mm` is 3.2 GB of plotfiles).
+- **New `validation/meier/sp_meier_pilot/input_feet_d2c`:** the scored
+  configuration, from `run.py --write-input`.
+- **Docs:**
+  - `validation/meier/README.md`: a D2c section.
+  - `validation/meier/meier-2017-pilot-660kg-validation-reference.md`:
+    errata items 10–11. Items 1, 2, 4 and 5, which the packet asked for, were
+    already present from the 09-17 reread and were verified.
+  - `studies/d2b_feet_rop/RESULTS.md` §0: a D2c line under the existing
+    09-17 correction, which already covered the whole-excavation volume and
+    the 1436 K relabel. The D2b tables are not rewritten.
+- **Not touched:** `jet.py`, `input_drilling`, `test`, `input_feet`,
+  `test_feet`, D2b outputs (the listing checksum is unchanged), `ext/`,
+  `bin/` (except via make), and other integrators.
+
+### Tests (4 ranks unless noted; final binary built 13:42)
+- **`unit/jet_d2c`: PASS, 26/26 checks** (log in `output/test_pass.log`,
+  144 s):
+  - (a) defaults are bit-identical;
+  - (b) D_e = D_e,ref·√(T_mix/T_ent) (1.0e-6) and T_stag from φ;
+  - (c) momentum with D_e = D and core 5 is bit-identical to nozzle;
+  - (d) m_ratio equals the product of the bin factors (1.1e-15), T_rec lags
+    T_mouth, and no free-surface column is identical to off;
+  - (e) the classification matches the hand rule on all 4999 rows, FSB
+    excludes the deep column, and 3 ranks are identical;
+  - (f) the exponential update is exact to ≤ 9e-15 at 1 bin, 4 mm and
+    0.25 mm, and the explicit error falls 9.5e-3 → 2.5e-3 → 6.2e-4;
+  - (g) negative flux: T_gas rises 400 → 497 K and matches the exact value to
+    6e-16;
+  - (h) 14 regime-4 cuts, each exactly at the pad height, with no ratchet;
+    volume and column counts match, the ledger is 2.5e-15, and 3 ranks are
+    identical;
+  - (i) 17 aborts;
+  - (j) the parsed power h matches `h_py` to ≤ 1e-15 and is continuous at
+    12 D, and the default string equals `input_feet`.
+  - Runs are on 1 rank except the 3-rank checks, as in the robin tests.
+- **Targeted witnesses: all PASS.** `robin_face`, `robin_pinned`,
+  `robin_jet`, `jet_enthalpy`, `robin_feet`, `beam_void_closure`,
+  `scalar_flaw` and `spall_event` all end in PASS. Meier `input_2d_dev` and
+  the S1 smoke (`--force`) exit 0.
+- **Hash check: 2639/2639 identical** before and after the change (Level_0
+  `Cell_D_*`, event, cluster and jet-profile CSVs, thermo). The pre-change
+  set was generated with the pre-D2c binary
+  (`scratchpad/d2c/mmwspalling-3d-g++.preD2c`).
+- **Parse smoke of `input_feet_d2c`** (0.2 s): its thermo header and rows
+  equal the 2 mm probe's.
+- **`feetmodel.py`** output is byte-identical before and after the `Cfg`
+  change.
+- **`nozzle.py`** reproduces the packet table: J = 19.15 N includes the
+  pressure thrust, while the packet's 19.3 N is ṁ·u_e; D_e at 800 K is
+  5.87 mm against a rounded 5.8.
+
+### Not run, with reasons
+- **Scored and D2d runs:** out of scope; `run.py --stage D2d` is defined only.
+- **Full regression sweep:** deferred to the commit, per the packet.
+- **Fig. 8.8 overlay:** optional, and not rendered. The CSV was used as
+  given.
+- **Literature check of the free-surface aspect/exponent:** not done. The
+  values are unchanged and the hand sensitivities are reported.
+- **`validation/meier/sp_meier_pilot/test_feet`:** not re-run, since D2b
+  outputs are unchanged and the new code is default-off.
+
+### Order followed
+Code and unit tests → `nozzle.py` → `PREDICTIONS.md` (sha256
+`a28f19875a7240f73b40eef0d2d70eda050e6147bf3e7d0d9e80a4274b5bd651`, mtime
+13:54:01) → `score.py` dry run → probes. The packet mtime (12:46:45) was
+re-checked before the probes.
+
+## Implementation takeaways
+
+1. **`IO::ParmParse::query_default` adds the default to the table.** A
+   `pp.contains(key)` after it is always true. "Given explicitly" checks
+   must read `contains` first; `jet_core_length` under momentum does this.
+2. **Clearance order.**
+   - Removal runs before the thermal advance (`BuildFlameColumns` →
+     `FeetDescent`), so a cut armed at step n acts at step n + 1, before
+     PASS 1.
+   - Cells are flipped **by index**, and φ is shifted by n·dz. A φ-only shift
+     loses or adds a cell at the common φ_top = 0 / dz ties. A tie-flipped
+     cell gets φ = −tiny, and the new top is held at φ ≥ 0.
+   - Regime 4 means mechanical; `removal_events.csv` gets one regime-4 row
+     per cleared column (`k_top` before the cut, `h_applied` = n·dz).
+   - The pin state is untouched.
+   - The pad k is the same nearest-rank pick on the integer tops, which is
+     valid because z_face is monotone in k.
+3. **Free surface only acts while the feet are shallower than about 50 mm.**
+   Deeper, the nozzle plane is below the original surface, so no
+   free-surface column marches, and T_rec reverts to T_exhaust.
+   - In the probe, m_exit/m_stag is about 4 and the diluted exhaust is at
+     about 550 K, while the mouth T_rec is about 1600 K.
+   - The T_rec-from-the-mouth rule is therefore what keeps the stagnation hot
+     early.
+4. **Invariants under `count`:** P_face is signed, and P_face − P_neg ≥ −tol
+   replaces P_face ≥ 0. Under drop the check is unchanged. With avail ≥ 0,
+   the existing clamp branch already handles P_bin ≤ 0.
+5. **New keys** (all under `surface_patch.`): `jet_decay_diameter`,
+   `jet_De_ref`, `jet_free_surface`, `jet_fs_aspect`, `jet_fs_exponent`,
+   `jet_bin_update`, `jet_negative_flux`, `foot_body_clearance`.
+   - Thermo: `jet_D_e`; `jet_fs_cols`, `jet_m_ratio`, `jet_T_mouth`;
+     `jet_P_neg`; `foot_mech_vol`, `foot_mech_cols`.
+   - Profile CSV extras: `T_eff`, `n_fs`, `m_ratio`, `P_neg`.
+   - Host state that is not checkpointed: `jet_fs_z0`, `foot_clear_k`.
+6. **Abort order.** The clearance-without-removal guard is unreachable in
+   practice: `surface.follow_mask = 1` needs removal and aborts first. The
+   unit test expects that older message.
+7. **What the predictions tell D2d** (pre-registered, not results):
+   - **(a) Domain height.** The domain-height rule gives 0.40 m, but the
+     hand steady window (from 750 s) needs ≥ 0.65 m. At 0.40 m, run 1 is
+     predicted to stop at the bottom (≈ 500 s) with no window. The
+     full-domain mesh check (both runs steady) therefore cannot pass at
+     0.40 m. The binding criterion is the s_c drift limit of 0.02 mm/s.
+   - **(b) ROP.** The steady ring ROP is 1.93 m/h, just above the band. The
+     ROP from 150 s to the bottom is 1.79 m/h.
+   - **(c) Mouth.** It stays too wide (134 / 118 mm at 25 / 50 mm), against
+     174 mm at 25 mm with the D2b closures + n = 1.
+   - **(d) n.** The ring barely feels n (n = 0.5: +1.2 %; clamp: −5.7 %).
+     n = 0.5 needs ≥ 1.55 m, so run 3 is not runnable.
+   - **(e) Run 7** (1 mm, full domain) cannot reach a steady window within
+     about 14 h alone: ≈ 24 h even with a 0.65 m domain. The proposed cap
+     is 750 s at 0.40 m (≈ 11.6 h).
+   - **(f) T_nozzle.** 1.3–1.6 m/h at T_nozzle below 1600 K up to ≈ 1730 K,
+     conditional on the scored closures and never reused.
+8. **Hand-model credibility** (D2b closures vs B_JM_A2): ROP +13 %, centre
+   depth +11 %, s_c +6 %, T_rec +1 %. The P6 bands are ±27 % on rates and
+   ±20 mm on Ø and s_c.
+9. **Probe cost.** 2 mm: 2.7e7 cell-steps/s (6.7 wall-s per simulated s in a
+   0.40 m domain). 1 mm full domain: 2.6e7 (55.6 wall-s/s). dt is 4 ms at
+   both resolutions (overshoot 1.4 / 2.8 K).
+10. **`score.py` interpretation** (stated in its docstring):
+    - The mouth passes iff 0 ≤ Ø − width ≤ 10 mm at 25 and 50 mm.
+    - Any Fig. 8.8 row inside the drilled depth with Ø < width fails the
+      profile.
+    - Ø(z) is the mean of the per-azimuth-sector max r over 9 sectors.
+    - The drilled depth is the nozzle-plane depth at the window end, only
+      71 mm for the D2b run.
+    - The dry run on B_JM_A2 gives: no window, whole volume 5.68 cm³/s,
+      mouth 165 / 131 mm.
+11. **D2b's `run.py` overwrote the `wall` treatment key with wall-clock
+    seconds** in the `.done` metadata. The D2c `run.py` uses `wall_s` and
+    `wall_treatment`.
+12. **`numpy.trapz` is gone** in the venv's numpy; use `np.trapezoid`.
+
+## Review findings
+
+Reviewed 2026-09-17, in a separate session from the implementation.
+
+Verdict: accepted
+
+### What was checked
+- **Scope.** Deliverables 1–14 are all present. `run.py --stage D2d` is
+  defined but was not run, and no scored run was made.
+  - Only the permitted docs changed: the Meier README, reference errata
+    items 10–11, and a D2c addendum to D2b `RESULTS.md` §0. No D2b table
+    changed.
+  - `jet.py`, `input_feet`, `test_feet` and `test` are unmodified. Nothing
+    under `ext/`, `obj/` or `build/`, `compile_commands.json`, `configure` or
+    `LICENSE` is modified.
+  - No D2b output file is newer than 2026-09-17 00:00 (`find -newermt`).
+- **Source diff, `MMWSpalling.H`** (vs the implementer's pre-change copy
+  `…ac0a0f5a…/scratchpad/d2c/`; 540 diff lines, all in scope):
+  - **Momentum decay diameter (deliverable 1).**
+    `D_dec = jet_De_ref*sqrt(T_mix/T_ent)` feeds
+    `phi = min(1, core*D_dec/s_c)`. The nozzle path computes exactly the
+    old expression.
+    - The parse aborts all match the spec. `core_given` reads `contains`
+      before `query_default` (takeaway 1).
+  - **Free surface (2).**
+    - `z0` is taken at the first march and the classification follows the
+      packet rule.
+    - Dilution comes after the bin's heat and is
+      `m_out = m(r_hi/r_lo)^(e·n_fs/n)`. The excess enthalpy is conserved,
+      so `P_cap` uses `mcp0` and `P_exhaust` uses the final `mcp`, which
+      keeps `P_face + P_exhaust = P_cap` exact.
+    - `T_rec_next` is the inlet T of the first free-surface bin, else
+      `T_exhaust`, and the `r_lo = 0` abort is present.
+  - **Exponential update (3).**
+    - `T_eff = T_eq + (T_in − T_eq)(−expm1(−N)/N)`; `P_bin` is
+      re-evaluated at `T_eff`, and `G ≤ 0` falls back to explicit.
+    - `PinRule` is `const` (`MMWSpalling.H:2095`), so calling it three times
+      per column has no side effects.
+  - **Rock-to-gas heat (4).**
+    - `count` sums the signed `q_rob`. A negative `P_bin` always takes the
+      non-clamp branch because `avail ≥ 0`.
+    - The invariant is `P_face − P_neg ≥ −tol`, and the full invariant set
+      is written in a code comment.
+  - **Thermo.** Every new column is registered only when its key is on,
+    after all older columns.
+  - **Default path.** It is the old arithmetic in the old order: `flame_Tg`
+    is set before `PinRule` and `SurfaceCellFlux`, as before. `PinRule`,
+    `SurfaceCellFlux`, `EnergyLedger` and `FeetDescent`'s existing arithmetic
+    are unchanged; clearance only adds a parallel integer pick behind
+    `if (clear)`.
+- **Source diff, `Removal.H`** (clearance pre-pass, deliverable 5):
+  - It runs before PASS 1 and uses `ColumnTopSolid`, the removed mask, as the
+    ROADMAP E1 note requires.
+  - It flips by index and shifts φ by n·dz, as thermal PASS 3 does. The tie
+    guards are present and the pin state is untouched.
+  - It sets `rem`, `reg`/`regf` = 4 and `D` = 0, as thermal removal does.
+    It does not write the per-event diagnostics (`RoP`, `spall_event`,
+    thickness), which is acceptable.
+  - `ReduceIntSum` is applied to the flip counts. Regime-4 rows are written
+    ahead of the thermal-row `continue`.
+  - The order (removal, then the thermal advance, then `FeetDescent` arming
+    the next step's cut) matches `RESULTS.md` §4.
+- **Tests really ran.**
+  - The binary is from 13:42:57 and the source from 13:42:25.
+  - `unit/jet_d2c/output/test_pass.log` is from 13:46: 26/26 PASS, checks
+    (a)–(j), with outputs written 13:43–13:46.
+  - The implementer's `post_all.log` shows every witness at rc 0 (13:46–13:55,
+    final binary): `robin_face`, `robin_pinned`, `robin_jet`, `jet_enthalpy`,
+    `robin_feet`, `beam_void_closure`, `scalar_flaw`, `spall_event`, Meier
+    `input_2d_dev` and the S1 smoke.
+  - The pre-change witnesses ran 12:52–13:01 on the pre-change binary
+    (`build1` is from 13:17). I diffed `pre.md5` against `post.md5` myself:
+    **2639/2639 identical.**
+- **Pre-registration.**
+  - `shasum -a 256 PREDICTIONS.md` = `a28f19875a72…5bd651`, which matches
+    RESULTS §0. The file's mtime is 13:54:01.
+  - The probes ran after it: the 2 mm log is from 14:01, the 1 mm log from
+    14:10, and `run.py` from 13:58.
+  - The probe `.done` confirms the scored keys:
+    - `De_ref` 3.556 mm, the unscaled full-jet value, with `jet_mdot = ṁ/4`;
+    - core 8, power n = 1, free surface on, 0.40 m domain.
+  - The probe's D_e of 8.32 mm equals 3.556·√(1604/293.15).
+  - I hand-checked the P1 scored row: D_e 8.64 mm, φ 0.385, T_stag 1797 K.
+  - `nozzle.py` output reproduces the packet table. J includes the
+    pressure thrust, which is stated.
+- **Helpers.**
+  - `walljet.h_expr` / `h_py` defaults are unchanged, and the power factor is
+    written numeric-first (`pow(0.09/max(0.09,s),n)`).
+  - The implementer's diff of `feetmodel` output before and after the change
+    is empty (`feetmodel_pre/post.txt`).
+  - `input_feet_d2c` carries the scored configuration exactly (§Scored
+    configuration).
+- **`score.py` matches §Meier targets.**
+  - Whole-excavation volume includes the regime-4 rows; the mechanical share
+    comes from `foot_mech_vol`.
+  - The mouth rule reads the table's "abs(ΔØ) ≤ 10 mm, and Ø below the
+    visible width fails" as 0 ≤ Ø − width ≤ 10 mm.
+  - The 76–80 mm "unresolved at 2 mm" band is implemented.
+  - The dry-run table in RESULTS §2 is consistent with D2b: 5.68 cm³/s
+    whole, 3.27 inside Ø 93, ledger 1.8e-14.
+- **One rerun: `validation/meier/sp_meier_pilot/test_feet`.** Reason: it
+  imports `analyze.py`, which imports `feetmodel.py`, which D2c edited, and
+  the implementer skipped it. It is analysis-only and makes no simulation.
+  Result: `PASS (all outcomes as recorded)`, rc 0, with the 4 expected-fails
+  unchanged.
+- **Caveats and takeaways.** The ROADMAP E1 tie rule is respected (by-index
+  flips from the removed mask). The new host state (`jet_fs_z0`,
+  `foot_clear_k`) is documented as not checkpointed. Takeaways 1–12 are
+  specific enough to plan D2d.
+
+### Findings for the D2d planner (non-blocking)
+- **The drilled-depth window leaves out the feet zone.**
+  - §Meier targets define the drilled depth as reaching the nozzle plane,
+    so the minimum-Ø metric never covers the 50 mm between the nozzle plane
+    and the feet. That is where the burner body passes and where D2b's
+    drilled-depth minimum lies.
+  - Example: the dry run reports a minimum of 117 mm over 0–71 mm, while
+    `test_feet` reports a drilled-depth minimum of 78.2 mm for the same run.
+  - Decide whether the minimum Ø (≥ 80 mm) should be scored down to the feet
+    depth.
+- **`run.py` caps run 7 at 1200 s (`CAP_1MM`), but RESULTS §3 proposes
+  750 s.** At the probe rate, 1200 s is 18.5 h alone, which exceeds the 14 h
+  budget. D2d must set the cap explicitly.
+- **The pre-registration predicts the campaign cannot pass as designed.**
+  - At 0.40 m there is no steady window before the bottom stop (the window
+    needs ≥ 0.65 m), so the full-domain mesh criterion cannot pass either.
+  - Run 7 on a 0.65 m domain needs about 24 h.
+  - The hand steady ring ROP (1.93 m/h) is just above the band top (1.92).
+  - Hand ROP is +13 % against D2b, which is well inside the ±27 % bands.
+  - The domain height and the run-7 budget are D2d decisions and must be
+    made before any run, without touching the scored closures.
+- **The free-surface lever acts only while the nozzle plane is above the
+  original surface** (takeaway 3). The hand model still predicts the mouth
+  fails (134 / 118 mm against 92 / 88 mm).
+  - The hand model is axisymmetric to 0.12 m, and its dilution is weaker
+    than the probe's (m_exit/m_stag 2.4 vs 3.7–4.3).
+  - So P4's mouth numbers are the least reliable predictions. Read their
+    refutation with that in mind.
+- **Run 6 ("D2b closures + n = 1") is not fully D2b.** It keeps
+  `exponential`, `count` and clearance, as the packet wrote it; only the
+  momentum diameter, core length and free surface revert. The hand model
+  check against D2b had no clearance. Label run 6 accordingly in D2d.
+- **Nit: the P3 T-range starts outside the sweep.** "1.3 m/h at T_nozzle ≈
+  below 1600 K" means the lower end is an extrapolation below the lowest
+  swept temperature, so the 1600/1750/1900 sweep cannot bracket 1.3 m/h
+  (hand at 1600 K: 1.34 steady, 1.24 transient). `score.py --sweep`
+  correctly reports `None` in that case.
+- **Nit: regime value 4 is new** in the `regime` and `regime_field`
+  plotfile variables. Post-processing that assumes {0, 1, 2, 3} needs
+  updating. Regime-4 rows appear only when `spall.removal_events_csv = 1`.
+
+
+## D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh check (completed, review-accepted)
+
+**Archived 2026-09-18 by /plan. Verdict: accepted (non-blocking findings below).**
+Campaign 2026-09-17 21:46 → 09-18 ~12:30 on the D2c binary (`4b4f9c51…`); no
+`src/` edit by D2d. Runs: R1, R2, R4, R5, R6, R7b (2 mm) and R7 (1 mm, stopped
+early at 300 s by the user); optional Oa/Ob/Oc not run.
+
+**Results.**
+- **R1 scored: steady window 470–694 s (marginal: s_c drift 0.0199 vs 0.02
+  mm/s), ROP 1.65 m/h PASS, whole volume 2.59 cm³/s PASS, ΔT_fire 528 K,
+  removal power 2.97 kW (R = 0.78). Mouth 130/114 vs 92/88 mm FAIL, depth-mean
+  Ø 101 FAIL, min Ø to feet depth 77.6 (unresolved at 2 mm).** Settled s_c
+  172 mm (P1 band 160–200 held).
+- **Mesh FAIL: 1 mm +42.8 % ROP over 150–300 s** (2.122 vs 1.486 m/h), gap
+  from 0–50 s (+5 %) growing to +47 %; s_c 133 vs 152 mm, T_rec 1686 vs 1623 K.
+  **Every 2 mm Meier number D2b–D2d is conditional on this.**
+- Domain height: +4.08 % ROP at 0.40 vs 0.70 m (a finding; same loop).
+- P6: 11 held, 1 refuted (P3 1600 K: 0.75 vs 0.91–1.57 m/h), 4 not tested.
+- Free-surface dilution closes about half the mouth excess (R1 vs R6); the far
+  law is a centre closure and barely moves the ring (R1 vs R2).
+- Sweep (window-(a) basis): 0.75 / 1.29 / 1.50 m/h at 1600 / 1750 / 1900 K;
+  run-basis range 1760 K to above 1900 K. **Not to be quoted** (inherits the
+  mesh error; 09-18b).
+- `test_feet_d2c` (new, check-only) PASS with expected-fails mouth, depth-mean
+  Ø, mesh; `test_feet` PASS.
+
+**Diagnosis after the step (`Claude_markdowns/2026-09-18.md` bottom, `2026-09-18b.md`).**
+- Not dt, bin radii, s_c or the pinned-share criterion: gas side identical to
+  150 s (ring T_in within 2 K, T_rec *lower* at 1 mm).
+- **Seed:** the 0.9-quantile pad height is always the 38–40 mm band; burner rate
+  = spall + whole-cell clearance clip of that slow tail (2 mm 14 + 11 = 25 mm/min
+  flat; 1 mm 26 → 37). A whole-cell clip discards a part-heated cell (thermal
+  layer ≈ κ/v ≈ 3 mm), a larger penalty at 2 mm. 2 mm pad is a cone, 1 mm flat.
+- **Amplifier:** faster burner → deeper nozzle plane → flank excluded by s ≤ 0
+  (reach 63→40 vs 71→53 mm) → less enthalpy extracted → hotter exhaust → hotter
+  recirculation → hotter, leaner stagnation → faster. 1 mm hole below the
+  funnel is Ø 80 = the burner.
+- The funnel is made in the first ~120 s with the same flank removal in both
+  meshes: a gas-reach problem, not the seed.
+- Proposed physics: the tube wall (shielding of the 12 mm rim + confinement to
+  the bore and three slots), ranked first rather than fourth.
+
+**Out-of-step changes during the campaign (user-approved, not /verify-ed).**
+"Perf (2026-09-18)" edits in `src/BC/Constant.cpp`, `src/Numeric/Material/Table.H`,
+`MMWSpalling.H` (~1259, ~1310): 1.37× (1.58× with `amr.max_grid_size = 60`),
+checked byte-identical on 30 s 1-rank / 6 s 4-rank and 9–11 unit tests
+(`2026-09-18a.md`). Binary relinked 11:27:47 (`1f4d5a01…`). **dt ladder**
+(`dt_cap.py`, new binary) on R7b_2mm: 8 and 16 ms PASS (ROP −0.1 / −1.0 %),
+32 ms+ FAIL via flake thickness (depth scan on an overshot profile); adopted
+rule 16 ms at 2 mm, 8 ms at 1 mm — recorded in RESULTS but **not yet encoded in
+`run.py`** (`DT_CAP = 4e-3`). Event-location design for the firing drafted
+(`2026-09-18a.md`), not implemented.
+
+**Review findings (non-blocking).** Run the 2639-file D2c witness hash on the
+new binary before building on it; `score.py` changed after the pre-run record
+(`sweep()` only, 08:32, hashes `874e7fee…` → `2de24904…`) — record it in RESULTS
+§5; mesh FAIL real; R1 window marginal; P6 "P1 scored" row should quote 172 mm;
+R4 steady-stop fired on a window the scorer rejects; §6 sweep text mixes bases.
+
+### D2d packet (verbatim, Context → Review findings)
+
+## Context
+
+**D2c (accepted 09-17)** added these options, all default-off:
+- the momentum decay diameter;
+- free-surface dilution;
+- the exponential bin update;
+- signed rock-to-gas heat;
+- burner-body clearance;
+- the far-field h power law (in the helper).
+
+It also wrote the hashed hand predictions, the corrected scoring
+(`score.py`) and cost probes. It made no scored runs.
+
+**What D2c predicts for this campaign** (`studies/d2c_steady/PREDICTIONS.md`;
+bands ±27 % on rates, ±20 mm on Ø and s_c):
+- **Scored steady state:** ring ROP **1.93 m/h**, just above the band top of
+  1.92. s_c is 180 mm and T_rec 1733 K.
+- **Steady window:** it opens at **750 s** (the s_c drift limit is the
+  binding criterion), and the run ends at 950 s. A **≥ 0.65 m** domain is
+  needed. At 0.40 m the centre hits the bottom stop at ≈ 498 s with no
+  window.
+- **Transient ROP**, 150 s to the 0.40 m bottom: 1.79 m/h.
+- **Far-field law:** the ring barely feels n (n = 0.5: +1.2 %; clamp:
+  −5.7 %). n = 0.5 needs a ≥ 1.55 m domain, so run 3 is **not run**. The
+  clamp has no centre equilibrium.
+- **T sweep (steady):** 1.34 / 1.64 / 1.93 m/h at 1600 / 1750 / 1900 K.
+  1.6 m/h falls at ≈ 1732 K. The 1.3 m/h end lies **below** the swept range.
+- **The mouth is predicted to fail:** 134 / 118 mm at 25 / 50 mm, against
+  Fig. 8.8's 92 / 88. The D2b closures with n = 1 give 174 mm at 25 mm.
+  These are the least reliable predictions, because the hand dilution is
+  weaker than the probe's (m_exit/m_stag 2.4 vs 3.7–4.3).
+- **Other hole metrics:** depth-mean Ø 111 mm, whole volume 4.33 cm³/s,
+  mechanical share 0.04 %.
+- **Cost (probes):**
+  - at 2 mm, 6.7 wall-s per simulated s in a 0.40 m domain;
+  - at 1 mm (full domain), 55.6 wall-s per simulated s;
+  - dt is 4 ms at both resolutions;
+  - three runs in parallel are each about 0.72× as fast.
+
+**Decisions made here, before any run** (planner, on the D2c review
+findings; none of them touches a scored closure):
+
+1. **Domain height 0.70 m** for every 2 mm matrix run except the mesh
+   partner.
+   - The hand model needs 0.65 m and runs 13 % fast, so 0.70 m leaves
+     margin.
+   - At 0.70 m the P6 window (a) is still measurable: it runs from 150 s to
+     the time the centre is 0.36 m deep, which is where a 0.40 m domain
+     would have stopped.
+2. **The mesh check becomes a matched transient window on a 0.40 m pair,
+   full domain (not trimmed).**
+   - The pair is `R7_1mm` and a new `R7b_2mm`: the same keys, the same
+     0.40 m height, only dz differs.
+   - Criterion: burner ROP over the **same** window
+     [150 s, min(t_end of the pair)] within **5 %**.
+   - Why: a steady 1 mm run needs about 24 h, which is outside any
+     reasonable budget. Mesh convergence compares the same quantity at the
+     same times at two resolutions, and a steady state is not required for
+     that.
+   - The steady-window mesh criterion of D2c is **replaced**, and the
+     replacement is recorded in `RESULTS.md` before the runs. Also report:
+     - s_c and T_rec at common times;
+     - pinned share;
+     - centre depth at the window end.
+3. **Run 7 is capped at 700 s** of simulated time (≈ 10.8 h alone at the
+   probe rate). `R7b_2mm` gets the same cap. `CAP_1MM = 1200` in `run.py`
+   is replaced.
+4. **The minimum Ø is scored down to the feet depth** (`foot_z` at the
+   window end), not only to the nozzle plane. That 50 mm band is where the
+   burner body passes and where D2b's 78 mm minimum lay.
+   - The depth-mean Ø and the mouth keep the nozzle-plane range.
+   - Report the minimum over both ranges.
+5. **Run 6 label:** "D2b jet closures + n = 1 (keeps exponential, count and
+   clearance)". Only the momentum diameter, core length and free surface
+   revert.
+6. **The T sweep stays at 1600, 1750 and 1900 K** (user's specification).
+   - The 1.3 m/h end is reported as "at or below 1600 K", open-ended.
+   - A 1450 K run is **optional** (O-c), only if the budget allows. Its
+     result is reported as extending the sweep and does not change the
+     scored reading.
+
+**What a D2d result means.**
+- **Score and predictions separately.** Every criterion gets a verdict in
+  the `score.py` table, and every P6 line gets "held" or "refuted".
+- **Report misses as they come out.** The hand model already predicts a
+  steady ROP just above the band and a failing mouth. **No tuning:** do not
+  change any closure, anchor, key value or scoring definition after the
+  first run starts, beyond decisions 1-6 above.
+- **Without a steady window**, the table shows the fallback window,
+  labelled transient, and every steady-gated verdict fails, as `score.py`
+  already does.
+- **The T_nozzle reading is an inference, never a fit.** State it as:
+  "given J-M, n = 1, free-surface dilution and core 8, Meier's 1.3–1.6 m/h
+  corresponds to T_nozzle ≈ X–Y K". Check it against adiabatic minus the
+  cooling-water loss once the author replies. Never reuse it as an input.
+
+**Caveats carried forward:**
+- (C1) Pin state, `nozzle_z`, T_rec, `jet_fs_z0` and `foot_clear_k` are not
+  checkpointed. **A restarted run is not the same run:** rerun from t = 0
+  instead of restarting.
+- (C1/D2a) Score by windows and fits, never by end depth or plotfile
+  staircases.
+- (D2a) The flux acts on the horizontal cell area; there is no side-wall
+  Robin.
+- (D2a) The AMReX `a/max(x, c)` parser bug: `h_expr` is generated
+  numeric-first by `walljet`.
+- (S1b) `V0 = V_cell` switches the Weibull size effect off.
+- (D2a2) `jet_mdot = mdot/4`; **`jet_De_ref` is the full-jet value**
+  (3.556 mm at 1900 K).
+- (D2b) A3 is inert under pinned; the wall treatment is A2.
+- (D2b) T_fire mesh change is 0 % by construction; it is not a mesh metric.
+- (D2b) Martin is out of range for most in-hole columns and the jet is
+  supersonic; both are caveats, not fixes.
+- (D2c) The free surface acts only while the nozzle plane is above the
+  original surface.
+- (D2c) Regime value 4 (mechanical) appears in `regime` / `regime_field` and
+  `removal_events.csv`.
+- **Relinking `bin/` while runs use it is unsafe on macOS: do not build
+  during the campaign.**
+
+## Sources
+
+The tree is uncommitted from Step 20 on. Committing before the campaign is a
+pending user decision; do not commit unless asked.
+
+### Frozen inputs (read, do not edit)
+- `studies/d2c_steady/PREDICTIONS.md`: sha256
+  `a28f19875a7240f73b40eef0d2d70eda050e6147bf3e7d0d9e80a4274b5bd651`.
+  **Verify the hash before the first run and again at the end.**
+- `studies/d2c_steady/RESULTS.md` §0–§4 (nozzle state, dry run, probes,
+  notes).
+- `validation/meier/meier_fig8_8_hole_profile.csv`: visible width, a lower
+  bound, ±5 mm. It reads 96 mm at 10 mm depth, 92 at 25, 88 at 50, 87 at
+  75–125, 84 at 300 and 78 at the 480 mm exit.
+- `validation/meier/sp_meier_pilot/input_feet_d2c`: the scored
+  configuration.
+
+### Scored configuration (unchanged from D2c)
+- **Anchor and jet closure:**
+  - J-M, Martin h_ref at the measured ṁ, T_nozzle 1900 K;
+  - `jet_closure = enthalpy`, `decay`, `jet_entrained_mass = 1`,
+    `jet_T_ent_mode = exhaust`;
+  - `jet_decay_diameter = momentum`, `jet_core_length = 8`,
+    `jet_De_ref = nozzle.de_ref(T)`;
+  - h far law `power`, n = 1.
+- **Free surface, update, signed flux:** `jet_free_surface = 1` (aspect 1,
+  exponent 1), `jet_bin_update = exponential`, `jet_negative_flux = count`.
+- **Feet:** `nozzle_descent = feet`, `pads`, annulus [0.028, 0.040],
+  quantile 0.9, `foot_body_clearance = 1`.
+- **Rest:** wall A2, `pinned_idle_cycles = 2`, quarter domain
+  0.12 × 0.12 m, 2 mm.
+
+### Run matrix (`studies/d2c_steady/run.py` `MATRIX`; amended as below)
+
+| id | change from scored | dz | height | stop | P6 lines scored |
+|---|---|---|---|---|---|
+| `R1_scored` | none | 2 mm | 0.70 m | steady-stop / bottom / cap 1300 s | P1 scored, P2, P4 |
+| `R2_clamp` | `far="clamp"` | 2 mm | 0.70 m | bottom / cap 1300 s | P1 clamp, P2 clamp |
+| `R4_1600` | T 1600 K (h_ref, De_ref per T) | 2 mm | 0.70 m | steady-stop / bottom / cap 1300 s | P3 1600, ordering |
+| `R5_1750` | T 1750 K | 2 mm | 0.70 m | same | P3 1750, ordering |
+| `R6_d2bjet_n1` | momentum off, core 5, free surface off (keeps exponential, count, clearance) | 2 mm | 0.70 m | same | P5 run 6 |
+| `R7_1mm` | dz 1 mm, **full domain** | 1 mm | 0.40 m | bottom / **cap 700 s** | mesh |
+| `R7b_2mm` | mesh partner (new) | 2 mm | 0.40 m | bottom / cap 700 s | mesh; height check vs R1 |
+| `Oa_core5` (optional) | core 5 | 2 mm | 0.70 m | as R1 | P5 core 5 |
+| `Ob_ricou` (optional) | core 3.125 | 2 mm | 0.70 m | as R1 | P5 Ricou |
+| `Oc_1450` (optional) | T 1450 K | 2 mm | 0.70 m | as R1 | sweep extension (not in P6) |
+
+- `R3_n05` is **not run** (P1: it needs ≥ 1.55 m). Report it from the hand
+  model only.
+- **Watchdogs** (as in D2c `run.py`):
+  - stalled: 60 s with no descent;
+  - bottom: centre ≤ 40 mm above the domain bottom;
+  - steady-stop: 50 s after a steady window is found;
+  - the per-run cap.
+- **Output:** sparse `plot_int`, `jet_profile_interval` 10 s,
+  `spall.removal_events_csv = 1`.
+
+**Cost estimate:**
+- 2 mm at 0.70 m ≈ 11.7 wall-s per simulated s alone (6.7 × 350/200), and
+  about 16 in threes.
+- Approximate wall time per run:
+
+  | run | wall time |
+  |---|---|
+  | R1 to about 1000 s | 4.5 h in threes |
+  | R4 or R5 to the 1300 s cap | ≤ 6 h in threes |
+  | R2 (bottom, about 600 s) | about 3 h |
+  | R7b | about 1.8 h |
+  | R7 alone | 10.8 h at the cap |
+
+- **Suggested schedule:**
+  1. batch A: R1, R4, R5;
+  2. batch B: R2, R6, R7b;
+  3. R7 alone overnight;
+  4. the optional runs, if time remains, in one batch.
+- **Budget:** about 22 h of wall time, over two nights plus a day.
+
+### Scoring (D2c definitions, with the decision 2 and 4 amendments)
+- `score.py` definitions are unchanged except:
+  - (i) the minimum Ø is taken over [0, depth of `foot_z` at the window
+    end], with the nozzle-plane minimum also shown;
+  - (ii) `--mesh` uses the matched fixed window
+    [150 s, min(t_end)], not steady windows;
+  - (iii) new window (a): [150 s, t_a], where t_a is the first time the
+    centre depth `lz − (nozzle_z − jet_s_c)` reaches 0.36 m (if never
+    reached, t_a = t_end, flagged). ROP, depth-mean Ø, mouth, volume and
+    mechanical share are reported over window (a) for the P6 checks.
+- **Bands:**
+
+  | criterion | band |
+  |---|---|
+  | ROP | [1.04, 1.92] m/h |
+  | whole volume | [1.98, 2.96] cm³/s |
+  | depth-mean Ø | 85–93 mm |
+  | minimum Ø | ≥ 80 mm (76–80 unresolved) |
+  | mouth | 0 ≤ Ø − width ≤ 10 mm at 25 and 50 mm |
+  | ΔT_fire | 500–560 K |
+  | R | ≤ 1.05 |
+  | mechanical share | > 5 % is a finding |
+  | ledger | round-off |
+  | mesh | ≤ 5 % |
+
+- **Sweep:** `score.py --sweep` uses steady ROPs where they exist.
+  Otherwise it uses window (a) ROPs, **labelled transient**, and the two are
+  never mixed in one interpolation.
+
+### Code pointers (no source edits expected)
+- `studies/d2c_steady/run.py`:
+  - `LZ = 0.40` (line ~66) and `CAP_2MM, CAP_1MM = 1200, 1200` (~67);
+  - `keys(..., lz=LZ, stop=...)` (~86);
+  - `MATRIX` and `D2D_DEFAULT` (~129-141);
+  - `steady_found` (~169);
+  - `project()`, `--stage D2d`, `--cases`, `--jobs`.
+  - **The `.done` metadata uses `wall_s` and `wall_treatment`.**
+- `studies/d2c_steady/score.py`:
+  - `score()` (~113): `drilled = run.lz - nz_end` and the Ø metrics;
+  - `mesh()` (~200);
+  - `sweep()` (~213);
+  - it reuses `d2b_feet_rop/analyze.py` (`Run`, `analyze`, `steady`).
+- `studies/d2b_feet_rop/analyze.py` and `feetmodel.py` are shared with
+  `test_feet`. Do not change their default behaviour.
+- `validation/meier/sp_meier_pilot/test_feet` is the pattern for a
+  check-only scored test.
+- Use `np.trapezoid`; `np.trapz` is gone.
+
+## Goal
+
+1. **Pre-run amendments (scripts only, before any run).**
+   - **`run.py`:**
+     - a per-run `lz` (0.70 m for the matrix, 0.40 m for R7 / R7b);
+     - `CAP_2MM = 1300`, `CAP_1MM = 700`, R7b cap 700 s;
+     - add `R7b_2mm`, rename run 6 to `R6_d2bjet_n1`, add optional
+       `Oc_1450` (h_ref and De_ref from the helpers);
+     - `D2D_DEFAULT` = R1, R2, R4, R5, R6, R7b, R7;
+     - `project()` reprints the schedule at the new heights.
+   - **`score.py`:** amendments (i)–(iii) from §Scoring, plus a
+     `--p6 RUN...` mode that evaluates **every P6 line** mechanically
+     (held / refuted / not tested, with the numbers). Keep the D2c
+     behaviour reachable, e.g. by re-running `--dry-run` on B_JM_A2 and
+     confirming its table is unchanged apart from the new min-Ø row.
+   - **`RESULTS.md` §5, "D2d pre-run record":**
+     - decisions 1–6 verbatim;
+     - the amended definitions;
+     - the PREDICTIONS.md hash check;
+     - the timestamp;
+     - the git-less file hashes of `run.py` / `score.py`.
+     - Written **before** the first `--stage D2d` launch.
+   - **Parse smoke** (≤ 0.5 s simulated) of R1 at 0.70 m and of R7b.
+     Confirm the thermo header matches the D2c probe and the domain is as
+     intended.
+   - **Re-read this packet (check its mtime) before launching.**
+
+2. **The campaign.** Run the matrix in the schedule above (you may reorder
+   for machine load; state the order used).
+   - Launch R7 alone, or with at most one other job.
+   - Do not build while runs are active.
+   - A run that dies abnormally is **rerun from t = 0**; record the failure
+     and the cause.
+   - Do not rerun a completed run to "get a window".
+
+3. **Scoring.** For each run:
+   - the `score.py` table;
+   - the window (a) table;
+   - the `_fig88_profile.csv`.
+   - Then run `score.py --mesh R7b_2mm R7_1mm` and
+     `score.py --sweep R4 R5 R1` (plus `Oc` if it was run).
+   - Also compare R7b (0.40 m) with R1 (0.70 m) over their common window
+     before R7b's bottom. **Report the domain-height effect**: burner ROP,
+     s_c and T_rec differences. More than 2 % is a finding.
+
+4. **Pre-registration check.** Put `score.py --p6` output in RESULTS §6, one
+   line per P6 item: held / refuted / not tested, with the numbers. **Do not
+   explain a refutation away.** Where a refutation has an obvious mechanism,
+   state it as a hypothesis for D3.
+
+5. **`RESULTS.md` §7, the verdict, written for D3.**
+   - **(a) The scored table (R1).** Say explicitly whether a steady window
+     exists, and quote the ROP with its window type.
+   - **(b) The mouth / funnel.** Compare R1 with R6, and state whether
+     free-surface dilution is the funnel lever and how much of the gap to
+     Fig. 8.8 remains.
+   - **(c) The far-field law.** Compare R1 with R2: what the law does to the
+     centre and the ring.
+   - **(d) ROP(T_nozzle)** and the conditional T range, stated as an
+     inference. Include the open lower end, or O-c if it was run.
+   - **(e) The mesh result** (matched window) and the domain-height check.
+   - **(f) Mechanical share and minimum Ø to the feet depth** (does the
+     clearance hold the hole at ≥ 80 mm?).
+   - **(g) Energy:** R, removal power vs 2.83 kW, face power, T_rec.
+   - **(h) The five open physics items** the results point to: supersonic
+     Martin, pad shielding, side-wall heating, cp(T), recovery temperature.
+     Rank them by what the residuals suggest, without testing them.
+
+6. **Check-only regression**
+   `validation/meier/sp_meier_pilot/test_feet_d2c`, mirroring `test_feet`.
+   - It reads R1 (and the mesh pair) and asserts every outcome as recorded,
+     including expected-fails.
+   - It exits non-zero if an outcome changes.
+   - Add a line to `validation/meier/README.md`.
+
+7. **Figures.** In `studies/d2c_steady/`, the following PNGs:
+   - `d2d_rop.png`: `nozzle_z` and ROP vs t for R1, R2, R4–R6, with the
+     band;
+   - `d2d_sc.png`: s_c and T_rec vs t;
+   - `d2d_profile.png`: Ø(z) for R1 and R6 against Fig. 8.8;
+   - `d2d_sweep.png`: ROP vs T_nozzle, hand and simulation;
+   - `d2d_mesh.png`: the R7 / R7b overlay.
+
+8. **Completion notes and takeaways** in this file, as usual, including
+   wall time per run and anything D3 must state.
+
+## Guardrails
+
+- **Frozen:**
+  - the scored configuration and every closure key value;
+  - `PREDICTIONS.md` (hash-checked);
+  - the D2c scoring definitions, except amendments (i)–(iii);
+  - the Fig. 8.8 CSV;
+  - `input_feet_d2c`;
+  - the D2b outputs.
+  Decisions 1–6 are the only departures, and they are recorded before any
+  run.
+- **No source edits** (`src/` untouched, no rebuild).
+  - If a run exposes a code bug, **stop the campaign** and record the
+    evidence in the completion notes, then report it. A fix belongs in a
+    re-planned packet.
+  - The binary used is the D2c final build (13:42:57). Record its checksum
+    in RESULTS §5.
+- **No tuning and no extra "diagnostic" runs** beyond the matrix and the
+  optional runs. No trimmed domains. Nothing is scored from a restart.
+- **Do not reintroduce** J-5/J-10, the 1436 K anchor, feet-depth blending,
+  the inside-Ø 93 volume as the score, or the steady-window mesh criterion.
+- **Do not edit** `jet.py`, `input_drilling`, `test`, `input_feet`,
+  `test_feet`, `PREDICTIONS.md`, or the D2b / D2c probe outputs. The
+  default behaviour of `analyze.py` and `feetmodel.py` must stay
+  byte-identical, so `test_feet` must still PASS; rerun it at the end.
+- **Disk:** plotfiles are sparse. `R7_1mm` at 0.40 m wrote 3.2 GB in a 10 s
+  probe at the probe's `plot_int`, so set R7's plot interval so its total
+  stays under about 10 GB, and state it. Keep `output/` out of git.
+- Do not touch `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`,
+  `configure`, `LICENSE`, or other integrators. Do not commit.
+
+## Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python
+S=tests/MMWSpalling/studies/d2c_steady
+
+# 0. Frozen-input checks (before and after the campaign)
+shasum -a 256 $S/PREDICTIONS.md      # must be a28f1987...5bd651
+shasum -a 256 bin/mmwspalling-3d-g++ # record in RESULTS §5; do not rebuild
+
+# 1. Pre-run amendments, then:
+$PY $S/score.py --dry-run tests/MMWSpalling/studies/d2b_feet_rop/output/B_JM_A2   # unchanged except the min-Ø row
+$PY $S/run.py --project                       # schedule at 0.70 / 0.40 m
+$PY $S/run.py --write-input                   # must leave input_feet_d2c unchanged (diff it)
+# parse smokes (<= 0.5 s): via run.py with a short stop, or mpirun on the generated keys
+
+# 2. Campaign (after RESULTS §5 is written)
+$PY $S/run.py --stage D2d --cases R1_scored R4_1600 R5_1750 --jobs 3
+$PY $S/run.py --stage D2d --cases R2_clamp R6_d2bjet_n1 R7b_2mm --jobs 3
+$PY $S/run.py --stage D2d --cases R7_1mm --jobs 1          # overnight, alone
+# optional: --cases Oa_core5 Ob_ricou Oc_1450 --jobs 3
+
+# 3. Scoring
+O=$S/output
+$PY $S/score.py $O/R1_scored $O/R2_clamp $O/R4_1600 $O/R5_1750 $O/R6_d2bjet_n1 $O/R7b_2mm $O/R7_1mm
+$PY $S/score.py --mesh $O/R7b_2mm $O/R7_1mm
+$PY $S/score.py --sweep $O/R4_1600 $O/R5_1750 $O/R1_scored
+$PY $S/score.py --p6 $O/R1_scored $O/R2_clamp $O/R4_1600 $O/R5_1750 $O/R6_d2bjet_n1
+
+# 4. Regressions (check-only)
+$PY tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet_d2c
+$PY tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet   # must still PASS
+```
+
+## Claude completion notes
+
+**Implemented 2026-09-17 21:46 → 2026-09-18 ~12:30 (D2d campaign).** Not
+committed.
+
+**Files changed by D2d** (all under `tests/`; `src/` untouched by this step,
+no rebuild):
+- `studies/d2c_steady/run.py`: decisions 1–3 and 5 (`LZ = 0.70`,
+  `LZ_MESH = 0.40`, `CAP_1MM = 700`, `R6_d2bjet_n1`, `R7b_2mm`), per-run
+  height/stop/plot interval, `D2D_DEFAULT`. `--write-input` is pinned to the
+  frozen D2c values, and `input_feet_d2c` is byte-identical.
+- `studies/d2c_steady/score.py`: minimum Ø to the feet depth (decision 4),
+  matched-window `--mesh`, `--window-a`, `--p6`, and a single-basis `--sweep`.
+- `studies/d2c_steady/plots.py` (new) and the five `d2d_*.png` files.
+- `studies/d2c_steady/RESULTS.md`: §5 (pre-run record, 2026-09-17 21:46:49,
+  before the first run), §6 (P6), §7 (verdict (a)–(h)).
+- `validation/meier/sp_meier_pilot/test_feet_d2c` (new, check-only), with
+  `EXPECTED` and `MESH_EXPECTED = "FAIL"` filled.
+- `validation/meier/README.md`: a D2d status line.
+
+**Frozen inputs.** `PREDICTIONS.md` sha256 `a28f1987…5bd651` and mtime
+2026-09-17 13:54:01 were checked before the campaign and again at the end:
+unchanged. `jet.py`, `input_drilling`, `test`, `input_feet`, `test_feet`,
+`input_feet_d2c` and the D2b/D2c probe outputs were not edited.
+`analyze.py`/`feetmodel.py` defaults are unchanged.
+
+**Runs** (order: batch A R1/R4/R5, batch B R2/R6/R7b, then R7 alone; Oa, Ob
+and Oc not run for budget):
+
+| run | status | t_end | wall |
+|---|---|---|---|
+| R1_scored | steady-stop | 694.1 s | 3.85 h |
+| R2_clamp | bottom | 727.8 s | 2.64 h |
+| R4_1600 | steady-stop (watchdog; the scorer finds no window) | 883.7 s | 4.50 h |
+| R5_1750 | cap | 1299.9 s | 5.65 h |
+| R6_d2bjet_n1 | steady-stop | 1097.5 s | 3.67 h |
+| R7b_2mm | bottom | 561.2 s | 1.39 h |
+| R7_1mm | stopped early (user decision) | 300.1 s | 5.01 h |
+
+- No abnormal deaths, no restarts, no reruns.
+- The wall times include periods of heavy host load (a game plus swapping
+  overnight, and browsers on 09-18), so they are not clean cost numbers. The
+  clean rate at 1 mm was about 54 wall-s per simulated s.
+- Output is about 11.4 GB for the seven D2d runs (R7 1.6 GB) and is git-ignored.
+
+**Tests.**
+- `test_feet_d2c`: **PASS** (all outcomes as recorded; expected-fails:
+  mouth, depth-mean Ø, mesh).
+- `test_feet` (D2b): **PASS**, unchanged.
+- The unit test `jet_d2c` was not rerun; there were no source changes in
+  this step.
+
+**Headline results** (RESULTS §6–7):
+- R1 has a **steady window 470–694 s**. ROP is 1.65 m/h PASS, the whole
+  volume 2.59 cm³/s PASS, ΔT_fire 528 K, and the removal power 2.97 kW
+  (R = 0.78).
+- The mouth (130/114 vs 92/88 mm) and the depth-mean Ø (101 mm) FAIL. The
+  minimum Ø to the feet depth is 77.6 mm, unresolved at 2 mm.
+- **Mesh FAIL:** the 1 mm ROP is +42.8 % over 150–300 s (2.12 vs 1.49 m/h).
+  The gap is systematic and grows from 0–50 s onwards. **The 2 mm Meier
+  agreement is not mesh-converged.**
+- Domain height: +4.08 % ROP at 0.40 vs 0.70 m (a finding).
+- P6: 11 held, **1 refuted (P3 at 1600 K: 0.75 vs 0.91–1.57 m/h)**, 4 not
+  tested.
+- Free-surface dilution closes about half of the mouth excess (R1 vs R6).
+  The far law is a centre closure; it barely moves the ring (R1 vs R2).
+- Sweep, window (a) basis: 0.75 / 1.29 / 1.50 m/h at 1600 / 1750 / 1900 K.
+
+## Implementation takeaways
+
+- **The mesh is D3's first problem.** Resolve it before any of the five
+  physics items. At 1 mm the centre stand-off stalls near 130 mm (versus
+  150 mm at 2 mm), T_rec runs +63 K, and the burner accelerates past the
+  band. The campaign does not isolate which closure reads cell-scale geometry
+  (candidates: jet bin radii vs dz, s_c from the solid top, the clearance
+  band, the pinned-share criterion). A 1 mm run at 0.40 m costs about
+  54 wall-s per simulated s, about 4.5 h to 300 s.
+- **The R7 early stop** (user, 2026-09-18) is recorded in `R7_1mm.done`
+  (`status stopped_early`, `stop_reason`). The matched window 150–300 s is
+  valid under decision 2, and the gap already exceeds 5 % before 150 s.
+- **Watchdog/scorer mismatch (R4).** The steady-stop watchdog fired on a
+  window (680 s onwards, found at 833.5 s) that the scorer rejects at t_end,
+  because the last 50 s held stalled sub-fits. R4 therefore stopped before
+  its centre reached 0.36 m, and its window (a) runs to t_end (flagged). Not
+  rerun (guardrail). For D3: re-validate the window at the stop time before
+  stopping.
+- **Gotcha for scripts:** `pkill -f R7_1mm` matches *any* process whose
+  command line contains the run name, including shell waiters (two of mine
+  were killed). Match on the binary path plus the `plot_file` instead.
+- **Out-of-scope changes made by another session during the campaign**
+  (not D2d; flagged for the reviewer):
+  - On 2026-09-18 at 11:26–11:27, "Perf (2026-09-18)" edits were made to
+    `src/BC/Constant.cpp`, `src/Numeric/Material/Table.H` and two blocks in
+    `src/Integrator/MMWSpalling.H`, and `bin/mmwspalling-3d-g++` was relinked
+    (new sha256 `1f4d5a01…`).
+  - The campaign binary `4b4f9c51…` survives as
+    `bin/mmwspalling-3d-g++.live` (its old inode), so R7, which was running at
+    the time, kept the campaign image. Every D2d run used `4b4f9c51…`.
+  - A timestep study, `studies/d2c_steady/dt_cap.py`
+    (`output/R7b_2mm_dt16`, `_dt8`), was started from that session at 12:01
+    on the **new** binary. It is not part of D2d, and nothing here reads it.
+- **The P3 refutation stands.** The hypothesis for D3 is intermittent firing
+  when the gas is only 150–200 K above T_fire, which is outside the hand
+  model.
+- **The ranking in §7 (h) is conditional on the mesh.** It is side-wall
+  heating > recovery T > supersonic Martin > pad shielding > cp(T).
+
+
+## Review findings
+
+Reviewed 2026-09-18, in a separate session from the implementation.
+
+Verdict: accepted
+
+### What was checked
+- **Scope.** Deliverables 1–8 are all present:
+  - the amendments to `run.py` and `score.py`;
+  - RESULTS §5 (pre-run record), §6 (P6) and §7 (a)–(h);
+  - `test_feet_d2c`, the Meier README line, the five `d2d_*.png` files,
+    and the completion notes.
+- **Deliberately not done, and disclosed:** the optional runs Oa, Ob and Oc
+  (budget), and the early stop of R7 at 300.1 s (a user decision, recorded
+  in `R7_1mm.done`). The matched window [150 s, min(t_end)] = 150–300 s is
+  valid under decision 2.
+- **Frozen inputs.**
+  - `PREDICTIONS.md` sha256 is `a28f1987…5bd651` now; its mtime is
+    2026-09-17 13:54:01.
+  - `run.py` still matches its §5 hash (`240a0915…`).
+  - The decisions in §5 match §Context 1–6.
+  - `input_feet_d2c` has mtime 09-17 21:43, from the byte-identical
+    `--write-input`.
+- **Binary used.** Every D2d run folder (R1, R2, R4, R5, R6, R7b, R7) carries
+  the same ALAMO `diff.patch` (md5 `a78ec4b0…`) with no "Perf (2026-09-18)"
+  block. The campaign therefore ran the D2c source.
+  - The D2c binary survives as `bin/mmwspalling-3d-g++.live`, sha256
+    `4b4f9c51…`, mtime 09-17 13:42:57, matching §5.
+- **Run metadata.** Each `.done` carries the matrix values: heights 0.70 m
+  and 0.40 m, caps 1300 s and 700 s, per-temperature `h_ref` and `De_ref`
+  (full-jet value), and R6 with momentum off, core 5 and free surface off.
+- **Headline numbers, recomputed from `thermo.dat` by linear fits:**
+  - **Mesh:** burner ROP over 150–300 s is 1.486 m/h at 2 mm and
+    2.122 m/h at 1 mm, **+42.8 %**. s_c at 300 s is 152.0 vs 132.7 mm, and
+    T_rec 1623 vs 1686 K. The 1 mm 50 s blocks climb 1.76 → 2.22 m/h.
+  - **R1 steady window, 470–694 s:** ROP 1.647 m/h; 50 s sub-fits 1.55 to
+    1.66; ledger ≤ 8.1e-15.
+  - **R1 s_c there:** mean 172 mm, range 168–175, inside P1's 160–200 mm.
+- **Regression tests, from the transcript:**
+  - `test_feet_d2c` ran at 11:10:40Z, after its last edit (11:10:30Z):
+    `PASS (all outcomes as recorded)`, rc 0, mesh FAIL as expected.
+  - `test_feet` (D2b): PASS, rc 0.
+  - Nothing was rerun by me: no output was missing or stale, and the
+    numbers I recomputed agree.
+- **Guardrails.**
+  - D2d itself made no `src/` edit and no build.
+  - No trimmed domain and no restart; no forbidden item was reintroduced.
+  - `output/` is git-ignored, and R7 is 1.6 GB.
+- **Takeaways.** They are specific enough for D3: mesh first, the R4
+  watchdog mismatch, the `pkill` gotcha, the out-of-scope edits, the P3
+  refutation, and a ranking conditional on the mesh.
+
+### Findings (non-blocking; the next /plan should act on the first two)
+- **Out-of-scope source and binary changes are in the tree, unreviewed.**
+  - Another session made "Perf (2026-09-18)" edits to `src/BC/Constant.cpp`,
+    `src/Numeric/Material/Table.H` and two blocks of
+    `src/Integrator/MMWSpalling.H` (lines ~1259 and ~1310), and relinked
+    `bin/mmwspalling-3d-g++` (sha256 `1f4d5a01…`, 11:27:47). That broke the
+    "do not build during the campaign" guardrail mid-R7; R7 survived only
+    because macOS kept the old inode.
+  - Per that session's memory note and `Claude_markdowns/2026-09-18a.md`,
+    the edits were user-approved and checked byte-identical against the
+    campaign binary: a 30 s run on 1 rank, 6 s on 4 ranks (2 mm config),
+    and 9 unit tests.
+  - That is not a `/verify`ed step, and the full D2c witness set has not
+    been hashed on the new binary.
+  - **Before D3 builds on it, run the default-identity hash check**
+    against `…ac0a0f5a…/scratchpad/d2c/post.md5` (2639 files), or
+    treat the Perf change as its own reviewed step.
+  - The `dt_cap.py` study outputs (`output/R7b_2mm_dt16`, `_dt8`) were made
+    with the new binary; their `diff.patch` contains the Perf blocks. Do not
+    mix them with D2d results.
+- **`score.py` was edited after the pre-run record, and this is not
+  disclosed.**
+  - Its sha256 is now `2de24904…`, against `874e7fee…` recorded in §5 under
+    "nothing below may change once a run has started".
+  - The transcript shows a single edit, at 2026-09-18 08:32 local, after
+    R1–R6 had finished. It rewrote `sweep()` only, so that steady and
+    window-(a) ROPs are never mixed in one interpolation, which is the
+    packet's own §Scoring rule. The pre-run code had mixed R1's steady
+    1.65 m/h with two transient points.
+  - The change is legitimate in substance. It moves the inferred range to
+    1760 K to above 1900 K on the transient basis.
+  - Still, it should be recorded in RESULTS §5 as a post-start amendment,
+    with both hashes. The planner or user should add that note when
+    archiving.
+- **The mesh FAIL (+42.8 %) is real and systematic**, as I recomputed it.
+  Every 2 mm Meier number from D2b to D2d is conditional on it. D3 should
+  make it the first item, as §7 says.
+- **R1's steady window is marginal.** The least-squares s_c drift over
+  470–694 s is 0.0199 mm/s against the 0.02 limit. So "steady" is true
+  under the scorer's rule but by 0.5 % of the limit. Quote the window with
+  that margin.
+- **The P6 "P1 scored" row reads oddly.** It quotes the window-(a) mean s_c
+  (156 mm, outside 160–200) where the band applies to the *settled* s_c,
+  which is 172 mm in R1's steady window. "Held" is correct, but the row
+  should quote 172 mm.
+- **R4's steady-stop fired on a window the scorer rejects** (disclosed). R4
+  therefore never reached the 0.36 m centre depth, and its window (a) is
+  flagged. The P3 refutation at 1600 K (0.75 vs 0.91–1.57 m/h) stands
+  regardless.
+- **Nit: the §6 sweep text is internally inconsistent.** The pre-registered
+  reading "1.3 m/h at or below 1600 K" is kept alongside the run-basis
+  "1.3–1.6 m/h ↔ 1760 K to above 1900 K". The two bases are stated, but D3
+  should quote only the run basis, with the mesh caveat that 1 mm would put
+  it lower.
+
+
+## D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed)
+
+**Archived 2026-09-18 by /plan at the user's request. No review verdict: the
+packet has completion notes and takeaways but no `## Review findings`.** P-b
+and P-c at 1 mm were stopped by the user at 16:53 to move to a physical support
+rule, so the amplifier half of the decision rule is untested.
+
+**Summary.**
+- **Perf (09-18) ACCEPTED:** 2639/2639 witness files identical on the Perf
+  binary. `amr.max_grid_size = 60` agrees (only `ledger_err` differs, 4.4e-16).
+- New default-off `jet_T_ent_mode = rec_fixed` + `jet_T_rec_fixed` (exhaust path
+  with constant T_mix; invariant derivation in a comment; aborts). Member
+  `jet_rec_fixed`; `jet_T_ent_exhaust` now means "recirculation on".
+  `unit/jet_d2c` 30 checks PASS (new (k)); witnesses 2639/2639 after the build
+  (binary `6d047b50…`, 14:41:45).
+- New `studies/d2e_mesh/`: `run.py` (imports d2c `run.py` via importlib; dt
+  policy **16 ms at 2 mm, 8 ms at 1 mm**; no steady-stop; `--mgs-check`,
+  `--identity`, `--gate`, `--kill`, `--list`), `rim.py`, `predict.py`,
+  `PREDICTIONS.md` (`7245201c…`), `analyze_pairs.py`, `RESULTS.md`,
+  `note_support_rule.md`, `witness/` (localised scripts + md5 sets).
+- Dated addenda to `studies/d2c_steady/RESULTS.md` §5–§7.
+
+**Results.**
+- B0-2 mm byte-identical to `R7b_2mm_dt16`; 1 mm step gate PASS (≤ 0.67 % on
+  blocks, s_c 0.55 %, T_rec 0.01 %); B0 gap +42.7 % (reproduces D2d).
+- **P-a (clearance off): gap +2.0 / +0.1 % early, +0.1 % over the matched
+  window; every paired quantity ≤ 0.6 %; rim by spall only (24–27 mm/min at
+  both meshes). The seed is the whole-cell clearance clip.** "Burner slower than
+  B0" REFUTED: faster in every block (the clip replaced spall, it did not add).
+- P-b, P-c not tested; fallbacks (pin idle timeout, half-cell increment) not
+  needed.
+- **Speed-up realised at 1 mm: 19.5 wall-s per simulated s vs 54 in D2d (2.8×).**
+
+**User decision (16:53, Meier Ch. 8 pp. 209–223).** The burner hangs on
+tensioned coil and rests on the **highest rock touching its feet**; it descends
+as that rock is removed; operator jolts keep it free; clearance is set by the
+advance rate. The 0.9 quantile and the clip are workarounds; D2f replaces them.
+Every Meier number D2b–D2d is superseded once the rule changes; gas-side
+closures, the mouth result and non-Meier validations are unaffected.
+
+**Takeaways worth keeping.** Two harnesses named `run.py` (load d2c's via
+`importlib.spec_from_file_location`); a run ends at the last step before
+`stop_time` (compare to its own t_end); at 16 ms thermo rows fall every 0.096 s;
+`ps | grep` with a `bin/...` path self-matches; `witness/post_all.sh` takes a
+label; use `run.py --kill NAME`, never `pkill -f NAME`; 1 mm plotfiles only at 0
+and the stop (≈ 4.7 GB otherwise).
+
+### D2e packet (verbatim, Context → Implementation takeaways)
+
+## Context
+
+**D2d (accepted 09-18).**
+- Scored 2 mm run R1 has a steady window (470–694 s, marginal: s_c drift 0.0199
+  vs 0.02 mm/s), with ROP 1.65 m/h and whole volume 2.59 cm³/s both passing.
+  The mouth and depth-mean Ø fail.
+- **Mesh FAIL:** 1 mm is **+42.8 %** faster over 150–300 s (2.122 vs
+  1.486 m/h, 0.40 m full domain). **Every 2 mm Meier number from D2b to D2d is
+  conditional on this.** The T_nozzle inference is not to be quoted.
+
+**Diagnosis from the logs (09-18b; reproducible from `studies/d2c_steady/output/{R7b_2mm,R7_1mm}`).**
+- **Ruled out:**
+  - dt (the 2 mm ladder is flat to 16 ms);
+  - bin radii;
+  - s_c;
+  - the pinned-share criterion.
+  The gas side is identical to 150 s: ring T_in within 2 K, and T_rec is
+  *lower* at 1 mm.
+- **Seed, the rim clip cycle.**
+  - The 0.9-quantile pad height is always the 38–40 mm band.
+  - Burner rate = spall + whole-cell clearance clip of that slow tail:
+    - 2 mm: 14 + 11 = 25 mm/min, flat;
+    - 1 mm: 26 → 37 mm/min.
+  - A whole-cell clip discards a part-heated cell (thermal layer ≈ κ/v ≈
+    3 mm), which is a larger penalty at 2 mm.
+  - The 2 mm pad is a cone; the 1 mm pad flattens.
+- **Amplifier, the gas loop.**
+  - A faster burner puts the nozzle plane deeper, so more of the flank is
+    excluded by s ≤ 0.
+  - Less enthalpy is extracted, so the exhaust is hotter.
+  - Recirculation (`exhaust` mode) carries that into a hotter, leaner
+    stagnation, so the burner goes faster still.
+  - The 1 mm hole below the funnel is Ø 80, the burner itself.
+- **Caveats (09-18b §6):**
+  - the rim-restart argument is inferred from the spall/clip split, not from
+    per-column temperature histories;
+  - the loop gain is read from two runs;
+  - R7 stopped at 300 s while still accelerating.
+
+**This step tests the diagnosis with one-switch pairs before any new physics.**
+The switches are **diagnostics, not candidate scored configurations**.
+
+**Amended 2026-09-18 after user review (before implementation).** The
+amendments cover:
+- the budget and its two conditions;
+- the B0 definition;
+- a P-a stop at 200 s;
+- run order (the decision pairs first);
+- the `rim.py` tolerance of 0.5 mm;
+- the D2b prior for P-a;
+- the named fallback.
+
+**Budget depends on two things passing** (Goal 0 speed-up acceptance, and
+the 8 ms / 1 mm step gate):
+
+| outcome | 1 mm wall-s per sim-s | 1 mm run time (B0 300 s, P-a 200 s, P-b 300 s, P-c 300 s) | wall, two at a time |
+|---|---|---|---|
+| both pass | ≈ 20 (54 / 1.37 / 2) | ≈ 6 h | **≈ 4 h** |
+| Perf rejected, 8 ms passes | ≈ 27 | ≈ 8 h | ≈ 5.5 h |
+| Perf accepted, 1 mm stays 4 ms | ≈ 39 | ≈ 12 h | ≈ 8 h |
+| both fail (campaign rate) | 54 | ≈ 16.5 h | ≈ 11 h |
+
+- The 2 mm runs add under 1 h in every case.
+- **The run order is chosen so the decision survives a budget cut:** P-a
+  and P-b carry the decision rule. B0 at 1 mm serves only as the step gate
+  and the gap reproduction. P-c is the lowest-value pair and is the first to
+  drop.
+
+**Speed-up work already in the tree (user, 09-18; not yet /verify-ed):**
+- **"Perf (2026-09-18)" source edits:**
+  - `src/Numeric/Material/Table.H`: seed table in `T_of_H`;
+  - `src/Integrator/MMWSpalling.H` ~1259 (static ghost fills once) and ~1310
+    (skip `exp` when `kappa_damage_alpha == 0`), plus the `BeamSource`
+    P == 0 return;
+  - `src/BC/Constant.cpp`: early return for interior boxes.
+- **Status:** the binary was relinked 09-18 11:27:47 (`1f4d5a01…`). The
+  edits were checked byte-identical on a 30 s 1-rank run, a 6 s 4-rank run
+  and 9–11 unit tests, but **not on the 2639-file D2c witness set.** They
+  give 1.37× from the code, and 1.58× with `amr.max_grid_size = 60`.
+- **dt ladder** (`studies/d2c_steady/dt_cap.py`, R7b_2mm, 4 → 128 ms):
+  - 8 and 16 ms PASS (ROP −0.1 / −1.0 %, Ø within 0.5 mm);
+  - 32 ms and above FAIL, via flake thickness (the depth scan sees an
+    overshot profile).
+  - Adopted rule: **16 ms at 2 mm, 8 ms at 1 mm** (≈ 5.7 K/step by the
+    harness formula). It is **not yet encoded** in `run.py`
+    (`DT_CAP = 4e-3`), and **8 ms at 1 mm is untested**; it is extrapolated
+    from K/step ∝ dt/dz.
+- **Event-location design** for the firing (`2026-09-18a.md`): not in this
+  step.
+
+**Caveats carried forward:**
+- (C1) Pin state, `nozzle_z`, T_rec, `jet_fs_z0` and `foot_clear_k` are not
+  checkpointed. Rerun from t = 0; never restart.
+- (C1/D2a) Score by windows and fits.
+- (D2a) Flux acts on the horizontal area.
+- (D2a) Parser `a/max(x, c)` bug.
+- (S1b) V0 = V_cell.
+- (D2a2) `jet_mdot = mdot/4`; `jet_De_ref` is the full-jet value.
+- (D2b) A3 is inert under pinned.
+- (D2c) Free surface only while the nozzle plane is above the original
+  surface.
+- (D2c) Regime 4 = mechanical.
+- (D2c) `foot_body_clearance = 1` **aborts unless `foot_rule = pads`.**
+- **Relinking `bin/` while runs use it is unsafe on macOS.** One build
+  (Goal 1), before any study run, and none after, for the whole step.
+- **`pkill -f <run name>` also kills shell waiters.** Match on the binary
+  path plus `plot_file`.
+
+## Sources
+
+The tree is uncommitted from Step 20 on. Do not commit unless asked.
+
+### The mesh pair to reproduce (D2d)
+- `studies/d2c_steady/run.py` `MATRIX["R7b_2mm"]` / `["R7_1mm"]`: the scored
+  configuration at `LZ_MESH = 0.40` m, full 0.12 × 0.12 quarter domain.
+- Scored configuration (`input_feet_d2c`):
+  - **Jet:**
+    - J-M, 1900 K;
+    - `jet_closure = enthalpy`, `decay`, entrained mass;
+    - `jet_T_ent_mode = exhaust`;
+    - momentum D_e, core 8;
+    - power law n = 1.
+  - **Free surface, update and flux:** free surface on (aspect 1, exponent 1),
+    `exponential`, `count`.
+  - **Feet:** feet pads, [0.028, 0.040], q 0.9, `foot_body_clearance = 1`.
+  - **Rest:** A2, `pinned_idle_cycles = 2`.
+- D2d numbers (burner ROP, 50 s blocks, 1 mm / 2 mm, m/h):
+
+  | block | 1 mm | 2 mm | gap |
+  |---|---|---|---|
+  | 0–50 s | 1.31 | 1.25 | +5 % |
+  | 50–100 s | 1.76 | 1.56 | +13 % |
+  | 100–150 s | 1.89 | 1.50 | +26 % |
+  | 150–200 s | 2.00 | 1.46 | +37 % |
+  | 200–250 s | 2.13 | 1.49 | +43 % |
+  | 250–300 s | 2.22 | 1.51 | +47 % |
+
+  - Over 150–300 s: 2.122 vs 1.486 (+42.8 %).
+  - At 300 s: s_c 133 vs 152 mm, T_rec 1686 vs 1623 K, `jet_P_face`
+    1012 vs 1309 W, `jet_r_reach` 40 vs 53 mm.
+- The dt ladder (`studies/d2c_steady/RESULTS.md` "Timestep ladder") gives
+  R7b_2mm at 16 ms: fit ROP 150–550 s = 1.546 m/h (4 ms: 1.562).
+
+### Witness set (Perf acceptance)
+- Reference hashes: `/private/tmp/claude-501/-Users-tzetze20-amr-tools-alamo/ac0a0f5a-4af6-48bf-b61d-9009cf0c8681/scratchpad/d2c/post.md5`
+  (2639 files, D2c final binary), with `hash.sh` and `post_all.sh` in the same
+  folder.
+- **`/private/tmp` is volatile.** Copy all three into
+  `tests/MMWSpalling/studies/d2e_mesh/witness/` first thing.
+- Coverage:
+  - `unit/{jet_enthalpy, robin_feet, robin_jet, robin_pinned, scalar_flaw, ...}`;
+  - the S1 smoke;
+  - Meier `dev2d`.
+
+### Code this step touches
+- **`JetEnthalpyMarch` (`MMWSpalling.H` ~1740–1920):**
+  - T_mix = `exhaust ? jet_T_rec_next : T_ent`;
+  - the march floor, free-surface dilution ambient and every invariant
+    reference use `jet_T_ent`;
+  - P_recirc = (m − mdot)·cp·(T_mix − T_ent).
+- **`jet_T_ent_mode` parse** (~5004): `fixed | exhaust`; `exhaust` requires
+  `jet_entrained_mass = 1`.
+- **Clearance/pads abort** (~5176).
+- **Thermo registration** (~598–650): on-only blocks, appended.
+- **Why P-b needs code:** setting `jet_T_ent = 1550` under `fixed` (09-18b's
+  wording) would also move the march floor and the free-surface dilution
+  ambient to 1550 K. That changes two more things than the switch intends.
+
+### Helpers to reuse (import; do not edit their defaults)
+- `studies/d2c_steady/run.py`: `keys()`, `job()`, `run_one()`,
+  `read_thermo()`, `MATRIX`, `dt_rule`, `q_max`.
+  - `dt_cap.py` shows the override pattern: rebind `R.dt_rule`.
+- `studies/d2c_steady/score.py`: `score()`, `mesh()`, `load_run()`.
+- `studies/d2b_feet_rop/analyze.py` (`Run`, `analyze`). `test_feet` and
+  `test_feet_d2c` import these.
+
+## Goal
+
+### 0. Perf acceptance (first; no source edit yet)
+- Copy the witness files (§Sources).
+- Rebuild **nothing**. With the current binary (`1f4d5a01…`, the Perf
+  source), run `post_all.sh` and hash with `hash.sh`.
+- **Compare against `post.md5`: all 2639 must be identical.**
+  - If any file differs, **stop**. Report which files differ and the diff of
+    thermo/CSV values. The Perf edits then need the user's decision, not a
+    workaround.
+- **`max_grid_size` check:**
+  - B0 at 2 mm, 16 ms, 30 s, 4 ranks, `amr.max_grid_size = 20` vs `60`.
+  - Compare `thermo.dat`, `removal_events.csv` and `jet_profile.csv`: byte
+    identity, else ≤ 1e-12 relative, with the difference stated.
+  - Use 60 in this step only if they agree. Record the wall-time ratio.
+
+### 1. Code: fixed recirculation temperature (default-off)
+- New value `surface_patch.jet_T_ent_mode = rec_fixed`, with
+  `surface_patch.jet_T_rec_fixed` [K], required under `rec_fixed`.
+- **Under `rec_fixed`:**
+  - `T_mix = jet_T_rec_fixed`;
+  - everything else is exactly as under `exhaust`: floor at `jet_T_ent`,
+    dilution ambient `jet_T_ent`, invariants and `P_recirc` with T_mix;
+  - `jet_T_rec_next` is not used.
+- **Requires `jet_entrained_mass = 1`.**
+- **Thermo:** as `exhaust` (`jet_T_rec` reports the fixed value,
+  `jet_P_recirc`).
+- **Enthalpy invariant with a constant mixing temperature.** Today the
+  recirculation budget term is derived under `exhaust`. Make it explicit for
+  `rec_fixed`, in the code comment and the invariant check:
+  - `P_face + P_exhaust = mdot·cp·(T_nozzle − T_ent) + (m − mdot)·cp·(jet_T_rec_fixed − T_ent)`;
+  - `jet_P_decay = 0` to 1e-9 relative;
+  - `P_face + P_exhaust = P_cap` as today.
+- **Parse aborts:**
+  - `jet_T_rec_fixed` missing, non-finite, or `< jet_T_ent`;
+  - `rec_fixed` without entrained mass.
+- **Unit checks**, appended to `unit/jet_d2c` as (k):
+  - `rec_fixed` with `jet_T_rec_fixed = jet_T_ent` is **bit-identical** to
+    `fixed` with entrained mass;
+  - one `rec_fixed` case with `jet_T_rec_fixed = 1550 K`, where the
+    invariant above holds every step (read from thermo:
+    `jet_P_face + jet_P_exhaust` vs the budget, and `jet_P_decay`);
+  - `jet_T_rec` is constant;
+  - the aborts fire.
+- After the change, build **once, before any study run**. Rerun the witness set and
+  `unit/jet_d2c`: **2639 identical** and **26 + (k) PASS**.
+
+### 2. Harness `tests/MMWSpalling/studies/d2e_mesh/run.py` (new; imports d2c `run.py`)
+- **Timestep policy:**
+  - a fixed step per mesh: `DT_MESH = {2 mm: 16 ms, 1 mm: 8 ms}`;
+  - halve only if the harness formula `q_max·dt/(ρCp·dz)` exceeds **6 K**
+    for that run's `q_max`;
+  - record dt and K/step in `.done`.
+  - Do **not** edit `studies/d2c_steady/run.py`; it is D2d's hashed record.
+- **Domain:** 0.40 m full domain (the D2d mesh-pair geometry), and
+  `max_grid_size` per Goal 0.
+- **Stops:**
+  - **P-a: 200 s.** The seed shows in 0–100 s with identical gas, and
+    150–200 s is one block past the flank switch-off;
+  - P-b, P-c and B0: 300 s;
+  - the stall watchdog (60 s) is on;
+  - **no steady-stop.**
+- **Output:**
+  - `jet_profile_interval` 10 s;
+  - `removal_events_csv = 1`;
+  - plot interval 150 s (1 mm) / 100 s (2 mm);
+  - under 3 GB per 1 mm run.
+- **Kill helper:** match on the binary path plus `plot_file`, not on the run
+  name.
+
+### 3. Rim reconstruction tool `d2e_mesh/rim.py`
+- **Inputs:** `removal_events.csv` and `thermo.dat`.
+- **What it computes:**
+  - rebuild the per-column `k_top` staircase;
+  - apply `FeetDescent`'s pad rule (3 equal sectors of the observed
+    azimuth range, nearest-rank ceil(qn)−1, mean over pads);
+  - report the reconstructed `foot_z` against the thermo value.
+    **Acceptance: ≤ 0.5 mm at every checked time; report the worst.**
+    - Exact agreement is not expected. The staircase is inferred from
+      cumulative removal, and clip events do not always land on half cells.
+    - 09-18b matched to 0.3 mm.
+- **Outputs per 50 s block:**
+  - recession per 2 mm radial band over 28–60 mm, split into **spall**
+    (regimes 1–3) and **clip** (regime 4), in mm/min;
+  - which band sets each pad height;
+  - pad shape, v(r) over 28–40 mm;
+  - removal in the 40–60 mm band (cm³/s, ×4).
+- **Validate on the D2d pair first.** It must reproduce 09-18b §2.3:
+  - 2 mm rim 14 + 11 ≈ 25 mm/min;
+  - 1 mm 12→17 + 14→19 (26→37);
+  - pad height always in the 38–40 mm band.
+  - If it can't, say so before the pairs run.
+
+### 4. Pre-registration `d2e_mesh/PREDICTIONS.md` (sha256 + mtime in RESULTS §0, before any pair run)
+Use exactly the expectations and decision rule below. Add a numeric
+expectation per row only if it comes from the D2d logs or `rim.py`, not from
+new modelling.
+
+**What "baseline" means.** B0 is not a new physics run; it checks the
+harness and the step.
+- **B0 at 2 mm is the harness identity check.** Under the adopted policy it
+  runs at 16 ms, so its reference is the ladder run
+  **`studies/d2c_steady/output/R7b_2mm_dt16`**: same keys, Perf binary,
+  `max_grid_size` 20. It is *not* R7b, which ran at 4 ms on the old binary.
+  - Run B0-2 mm at `max_grid_size = 20` to 300 s.
+  - Every `thermo.dat` row, `removal_events.csv` row and `jet_profile.csv`
+    row with t ≤ 300 s must be **byte-identical** to R7b_2mm_dt16.
+  - A mismatch means the harness differs from `run.py`. Fix the harness, not
+    the reference.
+- **B0 at 1 mm is needed only because the 1 mm step changes from 4 to
+  8 ms.** The 8 and 16 ms checks were made at 2 mm only.
+  - If the 1 mm step stayed at 4 ms on a bit-exact binary, B0-1 mm would
+    equal R7 and would not be run.
+  - Its first 150 s is the **step gate** (below).
+
+| pair | switch (both meshes) | isolates | expectation |
+|---|---|---|---|
+| B0 | none (the scored configuration) | harness (2 mm) and 1 mm step gate | **2 mm:** byte-identical to R7b_2mm_dt16 to 300 s. **1 mm gate:** 0–50, 50–100, 100–150 s ROP blocks within **2 %** of R7, and s_c and T_rec at 150 s within **1 %**. **Gap:** 1 mm / 2 mm over 150–300 s ≥ +30 % (D2d +42.8 %) |
+| P-a | `foot_body_clearance = 0` | the seed (clip cycle) | early gap (0–50, 50–100 s blocks) ≤ 3 %; burner slower than B0 at 2 mm; rim = spall only. **Prior:** D2b had no clearance, and its trimmed mesh check gave ring −4.8 % / burner −6.4 % at 1 mm, small and of the opposite sign. It also differed in the far law (clamp), decay diameter (nozzle, core 5), free surface (off), bin update and domain (trimmed r ≤ 60 mm), so it is consistent with clearance as the seed but not a clean test |
+| P-b | `jet_T_ent_mode = rec_fixed`, `jet_T_rec_fixed = 1550` | the amplifier (recirculation loop) | gap in the 250–300 s block ≤ its 50–100 s value + 3 points (no growth); D2d grew +13 → +47 % |
+| P-c | `foot_rule = mean`, `foot_body_clearance = 0` (the clearance/pads abort forces this) | slow-tail selection (read **against P-a**; lowest value) | 150–300 s gap ≤ 5 %; burner follows the annulus mean |
+
+- **Decision rule, stated now:**
+  - The mesh problem is **understood** if P-a removes the early gap **and**
+    P-b stops the growth.
+  - **Named fallback.** If P-a does **not** shrink the early gap, the next
+    suspects are:
+    1. **the pin idle timeout**: `PinRule` unpins a column idle for
+       `pinned_idle_cycles · t_cell`, with
+       `t_cell = pin_rhoCp·dz·(pin_T − T_amb)/q_pin`, which scales with cell
+       height;
+    2. **the half-cell removal increment** on rim columns
+       (`h_col = dz/2 − a_f`).
+
+    Record them in RESULTS §6 as the start of the next plan. **Do not test
+    them in this step.**
+  - If P-b does not stop the growth, the amplifier is not recirculation
+    alone. Say what the logs point to (flank exclusion by s ≤ 0 is the
+    other link).
+  - **If the 1 mm step gate fails,** the 8 ms / 1 mm step is not acceptable.
+    - Stop any 1 mm run already started at 8 ms and record it.
+    - Run P-a/P-b/P-c at 1 mm at **4 ms**.
+    - The 1 mm baseline is then **R7 itself** (4 ms, bit-exact binary), so
+      B0-1 mm is not rerun.
+- **What the result means for D2f (state in RESULTS, don't act on it):**
+  - if P-a/P-c converge, the burner-rate closure (feet quantile + whole-cell
+    clip) is the mesh-sensitive element;
+  - the tube-wall packet must then replace it with a rim rule shown
+    converged by this pair method.
+
+### 5. Runs
+- **Matrix:** 4 pairs × 2 meshes, 8 runs:
+  - `B0_2mm`, `B0_1mm`;
+  - `Pa_2mm`, `Pa_1mm`;
+  - `Pb_2mm`, `Pb_1mm`;
+  - `Pc_2mm`, `Pc_1mm`.
+- **Order.** The decision pairs come first, so a budget cut costs P-c, not
+  the verdict:
+  1. **2 mm:** B0 (identity check first; stop if it fails), then P-a, P-b
+     and P-c, three at a time (≈ 7 min each at 16 ms).
+  2. **1 mm, at most two at a time:**
+     - **B0-1 mm and P-a-1 mm together.** Read the step gate from B0's
+       first 150 s. If it fails, stop P-a at once (under 1 h lost) and
+       switch 1 mm to 4 ms.
+     - Then **P-b-1 mm**.
+     - Then **P-c-1 mm**, which is dropped first if time runs short.
+       Record the drop.
+- **Cost:** see the budget table in §Context; ≈ 4 h wall if Goal 0 and the
+  gate both pass.
+- No other runs. **One build only** (Goal 1), before any study run; **none
+  after**, for the whole step.
+
+### 6. Analysis `d2e_mesh/analyze_pairs.py` and `RESULTS.md`
+- **Per pair:**
+  - `score.py --mesh`-equivalent matched window 150–300 s (reuse
+    `score.mesh`);
+  - 50 s block ROP ratios;
+  - `rim.py` tables;
+  - `jet_r_reach`, T_rec, s_c, `jet_P_face` at 100/200/300 s;
+  - flank-band removal;
+  - ledger.
+- **RESULTS sections:**
+  - §0 hashes;
+  - §1 Perf acceptance and `max_grid_size`;
+  - §2 dt check;
+  - §3 rim tool validation;
+  - §4 pair table;
+  - §5 each PREDICTIONS row held / refuted with numbers;
+  - §6 the decision-rule verdict;
+  - §7 implications for D2f (tube wall: shielding plus confinement,
+    09-18b §4). Frame these as what the pairs support, not a design.
+- **Figures:**
+  - `d2e_blocks.png`: gap vs time per pair;
+  - `d2e_rim.png`: spall/clip by band, 2 vs 1 mm;
+  - `d2e_loop.png`: T_rec, s_c and reach vs time per pair.
+
+### 7. D2d record amendments (dated addenda; do not rewrite tables)
+In `studies/d2c_steady/RESULTS.md`:
+- **§5:** a post-start amendment. `score.py` was edited 2026-09-18 08:32,
+  after R1–R6 had finished; `sweep()` only (single-basis rule); sha256
+  `874e7fee…` → `2de24904…`.
+- **§6:** the "P1 scored" row. The settled s_c in R1's window is 172 mm
+  (the band applies to the settled value); "held" stands.
+- **§7:**
+  - the R1 window is marginal (drift 0.0199 vs 0.02 mm/s);
+  - the 2 mm ROP pass is a property of the 2 mm rim cycle (09-18b §2.5);
+  - the T_nozzle inference is **not to be quoted** until the mesh is
+    resolved;
+  - the mouth result is unaffected by the seed (the funnel forms in the
+    first ~120 s with the same flank removal at both meshes);
+  - only the run basis is to be quoted for the sweep.
+- `test_feet_d2c` must still PASS (it asserts outcomes, not text).
+
+### 8. Completion notes and takeaways
+As usual, including wall time per run and the speed-up actually realised.
+
+## Guardrails
+
+- **Source edits:** only deliverable 1 (`rec_fixed`). The Perf edits are
+  accepted or rejected by Goal 0. Do not modify them.
+  - No other `src/` change: no event location, no tube wall, no feet-rule
+    change.
+- **Default identity:** 2639/2639 witness files identical before and after
+  deliverable 1. `unit/jet_d2c` PASS.
+- **Frozen:**
+  - `studies/d2c_steady/{PREDICTIONS.md, run.py, score.py}`, D2d outputs,
+    `input_feet_d2c`, `test_feet*`, `jet.py`, `input_drilling`;
+  - `analyze.py` / `feetmodel.py` defaults.
+  - D2d RESULTS gets only the dated addenda in Goal 7.
+- **Diagnostics are not scored configurations.** Do not report any pair's
+  ROP against Meier's band. Do not propose adopting a switch as the model.
+- **No tuning**, no runs beyond the 8 listed (P-c-1 mm may be dropped; a
+  failed step gate switches 1 mm to 4 ms and uses R7 as the baseline, with no
+  B0 rerun), no trimmed domains, no restarts.
+- **Pre-registration:** PREDICTIONS hashed before the first pair run; the
+  rim tool validated on D2d data before that too.
+- Do not touch `ext/`, `bin/` (except the single Goal 1 `make`), `obj/`,
+  `build/`, `compile_commands.json`, `configure`, `LICENSE`, or other
+  integrators. Do not commit.
+- Re-read this packet (check its mtime) before launching the 1 mm runs.
+
+## Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python
+S=tests/MMWSpalling/studies/d2e_mesh
+W=/private/tmp/claude-501/-Users-tzetze20-amr-tools-alamo/ac0a0f5a-4af6-48bf-b61d-9009cf0c8681/scratchpad/d2c
+mkdir -p $S/witness && cp $W/post.md5 $W/hash.sh $W/post_all.sh $S/witness/
+shasum -a 256 bin/mmwspalling-3d-g++          # expect 1f4d5a01... (Perf binary)
+
+# 0. Perf acceptance (current binary; read post_all.sh / hash.sh first, adapt paths if needed)
+bash $S/witness/post_all.sh && bash $S/witness/hash.sh > $S/witness/perf.md5
+diff <(sort -k2 $S/witness/post.md5) <(sort -k2 $S/witness/perf.md5) && echo "2639 identical"
+
+# 1. rec_fixed, then build (no runs active)
+EIGEN=$PWD/ext \
+  CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current \
+  make -j8
+$PY tests/MMWSpalling/unit/jet_d2c/test
+bash $S/witness/post_all.sh && bash $S/witness/hash.sh > $S/witness/post_d2e.md5   # 2639 identical
+
+# 2-4. Harness, rim tool validation on D2d, predictions
+$PY $S/rim.py tests/MMWSpalling/studies/d2c_steady/output/R7b_2mm tests/MMWSpalling/studies/d2c_steady/output/R7_1mm
+$PY $S/run.py --mgs-check                      # B0 2 mm 30 s at mgs 20 vs 60
+$PY $S/predict.py                              # writes + hashes PREDICTIONS.md
+
+# 5. Runs
+$PY $S/run.py --cases B0_2mm --jobs 1          # must be byte-identical to R7b_2mm_dt16 to 300 s
+$PY $S/run.py --cases Pa_2mm Pb_2mm Pc_2mm --jobs 3
+$PY $S/run.py --cases B0_1mm Pa_1mm --jobs 2   # step gate from B0's first 150 s
+$PY $S/run.py --cases Pb_1mm --jobs 1
+$PY $S/run.py --cases Pc_1mm --jobs 1          # dropped first if short of time
+
+# 6-7. Analysis, D2d addenda, regressions
+$PY $S/analyze_pairs.py
+$PY tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet_d2c
+$PY tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet
+```
+
+## Claude completion notes
+
+**Implemented 2026-09-18, 14:30–17:15.** Not committed.
+
+**Outcome.**
+- **Perf ACCEPTED:** 2639/2639 witness files identical.
+- **The seed is identified: the clip.** P-a gives +0.1 % over the matched
+  window, against B0's +42.7 %.
+- **P-b and P-c at 1 mm were stopped or not started by the user** (16:53),
+  to move to a physical support rule. The amplifier half of the decision rule
+  is therefore untested.
+
+**The user's decision (16:53).** After P-a, the user reread Meier Ch. 8 with
+me. The burner hangs on tensioned coil and rests on its feet, and it can only
+descend as the **highest rock touching the feet** is removed (pp. 209–223).
+- The 0.9 quantile and the clip are numerical workarounds for that.
+- The user wants to move to the physical rule, so the remaining diagnostic
+  runs were stopped:
+  - Pb_1mm was killed at 79.5 s via `run.py --kill` (binary +
+    `plot_file`);
+  - the chain for Pc_1mm was stopped before it started;
+  - B0_1mm (13 s from its end) finished.
+- Recorded in `studies/d2e_mesh/note_support_rule.md`, RESULTS §4/§7, and
+  memory.
+
+**Files.**
+- `src/Integrator/MMWSpalling.H`: `jet_T_ent_mode = rec_fixed` with
+  `jet_T_rec_fixed`. It takes the exhaust path with a constant T_mix, and the
+  invariant derivation is in a comment. Parse aborts cover: missing, below
+  `jet_T_ent` or non-finite; and no entrained mass. The member is
+  `jet_rec_fixed`; `jet_T_ent_exhaust` now means "recirculation on".
+- `tests/MMWSpalling/unit/jet_d2c/test`: runs KT, K15 and A17–A19, and check
+  (k).
+- New `tests/MMWSpalling/studies/d2e_mesh/`:
+  - `run.py`: imports d2c `run.py` via importlib; dt policy 16/8 ms; no
+    steady-stop; `--mgs-check`, `--identity`, `--gate`, `--kill`, `--list`.
+  - `rim.py`; `predict.py`; `PREDICTIONS.md` (hashed, read-only).
+  - `analyze_pairs.py`, `pairs.md`, `RESULTS.md`, `rim_d2d_validation.md`.
+  - `gate_watch.py`, `chain_1mm.sh`.
+  - `witness/`: the scripts localised, with `ref_d2c.md5`, `perf.md5`,
+    `post_d2e.md5`.
+  - `mgs.txt` (60); figures `d2e_blocks/rim/loop.png`;
+    `note_support_rule.md`.
+- `studies/d2c_steady/RESULTS.md`: dated addenda to §5, §6 and §7 only (§7's
+  sits before the other session's "Timestep ladder" section).
+
+**Build.** One build, 14:41:45, with nothing running. Binary `6d047b50…` for
+every D2e study run.
+
+**Tests.**
+- Witness set on the Perf binary: **2639/2639 identical** to the D2c
+  reference.
+- Witness set after the build: **2639/2639 identical**.
+- `unit/jet_d2c`: **PASS**, 30 checks.
+- `test_feet_d2c`: **PASS**. `test_feet`: **PASS**.
+- Frozen D2d files are unchanged: `PREDICTIONS.md` `a28f1987…`, `run.py`
+  `240a0915…`, `score.py` `2de24904…`.
+- D2e `PREDICTIONS.md` `7245201c…` is unchanged since 15:05:21.
+
+**Runs and wall time.**
+- B0_2mm 6.2 min (alone, mgs 20).
+- Pa_2mm 5.5 min; Pb_2mm and Pc_2mm 7.7 min each (three at a time, mgs 60).
+- B0_1mm 97.4 min; Pa_1mm 64.6 min (two at a time).
+- Pb_1mm stopped at 79.5 s (28.4 min). Pc_1mm not run.
+- **Speed-up realised at 1 mm: 19.5 wall-s per simulated s against 54 in
+  D2d, 2.8×.** That combines the code (bit-exact), the 8 ms step (gated) and
+  mgs 60 (agrees).
+- Output is 12 GB, git-ignored.
+
+**Results (RESULTS §1–§7).**
+- **mgs 20 vs 60:** only `ledger_err` differs (4.4e-16 abs); the physics
+  columns and both CSVs are byte-identical.
+- **B0 identity:** every B0 row is byte-identical to R7b_2mm_dt16.
+- **Step gate PASS:** ≤ 0.67 % on the blocks, 0.55 % on s_c and 0.01 % on
+  T_rec.
+- **B0 gap:** +42.7 %, reproducing D2d.
+- **P-a:** early gap +2.0 / +0.1 %, matched window +0.1 %, every quantity
+  ≤ 0.6 %, rim by spall only.
+  - **"burner slower than B0" is REFUTED:** it is faster in every block,
+    because the clip replaced spall rather than adding to it.
+- **P-b and P-c: not tested.** The fallbacks were not needed.
+
+**Departures from the packet, recorded in RESULTS §2–§4.**
+- **1 mm plotfiles** only at 0 and the stop, not every 150 s: that would be
+  4.7 GB, against the 3 GB limit.
+- **The identity window** is B0's own end (299.904 s), not a nominal 300 s.
+- **`rim.py` fixes after PREDICTIONS (no expectation changed):** check at the
+  thermo rows' own times, keep the last block, apply P-c's mean rule, and
+  snapshot at block starts. The D2d validation tables are byte-unchanged.
+- **One part of the rim validation is not reproduced:** 09-18b's "86–100 %
+  of the 38–40 band sits at H" (here 57–87 %). Its definition is unstated.
+- **The packet's 0–50 s block values** (1.25 / 1.31 m/h) are not
+  reproducible. PREDICTIONS fixes the fit definition.
+
+## Implementation takeaways
+
+- **For the D2f planner: the burner support rule.**
+  - **What to build:** use the physical rule, a per-pad **maximum** (highest
+    rock touching each foot), with:
+    - shielded rock under the steel (no jet flux from above);
+    - an explicit undercut rule (from the bore side) or an operator-push
+      rule.
+  - **The mesh risk:** the maximum is set by the single slowest column. D2e
+    shows the 0.9 quantile without the clip converges (P-a), but the maximum
+    is untested.
+  - **The test:** gate the new rule with the D2e pair method (2 mm and 1 mm,
+    0.40 m, matched window, `rim.py`; about 2 h per pair) before any scored
+    run.
+  - Then redo the Meier scored run with fresh pre-registration.
+- **Every Meier number from D2b to D2d is superseded once D2f changes the
+  rule.** The gas-side closures, the mouth result and every non-Meier
+  validation are unaffected.
+- **The amplifier question (P-b) is open.** Without a seed the gap does not
+  grow (P-a over 200 s), but whether recirculation amplifies a small seed was
+  not tested. If the new rule leaves any seed, P-b's switch
+  (`rec_fixed = 1550`) is ready to use.
+- **Harness reuse.**
+  - `studies/d2e_mesh/run.py` takes a pair switch as a key replacement in
+    d2c's `keys()` list.
+  - The dt policy (16 / 8 ms) is gated, and mgs 60 is accepted.
+  - Use `--kill NAME` to stop a run, never `pkill -f NAME`.
+- **Gotchas.**
+  - **Two harnesses named `run.py`:** load d2c's via
+    `importlib.spec_from_file_location`.
+  - **Run end time:** a run ends at the last step before `stop_time`, so
+    compare to its own t_end.
+  - **Thermo row times:** at 16 ms, thermo rows fall every 0.096 s, not on
+    round times.
+  - **`ps | grep` self-match:** a process check in the same shell command as
+    a `bin/...` path matches itself.
+  - **Witness scripts:** `witness/post_all.sh` now takes a label, because the
+    old one overwrote its reference.
+
+
+
+## D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-accepted)
+
+**Archived 2026-09-19 by /plan. Verdict: accepted. Outcome (b): D2g scores
+`foot_pad_quantile = 0.9`, clip off.** No source change, no build (binary
+`6d047b50…`). The first version (a shielded "ledge" rule) was withdrawn before
+implementation after the full Meier Ch. 8 reread (`Claude_markdowns/2026-09-18c.md`).
+The user reports having verified the D2e source diff (D2e itself was archived
+without a `/verify` verdict).
+
+**Results (`studies/d2f_support/`, 0.40 m full domain, stop 300 s).**
+- Gate (ii) held: 2 mm ROP 150–300 s = 1.535 / 1.491 / 1.448 m/h at
+  q = 0.8 / 0.9 / 1.0 (±2.9 %); −0.044 m/h per +0.1 of q → carry ±3 % as a
+  support-rule uncertainty.
+- Gate (i) failed in one block: Q10 window −3.1 %, blocks after 50 s −1.0,
+  −0.8, −2.7, −1.2, **−9.7 %** (250–300 s). Cause: 2 mm descent quantised in
+  dz/3 steps (≈ 3.3 % of a 50 s block) plus a late 1 mm slowdown.
+- Q09 (optional 1 mm leg run): window −2.1 %, blocks +0.1, −1.9, +0.1, −3.0,
+  −4.3 % — converged to 300 s, but trending.
+- **Late 1 mm drift (new, unexplained):** after ~250 s at both q the 1 mm burner
+  is slower (rim spall 23.3–23.8 vs 24.4–25.0 mm/min), its 40–60 mm flank
+  removal falls faster (0.75–0.93 vs 1.19–1.28 cm³/s), T_rec 12–17 K hotter.
+  Opposite in sign to D2e's amplifier.
+- The clip never changed the 2 mm answer (Q09 1.491 vs D2e B0 1.483 m/h); it
+  only broke convergence.
+- Hole at 300 s unchanged by the support rule (Ø 130 / 114 at 25 / 50 mm vs
+  Fig. 8.8's 92 / 88): the funnel is gas-side.
+- Predictions (`db37f84b…`): E1 refuted, E2/E3/E6 held, E4/E5 held at all q;
+  hand model ~14 % fast on ROP. Q09_2mm byte-identical to D2e Pa_2mm to 200 s.
+- 1 mm legs paused by SIGSTOP/SIGCONT overnight (pause, not restart;
+  `PAUSED.md`).
+
+**Review findings for D2g.** Mesh check beyond 300 s before relying on a scored
+run (fix the block length first); D2e code unreviewed (user has since verified);
+carry ±3 % for q; RESULTS §5 E1 lists the 0–50 s block (nit).
+
+### D2f packet (verbatim, Context → Review findings)
+
+## Context
+
+**Where D2e left the feet rule (archived 2026-09-18, not /verify-ed).**
+- **The mesh seed was the whole-cell clearance clip.** With the clip off
+  (P-a: pads, 0.9 quantile, no clip), 2 mm and 1 mm agree to +0.1 % over
+  the matched window (to 200 s). With it on (B0), the gap is +42.7 %.
+- **The recirculation amplifier (P-b) is untested.** Without a seed, the gap
+  did not grow over 200 s.
+- **Speed-ups accepted:**
+  - the Perf binary;
+  - `max_grid_size = 60`;
+  - dt 16 ms at 2 mm and 8 ms at 1 mm;
+  - net cost at 1 mm of 19.5 wall-s per simulated s.
+
+**What Meier did** (Ch. 8, printed pages; pdf page = printed + 27):
+- **Burner hangs, progresses by gravity** (p. 211): the 15 kg burner keeps
+  "the coil essentially in tension using the drawworks. Its length ensures
+  smooth and vertical progression of the drill, due to gravity." Throughout,
+  he calls it a "contactless burner".
+- **Feet are a stand-off and guide, not a bearing surface** (p. 212):
+  "To prevent the outlet of the burner to be blocked and to direct the drill,
+  burner feet are used to keep a distance between the nozzle and the exposed
+  rock surface."
+- **The operator kept it free** (pp. 219–220): "constant axial acceleration
+  imposed to the burner by the drawworks, which is necessary to keep the
+  drill free", and "intermittent and rough axial displacement".
+- **Contact was monitored** (p. 221): "The hook load … giving evidence
+  whether the burner hangs or lies on the rock." ROP was taken from the burner
+  position: "an average and constant penetration rate of 1.5 m/h."
+- **The operator's advance rate set the clearance** (p. 223): the hole is
+  "cylindrical and calibrated", "only slightly underreamed allowing … the
+  necessary clearance for the contactless burner to advance under the effect
+  of gravity". "The clearance to the hole is adjusted by changing the
+  advancing rate." The underream at ≈ 10 cm came from "holding the burner
+  steady for several seconds".
+- **"The diameter of the drill controls the smallest hole diameter"**
+  (p. 223): Ø 85–93 mm against the Ø 80 tube.
+
+**What this means for the model.** Items marked *(inference)* are our
+reading, not Meier's words (`Claude_markdowns/2026-09-18c.md` §2).
+1. **Rock under the feet was removed thermally** *(inference)*.
+   - Meier gives a hole of Ø 85 (Tab. 8.2) to 93 mm (volume mean) around an
+     Ø 80 tube, and says the drill controls the smallest hole diameter.
+   - A hole wider than the tube implies the gas reached under and around the
+     rim while the burner hung and was moved axially. Meier does not say
+     so.
+   - **Not "at every depth":** the Fig. 8.8 visible width tapers to 80 mm at
+     450 mm and 78 mm at the exit. Those are lower bounds, so they neither
+     confirm nor contradict it.
+   - **No shielding.** The withdrawn ledge rule's premise (covered rock that
+     gas cannot reach, about 40 % of the cross-section removed mechanically)
+     does not fit a hole wider than the burner.
+2. **The burner descends as fast as the highest rock under its feet clears.**
+   Descending faster would mean it "lies on the rock". That is the contact
+   rule with the rock under the rim heated, and **no clip** (the clip has no
+   physical counterpart and is the mesh seed).
+   - **This is the contact limit.** Meier's operator set the advance by
+     crane, read the hook load, and a slower advance gave more clearance
+     (pp. 214–223). The measured ROP is therefore at or below what the rule
+     models. D2g reads the ROP one-sided.
+3. **A high per-pad quantile as an allowance for the axial motion**
+   *(inference)*.
+   - Meier reports "constant axial acceleration … necessary to keep the drill
+     free" and "intermittent and rough axial displacement". That this motion
+     clears or rides over isolated high points, but not a continuous ring of
+     rock, is our reading.
+   - So a high quantile is a plausible physical allowance, not only a
+     numerical guard.
+   - The strict maximum (q = 1) is the no-allowance limit. **The allowance
+     is unmeasured.** D2f must show the rate does not depend on it, or
+     report that it does.
+4. **ROP stays a prediction.** It is set by how fast the rock under the feet
+   clears, not by a prescribed feed; a prescribed feed makes ROP an identity,
+   as D2a showed.
+
+**The rule under test (no new code):** `nozzle_descent = feet`,
+`foot_rule = pads`, `foot_body_clearance = 0`, `foot_pad_quantile = q`, with
+the rock under the feet heated as today.
+- q = 0.9 is P-a, converged to 200 s.
+- q = 1.0 (the strict maximum, the literal "highest rock") is untested at
+  1 mm. D2e flagged it: the maximum is set by the single slowest column.
+
+**Stated limitations (not fixed here):**
+- **The model never lifts the burner.** Meier's holds and jolts change the
+  local hole shape; the 10 cm underream is one example. So Fig. 8.8's local
+  features beyond "cylindrical" are not a clean target.
+- **The rim's three slots are not modelled.**
+- **The outer-flank gas reach** (clearance between the tube and the wall, and
+  the mouth) is unchanged and still open.
+
+**Experiment conditions the model does not reproduce** (09-18c §3; for D2g,
+and for reading D2f's hole numbers). None changes the D2f gate:
+- **The mouth was inside a sealed, water-cooled wellhead** (Fig. 8.1,
+  p. 213). In phase 1 the gas over the surface was confined, cooled exhaust,
+  not the 293 K room air that D2c's free-surface dilution assumes. The
+  wellhead also caps any funnel.
+- **Two phases** (647 s + 736 s). Phase 2 restarted in a cooled,
+  part-drilled hole under rough vacuum, with room air drawn in at the top.
+  The model is one continuous run at 1 atm.
+- **ROP:** 0.5 m / 1383 s = **1.30 m/h** time-averaged, against the text's
+  1.5 m/h.
+- **Consequence for this step:** report the 300 s hole numbers (Ø at 25 and
+  50 mm, minimum Ø) as **direction only**. The mouth comparison with
+  Fig. 8.8 is weaker evidence than D2c/D2d treated it.
+
+**Caveats carried forward:**
+- (C1) Pin state and feet/jet host state are not checkpointed. Rerun from
+  t = 0; never restart.
+- (C1/D2a) Score by windows and fits.
+- (D2a) Flux acts on horizontal area.
+- (D2a) Parser `a/max(x, c)` bug.
+- (S1b) V0 = V_cell.
+- (D2a2) `jet_mdot = mdot/4`; `jet_De_ref` is the full-jet value.
+- (D2b) A3 is inert under pinned.
+- (D2c) The free surface acts only while the nozzle plane is above the
+  original surface.
+- (D2e) D2e is unreviewed. Its `rec_fixed` code passed the 2639-file witness
+  set, and D2f changes no source.
+- (D2e) **Harness rules:**
+  - use `run.py --kill NAME`, never `pkill -f`;
+  - no build or relink during the step;
+  - there are two `run.py` files, so load them by path (importlib);
+  - compare each run to its own t_end;
+  - 1 mm plotfiles only at 0 and at the stop.
+- **Hand numbers:** the planner gives none; the implementer computes every
+  prediction.
+
+## Sources
+
+The tree is uncommitted from Step 20 on. Do not commit unless asked.
+
+### Binary
+`bin/mmwspalling-3d-g++`, sha256 `6d047b50…` (the D2e build). **Verify it at
+the start and the end.** No source edit, no `make`.
+
+### Scored gas-side configuration (unchanged; `input_feet_d2c`)
+- **Jet:**
+  - J-M at 1900 K, enthalpy closure;
+  - decay with entrained mass, `exhaust`;
+  - momentum D_e with core 8;
+  - power law n = 1.
+- **Surface and flux:** free surface on (aspect 1, exponent 1),
+  `exponential`, `count`.
+- **Feet:** pads, annulus [0.028, 0.040], standoff 0.050.
+- **Rest:** A2, `pinned_idle_cycles = 2`.
+- **Only `foot_pad_quantile` and `foot_body_clearance` change.**
+
+### The D2e pair method (`studies/d2e_mesh/`)
+- **Harness:** `run.py` (`SWITCH` dict of key replacements on d2c's
+  `keys()`, `STOP`, `MESH = {2mm: R7b_2mm, 1mm: R7_1mm}`, dt policy 16 ms /
+  8 ms at ≤ 6 K/step, mgs 60 from `mgs.txt`, no steady-stop, `--kill`,
+  `--list`).
+- **Other tools:**
+  - `analyze_pairs.py` (50 s blocks; matched window);
+  - `rim.py` (spall/clip by 2 mm band, pad heights, `foot_z`
+    reconstruction ≤ 0.5 mm).
+- **Domain:** quarter domain 0.12 × 0.12 × **0.40 m**, full domain.
+- **Existing P-a runs** (q 0.9, no clip), both to 200 s:
+  - `output/Pa_2mm`;
+  - `output/Pa_1mm`.
+- **Hand model:** `d2b_feet_rop/feetmodel.py` has `QUANT = 0.9` and
+  `R_Q = √(ri² + q(ro² − ri²))`: the ring radius the quantile selects in an
+  axisymmetric hole. That is 40.0 mm at q = 1, 38.97 at 0.9 and ≈ 37.9 at 0.8.
+  `d2c_steady/handmodel.py` carries the scored closures.
+
+## Goal
+
+1. **Harness `tests/MMWSpalling/studies/d2f_support/run.py`.**
+   - Import `d2e_mesh/run.py` by path, and reuse `job`, the dt policy, mgs,
+     kill and list.
+   - New switches, all with `foot_body_clearance=0`:
+
+     | switch | `foot_pad_quantile` |
+     |---|---|
+     | `Q10` | 1.0 |
+     | `Q09` | 0.9 |
+     | `Q08` | 0.8 |
+
+   - **Stop** 300 s for all.
+   - **Stall watchdog 60 s**, as D2e. If a run stalls, that is a result:
+     record it, don't rerun.
+   - Do not edit the d2e or d2c harnesses.
+   - **Harness identity check:** Q09_2mm is P-a's configuration. Its thermo
+     and CSV rows to t ≤ 200 s must be **byte-identical** to
+     `d2e_mesh/output/Pa_2mm`. If not, fix the harness.
+
+2. **Hand predictions, `PREDICTIONS.md`**, hashed (sha256 + mtime in
+   RESULTS §0) **before any run**.
+   - Use `feetmodel` / `handmodel` with the scored closures and the ring at
+     `R_Q(q)`, for q = 0.8, 0.9 and 1.0.
+   - **Predict:**
+     - the steady ring ROP;
+     - the transient ROP over 150–300 s at 0.40 m;
+     - s_c and T_rec;
+     - Ø at 25 and 50 mm;
+     - the minimum Ø;
+     - **the q-sensitivity** (ROP change per 0.1 of q), as computed;
+     - the direction against D2d R1 (1.65 m/h, q 0.9 plus the clip).
+   - **Limit to state:** the axisymmetric hand model has no column scatter.
+     So it cannot predict the mesh behaviour of the maximum, which is what
+     the Q10 pair tests.
+
+3. **Runs** (0.40 m full domain, stop 300 s). Decision runs first:
+
+   | id | meshes | purpose |
+   |---|---|---|
+   | Q10 | 2 mm + 1 mm | **gate (i):** does the strict maximum converge? |
+   | Q09, Q08 | 2 mm | **gate (ii), with Q10_2mm:** does q control the rate? Q09_2mm is also the harness identity check |
+   | Q09 | 1 mm (**optional**) | extends P-a's 200 s convergence to 300 s; needed only for fallback (b) below |
+
+   - Run the 2 mm legs three at a time (≈ 7 min each).
+   - Run Q10_1mm (≈ 1.6 h) alone, or alongside Q09_1mm.
+   - **Total ≈ 2 h wall.**
+   - **Output:** plotfiles only at 0 and the stop for 1 mm;
+     `jet_profile_interval` 10 s; `removal_events_csv = 1`.
+
+4. **Pre-stated decision rule** (in PREDICTIONS, before any run):
+   - **(i) Convergence:** Q10 burner ROP, 1 mm / 2 mm over 150–300 s, is
+     within **5 %**, and every 50 s block after 50 s is within 5 %.
+   - **(ii) Insensitivity:** the 2 mm burner ROP over 150–300 s for q = 0.8,
+     0.9 and 1.0 is within **±5 %** of their mean.
+   - **Outcomes:**
+     - **(a) (i) and (ii) both hold:** D2g scores **q = 1.0**, the literal
+       "highest rock under each foot", with the fewest assumptions. The
+       jolt allowance is shown to be immaterial.
+     - **(b) (ii) holds, (i) fails:** D2g scores **q = 0.9**, justified as
+       the jolt allowance. It is shown converged by P-a and, if run,
+       Q09_1mm to 300 s. Report the maximum's mesh failure and its mechanism
+       from `rim.py`. If Q09_1mm was not run, the adoption is conditional on
+       running it in D2g.
+     - **(c) (ii) fails:** q controls the rate. Report ROP per 0.1 of q and
+       stop. D2g then needs a physical basis for the allowance (e.g. what
+       asperities the axial motion of a 15 kg drill clears). **Do not pick q to hit the
+       band.**
+   - Every PREDICTIONS row gets held / refuted with numbers.
+
+5. **Analysis `analyze.py` and `RESULTS.md`:**
+   - §0 hashes (binary, PREDICTIONS);
+   - §1 harness identity;
+   - §2 runs and wall time;
+   - §3 the Q10 pair in the D2e table format (blocks, matched window, s_c,
+     T_rec, reach, `jet_P_face`, pinned share, ledger);
+   - §4 q-sensitivity: ROP, s_c, T_rec, `foot_carry_cols` and rim
+     spall rates by band, per q;
+   - §5 PREDICTIONS rows;
+   - §6 the decision outcome (a / b / c);
+   - §7 what D2g inherits, including the open items from 09-18c (one-sided
+     ROP against 1.30 m/h time-averaged; the gas over the surface under the
+     wellhead vs D2c's ambient dilution; the two-phase history).
+   - **Also report the hole at 300 s** for each q: Ø at 25 and 50 mm and the
+     minimum Ø to the feet depth. This is the direction only, not a score.
+   - **Figures:**
+     - `d2f_blocks.png`: Q10 gap vs time, with P-a and B0 for reference;
+     - `d2f_q.png`: ROP vs q, hand and simulation;
+     - `d2f_rim.png`: the Q10 rim by band, 2 vs 1 mm.
+   - Extend `rim.py` only by import/wrapper. Do not change its D2e output.
+
+6. **Completion notes and takeaways** as usual.
+
+## Guardrails
+
+- **No source edit, no build, no relink.** Verify the binary sha256 at the
+  start and the end.
+- **Diagnostics only.** Do not score any run against Meier's band. Report
+  ROP only as the direction D2g will face.
+- **No tuning.**
+  - q values, the decision rule and the gas-side keys are fixed above.
+  - No runs beyond the table: no trimmed domains, no restarts.
+  - A stall is recorded, not rerun.
+- **Frozen:**
+  - D2c, D2d and D2e `PREDICTIONS.md`;
+  - their `run.py`, `score.py`, `rim.py` and outputs;
+  - `input_feet_d2c`, `test_feet*`, `jet.py`, `input_drilling`.
+- `test_feet` and `test_feet_d2c` must still PASS at the end (no source
+  change, so this is a sanity check).
+- Do not touch `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`,
+  `configure`, `LICENSE`, or other integrators. Do not commit.
+- Re-read this packet (check its mtime) before the 1 mm run.
+
+## Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python
+S=tests/MMWSpalling/studies/d2f_support
+shasum -a 256 bin/mmwspalling-3d-g++     # expect 6d047b50... (start and end)
+
+$PY $S/predict.py                         # writes + hashes PREDICTIONS.md, before any run
+$PY $S/run.py --list
+$PY $S/run.py --cases Q10_2mm Q09_2mm Q08_2mm --jobs 3
+$PY $S/run.py --identity                  # Q09_2mm vs d2e Pa_2mm, rows t <= 200 s
+$PY $S/run.py --cases Q10_1mm Q09_1mm --jobs 2   # Q09_1mm optional
+$PY $S/analyze.py
+
+$PY tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet
+$PY tests/MMWSpalling/validation/meier/sp_meier_pilot/test_feet_d2c
+```
+
+## Claude completion notes
+
+**Implemented 2026-09-18 17:23 → 2026-09-19 12:45.** No source edit, no
+build. Not committed.
+
+**Outcome (b): D2g scores `foot_pad_quantile = 0.9`, clip off.**
+- **Gate (ii) holds.** The 2 mm ROP for q 0.8 / 0.9 / 1.0 is 1.535 / 1.491
+  / 1.448 m/h, ±2.9 %.
+- **Gate (i) fails in one block.** Q10's matched window is −3.1 % (PASS), but
+  its 250–300 s block is −9.7 %.
+- **Q09 is converged to 300 s:** window −2.1 %, every block ≤ 4.3 %.
+
+**Files (all new, `tests/MMWSpalling/studies/d2f_support/`):**
+- `run.py`: loads d2e `run.py` by path and adds switches Q10 / Q09 / Q08
+  (quantile + clearance 0), stop 300 s. It has `--identity` (Q09_2mm vs
+  d2e Pa_2mm), `--kill` and `--list`.
+- `predict.py` → `PREDICTIONS.md`: sha256 `db37f84b…`, mtime
+  2026-09-18 17:27:07, read-only, written before any run. Hand model: d2c
+  `handmodel` with `feetmodel.R_Q` rebound to R_Q(q), clip off.
+- `analyze.py` → `analysis.md` and the figures `d2f_blocks.png`,
+  `d2f_q.png`, `d2f_rim.png`. It reuses d2e `analyze_pairs` and `rim` by
+  import. A wrapper sets `rim.QUANT` from each run's switch, so `rim.py` is
+  unchanged.
+- `profile_fig.py` → `d2f_profile.png`: the hole at 300 s against Fig. 8.8
+  (user request; direction only).
+- `RESULTS.md` §0–§7; `PAUSED.md`.
+
+**Tests and checks:**
+- Binary `6d047b50…` verified at the start and the end.
+- E6 identity: Q09_2mm byte-identical to Pa_2mm, every row to 200 s.
+- `rim.py` reconstructs `foot_z` exactly at every q.
+- `test_feet` PASS; `test_feet_d2c` PASS.
+- The D2c and D2e `PREDICTIONS.md` are unchanged.
+
+**Runs:**
+- Q10_2mm, Q09_2mm and Q08_2mm: 7.8 min each, three at a time.
+- Q10_1mm and Q09_1mm (Q09 was optional; run so that (b) needs no
+  condition), two at a time:
+  - **suspended by the user** with SIGSTOP at t ≈ 98 s (18:35) and resumed
+    with SIGCONT at 10:33 the next day. They are not restarts;
+  - computing time ≈ 178 min, part of it under heavy host load (load ≈ 33,
+    `kernel_task` 55 %);
+  - the `.done` wall_s of 1135.6 min includes the 958 min pause.
+- No stalls (longest `foot_stall_time` 8.2 s). Output 9.0 GB.
+
+**PREDICTIONS:** E1 refuted; E2, E3, E6 held; E4 and E5 held at all three
+q. The hand model runs ≈ 14 % fast on ROP, as in D2c.
+
+## Implementation takeaways
+
+- **The support rule for D2g:** pads, q 0.9, no clip.
+  - Physically: contact with the highest rock under each foot, within the
+    axial-motion allowance.
+  - q is a weak lever: −0.044 m/h per +0.1 (hand −0.066), because the
+    38–40 mm band sets every pad at every q and q only picks how deep into
+    its slow tail the burner rides.
+  - At 2 mm the clip made no difference to the rate or the shape (Q09 1.491
+    against D2e B0 1.483 m/h). It only broke the mesh convergence.
+- **The strict maximum's single failing block** comes from two things:
+  - the 2 mm descent is quantised in dz/3 = 0.67 mm steps (≈ 3.3 % of a
+    50 s block), and 250–300 s took one extra step;
+  - a late 1 mm slowdown that Q09 shares.
+
+  The rule was applied as written, but block-level 5 % is close to the 2 mm
+  step noise. A future mesh criterion could use 100 s blocks or the matched
+  window, fixed before running.
+- **The late 1 mm drift is new and unexplained.** After ~250 s at both q:
+  - the 1 mm burner is slower (rim spall 23.3–23.8 against 24.4–25.0
+    mm/min);
+  - its flank removal (40–60 mm) falls faster (0.75–0.93 against 1.19–1.28
+    cm³/s);
+  - T_rec is 12–17 K hotter.
+
+  This is not D2e's amplifier, whose sign was opposite. D2g needs a mesh
+  check beyond 300 s (1 mm to 450–600 s at 0.40 m, about 3–4 h clean) before
+  relying on the scored run.
+- **The hole at 300 s:** the funnel is unchanged by the support rule (Ø 130
+  / 114 at 25 / 50 mm, against 92 / 88). It is gas-side. The wellhead
+  (sealed, water-cooled, confined exhaust) makes the mouth a weak target; see
+  RESULTS §7.
+- **Pausing a run:** use SIGSTOP / SIGCONT on the launcher and the ranks,
+  matched by binary + `plot_file`. The runs resume bit-identically; this is
+  not a restart. The stall watchdog uses simulated time, so it is unaffected.
+  Subtract the pause from wall_s.
+- **Harness:** `d2f_support/run.py` extends d2e's `SWITCH` / `STOP` in
+  place. A D2g scored harness can do the same, or import `d2c` `keys()`
+  with the two key replacements.
+
+
+## Review findings
+
+Reviewed 2026-09-19, in a separate session from the implementation. No test
+or simulation was rerun; all outputs exist and are newer than the harness.
+
+Verdict: accepted
+
+### What was checked
+- **Scope.** Deliverables 1–6 are present in `studies/d2f_support/`:
+  - `run.py` (Q10 / Q09 / Q08, stop 300 s, `--identity`, `--kill`,
+    `--list`), `predict.py` → `PREDICTIONS.md`, `analyze.py` →
+    `analysis.md`;
+  - the three required figures, plus `d2f_profile.png` (user request);
+  - `RESULTS.md` §0–§7, and the completion notes.
+  - The optional Q09_1mm was run, so outcome (b) carries no D2g condition.
+- **No source change, no build.**
+  - `bin/mmwspalling-3d-g++` sha256 is `6d047b50…` (mtime 09-18 14:41:45).
+  - `find src -newer bin/…` is empty.
+- **Frozen files.** None changed during D2f (all mtimes predate its
+  17:23 start):
+  - D2c and D2e `PREDICTIONS.md`, `run.py`, `rim.py`, `analyze_pairs.py`;
+  - `input_feet_d2c`, `test_feet`, `test_feet_d2c`.
+- **Pre-registration.**
+  - `PREDICTIONS.md` sha256 `db37f84b…`, mtime 17:27:07, matches RESULTS §0.
+  - The 2 mm legs finished at 17:35. The decision rule and outcomes
+    (a)–(c) are in PREDICTIONS lines 59–79, word for word from the packet.
+- **Run keys.** Each run's `metadata` carries the intended
+  `foot_pad_quantile` (1.0 / 0.9 / 0.8) with `foot_body_clearance = 0`,
+  0.40 m, dz 2 / 1 mm, and dt 16 / 8 ms. All five `.done` files are
+  `ok` at t_end 299.9 s.
+- **Harness identity (E6).** I compared Q09_2mm's `thermo.dat` with D2e
+  `Pa_2mm` over Pa's full length (2085 lines): byte-identical.
+- **Gates, recomputed from `thermo.dat`** (linear fits of `nozzle_z`):
+  - **(ii):** 2 mm ROP over 150–300 s is 1.535 / 1.491 / 1.448 m/h for
+    q 0.8 / 0.9 / 1.0, which is −2.93 / −0.01 / +2.94 % of the mean. It
+    holds.
+  - **(i):** Q10 1 mm vs 2 mm is −3.06 % over the window. The 50 s blocks
+    from 50 s are −1.0, −0.8, −2.7, −1.2, **−9.7 %**, so it fails.
+  - **Q09:** −2.15 % over the window, blocks +0.1, −1.9, +0.1, −3.0, −4.3 %.
+  - **Ledger** ≤ 7.9e-15 in every leg.
+  - So the outcome is **(b), q = 0.9**, applied as pre-stated.
+- **PREDICTIONS rows (RESULTS §5).** The rows agree with the numbers above:
+  E1 refuted; E2, E3 and E6 held; E4 and E5 held at every q.
+- **Pause.** SIGSTOP/SIGCONT is a pause, not a restart, so it does not break
+  the C1 no-restart rule. It is recorded in `PAUSED.md` and in the notes,
+  with the wall-time correction.
+- **Takeaways** give the D2g support rule, the q-lever size, the cause of
+  the failing block, the late 1 mm drift, the pause procedure and the
+  harness pattern. That is enough to plan D2g.
+
+### Findings for the D2g planner (non-blocking)
+- **Q09's convergence is weakening at the end.** Its blocks trend
+  −3.0 % then −4.3 %, the same direction as Q10's −9.7 %.
+  - "Converged to 300 s" holds under the rule, but only just.
+  - The takeaways flag a late 1 mm drift (slower burner, faster-falling
+    flank removal, T_rec +12–17 K), cause unknown.
+  - D2g should not rely on a scored run past 300 s without the longer
+    1 mm check (to 450–600 s) the takeaways propose. Fix that criterion,
+    including the block length, before running.
+- **The binary carries D2e code that was never `/verify`-ed.** D2e was
+  archived without review (packet Context). Its `rec_fixed` code passed
+  the 2639-file witness set, but it has had no independent review. If D2g
+  scores on this binary, a short review of the D2e source diff should come
+  first.
+- **The q-sensitivity is small but not zero:** −0.044 m/h per +0.1 of q
+  (about 3 %). The allowance is unmeasured, so D2g should carry ±3 % as a
+  support-rule uncertainty on its ROP.
+- **Nit:** the RESULTS §5 E1 row lists six blocks, including 0–50 s
+  (+1.3 %), while the rule counts only blocks after 50 s. The verdict is
+  unaffected.
+
+
+## D2e — retroactive review (2026-09-19; attaches to the D2e entry above)
+
+**Verdict: accepted.** Recorded in the D2f packet by the reviewer (who does not
+edit the archive) and moved here by /plan on 2026-09-19. It closes the
+"NOT /verify-ed" flag on the D2e entry.
+
+
+Reviewed 2026-09-19 at the user's request. D2e was archived on 09-18 without
+a `/verify`; its packet is in `docs/project/ARCHIVE_DONE.md` ("D2e — Speed-up
+acceptance and the mesh-seed diagnosis"). The findings are recorded here
+because the reviewer does not edit the archive; the next `/plan` should
+attach them to the D2e entry. No test or simulation was rerun.
+
+Verdict: accepted
+
+### What was checked
+- **Perf source edits (Goal 0).** I read the diff of
+  `src/Integrator/MMWSpalling.H` against the D2c copy, and the git diffs of
+  `src/BC/Constant.cpp` and `src/Numeric/Material/Table.H`.
+  - **Static-field ghost fills.** `phase` / `grain_id` / `kappa_phase` are
+    filled once per `InitializeMicrostructure`, which resets
+    `micro_ghost_filled`.
+    - Every writer of those fields lies inside `InitializeMicrostructure`.
+    - `Initialize` (:688) and `Regrid` (:716, :4075) both call it, so the
+      cache cannot go stale.
+  - **`exp` gate.** It skips `exp(-a_D·D)` only when `a_D == 0`, where
+    `exp(0) = 1` exactly, so results are bit-identical.
+  - **`BC::Constant` early return.** Every kernel write needs an index
+    outside the domain's `[lo, hi]` (glevel ≠ 0 or the corner pass), so a
+    grown box inside the domain writes nothing. It is equivalent.
+  - **`Table::T_of_H` seed.** It picks the same bracket as the old bisection
+    (see the nit below).
+- **`rec_fixed` (Goal 1).**
+  - `T_mix = jet_T_rec_fixed` on the exhaust path; the floor, dilution
+    ambient, `P_recirc` and invariants are unchanged.
+  - `jet_T_rec_next` is still written but unused, as specified.
+  - The derivation comment is correct: `P_cap = mdot·cp·(T_noz − T_mix) +
+    m·cp·(T_mix − T_ent) = P_budget` for any T_mix with m = mdot/φ.
+  - The parse aborts are present, and `pp.contains` is checked before
+    `query_default`.
+- **Witness sets.**
+  - `witness/ref_d2c.md5` is byte-identical to the D2c `post.md5`.
+  - Both `perf.md5` (Perf binary `1f4d5a01…`, 14:32–14:39) and
+    `post_d2e.md5` (binary `6d047b50…` built 14:41:45, runs 14:49–14:56) are
+    **2639/2639 identical** to it. The `*_vs_ref.diff` files are empty.
+  - Every run in both logs is rc 0.
+  - A sample of hashed files has 09-18 14:49–14:56 mtimes, so the hashes
+    come from fresh outputs.
+- **`unit/jet_d2c`.** `test_pass.log` (14:49, after the build) shows 30
+  PASS, including (k):
+  - KT is bit-identical to NF;
+  - K15 holds T_rec at 1550 K on 2499 rows, with face + exhaust − cap = 0
+    and decay 2e-16;
+  - aborts A17–A19 fire.
+- **Pre-registration.**
+  - `PREDICTIONS.md` sha256 is `7245201c…`, mtime 15:05:21.
+  - `rim_d2d_validation.md` (15:04:45) came before it, and the first pair
+    run (B0_2mm) started about 15:05:30.
+  - The `max_grid_size` runs (15:01–15:02) are Goal 0 checks and came
+    before it, as allowed.
+- **Results, recomputed from the outputs:**
+  - **B0_2mm vs `R7b_2mm_dt16`:** `thermo.dat` is a byte-identical prefix,
+    and `removal_events.csv` (93,100 lines) and `jet_profile.csv` (1,603
+    lines) are identical up to B0's end.
+  - **1 mm step gate (B0_1mm vs R7):** blocks +0.83 / +0.06 / −0.67 %;
+    s_c −0.55 % and T_rec −0.007 % at 150 s. PASS.
+  - **B0 gap over 150–300 s:** +42.7 % (reproduces D2d).
+  - **P-a (clip off):** blocks +2.65 / +0.15 / −1.87 / +0.06 %; matched
+    window 150–200 s +0.06 %.
+  - **Ledger:** ≤ 9.5e-15 in every run.
+  - **So the seed is the whole-cell clearance clip.** The prediction
+    "burner slower than B0" is refuted: P-a at 2 mm runs 1.2–2.2 % faster in
+    every block.
+- **Early stop, disclosed.** P-b and P-c at 1 mm were stopped or not started
+  by the user (RESULTS §4 run log), so the recirculation-amplifier half of
+  the decision rule is untested. D2f's no-clip runs show no gap growth to
+  300 s beyond the late drift noted in the D2f review.
+- **Frozen D2d files unchanged:** `run.py` `240a0915…`, `score.py`
+  `2de24904…`, `PREDICTIONS.md` `a28f1987…`. The D2d `RESULTS.md` has only
+  the three dated D2e addenda (§5, §6, §7).
+
+### Findings (non-blocking)
+- **The witness set is single-level MMWSpalling only.**
+  - `BC::Constant` and `Numeric/Material/Table.H` are shared code, and the
+    ghost-fill cache has an AMR regrid path.
+  - None of the Step 7c AMR microstructure regression, the Zhang/Oglesby
+    tests or other integrators that use `BC::Constant` were rerun.
+  - Before committing, run the full regression sweep (already deferred to
+    the commit), including the AMR microstructure test.
+- **Nit: the `Table.H` seed comment claims more than it guarantees.**
+  - The comment says "Hj ≤ H", but `j = int((H − H0)/dH)` can round so that
+    `H0 + j·dH` exceeds H by an ulp.
+  - A table node in that ulp-wide gap would give a bracket one to the right
+    of the bisection's (a tiny extrapolation, not bit-identical).
+  - This is practically impossible and the witnesses are identical. Stepping
+    `lo` back while `m_H[lo] > H` would make it exact.
+- **Nit: `Constant.cpp` calls `Domain().contains(box)` without matching
+  index types.** For a node-centred FAB this trips AMReX's `sameType`
+  assert in a debug build (a release build is unaffected, and the index
+  comparison is still correct).
+- **Nit: the P-a first-block gap is quoted inconsistently.** The archive
+  quotes +2.0 %, but a plain 0–50 s fit gives +2.65 %. Both are within the
+  3 % expectation.
+
+
+## D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-accepted; GATE FAILED)
+
+**Archived 2026-09-20 by /plan. Verdict: accepted as work; the gate failed, which
+was its purpose.** No source edit, no build (binary `6d047b50…`).
+
+- **Result:** matched window 150–573 s: 2 mm 1.493 m/h vs 1 mm 1.067 m/h,
+  **−28.5 %** (limit ±5 %). 100 s blocks −1.8, −12.5, −40.2, −64.8 %; growth
+  −21.7 points per 100 s. Criterion `ba914d27…` hashed 4 s before launch.
+- **What fails:** the centre keeps pace (352 vs 337 mm at 550 s) while **the ring
+  stalls at 1 mm** (feet 229 vs 183 mm). Rim spall 2 mm holds 24.5–25.2 mm/min;
+  1 mm falls 24.3 → 8.4. Pinned share 0.10 → 0.05; s_c runs to 204 mm (173 at
+  2 mm); `jet_P_face` 807 vs 945 W; flank removal 0.04 vs 0.29 cm³/s.
+- **Both runs ended on the bottom watchdog** (573 / 621 s); the 1 mm run outlived
+  the 2 mm one because its hole is shallower.
+- Identity PASS (byte-identical to D2f Q09 to 299.9 s); `rim.py` reconstructs
+  `foot_z` exactly; ledger ≤ 8.5e-15; `test_feet` / `test_feet_d2c` PASS.
+- **Consequence:** the D2b–D2d Meier agreement was read at times (470–694 s)
+  where the pair is 40–65 % apart. **No Meier number may be quoted until the ring
+  behaviour is understood.** The 2 mm steadiness is mesh-dependent, not physics.
+- Review findings: the last block sits against the bottom stop (verdict unaffected);
+  s_c is both lead and consequence; cheapest decisive check is the ring-firing lead.
+- **Planner correction (2026-09-20):** the takeaway "`foot_carry_cols` 3× higher at
+  1 mm" was a normalisation slip. The quarter annulus holds ~160 columns at 2 mm
+  and ~641 at 1 mm, so 22/160 = 14 % vs 67/641 = 10 % — what a 0.9 quantile gives
+  by construction. Drop that lead.
+
+### D2g-1 packet (verbatim, Context → Review findings)
+
+## Context
+
+- **D2f (accepted 09-19)** fixed the support rule: `foot_rule = pads`,
+  `foot_pad_quantile = 0.9`, `foot_body_clearance = 0`. It is converged to
+  300 s: window −2.1 %, 50 s blocks +0.1, −1.9, +0.1, −3.0, −4.3 %.
+- **The open question is a late 1 mm drift** (cause unknown). After about
+  250 s the 1 mm run:
+  - is slower;
+  - loses 40–60 mm flank removal faster;
+  - runs T_rec 12–17 K hotter.
+  D2d's scored steady window was 470–694 s (at 0.70 m), so a scored run
+  relies on times this pair has never checked.
+- **This step** runs the Q09 pair past 300 s, to the bottom watchdog of the
+  0.40 m domain (about 550 s), to see whether the gap grows. The user chose
+  this over a 0.70 m / 700 s pair, which costs 6–7 h.
+- **Housekeeping:**
+  - D2e was reviewed retroactively (accepted, 09-19);
+  - committing is deferred by the user.
+
+**Stated limitation.** 0.40 m ends around 550 s, before D2d's scored window
+(470–694 s at 0.70 m) is fully covered, and domain height alone moved ROP
++4 % in D2d. So a pass means "mesh-checked to about 550 s at 0.40 m", and
+Stage 2 must quote it that way.
+
+**Caveats carried forward:**
+- Pin state and feet/jet host state are not checkpointed, so run from
+  t = 0. SIGSTOP/SIGCONT pausing is fine.
+- Score by fits, and compare each run to its own t_end.
+- Harness rules:
+  - `run.py --kill NAME`, never `pkill -f`;
+  - no build or relink during the step;
+  - 1 mm plotfiles only at 0 and at the stop.
+
+## Sources
+
+- **Binary:** `bin/mmwspalling-3d-g++`, sha256 `6d047b50…`. Verify it at the
+  start and at the end.
+- **Harness to extend:** `tests/MMWSpalling/studies/d2f_support/run.py`.
+  - It loads the d2e `run.py` by path; `E.SWITCH` / `E.STOP` define the
+    cases. Q09 is at lines ~37–40, with stop 300 s.
+  - Watchdogs:
+    - stall (60 s) is on;
+    - bottom (centre ≤ 40 mm above the domain bottom) is on;
+    - there is no steady-stop.
+  - dt 16 ms at 2 mm and 8 ms at 1 mm; mgs 60.
+- **Analysis to reuse:** `d2f_support/analyze.py`, d2e `analyze_pairs`
+  (blocks, matched window), and `rim.py` (with the `rim.QUANT` wrapper).
+- **Reference runs:** `d2f_support/output/Q09_2mm` and `Q09_1mm`, both to
+  299.9 s.
+- **Cost:** 1 mm at 19.5 wall-s per simulated s, about 3 h to 550 s. 2 mm
+  takes about 15 min. Run the two together.
+
+## Goal
+
+1. **Cases `L09_2mm` / `L09_1mm`** in a new
+   `tests/MMWSpalling/studies/d2g_mesh/run.py`. Import d2f's harness by path,
+   as d2f imports d2e.
+   - Keys are identical to Q09. The stop cap is 700 s; the bottom watchdog
+     ends the runs.
+   - **Identity check:** each L09 `thermo.dat`, rows to t ≤ 299.9 s, must be
+     byte-identical to the matching Q09 run. The same binary is
+     deterministic.
+2. **Criterion.** Write it into `RESULTS.md` §0, with its sha256 and time,
+   **before launching:**
+   - Burner ROP is a linear fit of `nozzle_z` over the matched window
+     [150 s, t_m], where t_m = min(t_end of the pair).
+   - **Pass requires both:**
+     - (a) the matched-window gap (1 mm / 2 mm − 1) is within **5 %**;
+     - (b) every **100 s** block from 150 s (150–250, 250–350, …, the last
+       block ending at t_m, dropped if shorter than 50 s) is within 5 %.
+       Blocks are 100 s long because a 50 s block at 2 mm sits within a few %
+       of the descent-step noise (D2f takeaway).
+   - **Growth diagnostic** (reported, not deciding): the slope of the block
+     gap against block mid-time, in % per 100 s.
+   - **Outcomes:**
+     - **Pass:** plan D2g Stage 2, the scored runs, quoting "mesh-checked to
+       t_m at 0.40 m".
+     - **Fail:** stop. The next packet diagnoses the late drift. Name the
+       leads from the logs: rim spall rate, flank removal, T_rec, s_c,
+       `jet_r_reach`, pinned share. Do not test them here.
+3. **Report, in `RESULTS.md`:**
+   - §0 the criterion hash;
+   - §1 the identity check and the binary;
+   - §2 the runs (t_end, wall, stop reason);
+   - §3 the pair table: matched window, 100 s blocks, and 50 s blocks for
+     continuity with D2f;
+   - §4 per block: rim spall and flank removal (`rim.py`), T_rec, s_c,
+     `jet_r_reach`, pinned share, ledger;
+   - §5 the verdict;
+   - one figure, `d2g1_blocks.png`: gap vs time for 50 s and 100 s blocks,
+     with D2f Q09 overlaid.
+4. **Completion notes and takeaways** as usual.
+
+## Guardrails
+
+- No source edit, no build. The binary sha256 must be unchanged at the end.
+- **One pair only.** No restarts, no trimmed domain, and no key changes
+  except the stop cap.
+- **Fix the criterion in §0 before launch.** Do not re-window after seeing
+  the result.
+- **Frozen:** every earlier `PREDICTIONS.md`, harness, analysis script and
+  output (d2c, d2e, d2f). Import them; do not edit them.
+- **Do not touch** `ext/`, `bin/`, `obj/`, `build/`,
+  `compile_commands.json`, `configure`, `LICENSE`, or other integrators. Do
+  not commit.
+
+## Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python
+S=tests/MMWSpalling/studies/d2g_mesh
+shasum -a 256 bin/mmwspalling-3d-g++      # expect 6d047b50... (start and end)
+# write RESULTS.md §0 (criterion) and record its sha256 first
+$PY $S/run.py --list
+$PY $S/run.py --cases L09_2mm L09_1mm --jobs 2     # ~3 h
+$PY $S/run.py --identity                            # rows t <= 299.9 s vs d2f Q09
+$PY $S/analyze.py
+```
+
+## Claude completion notes
+
+**Implemented 2026-09-19 18:30 → 2026-09-20 15:10.** No source edit, no
+build. Not committed.
+
+**Verdict: the mesh gate FAILS.** The D2f support rule (pads, q 0.9, no clip)
+is converged to about 300 s and then diverges completely.
+- Matched window 150–573 s: 2 mm 1.493 m/h, 1 mm 1.067 m/h, **−28.5 %**
+  (criterion (a), limit ±5 %).
+- 100 s blocks: −1.8, −12.5, −40.2, **−64.8 %** (criterion (b)).
+- Growth: −21.7 points per 100 s.
+- **Per the pre-registered rule, D2g Stage 2 is not planned on this rule.**
+
+**Files (all new, `tests/MMWSpalling/studies/d2g_mesh/`):**
+- `run.py`: loads d2f's harness by path (which loads d2e's; neither edited),
+  adds switch `L09` = Q09's keys with a 700 s cap, and has `--identity`,
+  `--kill` and `--list`.
+- `CRITERION.md`: sha256 `ba914d27bd88f1b7c3c046defecd2517acf52e29a5348f6c4f43e8af5f99a43a`,
+  written 2026-09-19 18:33:21, **before launch**, read-only, quoted in
+  RESULTS §0.
+- `analyze.py` → `analysis.md`, `d2g1_blocks.png`.
+- `RESULTS.md` §0–§5; `PAUSED.md`.
+
+**Checks:**
+- Binary `6d047b50…` unchanged at the start and the end.
+- **Identity PASS:** both L09 runs are byte-identical to the D2f Q09 runs for
+  every row to 299.9 s (3124 each).
+- `rim.py` reconstructs `foot_z` exactly (0.000 mm) in both runs.
+- The ledger closes to ≤ 8.5e-15 in every block.
+- `test_feet` PASS; `test_feet_d2c` PASS.
+- d2c, d2e and d2f are unmodified.
+
+**Runs.** Both ended on the bottom watchdog, neither stalled, and neither hit
+the 700 s cap.
+- L09_2mm: 573.2 s, 51 min.
+- L09_1mm: 621.4 s. Its reported 1202 min includes a **user pause**
+  (SIGSTOP at 103 s, 19:44 → SIGCONT 20:06) and long idle/loaded stretches
+  overnight; at the clean rate (≈ 19 wall-s per simulated s) it is about 3 h.
+- **The 1 mm run outlived the 2 mm one** (621 against 573 s) because its hole
+  is shallower. That is the failure itself.
+- Output 3.0 GB, git-ignored.
+
+**What fails.** The centre keeps pace at both meshes (352 against 337 mm at
+550 s); **the ring stalls at 1 mm** (feet 229 against 183 mm).
+- Rim spall at 38–40 mm: 2 mm holds 24.5–25.2 mm/min for the whole run, while
+  1 mm falls 24.3 → 22.4 → 15.4 → **8.4**.
+- The pinned share falls to 0.05 at 1 mm against 0.10 at 2 mm.
+- s_c runs away to 204 mm at 1 mm (173 at 2 mm), so the jet decays over a
+  longer distance and `jet_P_face` falls to 807 W (945 at 2 mm).
+- `foot_carry_cols` is 67–73 at 1 mm against 20–23 at 2 mm.
+- The 40–60 mm flank removal falls to 0.04 cm³/s at 1 mm (0.29 at 2 mm).
+
+## Implementation takeaways
+
+- **The headline for the next planner: the support rule is converged only to
+  ~300 s.** D2f's +0.1 %/−4.3 % to 300 s does not extend. At the scored times
+  D2d used (470–694 s) the pair is 40–65 % apart. **No Meier number may be
+  scored on this rule until this is understood.**
+- **The 2 mm run is the steady-looking one, for a mesh-dependent reason.** It
+  holds ~1.5 m/h and a rim of ~25 mm/min to the bottom; the 1 mm run shows
+  the ring going out. Do not read the 2 mm steadiness as physics.
+- **Leads, in the order the logs support them** (none tested here):
+  1. **the ring stops firing at 1 mm** (rim spall 24 → 8, pinned share
+     0.19 → 0.05): the `s ≤ 0` exclusion above the nozzle plane, the pinned
+     criterion, and the half-cell removal increment are the candidates;
+  2. **the stand-off feedback** (s_c 204 against 173 mm, `jet_P_face` 807 W):
+     whether a centre equilibrium exists at 1 mm in 0.40 m is open, and D2b
+     saw the same runaway with the clipped h law;
+  3. **`foot_carry_cols` 3× higher at 1 mm:** the pad rides on non-firing
+     rock;
+  4. the flank drying at 1 mm (0.04 cm³/s), so the hole stops widening;
+  5. T_rec 28 K hotter at 1 mm with less face power.
+- **A diagnosis run need not be long.** The split is already visible by
+  250–350 s (−12.5 %), so a 350 s pair is enough to test a candidate, about
+  1.5 h at 1 mm.
+- **Criterion design worked.** Fixing the window, the block length and the
+  fail branch in a hashed file before launch made the verdict mechanical
+  even though the result was a large failure.
+- **Gotcha:** `rim.py` needs the run's `.done`, so per-block diagnostics
+  cannot be computed while a run is still going. Thermo-only diagnostics can.
+- **Pausing** again worked (SIGSTOP/SIGCONT on the launcher and ranks, matched
+  by binary + `plot_file`): the run resumed bit-identically. It inflates
+  `wall_s`, so quote computing time separately.
+
+
+## Review findings
+
+Reviewed 2026-09-20, in a separate session from the implementation. Nothing
+was rerun: both runs and the analysis are complete, and every number I
+recomputed matches.
+
+Verdict: accepted
+
+The step is accepted as work. **Its result is a failed gate**, which is the
+step's purpose: the pre-registered rule decided it, and the packet's fail
+branch (stop; do not plan Stage 2 on this rule) was followed.
+
+### What was checked
+- **Scope.** Deliverables 1–4 are present in `studies/d2g_mesh/`:
+  - `run.py` with the `L09` switch, `--identity`, `--kill` and `--list`;
+  - `CRITERION.md` and `RESULTS.md` §0–§5;
+  - `analyze.py` → `analysis.md` and `d2g1_blocks.png`;
+  - the completion notes and takeaways.
+- **Pre-registration, and the order.**
+  - `CRITERION.md` sha256 `ba914d27…` matches RESULTS §0, and the file is
+    read-only.
+  - Its mtime is 18:33:21, four seconds before the first run's output
+    directory (18:33:25), so it was fixed before launch.
+  - It names the window, the block length, the drop rule and both outcomes,
+    so the verdict needed no judgement.
+- **No source change, no build.** The binary is `6d047b50…` as required,
+  and no file under `src/` is newer than the D2e build.
+- **Frozen study folders.** Nothing under `d2c_steady`, `d2e_mesh` or
+  `d2f_support` has changed since before this step began.
+- **Run keys.** Both `.done` files carry the D2f Q09 switch
+  (`foot_pad_quantile = 0.9`, `foot_body_clearance = 0`), 0.40 m, a 700 s
+  cap, dz 2 / 1 mm and dt 16 / 8 ms. Both ended on `bottom`, so neither hit
+  the cap and neither stalled.
+- **Identity.** I compared each L09 `thermo.dat` with its D2f Q09 run over
+  the first 3125 lines (to 299.9 s): byte-identical in both cases.
+- **The gate, recomputed from `thermo.dat`** with the criterion's own
+  definition:
+  - t_end 573.2 s (2 mm) and 621.4 s (1 mm), so t_m = 573.2 s.
+  - **(a) matched window 150–573 s: 1.493 vs 1.067 m/h, −28.5 %.** Fails
+    the ±5 % limit.
+  - **(b) 100 s blocks: −1.8, −12.5, −40.2, −64.8 %.** Fails.
+  - The trailing 550–573 s block is 23 s, correctly dropped.
+  - Growth diagnostic −21.67 points per 100 s, as reported.
+  - Ledger ≤ 8.5e-15.
+- **The "what fails" numbers all reproduce:** centre depth 352 vs 337 mm at
+  550 s, feet depth 229 vs 183 mm, `foot_carry_cols` 22 vs 67,
+  `jet_P_face` 945 vs 807 W, T_rec +29 K at 1 mm. So the ring stalls at
+  1 mm while the centre keeps pace.
+- **The pause** (SIGSTOP at 103 s, SIGCONT later) is a pause, not a restart,
+  and the inflated `wall_s` is disclosed with the clean rate.
+- **Takeaways** are strong enough to plan the diagnosis: the leads are
+  ordered by evidence, the split is visible by 250–350 s (so a 350 s pair
+  is enough), and the 2 mm steadiness is flagged as mesh-dependent rather
+  than physical.
+
+### Findings for the next planner (non-blocking)
+- **The scored Meier agreement is now clearly unconverged at the times it
+  was quoted.** D2d's scored window was 470–694 s, where this pair is
+  40–65 % apart. Nothing from D2b–D2d should be quoted as a Meier result
+  until the ring behaviour is understood, including the 1.65 m/h ROP and
+  the T_nozzle inference.
+- **The last block sits against the bottom stop.** The 450–550 s block ends
+  23 s before the 2 mm run's bottom watchdog (centre 352 mm in a 400 mm
+  domain), so bottom proximity may contribute there.
+  - It does not change the verdict: the gate already fails at 250–350 s
+    (−12.5 %) and 350–450 s (−40.2 %), well clear of the bottom.
+  - The diagnosis packet should still avoid drawing mechanism conclusions
+    from the final block alone, and may want a taller domain (D2d measured
+    a +4 % height effect at 0.40 m).
+- **s_c is both a lead and a consequence.** The stand-off runs away at 1 mm
+  *because* the ring stops clearing, and the longer stand-off then weakens
+  the jet. The diagnosis needs a test that separates the two, for instance
+  a fixed stand-off or a fixed recirculation temperature (`rec_fixed`,
+  which D2e added and never used).
+- **Cheapest decisive check first.** Lead 1 (the ring stops firing: rim
+  spall 24 → 8 mm/min, pinned share 0.19 → 0.05) covers the `s ≤ 0`
+  exclusion, the pinned criterion and the half-cell removal increment.
+  A 350 s pair at about 1.5 h per 1 mm run tests each of them.
+
+
+## D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet)
+
+Run between D2g-1 and the re-gate, by the reviewing session, under a hashed
+criterion (`0e23e117…`, 15:02:54, before launch). Binary `6d047b50…`, no build,
+no frozen file edited; `studies/d2h_openloop/` (`run.py` imports d2f → d2e → d2c
+by path). Three key-only pairs, 0.40 m, 350 s, 1 mm plotfiles every 50 s.
+
+| pair | switch | ROP gap 250–350 s | pad v gap | silent pad cols (1 mm) |
+|---|---|---|---|---|
+| L09 (D2g ref) | — | −12.5 % | −8.7 % | 9 % of 36–40 mm |
+| **I0** | `pinned_idle_cycles` 2 → 1e9 | **−4.0 %** | **−3.8 %** | **0 %** |
+| RF | `jet_T_ent_mode` exhaust → `rec_fixed` 1600 K | −15.0 % | −11.2 % | 24 % |
+| OL | RF + prescribed nozzle | **aborted** at 119.3 s | — | — |
+
+- **The mesh-dependent element is the idle clock.** Under the pin a cell absorbs
+  h(T_gas − T_pin) regardless of its own temperature, so it always reaches firing.
+  Once the clock drops the pin, the cell gets the self-limiting face form; lateral
+  loss into the cold rock beside the rim (∝ 1/dx) holds it at a sub-critical
+  plateau (~665 K) and it never fires again. Its cold top pushes the next column
+  past the timeout, so a silent front walks inward. Both legs are cell-scaled:
+  t_cell ∝ dz and lateral loss ∝ 1/dx.
+- With the clock off, the 1 mm fields at 350 s fire in every band 34–48 mm at
+  786–809 K and silence is only above the nozzle plane, as at 2 mm. Idle columns
+  0 vs 594 (L09 1 mm); pinned share 0.127 vs 0.080.
+- **RF rules out the recirculation ratchet as the amplifier** — this answers D2e's
+  untested P-b.
+- **OL aborted on the collision guard:** under `prescribed` its radius defaults to
+  the patch radius (0.2 m), not `foot_r_inner`. Fixed in `run.py`
+  (`nozzle_collision_radius = 0.028`); **not rerun** (the question is answered).
+- **Not established:** convergence beyond 350 s (I0 went −2.1 → −4.0 %; L09 went
+  −1.8 → −12.5 → −40 %). The wall silence at 44–52 mm is the `s ≤ 0` rule and is
+  untouched here.
+- **Do not change the `pinned_idle_cycles` default** without re-checking the
+  2639-file reference set; set it per input instead.
+
+---
+
+## D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED)
+
+Packet planned 09-20, run 09-20/21, reviewed 09-21 in a separate session.
+`tests/MMWSpalling/studies/d2i_gate/` (`run.py`, `CRITERION.md`, `analyze.py`,
+`RESULTS.md` §0–§6, `analysis.md`, `d2i_blocks.png`, `output/` 35 GB). No source
+edit, no build, no relink: binary `6d047b50…` verified identical at both ends.
+Nothing committed.
+
+**Verdict: FAIL.** Matched window 150–572 s **−13.9 %** (2 mm 1.487 vs 1 mm
+1.280 m/h); 100 s blocks **−2.1, −4.0, −16.3, −36.1 %** against a 5 % limit on
+every one. Criterion `1c05225f…`, hashed 19:09:58 before any scored run.
+
+- **Identity PASS.** Both `LI0` legs are byte-identical to the matching D2h `I0`
+  run over all 3645 thermo rows to 349.9 s, so D2h's findings carry over
+  unchanged and the new information starts at 350 s.
+- **The idle clock was a real mechanism but not the cause.** With it off the
+  divergence is delayed ≈ 150 s and its slope halves (−11.45 vs D2g-1's −21.7
+  points per 100 s), but it still runs away. **Idle columns are 0 at both meshes
+  in every block**, so a *second*, slower mesh-dependent mechanism with the same
+  signature sits underneath: the ring stalls at 1 mm while the centre keeps pace.
+- **State at the divergence (350 → 550 s, 2 mm / 1 mm).** Rim spall at 38–40 mm
+  24.5 (held) vs 24.3 → 14.9 mm/min; flank removal over 40–60 mm 1.77 → 0.49 vs
+  1.67 → 0.09 cm³/s; feet end 23 mm apart (172 vs 195 mm) while the centre floor
+  is only 9 mm apart (48 vs 57 mm); `s_c` 170.0 vs 178.9 mm; `jet_r_reach` 45.8
+  vs 43.8 mm; `jet_P_face` 1056 vs 959 W. Pinned share is nearly equal
+  (0.209/0.205 → 0.115/0.103) and the ledger closes to 1e-15, so it is neither a
+  pinning-rate difference nor accounting. The silent front at 1 mm starts in the
+  band just outside the pads (40–44 mm: 0 → 35 → 80 % between 350 and 550 s) and
+  walks in (36–40 mm at 31 %, 32–36 mm at 11 % by 550 s); 2 mm is 0 % below
+  44 mm throughout.
+- **`pinned_idle_cycles` is a threshold, not a dial.** `I20_1mm` (= 20) is
+  **byte-identical** to `I0_1mm` (= 1e9) in both `thermo.dat` and the removal
+  log: at 1 mm a 20-cycle clock never trips in 350 s. The trio is two points
+  (1.322 m/h at 2 cycles; 1.444 at both 20 and 1e9). Never describe the rate as
+  varying with the clock.
+- **The criterion was amended after a first hashing and the record is in the
+  file.** The user revised the packet after `051e93a5…` (19:01:50) and after two
+  runs had started; the sensitivity run moved 2 mm → 1 mm and the plotfile
+  spacing 100 s → 50 s. The deciding text (pair, ROP estimator, t_m, gap,
+  conditions (a) and (b)) is byte-unchanged between versions; the two started
+  runs were killed and their output deleted, so every scored run postdates the
+  amendment. The reviewer recovered the first version from the transcript,
+  re-hashed it and diffed the deciding text: confirmed.
+- **Runs.** `LI0_2mm` bottom at 571.8 s (15.7 min); `LI0_1mm` bottom at 591.1 s
+  (wall 304.6 min, computing ≈ 188 min); `I20_1mm` cap at 349.9 s (wall 232.2,
+  computing ≈ 115 min). Three four-rank jobs together under `caffeinate -dis`,
+  suspended 19:40–21:37 by SIGSTOP/SIGCONT at the user's request.
+  `sp_meier_pilot/test_feet` and `test_feet_d2c` both PASS.
+
+**Takeaways carried forward:**
+1. **Nothing is scored.** The support rule is mesh-converged only to ≈ 350 s
+   (against ≈ 300 s with the clock on). D2d's scored window 470–694 s sits where
+   the pair is 16–36 % apart. **No Meier number from D2b–D2d may be quoted**, and
+   D2g Stage 2 must not be planned on this rule.
+2. **`thermo.dat` is heavily buffered; never estimate progress or ETAs from it.**
+   It lagged by minutes and made the 1 mm legs look 4× slower than they were.
+   `<pf>_removal_events.csv` flushes promptly; use its last time.
+3. **`rim.py` reconstructs `foot_z` to 0.000 mm at both meshes** with the clip
+   retired and q = 0.9, so a later `foot_z` mismatch means a real code/analysis
+   divergence, not tolerance.
+4. **The analysis reuse chain is four deep** (d2i → d2g → d2f → d2e → d2c) and
+   every level is loaded by `importlib.util.spec_from_file_location`; a plain
+   `import` anywhere would break it silently.
+5. **The silence metric is a heuristic** (no removal event within 2·t_cell at a
+   fixed 528 K and 3e5 W/m²). It was pre-registered as reported-not-deciding,
+   which is right; a packet that leans on it must first show the front is not an
+   artefact of the threshold.
+6. **Two Stage 2 decisions remain open and untouched:** the 0.70 m
+   acceptance-mesh question, and the one-sided 1.30 m/h scoring with a
+   free-surface-off sensitivity for the wellhead.
+
+**Leads named in `RESULTS.md` §6 (not tested there):** the `s ≤ 0` exclusion
+above the nozzle plane (the front starts in the bands nearest it); the stand-off
+feedback and whether a centre equilibrium exists at 1 mm; the half-cell removal
+increment (∝ dz); and the pinned criterion at a lateral edge without the clock.
+A diagnosis pair needs only ≈ 450 s (≈ 2.5 h at 1 mm) because the legs are
+identical to 350 s.
+
+---
+
+## D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same evening by D2j-0b)
+
+`tests/MMWSpalling/studies/d2j0_hotdisk/` (`input_hotdisk`, `run.py`,
+`PREDICTIONS.md` sha256 `db007f1b…` 09:35:52 written before any run and never
+amended, `analyze.py`, `RESULTS.md` §0–§6, `d2j0_vprofile.png`, `output/` 3.0 GB).
+No source edit, no build; binary `6d047b50…` verified at both ends.
+
+A fixed Robin disk (r = 30 mm, h 700 W/m²K, T_gas 1600 K) on flat rock, quarter
+domain 0.08 × 0.08 × 0.10 m, **no jet, no feet, no descent**, at 4 / 2 / 1 mm,
+sharp and tapered h, 150 s.
+
+- **As scored: P2 failed.** A stalled annulus forms at the patch edge at every
+  mesh, but `f_stall` does **not** grow as dx falls (7.0 / 6.7 / 7.4 % at
+  4 / 2 / 1 mm) — the same 28–30 mm ring at every resolution. `w_edge`
+  converging (+119 % from 4 → 2 mm, then +15.3 %), so `S05` was correctly
+  skipped under the pre-registered 20 % rule.
+- **The verdict "the edge is bounded; do not redesign the front" is WITHDRAWN**
+  by D2j-0b: the 150 s window hid the growth. The same disk at 250 s has a
+  growing gap (−10 → −20 %) and an inward-walking ring.
+- **The sharp-vs-tapered discriminator came back on neither branch**, which is
+  itself a durable finding: sharp and tapered agree to ~0.005 in `v(r)/v_c` and
+  0.2 points in `w_edge` scaling. **The recession edge is not set by the
+  sharpness of h**, so the gas closure (`jet_r_reach`) is ruled out as the D2i
+  driver.
+- **The disk-mean rate, not `w_edge`, is the quantity that matters** for a rate
+  comparison, and it was still moving ≈ 10 % per halving at the finest pair with
+  no convergence criterion pre-registered for it. Later packets must
+  pre-register the disk-mean rate.
+- Checks: decomposition PASS (`S2` at `blocking_factor` 1 vs 2 byte-identical);
+  ledger ≤ 9.6e-15 on all six runs; `test_feet` and `test_feet_d2c` PASS.
+
+**Takeaways (durable, harness-level):**
+1. **Geometry must divide by `blocking_factor` at the coarsest mesh.** 0.10 m at
+   4 mm is 25 cells and aborted; `blocking_factor = 1` was set at *every* mesh
+   and then proved harmless byte-for-byte rather than varied across a sweep.
+2. **A tapered patch cannot end at the nominal radius.** `BuildFlameColumns`
+   aborts on h ≤ 0 for any in-patch column, so a ramp reaching zero at 32.5 mm
+   needs `radius = 0.0325` exactly; otherwise the "tapered" case silently
+   carries a half-height jump. `run.py --list` prints the minimum in-patch h.
+3. **`h_expr` drags in the nozzle.** Under `jet_closure = none` the parser
+   requires `h_expr` and `T_flame_expr` together, forbids `h_conv`/`T_flame`
+   alongside them, and makes `nozzle_z0` required. For a static test set
+   `nozzle_z0` far above and `nozzle_feed = 0` so neither `s ≤ 0` nor the
+   collision guard can fire, and keep the expression independent of `s`.
+4. `caffeinate -dis` is now structural for every study launch (written into
+   `.claude/commands/implement.md` at the user's request this session — the one
+   file changed outside the study folder, disclosed).
+5. **`score.py` writes profile CSVs into its own study folder**, so scoring one
+   study's runs adds files to another folder we call frozen (two appeared under
+   `d2c_steady/output` from scoring D2i). A future packet should make it write
+   beside the run.
+
+## D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet)
+
+`tests/MMWSpalling/studies/d2j0b_plane/` (`CRITERION.md` sha256 `2e6595eb…`
+locked 15:04 before launch, `CRITERION_addendum.md`, `run.py`, `analyze.py`,
+`step_probe.py`, `wall_probe.py`, `RESULTS.md`, `analysis.md`,
+`d2j0b_bands.png`, `output/` 7.9 GB). Key-only, binary `6d047b50…`, no build.
+
+The D2j-0 sharp disk in a 0.08 × 0.08 × **0.15** m box plus a **prescribed
+plane** 20 mm above the surface descending at 1.55 m/h. Variants differ only in
+(h, T_gas) above the plane: **C0** none (700/1600), **C1** exclusion emulated
+(1e-3/1600), **C2** warm wall (100/1000), **C3** exhaust-like (100/1600),
+**C1d** = C1 at dt 8 ms. 2 mm runs 2–3 min; 1 mm ≈ 26 min.
+
+**This is the packet that found the cause of the D2i mesh failure.**
+
+1. **The cascade reproduces with no feet, no jet, no gas closure — and the
+   exclusion is not even necessary.** C1 at 2 mm: every band stops firing 7–14 s
+   *before* its own face crosses the plane, ≈ 5 mm below it, and 21–36 s after
+   the band outside it crossed — D2i's pattern (5–50 mm below, 33–59 s at 2 mm).
+   **C0 cascades too, three times slower** (26–28 mm stops at 216 s vs 92 s).
+2. **The mechanism, as now stated:** a firing top cell beside a taller, colder
+   column loses **k(T_top − T_wall)/dx through a step face the model never
+   heats** (≈ 240 kW/m² at 2 mm, ≈ 480 at 1 mm, against q_pin ≈ 520). It stalls
+   when the wall interior is cold enough and then becomes the next wall. **The
+   threshold scales with 1/dx, so refinement makes it worse.** This holds for any
+   lateral hot/cold edge — pad rim, disk edge, cone wall.
+3. **Wall heating above the plane is NOT a remedy: C1 ≡ C2 ≡ C3 band for band**
+   at both meshes. A wall held by h = 100 at 1000 or 1600 K sits at 430–500 K
+   thirty seconds after exposure; the cell that drains the firing neighbour is
+   the wall column's **interior at the step depth, 10–20 mm below the exposed
+   surface**, unreachable by surface heating on this time scale. The
+   wall-heating closure is withdrawn.
+4. **`spall.surface_normal = 1` is inert for the cascade** (exploratory, "no
+   effect" predicted in writing first): C1n ≡ C1 and C0n ≡ C0 in every band's
+   `t_stop` to 1 s and block rates to 0.3 % at 2 mm, and C1n_1mm ≡ C1_1mm. The
+   Step 20 kernel acts on the criterion and the cut depth, not on the step flux.
+   **Third independent measurement of its inertness** (after D2b and D2a).
+5. **1 mm gaps:** C0 −10.4 / −15.3 / −20.1 %, C1 −13.5 / −28.7 / −45.5 %,
+   C2 ≡ C1, over blocks 50–100 / 100–150 / 150–200 s. `r_front` at 1 mm under C1
+   moves 26 → 22 → 18 mm. dt check holds (C1d vs C1 within 0.5 s and 0.4 %).
+6. **Bug audit before launch (user request):** `BuildFlameColumns`,
+   `FeetDescent`, `JetEnthalpyMarch`, `PinRule`, `BuildPinEffective`,
+   `SurfaceCellFlux`, the H-update kernel, `EnergyLedger`, `ColumnTopSolid`,
+   `UpdateSpAfterMechanics`, Removal.H (clearance pass, PASS 1, 1b, 2 with the
+   K_I scan and bisection, coherence cap, pin write, PASS 3) and the scoring
+   scripts. **No defect found that would bias the mesh comparison.** Two
+   modelling facts confirmed: flux and losses act on a column's **top face
+   only** (an exposed vertical step face is adiabatic), and a firing column's top
+   cell conducts laterally into the *interior* of a higher neighbour column at
+   the step depth. `ledger_surface_missing_cols` is inert (the unused phi-window
+   surface field under `follow_mask`).
+7. **The half-cell removal increment is NOT a second mesh mechanism** (the
+   extraction the planner asked for, table at the end of
+   `Claude_markdowns/2026-09-21.md`). Per-bin `v_1mm/v_2mm` for C0 in 50–100 s,
+   before any band stalls: **0.996–1.007 wherever the local slope < 0.7**, then
+   0.953, 0.900, 0.866, 0.745, 0.628, 0.525 in the six outer bands as the slope
+   runs 0.7 → 8.2. The whole ≈ 10 % disk-mean offset lives where the per-column
+   step exceeds the thermal length (slope × dx ≳ 1.5 mm); the flat interior,
+   where an increment effect would have to show, shows nothing (and S1 already
+   had the flat 1-D case converging). **The offset is the same corner sink in
+   its tall-step regime.** Consequence: the next packet is **single-remedy**.
+
+**Withdrawn by this diagnostic:** the D2h open-loop pair (it would only
+re-measure the same cascade without the feet), wall heating above the plane,
+D2j-0's "bounded edge", and `spall.surface_normal` as a remedy.
+
+---
+
+## D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier gate FAIL and inconclusive)
+
+First source change since the D2e perf edits. `src/Integrator/MMWSpalling.H` only;
+`tests/MMWSpalling/unit/side_face_flux/`; `tests/MMWSpalling/studies/d2k_sideface/`
+(`CRITERION.md` `6322064a…`, `CRITERION_MEIER.md` `90af5275…`, `witness/`, `output/`).
+Binary `6d047b50…` → `62dea451…`, both recorded. Nothing committed.
+
+**The rule.** Two default-off keys (`surface_patch.side_face_flux`,
+`side_face_factor` = f). A solid, in-patch cell with a void lateral neighbour
+receives `f·(q_in − q_out)` on each exposed face through **the same
+`SurfaceCellFlux` call** as the column's top face, added as `q·inv_dx` beside
+`q_in·inv_dz`. Cubic cells enforced by abort.
+
+- **Reference-set identity, key off: PASS, 2639/2639 byte-identical**, every test
+  rc = 0. Unit test 12/12 (ledger 1.9e-14, f-linearity exact to 0.00e+00).
+  `test_feet` and `test_feet_d2c` PASS.
+- **Arbiter PASS.** On the D2j-0b C1 cascade the disk-mean block gaps go from
+  **−13.5 / −28.7 / −45.5 %** (key off) to **+3.4 / +1.5 / −3.2 %**, with no band
+  stalling and no inward front, drawing 7 % of face power. f = 0.7 moves it 0.8 %.
+  **The D2j-0b mechanism is real and this remedy removes it.**
+- **Meier gate FAIL and inconclusive.** Window 150–450 s −1.9 % (passes); blocks
+  **+2.8 / +3.5 / −85.2 %** (fails). Both legs drilled out of the 0.40 m domain, so
+  the failing block measures the bottom stop, not the mesh — and the 350–550 s
+  window where D2i actually diverges was destroyed.
+- **The pre-registered direction is REFUTED.** Predicted: rate down a few %, hole
+  5–15 mm wider. Observed: **rate up 2.7× (4.07 vs 1.49 m/h)**, hole only
+  **+1.4…+4.0 mm** at matched feet height.
+- **Not a budget leak** — checked first because the packet's own rule said a rise
+  would imply one. `jet_P_face` = `ledger_P_robin` to 0.1 W (3204.2 W over
+  150–250 s) and the cap is never approached (max ratio 0.41). **The jet was
+  area-limited, not enthalpy-limited.**
+
+**The decomposition that matters for the next step:** absorbed power went
+1639 → 3204 W (**2.0×**) while the rate went **2.7×** and the hole widened ~4 mm.
+The rate rose *more* than the power because warming the wall removes the lateral
+conduction sink (240–480 kW/m² of a ~520 kW/m² budget), so a much larger fraction
+of absorbed power converts to recession. **That second factor is correct physics
+and must survive any closure; the suspect factor is the first — applying a
+stagnation-impingement `h` to a near-vertical face.**
+
+**Takeaways:**
+1. **The budget gather is exact and was the hard part.** `JetEnthalpyMarch` is
+   serial and replicated but a column's wall cells are spread over the
+   z-decomposition. A dense (column × k) gather is ~20 MB/step; instead per-column
+   `nslots = 1 + max(k_top − k)` via `ReduceIntMax`, prefix-sum to rank-identical
+   offsets, one `ReduceRealSum` over the compacted total. Verified by
+   `jet_P_face == ledger_P_robin` to 0.1 W.
+2. **Reusing `SurfaceCellFlux` is load-bearing.** `T_s = min(T_f, T_pin)` comes
+   with it, so a side-heated cell cannot exceed the firing temperature; and a
+   column above the nozzle plane already has `flame_h = 0`, so the `s ≤ 0`
+   exclusion is free while the face still radiates — exactly what an excluded top
+   face does. Never write a second flux expression.
+3. **Cubic cells are required and the code aborts otherwise** (one flux call
+   serves both lateral axes only if dx = dy; the face conductance `2k/dx` matches
+   `2k/dz` only if dx = dz).
+4. **`f` corrects area, not `h`, and that distinction is the finding.** The rule
+   applies the impinging-jet `h` to a vertical wall; side faces carry 39 % (2 mm)
+   / 35 % (1 mm) of face power. The next closure is a **heat-transfer** decision
+   and must not be made by tuning `f`.
+5. **The side term is a feet-descent accelerator, not a hole-widener.** At matched
+   *time* the hole looks 30 mm wider, but that is having drilled three times
+   further. **Always compare hole shape at matched geometry, never at matched
+   time.** The feet rest on the highest rock under the pads and side heating
+   attacks exactly those protruding columns.
+6. **A Meier re-test needs a taller domain** (0.70 m) or a corrected wall `h`
+   first: at 4 m/h the 0.40 m box is gone in ~400 s.
+7. **Scoring-script change made after seeing results, disclosed:** Δ_own = ∞
+   tripped a `> 10 s` test because `t_stop = t_end` is D2j-0b's sentinel for
+   *still firing*. Fixed by excluding `t_stop ≥ t_end − 5`; the reviewer confirmed
+   this implements the criterion's own wording rather than weakening it, and the
+   criterion file is unedited.
+8. **Do not track progress from `<pf>_removal_events.csv` alone** — it froze at
+   373 s while the run stepped to 450 s, because the hole had bottomed out. Use
+   `.done` for completion and `thermo.dat` mtime for liveness.
+9. **The witness sweep writes into its own study folder** — the frozen
+   `d2e_mesh/witness/` scripts were copied into `d2k_sideface/witness/` with paths
+   rewritten, avoiding the `score.py` trap the packet flagged.
+
+**Review findings carried forward (non-blocking except the first):**
+- **The working tree no longer matches the binary that produced every D2k
+  result.** At 00:01 on 09-22 another session added AMR surface-band refinement to
+  `MMWSpalling.H` and `Removal.H` and built `bin/mmwspalling-3d-g++-amr`. D2k's
+  binary is untouched, but D2k's own kernel line now carries `&& owner` (:1369),
+  which is not in the build that passed identity. **The 2639-file sweep must pass
+  on the current source before any rebuild of the main binary.**
+- Nits: the kernel adds `f·(q_in − q_out)` where the packet said `f·q_in` (the
+  code is right — it matches what a top face does — and the wording should
+  follow it); the unit test's exclusion check reads "no flame gain, the face still
+  radiates" rather than "receives nothing", which is the correct reading; and
+  `unit/side_face_flux/` has no `test_pass.log` on disk.
+
+---
+
+## D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered STOP, no code written)
+
+`tests/MMWSpalling/studies/d2l_scan/`, `PREDICTIONS.md` sha256 `b1b6686f…` written 10:26:57,
+read-only **before `output/` existed** (11:18:16). Binary `62dea451…`, **key-only: no source
+change, no build, Gate 1 not run, no closure written.** Harness identity guard passed:
+`A_f10` ≡ D2k `C1_2mm` and `M_f10` ≡ D2k `LI0_2mm` byte-identical, so reaching through two frozen
+studies is sound. Ledger ≤ 8.1e-15, cap ratio ≤ 0.39 throughout.
+
+**The decision: `f_min` = 0.5, `f_rate` = 0 — no overlap at all.** The side-face dial must stay at
+≥ 0.5 to keep the D2j-0b cascade suppressed, and must be 0 to bring the rate back into 1.3–1.6 m/h.
+One parameter controls both and pulls them in opposite directions, because the wall stays warm only
+while it is heated. **The wall-`h` closure is dead on its own terms.**
+
+| f | ROP 150–250 s | absorbed (qtr) | V̇ | min Ø | depth-mean Ø | J/mm³ to rock |
+|---|---|---|---|---|---|---|
+| 1 | 4.066 | 3204 W | 9.73 | 78.0 | 101.9 | 1.32 |
+| 0.5 | 3.759 | 2524 W | 7.58 | 77.1 | 97.8 | 1.33 |
+| 0.2 | 3.087 | 1980 W | 5.75 | 77.7 | 100.4 | 1.38 |
+| 0.1 | 2.137 | 1837 W | 5.25 | 77.5 | 104.1 | 1.40 |
+| 0 | 1.491 | 1639 W | 4.58 | 78.0 | 107.6 | 1.43 |
+
+**The finding that outranks the STOP.** With the side term **entirely off** — the D2i/D2d
+configuration — the model already absorbs 6.56 kW (17.3 % of 38 kW HHV) and removes **4.58 cm³/s
+against Meier's 2.47, i.e. ≈ 1.9× too much rock**, while the *burner rate* looks right (1.49 m/h).
+D2k's term doubled an error that was already there. **The rate agreement in D2b–D2d was partly a
+coincidence of two errors**, which is why "ROP in band" kept coexisting with "Ø and volume fail".
+
+- **Shape is the real signal:** the model cuts at **78 mm** (Meier 85–93) and flares to **145 mm**
+  at the mouth. Freshly cut rock is ~78 mm at *every* f; everything wider is accumulated
+  afterwards, and scales with dwell (119/98/45/0/258 s).
+- **Min Ø is flat to 0.9 mm across a ladder where absorbed power doubles** — a thermal diameter
+  would move with power. Something geometric is pinning it (→ D2m).
+- **The excess volume and the too-cheap removal are the same energy with a different fate.** The
+  excess 2.11 cm³/s costs ≈ 3.0 kW, ~46 % of all absorbed power. Remove it and the cost lands near
+  2.6 J/mm³ — about what Meier's numbers imply at a comparable delivery fraction. In his hole that
+  heat soaked into the wall (the altered band in the sawn section); in ours it removes rock.
+
+**Method corrections carried forward (all three matter beyond this packet):**
+1. **The cascade is invisible at a single mesh, at any f.** No band stalls and no `r_front` walks
+   inward at 2 mm even at f = 0.1, although key-off C1 at 2 mm does. **P1's single-mesh half was
+   refuted** (scored as "held" on the `f_min` half only). **Every future arbiter run must be a
+   mesh pair** — cheap single-mesh screening does not work for this class of failure.
+2. **The 4–6 J/mm³ "to-rock band" is not a measurement.** It is 0.3 × 38 kW ÷ Meier's volume from
+   the reference file, i.e. an *assumed* 30 % delivery, so "fails the band at every f" is the same
+   sentence as "delivery would have to be 9 %". **It cannot be used as independent evidence that
+   removal is too cheap**, and must not be quoted as a target. The only independent number on that
+   axis is the thermodynamic floor, 1.147 J/mm³; a thin-layer ablation model should sit near it,
+   and this one does (1.15–1.25×).
+3. **Ø at a single depth is fragile** — profiles cross, and the matched depth landed near a
+   crossing. Pre-register the **full Ø(z) profile plus the minimum**, never one depth. Ø at matched
+   *time* is meaningless (it tracks dwell: the slowest run showed the second-widest hole).
+
+**Deviations, both declared in `PREDICTIONS.md` §1 before launch:** 0c was run at f = 0 as well as
+f = 1, because both probes are provably inert at f = 1 (the far law is clamped at 12 D = 90 mm and
+the hole sits inside it; `jet_fs_cols` = 0 already) — the f = 1 legs then confirmed inertness to
+round-off. And the full 1 mm ladder was run because the packet's trigger ("run 1 mm at whichever f
+first fails at 2 mm") never fired — a superset, removing discretion rather than adding it.
+
+**A post-hoc metric swap was caught and reverted, and disclosed.** Scored on depth-mean Ø,
+`P_fsoff0` reads as the discriminating signature (+17.1 mm, rate −2.3 %) and the verdict flips. It
+is not one: the depth-mean was never the pre-registered metric, and it already fails **wide**
+(112 vs 85–93), so +17 mm is a worse funnel. The quantity that fails low is the minimum Ø, which
+moved +0.3 mm. **0c is inconclusive on shape, not negative** — the two available keys move the
+far-field axial decay and the mouth dilution, neither of which reshapes the radial profile that
+"h(r, s) is too peaked" refers to.
+
+**Open, for the next packets:** delivery vs cost cannot be split by this test (one equation, two
+unknowns). Two independent anchors named: the **thermally altered band** beside Meier's hole in the
+sawn section (heat that removed no rock — the only direct constraint on wall loss, and nobody has
+measured it), and the mouth-flank behaviour with and without dilution. Also reopened: **cuttings
+absorbing heat** was withdrawn as degenerate with delivery efficiency *under a fixed-flux BC*; the
+enthalpy march made the budget finite, so that premise has expired.

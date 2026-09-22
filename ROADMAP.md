@@ -374,29 +374,145 @@ Completed and passing:
   - **Recommended for D2b, before D2b:** `decay` + entrained mass.
   - See `docs/project/ARCHIVE_DONE.md`.
 
+- **D2b — Burner-on-feet descent and the scored Meier test (COMPLETED,
+  review-accepted, archived 09-17).**
+  - `nozzle_descent = feet` (tripod pads, annulus [0.028, 0.040], 0.9
+    quantile), `jet_T_ent_mode = exhaust`, `foot_stall_time`; new
+    `unit/robin_feet`; `sp_meier_pilot/input_feet` + check-only `test_feet`.
+  - **J-M untuned: ROP 1.36 m/h in band, ΔT_fire 528 K pass; but no steady
+    window** (the 12 D h clip in `walljet.h_expr` lets the centre pit run to
+    the domain bottom), **mouth funnel** (whole-excavation volume 2.3×
+    measured), min Ø over the drilled depth 78 mm (no burner body). Fixed
+    293 K stalls; 1436 K 0.67 m/h; J-5/J-10 above band (retired).
+  - Mesh on a trimmed domain (−4.8 % ring) is not like for like under exhaust.
+  - See `docs/project/ARCHIVE_DONE.md`.
+
+- **D2c — Steady-state and no-funnel closures + pre-registration (COMPLETED,
+  review-accepted, archived 09-17).**
+  - Default-off keys: `jet_decay_diameter = momentum` + `jet_De_ref` (full
+    jet), `jet_free_surface` (+ aspect, exponent; T_rec from the mouth),
+    `jet_bin_update = exponential`, `jet_negative_flux = count`,
+    `foot_body_clearance` (regime 4); helper far law `power`. New
+    `unit/jet_d2c` 26/26; 2639 witnesses identical; `input_feet_d2c`.
+  - Hashed `PREDICTIONS.md`: steady ring ROP 1.93 m/h (just above band),
+    steady window from 750 s needs a ≥ 0.65 m domain; ring insensitive to n;
+    T sweep 1.34/1.64/1.93 m/h at 1600/1750/1900 K; mouth predicted to fail
+    (134/118 mm vs 92/88). Probes: 6.7 (2 mm) / 55.6 (1 mm) wall-s per s.
+  - See `docs/project/ARCHIVE_DONE.md`.
+
+- **D2d — Meier campaign (COMPLETED, review-accepted, archived 09-18).**
+  - R1 (2 mm, 0.70 m): steady window 470–694 s (marginal), ROP 1.65 m/h and
+    whole volume 2.59 cm³/s PASS; mouth 130/114 vs 92/88 mm and depth-mean
+    Ø 101 FAIL; min Ø to feet 77.6 (unresolved).
+  - **Mesh FAIL: 1 mm +42.8 % ROP (150–300 s, 0.40 m full domain).** All 2 mm
+    Meier numbers D2b–D2d are conditional on it; the T_nozzle inference is not
+    to be quoted. P6: 11 held, 1 refuted (P3 1600 K). Free-surface dilution
+    closes ~half the mouth excess; the far law is a centre closure.
+  - Diagnosis (09-18b): seed = whole-cell clearance clip of the 0.9-quantile
+    rim band; amplifier = flank exclusion → hotter recirculation.
+  - See `docs/project/ARCHIVE_DONE.md`.
+
+- **D2e — Speed-up acceptance + mesh-seed diagnosis (COMPLETED, archived
+  09-18; NOT /verify-ed).** Perf edits accepted (2639/2639), mgs 60, dt 16 ms
+  (2 mm) / 8 ms (1 mm) gated: 1 mm cost 54 → 19.5 wall-s/s. New default-off
+  `jet_T_ent_mode = rec_fixed`. **Seed = the whole-cell clearance clip**: with
+  it off, 2 mm vs 1 mm +0.1 % (B0 +42.7 %). P-b/P-c at 1 mm stopped by the user
+  to move to a physical support rule; amplifier untested. See ARCHIVE_DONE.
+
+- **D2f — Contact support rule (COMPLETED, review-accepted, archived 09-19).**
+  Outcome (b): D2g scores pads, q = 0.9, clip off. q barely matters (2 mm ROP
+  1.535 / 1.491 / 1.448 m/h at q 0.8 / 0.9 / 1.0, ±2.9 %; carry ±3 %). q = 1.0
+  failed one late block (−9.7 %). Q09 converged to 300 s but trending
+  (−3.0, −4.3 % in the last blocks): late 1 mm drift, cause unknown. Funnel
+  unchanged (gas-side). D2e reviewed retroactively 09-19 (accepted); commit deferred.
+
+- **D2g-1 — Long mesh check of q = 0.9 (COMPLETED, review-accepted, archived
+  09-20; GATE FAILED).** Matched window 150–573 s −28.5 %; blocks −1.8, −12.5,
+  −40.2, −64.8 %. The centre keeps pace while the ring stalls at 1 mm (feet 229
+  vs 183 mm at 550 s). **D2b–D2d Meier numbers were read where the pair is
+  40–65 % apart; none may be quoted.** The 2 mm steadiness is mesh-dependent.
+- **D2h — key-only diagnostic pairs (2026-09-20, reviewer; no packet, archived).**
+  **The mesh-dependent element is the idle clock** (`pinned_idle_cycles`,
+  timeout ∝ dz): unpinning drops a column to the self-limiting face form, lateral
+  loss (∝ 1/dx) parks it sub-critical, and a silent front walks inward. Idle off:
+  ROP gap −4.0 % (ref −12.5 %), silent pad columns 0 %. Fixed recirculation:
+  −15.0 % — **the exhaust ratchet is not the amplifier (closes D2e's P-b)**. The
+  open-loop pair aborted on a collision-guard default; not rerun.
+
+- **D2i — Support-rule gate with the idle clock off (COMPLETED, review-accepted,
+  archived 09-21; GATE FAILED).** Matched window 150–572 s **−13.9 %**; 100 s
+  blocks −2.1, −4.0, −16.3, −36.1 %. Identity to D2h PASS (byte-identical to
+  349.9 s). **The idle clock was a real mechanism but not the cause:** with it
+  off the divergence is delayed ≈ 150 s and its slope halves, but it still runs
+  away, and **idle columns are 0 at both meshes in every block** — a third
+  mechanism with the same signature is underneath (ring stalls, centre keeps
+  pace; feet 23 mm apart at 550 s vs a 9 mm centre floor). `pinned_idle_cycles`
+  is a **threshold, not a dial**: `= 20` is byte-identical to `= 1e9` at 1 mm.
+  **Stage 2 must not be planned on this rule.** See ARCHIVE_DONE.
+
+- **D2j-0 — Hot-disk edge test, event model (COMPLETED 09-21, archived; its
+  verdict WITHDRAWN the same evening).** A fixed Robin disk with no jet, feet or
+  descent, at 4/2/1 mm, sharp and tapered h. As scored, P2 failed (`f_stall`
+  mesh-independent, `w_edge` converging), but the 150 s window hid the growth and
+  D2j-0b withdrew the "bounded edge" reading. **Durable:** sharp ≡ tapered, so
+  the recession edge is not set by the sharpness of h and the gas closure
+  (`jet_r_reach`) is ruled out; and the **disk-mean rate**, not `w_edge`, is the
+  quantity a mesh statement must pre-register.
+- **D2j-0b — Hot disk under a descending exclusion plane (reviewer diagnostic
+  09-21, no packet, archived). THIS FOUND THE CAUSE.** The D2i cascade reproduces
+  with **no feet, no jet, no gas closure, and the exclusion is not even
+  necessary** (C0 cascades three times slower). **Mechanism: a firing top cell
+  beside a taller, colder column loses k(T_top − T_wall)/dx through a step face
+  the model never heats** (≈ 240 kW/m² at 2 mm, ≈ 480 at 1 mm, against q_pin
+  ≈ 520); it stalls, then becomes the next wall. The threshold scales with 1/dx,
+  so refinement makes it worse, at any lateral hot/cold edge. **Withdrawn by it:**
+  wall heating above the plane (C1 ≡ C2 ≡ C3), `spall.surface_normal` as a remedy
+  (inert at both meshes), the D2h open-loop pair, and D2j-0's "bounded edge".
+  The half-cell increment is **not** a second mechanism (flat interior agrees to
+  0.5 %; the whole offset lives where slope × dx ≳ the thermal length).
+
+- **D2k — Side-face flux on exposed vertical faces (COMPLETED 09-22,
+  review-accepted; arbiter PASS, Meier gate FAIL and inconclusive).** Default-off
+  keys; **2639/2639 identity PASS**; unit 12/12. **The arbiter passes**: the
+  D2j-0b cascade goes from −13.5 / −28.7 / −45.5 % to **+3.4 / +1.5 / −3.2 %**
+  with no stalls — the step-face mechanism is real and this removes it. **The
+  Meier gate fails**: rate **up 2.7×** (4.07 vs 1.49 m/h) against a pre-registered
+  fall, hole only +1.4…+4.0 mm wider at matched feet height, and both legs drilled
+  out of the 0.40 m box so the failing block is a bottom stop. **Not a budget
+  leak** (`jet_P_face` = `ledger_P_robin` to 0.1 W, cap ratio 0.41): the jet is
+  **area-limited, not enthalpy-limited**. Power 1639 → 3204 W (2.0×) while the
+  rate went 2.7×, because warming the wall also removes the lateral conduction
+  sink — **that second factor is correct physics and must survive any closure**.
+  See ARCHIVE_DONE.
+
+- **D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 09-22;
+  window EMPTY ⇒ pre-registered STOP, no code written).** `f_min` = 0.5 (the
+  side-face dial must stay at half or above to keep the D2j-0b cascade
+  suppressed) but `f_rate` = 0 (the rate returns to 1.3–1.6 m/h only with the
+  term off). No overlap — **the wall-`h` closure is dead on its own terms.**
+  **The finding that outranks the verdict:** with the side term entirely off,
+  the model already removes **4.58 cm³/s against Meier's 2.47 (≈ 1.9×)** while
+  the burner rate looks right — so **the D2b–D2d rate agreement was partly a
+  coincidence of two errors**, which is why "ROP in band" kept coexisting with
+  "Ø and volume fail". Cut Ø **78 mm** (Meier 85–93) flaring to 145 mm at the
+  mouth. Method corrections: **the cascade is invisible at a single mesh at any
+  f — every future arbiter run must be a pair**; the 4–6 J/mm³ "to-rock band" is
+  an assumed 30 % delivery, not a measurement, and is not a target; pre-register
+  **Ø(z) plus the minimum**, never one depth. See ARCHIVE_DONE.
+
 Active step:
 
-- **D2b — Burner-on-feet descent and the scored Meier test.**
-  - `surface_patch.nozzle_descent = feet`: `z_n = z_foot + foot_standoff`,
-    monotone; `z_foot` = mean over 3 azimuth pads of each pad's 0.9 quantile
-    face height over the foot annulus **[0.028, 0.040] m** (a rigid tripod, so
-    one never-fired column cannot stall the burner); optional operator cap.
-  - `jet_T_ent_mode = exhaust`: the jet entrains its own lagged exhaust (blind
-    hole, jet confined in the feet collar); **scored baseline**, decided
-    before any run, with the ambient case in the same verdict table.
-  - New `unit/robin_feet`. Hand prediction (feet equilibrium + hole depth
-    profile) with `walljet.py` **before** any run.
-  - 3-D quarter domain, decay + entrained mass + exhaust, 1900 K. Stage A
-    picks the wall treatment by a pre-stated rule with a pre-decided
-    tie-break (violations outside the ring are carried as caveats); then
-    B (score **J-M**, report J-5/J-10), D (required 1 mm check on a
-    r ≤ 60 mm trim), C (ambient entrainment, nozzle mass, 1436 K).
-  - Hole diameter is scored depth-mean and read as a check of geometry
-    (feet + 50 mm stand-off + profile shape), not of the anchor. A stall is
-    where Meier's operator pushed, not "cannot drill".
-  - New scored `sp_meier_pilot/test_feet`; the uniform-beam test is marked
-    superseded.
-  - No tuning; J-M is scored as it comes out. See `ACTIVE_STEP.md`.
+- **D2m — Is the cut diameter set by the feet or by the flame?** Key-only, no
+  build, ~1 h. D2l's cut diameter was **flat to 0.9 mm (77.1–78.0) while
+  absorbed power doubled** — a thermal diameter would move with power, so
+  something geometric is pinning it, and the feet span Ø 80. Five 2 mm Meier
+  legs to 250 s varying only `foot_r_outer` (32/40/44/48 mm) plus one case
+  shifting the ring outward at constant width. **H-feet:** min Ø ≈ 2 ×
+  `foot_r_outer` within 5 mm. **H-thermal:** min Ø stays 78 ± 3 mm. Hashed
+  before launch, with the ROP direction pre-registered as a sign test on the
+  reasoning itself. Meier's hole was 85–93 mm with the *same* Ø 80 feet, so if
+  ours tracks the stance, the mechanism that removes rock **beyond** the feet is
+  missing and no wall-`h` work will supply it. See `ACTIVE_STEP.md`.
 
 Withdrawn (not implemented):
 
@@ -427,7 +543,137 @@ Programme source: `Claude_markdowns/2026-09-15b.md`, with the planner
 amendments noted here (user decisions 2026-09-15: flake size retired, Meier ROP
 next, MMW after):
 
-- **D3 — Report rewrite**: drop the 1.9×/P4 and flake/PSD drilling claims,
+- **D2n — the altered-band anchor: ATTEMPTED AND CLOSED (2026-09-22).** Two
+  reasons, either sufficient:
+  1. **It is not measurable.** Fig. 8.8 embeds the same greyscale JPEG in every
+     available copy, and the alteration is a reddish oxidation tint with little
+     luminance contrast, so greyscale loses it. A first pass giving 1.2 cm /
+     1.5–2.7 kW was **withdrawn**: against a 600-position control the shadow-side
+     fringe is p = 0.04 (0.11 in the lower half, control sd 3.0) and the lit-side
+     fringe follows the rim lip exactly — it is lighting, not rock. Full record in
+     `Claude_markdowns/2026-09-22a.md`.
+  2. **It should never have been a target.** The altered band is an **output** a
+     correct model predicts, not an input to calibrate against. Treating it as an
+     anchor was planner error (mine): "we need a number to split delivery from
+     cost" turned a validation check into a calibration knob. **The closure must
+     instead be built with no free wall parameter** — gas temperature from
+     conservation along the flow path, heat transfer from a standard annular-duct
+     correlation — so the wall heat is a **prediction**, and the band (if a colour
+     original ever appears) is a check on it.
+  - **What survived is worth more than what failed: a measured Ø(z) for Meier's
+    hole**, from rim texture and shadow rather than tint — ≈ 107 mm at 3–12 cm
+    (his own deliberate underream), **95 ± 5 mm constant from 14 to 38 cm**, and a
+    taper over the last 8 cm. **Meier's hole has a constant-diameter shaft; ours
+    has no constant section anywhere** (145 mm at the top narrowing to 78 mm at
+    the face). That is the scoring target, and it needs no energy accounting.
+  - **Unresolved conflict, worth 20 minutes before it enters a criterion:** the
+    bottom taper reads **60–70 mm** here and **78–80 mm** in the 09-18 pass of the
+    same figure. That is the *freshly cut* diameter, so it decides whether our
+    78 mm cut is too wide or too narrow — and it softens or strengthens D2m's
+    "our hole can never exceed the tool's stance". The shaft also reads 95 mm in
+    the photo against Table 8.2's 85 mm (known lighting bias on one rim), so the
+    target is a **band, 85–95 mm**, not a number.
+  - **Standing consequence:** Meier's data fix only delivery × (volume per joule);
+    **nothing in Ch. 8 breaks that tie.** Score the closure on **shape**, report
+    wall heat as a prediction, and never tune it to a target.
+
+- **D2o — The wall closure, one packet with a shape score.** Only after D2m and
+  D2n. **The physics to encode:** a surface element gets impinging-jet heating
+  where the flame strikes it, and grazing-flow heating from **already-cooled gas**
+  where it is a wall the exhaust slides past; the **enthalpy march continues along
+  the wall with the gas it has left after the floor**, so the wall's gas
+  temperature comes from conservation rather than a new free parameter.
+  - **Orientation must come from a smoothed profile, not single-cell steps.** A
+    cell-level discrete gradient at a surface edge is exactly where the last three
+    mesh failures lived.
+  - **The score is the diameter profile against depth**, specifically the **ratio
+    of wall recession to floor recession, target ≤ 0.1** (Meier's hole is
+    cylindrical and calibrated). The model is at roughly **0.3** today.
+  - **The altered band from D2n is the check that the wall term was not simply
+    zeroed** — passing the shape score with no wall heat at all is a failure, not
+    a pass.
+  - **Two meshes from the first day** (D2l: the cascade is invisible at a single
+    mesh). Cost: a few days.
+
+- **Deliberately NOT now (2026-09-22 decision):** gas temperature, cuttings
+  absorption and melting. All three scale every flux roughly equally, so they move
+  how fast the model drills but not the shape of the hole — and **shape is the
+  only thing we can currently score against Meier without circularity**. They
+  return once shape is right and the model can be scored on rate again. *(Partial
+  caveat: debris accumulates preferentially in the annulus, so cuttings shielding
+  is not perfectly uniform and could touch shape — second-order, and unmeasurable
+  until the wall term exists.)*
+- **Standing until D2o exists: no diameter, rate or energy number from the model
+  may be quoted as a Meier comparison.**
+
+- **AMR surface-band refinement — its own packet, reviewed before merge**
+  (working tree, uncommitted, `bin/mmwspalling-3d-g++-amr`, notes in
+  `Claude_markdowns/2026-09-22.md`; study `studies/amr_band/`). The finest level
+  owns the surface (`SurfaceOwner`), a band follows each column's top cell,
+  `RepairRemovalStateAfterRegrid` rebuilds the column-linear level set, and the
+  single-level aborts were relaxed. Already gated on the hot-disk exclusion case:
+  key-off byte identity on one run, whole-domain level-1 ≡ uniform 1 mm at 60 s
+  (removal log byte-identical), and a 20 mm band within 1.4 % at 250 s. **Four
+  gates still owed, in this order:**
+  1. **the 2639-file reference sweep on the working tree** (D2l Gate 1 — on the
+     critical path for *any* rebuild, AMR or not);
+  2. **LI0 identity under whole-domain refinement** with side-face flux on,
+     60 s, removal log byte-identical — this is a *wiring* test (which level owns
+     each per-column gather), **not** a drift test: the feet/jet loop has diverged
+     at 300–450 s every time, so a 60 s identity must never be quoted as "safe
+     for Meier";
+  3. **an LI0 band gate over a long window.** Note the existing D2k 1 mm leg is
+     only usable to ≈ 350 s (it drilled out of the box by ~400 s), and it will be
+     superseded by the D2l closure run — so this gate is best run *after* the
+     closure lands, against a reference that will still be current;
+  4. **a two-level energy ledger.** It aborts under AMR today, and it is the check
+     that caught the E1 beam leak and proved D2k's budget exact. **Not a plain sum
+     over levels:** with average-down the covered coarse cells duplicate the fine
+     ones, so the sum must exclude covered regions via the level mask — a naive
+     sum closes spuriously, which is worse than no ledger. No scored AMR run
+     without it.
+  - **Speed target before it goes near a scored run.** Measured wall ratio is
+    **1.00** with 3.3× fewer cells (per-column gathers, two-level FillPatch, 339
+    small level-1 boxes), so AMR currently buys correctness and no speed. State
+    the target as wall time for a named job — the 0.5 mm arbiter leg (5–7 h
+    uniform) or a taller Meier domain — not in the abstract. Known fixes: level-1
+    `max_grid_size`/`blocking_factor`, `grid_eff`, coverage check at regrid only.
+  - **Untested:** `max_level ≥ 2`, mechanics-on paths (dormant only because the
+    D2 line runs `el.type = disable`), and **beam + AMR**, which has a silent
+    trap: `P_now = owner ? … : 0`, so deposition below the band vanishes if the
+    Beer-Lambert depth exceeds `surface.refine_depth`, with nothing tying the two
+    together. Worth an abort while the code is fresh — it will bite the MMW anchor.
+  - **AMR does not fix the mesh problem.** By the step-face mechanism refinement
+    makes the cascade *worse*; AMR is a cost tool, not a remedy.
+
+- **Overnight confirmation of D2k, once it passes:** `d2j0b_plane` C1 at
+  **0.5 mm** with the key on, in the 0.15 m box (7.7 M cells, ≈ 5–7 h on four
+  ranks). A third mesh point on the *fixed* configuration, not a gate on the
+  2 mm / 1 mm result — the week's recurring failure was "converged at two meshes
+  over a short window".
+- **FALLBACK, only if D2k's arbiter fails — D2j-a/b/c, the continuous ablation
+  front** (`Claude_markdowns/2026-09-21b.md`): `spall.removal = events |
+  isotherm`, default-off and byte-identical across the 2639-file set; recession
+  to the `T_abl` isotherm in Removal.H PASS 2; the 1-D ablation-column test; then
+  the hot disk and the Meier pair. **No slope factor** (see Known Notes). It is
+  the fallback **plus** side-face flux, never either alone: the front alone still
+  leaves a staircase whose step faces are unheated.
+- **WITHDRAWN by D2j-0b:** the D2h open-loop pair (it would only re-measure the
+  same cascade without the feet), wall heating above the nozzle plane, and
+  `spall.surface_normal` as a remedy.
+- **D2g Stage 2 — Meier rescored under the D2f support rule** (blocked until a
+  mesh gate passes; fresh pre-registration;
+  0.70 m; T_nozzle sweep on a single basis; full-domain mesh pair). Every D2b–D2d Meier number
+  is superseded by it. Tube-wall confinement of the gas (slots) stays a
+  candidate if the mouth still fails.
+- **Event location for the firing** (`2026-09-18a.md`): interpolate to the
+  Sp = 1 crossing; removes the flake dt drift (32 ms+ fails today); re-run the
+  dt ladder after. Default-off.
+- **Outside the code (user):** ask Meier for the 160 L/h cooling-water ΔT (or
+  the chamber design heat load); recompute adiabatic T for CH₄/air λ = 1.2
+  with dissociation. **Commit the tree** (E1 … D2c) with the full sweep
+  before the D2d campaign — pending user go-ahead.
+- **D3 — Report rewrite** (after D2g): drop the 1.9×/P4 and flake/PSD drilling claims,
   state the 09-15b §1 energy accounting, and reposition as a validated
   moving-boundary thermoelastic ablation model with Weibull onset statistics.
   Must also state: the D2a/D2a2 supersessions and the 09-16 corrections to
@@ -523,6 +769,101 @@ next, MMW after):
   steps only.
 
 ## Known Stale/Important Notes
+
+- **Idle clock (`pinned_idle_cycles`) is mesh-dependent (D2h, 2026-09-20).** Its
+  timeout is measured in cell-heating times (t_cell ∝ dz), and the unpinned face
+  form is self-limiting, so at finer meshes edge columns park sub-critical and a
+  silent front walks inward. Set the key per input (1e9 = off); **changing the
+  source default rebases every pinned-closure result since C1** and needs its own
+  packet with the 2639-file reference set re-checked.
+
+- **D2e retroactive review (2026-09-19, accepted) — carry to the commit.** The
+  2639-file witness set is single-level MMWSpalling only; the Perf edits touch
+  shared code (`BC::Constant`, `Numeric/Material/Table.H`) and an AMR regrid
+  path, so the deferred full sweep must include the AMR microstructure test and
+  other `BC::Constant` users. Nits: the `Table.H` seed can in principle pick a
+  bracket one to the right at an ulp tie (step `lo` back while `m_H[lo] > H`);
+  `Constant.cpp` `Domain().contains(box)` mixes index types (debug-build
+  `sameType` assert on node-centred FABs).
+
+- **How Meier ran the pilot test vs the model (2026-09-18, full Ch. 8
+  reread; `Claude_markdowns/2026-09-18c.md`).** Decisions for D2g, before any
+  scoring:
+  1. **The mouth was inside a sealed, water-cooled wellhead** (Fig. 8.1,
+     p. 213), glued to the rock, with exhaust to a cyclone and a bore of
+     roughly twice the burner Ø (visual estimate; no dimension given). In
+     phase 1 the gas over the surface was confined, cooled exhaust, not
+     293 K room air. D2c's free-surface ambient dilution, which D2d credits
+     with about half the mouth fix, rests on an open surface that did not
+     exist. The wellhead also caps any funnel. **Confirmed by the user against
+     independent thesis notes, 2026-09-20: this is a gas-side finding, not
+     only a mouth-scoring one — it is the same physics as the tube-wall
+     confinement, so Stage 2 must carry at minimum a free-surface-off variant
+     as a sensitivity rather than treat dilution as settled.**
+  2. **Two drilling phases** (647 s + 736 s, p. 219). Phase 2 restarted in a
+     cooled, part-drilled hole (about 0.25 m, estimate) with the hole in
+     rough vacuum and room air drawn in through the burner–wellhead gap. The
+     model is one continuous run at 1 atm.
+  3. **The thesis's ROP figures disagree with each other:** 0.5 m / 1383 s =
+     **1.30 m/h**, against the text's 1.5. TSE 15.4 J/mm³ confirms 1383 s.
+     Quote 1.30 as the time average, and state the discrepancy.
+  4. **The measured ROP is an operator choice at or below the contact
+     limit** (crane advance, hook load, clearance set by advance rate,
+     pp. 214–223). The model's contact rule is an upper bound. Read the ROP
+     one-sided: a model ROP below the measurement is a miss, while a
+     somewhat higher ROP with a somewhat narrower hole is consistent.
+  5. **The cooling-water ΔT was instrumented** (thermocouples up- and
+     downstream, p. 208) but not reported, so the request to Meier is for
+     recorded data. Also ask for the wellhead bore and height, the depth at
+     the end of phase 1, and what the 1.5 m/h is.
+  - **D2f wording corrected 2026-09-18** (the gate is unaffected):
+    - "jolts clear isolated high rock" and "gas reached under the rim" are
+      our inferences;
+    - "wider than the tube at every depth" is overstated (Tab. 8.2: 85 mm;
+      Fig. 8.8 visible width 80 → 78 mm near the exit, a lower bound).
+- **D2f planning decisions (2026-09-18, revised same day).** A shielded
+  "ledge" rule (rock under the rim gets no gas; broken off when undercut) was
+  planned and **withdrawn before implementation**: Meier's hole is wider than
+  the tube at every depth and he calls the tool contactless, so the rock under
+  the feet was removed thermally. The support is the contact rule with the rock
+  heated and no clip; the per-pad quantile is read as the operator-jolt
+  allowance and must be shown not to control the rate. The model never lifts
+  the burner (Meier's holds and jolts shape the hole locally).
+- **D2e planning decisions (2026-09-18).** 09-18b's P-b as written
+  (`jet_T_ent = 1550` under `fixed`) would also move the march floor and the
+  free-surface ambient, so D2e adds `rec_fixed` (T_mix only). P-c
+  (`foot_rule = mean`) must run with clearance off (parse abort), so it is read
+  against P-a. 8 ms at 1 mm is extrapolated (K/step ∝ dt/dz); B0 checks it
+  against D2d's 4 ms R7. The Perf edits are unreviewed until D2e Goal 0.
+  Regression sweep 09-17: `heterogeneous_kappa`, `amr_microstructure_regrid`
+  fail under `mpirun -np 4` (k_eff diagnostic not reduced per rank; one-line
+  `ReduceLongSum` fix when that file is next open). `pkill -f <run name>` kills
+  shell waiters too. Advisor's Hutchinson–Suo buckling release (09-18) is the
+  one import worth considering later, not now.
+
+- **D2d planning decisions (2026-09-17, planner, before any run).** The
+  steady-window mesh criterion is replaced by a matched transient window on a
+  0.40 m full-domain pair (a steady 1 mm run needs ≈ 24 h). Matrix domain
+  0.70 m (hand needs 0.65 m, runs 13 % fast). Min Ø scored to the feet depth
+  (D2c's nozzle-plane range missed the 50 mm feet zone). T sweep lower end
+  (1.3 m/h) is below 1600 K and reported open-ended. Run 3 (n = 0.5) is hand
+  only. "D2b closures + n = 1" keeps exponential/count/clearance.
+
+- **D2c planning decisions (2026-09-17, user-reviewed).**
+  - Feet-depth blending of the stagnation gas is **rejected**: the jet runs
+    inside the Ø 56 collar from t = 0, and a blend starting at ambient
+    reproduces the D2b 293 K stall.
+  - The 12 D clamp lives in the Python `h_expr` string, not in C++.
+  - Nozzle (γ 1.3, ṁ measured, 1900 K): p0 5.95 bar, M_e 1.86, p_e 0.97 bar
+    (perfectly expanded), u_e ≈ 1277 m/s, J ≈ 19.3 N; D_e 3.5–3.6 mm in 293 K
+    air, 8.0 mm in 1500 K exhaust. 8·D_e = 29 mm ambient (not 37), 64 mm in
+    exhaust. The quarter domain must use the full-jet D_e (mdot/4 would halve
+    it).
+  - Fig. 8.8 is digitised (`validation/meier/meier_fig8_8_hole_profile.csv`,
+    visible width = lower bound, ±5 mm): 96 mm at 10 mm, 88 at 50, 87 to
+    125, 84 at 300, 78 at the exit. A mild collar (~10 mm) is real.
+  - Volume is scored on the whole excavation (water filling); the 09-16
+    inside-Ø 93 addendum is withdrawn. "1436 K" is not a gas temperature.
 
 - **P1 melt-aware spallation is DONE (default-off `spall.melt_aware`).** The lever
   is the DRIVING STRESS, not K_Ic: σ_xx scaled by `f(Λ_L)=max(0,1−Λ_L/Λ_crit)`
@@ -1168,3 +1509,178 @@ next, MMW after):
 - For yt/numpy regressions on this machine, use
   `/Users/tzetze20/Desktop/code/.venv/bin/python`; `/usr/bin/python3` lacks
   `numpy`.
+
+- **The continuous ablation front — design record (2026-09-21).** Source:
+  `Claude_markdowns/2026-09-21b.md` (scope = recession law only; onset stays the
+  K_I/Weibull test as a one-time per-column switch), reviewed by the user the
+  same day. The central energy argument holds: with the flux BC computed from a
+  fixed `T_abl` and the removed slab carrying its enthalpy, the steady rate is
+  `q/(ρc(T_abl − T_∞))` with no mesh-dependent term, so the residual sensitivity
+  really is lateral conduction only. Decisions taken, binding on D2j-a:
+  1. **The slope-aware variant is DROPPED** (`spall.isotherm_normal` is not to
+     be added). Three reasons: (i) the doc's gradient relation is inverted —
+     `∂T/∂z = cos θ ∂T/∂n`, so `∂T/∂n = (∂T/∂z)/cos θ`, and as written it would
+     over-remove by 1/cos²θ (2× at 45°, 4× at 60°), a silent slope-dependent
+     error in exactly the 80° cone geometry under diagnosis; (ii) done correctly
+     it is a **no-op** — moving each column's face down its own vertical line to
+     `T = T_abl` puts the face set on the isosurface whatever the slope, so the
+     cos θ factors cancel identically; (iii) D2b already measured the Step 20
+     normal kernel **inert** under the pinned closure, and the needle artefact it
+     was built for belongs to the per-column event increment this packet retires.
+     **The slope correction that does matter is the one in the flux** (per
+     horizontal vs true area) and it stays deferred to the cone packet.
+  2. **Linear two-cell reconstruction is settled** (the quadratic is optional):
+     its error scales with the *per-step* increment, not with dz. At Meier fluxes
+     the overshoot rule gives ≈ 5 K/step ≈ 0.03 mm against a thermal length of
+     3.2 mm, so the secant-vs-tangent bias costs ≈ 0.1 % in rate. A **dt**
+     question, covered by the dt ladder.
+  3. **The `δh ≤ dz/2` cap is a gate quantity, not a log line.** Pre-register
+     max(δh/dz) and cap-hit counts per block: if the cap binds at 1 mm and not at
+     2 mm, the run is void. The dangerous case is `T_0` just above `T_abl` with a
+     near-flat vertical gradient, where `z_iso` divides by something small.
+  4. **Registration must be conditional** (the `jet_P_face` pattern at
+     `src/Integrator/MMWSpalling.H:600`). An unconditional
+     `RegisterIntegratedVariable` or new plotfile field changes every
+     `thermo.dat`/plotfile header even with the key off, and the 2639-file
+     identity would fail on headers alone — discovered late, in the full sweep.
+  5. **Abort on checkpoint restart under the front.** `abl_on`/`T_abl` are host
+     state and are not saved (same class as `pin_T`), so a restart silently
+     resets the surface to pre-onset. With 3 h+ runs, document-and-hope is not
+     enough.
+  6. **Diagnostics parity before the Meier pair.** `rim.py` and the d2e→d2i
+     analysis chain read `removal_events.csv`, which the front would make
+     unusable (a row per column per step). Ship the cumulative-recession field
+     plus a converter, and show it reproduces D2i's rim numbers in `events`
+     mode, or the "compare to D2i within 5 %" test is not like-for-like.
+  7. **The pre-registered expectation straddles its own gate** (the doc expects a
+     5–8 % residual against a 5 % limit). Do **not** widen the gate after the
+     fact. Pre-register the *interpretation* instead: a failure at a gap
+     consistent with D2j-b's measured edge-width sensitivity is diagnosed as
+     lateral resolution, and the response is surface-refined AMR or the
+     true-area flux — never a re-tune.
+  8. **Resolution is marginal everywhere, not only at the edge.** κ/v ≈ 3.2 mm,
+     so dz = 2 mm spans 1.6 cells of the ablation layer and 1 mm spans 3.2 —
+     consistent with D2i's centre also drifting 9 mm by 550 s. A uniform 0.5 mm
+     Meier run is a day or more, so **surface-refined AMR is a named decision
+     point**, not a parenthesis, and is probably what makes this line finishable.
+  9. **Cost note:** after onset the K_I scan can be skipped per column, so the
+     front should be somewhat *cheaper* than the event model, not dearer.
+  10. **Packet split** (the doc's single D2c-sized packet is too big):
+      D2j-0 (the hot-disk test, no code) → D2j-a (vertical front + 1-D test +
+      identity + regressions) → D2j-b (hot disk with the front) → D2j-c (the
+      Meier pair).
+
+- **THE STEP-FACE MECHANISM — the cause of the D2d–D2i mesh failures
+  (D2j-0b, 2026-09-21; supersedes the D2d and D2h diagnoses).** Flux and losses
+  act on a column's **top face only**; an exposed vertical step face is
+  adiabatic. A firing top cell beside a taller, colder column therefore loses
+  `k(T_top − T_wall)/dx` into that column's *interior at the step depth*
+  (≈ 240 kW/m² at 2 mm, ≈ 480 at 1 mm, against q_pin ≈ 520). It stalls, goes
+  cold, and becomes the next wall — an inward cascade. **Reproduced with no
+  feet, no jet, no gas closure and without the `s ≤ 0` exclusion** (C0 cascades
+  too, three times slower).
+  - **Why the mesh dependence.** A **one-cell** step has ΔT ∝ dz, the two cancel,
+    and the loss converges — which is why the static D2j-0 disk looked bounded.
+    Once the step exceeds the thermal length (κ/v ≈ 3.2 mm) the neighbour sits at
+    bulk temperature at any mesh, ΔT is pinned, and the flux density goes as
+    1/dx. This is the continuum **corner singularity**: a pointwise firing
+    criterion evaluated at a geometric corner is mesh-divergent by construction,
+    and **refinement makes it worse**.
+  - **Measured, not argued:** per-bin `v_1mm/v_2mm` is 0.996–1.007 wherever the
+    local slope < 0.7 and falls to 0.95 … 0.53 in the six bands where the slope
+    runs 0.7 → 8.2. The whole ≈ 10 % disk-mean offset lives where
+    slope × dx ≳ 1.5 mm. **The half-cell removal increment is not a second
+    mechanism** (the flat interior is where it would show, and S1 already had the
+    flat 1-D case converging).
+  - **Dead remedies, each on measurement, not argument:** wall heating above the
+    plane (C1 ≡ C2 ≡ C3 band for band — the sink is 10–20 mm below the exposed
+    surface); `spall.surface_normal = 1` (inert at 2 and 1 mm, the third
+    independent measurement of its inertness); true-area flux × 1/cos θ on the
+    top face (deposits the energy in the column's own top cell, never reaching
+    the sink); a longer idle clock; more mesh pairs on the same configuration.
+  - **The fix must act on the step**, i.e. heat the sink cell directly. Hence
+    D2k. Design constraints found in review and binding on it: the side power
+    must come **out of the enthalpy march's budget** (the D2a failure D2a2 exists
+    to prevent, invisible in a fixed-h hot disk); a side-heated cell must obey
+    `T_s = min(T_f, T_pin)` or an unremovable mid-wall cell becomes a heat
+    reservoir that flatters the fix; the `s ≤ 0` exclusion must apply identically
+    to side faces or the C1/C2/C3 result is silently invalidated; and `f` is
+    pre-registered, never fitted (a staircase of one-cell steps has area
+    `dx + Δz` against a true `√(dx² + Δz²)`, over-heating by ≤ 41 % at 45° and
+    ≈ 16 % at the observed 80° cone).
+  - **The arbiter already exists and is cheap:** `d2j0b_plane` C1 at 2 and 1 mm,
+    3 min + 26 min. Any candidate remedy is tested there first. An acceptance of
+    "the gap stands" is not enough — it must be **within 5 % in every block**, on
+    the same estimator as the Meier gate, or a pass will not transfer.
+
+- **D2k's outcome and the two live explanations (2026-09-22).** Side-face flux
+  fixes the step-face cascade (arbiter −45 % → −3 %) but drives the Meier rate to
+  4.07 m/h. **The decomposition is the thing to carry:** absorbed power 1639 →
+  3204 W (2.0×) while the rate went 2.7×, because warming the wall also removes
+  the lateral conduction sink (240–480 of ~520 kW/m²), so far more of the absorbed
+  power converts to recession.
+  - **The second factor is correct physics and must survive any closure.** Only
+    the first — a stagnation-impingement `h` on a near-vertical face — is suspect.
+  - **Explanation 2 is live and has not been tested:** over a *smooth* steep cone
+    the wall jet is attached and the area really is ~6× the projection, so large
+    absorbed power is not obviously wrong. What may be wrong is that `h(r, s)` is
+    too peaked, so the model digs a pit with an 80° skirt instead of Meier's "half
+    elongated spheroid" at Ø 85–93 mm. **Its discriminating signature is rate down
+    *and* Ø up together**, which no cut to side flux can produce.
+  - **The coupling that may kill explanation 1:** the wall stays warm because it
+    is heated, so cascade suppression and the power excess ride the *same*
+    parameter in opposite directions. If the f that restores 1.3–1.6 m/h is below
+    the f at which the cascade returns, the wall closure cannot satisfy both gates
+    and no closure should be written. D2l Gate 0 measures both bounds in ~1 h,
+    key-only.
+  - **`f` is an area correction and a diagnostic dial only.** It scales `q_side`
+    linearly where an `h` scale would, which is why it maps the window — but no
+    value found by scanning it may be kept as a setting. A closure value must be
+    derived from a named heat-transfer source and pre-registered before the Meier
+    run, then checked against Gate 0's window.
+  - **Score three axes, never rate alone:** rate one-sided against 1.30 m/h, **Ø
+    at matched feet height** against 85–93 mm, and **J/mm³ against Meier's 15.4**.
+    Cutting side flux to recover ~1.4 m/h would give the right rate for the wrong
+    reason — a narrower hole drilled more slowly, which is D2b's failure again.
+  - **Hole shape is compared at matched feet height, never at matched time.**
+    D2k's hole looks 30 mm wider at matched time purely from drilling 3× further.
+
+- **Shape, not rate, is the honest score (D2l, 2026-09-22).** With the side-face
+  term off — the D2i/D2d configuration — the model removes **1.9× too much rock**
+  (4.58 vs 2.47 cm³/s) while the burner rate reads 1.49 m/h, in band. **The rate
+  agreement was partly a coincidence of two errors.** Cut Ø is 78 mm against
+  Meier's 85–93; the mouth flares to 145 mm. Freshly cut rock is ~78 mm at every
+  setting — everything wider is removed *afterwards*, and scales with dwell.
+  - **The excess volume and the too-cheap removal are one thing seen twice.** The
+    excess 2.11 cm³/s costs ≈ 3.0 kW, ~46 % of absorbed power; remove it and the
+    cost lands near 2.6 J/mm³, about what Meier's numbers imply at a comparable
+    delivery. In his hole that heat soaked into the wall (the **thermally altered
+    band** in the sawn section); in ours it removes rock.
+  - **Scoring rules now standing:** score Ø(z) and volume, never rate alone;
+    compare at matched feet height, never matched time; quote the volume (water
+    filled) and the cut Ø, and keep the **mouth reported rather than scored** (it
+    formed under the wellhead across two phases).
+  - **Anchors named for the delivery-vs-cost question** (one equation, two
+    unknowns, not separable by rate data): the altered-band width, and the
+    mouth-flank behaviour with and without dilution.
+  - **Reopened:** cuttings absorbing heat was withdrawn as degenerate with
+    delivery efficiency *under a fixed-flux BC*; the enthalpy march made the
+    budget finite, so that premise has expired.
+  - **Largest unverified input:** the ~1900 K driving gas temperature. Meier's
+    burner cooling water (160 L/h, thermocouples both ends, ΔT never reported) is
+    186 W per kelvin — a 10–30 K rise is 1.9–5.6 kW, i.e. **100–300 K off the
+    nozzle gas temperature**, and heat flow scales with (T_gas − 821 K). Cheapest
+    question to ask Meier, largest leverage.
+
+- **How the feet reach the heat distribution (code path, for D2m).**
+  `FeetDescent` reads only live columns with r in [`foot_r_inner`,
+  `foot_r_outer`] (28–40 mm), takes the 0.9 quantile per pad, and sets
+  `z_target = z_foot + foot_standoff` with monotone descent.
+  `BuildFlameColumns` then derives every column's `s = z_nozzle − z_face` and
+  `h = h_expr(r, s)`, with `h = 0` where `s ≤ 0`. **The feet touch heating through
+  exactly one scalar — the nozzle height.** Consequence: the 28–40 mm ring is the
+  only rock held at the design stand-off for the whole run, so pad recession and
+  ROP are locked together; the centre runs away (s_c 157–178 mm against a design
+  50 mm) and rock outside 40 mm is left behind with a growing stand-off and
+  falling heat. That predicts an erosion-rate transition at r ≈ `foot_r_outer`,
+  which is what D2m tests.

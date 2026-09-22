@@ -1,0 +1,196 @@
+<title>Pad Rim Mesh Diagnosis</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f5f4ef; --panel:#ebe9e2; --ink:#1e2a33; --muted:#5f6d78; --rule:#cfd3d1;
+  --c2:#2f6f9f; --c1:#c2542d; --dt:#8a97a1; --band:#d9e4d3; --spall:#9fb7c9; --clip:#d99a82;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171c20; --panel:#20272d; --ink:#e6e8e6; --muted:#9aa7b0; --rule:#3a444c;
+    --c2:#6fb0e0; --c1:#e88a64; --dt:#8a97a1; --band:#2c3a2c; --spall:#3f6a8c; --clip:#8f4a33;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171c20; --panel:#20272d; --ink:#e6e8e6; --muted:#9aa7b0; --rule:#3a444c;
+  --c2:#6fb0e0; --c1:#e88a64; --dt:#8a97a1; --band:#2c3a2c; --spall:#3f6a8c; --clip:#8f4a33;
+}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:16px;line-height:1.55;margin:0;padding-inline:16px;padding-block:32px 64px}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:1.9rem;line-height:1.15;font-weight:600;margin:0;text-wrap:balance}
+h2{font-size:1.2rem;font-weight:600;margin:0 0 8px;text-wrap:balance}
+p{margin:0 0 12px;max-width:65ch}
+.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.answer{background:var(--panel);border-left:4px solid var(--c1);padding:14px 18px}
+.answer p:last-child{margin:0}
+figure{margin:6px 0 16px;display:flex;flex-direction:column;gap:6px}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.78rem;color:var(--muted);line-height:1.45}
+svg text{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;fill:var(--ink)}
+svg .mut{fill:var(--muted)}
+svg .grid{stroke:var(--rule);stroke-width:1}
+svg .ax{stroke:var(--muted);stroke-width:1}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+td.n{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace}
+th.n{text-align:right}
+.wrap{overflow-x:auto}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.78rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:14px;height:3px;margin-right:6px;vertical-align:middle;background:var(--c2)}
+.legend .one::before{background:var(--c1)}
+.legend .dt::before{background:var(--dt);height:2px}
+ol{padding-left:22px;margin:0 0 12px}
+li{margin-bottom:6px}
+</style>
+
+<main>
+<header>
+  <div class="kicker">D2d · Meier campaign · mesh pair R7b (2 mm) vs R7 (1 mm) · 2026-09-18</div>
+  <h1>Why the 1 mm mesh drills 43 % faster</h1>
+</header>
+
+<section class="answer">
+  <p><strong>Short answer.</strong> The burner's descent rate is not set by the pad as a whole. It is set by the outermost 2 mm of the pad, which is removed half by spalling and half by the burner body clipping it, one whole cell at a time. That clip-and-restart cycle depends on cell size, and gives the 1 mm run a 5 to 11 % head start with identical gas. The gas closures then amplify the head start: a faster burner pushes the nozzle plane deeper, the flank outside the pad stops receiving gas, less heat is absorbed, the recirculated exhaust gets hotter, and everything drills faster. Time stepping is not involved.</p>
+</section>
+
+<section>
+  <h2>1. The gap opens before the gas side differs</h2>
+  <p>Figure 1 shows the burner rate in 50 s blocks. The two meshes start 5 % apart and the gap grows steadily. For the first 150 s, though, the gas the pads see is the same in both runs: ring temperatures agree to 2 K, the firing temperature is 821 K in both, and the 1 mm run actually has the slightly cooler recirculation. So whatever seeds the gap is on the rock side. The 16 ms and 8 ms reruns of the 2 mm case sit on top of the 4 ms curve, which rules out the time step.</p>
+  <figure>
+    <svg viewBox="0 0 640 300" role="img" aria-label="Burner rate per 50 s block for both meshes">
+      <rect x="60" y="155.7" width="550" height="47.2" fill="var(--band)"/>
+      <text x="606" y="199" text-anchor="end" class="mut">Meier 1.3–1.6 m/h</text>
+      <line x1="60" y1="250" x2="610" y2="250" class="grid"/>
+      <line x1="60" y1="171.4" x2="610" y2="171.4" class="grid"/>
+      <line x1="60" y1="92.9" x2="610" y2="92.9" class="grid"/>
+      <text x="52" y="254" text-anchor="end">1.0</text>
+      <text x="52" y="175" text-anchor="end">1.5</text>
+      <text x="52" y="97" text-anchor="end">2.0</text>
+      <text x="14" y="140" transform="rotate(-90 14 140)" text-anchor="middle" class="mut">burner rate, m/h</text>
+      <line x1="60" y1="250" x2="610" y2="250" class="ax"/>
+      <g class="mut">
+        <text x="105.8" y="270" text-anchor="middle">0–50</text>
+        <text x="197.5" y="270" text-anchor="middle">50–100</text>
+        <text x="289.2" y="270" text-anchor="middle">100–150</text>
+        <text x="380.8" y="270" text-anchor="middle">150–200</text>
+        <text x="472.5" y="270" text-anchor="middle">200–250</text>
+        <text x="564.2" y="270" text-anchor="middle">250–300 s</text>
+      </g>
+      <polyline fill="none" stroke="var(--dt)" stroke-width="2" stroke-dasharray="5 4" points="105.8,209.9 197.5,163.7 289.2,172.4 380.8,181.2 472.5,171.6 564.2,171.6"/>
+      <polyline fill="none" stroke="var(--c2)" stroke-width="2.5" points="105.8,211.2 197.5,162.5 289.2,171.9 380.8,178.2 472.5,172.4 564.2,169.4"/>
+      <polyline fill="none" stroke="var(--c1)" stroke-width="2.5" points="105.8,201.1 197.5,130.9 289.2,110.5 380.8,92.9 472.5,72.2 564.2,58.2"/>
+      <g fill="var(--c2)"><circle cx="105.8" cy="211.2" r="3.5"/><circle cx="197.5" cy="162.5" r="3.5"/><circle cx="289.2" cy="171.9" r="3.5"/><circle cx="380.8" cy="178.2" r="3.5"/><circle cx="472.5" cy="172.4" r="3.5"/><circle cx="564.2" cy="169.4" r="3.5"/></g>
+      <g fill="var(--c1)"><circle cx="105.8" cy="201.1" r="3.5"/><circle cx="197.5" cy="130.9" r="3.5"/><circle cx="289.2" cy="110.5" r="3.5"/><circle cx="380.8" cy="92.9" r="3.5"/><circle cx="472.5" cy="72.2" r="3.5"/><circle cx="564.2" cy="58.2" r="3.5"/></g>
+      <text x="572" y="54" fill="var(--c1)">1 mm  2.22</text>
+      <text x="572" y="188" fill="var(--c2)">2 mm  1.51</text>
+      <text x="70" y="45" class="mut">+5 %  → +13 %  → +26 %  → +37 %  → +43 %  → +47 %</text>
+    </svg>
+    <div class="legend"><span>2 mm, 4 ms</span><span class="one">1 mm, 4 ms</span><span class="dt">2 mm, 16 ms (dashed)</span></div>
+    <figcaption>Fig. 1. Burner descent rate from the feet rule, least-squares slope of foot_z in each 50 s block. Both runs use a 0.40 m domain and the same keys; only the cell size differs. The 16 ms and 8 ms reruns of the 2 mm case are indistinguishable from 4 ms.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>2. The seed: the burner rides on the rim of the pad</h2>
+  <p>The feet rule takes, in each of three pad sectors, the height below which 90 % of the pad's columns lie, and puts the nozzle 50 mm above the mean of those heights. Reconstructing that rule from the removal log reproduces the run's own pad height to 0.3 mm, so the following reading is exact. In both meshes the 90 % height is always the outermost band of the pad, 38 to 40 mm radius. That band is where every mechanical clearance event lands: columns that stand proud of the pad height are cut down to it by the burner body.</p>
+  <p>Figure 2 shows how fast each 2 mm band of the pad recedes. At 2 mm the pad is a cone, fast inside and slow at the rim, and the burner descends at the rim's rate. At 1 mm the pad has become flat by 300 s and the whole pad, rim included, recedes at the interior's rate.</p>
+  <figure>
+    <svg viewBox="0 0 640 260" role="img" aria-label="Recession speed per radial band of the pad at 250 to 300 s">
+      <line x1="60" y1="220" x2="610" y2="220" class="ax"/>
+      <line x1="60" y1="130" x2="610" y2="130" class="grid"/>
+      <line x1="60" y1="40" x2="610" y2="40" class="grid"/>
+      <text x="52" y="224" text-anchor="end">0</text>
+      <text x="52" y="134" text-anchor="end">20</text>
+      <text x="52" y="44" text-anchor="end">40</text>
+      <text x="14" y="130" transform="rotate(-90 14 130)" text-anchor="middle" class="mut">recession, mm/min</text>
+      <g fill="var(--c2)">
+        <rect x="80" y="74.7" width="30" height="145.3"/><rect x="170" y="82.8" width="30" height="137.2"/><rect x="260" y="85.9" width="30" height="134.1"/><rect x="350" y="96.3" width="30" height="123.7"/><rect x="440" y="99" width="30" height="121"/><rect x="530" y="109.8" width="30" height="110.2"/>
+      </g>
+      <g fill="var(--c1)">
+        <rect x="114" y="52.2" width="30" height="167.8"/><rect x="204" y="53.1" width="30" height="166.9"/><rect x="294" y="54" width="30" height="166"/><rect x="384" y="54" width="30" height="166"/><rect x="474" y="54" width="30" height="166"/><rect x="564" y="55.3" width="30" height="164.7"/>
+      </g>
+      <g class="mut">
+        <text x="112" y="240" text-anchor="middle">28–30</text><text x="202" y="240" text-anchor="middle">30–32</text><text x="292" y="240" text-anchor="middle">32–34</text><text x="382" y="240" text-anchor="middle">34–36</text><text x="472" y="240" text-anchor="middle">36–38</text><text x="562" y="240" text-anchor="middle">38–40 mm</text>
+      </g>
+      <text x="95" y="68" text-anchor="middle" fill="var(--c2)">32</text><text x="545" y="104" text-anchor="middle" fill="var(--c2)">25</text>
+      <text x="129" y="46" text-anchor="middle" fill="var(--c1)">37</text><text x="579" y="49" text-anchor="middle" fill="var(--c1)">37</text>
+      <text x="562" y="256" text-anchor="middle" class="mut">↑ rim = pad height</text>
+    </svg>
+    <div class="legend"><span>2 mm</span><span class="one">1 mm</span></div>
+    <figcaption>Fig. 2. Total recession (spall plus mechanical clip) per radial band of the foot annulus, 250 to 300 s, from the removal log. The 2 mm cone reaches 25 mm/min at the rim, which is the burner rate of 1.5 m/h. The flat 1 mm pad recedes at 37 mm/min everywhere, 2.2 m/h.</figcaption>
+  </figure>
+  <p>Why does the rim depend on cell size? Figure 3 splits the rim's recession into the part removed by spalling and the part clipped by the burner body. In both meshes the clip does roughly half the work. Each clip throws away a whole cell that was part-way to firing, and the fresh cell underneath must reheat from its preheat temperature. The thermal layer under a spalling face is about 3 mm thick. A 2 mm clip discards most of that layer; a 1 mm clip discards a third. So the rim restarts warmer at 1 mm and fires again sooner, which is the 5 % at 0 to 50 s and 11 % at 50 to 100 s, before any gas-side difference exists.</p>
+  <figure>
+    <svg viewBox="0 0 640 210" role="img" aria-label="Rim recession split into spall and clip">
+      <line x1="60" y1="170" x2="600" y2="170" class="ax"/>
+      <text x="52" y="174" text-anchor="end">0</text>
+      <text x="52" y="94" text-anchor="end">20</text>
+      <line x1="60" y1="90" x2="600" y2="90" class="grid"/>
+      <text x="14" y="110" transform="rotate(-90 14 110)" text-anchor="middle" class="mut">mm/min</text>
+      <g fill="var(--spall)"><rect x="90" y="112.4" width="60" height="57.6"/><rect x="190" y="113.2" width="60" height="56.8"/><rect x="340" y="120.4" width="60" height="49.6"/><rect x="440" y="100.4" width="60" height="69.6"/></g>
+      <g fill="var(--clip)"><rect x="90" y="71.2" width="60" height="41.2"/><rect x="190" y="72" width="60" height="41.2"/><rect x="340" y="65.2" width="60" height="55.2"/><rect x="440" y="23.6" width="60" height="76.8"/></g>
+      <text x="120" y="65" text-anchor="middle">24.7</text><text x="220" y="66" text-anchor="middle">24.5</text><text x="370" y="59" text-anchor="middle">26.2</text><text x="470" y="18" text-anchor="middle">36.6</text>
+      <g class="mut"><text x="120" y="190" text-anchor="middle">0–50 s</text><text x="220" y="190" text-anchor="middle">250–300 s</text><text x="370" y="190" text-anchor="middle">0–50 s</text><text x="470" y="190" text-anchor="middle">250–300 s</text></g>
+      <text x="170" y="206" text-anchor="middle" fill="var(--c2)">2 mm</text><text x="420" y="206" text-anchor="middle" fill="var(--c1)">1 mm</text>
+      <rect x="540" y="60" width="12" height="12" fill="var(--spall)"/><text x="558" y="70" class="mut">spalled</text>
+      <rect x="540" y="80" width="12" height="12" fill="var(--clip)"/><text x="558" y="90" class="mut">clipped</text>
+    </svg>
+    <figcaption>Fig. 3. Recession of the 38 to 40 mm rim band split by removal mechanism. The rim is the only place mechanical clearance acts. At 2 mm both parts stay constant; at 1 mm both grow.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>3. The amplifier: a loop through the gas</h2>
+  <p>A head start of a few percent would not matter on its own. It matters because the gas closures feed it back. The chain, with the numbers at 300 s, is:</p>
+  <figure>
+    <svg viewBox="0 0 640 230" role="img" aria-label="Feedback loop diagram">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+      <g fill="var(--panel)" stroke="var(--rule)">
+        <rect x="20" y="20" width="180" height="56" rx="3"/><rect x="230" y="20" width="180" height="56" rx="3"/><rect x="440" y="20" width="180" height="56" rx="3"/>
+        <rect x="440" y="140" width="180" height="56" rx="3"/><rect x="230" y="140" width="180" height="56" rx="3"/><rect x="20" y="140" width="180" height="56" rx="3"/>
+      </g>
+      <g text-anchor="middle">
+        <text x="110" y="42">burner descends faster</text><text x="110" y="60" class="mut">the seed, §2</text>
+        <text x="320" y="42">nozzle plane deeper</text><text x="320" y="60" class="mut">110 vs 74 mm at 300 s</text>
+        <text x="530" y="42">flank above plane cut off</text><text x="530" y="60" class="mut">gas reach 40 vs 53 mm</text>
+        <text x="530" y="162">less heat absorbed</text><text x="530" y="180" class="mut">1.01 vs 1.31 kW</text>
+        <text x="320" y="162">hotter exhaust recirculated</text><text x="320" y="180" class="mut">T_rec 1686 vs 1623 K</text>
+        <text x="110" y="162">hotter, leaner stagnation</text><text x="110" y="180" class="mut">1796 vs 1745 K</text>
+      </g>
+      <g fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)">
+        <line x1="200" y1="48" x2="228" y2="48"/><line x1="410" y1="48" x2="438" y2="48"/>
+        <line x1="530" y1="76" x2="530" y2="138"/>
+        <line x1="440" y1="168" x2="412" y2="168"/><line x1="230" y1="168" x2="202" y2="168"/>
+        <path d="M110 140 L110 78"/>
+      </g>
+      <text x="632" y="112" text-anchor="end" class="mut">s ≤ 0 rule</text>
+      <text x="122" y="112" class="mut">pad flux up → rim faster</text>
+    </svg>
+    <figcaption>Fig. 4. The loop. Columns whose face lies above the nozzle plane receive no gas. As the nozzle goes deeper the flank outside the pad drops out of the enthalpy march, the exhaust leaves hotter, and the exhaust is what the model recirculates into the stagnation zone.</figcaption>
+  </figure>
+  <div class="wrap"><table>
+    <thead><tr><th>At 300 s</th><th class="n">2 mm</th><th class="n">1 mm</th></tr></thead>
+    <tbody>
+      <tr><td>Flank removal, 40 to 60 mm radius, cm³/s</td><td class="n">1.22</td><td class="n">0.04</td></tr>
+      <tr><td>Jet power absorbed by rock, W</td><td class="n">1309</td><td class="n">1012</td></tr>
+      <tr><td>Share of that power inside the pad radius</td><td class="n">two thirds</td><td class="n">all</td></tr>
+      <tr><td>Recirculated exhaust temperature, K</td><td class="n">1623</td><td class="n">1686</td></tr>
+      <tr><td>Centre stand-off, mm</td><td class="n">152</td><td class="n">133</td></tr>
+      <tr><td>Hole diameter below the funnel, mm</td><td class="n">≈ 84</td><td class="n">80 (= burner)</td></tr>
+    </tbody>
+  </table></div>
+  <p>The 1 mm run ends up absorbing <em>less</em> jet power than the 2 mm run, but it spends all of it inside the pad radius, while the 2 mm run spends a third of its power widening the flank. The domain-height finding in the campaign, 4 % faster in the 0.40 m box, is the same loop with a smaller seed.</p>
+</section>
+
+<section>
+  <h2>4. What it is not, and what to do</h2>
+  <p>It is not the time step, not the ring bin width, not the centre stand-off read from the solid top, and not the pinned-share criterion. All of those were suspects in the packet; the gas-side quantities they affect are identical across the meshes for the first 150 s. The S1 and D2b mesh checks passed because they measured the ring-average front. The 0.9-quantile feet rule selects the slow tail, which was never tested.</p>
+  <ol>
+    <li><strong>Three controlled pairs</strong> at 2 mm and 1 mm to 300 s, matched window: body clearance off, which isolates the seed; recirculation held at a fixed mixing temperature, which isolates the amplifier; the mean foot rule instead of the 0.9 quantile, which isolates the slow-tail selection.</li>
+    <li><strong>Then the physics that removes both problems: the tube wall.</strong> The burner tube is 80 mm outside and 56 mm inside, with three slots at the bottom. Rock under the 12 mm rim is shielded from the jet, so the burner rate is a lateral undercut problem, not a rim-clip problem. Gas cannot reach the flat surface outside the tube except through the slots, so there is no free-surface funnel in the first 120 s and no flank to switch off later. This is the mechanism you proposed, and it should move from last to first among the open items.</li>
+  </ol>
+</section>
+
+<footer class="kicker">Sources: studies/d2c_steady/output R7b_2mm, R7_1mm, R7b_2mm_dt16, R7b_2mm_dt8 · thermo.dat, removal_events.csv, jet_profile.csv · full note in Claude_markdowns/2026-09-18.md</footer>
+</main>

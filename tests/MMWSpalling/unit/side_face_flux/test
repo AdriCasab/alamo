@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+# D2k: surface_patch.side_face_flux -- flux on exposed vertical faces.
+#
+# Variants (see ./input for the geometry; 4 ranks unless noted):
+#   OFF   the reference: side_face_flux = 0
+#   ON    side_face_flux = 1, side_face_factor = 1.0
+#   HALF  side_face_flux = 1, side_face_factor = 0.5
+#   COL1  1 x 1 x 60 (no lateral neighbour anywhere), side_face_flux = 0
+#   COL1S the same with side_face_flux = 1
+#   EXCL  ON with a nozzle plane descending at 4 mm/s from 138 mm, so it
+#         overtakes the slow wall columns at ~4.5 s (h -> 0 there) while the
+#         fast corner stays below it
+#
+# Checks:
+#   (a) COL1S == COL1, byte for byte (thermo.dat, removal_events.csv, every
+#       Level_0 Cell_D): with no lateral void neighbour the key is inert.
+#       Also OFF against the pre-D2k reference behaviour is covered by the
+#       2639-file sweep, not here.
+#   (b) ON differs from OFF (the term does something), and on ON
+#       ledger_err stays <= 1e-13 on every row: the ledger carries the
+#       identical side term, so energy still closes to round-off.
+#   (c) side_faces equals the count reconstructed from removal_events.csv
+#       (staircase k_top per column, void lateral neighbours, in-patch
+#       columns only) on every row where it is nonzero.
+#   (d) exact linearity in f: at the FIRST row with side_faces > 0 the two
+#       runs still have identical temperature fields, so
+#       side_P_face(ON) == 2 * side_P_face(HALF) to round-off.
+#   (e) admissible range: 0 < side_P_face <= side_faces * dx*dz * h_wall *
+#       (T_gas - T_amb) on that row (every wall cell lies between T_amb and
+#       T_gas, so the flux cannot exceed the h*(T_gas - T_amb) bound).
+#   (f) exclusion: on EXCL, once the descending plane has passed the wall
+#       columns they have h -> 0, and their side faces must take NOTHING from
+#       the flame. They still radiate, exactly as an excluded TOP face does
+#       (same SurfaceCellFlux call), so the precise statement is
+#       side_P_face == -side_P_loss identically -- the gain term is zero --
+#       and side_P_face < 0. On ON, by contrast, the gain is positive.
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import filecmp
+import glob
+import os
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT = os.path.join(HERE, "input")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "output")
+
+DX = 0.002
+NXY, NZ = 4, 60
+H_WALL, T_GAS, T_AMB = 2000.0, 1000.0, 293.15
+R_PATCH = 0.010
+H_EXCL = '"if(s>0.0,if(r<0.003,20000.0,2000.0),1.0e-30)"'
+
+VARIANTS = {
+    "OFF":   ["surface_patch.side_face_flux=0"],
+    "ON":    ["surface_patch.side_face_flux=1", "surface_patch.side_face_factor=1.0"],
+    "HALF":  ["surface_patch.side_face_flux=1", "surface_patch.side_face_factor=0.5"],
+    "COL1":  ["surface_patch.side_face_flux=0", "amr.n_cell=1 1 60",
+              "geometry.prob_hi=0.002 0.002 0.120"],
+    "COL1S": ["surface_patch.side_face_flux=1", "surface_patch.side_face_factor=1.0",
+              "amr.n_cell=1 1 60", "geometry.prob_hi=0.002 0.002 0.120"],
+    "EXCL":  ["surface_patch.side_face_flux=1", "surface_patch.side_face_factor=1.0",
+              f"surface_patch.h_expr={H_EXCL}",
+              "surface_patch.nozzle_z0=0.138", "surface_patch.nozzle_feed=4.0e-3"],
+}
+
+FAIL = []
+
+
+def check(name, cond, detail):
+    print(f"  {'PASS' if cond else 'FAIL'}  {name}: {detail}")
+    if not cond:
+        FAIL.append(name)
+
+
+def run(name):
+    pf = os.path.join(OUT, name)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, INPUT,
+            f"plot_file={pf}"] + VARIANTS[name])
+    os.makedirs(OUT, exist_ok=True)
+    with open(pf + ".log", "w") as log:
+        log.write(" ".join(cmd) + "\n")
+        log.flush()
+        rc = subprocess.call(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    print(f"  {name}: rc={rc}")
+    return rc
+
+
+def thermo(name):
+    p = os.path.join(OUT, name, "thermo.dat")
+    head = open(p).readline().split()
+    a = np.loadtxt(p, skiprows=1, ndmin=2)
+    return {c: a[:, i] for i, c in enumerate(head)}
+
+
+def thermo_text(name):
+    return open(os.path.join(OUT, name, "thermo.dat")).read()
+
+
+def events(name):
+    p = os.path.join(OUT, name + "_removal_events.csv")
+    if not os.path.exists(p) or os.path.getsize(p) < 2:
+        return np.zeros((0, 11))
+    return np.loadtxt(p, delimiter=",", skiprows=1, ndmin=2)
+
+
+def cell_d(name):
+    return sorted(glob.glob(os.path.join(OUT, name, "*", "Level_0", "Cell_D_*")))
+
+
+def faces_from_events(name, t, dt):
+    """Reconstruct the staircase k_top per column from the removal log and
+    count void lateral neighbours of in-patch solid cells -- the geometry the
+    kernel sees at the step stamped `t` (events carry the step's start time)."""
+    ev = events(name)
+    k = np.full((NXY, NXY), NZ - 1, int)
+    if ev.size:
+        ev = ev[np.argsort(ev[:, 0], kind="stable")]
+        s = ev[:, 0] <= t - 0.5 * dt
+        for row in ev[s]:
+            i, j = int(row[1]), int(row[2])
+            k[i, j] = int(row[4]) - int(row[10])
+    c = (np.arange(NXY) + 0.5) * DX
+    X, Y = np.meshgrid(c, c, indexing="ij")
+    inp = np.hypot(X, Y) <= R_PATCH
+    n = 0
+    for i in range(NXY):
+        for j in range(NXY):
+            if not inp[i, j]:
+                continue
+            for kk in range(0, k[i, j] + 1):          # solid cells of this column
+                for di, dj in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    ii, jj = i + di, j + dj
+                    if 0 <= ii < NXY and 0 <= jj < NXY and kk > k[ii, jj]:
+                        n += 1
+    return n
+
+
+def main():
+    if len(sys.argv) == 1:
+        for v in VARIANTS:
+            if run(v) != 0:
+                print(f"ALAMO failed for {v}")
+                sys.exit(1)
+
+    print("\n(a) COL1S == COL1 (no lateral neighbour -> key inert)")
+    ta, tb = thermo("COL1S"), thermo("COL1")
+    common = [c for c in tb if c in ta]
+    same_t = (len(ta["time"]) == len(tb["time"])
+              and all(np.array_equal(ta[c], tb[c]) for c in common))
+    new_cols = [c for c in ta if c not in tb]
+    a, b = cell_d("COL1S"), cell_d("COL1")
+    same_c = len(a) == len(b) and len(a) > 0 and all(filecmp.cmp(x, y, shallow=False)
+                                                     for x, y in zip(a, b))
+    same_e = open(os.path.join(OUT, "COL1S_removal_events.csv")).read() == \
+             open(os.path.join(OUT, "COL1_removal_events.csv")).read()
+    check("a.thermo", same_t,
+          f"all {len(common)} common thermo columns identical "
+          f"(key-on adds {new_cols})")
+    check("a.cell_d", same_c, f"{len(a)} Level_0 Cell_D files identical")
+    check("a.events", same_e, "removal_events.csv identical")
+
+    on, off, half = thermo("ON"), thermo("OFF"), thermo("HALF")
+    print("\n(b) ON differs from OFF; ledger closes with the key on")
+    n = min(len(on["time"]), len(off["time"]))
+    differs = not np.array_equal(on["nozzle_z"][:n] if "nozzle_z" in on else on["ledger_E_H"][:n],
+                                 off["ledger_E_H"][:n]) or \
+        not np.array_equal(on["ledger_E_H"][:n], off["ledger_E_H"][:n])
+    check("b.differs", differs, "ON and OFF enthalpy histories differ")
+    led = float(np.max(np.abs(on["ledger_err"])))
+    check("b.ledger", led <= 1e-13, f"max |ledger_err| on ON = {led:.2e} (limit 1e-13)")
+    check("b.ledger_half", float(np.max(np.abs(half["ledger_err"]))) <= 1e-13,
+          f"max |ledger_err| on HALF = {np.max(np.abs(half['ledger_err'])):.2e}")
+
+    print("\n(c) side_faces matches the geometry reconstructed from the removal log")
+    dt = float(on["time"][1] - on["time"][0])
+    nz_rows = np.nonzero(on["side_faces"] > 0)[0]
+    check("c.any", nz_rows.size > 0, f"{nz_rows.size} rows with exposed faces")
+    bad = []
+    for r in nz_rows[:: max(1, nz_rows.size // 25)]:
+        t = float(on["time"][r])
+        want = faces_from_events("ON", t, dt)
+        got = int(round(float(on["side_faces"][r])))
+        if want != got:
+            bad.append((t, got, want))
+    check("c.count", not bad,
+          "every sampled row matches" if not bad else f"mismatches {bad[:4]}")
+
+    print("\n(d) exact linearity in f at the first row with faces")
+    r0 = int(nz_rows[0])
+    hp = float(half["side_P_face"][r0])
+    op = float(on["side_P_face"][r0])
+    rel = abs(op - 2.0 * hp) / max(abs(op), 1e-30)
+    check("d.linear", rel <= 1e-12,
+          f"side_P_face ON {op:.9e} vs 2x HALF {2*hp:.9e} (rel {rel:.2e})")
+    check("d.same_faces", on["side_faces"][r0] == half["side_faces"][r0],
+          f"same face count on that row ({on['side_faces'][r0]:.0f})")
+
+    print("\n(e) side_P_face inside the admissible h*(T_gas - T_amb) bound")
+    area = DX * DX
+    bound = float(on["side_faces"][r0]) * area * H_WALL * (T_GAS - T_AMB)
+    check("e.range", 0.0 < op <= bound,
+          f"0 < {op:.4g} W <= {bound:.4g} W")
+
+    print("\n(f) exclusion: a column above the nozzle plane takes nothing from the flame")
+    ex = thermo("EXCL")
+    exr = np.nonzero(ex["side_faces"] > 0)[0]
+    check("f.faces", exr.size > 0, f"{exr.size} rows with exposed faces on EXCL")
+    # the plane crosses the original surface at (0.138 - 0.120)/4e-3 = 4.5 s;
+    # take rows well after it has overtaken the wall columns
+    late = exr[ex["time"][exr] > 6.0]
+    gain = ex["side_P_face"][late] + ex["side_P_loss"][late]
+    check("f.no_gain", late.size > 0 and float(np.max(np.abs(gain))) == 0.0,
+          f"flame gain identically zero on {late.size} rows "
+          f"(max |side_P_face + side_P_loss| = {float(np.max(np.abs(gain))) if late.size else float('nan'):.1e})")
+    check("f.loses", late.size > 0 and bool((ex["side_P_face"][late] < 0.0).all()),
+          f"every excluded row still radiates: side_P_face in "
+          f"[{ex['side_P_face'][late].min():.4g}, {ex['side_P_face'][late].max():.4g}] W")
+    on_gain = on["side_P_face"][nz_rows] + on["side_P_loss"][nz_rows]
+    check("f.on_gains", bool((on_gain > 0.0).all()),
+          f"ON gains on every face row (min {on_gain.min():.4g} W)")
+
+    print("\n" + ("PASS" if not FAIL else f"FAIL: {FAIL}"))
+    sys.exit(1 if FAIL else 0)
+
+
+if __name__ == "__main__":
+    main()

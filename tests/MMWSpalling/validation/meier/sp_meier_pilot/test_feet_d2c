@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+# Meier 2017 Grimsel pilot -- D2d scored test: the D2c closures (J-M, n = 1,
+# momentum D_e, free-surface dilution, body clearance).
+# Reference packet: ../meier-2017-pilot-660kg-validation-reference.md
+#
+# CHECK-ONLY, like test_feet. The scored run (input_feet_d2c keys at 0.70 m,
+# many hundreds of simulated seconds) takes hours on 4 ranks, which is far too
+# expensive for a regression. This script re-scores the output of
+#   tests/MMWSpalling/studies/d2c_steady/run.py --stage D2d
+# (R1_scored, and the mesh pair R7b_2mm / R7_1mm) with the study's score.py,
+# i.e. the D2c scoring with the D2d amendments:
+#   (i)   the minimum Ø is taken to the feet depth (the burner-body band);
+#   (ii)  the mesh check is a matched transient window [150 s, min(t_end)],
+#         burner ROP within 5 % (a steady 1 mm run needs about 24 h);
+#   (iii) window (a) = [150 s, the time the centre reaches 0.36 m] carries the
+#         PREDICTIONS.md P6 bands.
+#
+# Criteria and bands (ACTIVE_STEP D2d §Scoring; unchanged from D2c):
+#   steady window        >= 150 s, |ds_c/dt| < 0.02 mm/s, 50 s sub-fits +-10 %
+#   ROP                  [1.04, 1.92] m/h
+#   whole volume rate    [1.98, 2.96] cm^3/s (water filling: whole excavation)
+#   mechanical share     <= 5 % (above = finding)
+#   wall profile (mouth) 0 <= Ø - width <= 10 mm at 25 and 50 mm (Fig. 8.8)
+#   depth-mean Ø         85-93 mm over the drilled depth
+#   minimum Ø            >= 80 mm over the feet depth (76-80 unresolved at 2 mm)
+#   ΔT_fire              500-560 K
+#   removal power / R    vs 2.83 kW; R <= 1.05
+#   ledger               round-off
+#   mesh                 burner ROP within 5 % on the matched window
+#
+# EXPECTED records each outcome as it came out of the D2d campaign. A FAIL
+# there is an expected-fail, with its numbers in the study RESULTS.md; the
+# bands are not loosened. The test passes when every outcome matches EXPECTED,
+# so a change that flips any criterion (either way) is reported.
+# No parameter was adjusted toward Meier's ROP, hole diameter or volume rate.
+#
+# Usage:  python3 test_feet_d2c        (needs numpy; uses the study output)
+
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+STUDY = os.path.normpath(os.path.join(HERE, "..", "..", "..", "studies", "d2c_steady"))
+sys.path.insert(0, STUDY)
+import score as scr  # noqa: E402
+
+OUT = os.path.join(STUDY, "output")
+RUN = "R1_scored"
+MESH_PAIR = ("R7b_2mm", "R7_1mm")
+ACCEPTED_STATUS = ("ok", "bottom", "steady-stop", "cap")
+
+# Outcomes as recorded after the D2d campaign (2026-09-17/18). See
+# studies/d2c_steady/RESULTS.md sections 6-7 for the numbers behind each one.
+# R1: steady 470-694 s, ROP 1.65 m/h, volume 2.59 cm^3/s, mouth 130/114 mm,
+# depth-mean Ø 100.9 mm, minimum Ø 77.6 mm at the feet depth.
+EXPECTED = {
+    "steady window": "exists",
+    "ROP": "PASS",
+    "whole volume rate": "PASS",
+    "mechanical share": "ok",
+    "wall profile (mouth)": "FAIL",               # expected-fail: funnel, +38/+26 mm
+    "depth-mean Ø (drilled depth)": "FAIL",       # expected-fail: 100.9 mm
+    "minimum Ø (feet depth)": "unresolved at 2 mm",
+    "ΔT_fire": "PASS",
+    "removal power / R": "PASS",
+    "ledger": "PASS",
+}
+# Matched window 150-300 s (R7_1mm stopped at 300 s by the user's decision):
+# 1 mm ROP +42.8 % over 2 mm. Expected-fail: the 2 mm results are not converged.
+MESH_EXPECTED = "FAIL"
+
+
+def main():
+    pf = os.path.join(OUT, RUN)
+    if not os.path.exists(pf + ".done"):
+        print(f"FAIL: {RUN} not found under {OUT}; run the study's --stage D2d first")
+        return 1
+    rows, info = scr.score(pf, write_profile=False)
+    status = info["status"]
+    print(f"{RUN}: status {status}, t_end {info['t_end']:g} s, window "
+          f"{info['W'][0]:.0f}-{info['W'][1]:.0f} s"
+          f"{'' if info['steady'] else ' (NOT steady: fallback window)'}")
+    got = {}
+    for name, target, sim, verdict in rows:
+        got[name] = verdict
+        print(f"  {name:28s} {verdict:16s} {sim}  (target {target})")
+    ok = True
+    if not any(status.startswith(s) for s in ACCEPTED_STATUS):
+        print(f"FAIL: run status {status!r} (expected one of {ACCEPTED_STATUS})")
+        ok = False
+    if EXPECTED is None:
+        print("FAIL: EXPECTED outcomes not recorded yet")
+        return 1
+    for name, want in EXPECTED.items():
+        have = got.get(name)
+        if have != want:
+            print(f"FAIL: {name}: outcome {have!r}, recorded {want!r}")
+            ok = False
+        elif want.startswith("FAIL"):
+            print(f"  expected-fail: {name}")
+    # mesh pair (matched transient window)
+    pf2, pf1 = (os.path.join(OUT, n) for n in MESH_PAIR)
+    if os.path.exists(pf2 + ".done") and os.path.exists(pf1 + ".done"):
+        txt = scr.mesh(pf2, pf1)
+        verdict = "PASS" if "Mesh verdict: PASS" in txt else "FAIL"
+        print(f"  mesh ({MESH_PAIR[1]} vs {MESH_PAIR[0]}): {verdict}")
+        print("    " + txt.replace("\n", "\n    "))
+        if MESH_EXPECTED is not None and verdict != MESH_EXPECTED:
+            print(f"FAIL: mesh outcome {verdict!r}, recorded {MESH_EXPECTED!r}")
+            ok = False
+    else:
+        print(f"  mesh: {MESH_PAIR} not found; skipped")
+        if MESH_EXPECTED is not None:
+            print("FAIL: the mesh pair is recorded but missing")
+            ok = False
+    print("PASS (all outcomes as recorded)" if ok else "FAILED")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

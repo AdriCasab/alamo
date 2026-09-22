@@ -79,6 +79,23 @@ public:
         if (mat.T_vap_hi <= mat.T_vap_lo && mat.L_v > 0.0)
             m_H_vap_hi = m_H_vap_lo + mat.rho(mat.T_vap_lo) * mat.L_v;
         m_sharp_vap = (mat.T_vap_hi <= mat.T_vap_lo) && (mat.L_v > 0.0);
+
+        // Perf (2026-09-18): uniform-in-H seed table for T_of_H. For a
+        // query H the seed lo = m_inv_lo[j] satisfies m_H[lo] <= H, and a
+        // short forward walk reaches the unique bracket m_H[lo] <= H <
+        // m_H[lo+1] that the old bisection returned, so the interpolated
+        // T is bit-identical. Replaces ~14 data-dependent bisection steps
+        // per cell per step.
+        m_inv_N   = 4 * m_N;
+        m_inv_H0  = m_H.front();
+        m_inv_dH  = (m_H.back() - m_H.front()) / m_inv_N;
+        m_inv_lo.assign(m_inv_N + 1, 0);
+        for (int j = 0, lo = 0; j <= m_inv_N; ++j)
+        {
+            const Set::Scalar Hj = m_inv_H0 + j * m_inv_dH;
+            while (lo + 1 < m_N - 1 && m_H[lo + 1] <= Hj) ++lo;
+            m_inv_lo[j] = lo;
+        }
     }
 
     bool built() const { return m_N > 0; }
@@ -101,12 +118,25 @@ public:
         if (m_sharp_vap && H >= m_H_vap_lo && H <= m_H_vap_hi) return m_vap_lo_T;
         if (H <= m_H.front()) return m_T.front();
         if (H >= m_H.back())  return m_T.back();
-        int lo = 0, hi = m_N - 1;
-        while (hi - lo > 1)
+        int lo = 0;
+        if (m_inv_N > 0)
         {
-            int mid = (lo + hi) / 2;
-            if (m_H[mid] <= H) lo = mid; else hi = mid;
+            int j = static_cast<int>((H - m_inv_H0) / m_inv_dH);
+            if (j < 0) j = 0; else if (j > m_inv_N) j = m_inv_N;
+            lo = m_inv_lo[j];
+            // Hj <= H, so m_H[lo] <= Hj <= H; walk to the last such index.
+            while (lo + 1 < m_N - 1 && m_H[lo + 1] <= H) ++lo;
         }
+        else
+        {
+            int hi = m_N - 1;
+            while (hi - lo > 1)
+            {
+                int mid = (lo + hi) / 2;
+                if (m_H[mid] <= H) lo = mid; else hi = mid;
+            }
+        }
+        const int hi = lo + 1;
         Set::Scalar denom = m_H[hi] - m_H[lo];
         Set::Scalar w = (denom > 0.0) ? (H - m_H[lo]) / denom : 0.0;
         return m_T[lo] * (1.0 - w) + m_T[hi] * w;
@@ -140,6 +170,10 @@ private:
     std::vector<Set::Scalar> m_T, m_H;
     Set::Scalar m_T_min = 0.0, m_dT = 0.0;
     int         m_N     = 0;
+    // Uniform-in-H seed table for T_of_H (see Build()).
+    std::vector<int> m_inv_lo;
+    int              m_inv_N  = 0;
+    Set::Scalar      m_inv_H0 = 0.0, m_inv_dH = 0.0;
 
     Set::Scalar m_fus_lo_T = 0.0, m_fus_hi_T = 0.0;
     Set::Scalar m_vap_lo_T = 0.0, m_vap_hi_T = 0.0;
