@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Wall Problem</title>
+<meta name="description" content="Why seven packets of the MMWSpalling drilling model have failed to widen the hole, what each one ruled out, and what the next packet must identify.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground:    #f4f5f6;
+    --surface:   #ffffff;
+    --sunk:      #eceef0;
+    --ink:       #16191d;
+    --muted:     #5c666f;
+    --faint:     #8b949c;
+    --rule:      #d9dde1;
+    --rule-firm: #b9c1c8;
+    --hot:       #d1490b;
+    --hot-soft:  #fbe6d8;
+    --cold:      #2f6f86;
+    --cold-soft: #dfeaef;
+    --rock:      #cfd5da;
+    --rock-deep: #b3bbc2;
+    --stop:      #a8341a;
+    --ok:        #2e6b4f;
+    --ok-soft:   #dceee4;
+
+    --display: "Newsreader", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#14171a; --surface:#1c2024; --sunk:#23282d; --ink:#e8eaed;
+      --muted:#a0a8af; --faint:#767e85; --rule:#2d343a; --rule-firm:#3d454c;
+      --hot:#f0763a; --hot-soft:#3a2113; --cold:#6fb4cc; --cold-soft:#17313b;
+      --rock:#394148; --rock-deep:#4a535b; --stop:#e4694b;
+      --ok:#6cba92; --ok-soft:#16301f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#14171a; --surface:#1c2024; --sunk:#23282d; --ink:#e8eaed;
+    --muted:#a0a8af; --faint:#767e85; --rule:#2d343a; --rule-firm:#3d454c;
+    --hot:#f0763a; --hot-soft:#3a2113; --cold:#6fb4cc; --cold-soft:#17313b;
+    --rock:#394148; --rock-deep:#4a535b; --stop:#e4694b;
+    --ok:#6cba92; --ok-soft:#16301f;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 56px 16px 80px; }
+
+  .mast { margin-bottom: 40px; }
+  .kicker {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(2.1rem, 6vw, 3.1rem); line-height: 1.08;
+    margin: 0 0 16px; letter-spacing: -0.015em;
+  }
+  .standfirst {
+    font-family: var(--display); font-size: clamp(1.05rem, 2.6vw, 1.3rem);
+    line-height: 1.45; color: var(--muted); margin: 0; text-wrap: pretty;
+  }
+
+  h2 {
+    font-family: var(--display); font-weight: 600;
+    font-size: clamp(1.4rem, 3.6vw, 1.85rem); line-height: 1.2;
+    margin: 0 0 12px; letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 1.02rem; font-weight: 600; margin: 28px 0 8px;
+  }
+  p { margin: 0 0 16px; text-wrap: pretty; }
+  code {
+    font-family: var(--mono); font-size: 0.85em;
+    background: var(--sunk); padding: 1px 5px; border-radius: 3px;
+  }
+  strong { font-weight: 600; }
+
+  .partline {
+    display: flex; align-items: center; gap: 14px;
+    margin: 56px 0 24px;
+  }
+  .partline .n {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--hot); white-space: nowrap;
+  }
+  .partline .bar { height: 1px; background: var(--rule-firm); flex: 1; }
+
+  /* ---- cards ---- */
+  .evidence, .note, .fig {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 5px; padding: 20px 22px; margin: 26px 0;
+  }
+  .note { background: var(--sunk); border-color: transparent; }
+  .evidence > :last-child, .note > :last-child, .fig > :last-child { margin-bottom: 0; }
+  .cap {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 12px;
+  }
+
+  /* ---- tables ---- */
+  .tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table {
+    border-collapse: collapse; width: 100%;
+    font-size: 0.92rem; font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left; padding: 8px 14px 8px 0;
+    border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  th {
+    font-family: var(--mono); font-weight: 600; font-size: 10.5px;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+  }
+  td.num { font-family: var(--mono); font-size: .87rem; }
+  tr:last-child td { border-bottom: none; }
+  .bad  { color: var(--stop); font-weight: 600; }
+  .good { color: var(--ok); font-weight: 600; }
+  .dim  { color: var(--faint); }
+
+  /* ---- packet timeline ---- */
+  .packet {
+    display: grid; grid-template-columns: 116px 1fr; gap: 22px;
+    padding: 22px 0; border-top: 1px solid var(--rule);
+  }
+  .packet:last-of-type { border-bottom: 1px solid var(--rule); }
+  .rail { display: flex; flex-direction: column; gap: 7px; align-items: flex-start; }
+  .rail .id {
+    font-family: var(--mono); font-weight: 600; font-size: .92rem;
+  }
+  .chip {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .07em;
+    text-transform: uppercase; padding: 3px 7px; border-radius: 3px;
+    white-space: nowrap;
+  }
+  .c-fail  { background: var(--hot-soft); color: var(--stop); }
+  .c-cause { background: var(--cold-soft); color: var(--cold); }
+  .c-close { background: var(--sunk); color: var(--muted); }
+  .c-pass  { background: var(--ok-soft); color: var(--ok); }
+  .packet h3 { margin: 0 0 8px; font-size: 1.06rem; }
+  .packet p { margin: 0 0 10px; font-size: .96rem; }
+  .packet p:last-child { margin-bottom: 0; }
+  .bought {
+    font-size: .89rem; color: var(--muted);
+    border-left: 2px solid var(--rule-firm); padding-left: 12px;
+  }
+  .bought b { color: var(--ink); font-weight: 600; }
+
+  /* ---- cell diagrams ---- */
+  .diagrams {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 18px; margin: 26px 0;
+  }
+  .fig h4 { font-family: var(--body); font-weight: 600; font-size: .95rem; margin: 0 0 4px; }
+  .fig .sub { font-size: .86rem; color: var(--muted); margin: 0 0 16px; line-height: 1.45; }
+  .gridfig {
+    display: grid; grid-template-columns: repeat(6, 30px);
+    grid-auto-rows: 24px; gap: 2px; margin: 0 auto 14px; width: max-content;
+  }
+  .c { border-radius: 2px; background: var(--rock); position: relative; }
+  .c.deep { background: var(--rock-deep); }
+  .c.void { background: transparent; border: 1px dashed var(--rule-firm); }
+  .c.hot  { background: var(--hot); }
+  .c.warm { background: #e8a072; }
+  .c.cold { background: var(--cold); }
+  .c.gone { background: var(--hot-soft); border: 2px dashed var(--hot); }
+  .c.label::after {
+    content: attr(data-l); position: absolute; inset: 0;
+    display: grid; place-items: center; font-family: var(--mono);
+    font-size: 11px; font-weight: 600; color: #fff;
+  }
+  .c.gone.label::after { color: var(--hot); }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 6px 16px;
+    font-size: .8rem; color: var(--muted); margin-top: 4px;
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .sw { width: 13px; height: 13px; border-radius: 2px; flex: none; display: inline-block; }
+  .sw.rock { background: var(--rock); }
+  .sw.hot { background: var(--hot); }
+  .sw.warm { background: #e8a072; }
+  .sw.cold { background: var(--cold); }
+  .sw.void { border: 1px dashed var(--rule-firm); }
+
+
+  /* ---- full packet sections ---- */
+  .packet-full { border-top: 1px solid var(--rule-firm); padding: 34px 0 10px; }
+  .phead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .phead .id { font-family: var(--mono); font-weight: 600; font-size: .95rem; }
+  .packet-full h3 {
+    width: 100%; margin: 10px 0 14px; font-family: var(--display);
+    font-weight: 600; font-size: clamp(1.2rem, 3vw, 1.5rem); line-height: 1.22;
+  }
+  .lab {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--hot); font-weight: 600;
+    display: block; margin: 20px 0 6px;
+  }
+  .packet-full p { font-size: .97rem; }
+  .keynum {
+    display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 18px 0;
+  }
+  .keynum div {
+    background: var(--sunk); border-radius: 4px; padding: 9px 13px;
+    font-size: .85rem; line-height: 1.35;
+  }
+  .keynum b { font-family: var(--mono); font-size: .95rem; display: block; }
+  .schem { font-family: var(--body); font-size: 11.5px; fill: var(--muted); }
+  .schem.hd { font-size: 12.5px; fill: var(--ink); font-weight: 600; }
+
+  /* ---- charts ---- */
+  figure { margin: 26px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-size: .86rem; color: var(--muted); margin-top: 10px;
+    line-height: 1.5; text-wrap: pretty;
+  }
+  .ax { font-family: var(--mono); font-size: 10px; fill: var(--faint); }
+  .lbl { font-family: var(--body); font-size: 12px; fill: var(--ink); }
+  .lbl.s { font-size: 11px; fill: var(--muted); }
+  .val { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+
+  .pull {
+    font-family: var(--display); font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+    line-height: 1.38; border-left: 3px solid var(--hot);
+    padding: 2px 0 2px 20px; margin: 30px 0; text-wrap: pretty;
+  }
+
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 9px; }
+
+  .q { margin: 26px 0; padding-left: 0; }
+  .q h3 { margin-top: 0; }
+  .qnum {
+    font-family: var(--mono); font-size: 11px; color: var(--hot);
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+
+  footer {
+    margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--rule);
+    font-size: .84rem; color: var(--faint); font-family: var(--mono);
+    line-height: 1.7;
+  }
+  a { color: var(--cold); }
+
+  @media (max-width: 560px) {
+    .packet { grid-template-columns: 1fr; gap: 10px; }
+    .rail { flex-direction: row; align-items: center; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <p class="kicker">ALAMO · MMWSpalling · 23 September 2026</p>
+  <h1>The Wall Problem</h1>
+  <p class="standfirst">Nine packets have tried to make the model drill a cylinder instead of a cone. None has succeeded. This is what each one ruled out, why the latest one returned an honest negative, and the four things the next packet has to settle.</p>
+</header>
+
+<h2>What is being built, and what it is scored against</h2>
+
+<p>The model is a thermal-spallation drilling simulation: a burner sits in a borehole, heats granite, and the rock flakes off in thin spalls. It is written in ALAMO (an AMReX-based multiphysics code) and is being validated against <strong>Meier's 2017 field trial at Grimsel</strong>, where a flame-jet burner resting on tripod feet drilled half a metre of granite.</p>
+
+<p>The validation is deliberately narrow. Gas temperature, cuttings absorption and melting all scale every heat flux equally, so they change <em>how fast</em> the model drills but not the <em>shape</em> of the hole it makes. Shape is therefore the only thing that can be scored without circularity — and shape is where the model fails.</p>
+
+<div class="evidence">
+  <p class="cap">The scoring failure that started this line of work</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Quantity</th><th>Meier (measured)</th><th>Model</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Hole cross-section</td><td class="num">cylinder</td><td class="num">cone</td><td class="bad">fail</td></tr>
+      <tr><td>Shaft diameter, 14–38 cm depth</td><td class="num">95 ± 5 mm, constant</td><td class="num">145 → 78 mm, no constant section</td><td class="bad">fail</td></tr>
+      <tr><td>Volume removal rate</td><td class="num">2.47 cm³/s</td><td class="num">4.58 cm³/s</td><td class="bad">1.9×</td></tr>
+      <tr><td>Rate of penetration</td><td class="num">1.30 m/h</td><td class="num">1.49 m/h</td><td class="good">in band</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px;font-size:.9rem;color:var(--muted)">The rate looks right and the shape is wrong. A later packet (D2l) showed that even the rate agreement was a coincidence of two errors cancelling — the model absorbs 17.3 % of the burner's energy where 9.1 % would reproduce Meier's volume.</p>
+</div>
+
+<p class="pull">To widen a hole, rock at the <em>wall</em> has to be removed. Everything that follows is the story of why it could not be.</p>
+
+<div class="partline"><span class="n">Part 1</span><span class="bar"></span></div>
+<h2>The cause: a staircase that bleeds heat sideways</h2>
+
+<p>The model stores the hole as a <strong>height function</strong>: for every vertical column of cells it remembers one number, how far down that column has been eaten away. The wall of a drilled hole is therefore a staircase of columns of different heights.</p>
+
+<p>When one column spalls and drops by a cell, its new top cell — which is hot, at the firing temperature — ends up directly beside the <em>buried interior</em> of the taller column next door. That neighbouring rock is still at bulk temperature, and nothing ever heats it. Heat runs sideways across that face and is lost from the drilling process.</p>
+
+<div class="diagrams">
+  <div class="fig">
+    <h4>The drain</h4>
+    <p class="sub">A firing top cell (orange) sits beside cold buried rock in the taller column (blue). Heat flows across that face and never comes back.</p>
+    <div class="gridfig" role="img" aria-label="Staircase of rock cells: the short column's hot top cell borders the tall column's cold buried interior, with heat flowing sideways.">
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+      <div class="c"></div><div class="c hot"></div><div class="c hot label" data-l="→"></div><div class="c cold"></div><div class="c deep"></div><div class="c deep"></div>
+      <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+      <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+    </div>
+    <div class="legend">
+      <span><i class="sw void"></i>void</span><span><i class="sw rock"></i>rock</span>
+      <span><i class="sw hot"></i>firing</span><span><i class="sw cold"></i>cold wall</span>
+    </div>
+  </div>
+
+  <div class="fig">
+    <h4>Why refining the mesh makes it worse</h4>
+    <p class="sub">The flux across that face is <code>k·ΔT/dx</code>. Halving the cell size halves <code>dx</code> but leaves <code>ΔT</code> unchanged — so the drain doubles.</p>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>Cell size</th><th>ΔT across face</th><th>Drain</th><th>vs input flux</th></tr></thead>
+      <tbody>
+        <tr><td>2 mm</td><td class="num">≈ 400 K</td><td class="num">302 kW/m²</td><td class="num bad">58 %</td></tr>
+        <tr><td>1 mm</td><td class="num">≈ 400 K</td><td class="num">604 kW/m²</td><td class="num bad">116 %</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="sub" style="margin:14px 0 0">Measured in D2o-0b: the step was <strong>155.1 K at 2 mm and 153.7 K at 1 mm</strong> — identical — while the sink it drives doubled. The input flux is ≈ 520 kW/m².</p>
+  </div>
+</div>
+
+<p>This is not a coding bug. It is a <strong>continuum corner singularity</strong>: a criterion evaluated at a single point on a geometric corner is mesh-divergent by construction. The practical symptom is that the drilling rate depends on the mesh, which means no number the model produces can be trusted.</p>
+
+<div class="note">
+  <p class="cap">The arbiter test, used by every packet since</p>
+  <p>A stripped-down problem — a static hot disk under a descending exclusion plane, no burner, no jet, no gas model — reproduces the cascade exactly. A packet passes it if the drilling rate measured at <strong>2 mm and at 1 mm agrees to within 5 %</strong> in each of three time blocks. That is the whole test: does the answer stop depending on the mesh?</p>
+</div>
+
+<figure>
+<svg viewBox="0 0 720 470" role="img" aria-labelledby="t-gaps">
+  <title id="t-gaps">Mesh disagreement by packet</title>
+  <rect x="150" y="26" width="50" height="404" fill="var(--ok-soft)"></rect>
+  <text class="ax" x="202" y="22">5 % target zone</text>
+  <g class="ax">
+    <line x1="150" y1="26" x2="150" y2="430" stroke="var(--rule-firm)"></line>
+    <line x1="250" y1="26" x2="250" y2="430" stroke="var(--rule)" stroke-dasharray="2 4"></line>
+    <line x1="350" y1="26" x2="350" y2="430" stroke="var(--rule)" stroke-dasharray="2 4"></line>
+    <line x1="450" y1="26" x2="450" y2="430" stroke="var(--rule)" stroke-dasharray="2 4"></line>
+    <line x1="550" y1="26" x2="550" y2="430" stroke="var(--rule)" stroke-dasharray="2 4"></line>
+    <line x1="650" y1="26" x2="650" y2="430" stroke="var(--rule)" stroke-dasharray="2 4"></line>
+    <text x="150" y="448" text-anchor="middle">0</text>
+    <text x="250" y="448" text-anchor="middle">10</text>
+    <text x="350" y="448" text-anchor="middle">20</text>
+    <text x="450" y="448" text-anchor="middle">30</text>
+    <text x="550" y="448" text-anchor="middle">40</text>
+    <text x="650" y="448" text-anchor="middle">50 %</text>
+  </g>
+
+  <!-- group 1: C1 key-off -->
+  <text class="lbl" x="142" y="52" text-anchor="end">baseline</text>
+  <text class="lbl s" x="142" y="67" text-anchor="end">no fix (D2j-0b)</text>
+  <rect x="150" y="40" width="135" height="14" fill="var(--stop)" opacity=".55"></rect>
+  <rect x="150" y="58" width="287" height="14" fill="var(--stop)" opacity=".75"></rect>
+  <rect x="150" y="76" width="455" height="14" fill="var(--stop)"></rect>
+  <text class="val" x="293" y="51">13.5</text>
+  <text class="val" x="445" y="69">28.7</text>
+  <text class="val" x="613" y="87">45.5</text>
+
+  <!-- group 2: D2q-2c C1 -->
+  <text class="lbl" x="142" y="128" text-anchor="end">cap 80 W/m²K</text>
+  <text class="lbl s" x="142" y="143" text-anchor="end">D2q-2c, with plane</text>
+  <rect x="150" y="116" width="109" height="14" fill="var(--stop)" opacity=".55"></rect>
+  <rect x="150" y="134" width="222" height="14" fill="var(--stop)" opacity=".75"></rect>
+  <rect x="150" y="152" width="303" height="14" fill="var(--stop)"></rect>
+  <text class="val" x="267" y="127">10.9</text>
+  <text class="val" x="380" y="145">22.2</text>
+  <text class="val" x="461" y="163">30.3</text>
+
+  <!-- group 3: D2k -->
+  <text class="lbl" x="142" y="204" text-anchor="end">full side heat</text>
+  <text class="lbl s" x="142" y="219" text-anchor="end">D2k, h = 700</text>
+  <rect x="150" y="192" width="34" height="14" fill="var(--ok)" opacity=".6"></rect>
+  <rect x="150" y="210" width="15" height="14" fill="var(--ok)" opacity=".8"></rect>
+  <rect x="150" y="228" width="32" height="14" fill="var(--ok)"></rect>
+  <text class="val" x="192" y="203">3.4</text>
+  <text class="val" x="173" y="221">1.5</text>
+  <text class="val" x="190" y="239">3.2</text>
+  <text class="val" x="230" y="221" fill="var(--stop)">— but drills 2.7× too fast</text>
+
+  <!-- group 4: C0 key-off -->
+  <text class="lbl" x="142" y="280" text-anchor="end">no corner present</text>
+  <text class="lbl s" x="142" y="295" text-anchor="end">C0, no fix</text>
+  <rect x="150" y="268" width="104" height="14" fill="var(--muted)" opacity=".45"></rect>
+  <rect x="150" y="286" width="153" height="14" fill="var(--muted)" opacity=".6"></rect>
+  <rect x="150" y="304" width="201" height="14" fill="var(--muted)" opacity=".75"></rect>
+  <text class="val" x="262" y="279">10.4</text>
+  <text class="val" x="311" y="297">15.3</text>
+  <text class="val" x="359" y="315">20.1</text>
+
+  <!-- group 5: C0 cap 80 -->
+  <text class="lbl" x="142" y="356" text-anchor="end">no corner present</text>
+  <text class="lbl s" x="142" y="371" text-anchor="end">C0, cap 80</text>
+  <rect x="150" y="344" width="37" height="14" fill="var(--ok)" opacity=".6"></rect>
+  <rect x="150" y="362" width="45" height="14" fill="var(--ok)" opacity=".8"></rect>
+  <rect x="150" y="380" width="20" height="14" fill="var(--ok)"></rect>
+  <text class="val" x="195" y="355">3.7</text>
+  <text class="val" x="203" y="373">4.5</text>
+  <text class="val" x="178" y="391">2.0</text>
+</svg>
+<figcaption><strong>Mesh disagreement between a 2 mm and a 1 mm run</strong>, in three successive time blocks (top bar earliest). Zero means the answer no longer depends on the mesh. Only two configurations reach the target zone: full-strength side heating, which drills 2.7× too fast, and the physically-capped case <em>without</em> a corner present. The corner case is still badly divergent.</figcaption>
+</figure>
+
+<div class="partline"><span class="n">Part 2</span><span class="bar"></span></div>
+<h2>Nine attempts, one at a time</h2>
+
+<p>What follows is every packet since the mesh problem was found, in order. For each one: what the idea was, what was actually run, what came out, why, and what it left behind for the next attempt.</p>
+
+<p>Two conventions are worth knowing before you read them. First, <strong>predictions were written down and hashed before every campaign</strong>, made read-only and timestamped before the output directory existed — so no result could be reinterpreted afterwards. Second, <strong>every new option had to be off by default and provably inert</strong>: with the option off, all 2639 reference output files had to come out bit-for-bit identical. That is what makes each result attributable to the new term and nothing else.</p>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2i</span><span class="chip c-fail">failed the gate</span></div>
+  <h3>Is the mesh problem just bad timing?</h3>
+
+  <span class="lab">The idea</span>
+  <p>When a patch of rock gets hot enough it spalls, and the surface drops by one cell. But the code also made a column <em>wait</em> — an "idle clock" — before it was allowed to fire again. That waiting time was proportional to the cell height. A 2 mm run and a 1 mm run therefore had different waiting times baked into them, which is an obvious way for the answer to end up depending on the mesh.</p>
+
+  <span class="lab">What was run</span>
+  <p>Switch the idle clock off completely, then drill the same hole twice — once with 2 mm cells, once with 1 mm cells. If the clock was the cause, the two runs should now agree. The pass mark, fixed in advance: the drilling rate must agree to within 5 % in <em>every</em> 100-second block.</p>
+
+  <span class="lab">What happened</span>
+  <p>It failed. Over the matched window the two meshes differed by <strong>13.9 %</strong>, and block by block the disagreement grew steadily worse. The count of idle columns was <strong>0</strong> in every block at both meshes, so the clock genuinely was off — this was not a case of the switch not working.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 235" role="img" aria-labelledby="t-d2i">
+    <title id="t-d2i">Mesh disagreement grows as the hole deepens</title>
+    <rect x="130" y="30" width="50" height="160" fill="var(--ok-soft)"></rect>
+    <text class="ax" x="184" y="26">5 % pass mark</text>
+    <line x1="130" y1="30" x2="130" y2="190" stroke="var(--rule-firm)"></line>
+    <rect x="130" y="38" width="21" height="26" fill="var(--ok)" opacity=".7"></rect>
+    <rect x="130" y="76" width="40" height="26" fill="var(--ok)" opacity=".7"></rect>
+    <rect x="130" y="114" width="163" height="26" fill="var(--stop)" opacity=".7"></rect>
+    <rect x="130" y="152" width="361" height="26" fill="var(--stop)"></rect>
+    <text class="lbl" x="122" y="56" text-anchor="end">block 1 (early)</text>
+    <text class="lbl" x="122" y="94" text-anchor="end">block 2</text>
+    <text class="lbl" x="122" y="132" text-anchor="end">block 3</text>
+    <text class="lbl" x="122" y="170" text-anchor="end">block 4 (late)</text>
+    <text class="val" x="159" y="56">2.1 %</text>
+    <text class="val" x="178" y="94">4.0 %</text>
+    <text class="val" x="301" y="132">16.3 %</text>
+    <text class="val" x="499" y="170">36.1 %</text>
+    <g class="ax">
+      <text x="130" y="208" text-anchor="middle">0</text>
+      <text x="230" y="208" text-anchor="middle">10</text>
+      <text x="330" y="208" text-anchor="middle">20</text>
+      <text x="430" y="208" text-anchor="middle">30</text>
+      <text x="530" y="208" text-anchor="middle">40 %</text>
+      <text x="530" y="226" text-anchor="middle">disagreement between the 2 mm and 1 mm run</text>
+    </g>
+  </svg>
+  <figcaption>The first two blocks pass comfortably. By the fourth the two meshes disagree by more than a third. <strong>The shape of this failure is the clue</strong> — whatever is wrong accumulates as the hole gets deeper, rather than being present from the start.</figcaption>
+  </figure>
+
+  <span class="lab">Why</span>
+  <p>The clock was a real mesh mechanism — removing it delayed the divergence by about 150 seconds. But a second, slower failure sits underneath it and only shows itself once the hole has depth. A further hint came free: setting the clock's threshold to 20 produced byte-identical output to switching it off, which means it was behaving as an on/off threshold rather than as a dial. It was never controlling the thing that mattered.</p>
+
+  <p class="bought"><b>What it bought:</b> the cause is not timing, and it is something that <em>builds up with depth</em>. That ruled out a whole class of explanations and pointed the next packet at the geometry of the hole rather than at the removal rules.</p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2j-0b</span><span class="chip c-cause">found the cause</span></div>
+  <h3>Take everything away and see whether it still breaks</h3>
+
+  <span class="lab">The idea</span>
+  <p>The full simulation has a lot going on at once: a burner descending on three feet, a flame jet, a gas energy model, a cone-shaped hole, a rough rock surface. Any of them could be responsible. The way to find out which is to start deleting them.</p>
+
+  <span class="lab">What was run</span>
+  <p>A deliberately impoverished problem. A flat block of granite. A uniform hot disk pressed against the top of it. And one horizontal plane descending at a fixed speed which does nothing except switch the heating off above itself — a stand-in for the burner going down. No jet. No feet. No gas model. No burner mechanics of any kind.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 300" role="img" aria-labelledby="t-d2j">
+    <title id="t-d2j">The full model versus the stripped-down test</title>
+    <text class="schem hd" x="20" y="24">The full model</text>
+    <text class="schem hd" x="365" y="24">The hot-disk test</text>
+
+    <rect x="25" y="110" width="285" height="150" fill="var(--rock)"></rect>
+    <polygon points="118,110 152,215 192,215 226,110" fill="var(--ground)"></polygon>
+    <rect x="145" y="52" width="48" height="46" rx="3" fill="var(--muted)"></rect>
+    <rect x="130" y="98" width="9" height="13" fill="var(--muted)"></rect>
+    <rect x="199" y="98" width="9" height="13" fill="var(--muted)"></rect>
+    <g stroke="var(--hot)" stroke-width="2">
+      <line x1="160" y1="100" x2="152" y2="140"></line>
+      <line x1="169" y1="100" x2="169" y2="145"></line>
+      <line x1="178" y1="100" x2="186" y2="140"></line>
+    </g>
+    <text class="schem" x="25" y="282">burner · feet · flame jet · gas model · cone hole</text>
+
+    <rect x="370" y="110" width="285" height="150" fill="var(--rock)"></rect>
+    <rect x="430" y="102" width="165" height="8" fill="var(--hot)"></rect>
+    <text class="schem" x="512" y="94" text-anchor="middle" fill="var(--hot)">uniform hot disk</text>
+    <line x1="380" y1="68" x2="630" y2="68" stroke="var(--cold)" stroke-width="2" stroke-dasharray="6 4"></line>
+    <line x1="645" y1="60" x2="645" y2="80" stroke="var(--cold)" stroke-width="2"></line>
+    <polygon points="641,78 649,78 645,86" fill="var(--cold)"></polygon>
+    <text class="schem" x="380" y="58" fill="var(--cold)">plane descends, switches heating off above it</text>
+    <text class="schem" x="370" y="282">a flat plate, a hot disk, a moving plane. Nothing else.</text>
+
+    <text class="lbl" x="167" y="298" text-anchor="middle" fill="var(--stop)" style="font-weight:600">cascade present</text>
+    <text class="lbl" x="512" y="298" text-anchor="middle" fill="var(--stop)" style="font-weight:600">cascade present, unchanged</text>
+  </svg>
+  <figcaption>Everything on the left that could plausibly have caused the failure was deleted, and the failure survived at full strength. That localises it to the only thing both pictures share: <strong>rock that recedes column by column, leaving steps.</strong></figcaption>
+  </figure>
+
+  <span class="lab">Why</span>
+  <p>Because the mechanism needs nothing but a staircase. The moment one column fires and drops, its hot new top cell is in direct contact with the cold buried interior of the column beside it, and heat pours sideways into rock that is doing no useful work. The flux across that face is <code>k·ΔT/dx</code>: conductivity, times the temperature difference, divided by the cell width.</p>
+  <p>Now halve the cell size. The temperature difference does not change, because the neighbouring rock is at bulk temperature either way — this was measured directly, <strong>155.1 K at 2 mm and 153.7 K at 1 mm</strong>. But <code>dx</code> has halved, so the heat flux doubles. Refining the mesh, which is supposed to make an answer more accurate, makes this one worse.</p>
+
+  <p class="bought"><b>What it bought:</b> the cause, isolated in a test that runs in minutes. And a rule with real cutting power — <em>if the failure happens under perfectly uniform heating, then no change to the heating pattern can remove it.</em> That one sentence later closed several proposals without running any of them.</p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2k</span><span class="chip c-pass">test passed</span><span class="chip c-fail">field run failed</span></div>
+  <h3>If the sideways face is losing heat, then heat it</h3>
+
+  <span class="lab">The idea</span>
+  <p>That cold face is cold because nothing in the model heats it. In reality hot gas is flowing past it. So add a heat flux on exposed <em>vertical</em> faces, not only on the horizontal ones the code already heats.</p>
+
+  <span class="lab">What was run</span>
+  <p>A new code path, off by default, with the identity gate passed (2639 files unchanged with it off). Then the stripped-down test at both mesh sizes, and separately the full Meier case.</p>
+
+  <span class="lab">What happened — two results that must not be read as one</span>
+  <p>On the stripped-down test it <strong>worked outright</strong>. Mesh disagreement collapsed from −13.5 / −28.7 / −45.5 % to +3.4 / +1.5 / −3.2 %. No stalls, no artefacts, and it did this while drawing only about 7 % of the total face power.</p>
+  <p>On the Meier case it <strong>failed badly</strong>. The burner drilled at <strong>4.07 m/h instead of 1.49</strong> — 2.7 times too fast — and both runs drilled clean out of the bottom of the simulation box before the comparison window was even reached.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 300" role="img" aria-labelledby="t-d2k">
+    <title id="t-d2k">Heating the vertical faces adds a large amount of heated area</title>
+    <text class="schem hd" x="20" y="24">Before: only up-facing surfaces heated</text>
+    <text class="schem hd" x="365" y="24">After: side faces heated too</text>
+
+    <rect x="30" y="60" width="270" height="180" fill="var(--rock)"></rect>
+    <polygon points="60,60 60,100 100,100 100,140 140,140 140,180 180,180 180,140 220,140 220,100 260,100 260,60" fill="var(--ground)"></polygon>
+    <g stroke="var(--hot)" stroke-width="5" stroke-linecap="square">
+      <line x1="30" y1="60" x2="60" y2="60"></line>
+      <line x1="60" y1="100" x2="100" y2="100"></line>
+      <line x1="100" y1="140" x2="140" y2="140"></line>
+      <line x1="140" y1="180" x2="180" y2="180"></line>
+      <line x1="180" y1="140" x2="220" y2="140"></line>
+      <line x1="220" y1="100" x2="260" y2="100"></line>
+      <line x1="260" y1="60" x2="300" y2="60"></line>
+    </g>
+
+    <rect x="375" y="60" width="270" height="180" fill="var(--rock)"></rect>
+    <polygon points="405,60 405,100 445,100 445,140 485,140 485,180 525,180 525,140 565,140 565,100 605,100 605,60" fill="var(--ground)"></polygon>
+    <g stroke="var(--hot)" stroke-width="5" stroke-linecap="square">
+      <line x1="375" y1="60" x2="405" y2="60"></line>
+      <line x1="405" y1="100" x2="445" y2="100"></line>
+      <line x1="445" y1="140" x2="485" y2="140"></line>
+      <line x1="485" y1="180" x2="525" y2="180"></line>
+      <line x1="525" y1="140" x2="565" y2="140"></line>
+      <line x1="565" y1="100" x2="605" y2="100"></line>
+      <line x1="605" y1="60" x2="645" y2="60"></line>
+      <line x1="405" y1="60" x2="405" y2="100"></line>
+      <line x1="445" y1="100" x2="445" y2="140"></line>
+      <line x1="485" y1="140" x2="485" y2="180"></line>
+      <line x1="525" y1="140" x2="525" y2="180"></line>
+      <line x1="565" y1="100" x2="565" y2="140"></line>
+      <line x1="605" y1="60" x2="605" y2="100"></line>
+    </g>
+
+    <text class="schem" x="30" y="266">mesh disagreement −45.5 %</text>
+    <text class="schem" x="30" y="284" fill="var(--ok)">drilling rate 1.49 m/h</text>
+    <text class="schem" x="375" y="266" fill="var(--ok)">mesh disagreement −3.2 %</text>
+    <text class="schem" x="375" y="284" fill="var(--stop)">drilling rate 4.07 m/h — 2.7× too fast</text>
+  </svg>
+  <figcaption>In a deep hole the exposed vertical wall has an area comparable to the floor. Giving it the same heat transfer coefficient as the floor therefore <strong>nearly doubles the power entering the rock</strong>. The mesh problem goes away; the energy budget is wrecked.</figcaption>
+  </figure>
+
+  <span class="lab">Why</span>
+  <p>The implementation gave a vertical wall the same heat transfer coefficient as the floor sitting directly under the flame jet. That is the coefficient for a surface being blasted head-on by an impinging jet, applied to a surface the jet is merely sliding past. Since more absorbed power means more rock removed, the burner simply drilled faster.</p>
+
+  <p class="bought"><b>What it bought:</b> proof that the mesh divergence <em>is</em> removable — it is not a law of nature. And the exact failure mode that every subsequent packet was written to reject: <strong>buying convergence by drilling faster.</strong></p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2l</span><span class="chip c-close">stopped — no window</span></div>
+  <h3>Turn the side heating down until both things are true at once</h3>
+
+  <span class="lab">The idea</span>
+  <p>Full-strength side heating fixes the mesh problem but drills far too fast. Zero side heating drills at the right rate but leaves the mesh problem. Somewhere in between there ought to be a setting that does both.</p>
+
+  <span class="lab">What was run</span>
+  <p>A pure parameter scan — no code change at all. The side heating was scaled by a factor <code>f</code> at 1.0, 0.5, 0.2, 0.1 and 0. Two quantities were defined in advance: <code>f_min</code>, the lowest setting that still suppresses the mesh cascade, and <code>f_rate</code>, the highest setting that still leaves the drilling rate inside Meier's measured 1.3–1.6 m/h band. The rule, also fixed in advance: proceed only if <code>f_rate ≥ f_min</code>.</p>
+
+  <span class="lab">What happened</span>
+  <p><code>f_min</code> came out at <strong>0.5</strong>. <code>f_rate</code> came out at <strong>0</strong> — the rate only re-enters the band with the term switched off entirely. The two requirements do not overlap anywhere on the scale. The scan stopped at that point and no code was written.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 210" role="img" aria-labelledby="t-d2l">
+    <title id="t-d2l">No setting satisfies both requirements</title>
+    <rect x="370" y="52" width="250" height="34" fill="var(--ok)" opacity=".25"></rect>
+    <text class="schem" x="495" y="44" text-anchor="middle" fill="var(--ok)">mesh cascade suppressed — needs f ≥ 0.5</text>
+    <rect x="120" y="96" width="7" height="34" fill="var(--cold)"></rect>
+    <text class="schem" x="136" y="117" fill="var(--cold)">drilling rate in Meier's band — only at f = 0</text>
+    <rect x="127" y="52" width="243" height="78" fill="var(--stop)" opacity=".1"></rect>
+    <text class="schem" x="248" y="150" text-anchor="middle" fill="var(--stop)" style="font-weight:600">empty — nothing satisfies both</text>
+    <line x1="120" y1="165" x2="620" y2="165" stroke="var(--rule-firm)"></line>
+    <g class="ax">
+      <line x1="120" y1="165" x2="120" y2="171" stroke="var(--rule-firm)"></line>
+      <line x1="170" y1="165" x2="170" y2="171" stroke="var(--rule-firm)"></line>
+      <line x1="220" y1="165" x2="220" y2="171" stroke="var(--rule-firm)"></line>
+      <line x1="370" y1="165" x2="370" y2="171" stroke="var(--rule-firm)"></line>
+      <line x1="620" y1="165" x2="620" y2="171" stroke="var(--rule-firm)"></line>
+      <text x="120" y="186" text-anchor="middle">0</text>
+      <text x="170" y="186" text-anchor="middle">0.1</text>
+      <text x="220" y="186" text-anchor="middle">0.2</text>
+      <text x="370" y="186" text-anchor="middle">0.5</text>
+      <text x="620" y="186" text-anchor="middle">1.0</text>
+      <text x="370" y="204" text-anchor="middle">side-heating strength f</text>
+    </g>
+  </svg>
+  <figcaption>The two acceptable regions sit at opposite ends of the scale with a wide gap between them. This does not refute one value of <code>f</code> — it refutes <strong>every</strong> value, and with it the whole idea of fixing the problem by scaling wall heating.</figcaption>
+  </figure>
+
+  <span class="lab">Why — and this part matters more than the scan</span>
+  <p>Across the entire ladder the model removed rock at an almost constant <strong>1.32–1.43 joules per cubic millimetre</strong> of absorbed energy. So the volume removed is essentially just proportional to the power absorbed, and the whole question reduces to an energy budget.</p>
+  <p>With the side term completely off, the model already absorbs <strong>6.56 kW — 17.3 % of the burner's 38 kW</strong> — and removes 4.58 cm³/s against Meier's 2.47. To reproduce Meier's volume at the model's own conversion efficiency it would need to absorb about <strong>3.46 kW, or 9.1 %</strong>. In other words the factor-of-two error is <em>already there</em> with the side term off. D2k's term made an existing error larger; it did not create it.</p>
+  <p style="font-size:.9rem;color:var(--muted)">One honest caveat: the 9.1 % figure rests on an assumed 4–6 J/mm³ energy cost, which is an assumption about how much of the burner's output reaches the rock at all, not a measurement.</p>
+
+  <p class="bought"><b>What it bought:</b> a whole family of proposals closed at once, and the discovery that the model's apparently-correct drilling rate had been two errors cancelling out.</p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2m</span><span class="chip c-cause">mixed, and revealing</span></div>
+  <h3>Is the hole's width set by the flame, or by the tool?</h3>
+
+  <span class="lab">The idea</span>
+  <p>Meier's burner rests on three feet. The model's burner rests on the highest rock beneath its feet. Perhaps the hole is narrow for a boring reason: the tool is narrow, and the hole is simply the shape the tool carves. If so, the flame physics is not the problem at all.</p>
+
+  <span class="lab">What was run</span>
+  <p>Change the burner's foot radius across a 32 mm swing — overall stances of 64, 80, 88 and 96 mm — and measure the minimum diameter of the resulting hole.</p>
+
+  <span class="lab">What happened</span>
+  <p>The hole diameter tracked twice the foot radius to within <strong>0.5–2.1 mm at every stance, in both directions</strong>. The model's hole is the width of its own tool, almost exactly.</p>
+  <p>Meanwhile the flame's reach was <em>unaffected</em> by the stance: at 45–50 mm radius the absolute recession rate was the same to within 5–7 % across the whole ladder, while the centre moved by 39 %.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 400" role="img" aria-labelledby="t-d2m">
+    <title id="t-d2m">Hole diameter against tool stance</title>
+    <line x1="130" y1="340" x2="620" y2="60" stroke="var(--rule-firm)" stroke-dasharray="5 4"></line>
+    <text class="schem" x="560" y="86" text-anchor="end">hole = tool width</text>
+
+    <circle cx="179" cy="317" r="6" fill="var(--cold)"></circle>
+    <circle cx="375" cy="205" r="6" fill="var(--cold)"></circle>
+    <circle cx="473" cy="151" r="6" fill="var(--cold)"></circle>
+    <circle cx="571" cy="103" r="6" fill="var(--cold)"></circle>
+    <text class="val" x="190" y="322">63.5</text>
+    <text class="val" x="386" y="210">79.3</text>
+    <text class="val" x="484" y="156">87.0</text>
+    <text class="val" x="582" y="108">93.9</text>
+
+    <rect x="368" y="109" width="14" height="56" fill="var(--stop)" opacity=".85" rx="2"></rect>
+    <text class="schem" x="392" y="128" fill="var(--stop)" style="font-weight:600">Meier: 85–93 mm hole</text>
+    <text class="schem" x="392" y="146" fill="var(--stop)">from an 80 mm tool</text>
+
+    <line x1="130" y1="60" x2="130" y2="340" stroke="var(--rule-firm)"></line>
+    <line x1="130" y1="340" x2="620" y2="340" stroke="var(--rule-firm)"></line>
+    <g class="ax">
+      <text x="130" y="360" text-anchor="middle">60</text>
+      <text x="252" y="360" text-anchor="middle">70</text>
+      <text x="375" y="360" text-anchor="middle">80</text>
+      <text x="497" y="360" text-anchor="middle">90</text>
+      <text x="620" y="360" text-anchor="middle">100 mm</text>
+      <text x="375" y="380" text-anchor="middle">tool stance (twice the foot radius)</text>
+      <text x="122" y="344" text-anchor="end">60</text>
+      <text x="122" y="274" text-anchor="end">70</text>
+      <text x="122" y="204" text-anchor="end">80</text>
+      <text x="122" y="134" text-anchor="end">90</text>
+      <text x="122" y="64" text-anchor="end">100 mm</text>
+    </g>
+    <text class="schem" x="20" y="40">hole diameter</text>
+  </svg>
+  <figcaption>Every model point sits on the line: the hole is as wide as the tool and no wider. <strong>Meier's point sits well above it</strong> — his 80 mm burner made an 85–93 mm hole. The model cannot produce that, by construction. The mechanism that removes rock beyond the tool's own footprint is simply absent.</figcaption>
+  </figure>
+
+  <span class="lab">Why this is damning rather than reassuring</span>
+  <p>If the model's hole is exactly its tool's width and Meier's was <em>wider</em> than his tool, then the agreement is not physics — it is geometry. The rock beyond the footprint has to come off somehow, and nothing in the model can take it off.</p>
+  <p>A second measurement in the same packet made it worse: the model's floor is not a flat disc with an edge, it is a <strong>cone with a long tail</strong>. The recession rate is already down to 0.83 of its central value at 29 mm radius and 0.62 at 39 mm, and never falls to a tenth of centre anywhere within 70 mm. Meier's hole is a cylinder.</p>
+
+  <p class="bought"><b>What it bought:</b> the target is the <em>radial distribution</em> of heat, and the missing capability is removal beyond the footprint — which is the same missing capability the wall needs.</p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2o-0</span><span class="chip c-fail">jammed the burner</span></div>
+  <h3>Heat the floor and the wall differently, and see what shape comes out</h3>
+
+  <span class="lab">The idea</span>
+  <p>Instead of one heat transfer coefficient everywhere, prescribe a high one on the floor, where the jet actually impinges (h = 700), and a low one on the wall, where gas merely flows past (h = 40). Prescribed by hand, not modelled — the point was only to see what shape such a split produces.</p>
+
+  <span class="lab">What was run</span>
+  <p>The floor/wall boundary was defined by depth below the nozzle: rock within 45 mm of the nozzle plane counted as "wall", anything deeper counted as "floor".</p>
+
+  <span class="lab">What happened</span>
+  <p>The burner jammed. The drilling rate fell from <strong>1.491 to 0.108 m/h</strong>, and the hole never even reached 10 cm.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 330" role="img" aria-labelledby="t-d2o0">
+    <title id="t-d2o0">The boundary cut through the columns holding the burner up</title>
+    <line x1="60" y1="46" x2="640" y2="46" stroke="var(--rule-firm)"></line>
+    <text class="schem" x="60" y="38">nozzle plane</text>
+
+    <rect x="240" y="52" width="180" height="46" rx="3" fill="var(--muted)"></rect>
+    <text class="schem" x="330" y="80" text-anchor="middle" fill="var(--surface)" style="font-weight:600">burner</text>
+    <rect x="252" y="98" width="14" height="62" fill="var(--muted)"></rect>
+    <rect x="394" y="98" width="14" height="62" fill="var(--muted)"></rect>
+
+    <line x1="60" y1="175" x2="640" y2="175" stroke="var(--stop)" stroke-width="2" stroke-dasharray="7 4"></line>
+    <text class="schem" x="644" y="172" text-anchor="end" fill="var(--stop)" style="font-weight:600">h switches 700 → 40 here (45 mm)</text>
+    <line x1="60" y1="196" x2="640" y2="196" stroke="var(--rule-firm)" stroke-dasharray="3 3"></line>
+    <text class="schem" x="64" y="211">the plane the feet rest on (50 mm)</text>
+
+    <path d="M60 240 L110 238 L150 232 L180 205 L210 214 L245 160 L275 212 L310 236 L350 240 L385 218 L404 160 L430 212 L470 234 L510 230 L560 238 L600 232 L640 240 L640 258 L60 258 Z" fill="var(--rock)"></path>
+    <path d="M225 220 L245 160 L262 216 Z" fill="var(--cold)"></path>
+    <path d="M388 214 L404 160 L420 216 Z" fill="var(--cold)"></path>
+    <text class="schem" x="60" y="278" fill="var(--hot)" style="font-weight:600">floor zone, deeper than 45 mm: h = 700, fires normally</text>
+    <text class="schem" x="60" y="296" fill="var(--cold)" style="font-weight:600">any column poking above the line: h = 40, stuck at 444–482 K, never fires again</text>
+    <text class="schem" x="60" y="320">Because they never spall they stay tall — and the burner sits on them like stilts.</text>
+  </svg>
+  <figcaption>The burner rests on the highest rock beneath its feet. Any column poking more than 5 mm above that plane fell on the wrong side of the boundary, got the low coefficient, and cooled to 444–482 K where the control had it at 680–814 K — right at its firing threshold. Those columns stopped spalling and held the tool up. It was the boundary's <strong>position</strong>, not its strength: h = 40, h = 20 and h = 0 all jammed identically.</figcaption>
+  </figure>
+
+  <span class="lab">A second, unrelated defect found in the same packet</span>
+  <p>The prescribed gas temperature was a quadratic curve fitted to data out to 68 mm radius, wrapped in a <code>max(1400, …)</code> guard that existed purely so the input parser could never evaluate a negative number. Applied at large radius, that fit crosses 1400 K at 84.7 mm and goes <em>negative</em> at 198 mm — so beyond 85 mm the safety guard stopped being a guard and became the physics.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 300" role="img" aria-labelledby="t-d2o0b">
+    <title id="t-d2o0b">A curve fit used far outside its range</title>
+    <rect x="120" y="40" width="180" height="210" fill="var(--ok-soft)"></rect>
+    <text class="schem" x="210" y="34" text-anchor="middle" fill="var(--ok)">fitted on this range</text>
+    <rect x="344" y="40" width="306" height="47" fill="var(--stop)" opacity=".12"></rect>
+    <path d="M120 47 L173 50 L226 57 L300 73" fill="none" stroke="var(--cold)" stroke-width="2.5"></path>
+    <path d="M300 73 L344 87 L438 124 L544 182 L645 252" fill="none" stroke="var(--cold)" stroke-width="2.5" stroke-dasharray="6 4"></path>
+    <line x1="344" y1="87" x2="650" y2="87" stroke="var(--stop)" stroke-width="3"></line>
+    <text class="schem" x="497" y="80" text-anchor="middle" fill="var(--stop)" style="font-weight:600">what the model actually applied: 1400 K everywhere out here</text>
+    <text class="schem" x="500" y="110" fill="var(--cold)">what the fit says</text>
+    <text class="schem" x="500" y="240" fill="var(--cold)">(and it goes negative at 198 mm)</text>
+    <line x1="120" y1="40" x2="120" y2="255" stroke="var(--rule-firm)"></line>
+    <line x1="120" y1="255" x2="655" y2="255" stroke="var(--rule-firm)"></line>
+    <g class="ax">
+      <text x="120" y="274" text-anchor="middle">0</text>
+      <text x="252" y="274" text-anchor="middle">50</text>
+      <text x="385" y="274" text-anchor="middle">100</text>
+      <text x="517" y="274" text-anchor="middle">150</text>
+      <text x="650" y="274" text-anchor="middle">200 mm</text>
+      <text x="385" y="294" text-anchor="middle">distance from the hole's axis</text>
+      <text x="112" y="50" text-anchor="end">1750 K</text>
+      <text x="112" y="87" text-anchor="end">1400 K</text>
+      <text x="112" y="255" text-anchor="end">0 K</text>
+    </g>
+  </svg>
+  <figcaption>The result was a 1400 K gas blanket over rock that should have seen room temperature. <strong>2637 of 3600 columns — 73 % of the domain — sat in it</strong>, absorbing 1.7–1.8 kW, which is more than the control run's entire 1639 W. Total prescribed power came to 7956 W against the control's 2711 W.</figcaption>
+  </figure>
+
+  <p class="bought"><b>What it bought:</b> the boundary must be defined <em>radially</em>, at the foot radius, so the load-carrying columns fall inside the floor zone by construction. Plus two rules with general force — never apply a fit outside the range it was fitted on, and never let a parser-safety clamp set a physical value. Guard with ambient temperature, not with a working gas temperature.</p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2o-0b</span><span class="chip c-fail">failed the gate</span></div>
+  <h3>The same idea, with the boundary at the foot radius</h3>
+
+  <span class="lab">What was run</span>
+  <p>Identical to D2o-0, except the floor/wall boundary now sits at a fixed radius of 40 mm — the outer edge of the feet — so every load-carrying column is inside the floor zone whatever its height.</p>
+
+  <span class="lab">What happened</span>
+  <p>The intended repair worked. Frozen columns fell from <strong>15 to 2</strong>, the stall time from <strong>219 s to 11 s</strong>, and the drilling rate recovered from <strong>0.108 to 0.771 m/h</strong>. But the gate still failed, because 0.771 is about half the control's 1.491.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 320" role="img" aria-labelledby="t-d2o0c">
+    <title id="t-d2o0c">A sharp corner in the heating makes its own temperature step</title>
+    <text class="schem hd" x="20" y="22">heat transfer coefficient</text>
+    <path d="M120 60 L370 60 L370 108 L620 108" fill="none" stroke="var(--muted)" stroke-width="2.5"></path>
+    <text class="val" x="200" y="52">h = 700</text>
+    <text class="val" x="396" y="126">h = 40 — a factor of 17, across one cell</text>
+
+    <text class="schem hd" x="20" y="178">rock surface temperature</text>
+    <path d="M120 200 L370 200 L370 268 L620 268" fill="none" stroke="var(--hot)" stroke-width="2.5"></path>
+    <text class="val" x="200" y="192" fill="var(--hot)">≈ 820 K — at the firing point</text>
+    <text class="val" x="400" y="286" fill="var(--cold)">≈ 418 K — cold</text>
+
+    <line x1="382" y1="234" x2="440" y2="234" stroke="var(--stop)" stroke-width="2"></line>
+    <polygon points="440,229 440,239 450,234" fill="var(--stop)"></polygon>
+    <text class="val" x="456" y="231" fill="var(--stop)" style="font-weight:600">a 402 K step across one cell</text>
+    <text class="val" x="456" y="247" fill="var(--stop)">drains 302 kW/m² — 58 % of the input</text>
+
+    <line x1="370" y1="40" x2="370" y2="290" stroke="var(--rule-firm)" stroke-dasharray="3 4"></line>
+    <text class="ax" x="370" y="306" text-anchor="middle">the corner, at the foot radius (40 mm)</text>
+    <text class="ax" x="120" y="306">axis</text>
+    <text class="ax" x="620" y="306" text-anchor="end">outward →</text>
+  </svg>
+  <figcaption>Jumping the heat transfer coefficient by a factor of 17 across a single cell puts a 402 K temperature difference across that same cell — and that difference drives a sideways conduction drain taking 58 % of the incoming heat. For comparison, the ordinary control run has a step of 77 K, taking 11 %. The corner traded a frozen tool for a heat leak, and the burner descended at half rate.</figcaption>
+  </figure>
+
+  <span class="lab">The reframing that came out of it</span>
+  <p>This is the packet that changed how the whole problem is posed. The 302 kW/m² draining across that corner is <strong>not a loss</strong>. It is heat being delivered into the rock immediately behind the wall — which is exactly where the wall needs to get hot in order to spall. The heat is arriving in the right place. The code simply has no way to spend it.</p>
+
+  <p class="bought"><b>What it bought:</b> the general constraint that <em>any</em> sharp corner in the heating does this, radial or depth-based, so the transition must be smooth over several cells. And the reframing above, which is the standard every later packet is judged against: does the fix turn that drained heat into useful work — without drilling faster?</p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2p-0</span><span class="chip c-close">closed before any run</span></div>
+  <h3>Let the sideways-facing cell fire on its own</h3>
+
+  <span class="lab">The idea</span>
+  <p>If the wall is getting hot and cannot spall because the spall test is only applied at the top surface, then apply the test to the sideways-facing cell as well.</p>
+
+  <span class="lab">What happened</span>
+  <p>The packet was closed during implementation, before a single simulation ran, on three facts each about one search away in the source:</p>
+  <ol>
+    <li><strong>There is no per-cell firing test to reuse.</strong> The criterion field is zeroed everywhere and written only at the surface cell. It is inherently a free-surface test that needs a surface and a scan downwards from it.</li>
+    <li><strong>A side face is heated using its own column's coefficient.</strong> So a wall column that is not itself being heated receives no side flux at all, however hot its neighbour is.</li>
+    <li><strong>Void is derived from a single height per column</strong> — so solid sitting above void, in one column, cannot be represented at all.</li>
+  </ol>
+
+  <figure>
+  <svg viewBox="0 0 680 250" role="img" aria-labelledby="t-d2p0">
+    <title id="t-d2p0">The side face is heated by its own column, not by its neighbour</title>
+    <rect x="170" y="110" width="110" height="120" fill="var(--rock)"></rect>
+    <rect x="280" y="60" width="110" height="170" fill="var(--rock)"></rect>
+    <rect x="170" y="110" width="110" height="24" fill="var(--hot)"></rect>
+    <g stroke="var(--hot)" stroke-width="2">
+      <line x1="196" y1="82" x2="196" y2="104"></line><polygon points="192,102 200,102 196,110" fill="var(--hot)"></polygon>
+      <line x1="225" y1="82" x2="225" y2="104"></line><polygon points="221,102 229,102 225,110" fill="var(--hot)"></polygon>
+      <line x1="254" y1="82" x2="254" y2="104"></line><polygon points="250,102 258,102 254,110" fill="var(--hot)"></polygon>
+    </g>
+    <text class="val" x="225" y="74" text-anchor="middle" fill="var(--hot)">heated, h = 700</text>
+
+    <text class="val" x="335" y="52" text-anchor="middle" fill="var(--muted)">not heated, h = 0</text>
+    <text class="val" x="335" y="160" text-anchor="middle" fill="var(--muted)">cold interior</text>
+
+    <line x1="280" y1="110" x2="280" y2="230" stroke="var(--cold)" stroke-width="4"></line>
+    <line x1="470" y1="150" x2="292" y2="150" stroke="var(--cold)" stroke-width="1.5"></line>
+    <polygon points="294,145 294,155 284,150" fill="var(--cold)"></polygon>
+    <text class="val" x="478" y="140" fill="var(--cold)" style="font-weight:600">this face</text>
+    <text class="val" x="478" y="156" fill="var(--cold)">uses the RIGHT column's</text>
+    <text class="val" x="478" y="172" fill="var(--cold)">own h — which is zero</text>
+    <text class="schem" x="20" y="246">Heating the left column cannot make the shared face deliver anything to the right column.</text>
+  </svg>
+  <figcaption>Points 1 and 2 could have been coded around. Point 3 could not: even with a perfect trigger there was <strong>nowhere to put the answer</strong>. Lateral rules fail at the moment of removal, not at the moment of triggering.</figcaption>
+  </figure>
+
+  <span class="lab">Two fallbacks checked and rejected the same way</span>
+  <p>A "slab" rule — levelling any step as soon as it forms — would pass the mesh test trivially, because it removes the steps that the test is measuring, leaving nothing to measure. It is also inert at Meier's 418 K wall, and it removes a whole slab of rock for the cost of heating one cell, which is energetically wrong in a model already removing 1.9× too much. Capping the step height was already answered on the record: a one-cell step has a temperature difference proportional to the cell height, so that particular loss converges on its own.</p>
+
+  <p class="bought"><b>What it bought:</b> two packets and a design argument refuted in about an hour, for zero compute. And a method rule now applied to every packet: before claiming a mechanism "fits the existing representation", name the variable that holds it and the line that writes it.</p>
+</section>
+
+<section class="packet-full">
+  <div class="phead"><span class="id">D2p-1</span><span class="chip c-close">closed before any run</span></div>
+  <h3>Smooth the corner over a physical length instead</h3>
+
+  <span class="lab">The idea</span>
+  <p>D2o-0b showed a sharp corner generates its own drain. So do not make it sharp — spread the transition over a physical length, specifically the distance heat diffuses in the time the burner takes to advance past a point.</p>
+
+  <span class="lab">What happened</span>
+  <p>Closed before launch on three counts, all arithmetic.</p>
+
+  <p><strong>1. The length had been computed from the wrong material.</strong> The project's recorded 3.2 mm came from textbook granite. The model's own inputs give a conductivity of 1.5 and a heat capacity of 2.17×10⁶, which puts the length at <strong>1.604 mm</strong>. That correction matters beyond this packet: a 2 mm cell spans 0.8 of the heated layer, not 1.6 of it, so the mesh is coarser relative to the physics than anyone had assumed.</p>
+
+  <p><strong>2. The fix points the wrong way.</strong> Take D2o-0b's measured 402 K step and spread it over 1.604 mm rather than over one cell. The drain becomes <strong>376 kW/m², or 72 % of the incoming heat</strong> — worse than the 302 kW/m² that already halved the burner's rate. And structurally, a smoothing takes heat <em>away</em> from the wall and returns it to the floor, so the floor speeds up, the wall gets colder, and the hole gets <strong>narrower</strong> — while Meier's hole is wider than his tool precisely because the wall received that heat.</p>
+
+  <p><strong>3. The test would have passed by construction.</strong> The smoothing length is defined as the larger of the cell size and 1.604 mm. At 2 mm cells the option therefore does nothing at all, and the 1 mm and 0.5 mm runs both clamp to the same 1.604 mm. Two runs sharing the same physical length must agree — so the mesh-convergence test would have returned a clean pass on a model further from the truth than when it started.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 310" role="img" aria-labelledby="t-d2p1">
+    <title id="t-d2p1">Why the test could not have failed, and why the fix is worse</title>
+    <text class="schem hd" x="20" y="22">smoothing length actually used = larger of (cell size, 1.604 mm)</text>
+    <text class="lbl" x="200" y="56" text-anchor="end">2.0 mm cells</text>
+    <rect x="210" y="42" width="120" height="18" fill="var(--muted)" opacity=".5"></rect>
+    <text class="val" x="340" y="56">2.00 mm — option does nothing at all</text>
+    <text class="lbl" x="200" y="88" text-anchor="end">1.0 mm cells</text>
+    <rect x="210" y="74" width="96" height="18" fill="var(--stop)" opacity=".75"></rect>
+    <text class="val" x="340" y="88">1.604 mm</text>
+    <text class="lbl" x="200" y="120" text-anchor="end">0.5 mm cells</text>
+    <rect x="210" y="106" width="96" height="18" fill="var(--stop)" opacity=".75"></rect>
+    <text class="val" x="340" y="120">1.604 mm — identical</text>
+    <path d="M316 76 L326 76 L326 120 L316 120" fill="none" stroke="var(--stop)" stroke-width="1.5"></path>
+    <text class="val" x="334" y="146" fill="var(--stop)" style="font-weight:600">same length ⇒ these two runs must agree ⇒ automatic pass</text>
+
+    <text class="schem hd" x="20" y="194">heat draining sideways at the corner</text>
+    <text class="lbl" x="200" y="222" text-anchor="end">today, sharp corner</text>
+    <rect x="210" y="210" width="272" height="18" fill="var(--stop)" opacity=".55"></rect>
+    <text class="val" x="490" y="223">302 kW/m² — halves the rate</text>
+    <text class="lbl" x="200" y="252" text-anchor="end">after smoothing</text>
+    <rect x="210" y="240" width="338" height="18" fill="var(--stop)"></rect>
+    <text class="val" x="556" y="253" fill="var(--stop)" style="font-weight:600">376 kW/m²</text>
+    <text class="lbl" x="200" y="282" text-anchor="end">total heat arriving</text>
+    <rect x="210" y="270" width="468" height="18" fill="var(--muted)" opacity=".35"></rect>
+    <text class="val" x="214" y="303">520 kW/m²</text>
+  </svg>
+  <figcaption>The proposed cure drains more heat than the disease, and the experiment designed to detect that could not have detected anything, because two of its three legs were forced to the same physical configuration.</figcaption>
+  </figure>
+
+  <p class="bought"><b>What it bought:</b> the rule that generalises past this packet — <strong>a criterion that a fix satisfies by construction is not a criterion.</strong> Before hashing predictions, check what the proposed fix makes true for free. Also, on the record permanently: corner smoothing is never to be revisited, at any length.</p>
+</section>
+
+<div class="note">
+  <p class="cap">Reading the nine together</p>
+  <p>Four of them (D2k, D2l, D2o-0, D2o-0b) were attempts to fix the problem by changing <strong>how the rock is heated</strong>. Every one failed, and D2j-0b explains why in advance: the failure occurs under perfectly uniform heating, so no heating pattern can remove it.</p>
+  <p style="margin-bottom:0">Two of them (D2p-0, D2p-1) were closed by reading the code and doing arithmetic, at zero compute cost — and one of those found the fact that explains all the others.</p>
+</div>
+
+<div class="partline"><span class="n">Part 3</span><span class="bar"></span></div>
+<h2>The blocker underneath all of them</h2>
+
+<p>D2p-0's third finding is the one that explains the whole sequence. The hole is stored as one number per column. That representation can express a floor going down. It cannot express an <strong>undercut</strong> — rock removed from the side, with solid rock still above it — because void is defined as "everything above this height".</p>
+
+<div class="diagrams">
+  <div class="fig">
+    <h4>What the wall actually needs</h4>
+    <p class="sub">Heat arrives at the wall <em>at the step's depth</em>. Spalling it means removing a cell with solid rock still above it.</p>
+    <div class="gridfig" role="img" aria-label="An undercut: a void cell sits in the middle of a column with solid rock above it.">
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+      <div class="c"></div><div class="c hot"></div><div class="c hot label" data-l="→"></div><div class="c gone label" data-l="✕"></div><div class="c deep"></div><div class="c deep"></div>
+      <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+      <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+    </div>
+    <div class="legend"><span><i class="sw void"></i>void</span><span><i class="sw hot"></i>firing</span><span><i class="sw" style="background:var(--hot-soft);border:2px dashed var(--hot)"></i>needs to go</span></div>
+  </div>
+
+  <div class="fig">
+    <h4>What the representation allowed</h4>
+    <p class="sub">One height per column. Removing that cell means removing everything above it too — which the physics does not justify.</p>
+    <div class="gridfig" role="img" aria-label="A height function: void must be a contiguous stack from the top of each column.">
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c void"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c gone label" data-l="✕"></div><div class="c"></div><div class="c"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c gone label" data-l="✕"></div><div class="c"></div><div class="c"></div>
+      <div class="c"></div><div class="c hot"></div><div class="c hot label" data-l="→"></div><div class="c gone label" data-l="✕"></div><div class="c deep"></div><div class="c deep"></div>
+      <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+      <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+    </div>
+    <div class="legend"><span><i class="sw void"></i>void</span><span><i class="sw hot"></i>firing</span><span><i class="sw" style="background:var(--hot-soft);border:2px dashed var(--hot)"></i>forced to go too</span></div>
+  </div>
+</div>
+
+<p>So D2o-0, D2o-0b, D2p-0 and D2p-1 were all testing a physics hypothesis on a data structure that could not host the answer, whatever the answer turned out to be. That is why the next packets stopped arguing about heating laws and went to work on the representation.</p>
+
+<div class="partline"><span class="n">Part 4</span><span class="bar"></span></div>
+<h2>D2q: building the missing capability, then asking whether it helps</h2>
+
+<p>The D2q line was deliberately split into three stages, each with a gate that had to pass before the next began.</p>
+
+<h3>Stage 1 (D2q-1) — change the storage, change nothing else</h3>
+<p>Make the void mask authoritative instead of deriving it from a column height. The single acceptance test was that <strong>all 2639 output files stay byte-identical</strong>. They did. No physics, no new options, no behaviour change — the capability exists, dormant.</p>
+
+<h3>Stage 2 (D2q-2b) — the mechanism</h3>
+<p>Add an off-by-default option that scores the spall criterion on <em>every exposed face</em>, not only the top one, and removes non-top cells when it fires. Identity passed again with the option off.</p>
+
+<div class="note">
+  <p class="cap">The finding that justified the whole staged approach</p>
+  <p>A deliberately-added interior void was used as a probe, and it caught a bug <strong>that had already shipped in Stage 1 while passing byte-identity</strong>: incident beam power was being tallied on a "is the cell above me void?" test, so two cells per column qualified and the energy books were out by <strong>14.29 %</strong> — predicted and measured to four figures. It is now 2×10⁻¹⁵.</p>
+  <p>The lesson generalises: <em>byte-identity proves only that nothing changed while the void stayed contiguous.</em> That was demonstrated rather than argued. Two separate bugs in this line have now come from using "the cell above is void" as shorthand for "this is the top of the column".</p>
+</div>
+
+<h3>Stage 3 (D2q-2c) — the arbiter, run 22–23 September</h3>
+
+<p>The question: <strong>does the drained corner heat now spall the wall, without making the model drill faster?</strong> Four runs, two configurations at two mesh sizes, 250 s each.</p>
+
+<p>The side heating was capped at <strong>80 W/m²K</strong>. That number was not tuned: it is set just below the coefficient at which a wall would reach its firing temperature within the time it is exposed, derived from the model's own material constants. Raising it to force the mechanism to fire was explicitly forbidden in the packet.</p>
+
+<div class="evidence">
+  <p class="cap">Result</p>
+  <p style="font-family:var(--display);font-size:1.25rem;line-height:1.35;margin-bottom:12px"><strong>The mechanism never fired. Not once, in any run, with up to ~4000 eligible wall cells present.</strong></p>
+  <p style="margin-bottom:0">This outcome was <em>pre-registered</em> as prediction P4 before the runs, with the instruction that the cap must not be raised to rescue it.</p>
+</div>
+
+<figure>
+<svg viewBox="0 0 720 290" role="img" aria-labelledby="t-temp">
+  <title id="t-temp">Wall temperature against the firing threshold</title>
+  <line x1="120" y1="235" x2="670" y2="235" stroke="var(--rule-firm)"></line>
+  <g class="ax">
+    <line x1="120" y1="235" x2="120" y2="241" stroke="var(--rule-firm)"></line>
+    <line x1="298" y1="235" x2="298" y2="241" stroke="var(--rule-firm)"></line>
+    <line x1="476" y1="235" x2="476" y2="241" stroke="var(--rule-firm)"></line>
+    <line x1="654" y1="235" x2="654" y2="241" stroke="var(--rule-firm)"></line>
+    <text x="120" y="256" text-anchor="middle">293 K</text>
+    <text x="298" y="256" text-anchor="middle">500 K</text>
+    <text x="476" y="256" text-anchor="middle">700 K</text>
+    <text x="654" y="256" text-anchor="middle">900 K</text>
+  </g>
+
+  <!-- firing threshold -->
+  <line x1="591" y1="30" x2="591" y2="235" stroke="var(--stop)" stroke-width="2"></line>
+  <text class="lbl" x="583" y="42" text-anchor="end" fill="var(--stop)" style="font-weight:600">firing point 822 K</text>
+  <text class="lbl s" x="583" y="58" text-anchor="end">measured, 822.2 ± 9.5 K</text>
+
+  <!-- 2 mm bar -->
+  <text class="lbl" x="112" y="102" text-anchor="end">wall at 2 mm</text>
+  <rect x="120" y="88" width="300" height="20" fill="var(--cold)" opacity=".28"></rect>
+  <rect x="420" y="88" width="18" height="20" fill="var(--cold)"></rect>
+  <text class="val" x="446" y="102">630–650 K</text>
+  <line x1="438" y1="98" x2="587" y2="98" stroke="var(--stop)" stroke-dasharray="3 3"></line>
+  <text class="val" x="512" y="90" text-anchor="middle" fill="var(--stop)">short by 172 K</text>
+
+  <!-- 1 mm bar -->
+  <text class="lbl" x="112" y="152" text-anchor="end">wall at 1 mm</text>
+  <rect x="120" y="138" width="386" height="20" fill="var(--cold)" opacity=".28"></rect>
+  <rect x="506" y="138" width="17" height="20" fill="var(--cold)"></rect>
+  <text class="val" x="531" y="152">727–746 K</text>
+  <line x1="523" y1="148" x2="587" y2="148" stroke="var(--stop)" stroke-dasharray="3 3"></line>
+  <text class="val" x="555" y="140" text-anchor="middle" fill="var(--stop)">76 K</text>
+
+  <!-- floor bar -->
+  <text class="lbl" x="112" y="202" text-anchor="end">floor (fires)</text>
+  <rect x="120" y="188" width="471" height="20" fill="var(--hot)" opacity=".8"></rect>
+  <text class="val" x="599" y="202">spalls</text>
+</svg>
+<figcaption><strong>The wall settles well short of the temperature it needs, and stays there.</strong> The solid block is the measured steady range across all candidate wall cells. It stops rising between 50 s and 250 s — so at this heating strength <em>no exposure time whatsoever</em> would fire the wall. Note also that the wall is ~100 K hotter at the finer mesh, which is a caveat on the verdict, not a comfort.</figcaption>
+</figure>
+
+<p>That last point is the most useful thing the packet produced. Going in, the shortfall was believed to be about <em>duration</em> — the wall needed 149 s of continuous exposure and was not getting it. The measurement says otherwise: the wall reaches a <strong>steady</strong> temperature 80–170 K below firing and stops. It is a steady-state deficit, and that is the number the next packet has to close.</p>
+
+<h3>The trap, and how the packet avoided it</h3>
+
+<p>Two of the packet's criteria failed: the mesh gap was still −10.9 / −22.2 / −30.3 %, and the rate exceeded its ceiling in 5 of 6 blocks. The available mistake was to read that as evidence <em>against</em> per-cell removal.</p>
+
+<p>It is not, and a baseline registered in advance settles it. An earlier study (D2l's <code>f01</code>) ran side heating at a comparable strength <strong>when per-cell removal did not exist in the codebase at all</strong>:</p>
+
+<div class="evidence">
+  <p class="cap">Attribution — drilling rate, m/h</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Time block</th><th>D2q-2c, mechanism ON</th><th>D2l f01, mechanism ABSENT</th><th>difference</th></tr></thead>
+    <tbody>
+      <tr><td>50–100 s</td><td class="num">1.4400</td><td class="num">1.4638</td><td class="num dim">1.6 %</td></tr>
+      <tr><td>100–150 s</td><td class="num">1.4260</td><td class="num">1.4450</td><td class="num dim">1.3 %</td></tr>
+      <tr><td>150–200 s</td><td class="num">1.3592</td><td class="num">1.3748</td><td class="num dim">1.1 %</td></tr>
+      <tr><td>mesh gaps</td><td class="num">−10.9 / −22.2 / −30.3 %</td><td class="num">−10.6 / −20.2 / −27.2 %</td><td class="num dim">1.5–3 pts</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px;font-size:.9rem;color:var(--muted)">The campaign reproduced a pure side-heating run. The new mechanism is not merely unhelpful — it is <strong>undetectable</strong>, which is exactly what a zero firing count predicts. Without that baseline on disk, "rates rose and gaps stayed bad" would have looked like a verdict on the mechanism. It is a verdict on side heating.</p>
+</div>
+
+<h3>A real finding, about something else entirely</h3>
+
+<p>Capped side heating <strong>largely fixes the cascade when no corner is present</strong>: the mesh gap in the control goes from −10.4 / −15.3 / −20.1 % to −3.7 / −4.5 / −2.0 %. With the corner it stays bad. The reason is visible in one number — the corner configuration receives only <strong>35 W</strong> of side-face power against the control's <strong>132 W</strong>, because the exclusion plane switches the heating off above it.</p>
+
+<p>Which brings the project to the bind it now has to argue its way out of:</p>
+
+<figure>
+<svg viewBox="0 0 720 240" role="img" aria-labelledby="t-h">
+  <title id="t-h">Heat transfer coefficients: what is allowed versus what works</title>
+  <line x1="120" y1="185" x2="670" y2="185" stroke="var(--rule-firm)"></line>
+  <g class="ax">
+    <text x="120" y="206" text-anchor="middle">30</text>
+    <text x="284" y="206" text-anchor="middle">100</text>
+    <text x="433" y="206" text-anchor="middle">300</text>
+    <text x="596" y="206" text-anchor="middle">1000</text>
+    <text x="670" y="224" text-anchor="end">W/m²K, log scale</text>
+  </g>
+  <rect x="159" y="40" width="108" height="145" fill="var(--ok-soft)"></rect>
+  <text class="ax" x="213" y="34" text-anchor="middle" fill="var(--ok)">physically defensible</text>
+
+  <g>
+    <circle cx="159" cy="70" r="5" fill="var(--cold)"></circle>
+    <text class="lbl" x="171" y="74">40 — grazing flow along a wall</text>
+  </g>
+  <g>
+    <circle cx="253" cy="105" r="6" fill="var(--hot)"></circle>
+    <text class="lbl" x="265" y="109" style="font-weight:600">80 — the cap used in D2q-2c</text>
+  </g>
+  <g>
+    <circle cx="267" cy="138" r="5" fill="var(--muted)"></circle>
+    <text class="lbl" x="279" y="142">88.5 — wall would fire inside its dwell</text>
+  </g>
+  <g>
+    <circle cx="454" cy="171" r="5" fill="var(--stop)"></circle>
+    <text class="lbl" x="466" y="175" fill="var(--stop)">≈350 — cascade starts to be suppressed</text>
+  </g>
+  <line x1="548" y1="40" x2="548" y2="185" stroke="var(--stop)" stroke-dasharray="4 3"></line>
+  <text class="lbl" x="540" y="52" text-anchor="end" fill="var(--stop)">700 — D2k: converges, but drills 2.7× too fast</text>
+</svg>
+<figcaption><strong>The gap the project has to close.</strong> The heating strength the physics currently allows on a wall and the strength that actually suppresses the mesh cascade are roughly a factor of four apart. D2q-2c is the first packet to measure that gap rather than infer it.</figcaption>
+</figure>
+
+<div class="partline"><span class="n">Part 5</span><span class="bar"></span></div>
+<h2>Two defects that would fire the moment the mechanism starts working</h2>
+
+<p>Both were found by inspection during this packet, both confirmed independently in review, and <strong>neither affected any number reported</strong> — because the mechanism never fired. They matter because they will bite precisely when it does.</p>
+
+<div class="diagrams">
+  <div class="fig">
+    <h4>Defect 1 — the column-wide label</h4>
+    <p class="sub">The code that decides whether a column is "firing" scans the <em>whole</em> column. That was safe only while the criterion was written at the top cell alone. Now a <strong>side</strong> cell reaching the threshold flags the column — and the <strong>top</strong> cell spalls, vertically, for the wrong reason.</p>
+    <div class="gridfig" role="img" aria-label="A hot lateral cell deep in a column causes the top cell of that column to be removed.">
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c gone label" data-l="✕"></div><div class="c"></div><div class="c"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+      <div class="c void"></div><div class="c void"></div><div class="c void"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+      <div class="c"></div><div class="c hot"></div><div class="c hot label" data-l="→"></div><div class="c warm label" data-l="!"></div><div class="c deep"></div><div class="c deep"></div>
+      <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+    </div>
+    <div class="legend"><span><i class="sw warm"></i>side cell ready</span><span><i class="sw" style="background:var(--hot-soft);border:2px dashed var(--hot)"></i>wrongly removed</span></div>
+  </div>
+
+  <div class="fig">
+    <h4>Defect 2 — the moving target</h4>
+    <p class="sub">The test for "is this cell exposed sideways?" is run against the live void mask <em>inside the same loop that modifies it</em>. A neighbour removed earlier in the same sweep can expose a cell which then also fires — but only if it is in the same parallel block, since across a block boundary the copy is stale.</p>
+    <p class="sub" style="margin-bottom:0">Consequence: the claim that removal is independent of how the domain is split across processors is <strong>too strong</strong>. Narrow, since unexposed cells hold a zero score, but it has to be fixed by testing exposure against a frozen snapshot.</p>
+  </div>
+</div>
+
+<div class="partline"><span class="n">Part 6</span><span class="bar"></span></div>
+<h2>What the next packet has to identify</h2>
+
+<p>The pre-registered decision rule for an inert result is: report it, and do not raise the cap. The next move is a heating closure that raises the wall temperature <em>honestly</em>. Four things have to be settled, and the first two are prerequisites — without them the first positive result would be an artefact.</p>
+
+<div class="q">
+  <p class="qnum">Question 1 — prerequisite</p>
+  <h3>Fix the two ordering defects before anything is made hotter</h3>
+  <p>The column-wide label and the live-mask exposure test both produce wrong removals only once wall cells start reaching the threshold. They must be repaired, and the repair gated on the same byte-identity sweep, <em>before</em> any packet raises the wall temperature.</p>
+</div>
+
+<div class="q">
+  <p class="qnum">Question 2 — prerequisite</p>
+  <h3>Is "inert" physical, or a coarse-mesh artefact?</h3>
+  <p>The wall runs ~100 K hotter at 1 mm than at 2 mm. The trend runs <em>towards</em> firing as the mesh refines, so the verdict "unreachable under this cap" is established at two mesh sizes and contradicted in direction by both of them. One 0.5 mm point settles it. Cheap, and it decides whether the negative result stands.</p>
+</div>
+
+<div class="q">
+  <p class="qnum">Question 3 — the substance</p>
+  <h3>Can the wall be heated to 822 K by a defensible physical argument?</h3>
+  <p>This is the real question and it is now quantified: the wall needs <strong>+76 K at 1 mm, +172 K at 2 mm</strong>, as a steady-state gain, not a longer exposure. The physical case for it already exists in the field record and has never been applied in the model — Meier's burner is <em>a body inside the hole</em>, an 80 mm skirt and a water-cooled shield inside an 85–95 mm bore, which implies confined impingement of 700–1500 W/m²K where the model currently applies grazing flow at ~40.</p>
+  <p>The corresponding trap is equally clear, and D2k already demonstrated it: heating strong enough to suppress the cascade doubles the absorbed power and makes the burner drill 2.7× too fast. So the closure has to raise the <em>wall</em> temperature without raising total absorbed power — which means redistributing heat, not adding it.</p>
+</div>
+
+<div class="q">
+  <p class="qnum">Question 4 — owed, and cheap</p>
+  <h3>How much drain is still being lost?</h3>
+  <p>The diagnostic <code>k·ΔT/dx</code> at the transition, measured against D2o-0b's 302 kW/m² / 58 % of input, was requested regardless of verdict and is missing from the write-up. It is the direct measure of how much of the corner heat is still going nowhere, and it is recoverable from the existing output files without re-running anything.</p>
+</div>
+
+<div class="note">
+  <p class="cap">What the D2q line has and has not established</p>
+  <p>It <strong>has</strong> established that the code can now represent and remove an undercut, that under a physically-derived cap an exposed wall never reaches its firing point in 250 s, and that the deficit is steady-state rather than dwell-limited.</p>
+  <p style="margin-bottom:0">It has <strong>not</strong> established that the mechanism is wrong, untestable, or unable to spall a wall that <em>is</em> hot enough. That remains untested, and Questions 1 and 2 must be answered before it is tested.</p>
+</div>
+
+<div class="partline"><span class="n">Method</span><span class="bar"></span></div>
+<h2>Why nine failures is not nine wasted weeks</h2>
+
+<p>Each packet in this sequence is a closed experiment with its predictions written down and hashed before any run, read-only, timestamped before the output directory exists. That discipline is what makes the negatives usable:</p>
+
+<ul>
+  <li><strong>Two packets were closed for zero compute cost</strong> (D2p-0, D2p-1) — one by reading three lines of code, one by arithmetic that showed the proposed fix was worse than the problem and would have passed its own test by construction.</li>
+  <li><strong>Byte-identity gates</strong> — every source change in the D2q line had to leave all 2639 reference output files bit-for-bit unchanged with the new option off. That is what makes each campaign's result attributable to the new term alone.</li>
+  <li><strong>Attribution baselines registered in advance</strong> — without D2l's earlier scan sitting on disk, D2q-2c's failed criteria would have looked like a verdict on the new mechanism instead of a verdict on side heating.</li>
+  <li><strong>Pre-registered negative branches</strong> — "the mechanism stays inert" was written down as an outcome, with the instruction not to raise the cap to escape it, before the runs started. That is why this result is reportable rather than arguable.</li>
+  <li><strong>Anchors chosen before the fact</strong> — one of D2q-2c's criteria fails against the anchor it was registered against and would pass against a different, equally arguable one. Both are recorded; the pre-registered one governs.</li>
+</ul>
+
+<p>The net position after nine packets: the cause is identified and reproduced in a minimal test, the representation that blocked every fix has been replaced, the remaining gap is a single measured number (76–172 K of wall temperature), and the physical argument that might supply it is already in the field record, unexploited.</p>
+
+<footer>
+  Sources — <code>tests/MMWSpalling/studies/d2q2c_arbiter/RESULTS.md</code> (campaign, scorecard, attribution) ·
+  <code>d2o0b_wallsplit/RESULTS.md</code> (corner drain, mesh-independent ΔT) ·
+  <code>d2l_scan/RESULTS.md</code> (empty window, energy accounting) ·
+  <code>d2k_sideface/RESULTS.md</code> (arbiter pass, 2.7× rate) ·
+  <code>ACTIVE_STEP.md</code> (completion notes and review findings) ·
+  <code>ROADMAP.md</code>.<br>
+  All figures drawn from measured run output. No number on this page is a Meier comparison — those remain blocked pending the shape criterion.
+</footer>
+
+</div>
+</body>
+</html>

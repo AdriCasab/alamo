@@ -679,7 +679,64 @@ public:
                 value.RegisterIntegratedVariable(&value.side_P_face,  "side_P_face",  false);
                 value.RegisterIntegratedVariable(&value.side_P_loss,  "side_P_loss",  false);
                 value.RegisterIntegratedVariable(&value.side_faces,   "side_faces",   false);
+                // D2r-1: registered ONLY when side_face_factor_above is set.
+                // A new thermo column changes thermo.dat, and the frozen A_f02
+                // baseline must stay byte-comparable (Goal item 1), so a run
+                // that does not set the key keeps its exact column set.
+                if (value.surface_patch.side_face_factor_above >= 0.0)
+                {
+                    value.RegisterIntegratedVariable(&value.side_P_face_above,
+                                                     "side_P_face_above", false);
+                    value.RegisterIntegratedVariable(&value.side_cols_above,
+                                                     "side_cols_above",   false);
+                    value.RegisterIntegratedVariable(&value.wall_step_q, "wall_step_q", false);
+                    value.RegisterIntegratedVariable(&value.wall_step_n, "wall_step_n", false);
+                }
             }
+        }
+
+        // D2q-2b item 5: per-cell removal preconditions, cross-checked here
+        // because they live in three different parse blocks.
+        if (value.spall_per_cell_removal)
+        {
+            if (!value.removal_enabled())
+                Util::Abort(INFO, "spall.per_cell_removal = 1 requires removal "
+                                  "(spall.enabled or vapor.enabled)");
+            if (!(value.surface_patch.enabled && value.surface_patch.side_face_flux))
+                Util::Abort(INFO, "spall.per_cell_removal = 1 requires "
+                                  "surface_patch.side_face_flux = 1: without it an exposed "
+                                  "lateral face is never heated, so the criterion evaluated "
+                                  "there reads bulk rock and the mechanism is silently inert");
+            // side_face_flux already implies this, but state it directly: the
+            // requirement belongs to per-cell removal on its own terms (phi is
+            // still the sole input to UpdateSurfaceMaskFromPhi, and a cell
+            // voided off-top does not move its column's phi). See RESULTS.md Q1.
+            if (!value.surface_follow_mask)
+                Util::Abort(INFO, "spall.per_cell_removal = 1 requires "
+                                  "surface.follow_mask = 1: the phi-window surface mask "
+                                  "would keep selecting a cell this mechanism has voided");
+            // The ONE case where the column gate and the per-cell gate would
+            // genuinely differ. Under weibull the column path gates on the
+            // 4-connected cluster labeller, which reduces to Sp_top >= 1 only
+            // while the area filter is inactive. With the filter ON there is no
+            // lateral analogue of a top-z-plane labeller, so refuse rather than
+            // silently fall back to Sp >= 1. Generalising the labeller to the
+            // exposed-face set is a separate packet.
+            if (value.weibull_enabled &&
+                value.weibull_detach_mode == DetachMode::ConnectedCluster &&
+                value.weibull_A_crit > 0.0)
+                Util::Abort(INFO, "spall.per_cell_removal = 1 is incompatible with "
+                                  "weibull.detach_mode = connected_cluster and "
+                                  "weibull.A_crit > 0: the 4-connected cluster filter is "
+                                  "defined over the top-z plane and has no lateral "
+                                  "analogue, so the column gate and the per-cell gate "
+                                  "would differ. Unset A_crit (the filter is then a no-op "
+                                  "and both gates reduce to Sp >= 1), or drop "
+                                  "per_cell_removal");
+            // Item 8: overhang census. Registered LAST and only with the key
+            // on, so every pre-D2q-2b thermo.dat column keeps its position.
+            value.RegisterIntegratedVariable(&value.pcr_overhang_cells, "pcr_overhang_cells", false);
+            value.RegisterIntegratedVariable(&value.pcr_lateral_cells,  "pcr_lateral_cells",  false);
         }
 
         if (value.vapor_enabled && !value.vapor_A_beam_override)
@@ -713,6 +770,7 @@ protected:
         HeatConduction::Initialize(lev);                      // sets temp_mf, temp_old_mf
         Mechanics<Model::Solid::Affine::Isotropic>::Initialize(lev);
         if (removal_enabled()) InitPhi(lev);
+        if (removal_enabled()) ApplySeedVoid(lev);
         InitSurfaceMask(lev);
         // InitializeMicrostructure must run before ConvertTtoH on the
         // microstructure path because the H(T) inversion is per-phase.
@@ -968,6 +1026,10 @@ protected:
         // BEFORE the H/Temp swaps below so the reset H(T_amb)/T_amb values
         // become the "old" state consumed by the thermal advance step.
         UpdateRemovalAfterCohesive(lev, time, dt);
+        // D2q-2b item 6: lateral per-cell removal, AFTER the column pass so the
+        // top-cell path is untouched and this step's newly exposed faces are
+        // the ones scored next step. No-op with the key off.
+        PerCellRemoval(lev, time, dt);
         std::swap(*H_mf[lev], *H_old_mf[lev]);
         std::swap(*temp_mf[lev], *temp_old_mf[lev]);
         if      (microstructure_enabled)                          AdvanceMicrostructure(lev, time, dt);
@@ -1341,6 +1403,15 @@ protected:
             ? ColumnTopSolid(lev) : amrex::Vector<int>();
         const int* ktc = k_top_col.data();
         const int ncx = dhi[0] - dlo[0] + 1;
+        // D2q-1: the beam path counts SOLID cells, not geometric distance.
+        // Only needed when the beam is actually on (BeamSource returns 0 at
+        // P = 0), which keeps the large beam-free runs free of the gather.
+        const amrex::Vector<int> solid_above_col =
+            (void_aware && P_now > 0.0 && !k_top_col.empty())
+            ? ColumnSolidAboveCount(lev, k_top_col) : amrex::Vector<int>();
+        const int* sab    = solid_above_col.data();
+        const int  nz_dom = dhi[2] - dlo[2] + 1;
+        const int  klo_d  = dlo[2];
 
         const Set::Scalar* DX  = geom[lev].CellSize();
         const Set::Scalar* PLO = geom[lev].ProbLo();
@@ -1368,6 +1439,14 @@ protected:
         // face whose normal spacing is dx.
         const bool        side_on = surface_patch.enabled && surface_patch.side_face_flux && owner;
         const Set::Scalar side_f  = surface_patch.side_face_factor;
+        const Set::Scalar side_f_above = surface_patch.side_face_factor_above;
+        // D2q-2b item 7: cap the coefficient a SIDE face sees, ONLY when
+        // per-cell removal is on. -1 = no cap, which is every pre-D2q-2b run.
+        // Applied identically in the kernel and in the ledger, or the ledger
+        // stops reproducing the kernel's flux.
+        const Set::Scalar side_hmax =
+            (surface_patch.side_face_flux && spall_per_cell_removal)
+            ? surface_patch.side_face_h_max : Set::Scalar(-1.0);
         const Set::Scalar inv_dx  = 1.0 / DX[0];
         const Set::Scalar inv_dy  = 1.0 / DX[1];
         if (side_on && !(std::abs(DX[0] - DX[1]) <= 1.0e-12 * DX[0] &&
@@ -1394,6 +1473,9 @@ protected:
         if (sp_on) BuildFlameColumns(lev, time, dt, k_top_col);
         const Set::Scalar* fh  = sp_on ? flame_h.data()  : nullptr;
         const Set::Scalar* fTg = sp_on ? flame_Tg.data() : nullptr;
+        // D2r-1: per-column stand-off, so the side factor can differ above and
+        // below the nozzle plane. Same array the march and the pin rule read.
+        const Set::Scalar* fs  = sp_on ? flame_s.data()  : nullptr;
         // C1: pinned runs the face Newton (face_form = true) plus the pin.
         const bool        sp_pinned = sp_on && surface_patch.robin_form ==
                                       SurfacePatch::RobinForm::Pinned;
@@ -1553,8 +1635,10 @@ protected:
                     if (nfx + nfy > 0)
                     {
                         Set::Scalar s_in = 0.0, s_out = 0.0, s_rob = 0.0, s_los = 0.0;
+                        Set::Scalar h_side = fh ? fh[col_c] : Set::Scalar(0.0);
+                        if (side_hmax > 0.0 && h_side > side_hmax) h_side = side_hmax;
                         SurfaceCellFlux(true, sp_face, 1.0,
-                                        fh  ? fh[col_c]  : Set::Scalar(0.0),
+                                        h_side,
                                         fTg ? fTg[col_c] : Set::Scalar(0.0),
                                         kc, DX[0], Tc,
                                         eps_lo, eps_hi, T_eps_b, sig_SB, h_c, T_a,
@@ -1562,7 +1646,13 @@ protected:
                                         tpe ? tpe[col_c] : Set::Scalar(0.0));
                         // dx == dy == dz is enforced when the key is on, so one
                         // call serves both axes and inv_dx == inv_dy.
-                        div_kgrad += side_f * (s_in - s_out)
+                        // D2r-1: above the nozzle plane (s <= 0) the side
+                        // factor may differ. Sentinel < 0 keeps the single
+                        // uniform factor, so unset is byte-identical.
+                        const Set::Scalar sf_c =
+                            (side_f_above >= 0.0 && fs && !(fs[col_c] > 0.0))
+                            ? side_f_above : side_f;
+                        div_kgrad += sf_c * (s_in - s_out)
                                    * (Set::Scalar(nfx) * inv_dx + Set::Scalar(nfy) * inv_dy);
                     }
                 }
@@ -1585,8 +1675,14 @@ protected:
                                                        bR, bprof, brad, alpha_f, x, y, z, Tc,
                                                        DX[2],
                                                        // ktc is null unless void-aware (Q = 0 when P_now == 0).
+                                                       // D2q-1: `sab` is the solid-cell count above k;
+                                                       // it is null when the beam is off, where the
+                                                       // path is unused and k_top - k is kept.
                                                        (void_aware && ktc)
-                                                         ? SolidFacePath(ktc[(j - dlo[1]) * ncx + (i - dlo[0])] - k, DX[2])
+                                                         ? SolidFacePath(
+                                                             sab ? sab[static_cast<std::size_t>(col_c) * nz_dom
+                                                                       + (k - klo_d)]
+                                                                 : ktc[col_c] - k, DX[2])
                                                          : Set::Scalar(-1.0));
 
                 (void)q_rob; (void)q_los;
@@ -1699,7 +1795,72 @@ protected:
         }
         patch_min_standoff = std::isfinite(s_min) ? s_min : 0.0;
         if (surface_patch.jet_enthalpy) JetEnthalpyMarch(lev, time, k_top_col);
+        // D2r-1 item 3: gated on the same key as its thermo columns, so an
+        // unset run does no extra work and writes the same thermo.dat.
+        if (surface_patch.side_face_factor_above >= 0.0) WallStepDiagnostic(lev, k_top_col);
     }
+
+    // D2r-1 item 3 (owed since D2q-2c): THE DRAIN, measured. When a column
+    // spalls it drops one cell, so its hot new top cell sits against the buried
+    // interior of the taller column beside it and loses k*(T_top - T_wall)/dx
+    // sideways. D2o-0b measured 302 kW/m^2 -- 58 % of the ~520 arriving -- and
+    // it doubles when dx halves, because nothing heats the receiving rock.
+    // Reported as the mean over exactly those faces, with the face count, so a
+    // mesh pair can be compared directly against that number.
+    // Diagnostic only: reads state, writes no field, changes no trajectory.
+    void WallStepDiagnostic(int lev, const amrex::Vector<int>& k_top_col)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int nx = domain.length(0);
+        const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
+        const int ihi_dom = domain.bigEnd(0),   jhi_dom = domain.bigEnd(1);
+        const Set::Scalar* DX = geom[lev].CellSize();
+        const bool void_aware = removal_enabled();
+        Set::Scalar q_sum = 0.0, n_face = 0.0;
+        for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& kp    = (*kappa_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& Df    = (*D_mf[lev]).const_array(mfi);
+            // Lateral neighbours are read through the GHOST layer, exactly as
+            // the conduction kernel and the side-face branch already do, so the
+            // measurement does not depend on the box decomposition.
+            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            const int nbr[4][2] = {{-1,0},{1,0},{0,-1},{0,1}};
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                const std::size_t c = static_cast<std::size_t>(j - jlo_dom) * nx + (i - ilo_dom);
+                const int k = k_top_col[c];
+                if (k == std::numeric_limits<int>::min()) continue;
+                if (k < lo.z || k > hi.z) continue;
+                const Set::Scalar Tc = T_old(i, j, k);
+                const Set::Scalar kc = kp(i, j, k) * std::exp(-kappa_damage_alpha * Df(i, j, k));
+                for (const auto& d : nbr)
+                {
+                    const int i2 = i + d[0], j2 = j + d[1];
+                    if (i2 < ilo_dom || i2 > ihi_dom || j2 < jlo_dom || j2 > jhi_dom) continue;
+                    const std::size_t c2 =
+                        static_cast<std::size_t>(j2 - jlo_dom) * nx + (i2 - ilo_dom);
+                    const int k2 = k_top_col[c2];
+                    if (k2 == std::numeric_limits<int>::min()) continue;
+                    // The neighbour must be TALLER, so the cell beside this top
+                    // is that column's buried interior, not its own top.
+                    if (k2 <= k) continue;
+                    if (void_aware && rem(i2, j2, k) > 0.5) continue;   // not solid there
+                    q_sum  += kc * (Tc - T_old(i2, j2, k)) / DX[0];
+                    n_face += 1.0;
+                }
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(q_sum);
+        amrex::ParallelDescriptor::ReduceRealSum(n_face);
+        wall_step_q = (n_face > 0.0) ? q_sum / n_face : 0.0;
+        wall_step_n = n_face;
+    }
+
 
     // D2b: burner-on-feet descent (surface_patch.nozzle_descent = feet), lev 0,
     // once per step, before the stand-offs are computed. The foot annulus is
@@ -2591,8 +2752,20 @@ protected:
         // D2k
         const bool        side_on = sp_on && surface_patch.side_face_flux;
         const Set::Scalar side_f  = surface_patch.side_face_factor;
+        // D2r-1: mirrors the kernel's per-region factor. If these two ever
+        // disagree the ledger stops reproducing the flux and ledger_err breaks,
+        // which is the whole reason the twin exists.
+        const Set::Scalar side_f_above = surface_patch.side_face_factor_above;
+        // D2q-2b item 7: cap the coefficient a SIDE face sees, ONLY when
+        // per-cell removal is on. -1 = no cap, which is every pre-D2q-2b run.
+        // Applied identically in the kernel and in the ledger, or the ledger
+        // stops reproducing the kernel's flux.
+        const Set::Scalar side_hmax =
+            (surface_patch.side_face_flux && spall_per_cell_removal)
+            ? surface_patch.side_face_h_max : Set::Scalar(-1.0);
         const int ihi_dom = domain.bigEnd(0), jhi_dom = domain.bigEnd(1);
         Set::Scalar side_rob = 0.0, side_los = 0.0, side_n = 0.0;
+        Set::Scalar side_ab_P = 0.0, side_ab_n = 0.0;   // D2r-1 witness
         std::vector<int> has_surf(static_cast<std::size_t>(ncx) * ncy, 0);
         for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
         {
@@ -2661,20 +2834,33 @@ protected:
                     if (nfx + nfy > 0)
                     {
                         Set::Scalar s_in = 0.0, s_out = 0.0, s_rob = 0.0, s_los = 0.0;
+                        Set::Scalar h_side = sp_on ? flame_h[col] : Set::Scalar(0.0);
+                        if (side_hmax > 0.0 && h_side > side_hmax) h_side = side_hmax;
                         SurfaceCellFlux(true, sp_face, 1.0,
-                                        sp_on ? flame_h[col]  : Set::Scalar(0.0),
+                                        h_side,
                                         sp_on ? flame_Tg[col] : Set::Scalar(0.0),
                                         kc, DX[0], Tc,
                                         eps_rad, eps_rad_hi, T_eps_break, sigma_SB,
                                         h_conv, T_amb, s_in, s_out, s_rob, s_los,
                                         sp_pinned ? pin_T_eff[col] : Set::Scalar(0.0));
-                        const Set::Scalar Aside = side_f
+                        const bool above_c = sp_on && !(flame_s[col] > 0.0);
+                        const Set::Scalar sf_c =
+                            (side_f_above >= 0.0 && above_c) ? side_f_above : side_f;
+                        const Set::Scalar Aside = sf_c
                             * (Set::Scalar(nfx) * DX[1] * dz + Set::Scalar(nfy) * DX[0] * dz);
                         P_robin  += s_rob * Aside;
                         P_loss   += s_los * Aside;
                         side_rob += (s_in - s_out) * Aside;
                         side_los += s_los * Aside;
                         side_n   += Set::Scalar(nfx + nfy);
+                        // D2r-1 criterion (c): THE MECHANISM'S OWN WITNESS.
+                        // If this is 0 on the test leg, the leg heated nothing
+                        // and the result is a plumbing failure, not physics.
+                        if (above_c)
+                        {
+                            side_ab_P += (s_in - s_out) * Aside;
+                            side_ab_n += Set::Scalar(nfx + nfy);
+                        }
                     }
                 }
             }
@@ -2691,6 +2877,13 @@ protected:
             side_P_face = side_rob;
             side_P_loss = side_los;
             side_faces  = side_n;
+            if (surface_patch.side_face_factor_above >= 0.0)
+            {
+                amrex::ParallelDescriptor::ReduceRealSum(side_ab_P);
+                amrex::ParallelDescriptor::ReduceRealSum(side_ab_n);
+                side_P_face_above = side_ab_P;
+                side_cols_above   = side_ab_n;
+            }
         }
         amrex::ParallelDescriptor::ReduceIntMax(has_surf.data(), static_cast<int>(has_surf.size()));
         if (!ledger_started)
@@ -2777,7 +2970,10 @@ protected:
             {
                 int& kt = k_top[col(i, j)];
                 for (int k = hi.z; k >= lo.z && k > kt; --k)
-                    if (rem(i, j, k) <= 0.5 && phi(i, j, k) >= 0.0) { kt = k; break; }
+                    // D2q-1: removed_mf is authoritative. The old `&& phi >= 0`
+                    // conjunct was redundant (the two agree cell-for-cell while
+                    // void is contiguous) and would mask an interior void.
+                    if (rem(i, j, k) <= 0.5) { kt = k; break; }
             }
         }
         amrex::ParallelDescriptor::ReduceIntMax(k_top.data(), ncols);
@@ -2815,10 +3011,22 @@ protected:
                 const Set::Scalar base = phi_floor[c];
                 for (int k = lo.z; k <= hi.z; ++k)
                 {
+                    // D2q-1: removed_mf is authoritative and is NEVER re-derived
+                    // from phi here. Interpolation across a regrid can leave the
+                    // 0/1 indicator fractional, so rem is only *cleaned* to an
+                    // exact 0/1 by the same > 0.5 test every reader already
+                    // applies; phi is re-imposed as the column-linear sub-cell
+                    // accumulator, anchored on rem's own top solid cell (k_top
+                    // above). While void is contiguous `expect < 0` and
+                    // `rem > 0.5` agree cell-for-cell, so this is byte-identical;
+                    // once stage 2 creates an interior void, the old form would
+                    // have silently filled it in.
                     const Set::Scalar expect = base - Set::Scalar(k - klo) * dz;
-                    if (std::abs(phi(i, j, k) - expect) <= tol) continue;
+                    const Set::Scalar r_auth = (rem(i, j, k) > 0.5) ? 1.0 : 0.0;
+                    if (std::abs(phi(i, j, k) - expect) <= tol &&
+                        rem(i, j, k) == r_auth) continue;
                     phi(i, j, k) = expect;
-                    rem(i, j, k) = (expect < 0.0) ? 1.0 : 0.0;
+                    rem(i, j, k) = r_auth;
                     ++n_fixed;
                 }
             }
@@ -2873,8 +3081,9 @@ protected:
     // E1: global topmost solid (removed <= 0.5) cell index per (i, j)
     // column at level lev, INT_MIN for fully removed columns. Index is
     // (j - dlo_y)*nx + (i - dlo_x). MPI-reduced, so identical on every rank
-    // and independent of the z box decomposition (cf. Removal.H PASS 1,
-    // which additionally requires phi >= 0).
+    // and independent of the z box decomposition. D2q-1: every column-top
+    // scan in the code now uses this rule -- `removed` alone -- so Removal.H
+    // PASS 1 no longer additionally requires phi >= 0.
     amrex::Vector<int> ColumnTopSolid(int lev)
     {
         const amrex::Box& domain = geom[lev].Domain();
@@ -2899,6 +3108,109 @@ protected:
         return k_top;
     }
 
+    // D2q-1: number of SOLID cells strictly above cell k, up to and including
+    // the column top, indexed [col*nz + (k - klo)] with col as in
+    // ColumnTopSolid. The beam's optical path must be measured through
+    // MATERIAL, not through geometric distance: with an interior void the beam
+    // crosses it unattenuated, so `k_top - k` would overstate the path.
+    //
+    // While void is contiguous every cell in (k, k_top] is solid and this
+    // returns exactly `k_top - k`, which is what keeps the beam runs
+    // byte-identical.
+    //
+    // Cost: one ncols*nz int reduction. Built ONLY when the beam is on (the
+    // path argument is unused otherwise -- BeamSource returns 0 at P = 0 and
+    // BeamEnergyBalance skips columns with Pi == 0), so the Meier and arbiter
+    // runs, which are the large ones, never pay for it.
+    amrex::Vector<int> ColumnSolidAboveCount(int lev, const amrex::Vector<int>& k_top)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo = domain.smallEnd(0), jlo = domain.smallEnd(1);
+        const int klo = domain.smallEnd(2);
+        const int nx = domain.length(0), ny = domain.length(1), nz = domain.length(2);
+        const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
+        // Each cell is owned by exactly one box at a level, so a sum over ranks
+        // gathers the column without double counting.
+        amrex::Vector<int> solid(ncols * static_cast<std::size_t>(nz), 0);
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+                if (rem(i, j, k) <= 0.5)
+                    solid[static_cast<std::size_t>((j - jlo) * nx + (i - ilo)) * nz
+                          + (k - klo)] = 1;
+        }
+        amrex::ParallelDescriptor::ReduceIntSum(solid.data(), static_cast<int>(solid.size()));
+
+        amrex::Vector<int> cnt(ncols * static_cast<std::size_t>(nz), 0);
+        for (std::size_t c = 0; c < ncols; ++c)
+        {
+            const int kt = k_top[c];
+            if (kt == std::numeric_limits<int>::min()) continue;
+            int acc = 0;
+            for (int k = kt; k >= klo; --k)
+            {
+                const std::size_t p = c * nz + (k - klo);
+                cnt[p] = acc;                 // solid cells in (k, k_top]
+                if (solid[p]) ++acc;
+            }
+        }
+        return cnt;
+    }
+
+    // D2q-1: length of the CONTIGUOUS solid run below each column's top cell,
+    // in cells, capped at the column height. The depth scan walks downward
+    // from k_top in 1-cell strides assuming every cell it passes is material;
+    // this is how far that assumption holds. Equal to the full distance to the
+    // domain floor while void is contiguous, so the scan is unchanged today.
+    // Reduces only ncols ints (one per column, like ColumnTopSolid): each rank
+    // reports the HIGHEST void cell it owns strictly below that column's top,
+    // and ReduceIntMax picks the global one. A full per-(column, k) gather here
+    // would cost an ncols*nz reduction on every removal step, which the Meier
+    // runs cannot afford.
+    amrex::Vector<int> ColumnSolidRunBelowTop(int lev, const amrex::Vector<int>& k_top)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo = domain.smallEnd(0), jlo = domain.smallEnd(1);
+        const int klo = domain.smallEnd(2);
+        const int nx = domain.length(0), ny = domain.length(1);
+        const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
+        amrex::Vector<int> kvoid(ncols, std::numeric_limits<int>::min());
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                const std::size_t c = static_cast<std::size_t>((j - jlo) * nx + (i - ilo));
+                const int kt = k_top[c];
+                if (kt == std::numeric_limits<int>::min()) continue;
+                int kmax = std::min(hi.z, kt - 1);
+                for (int k = kmax; k >= lo.z; --k)
+                    if (rem(i, j, k) > 0.5) { if (k > kvoid[c]) kvoid[c] = k; break; }
+            }
+        }
+        amrex::ParallelDescriptor::ReduceIntMax(kvoid.data(), static_cast<int>(kvoid.size()));
+
+        amrex::Vector<int> run(ncols, 0);
+        for (std::size_t c = 0; c < ncols; ++c)
+        {
+            const int kt = k_top[c];
+            if (kt == std::numeric_limits<int>::min()) continue;
+            // Cells kt down to kvoid+1 are solid; with no void below the top
+            // the run reaches the domain floor.
+            run[c] = (kvoid[c] == std::numeric_limits<int>::min())
+                   ? (kt - klo + 1) : (kt - kvoid[c]);
+        }
+        return run;
+    }
+
     // E1: per-step closure of the microstructure-path beam deposition.
     //
     //   P_inc   = sum over lit columns of (1-R)*Pi*dx*dy at the top solid cell
@@ -2915,12 +3227,20 @@ protected:
     // the P_dep <= P_inc double-count guard is applied to the uniform profile
     // only.
     //
-    // Invariant (void-aware runs), per solid cell with n = k_top - k:
-    //   (a) contiguity: "cell above is void or k is the domain top" <=> n == 0
-    //       (a mismatch is a hole or floating solid in the column);
-    //   (b) phi/mask sync: phi - n*dz in [0, dz), with a 1e-6*dz round-off
-    //       band, i.e. floor(phi/dz) == n up to ties. A violation means phi
-    //       and the `removed` mask disagree by more than round-off.
+    // Invariant (void-aware runs), per solid cell, where n = the count of SOLID
+    // cells in (k, k_top] (D2q-1: a solid count, no longer k_top - k):
+    //   (a) n == 0 <=> k == k_top.
+    //       RESTATED in D2q-2b. It used to read "cell above is void or k is the
+    //       domain top <=> n == 0", a CONTIGUITY test, which an interior void
+    //       breaks: the cell under the void satisfies the left side with solid
+    //       still above it. The current form is exact at any topology because
+    //       k_top is itself solid, so the count vanishes only at the top cell.
+    //   (b) RETIRED in D2q-1. It asserted phi - n*dz in [0, dz), i.e. that phi
+    //       and the `removed` mask agree -- that phi is a valid void oracle,
+    //       which is exactly the assumption D2q-1 removed.
+    // The P_inc tally below is gated on the SAME k == k_top test, for the same
+    // reason: the old contiguity form counted incident power twice per column
+    // once an interior void existed (measured 14.29 % closure error).
     // Single level: lev == 0 only (multi-level unsupported; composite sums
     // would double-count covered cells).
     void BeamEnergyBalance(int lev, Set::Scalar time, Set::Scalar dt,
@@ -2939,6 +3259,12 @@ protected:
         const Set::Scalar V  = A * dz;
         const Set::Scalar P_now = beam.power_at(time);
         auto alpha_f = beam.alpha_f;
+        // D2q-1: solid-cell count above k, as in AdvanceMicrostructure.
+        const amrex::Vector<int> solid_above =
+            (void_aware && P_now > 0.0 && !k_top_col.empty())
+            ? ColumnSolidAboveCount(lev, k_top_col) : amrex::Vector<int>();
+        const int* sab    = solid_above.data();
+        const int  nz_dom = domain.length(2);
 
         Set::Scalar P_inc = 0.0, P_dep = 0.0, P_trans = 0.0, n_viol = 0.0;
         for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
@@ -2956,19 +3282,48 @@ protected:
             for (int i = lo.x; i <= hi.x; ++i)
             {
                 if (void_aware && rem(i, j, k) > 0.5) continue;
+                const int col_b = (j - jlo_dom) * ncx + (i - ilo_dom);
                 const int n_above = void_aware
-                    ? k_top_col[(j - jlo_dom) * ncx + (i - ilo_dom)] - k : 0;
+                    ? (sab ? sab[static_cast<std::size_t>(col_b) * nz_dom + (k - klo_dom)]
+                           : k_top_col[col_b] - k)
+                    : 0;
                 const Set::Scalar path = void_aware ? SolidFacePath(n_above, dz)
                                                     : Set::Scalar(-1.0);
-                // removed_mf ghosts were filled at the top of
-                // AdvanceMicrostructure, so rem(k+1) is valid at box seams.
-                const bool is_top_solid =
-                    (k == khi_dom) || (void_aware && rem(i, j, k + 1) > 0.5);
+                // D2q-2b: the column top, for BOTH invariant (a) and the P_inc
+                // tally below. This replaces the old `is_top_solid` test --
+                // "the cell directly above is void, or this is the domain top"
+                // -- which is a contiguity test and counts MORE THAN ONE cell
+                // per column the moment an interior void exists: the true top,
+                // and again the cell sitting just under the void. That
+                // double-counted the incident beam power (measured: a 14.29 %
+                // closure error against a predicted 140/120 over-count on the
+                // seeded probe). Identical while void is contiguous.
+                const bool at_col_top = void_aware ? (k == k_top_col[col_b])
+                                                   : (k == khi_dom);
                 if (void_aware)
                 {
-                    if (is_top_solid != (n_above == 0)) n_viol += 1.0;        // (a)
-                    const Set::Scalar d = phi(i, j, k) - Set::Scalar(n_above) * dz;
-                    if (d < -1.0e-6 * dz || d >= (1.0 + 1.0e-6) * dz) n_viol += 1.0; // (b)
+                    // (a) RESTATED (D2q-2b item 0.3): `n_above == 0` iff
+                    // `k == k_top`.
+                    //
+                    // The old form compared against `is_top_solid` -- "the cell
+                    // directly above is void" -- which is a CONTIGUITY test: a
+                    // cell sitting just under an interior void satisfies it
+                    // while still having solid above, so it would be counted as
+                    // a violation the moment per-cell removal creates one.
+                    //
+                    // The restated form is exact at any topology, because
+                    // n_above counts SOLID cells in (k, k_top] and k_top is
+                    // itself solid: below the top there is always at least one,
+                    // so the count vanishes exactly at the top cell. With void
+                    // contiguous the two forms agree, which keeps identity.
+                    if (at_col_top != (n_above == 0)) n_viol += 1.0;
+                    // D2q-1: invariant (b) -- phi - n*dz in [0, dz) -- is
+                    // RETIRED. It asserted that phi and the `removed` mask
+                    // agree, i.e. that phi is a valid void oracle, which is
+                    // exactly the assumption this step removes. It reads 0
+                    // violations under both forms today, and n_viol feeds the
+                    // `beam_invariant_viol` thermo.dat column, so dropping it
+                    // is byte-identical.
                 }
 
                 const Set::Scalar x = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
@@ -2985,7 +3340,7 @@ protected:
                                                  beam.profile, beam.radius, alpha_f,
                                                  x, y, z, Tc, dz, path);
                 P_dep += Q * V;
-                if (is_top_solid) P_inc += (1.0 - beam.R) * Pi * A;
+                if (at_col_top) P_inc += (1.0 - beam.R) * Pi * A;
                 if (k == klo_dom)
                 {
                     const Set::Scalar a = alpha_f(Tc);
@@ -3712,6 +4067,59 @@ private:
         if (!(std::isfinite(value.spall_flake_coh_len) && value.spall_flake_coh_len >= 0.0))
             Util::Abort(INFO, "spall.flake_coherence_length must be finite and >= 0, got ",
                         value.spall_flake_coh_len);
+
+        // D2q-2b item 0: DEBUG-ONLY seeded interior void. Six ints in INDEX
+        // space, `ilo jlo klo ihi jhi khi`, flipped to void once after
+        // Initialize. Absent = off, and nothing in the code path runs.
+        //
+        // It exists so the paths that must tolerate SOLID ABOVE VOID -- the
+        // depth-scan clamp, the three k_top scans, ColumnSolidAboveCount and
+        // beam invariant (a) -- can be exercised at their real call sites
+        // before any mechanism creates such a state. D2q-1 shipped that
+        // handling with nothing able to produce an interior void, so it was
+        // proved inert but never proved correct.
+        //
+        // Deliberately writes NO diagnostic column: a new thermo.dat or
+        // removal_events.csv field breaks the 2639-file identity on headers
+        // alone, whatever the numbers do.
+        // D2q-2b item 5: per-cell removal. Default 0 = off and byte-identical
+        // to every pre-D2q-2b result.
+        //
+        // Preconditions are enforced here rather than trusted to the input:
+        //  * `surface_patch.side_face_flux = 1` -- without it an exposed
+        //    lateral face is never heated, so the criterion evaluated there
+        //    reads bulk rock and the mechanism is silently inert.
+        //  * `surface.follow_mask = 1` -- this one is NOT cosmetic. `phi` is
+        //    still the sole input to UpdateSurfaceMaskFromPhi (D2q-1 site 7,
+        //    unconverted). Per-cell removal can void a cell without moving the
+        //    column's phi, so the window `0 <= phi < dz` would keep pointing at
+        //    a now-void cell and the surface flux would be applied to a void.
+        //    follow_mask takes the surface from the rem-based k_top instead.
+        //    See RESULTS.md Q1.
+        int pcr = 0;
+        pp.query_default("spall.per_cell_removal", pcr, 0);
+        if (pcr != 0 && pcr != 1)
+            Util::Abort(INFO, "spall.per_cell_removal must be 0 or 1, got: ", pcr);
+        value.spall_per_cell_removal = (pcr == 1);
+
+        // NOTE the `spall.` prefix: ParseSpallSettings receives the TOP-level
+        // ParmParse, so every key in this function carries its own prefix.
+        // Writing "seed_void" here parses nothing and AMReX only *warns*
+        // ("Unused ParmParse Variables"), so the run proceeds with the feature
+        // silently off.
+        std::vector<int> sv;
+        pp.queryarr("spall.seed_void", sv);
+        if (!sv.empty())
+        {
+            if (sv.size() != 6)
+                Util::Abort(INFO, "spall.seed_void takes 6 ints (ilo jlo klo ihi jhi khi), got ",
+                            sv.size());
+            for (int d = 0; d < 3; ++d)
+                if (sv[d] > sv[d + 3])
+                    Util::Abort(INFO, "spall.seed_void lo > hi in direction ", d,
+                                ": ", sv[d], " > ", sv[d + 3]);
+            value.spall_seed_void = sv;
+        }
     }
 
     static void ParseVaporSettings(MMWSpalling& value, IO::ParmParse& pp)
@@ -3831,7 +4239,8 @@ private:
             {
                 int ktl = std::numeric_limits<int>::min();
                 for (int k = khi; k >= klo; --k)
-                    if (rem(i, j, k) <= 0.5 && phi(i, j, k) >= 0.0) { ktl = k; break; }
+                    // D2q-1: removed_mf is authoritative (see ColumnTopSolid).
+                    if (rem(i, j, k) <= 0.5) { ktl = k; break; }
                 if (ktl > std::numeric_limits<int>::min())
                 {
                     const int idx = (j - dom_jlo) * nx_dom + (i - dom_ilo);
@@ -3988,12 +4397,27 @@ private:
         // below the top z-slab stay zero on plotfiles.
         Sp_field_mf[lev]->setVal(0.0);
 
+        // D2q-2b item 6: per-cell removal scores every exposed face, so the
+        // six-neighbour void test below needs a current ghost layer on
+        // removed_mf. Parse() guarantees removal is enabled whenever the key
+        // is on.
+        const bool pcr_on = spall_per_cell_removal;
+        const int dlo_pc[3] = {domain.smallEnd(0), domain.smallEnd(1), domain.smallEnd(2)};
+        const int dhi_pc[3] = {domain.bigEnd(0),   domain.bigEnd(1),   domain.bigEnd(2)};
+        if (pcr_on) Util::RealFillBoundary(*removed_mf[lev], geom[lev]);
+
         for (amrex::MFIter mfi(*Sp_field_mf[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.tilebox();
             const int vbx_lo_k = mfi.validbox().smallEnd(2);
             amrex::Array4<Set::Scalar>       const& Sp_a  = (*Sp_field_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> const& T_a   = (*temp_mf[lev]).array(mfi);
+            // Bound to Sp_field_mf as a harmless placeholder when the key is
+            // off; the lambda never reads it then (mirrors the AdvanceMicro-
+            // structure convention for rem/phi).
+            amrex::Array4<const Set::Scalar> const& rem_pc = pcr_on
+                ? (*removed_mf[lev]).const_array(mfi)
+                : (*Sp_field_mf[lev]).const_array(mfi);
             amrex::Array4<const Set::Matrix> sig_node;
             if (!use_presc_s && !use_local_TE) sig_node = (*stress_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> flaw_a;
@@ -4001,7 +4425,44 @@ private:
 
             amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
                 const int ksurf = k_top_col_p[col_index_sp(i, j)];
-                if (k != ksurf) return;
+                // D2q-2b item 6: with per-cell removal the criterion is
+                // evaluated on EVERY exposed face, not only the column top.
+                // `nx_in, ny_in, nz_in` is the inward normal of the face being
+                // scored -- (0,0,-1) is the top face, i.e. exactly the
+                // pre-D2q-2b behaviour, which is why the key-off path below is
+                // the original code unchanged.
+                int nx_in = 0, ny_in = 0, nz_in = -1;
+                if (!pcr_on)
+                {
+                    if (k != ksurf) return;
+                }
+                else
+                {
+                    if (rem_pc(i, j, k) > 0.5) return;       // void: nothing to score
+                    // An exposed face has a void (or out-of-domain) neighbour.
+                    // removed_mf carries one ghost, refilled before this call,
+                    // so the six-neighbour read is valid at box seams; the
+                    // domain top counts as exposed, matching `k == ksurf`.
+                    const bool ez = (k == top_k) || rem_pc(i, j, k + 1) > 0.5;
+                    const bool exm = (i > dlo_pc[0]) && rem_pc(i - 1, j, k) > 0.5;
+                    const bool exp_ = (i < dhi_pc[0]) && rem_pc(i + 1, j, k) > 0.5;
+                    const bool eym = (j > dlo_pc[1]) && rem_pc(i, j - 1, k) > 0.5;
+                    const bool eyp = (j < dhi_pc[1]) && rem_pc(i, j + 1, k) > 0.5;
+                    if (!(ez || exm || exp_ || eym || eyp)) return;
+                    // Score the face whose inward normal is most favourable.
+                    // At a0 << dx every sample lands in this cell, so all
+                    // normals give the same Sp and the choice is immaterial;
+                    // the loop is written generally so it stays correct if the
+                    // flaw ever approaches a cell width.
+                    if (!ez)
+                    {
+                        nz_in = 0;
+                        if      (exm) { nx_in =  1; }
+                        else if (exp_) { nx_in = -1; }
+                        else if (eym) { ny_in =  1; }
+                        else           { ny_in = -1; }
+                    }
+                }
                 // Receded surface top face (== domain top z when nothing above
                 // this column has been removed, since then ksurf == top_k).
                 const Set::Scalar z_surf_face =
@@ -4034,15 +4495,30 @@ private:
                     }
                     if (use_local_TE)
                     {
-                        // 1-D-confined thermoelastic sigma_xx from T(z), same
-                        // form and compression-positive convention as the
-                        // h_spall scan (Removal.H). Sample temp_mf at the cell
-                        // containing the requested depth below the (receded)
-                        // surface, clamped into the box.
-                        int k_d = ksurf - static_cast<int>(std::floor(dv / dz));
+                        // 1-D-confined thermoelastic sigma_xx from T, same form
+                        // and compression-positive convention as the h_spall
+                        // scan (Removal.H). Sample temp_mf at the cell
+                        // containing the requested depth along the INWARD FACE
+                        // NORMAL, clamped into the box.
+                        //
+                        // D2q-2b: for the top face (nz_in = -1, nx_in = ny_in
+                        // = 0) this is bit-for-bit the pre-D2q-2b expression.
+                        // For a lateral face it steps sideways into the rock
+                        // instead of downwards -- the same rule, evaluated
+                        // where it currently is not. At a0 = 20 um against
+                        // dx = 2 mm the step count is 0 for every sample, so
+                        // the criterion is a function of THIS CELL alone.
+                        const int nstep = static_cast<int>(std::floor(dv / dz));
+                        int i_d = i + nx_in * nstep;
+                        int j_d = j + ny_in * nstep;
+                        int k_d = k + nz_in * nstep;
                         if (k_d > ksurf)    k_d = ksurf;
                         if (k_d < vbx_lo_k) k_d = vbx_lo_k;
-                        return te_E * te_beta * (T_a(i, j, k_d) - te_Tref)
+                        if (i_d < dlo_pc[0]) i_d = dlo_pc[0];
+                        if (i_d > dhi_pc[0]) i_d = dhi_pc[0];
+                        if (j_d < dlo_pc[1]) j_d = dlo_pc[1];
+                        if (j_d > dhi_pc[1]) j_d = dhi_pc[1];
+                        return te_E * te_beta * (T_a(i_d, j_d, k_d) - te_Tref)
                                / (1.0 - te_nu) + sp_conf_offset;
                     }
                     int k_d = ksurf - static_cast<int>(std::floor(dv / dz));
@@ -4449,6 +4925,16 @@ private:
     // Surface cells are material cells (phi >= 0) that are the highest
     // material cell in their column, equivalently 0 <= phi < dz. Implement
     // the simple per-column scan; AMR is single-level for Step 10.
+    //
+    // D2q-1: this is the ONE site that could NOT be made rem-authoritative
+    // without changing behaviour, so it is left on phi and ESCALATED rather
+    // than approximated. Replacing the phi window with "solid here, void
+    // directly above" changed 24 plotfiles in `dev2d` -- and changed the
+    // trajectory, not merely the written `surface` field: the differing files
+    // migrate between the 40000cell / 48000cell / 56000cell output
+    // directories. `input_2d_dev` sets no `surface.follow_mask`, so this mask
+    // is a live decision path feeding SurfaceCellFlux, not a diagnostic.
+    // See studies/d2q1_percellvoid/RESULTS.md section "Site 7".
     void UpdateSurfaceMaskFromPhi(int lev)
     {
         const Set::Scalar dz = geom[lev].CellSize()[2];
@@ -4462,6 +4948,146 @@ private:
                 mask(i, j, k) = (p >= 0.0 && p < dz) ? 1.0 : 0.0;
             });
         }
+    }
+
+    // D2q-2b items 6 + 8: LATERAL per-cell removal.
+    //
+    // Runs after UpdateSpAfterMechanics, which (with the key on) has already
+    // written Sp for every exposed cell, scored along that cell's own face
+    // normal. This pass only decides and flips.
+    //
+    // SCOPE -- and this is what makes criterion (f) exact rather than
+    // approximate. Only cells that are NOT their column's top and that have an
+    // exposed LATERAL face are considered here. The column top keeps its
+    // existing path entirely (depth scan, flake coherence, h_col remainder).
+    // A flat interior therefore has no candidate cells at all, so with the key
+    // on its rate is not merely close to the key-off rate, it is produced by
+    // the identical code. Anything (f) detects is a real difference, not drift.
+    //
+    // MPI CONSISTENCY -- no precedent in this codebase, so stated explicitly:
+    //  * The criterion is LOCAL. At a0 = 20 um against dx = 2 mm every sample
+    //    in the K_I integral lands in the scored cell (floor(dv/dz) = 0), so Sp
+    //    is a function of that cell's own T and a_f. No column gather is needed
+    //    -- unlike the top-cell path, where a column spans ranks and k_top must
+    //    be reduced.
+    //  * The only non-local read is the six-neighbour void test, taken from
+    //    removed_mf's one-ghost layer refilled inside UpdateSpAfterMechanics.
+    //  * Decide-then-flip. Sp was computed from the FROZEN pre-pass state, and
+    //    this pass reads only Sp (an owned cell) when flipping. So no cell's
+    //    fate depends on whether a neighbour was flipped first, and the result
+    //    is independent of box decomposition and iteration order. Flipping in
+    //    place while re-testing exposure would have made a rank's sweep order
+    //    observable -- the same class of bug as the 0-ghost removed_mf seam
+    //    defect found earlier in this project.
+    //  * Ghosts are refilled after the flip, and the counters are reduced.
+    void PerCellRemoval(int lev, Set::Scalar /*time*/, Set::Scalar /*dt*/)
+    {
+        pcr_lateral_cells  = 0.0;
+        pcr_overhang_cells = 0.0;
+        if (!spall_per_cell_removal || !SurfaceOwner(lev)) return;
+
+        const amrex::Box& domain = geom[lev].Domain();
+        const int dlo[3] = {domain.smallEnd(0), domain.smallEnd(1), domain.smallEnd(2)};
+        const int dhi[3] = {domain.bigEnd(0),   domain.bigEnd(1),   domain.bigEnd(2)};
+        const amrex::Vector<int> k_top = ColumnTopSolid(lev);
+        const int nx = domain.length(0), ilo = dlo[0], jlo = dlo[1];
+        // Mirrors Removal.H:125 -- regime_field_mf exists only on this branch.
+        const bool sp_weibull_spall =
+            spall_enabled && spallation_model == SpallationModel::SpWeibull;
+
+        Set::Scalar n_fired = 0.0;
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<Set::Scalar>       const& rem = (*removed_mf[lev]).array(mfi);
+            amrex::Array4<const Set::Scalar> const& Sp  = (*Sp_field_mf[lev]).const_array(mfi);
+            amrex::Array4<Set::Scalar>       const& reg = (*regime_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar>       const& D   = (*D_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> regf;
+            if (sp_weibull_spall) regf = (*regime_field_mf[lev]).array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                if (rem(i, j, k) > 0.5) continue;
+                const int kt = k_top[(j - jlo) * nx + (i - ilo)];
+                if (k == kt) continue;                  // the column path owns the top
+                const bool lat =
+                    ((i > dlo[0]) && rem(i - 1, j, k) > 0.5) ||
+                    ((i < dhi[0]) && rem(i + 1, j, k) > 0.5) ||
+                    ((j > dlo[1]) && rem(i, j - 1, k) > 0.5) ||
+                    ((j < dhi[1]) && rem(i, j + 1, k) > 0.5);
+                if (!lat) continue;
+                if (!(Sp(i, j, k) >= 1.0)) continue;
+                rem(i, j, k) = 1.0;
+                reg(i, j, k) = 1.0;                     // spall regime
+                if (sp_weibull_spall) regf(i, j, k) = 1.0;
+                D(i, j, k) = 0.0;
+                // H and T are deliberately NOT reset -- see Removal.H's note:
+                // a void cell is insulating, its stored state is inert, and
+                // resetting it both breaks the energy ledger's neutrality and
+                // produces a spurious cold checkerboard.
+                n_fired += 1.0;
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(n_fired);
+        pcr_lateral_cells = n_fired;
+
+        // The flip changed the void mask; refill before anything reads it.
+        Util::RealFillBoundary(*removed_mf[lev], geom[lev]);
+
+        // Item 8: overhang census -- void cells with SOLID directly above.
+        // A one-cell fillet at the corner is expected. A DEEP undercut is a
+        // finding to report, not a bug to suppress: nothing in this model
+        // collapses an overhang, so whatever forms, stays.
+        Set::Scalar n_over = 0.0;
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+                if (rem(i, j, k) > 0.5 && k < dhi[2] && rem(i, j, k + 1) <= 0.5)
+                    n_over += 1.0;
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(n_over);
+        pcr_overhang_cells = n_over;
+    }
+
+    // D2q-2b item 0: flip the seeded index-space box to void, once, right
+    // after InitPhi. Sets `removed` ONLY -- phi is deliberately left alone, so
+    // the two genuinely disagree and every consumer is forced through the
+    // authoritative mask that D2q-1 installed. That disagreement is the whole
+    // point of the probe: with phi still saying "solid", any path that quietly
+    // fell back to phi shows up immediately.
+    //
+    // No-op unless `spall.seed_void` was given.
+    void ApplySeedVoid(int lev)
+    {
+        if (spall_seed_void.size() != 6) return;
+        const amrex::Box seed(amrex::IntVect{AMREX_D_DECL(spall_seed_void[0],
+                                                          spall_seed_void[1],
+                                                          spall_seed_void[2])},
+                              amrex::IntVect{AMREX_D_DECL(spall_seed_void[3],
+                                                          spall_seed_void[4],
+                                                          spall_seed_void[5])});
+        long n = 0;
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box bx = mfi.validbox() & seed;
+            if (!bx.ok()) continue;
+            amrex::Array4<Set::Scalar> const& rem = (*removed_mf[lev]).array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+                if (rem(i, j, k) <= 0.5) { rem(i, j, k) = 1.0; ++n; }
+        }
+        amrex::ParallelDescriptor::ReduceLongSum(n);
+        Util::Message(INFO, "spall.seed_void: level ", lev, ", voided ", n, " cells");
     }
 
     // Initialize phi to a flat top surface at z = prob_hi[2]. The cell-
@@ -5237,6 +5863,14 @@ private:
     std::vector<int> foot_clear_k;        // per column target top k (INT_MIN = none)
     // D2k: side-face flux on exposed vertical faces (surface_patch.side_face_flux).
     Set::Scalar side_P_face = 0.0;  // thermo: net power into side faces [W] (f applied)
+    // D2r-1 witness: side-face power delivered to columns ABOVE the
+    // nozzle plane, and the face count. Registered ONLY when
+    // side_face_factor_above is set, so unset runs keep their exact
+    // thermo.dat -- which is what keeps the frozen A_f02 comparable.
+    Set::Scalar side_P_face_above = 0.0;
+    Set::Scalar side_cols_above   = 0.0;
+    Set::Scalar wall_step_q       = 0.0;  // mean k*dT/dx across the wall step [W/m^2]
+    Set::Scalar wall_step_n       = 0.0;  // faces in that mean
     Set::Scalar side_P_loss = 0.0;  // thermo: side-face surface losses [W] (f applied)
     Set::Scalar side_faces  = 0.0;  // thermo: number of exposed lateral faces heated
     // Per-column side power at the current flame vectors, for the enthalpy
@@ -5283,6 +5917,16 @@ private:
         // side_face_flux = 0 is byte-identical to every pre-D2k result).
         bool side_face_flux = false;
         Set::Scalar side_face_factor = 1.0;
+        // D2q-2b: cap on a side face's heat-transfer coefficient, applied only
+        // when spall.per_cell_removal = 1. See the parse block for why 80.
+        Set::Scalar side_face_h_max = 80.0;
+        // D2r-1: the side factor for columns ABOVE the nozzle plane (s <= 0).
+        // SENTINEL -1 = "use side_face_factor", so every run that does not set
+        // it is byte-identical. The drain flows into the taller column's buried
+        // interior; that column's top is above the plane, so its h is ~0 and
+        // its side faces have received 0 x f = 0 in every run ever done. This
+        // key is what lets a leg heat exactly those faces and nothing else.
+        Set::Scalar side_face_factor_above = -1.0;
         Set::Scalar x0 = 0.0, y0 = 0.0, radius = 0.0;
         Set::Scalar T_ext   = 0.0;
         Set::Scalar h_conv  = 0.0;  // convective_flame: flame coefficient h_fl
@@ -5398,7 +6042,36 @@ private:
                     if (!(std::isfinite(v.side_face_factor) && v.side_face_factor >= 0.0))
                         Util::Abort(INFO, "surface_patch.side_face_factor must be finite "
                                           "and >= 0, got: ", v.side_face_factor);
+                    // D2q-2b item 7: cap on the coefficient a SIDE face may see.
+                    // Applied only when spall.per_cell_removal = 1 (checked at
+                    // the use site), so it is inert for every pre-D2q-2b run.
+                    //
+                    // The default 80 W/m2K sits BELOW h* -- the coefficient at
+                    // which a wall reaches the 821 K firing point inside its
+                    // 121 s dwell (116 at T_gas = 1400, 88.5 at the arbiter's
+                    // 1600, 75 at 1750). So the wall provably cannot be heated
+                    // into spalling on its own: any lateral removal has to come
+                    // from the corner drain, which is the claim under test.
+                    // DECLARED, never fitted -- a failure routes to the packet's
+                    // decision rule, not to another value.
+                    pp.query_default("side_face_factor_above",
+                                     v.side_face_factor_above, -1.0);
+                    if (v.side_face_factor_above >= 0.0 &&
+                        !std::isfinite(v.side_face_factor_above))
+                        Util::Abort(INFO, "surface_patch.side_face_factor_above must be finite "
+                                          "and >= 0 (unset = use side_face_factor), got: ",
+                                    v.side_face_factor_above);
+                    pp.query_default("side_face_h_max", v.side_face_h_max, 80.0);
+                    if (!(std::isfinite(v.side_face_h_max) && v.side_face_h_max > 0.0))
+                        Util::Abort(INFO, "surface_patch.side_face_h_max must be finite "
+                                          "and > 0, got: ", v.side_face_h_max);
                 }
+                else if (pp.contains("side_face_h_max"))
+                    Util::Abort(INFO, "surface_patch.side_face_h_max requires "
+                                      "surface_patch.side_face_flux = 1");
+                else if (pp.contains("side_face_factor_above"))
+                    Util::Abort(INFO, "surface_patch.side_face_factor_above requires "
+                                      "surface_patch.side_face_flux = 1");
                 else if (pp.contains("side_face_factor"))
                     Util::Abort(INFO, "surface_patch.side_face_factor requires "
                                       "surface_patch.side_face_flux = 1");
@@ -5877,6 +6550,23 @@ private:
     // is capped until its neighbours catch up). Decomposition-independent
     // (operates on the gathered per-column surface heights).
     Set::Scalar spall_flake_coh_len = 0.0;
+
+    // D2q-2b item 5: per-cell removal (default off). The two preconditions
+    // are cross-checked in Parse() once every block has been read, since they
+    // live in other parse blocks.
+    bool spall_per_cell_removal = false;
+    // Item 8: thermo counters, registered only when the key is on.
+    // pcr_overhang_cells = void cells with solid directly above (the undercut
+    // census -- a one-cell fillet is expected, a deep undercut is a FINDING,
+    // not a bug, because nothing in the model collapses one).
+    // pcr_lateral_cells  = cells removed this step through a lateral face.
+    Set::Scalar pcr_overhang_cells = 0.0;
+    Set::Scalar pcr_lateral_cells  = 0.0;
+
+    // D2q-2b item 0: debug-only seeded interior void, `ilo jlo klo ihi jhi khi`
+    // in index space. Empty = off (the default), and ApplySeedVoid returns
+    // immediately. See the parse block for why it carries no diagnostic.
+    std::vector<int> spall_seed_void;
 
     // Step 16: Sp-vs-depth h_spall scan parameters (sp_weibull branch only).
     // `spall.h_spall_max` caps the downward column scan in metres (safety

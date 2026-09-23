@@ -237,7 +237,8 @@
                 int k_top_local = std::numeric_limits<int>::min();
                 for (int k = khi; k >= klo; --k)
                 {
-                    if (rem(i, j, k) <= 0.5 && phi(i, j, k) >= 0.0) { k_top_local = k; break; }
+                    // D2q-1: removed_mf is authoritative (see ColumnTopSolid).
+                    if (rem(i, j, k) <= 0.5) { k_top_local = k; break; }
                 }
                 if (k_top_local > std::numeric_limits<int>::min())
                 {
@@ -478,6 +479,14 @@
         // / prescribed_T) scan path consumes this; the stress_mf path keeps its
         // box-local read (sig_node is not gathered).
         const int dom_klo_z = domain.smallEnd(2);
+        // D2q-1: the K_I depth scan strides downward from k_top in 1-cell
+        // strides and reads each cell as material. This is how far that holds:
+        // the contiguous solid run below each column's top. While void is
+        // contiguous it reaches the domain floor, so the scan is unchanged and
+        // the clamp below is inert -- but once stage 2 can leave an interior
+        // void, the scan must not read through it as if it were rock.
+        const amrex::Vector<int> solid_run_col =
+            ColumnSolidRunBelowTop(lev, k_top_global);
         int Dmax_col = static_cast<int>(std::floor(h_spall_max_loc / dz));
         if (Dmax_col < 1) Dmax_col = 1;
         if (Dmax_col > domain.bigEnd(2) - dom_klo_z)
@@ -680,8 +689,11 @@
                                 // stress_mf path stays box-local. See PASS 1b.
                                 const int scan_kbot =
                                     sp_weibull_use_T_face ? dom_klo_z : klo;
+                                // D2q-1: also clamp to the contiguous solid run
+                                // below the top (inert while void is contiguous).
                                 const int max_steps =
-                                    std::min(max_steps_cap, k_top - scan_kbot);
+                                    std::min(std::min(max_steps_cap, k_top - scan_kbot),
+                                             solid_run_col[idx] - 1);
                                 // Column temperature by depth-below-surface index
                                 // (cells): gathered profile for the T-path (box-
                                 // independent), box-local T_a otherwise.

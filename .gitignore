@@ -77,5 +77,6 @@ CMakeCache.txt
 cmake-build-*/
 .venv/
 venv/
-.claude/
+# .claude/ is tracked (phase command files). Machine-local settings are not:
+.claude/settings.local.json
 __pycache__/

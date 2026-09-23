@@ -1,0 +1,585 @@
+<title>The Undercut Problem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --ground:    #f4f5f6;
+    --surface:   #ffffff;
+    --sunk:      #eceef0;
+    --ink:       #16191d;
+    --muted:     #5c666f;
+    --faint:     #8b949c;
+    --rule:      #d9dde1;
+    --rule-firm: #b9c1c8;
+    --hot:       #d1490b;
+    --hot-soft:  #fbe6d8;
+    --cold:      #2f6f86;
+    --cold-soft: #dfeaef;
+    --rock:      #cfd5da;
+    --rock-deep: #b3bbc2;
+    --stop:      #a8341a;
+
+    --display: "Newsreader", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #14171a;
+      --surface:   #1c2024;
+      --sunk:      #23282d;
+      --ink:       #e8eaed;
+      --muted:     #a0a8af;
+      --faint:     #767e85;
+      --rule:      #2d343a;
+      --rule-firm: #3d454c;
+      --hot:       #f0763a;
+      --hot-soft:  #3a2113;
+      --cold:      #6fb4cc;
+      --cold-soft: #17313b;
+      --rock:      #394148;
+      --rock-deep: #4a535b;
+      --stop:      #e4694b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:    #14171a;
+    --surface:   #1c2024;
+    --sunk:      #23282d;
+    --ink:       #e8eaed;
+    --muted:     #a0a8af;
+    --faint:     #767e85;
+    --rule:      #2d343a;
+    --rule-firm: #3d454c;
+    --hot:       #f0763a;
+    --hot-soft:  #3a2113;
+    --cold:      #6fb4cc;
+    --cold-soft: #17313b;
+    --rock:      #394148;
+    --rock-deep: #4a535b;
+    --stop:      #e4694b;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+    margin: 0;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin-inline: auto;
+    padding-inline: 16px;
+    padding-block: 0 80px;
+  }
+
+  /* ---- masthead ---- */
+  header.mast {
+    padding-block: 56px 36px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 40px;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.3rem, 6vw, 3.6rem);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-family: var(--display);
+    font-size: clamp(1.1rem, 2.4vw, 1.35rem);
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+    max-width: 40ch;
+  }
+
+  /* ---- prose ---- */
+  .col { max-width: 66ch; }
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(1.5rem, 3.4vw, 2rem);
+    line-height: 1.16;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  p { margin: 0 0 16px; }
+  strong { font-weight: 600; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--sunk);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ---- step sections with rail ---- */
+  section.step {
+    display: grid;
+    grid-template-columns: 116px minmax(0, 1fr);
+    gap: 28px;
+    padding-block: 34px;
+    border-top: 1px solid var(--rule);
+  }
+  section.step:first-of-type { border-top: none; padding-top: 0; }
+  .rail { position: relative; }
+  .rail .id {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    display: block;
+  }
+  .rail .verdict {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 7px;
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .v-closed { background: var(--sunk); color: var(--muted); }
+  .v-cause  { background: var(--hot-soft); color: var(--hot); }
+  .v-pass   { background: var(--cold-soft); color: var(--cold); }
+
+  @media (max-width: 720px) {
+    section.step { grid-template-columns: 1fr; gap: 12px; }
+    .rail { display: flex; align-items: center; gap: 10px; }
+    .rail .verdict { margin-top: 0; }
+  }
+
+  /* ---- evidence ---- */
+  .evidence {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px;
+    margin: 22px 0;
+  }
+  .evidence > :last-child { margin-bottom: 0; }
+  .cap {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 14px;
+  }
+
+  .tablewrap { overflow-x: auto; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.92rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 14px 8px 0;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  th {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  td.num { font-family: var(--mono); font-size: 0.87rem; }
+  tr:last-child td { border-bottom: none; }
+  .bad  { color: var(--stop); font-weight: 600; }
+  .good { color: var(--cold); font-weight: 600; }
+
+  /* ---- cell grid diagrams ---- */
+  .diagrams {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 24px 0;
+  }
+  .fig {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px;
+  }
+  .fig h4 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin: 0 0 4px;
+  }
+  .fig .sub {
+    font-size: 0.86rem;
+    color: var(--muted);
+    margin: 0 0 16px;
+    line-height: 1.45;
+  }
+  .gridfig {
+    display: grid;
+    grid-template-columns: repeat(6, 30px);
+    grid-template-rows: repeat(7, 26px);
+    gap: 2px;
+    margin: 0 auto 14px;
+    width: max-content;
+  }
+  .c {
+    border-radius: 2px;
+    background: var(--rock);
+    position: relative;
+  }
+  .c.deep  { background: var(--rock-deep); }
+  .c.void  { background: transparent; border: 1px dashed var(--rule-firm); }
+  .c.hot   { background: var(--hot); }
+  .c.cold  { background: var(--cold); }
+  .c.gone  {
+    background: var(--hot-soft);
+    border: 2px dashed var(--hot);
+  }
+  .c.label::after {
+    content: attr(data-l);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .c.gone.label::after { color: var(--hot); }
+
+  .flux {
+    grid-column: 4 / 5;
+    grid-row: 4 / 5;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .sw {
+    width: 13px; height: 13px; border-radius: 2px; flex: none;
+  }
+  .sw.rock { background: var(--rock); }
+  .sw.hot  { background: var(--hot); }
+  .sw.cold { background: var(--cold); }
+  .sw.void { border: 1px dashed var(--rule-firm); }
+
+  /* ---- pull ---- */
+  .pull {
+    font-family: var(--display);
+    font-size: clamp(1.15rem, 2.8vw, 1.5rem);
+    line-height: 1.38;
+    border-left: 3px solid var(--hot);
+    padding: 2px 0 2px 20px;
+    margin: 26px 0;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .note {
+    background: var(--sunk);
+    border-radius: 4px;
+    padding: 16px 18px;
+    font-size: 0.93rem;
+    margin: 20px 0;
+  }
+  .note > :last-child { margin-bottom: 0; }
+  .note .cap { margin-bottom: 8px; }
+
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-size: 0.86rem;
+    color: var(--faint);
+    font-family: var(--mono);
+  }
+  a { color: var(--cold); }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="kicker">ALAMO · MMWSpalling · 2026-09-22</p>
+    <h1>The Undercut Problem</h1>
+    <p class="standfirst">Why the model drills a cone when Meier drilled a cylinder — and why fixing it meant changing how the code stores a hole before touching any physics.</p>
+  </header>
+
+  <div class="col">
+    <p>We are validating a thermal-spallation drilling model against Meier's 2017 Grimsel pilot: a flame burner resting on tripod feet, melting and spalling its way down a granite borehole. The model gets the drilling <em>rate</em> roughly right. It gets the <em>shape</em> badly wrong, and shape is the only thing we can currently score without circularity.</p>
+    <p>This page explains the chain of investigation that followed, and what was actually changed in the code today.</p>
+  </div>
+
+  <div class="evidence">
+    <p class="cap">The scoring failure</p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Quantity</th><th>Meier</th><th>Model</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Shaft diameter, 14–38 cm depth</td><td class="num">95 ± 5 mm, constant</td><td class="num">145 mm → 78 mm, no constant section</td><td class="bad">fail</td></tr>
+          <tr><td>Mean Ø from water-filled volume</td><td class="num">93.3 mm</td><td class="num">—</td><td></td></tr>
+          <tr><td>Volume removal rate</td><td class="num">2.47 cm³/s</td><td class="num">4.58 cm³/s</td><td class="bad">1.9×</td></tr>
+          <tr><td>Hole cross-section</td><td class="num">cylinder</td><td class="num">cone</td><td class="bad">fail</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="pull">To widen the hole, rock at the <em>wall</em> has to be removed. Everything below is the story of why it could not be.</p>
+  </div>
+
+  <section class="step">
+    <div class="rail">
+      <span class="id">D2j-0b</span>
+      <span class="verdict v-cause">found the cause</span>
+    </div>
+    <div>
+      <h2>A hot cell beside a cold column bleeds heat sideways</h2>
+      <p>The wall of a drilled hole is a staircase of cells. When one column fires and recedes, its new top cell sits directly beside the buried interior of the taller column next door — rock that is still at bulk temperature. Heat runs laterally across that face, and the model never heats it back.</p>
+      <p>The flux is <code>k(T_hot − T_cold)/dx</code>. Because the neighbour stays at bulk temperature at <em>any</em> resolution once the step is taller than the thermal length, the temperature difference is pinned and the flux density scales as <strong>1/dx</strong> — so refining the mesh makes it worse, not better.</p>
+    </div>
+  </section>
+
+  <div class="diagrams">
+    <div class="fig">
+      <h4>The drain</h4>
+      <p class="sub">A firing top cell (orange) loses heat into the cold buried interior of the taller column (blue). That face is never heated back.</p>
+      <div class="gridfig" role="img" aria-label="Grid of rock cells forming a staircase. The short column's hot top cell sits beside the tall column's cold buried interior.">
+        <!-- row 1 -->
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+        <!-- row 2 -->
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+        <div class="c"></div><div class="c"></div><div class="c"></div>
+        <!-- row 3 -->
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+        <div class="c"></div><div class="c"></div><div class="c"></div>
+        <!-- row 4 -->
+        <div class="c"></div><div class="c hot"></div><div class="c hot label" data-l="→"></div>
+        <div class="c cold"></div><div class="c deep"></div><div class="c deep"></div>
+        <!-- rows 5-7 -->
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+      </div>
+      <div class="legend">
+        <span><i class="sw void"></i>void</span>
+        <span><i class="sw rock"></i>rock</span>
+        <span><i class="sw hot"></i>firing</span>
+        <span><i class="sw cold"></i>cold wall</span>
+      </div>
+    </div>
+
+    <div class="fig">
+      <h4>The removal that cannot be expressed</h4>
+      <p class="sub">The wall column is heated at its <em>base</em>, by that same drain. Removing the cell that got the heat would leave solid sitting above void — an undercut.</p>
+      <div class="gridfig" role="img" aria-label="The same staircase, with the wall column's basal cell marked for removal, leaving two solid cells stranded above a void.">
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+        <div class="c"></div><div class="c"></div><div class="c"></div>
+
+        <div class="c void"></div><div class="c void"></div><div class="c void"></div>
+        <div class="c"></div><div class="c"></div><div class="c"></div>
+
+        <div class="c"></div><div class="c hot"></div><div class="c hot"></div>
+        <div class="c gone label" data-l="✕"></div><div class="c deep"></div><div class="c deep"></div>
+
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+        <div class="c deep"></div><div class="c deep"></div><div class="c deep"></div>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="border:2px dashed var(--hot); background:var(--hot-soft)"></i>should spall, cannot</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="step">
+    <div class="rail">
+      <span class="id">D2o-0 / 0b</span>
+      <span class="verdict v-closed">closed</span>
+    </div>
+    <div>
+      <h2>Every sharp corner generates the same cascade</h2>
+      <p>We tried prescribing a floor/wall split in the heat-transfer coefficient directly. A corner placed at the stand-off froze the burner's load-bearing feet and jammed the tool. Moving the corner to a radius cured the freeze — and then the corner itself became the drain.</p>
+      <div class="evidence">
+        <p class="cap">Lateral step at the load-bearing ring, 2 mm mesh</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th></th><th>ΔT across one cell</th><th>k·ΔT/dx</th><th>as share of q_pin ≈ 520 kW/m²</th></tr></thead>
+            <tbody>
+              <tr><td>control</td><td class="num">+77 K</td><td class="num">—</td><td class="num">11 %</td></tr>
+              <tr><td>radial corner</td><td class="num">+402 K</td><td class="num">302 kW/m²</td><td class="num bad">58 %</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>The temperature step was mesh-independent while the sink it drove <strong>doubled</strong> from 2 mm to 1 mm — the 1/dx signature again. The general finding: <strong>no sharp corner in the heating law works, radial or stand-off.</strong></p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="rail">
+      <span class="id">D2p-0</span>
+      <span class="verdict v-cause">the blocker</span>
+    </div>
+    <div>
+      <h2>The drain is not a loss — it is heat we cannot spend</h2>
+      <p>This was the reframing that changed the target. The heat running into the wall is being delivered <em>exactly where the wall ought to spall</em>. The problem is not that we lose it; it is that the representation has nowhere to put the result.</p>
+      <p>Three facts in the code closed the packet at design time, before anything was run:</p>
+      <ul>
+        <li>There is <strong>no per-cell firing criterion</strong> — the spall field is written only at each column's top cell.</li>
+        <li><strong>Void was derived from a per-column level set</strong>, linear down the column. Solid above void was arithmetically impossible.</li>
+        <li>A side face is heated with its <em>own</em> column's coefficient.</li>
+      </ul>
+      <p class="pull">Every lateral rule we tried failed at <em>removal</em>, not at triggering. "Fire on the lateral face" is a no-op: the criterion already fires there. The rule had nowhere to write its answer.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="rail">
+      <span class="id">D2p-1</span>
+      <span class="verdict v-closed">refuted</span>
+    </div>
+    <div>
+      <h2>The cheap way around it does not exist</h2>
+      <p>Rather than fix the representation, we tried regularising the lateral gradient over a physical length instead of over the cell width. It was abandoned before launch for two independent reasons, both provable from numbers already on disk.</p>
+
+      <div class="note">
+        <p class="cap">1 · The length was wrong by a factor of two</p>
+        <p>The project had been quoting κ/v ≈ 3.2 mm. Recomputed from the run's own inputs (κ = 1.5, ρc = 2.1725×10⁶, α = 6.9045×10⁻⁷ m²/s) it is <strong>1.604 mm</strong>. The old figure came from textbook granite. At 1.604 mm the correction is inert at a 2 mm mesh — it inverts the meaning of the test.</p>
+      </div>
+
+      <div class="note">
+        <p class="cap">2 · Two acceptance criteria could not both be met</p>
+        <p>The gate asked for mesh convergence <em>and</em> a ceiling on removal. But the cascade <em>suppresses</em> the fine-mesh rate, so closing the gap requires raising it by +74 % to +93 % — while the ceiling allowed +15 %. The windows do not overlap.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>block</th><th>2 mm</th><th>1 mm</th><th>convergence needs</th><th>ceiling allows</th></tr></thead>
+            <tbody>
+              <tr><td>100–150 s</td><td class="num">0.968</td><td class="num">0.690</td><td class="num">0.920 – 1.016</td><td class="num bad">≤ 0.793</td></tr>
+              <tr><td>150–200 s</td><td class="num">0.759</td><td class="num">0.414</td><td class="num">0.721 – 0.797</td><td class="num bad">≤ 0.476</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>It also pointed the wrong way: capping heat into the wall hands it back to the floor, making the hole <em>narrower</em>. Meier's wall is wider than his skirt precisely <em>because</em> it received that heat.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="rail">
+      <span class="id">D2q-1</span>
+      <span class="verdict v-pass">shipped</span>
+    </div>
+    <div>
+      <h2>What was actually changed today</h2>
+      <p>With three routes closed, one remained: make the representation able to hold an undercut. The removal mask <code>removed_mf</code> already existed as a real field; it was simply not authoritative. Six edits across two integrator files make it so.</p>
+
+      <div class="evidence">
+        <p class="cap">The six sites</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Site</th><th>Assumed</th><th>Now</th></tr></thead>
+            <tbody>
+              <tr><td>Regrid repair</td><td>rebuilt the mask from a linear level set</td><td>preserves the mask, cleans it to 0/1</td></tr>
+              <tr><td>Three column-top scans</td><td>mask <em>and</em> level set agree</td><td>mask alone</td></tr>
+              <tr><td>Beam path</td><td>geometric distance to the top</td><td>counts solid cells</td></tr>
+              <tr><td>Beam invariant (b)</td><td>asserted mask/level-set sync</td><td>retired</td></tr>
+              <tr><td>Crack depth scan</td><td>strided down through anything</td><td>stops at the first void</td></tr>
+              <tr><td>Energy ledger</td><td>already cell-wise</td><td>unchanged</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p>The level set survives, demoted: it still carries the sub-cell recession remainder that decides <em>when</em> the next cell flips, which is why it could not simply be deleted. But no decision path asks it whether a cell is void.</p>
+
+      <div class="note">
+        <p class="cap">The gate</p>
+        <p><strong>2639 / 2639 output files byte-identical</strong>, 11/11 runs clean, 7/7 named regressions passing, energy ledger at round-off (≤ 5.3×10⁻¹⁵). Run in three bisectable batches — which paid for itself when one batch failed and isolated to a single site in one sweep instead of leaving the whole refactor under suspicion.</p>
+      </div>
+
+      <p>Byte-identity was chosen as the <em>only</em> acceptance criterion deliberately. Most of the risk in per-cell void lives in plumbing — regrid, beam path, depth scan, ledger — and plumbing has a perfect oracle. A mistake shows up as a broken hash in twelve minutes rather than as a wrong physics result diagnosed over a multi-day campaign.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="rail">
+      <span class="id">honesty</span>
+      <span class="verdict v-closed">open</span>
+    </div>
+    <div>
+      <h2>What this does not do</h2>
+      <p>It changes nothing observable. That was the point — 2639 files identical. It creates no interior void, spalls no wall, and widens no hole. It removes a <em>representational</em> blocker so that the next step can be attempted at all.</p>
+
+      <h3>Two things were escalated, not forced</h3>
+      <ul>
+        <li><strong>The surface mask stays level-set-derived.</strong> Converting it changed 24 files and moved the trajectory. My pre-check said it was safe; the gate refuted it. The counter I checked is blind in the direction that actually bites.</li>
+        <li><strong>The new unit test is unsatisfiable as specified.</strong> It needs an interior void, and the only two void-producing sites in the codebase are both column-based and top-down — which is the very premise being fixed.</li>
+      </ul>
+
+      <h3>The known trap ahead</h3>
+      <p>The next step adds the per-cell criterion and lateral removal. The danger is obvious from the numbers: the model already removes <strong>1.9× too much rock</strong>, and Meier's wall needs only <strong>+2.5 to 7.5 mm per side</strong>. A fix that converges by drilling faster is not a fix — and the ceiling must be measured against the artefact-free control, never against a cascade-suppressed run. That error is what killed the previous attempt.</p>
+    </div>
+  </section>
+
+  <footer>
+    ALAMO / src/Integrator/MMWSpalling.H · Removal.H — +184/−13, +16/−2 · no new keys, fields or diagnostic columns
+  </footer>
+
+</div>

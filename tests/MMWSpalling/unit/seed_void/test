@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+# D2q-2b item 0: the interior-void probe.
+#
+# WHAT THIS EXISTS FOR
+#
+# D2q-1 made `removed_mf` authoritative so that SOLID ABOVE VOID -- an undercut
+# -- becomes representable, and taught four call sites to tolerate one:
+#
+#   * ColumnTopSolid and the two other k_top scans, which must still find the
+#     real column top above an interior void;
+#   * ColumnSolidAboveCount, which must measure the beam's optical path in
+#     SOLID CELLS rather than as the geometric distance k_top - k;
+#   * the K_I depth scan, clamped to the contiguous solid run below the top;
+#   * beam-closure invariant (a).
+#
+# But nothing in the physics can create an interior void, so all four were
+# proved INERT and none was proved CORRECT. `spall.seed_void` punches one in
+# directly, and this test exercises the four paths at their real call sites.
+#
+# The seed writes `removed` ONLY -- phi still reads "solid" in the voided box --
+# so any consumer that quietly fell back to the level set is caught here.
+#
+# CHECKS
+#   S1 (invariant)  beam_invariant_viol == 0 on every row. This is the sharp
+#                   one. Invariant (a) used to be a CONTIGUITY test ("the cell
+#                   above is void" iff n_above == 0); the eight solid cells
+#                   stranded above the seeded void each satisfy the left side
+#                   and not the right, so the pre-D2q-2b form flags them. Its
+#                   restatement -- n_above == 0 iff k == k_top -- is exact at
+#                   any topology.
+#   S2 (beam path)  |beam_closure_err| <= 1e-9 with the void present. The
+#                   Beer-Lambert path telescopes down a column only if it
+#                   counts MATERIAL; measuring k_top - k across a two-cell void
+#                   over-states the optical depth and P_dep + P_trans stops
+#                   matching P_inc. This is the direct check on
+#                   ColumnSolidAboveCount.
+#   S3 (seed)       the seeded box really is void in the first plotfile, and
+#                   solid really does survive above it -- i.e. the state under
+#                   test is the one we think it is, not a silently collapsed
+#                   column.
+#   S4 (k_top)      the columns through the seed still report their top solid
+#                   cell ABOVE the void, so the surface did not fall into it.
+#                   Read from `removed` in the plotfiles.
+#   S5 (survival)   the undercut is still there at the last plotfile. Nothing
+#                   in this configuration collapses an overhang, so a
+#                   disappeared one would mean a consumer wrote the void away
+#                   (the regrid repair used to do exactly that).
+#
+# Usage: test            (runs ALAMO on 4 ranks, then checks)
+#        test <outdir>   (checks an existing output directory)
+
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.dirname(os.path.abspath(__file__)).split(
+    os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT = os.path.join(TEST_DIR, "input")
+DEFAULT_OUT = os.path.join(TEST_DIR, "output")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+# Must match `spall.seed_void` in the input: ilo jlo klo ihi jhi khi.
+SEED = (10, 0, 20, 14, 3, 21)
+NZ = 30                     # amr.n_cell z
+TOL_COUNTER = 1.0e-9
+
+
+def plotfiles(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for path in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(path))
+        if m:
+            cands.append((int(m.group(1)), path))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def run_alamo(outdir):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+           BIN, INPUT, f"plot_file={outdir}"]
+    print("Running:", " ".join(cmd))
+    res = subprocess.run(cmd, cwd=ROOT)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO run exited with {res.returncode}")
+        sys.exit(res.returncode)
+
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+outdir = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
+if len(sys.argv) <= 1:
+    run_alamo(outdir)
+
+# ---------------------------------------------------------------------------
+# S1 + S2: thermo.dat counters, with the undercut present
+# ---------------------------------------------------------------------------
+thermo = os.path.join(outdir, "thermo.dat")
+if not os.path.exists(thermo):
+    print(f"FAIL: missing {thermo}")
+    sys.exit(1)
+with open(thermo) as f:
+    names = f.readline().split()
+rows = np.loadtxt(thermo, skiprows=1, ndmin=2)
+col = {n: i for i, n in enumerate(names)}
+for n in ("beam_P_inc", "beam_closure_err", "beam_invariant_viol"):
+    if n not in col:
+        print(f"FAIL: thermo.dat has no column {n}")
+        sys.exit(1)
+
+viol = rows[:, col["beam_invariant_viol"]]
+check("S1 invariant (a) restated", np.all(viol == 0.0),
+      f"max beam_invariant_viol = {np.max(viol):.0f} over {rows.shape[0]} rows "
+      f"(the pre-D2q-2b contiguity form would flag the 8 stranded cells)")
+
+lit = rows[rows[:, col["beam_P_inc"]] > 0.0]
+cerr = lit[:, col["beam_closure_err"]]
+check("S2 beam path counts solid cells",
+      lit.shape[0] > 0 and np.all(np.abs(cerr) <= TOL_COUNTER),
+      f"{lit.shape[0]} lit rows, max |beam_closure_err| = "
+      f"{np.max(np.abs(cerr)) if lit.shape[0] else float('nan'):.3e} "
+      f"(tol {TOL_COUNTER:g})")
+
+# ---------------------------------------------------------------------------
+# S3-S5: the state under test, from the plotfiles
+# ---------------------------------------------------------------------------
+pfs = plotfiles(outdir)
+if not pfs:
+    print(f"FAIL: no plotfiles in {outdir}")
+    sys.exit(1)
+
+
+def removed_grid(pf):
+    ds = yt.load(pf)
+    dims = ds.domain_dimensions
+    cg = ds.covering_grid(0, left_edge=ds.domain_left_edge, dims=dims)
+    return np.array(cg["removed"])
+
+
+ilo, jlo, klo, ihi, jhi, khi = SEED
+rem0 = removed_grid(pfs[0])
+seed_block = rem0[ilo:ihi + 1, jlo:jhi + 1, klo:khi + 1]
+above_block = rem0[ilo:ihi + 1, jlo:jhi + 1, khi + 1:NZ]
+
+check("S3 seeded box is void",
+      seed_block.size > 0 and np.all(seed_block > 0.5),
+      f"{seed_block.size} cells in k={klo}..{khi}, "
+      f"min removed = {seed_block.min():.1f}")
+
+check("S3b solid survives above the void",
+      above_block.size > 0 and np.all(above_block <= 0.5),
+      f"{above_block.shape[2]} layers k={khi + 1}..{NZ - 1} still solid "
+      f"-- this is the undercut")
+
+# S4: the top solid cell of a seeded column must sit above the void.
+def k_top(rem, i, j):
+    solid = np.nonzero(rem[i, j, :] <= 0.5)[0]
+    return int(solid.max()) if solid.size else -1
+
+
+tops0 = [k_top(rem0, i, j)
+         for i in range(ilo, ihi + 1) for j in range(jlo, jhi + 1)]
+check("S4 k_top found above the void", all(t > khi for t in tops0),
+      f"k_top in {min(tops0)}..{max(tops0)}, all > {khi} "
+      f"(a scan that stopped at the void would report {khi - 1} or below)")
+
+# S5: the undercut survives to the end of the run.
+remN = removed_grid(pfs[-1])
+seedN = remN[ilo:ihi + 1, jlo:jhi + 1, klo:khi + 1]
+aboveN = remN[ilo:ihi + 1, jlo:jhi + 1, khi + 1:NZ]
+still_void = np.all(seedN > 0.5)
+still_solid_above = np.any(aboveN <= 0.5)
+check("S5 undercut survives the run", still_void and still_solid_above,
+      f"seed still void: {still_void}; solid still above: {still_solid_above} "
+      f"({len(pfs)} plotfiles)")
+
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

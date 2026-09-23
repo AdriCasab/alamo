@@ -10739,3 +10739,1671 @@ sawn section (heat that removed no rock — the only direct constraint on wall l
 measured it), and the mouth-flank behaviour with and without dilution. Also reopened: **cuttings
 absorbing heat** was withdrawn as degenerate with delivery efficiency *under a fixed-flux BC*; the
 enthalpy march made the budget finite, so that premise has expired.
+
+---
+
+## D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported as mixed)
+
+`tests/MMWSpalling/studies/d2m_feet/`, `PREDICTIONS.md` sha256 `d735f95f…` 12:22:10,
+read-only, all five runs 12:40–12:42 so every run post-dates the hash. Binary
+`62dea451…` verified unchanged. Key-only, no build, nothing committed. Identity:
+`R40` byte-identical to `d2i_gate/LI0_2mm` over 2605 rows (the packet named the
+partner "D2l's `M_f0`", which does not exist — D2l read that row from
+`d2i_gate`; named explicitly rather than substituted silently).
+
+**Both mechanisms are active, on different quantities.**
+
+| case | ring [mm] | stance Ø | min Ø | ROP | absorbed | V̇ | depth-mean Ø |
+|---|---|---|---|---|---|---|---|
+| R32 | 28–32 | 64 | **63.5** | 1.925 | 1258 W | 3.59 | 91.8 |
+| R40 | 28–40 | 80 | **79.3** | 1.491 | 1639 W | 4.58 | 110.5 |
+| R44 | 28–44 | 88 | **87.0** | 1.301 | 1841 W | 5.11 | 120.0 |
+| R48 | 28–48 | 96 | **93.9** | 1.179 | 2021 W | 5.62 | 128.1 |
+| S3648 | 36–48 | 96 | **94.8** | 1.154 | 2052 W | 5.70 | 129.4 |
+
+1. **The cut diameter is the tool's stance**, tracking 2·`foot_r_outer` to
+   0.5–2.1 mm over a 32 mm swing in both directions; `S3648` shows the **outer
+   edge alone** sets it. **But this was pre-registered as weak evidence and
+   remains so:** `z_foot` is the 0.9 quantile of annulus heights, so the hole is
+   ≥ 2·r_outer at the feet depth almost by construction. **No future packet may
+   quote the tracking as a discovery.**
+2. **The flame's far field is stance-invariant.** Absolute erosion at 45–50 mm
+   agrees to **5–7 %** across the ladder while the centre moves **39 %**.
+3. **THE RESULT THAT MATTERS: the floor is a cone with no edge.** v(r)/v_c = 0.83
+   at 29 mm, **0.62 at 39 mm**, still ≈ 0.36 at 69 mm, and never reaches 0.1·v_c
+   inside 70 mm — `w_edge` is **undefined** for four of five cases. Meier's floor
+   half-width is 42.5–46.5 mm. **Meier drilled a cylinder; the model drills a
+   cone.** The support rule does not explain it; it lives in the **radial** heat
+   distribution, which D2l showed no existing key can reach.
+4. **ROP falls monotonically with stance** (1.925 → 1.179 m/h) while **absorbed
+   power rises** (1258 → 2021 W): a wider hole absorbs more and descends slower.
+   The pre-registered ROP direction passed.
+5. **H-asym refuted on its inward branch.** `R32` was predicted to stay near
+   78 mm because `h = h_expr(r, s)` has no foot-radius dependence. It collapsed
+   to 63.5. **Being heated is not sufficient** — rock outside the stance is never
+   brought under the nozzle, its stand-off grows, and it lags permanently. The
+   `z_foot` feedback beats the direct heating term.
+
+**Method traps, all three now on the record:**
+- **A normalised metric is unsafe when its normaliser moves.** `r_half` spans
+  16.0 mm for 16 mm of `r_outer` (slope 1.02), first written up as "the erosion
+  edge moves one-for-one with the stance". That is an artefact: `r_half` is a
+  crossing of 0.5·v_c and v_c falls 3.32 → 1.97 m/h across the ladder. The
+  retraction is kept in `RESULTS.md` §4. **Always check the absolute quantity
+  first.** Third in the series, after "Ø at matched time tracks dwell" and "Ø at
+  a single depth lands near a profile crossing" (both D2l).
+- **`foot_r_outer` silently sets the free-surface boundary** (`MMWSpalling.H:2062`)
+  and cannot be pinned away: `jet_fs_cols` runs 0 / 18 / 87 / 203 / 247 across the
+  ladder, so the pre-launch bound (taken from D2l's `P_fsoff0` at ~18 columns)
+  **does not cover the wide end**. min Ø survives by ~100×; **the ROP percentages
+  are direction-plus-size, not calibrated.** A clean ladder needs
+  `jet_free_surface = 0` throughout.
+- **`foot_r_inner` silently sets `nozzle_collision_radius`**
+  (`MMWSpalling.H:5695`, `feet ? foot_r_inner : radius`) whenever the key is
+  absent, which the D2i chain never supplies. Pinned at 0.028 in every case and
+  the identity PASS proves the pin inert. **Any future packet touching
+  `foot_r_inner` must pin it too.**
+
+**Planner error recorded:** `ACTIVE_STEP.md` was amended at 12:16:08 — after the
+first `PREDICTIONS.md` hash (12:15:53) and while the first launch was starting —
+changing the deciding metric. The five in-flight runs were killed at 22–28 s and
+deleted with no analysis, the file was re-hashed and everything relaunched from
+t = 0. **A planner must not edit a hashed, launched packet**; a late addition
+goes through a fresh hash.
+
+**What the next packet inherits:** no Meier diameter may be quoted until
+something removes rock beyond the stance; the real failure is the cone; and
+matching rate and cut diameter together (R44 lands at 1.301 m/h and 87.0 mm, both
+in Meier's ranges) **still leaves the volume 2× high** at 5.11 cm³/s, because the
+depth-mean Ø is 120 mm. The funnel above the cut, not the cut, is where the
+volume goes.
+
+---
+
+## D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accepted; NEGATIVE, and the field had a defect found afterwards)
+
+**Key-only. No source edit, no build; binary `62dea451…` unchanged start to end;
+nothing committed.** Study `tests/MMWSpalling/studies/d2o0_wallsplit/`
+(`run.py`, `PREDICTIONS.md` sha256 `855c70e9…` read-only 14:53:01, `analyze.py`,
+`analysis.md`, `RESULTS.md`, two figures, `output/` with 3 runs). Control
+`d2i_gate/output/LI0_2mm` imported by path and **not re-run**.
+
+### The question
+
+The burner is a body in the hole: impingement on the floor transfers
+≈ 700–1500 W/m²K, flow sliding up the ~1 cm annulus ≈ 40 W/m²K — a factor ~20
+the model never applied. Prescribe that split by hand, before writing any
+closure, and ask whether Meier's cylinder appears. Floor where `s > 45 mm` keeps
+the J-M `h`; wall where `s ≤ 45 mm` gets 40 W/m²K; skirt shadow for `r > 40 mm`
+inside the band. Cases `W_2mm` (grazing skirt, primary), `Wz_2mm` (zero skirt),
+`Wsens_2mm` (h = 20, the pre-registered correlation branch).
+
+### Outcome: no cylinder, and the split JAMS the burner
+
+| case | h_wall | skirt | ROP 150–250 s [m/h] | descent in 450 s [mm] | `foot_stall_time` [s] |
+|---|---|---|---|---|---|
+| control | — | — | **1.491** | 236.0 | 1 |
+| `W_2mm` | 40 | grazing | **0.108** | 55.3 | 23 |
+| `Wz_2mm` | 40 | zero | **0.053** | 48.0 | 219 |
+| `Wsens_2mm` | 20 | grazing | **0.025** | 50.7 | 147 |
+
+The hole never reaches 10 cm, so **P1 and P2 are unscoreable** (no shaft).
+**P3 fails low at 565 K** (target 600–800), **P4 fails low at 160 W** (target
+1.5–3.5 kW), **P5 does not fire** (209 K of margin). The packet's "P1 or P2
+fails" branch was followed: report what a prescribed field could not produce,
+and **the field was not tuned**. `patch_min_standoff` grows 60 → 181 mm: the
+centre pit keeps deepening while the feet are held up — the tool and the hole
+decouple.
+
+### THE FINDING — a design constraint on any wall closure
+
+**A floor/wall transition placed inside the height spread of the support annulus
+locks the tool.** `FeetDescent` rests the pads on the **0.9 nearest-rank
+quantile** of annulus heights, so ~10 % of annulus rock sits *above* the pad
+plane, at `s <` the 50 mm stand-off. The switch at **s = 45 mm sits only 5 mm
+below the plane the feet themselves define** and cuts straight through the
+carrying population. Those columns get h = 40, sit at **444–482 K**, can never
+reach 821 K, and hold the burner up for the rest of the run. In the control the
+same 5 columns sit at **680–814 K** — at threshold — and keep firing.
+`foot_carry_cols` 18 against 20–26.
+
+**It is the transition's position, not its strength.** All three variants stall
+and their hole shapes agree within the 2-cell (4 mm) Ø quantum. A coefficient
+sensitivity could never have found this; only the geometry could.
+
+**A single grazing coefficient truncates the cone, it does not make a cylinder.**
+`v(r)` beyond 45 mm is **exactly 0.000 m/h** in every variant against the
+control's 1.318 — and 45 mm is precisely Meier's implied floor half-width. The
+widening mechanism Meier's hole needs is still missing and **it is not "less
+heat on the wall"**.
+
+### DEFECT IN THE PRESCRIBED FIELD, found by the planner after review (2026-09-22)
+
+The field is **not the controlled change the packet asked for**. It heats the
+whole domain top surface, not the hole.
+
+- **The control's march cools the gas radially; the prescribed field replaced
+  that with a constant.** `LI0_2mm_jet_profile.csv` does reach r = 168 mm while
+  the hole is shallow (t < 120 s) — but at **455–689 K**, spent. The hand field
+  prescribes **1400 K** (floor zone) or **1610 K** (wall zone) at *every* radius:
+  **5–18× the driving potential** over rock 20 cm from the axis.
+- **Root cause is an extrapolated fit with a safety clamp.**
+  `T = max(1400.0, 1742.48 − 435.739·r − 42654·r²)` (`run.py:119`) was fitted on
+  r ≤ 68 mm; the quadratic crosses 1400 K at r = 84.7 mm and goes **negative** at
+  r = 198 mm. The `max(1400, …)` was added so the unused branch could not
+  evaluate ≤ 0 for the parser, and **silently became a 1400 K gas blanket beyond
+  r = 85 mm**, with the J-M coefficient still reading 137–340 W/m²K there.
+- **The `s ≤ 0` guard was aimed at the wrong variable.** Takeaway 4(a) named the
+  trap exactly — "without a hand-written guard the whole undisturbed surface out
+  to the 0.2 m patch radius is heated" — and then guarded on **stand-off**, which
+  only closes once the tool is deep. Because the tool jammed, it never got deep.
+  **The guard needed to be in `r`.** The packet never bounded the field in `r`
+  either: **planner error, shared.**
+- **Magnitude.** 2637 of 3600 columns (73 % of the patch area) lie beyond
+  r = 70 mm. Measured from the plotfiles plus the prescribed field:
+
+  | t [s] | prescribed P total | r < 70 mm | **r > 70 mm** | band cols | of which r > 70 mm |
+  |---|---|---|---|---|---|
+  | 50 | 7956 W | 6149 | **1806 W** | 3228 | **2637** |
+  | 150 | 6173 W | 4448 | **1724 W** | 3296 | **2637** |
+  | 200 | 5508 W | 3819 | **1689 W** | 3296 | **2637** |
+  | 250 | 3241 W | 3241 | **0** | 399 | 0 |
+  | 450 | 2411 W | 2411 | **0** | 239 | 0 |
+
+  The far field absorbs **1.7–1.8 kW — more than the control's entire 1639 W**.
+  Undisturbed rock at r = 120–180 mm ends the run at **416 K** in `W_2mm` against
+  **356 K** in the control and **323 K** in `Wz_2mm`.
+- **A step discontinuity sits inside the 150–250 s ROP window.** At t ≈ 225 s the
+  jammed nozzle finally sinks below the original surface, `s ≤ 0` engages on the
+  far field, and 1689 W vanishes at a stroke. The headline ROP averages across it.
+- **The band metric is mostly not the hole wall.** `analyze.py:161` defines
+  `band = (s > 0) & (s ≤ 45 mm)` with **no radius limit and no requirement that
+  the column be below the original surface**. That alone explains the band count
+  jumping **239 / 3298 / 400**: it depends only on whether the nozzle happened to
+  sit a few mm above or below the original surface at the snapshot. `Wz_2mm`'s
+  nozzle ended 2 mm *above* it, so its "wall" is 3298 columns of untouched rock —
+  **which is the whole of why P3 reads 333 K.** `W_2mm`'s 565 K is nearly clean
+  by luck (nozzle 3.3 mm below at the snapshot).
+
+**What survives the defect — the jam, and its diagnosis.** The frozen carrying
+columns are at r = 28–40 mm, inside the clean region; `FeetDescent` reads only
+that annulus; and with `jet_closure = none` there is **no gas budget**, so the
+blanket is a pure added source that steals nothing from the hole. `v(r > 45) ≡ 0`
+is likewise inside the clean region. P1/P2 unscoreable stands.
+
+**What does NOT survive, and may not be quoted:** **P3 (565 / 333 / 496 K), P4
+(160 / 11 / 143 W), `patch_P_robin` (1137 / 775 / 1067 W), the J/mm³ column**,
+and any ROP number quoted across the 225 s discontinuity.
+
+### The shape table decides NOTHING — and why (planner correction, 2026-09-22)
+
+A first planner re-read claimed the split "moved most of the way to Meier" on the
+strength of the matched-48 mm table (mouth Ø 136.7 → 95.8, Ø at z = 20/40 from
+118/87 to 85/78). **That claim is WITHDRAWN. It compared unfinished rock against
+a finished wall.**
+
+**Rock is only finished once the nozzle plane passes it** — `s ≤ 0` shuts the
+flux off, and nothing above the plane changes again. Measured at end of run:
+
+| run | feet depth | **nozzle plane depth** | max hole depth | **finished wall** |
+|---|---|---|---|---|
+| control | 236.0 mm | **186.0 mm** | 362.0 mm | **186 mm** |
+| `W_2mm` | 55.3 | **5.3** | 250.0 | **5 mm** |
+| `Wz_2mm` | 48.0 | **−2.0** | 248.0 | **0 mm** |
+| `Wsens_2mm` | 50.7 | **0.7** | 250.0 | **1 mm** |
+
+**The jammed runs finished 0–5 mm of wall.** Every other point in their Ø(z) is
+rock still inside the active heating zone, which will keep changing for as long
+as the tool sits over it. There is **no wellbore profile to score**.
+
+**And what is below the feet is not a wellbore.** Max hole depth 250 mm with the
+feet at 55 mm is a **195 mm pencil-thin runaway pit** — Ø 78 mm at 100 mm,
+**59.7 at 180, 41.1 at 220, 30.3 at 240**, narrowing all the way. That is the
+D2b pit-runaway mode, and `patch_min_standoff` growing 60 → 181 mm is the same
+fact from the tool's side. The hole and the tool decoupled.
+
+**So the implementer's own judgement — "the shape table decides nothing in this
+packet" — was correct, and the planner's re-read was wrong.** D2o-0 is a **clean
+null on shape**. Its only result is the jam.
+
+**THE RULE THIS BUYS, and it is worth more than the re-read was:**
+**Ø(z) may only be scored on rock the nozzle plane has already passed.** Any
+packet that scores a diameter must first report how much finished wall the run
+produced, and a run that finishes less than the scoring range has no shape
+result at all — at any depth, by any estimator, at matched time or matched
+geometry. This sits alongside D2l's "profiles cross, so never score one depth"
+and D2m's moving-normaliser traps.
+
+### Method takeaways
+
+1. **`jet_closure = none` is not a drop-in for the enthalpy path — four traps.**
+   (a) It does **not** apply the `s ≤ 0` rule the enthalpy path applies itself.
+   (b) It **strictly requires h > 0 and T_gas > 0** at every in-patch column
+   (`MMWSpalling.H:1690`), so "zero" must be emulated (1e-3, the d2j0b
+   convention). (c) It registers **no `jet_*` thermo columns**, so analysis
+   reusing `d2l_scan`'s `meier_row` breaks on `jet_P_face`; use `patch_P_robin`.
+   (d) **It removes the march, which is the only thing that bounded the field in
+   radius and cooled the gas as it spread** — a prescribed field must supply both
+   by hand, or it heats the whole domain.
+2. **Never apply a fit outside the radius it was fitted on, and never let a
+   parser-safety clamp set a physical value.** Both defects above are the same
+   `max(1400, …)`.
+3. **A metric caught before any result, by reproducing the packet's own
+   reference.** The first P2 definition gave the control −0.5 mm/side where
+   ACTIVE_STEP states ≈ 33 (the mouth gain, (144.9 − 80)/2 = +32.4, exact). Runs
+   killed 2 min in, output deleted, `PREDICTIONS.md` re-hashed `9bbf85bc…` →
+   `855c70e9…`, killed log kept. **Always reproduce a packet's stated reference
+   with your own estimator before trusting the estimator.**
+4. **Two scoring facts that outlast the packet.** (a) **P1 on the shaft mean is
+   already satisfied by the control** (90.0 mm, inside 85–95) — a shape criterion
+   must bind on the **whole profile**, not its mean. (b) **P2 at the mouth is
+   largely a start-up comparison**: at t = 0 the nozzle sits 50 mm over a flat
+   surface so the whole surface is briefly floor-zone. The control's *steady*
+   band gain is **+5.0 mm/side, already inside P2's 2.5–7.5 target**.
+5. **The cheap hand estimate was worth making.** Semi-infinite Robin,
+   β = h√(αt)/k, predicted the wall at **578 K**; measured **565 K** — within
+   13 K. Any future wall closure should be made to pass this check before it runs.
+6. **What the implementer got wrong:** predicted an inert wall but not that an
+   inert wall would **jam the descent**. The coupling runs through the *support
+   rule*, not the thermal field. Q5's magnitude was also off (0.4–0.9 kW
+   predicted, 160 W measured — and that 160 W is itself contaminated).
+7. **P3 misses its band but reproduces the physical constraint.** 565 K against
+   600–800 K is a FAIL, yet within 5 K of the ≈ 570 K alteration threshold, so
+   "altered, not spalled" is essentially reproduced. **Different claims, scored
+   separately** — the number fails, the constraint holds. (Caveat: see the band
+   contamination above; `W_2mm`'s figure is the only near-clean one.)
+8. **Declared deviation: the `W_1mm` leg was deferred**, on a criterion fixed
+   *before* the 2 mm results were read (run it if P5 fires, or if the result is
+   positive and therefore unquotable on one mesh). Neither held; the leg was
+   killed at 14:56, ten minutes before the 2 mm runs finished at 15:06.
+   **This is a single-mesh study and nothing in it is converged.** The leg stays
+   owed the moment anything positive is claimed from this configuration.
+9. **Reviewer correction carried forward:** the completion-notes summary said
+   "the nozzle descends ~27 mm and stops (`foot_stall_time` 219 s)". The correct
+   figures are **55.3 / 48.0 / 50.7 mm** and 219 s is `Wz_2mm`'s stall time, not
+   `W_2mm`'s (23 s). **Archive RESULTS' numbers, not a summary sentence.**
+10. **The owed 2639-file reference sweep was discharged outside this step.**
+    `studies/tree_sweep_0922/` reports **2639/2639 identical** on the current
+    working tree, binary swapped rather than rebuilt and verified restored to
+    `62dea451…`. **The "do not rebuild" block from D2k/D2l is lifted.**
+
+### Verdict
+
+Reviewed 2026-09-22 in a separate session: **accepted** as work, result negative.
+The jam and its cause are the durable product. The field defect was found by the
+planner after acceptance and is recorded here; it invalidates the wall-side
+numbers but not the jam, and it is the reason **D2o-0b** re-runs the experiment
+with the field bounded in radius.
+
+---
+
+## D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by review as incomplete; Q1 FAILS; **closes the prescribed-field line**)
+
+**Key-only.** Binary `62dea451…` unchanged; no `src/` edit, no build, nothing
+committed. Study `tests/MMWSpalling/studies/d2o0b_wallsplit/`
+(`PREDICTIONS.md` sha256 `d2ee1221…`, read-only 15:49:55, before `output/`
+existed; three 2 mm legs to 600 s finished 16:05; ledger ≤ 5.6e-15).
+`d2o0_wallsplit/` copied and fixed, never run in place; control not re-run.
+
+### Outcome
+
+| case | h_wall | ROP 150–250 s | feet depth at 600 s | `foot_stall_time` | Q1 |
+|---|---|---|---|---|---|
+| control | — | **1.491 m/h** | 236 mm | 1.3 s | — |
+| `W_2mm` | 40 | **0.771** | 78.0 mm | 11.2 s | **FAIL** |
+| `Wsens_2mm` | 20 | **0.522** | 77.3 mm | 13.7 s | **FAIL** |
+| `Wz_2mm` | 0 | **0.340** | 38.7 mm | 46.7 s | **FAIL** |
+
+**The radial corner did what D2o-0's constraint asked.** Frozen carriers
+**15/162 → 2/162**, stall **219 s → 11 s**, ROP **0.108 → 0.771 m/h**. The
+carrier freeze is cured and the floor field was **bit-identical** to the control
+at every checked time (5344 / 4553 / 4025 W).
+
+**But a sharp radial corner is itself a step-face cascade generator.** The
+700 → 40 discontinuity in `h` puts a **+402 K lateral step** at the load-bearing
+annulus edge (control: **+77 K**). `k·ΔT/dx` drains **302 kW/m² of a q_pin ≈
+520 kW/m² input — 58 %** at 2 mm, which is why the burner runs at half rate.
+From the truncated 1 mm leg at the common time t = 50 s, **the step is
+mesh-independent (155.1 K at 2 mm, 153.7 at 1 mm) while the sink it drives
+doubles (116 → 231 kW/m²)** — the D2j-0b signature exactly. (t = 50 s is early
+transient; indicative, not scored.)
+
+### THE FINDING, in its general form
+
+**No sharp corner in `h`, anywhere.** A **stand-off** corner freezes the
+carriers (D2o-0). A **radial** corner drains them laterally (here). Taken
+together these are the most reusable result of the pair, and they constrain the
+real closure, not only prescribed tests.
+
+**And smoothing cannot rescue it — but the first argument for that was wrong
+and is withdrawn.** A smoothing length in *cells* is mesh-dependent by
+construction, so that version is dead. But the claim that a ≈ 10 mm physical
+length is "longer than any physical length in the geometry" is **false**: the
+conduction length over the 121 s dwell is `√(αt) = 9.1 mm` (α = 6.90e-7 from
+this model's own `kappa = 1.5`, `rho·Cp = 2.17e6`). **The correct and stronger
+reason: D2j-0b reproduced the cascade with no feet, no jet and no gas closure at
+all**, under uniform heating. The sink is driven by the step in the
+**column-height field**, not by a gradient in `h`, so smoothing `h` cannot
+remove a mechanism that exists without an `h` gradient — and a cylinder wall
+*is* a sharp erosion edge however smoothly it is heated. **The conclusion stands:
+no further prescribed heating pattern, corner position or `side_face_factor`
+value is worth running.**
+
+### Why the whole prescribed-field line is blocked — verified in the code
+
+**Recession is vertical everywhere, and the state cannot express anything else.**
+- `spall.surface_normal` only rescales the *sampling depth*: `icth = 1/cos θ`
+  (`MMWSpalling.H:4019`) feeds the K_I scan, nothing more.
+- Removal is decided **per column** — `spall_fires_col[idx]`, `h_s_cand_col[idx]`
+  — and `Removal.H:962–971` says so outright: *"the column (height-function)
+  representation must recede VERTICALLY"*.
+- The state itself is a per-column floor: the regrid repair rebuilds a whole
+  column from one scalar, `phi(i,j,k) = base − (k−klo)·dz`,
+  `rem = (expect < 0)` (`MMWSpalling.H:2818–2821`). Void is a contiguous stack
+  from the top, by construction.
+
+**Consequence:** a lagging column beside a firing one can only be removed from
+its top. In reality that rock heats, spalls sideways, the corner rounds and the
+gradient relaxes; in the model it heats and sits there as a sink for ever.
+**No wall-heating law, grazing or otherwise, can be tested for shape until the
+model can move a wall sideways.** The prescribed-field line was testing a physics
+hypothesis on a discretisation that cannot host the answer.
+
+**Scope of the claim, stated precisely.** It is *not* true that every packet
+since D2i ended this way — D2l ended on an empty parameter window (`f_min` 0.5 vs
+`f_rate` 0), D2m completed with a mixed verdict, and D2k's arbiter **passed**
+(−45 % → −3 %). The accurate statement is narrower and more useful: **every
+packet that tried to impose a floor/wall distinction has ended on the step-face
+mechanism.** The failure is specific to edges, which is why fixing the edge
+treatment should unblock it.
+
+### Shape — observed, NOT scored (Q1 failed)
+
+| case | depth-mean Ø | mouth Ø | V̇ [cm³/s] | `patch_P_robin` |
+|---|---|---|---|---|
+| control | 109.8 | **128.2** | **4.58** | 1639 W |
+| `W_2mm` | 79.1 | **79.3** | **2.00** | 1078 W |
+| `Wz_2mm` | 78.1 | 78.4 | 1.63 | 735 W |
+
+**The funnel is gone and this must not be quoted as success:** the hole is 79 mm
+*because it is exactly the skirt bore*, at half the drilling rate — the same
+"right number for the wrong reason" as D2m's `R44`. **The geometric wall band is
+EMPTY**: no rock outside r = 40 mm was ever excavated, so there is no wall to
+measure. That **vindicates the geometric band definition** — D2o-0's `s`-only
+band counted 3298 columns of untouched rock and reported a meaningless 333 K.
+
+**PLANNER ERROR in the dwell arithmetic, corrected 2026-09-22.** The planner's
+firing-threshold estimate used textbook granite (k = 2.5, ρc = 2.2e6,
+α = 1.14e-6) and gave h ≈ 150 W/m²K. **This model uses k = 1.5, ρ = 2750,
+Cp = 790** (`validation/meier/sp_meier_pilot/input_feet:55–60`) ⇒ **ρc = 2.17e6,
+α = 6.90e-7**. Corrected, the coefficient at which a wall reaches 821 K inside a
+121 s dwell is **116 W/m²K at T_gas = 1400 and 88.5 at 1600**; at h = 150 the
+wall fires in **43 s**, well inside the dwell. Any cap derived from this must be
+recomputed from the run's own input keys. (The *implementer's* D2o-0 estimate was
+sound — 578 K predicted vs 565 K measured — because it used the right constants.)
+
+**The volume arithmetic that makes width load-bearing.** A flat 80 mm hole at
+Meier's 1.30 m/h gives **1.82 cm³/s against his 2.47 — 26 % low**; his 95 mm
+gives 2.56. **So the 85–95 mm width carries about a quarter of the volume and
+cannot be written off as running clearance.** Lateral recession matters for the
+volume score, not only for the shape.
+
+### Review verdict and its three must-fixes, as settled by the planner
+
+**Rejected as incomplete, not as wrong.** Resolutions:
+1. **The hashed criterion governs: 600 s and 150 mm.** The planner amended
+   `ACTIVE_STEP.md` at 16:22 and again at 16:26 — after the 15:50 launch and
+   after the review — changing item 6 to 700 s and Q1 to 200 mm. **That is the
+   D2m error repeated twice, by the planner, against a guardrail the planner
+   wrote into this packet.** The runs stand as scored; the verdict is unchanged
+   either way (legs reached 78 mm). The amendments are withdrawn from the packet.
+2. **G1 must be rewritten one-sided** — see the Known Note. A two-sided ±20 %
+   gate cannot coexist with a mandated 20× wall cut; the implementer measured
+   0.49–0.72× (a *deficit*, entirely outside r = 40 mm, floor bit-identical),
+   flagged it before launch and asked for a reviewer check. The reasoning was
+   sound but the guardrail said "do not launch".
+3. **`RESULTS.md`, notes and takeaways** — since written (16:25). Discharged.
+
+### Method takeaways
+
+1. **A packet reference that did not reproduce, caught before launch.** Gas
+   power, both radial splits and all 22 `T_gas(r)` values matched exactly; **the
+   control's depth-mean Ø of 110.5 mm did not** — the implementer's estimator
+   gives **100.7** over the whole drilled length. **Depth-mean is not a single
+   number for a cone**: 112.3 at a 97 mm averaging depth → 100.7 at 236 mm, and
+   110.5 corresponds to ≈ 105 mm. **Score it at a matched depth with the control
+   recomputed there**, or the target drifts with how deep the test drills.
+   Fourth metric trap in this line, same family as D2m's three.
+2. **G1 caught a bug in the implementer's own estimator, which is what a
+   pre-flight is for.** Reading the top solid cell's `Temp` from a plotfile is
+   **not** the pinned surface temperature the solver uses (`robin_form = pinned`),
+   so absolute powers are biased **4.2–4.6× high**. **Fix: one estimator on both
+   fields so the bias cancels in the ratio**, and print the calibration.
+3. **The mesh-divergence trigger watched the wrong quantity.** A "wall within
+   50 K of 821 K" test never fires when the wall is at 417 K, yet the divergence
+   risk was real and came from the **lateral gradient at the corner**. **The
+   right diagnostic is `k·ΔT/dx` at the transition against q_pin**, and every
+   future wall closure must be checked on it.
+4. **The 1 mm leg was ended at t = 56.9 s on the user's instruction**, first cut
+   600 → ~260 s. Consistent with the packet's screening rule (both meshes
+   required only for a *positive* claim) and with the negative result. No `.done`
+   was fabricated; `output/W_1mm_TRUNCATED.md` records it. **This study is
+   single-mesh and nothing in it is converged.**
+5. **What the implementer got wrong:** predicted Q1 would pass. The
+   carrier-freeze half was right; removing it exposed a lateral drain at the same
+   radius. The hand estimate (588 K) could not be checked at all — empty band.
+
+---
+
+## D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise refuted, pre-registered fallback triggered)
+
+**No code was written and nothing was run.** The packet's load-bearing
+assumption — "Option A fits the existing representation and is the smaller
+change by a wide margin" — was refuted by three code facts found during
+implementation. This is the cheapest possible failure and the finding is worth
+more than the campaign would have been.
+
+### The three code facts
+
+1. **The surface criterion exists only at the column's top cell.**
+   `Sp_field_mf` is zeroed (`MMWSpalling.H:3989`) and then written only where
+   `k == ksurf` (`:4002–4004`). There is no per-cell firing criterion anywhere:
+   `spall.damage_threshold` is a damage *fraction* on the `damage_law` branch,
+   and `T_fire` appears only in a comment. The Sp criterion is inherently a
+   **free-surface** criterion — it needs a surface and a depth scan.
+2. **Void is derived from a per-column `phi`.** `phi(i,j,k) = base − (k−klo)·dz`
+   with `rem = (expect < 0)` (`:2818–2821`), so **a per-cell void below a
+   column's top is not representable at all**. The beam path integral depends on
+   the same linearity (the E1 comment at `:1571–1575`).
+3. **A side face is heated with its own column's `h`** — `fh[col_c]`,
+   `fTg[col_c]` at `:1556–1558`. A column that is not itself being heated
+   receives no side flux, whatever its neighbour is doing.
+
+### Why each option dies
+
+- **"The top cell fires on its lateral face" is a no-op.** The gate is
+  `Sp_top(i,j,k_top) >= 1.0` (`Removal.H:642–644`); D2k's side flux already
+  raises that cell. The rule adds nothing and would merely reproduce D2l's
+  f-scan.
+- **Trigger on the top cell, remove the whole slab** — rejected. In the
+  configuration that motivated the packet the taller column with the exposed
+  face **is the cold wall** (D2o-0b measured r 40–44 mm at **418 K**), so the
+  trigger never fires and the corner is untouched. In the *arbiter* the lagging
+  columns are warm and their tops do fire, so every step is levelled as it forms
+  and criteria (a)–(d) pass **trivially, with nothing left to measure** — the
+  "suppressed without being fixed" case the packet says to fail, made
+  undetectable. It is also energetically wrong: a slab of any height removed for
+  the cost of heating one cell breaks the energy-limited recession rate the whole
+  D2 line rests on, in a model that **already removes 1.9× too much rock**.
+- **The lateral K_I scan rotated 90° cannot do the job either, and not because
+  of triggering.** At the corner the wall column is heated **at its base**, by
+  the very conduction the drain delivers — the D2j-0b mechanism says so: the
+  firing top cell loses `k·ΔT/dx` *into the taller column's interior at the step
+  depth*. Removing that rock leaves **solid above void in the same column: an
+  undercut**, which fact 2 says cannot exist. The scan fails at **removal**, not
+  at triggering. Any rule that removes *cells* rather than *columns* needs
+  per-cell state — which is the big change under another name.
+- **A planner proposal to cap the step height as a cheap diagnostic was also
+  withdrawn**, for the same reason as the slab rule plus one worse: ROADMAP
+  already records that **a one-cell step has ΔT ∝ dz and converges**, so capping
+  at one cell would have spent a run confirming a result D2j-0b established.
+
+### THE FINDING
+
+**The height-function representation cannot express lateral recession.** Void is
+a contiguous stack from the top of each column, so the corner cannot round. And
+the record already names the consequence exactly: *"This is the continuum corner
+singularity: a pointwise firing criterion evaluated at a geometric corner is
+mesh-divergent by construction, and refinement makes it worse."*
+
+**The reframing that matters:** the corner drain is **not a loss**. It is heat
+being delivered precisely where the wall ought to spall — and the representation
+cannot spend it. Any successor is judged on whether that heat becomes useful
+work moving the wall, instead of a sink that scales with mesh.
+
+### AND: the continuous ablation front does NOT solve this either
+
+The pre-registered fallback named "Option B, the continuous ablation front from
+the D2j design memo". **Checked, and it is the wrong fallback for this problem.**
+`Claude_markdowns/2026-09-21b.md` §1 formulates the front **per column (i, j)**,
+host-side state like `pin_T`, receding each column down its own vertical line to
+the `T_abl` isotherm. It is still a height function. §0 disclaims this failure in
+its own words:
+
+> **The front does not fix under-resolved lateral conduction.** … a continuous
+> front recedes at the rate the net heat allows, but if that net heat is
+> mesh-dependent because the lateral gradient is unresolved at 1–2 mm (thermal
+> length κ/v ≈ 3 mm), the rate is still mesh-dependent, only smoothly so.
+
+So the front fixes the **event** artefacts (half-cell increments, clocks, binary
+stall, descent quantisation) and is orthogonal to the step face. **It remains
+worth doing on its own merits; it is not the answer here.** Recommending "go to
+Option B now" on the strength of the fallback's name would have bought a third
+packet that could not address the failure.
+
+### What is left, and what the successor must be
+
+- **Refinement is not the answer** — the continuum solution is singular at the
+  corner, so refinement makes the flux density worse, by the project's own
+  diagnosis. The 0.5 mm and AMR routes do not rescue this.
+- **Per-cell void** (a genuine 3D front, `removed_mf` authoritative rather than
+  derived from a linear `phi`) is the complete fix, and it is a **major**
+  architectural change: the depth scan, the beam path integral's linearity
+  assumption, the regrid repair and the ledger all assume the column structure.
+- **A sub-grid regularisation of the corner** is the cheap, testable alternative
+  and it follows directly from the project's own diagnosis of the failure as *"a
+  **pointwise** firing criterion evaluated at a geometric corner"*: stop
+  evaluating it pointwise. That is **D2p-1**, and it is arbiter-gated so a pass
+  has to be earned on the same D2j-0b pair, with a removal ceiling added so it
+  cannot pass by removing the sink and drilling faster.
+
+### Method takeaway
+
+**Two packets (D2o-0, D2o-0b) and one design fork were spent on assumptions that
+a code read would have refuted in an hour.** Before a packet asserts that a
+mechanism "fits the existing representation", the planner must name the state
+that holds it and the line that writes it. Both facts here were one grep away.
+
+---
+
+## D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by arithmetic)
+
+**No `CRITERION.md` was hashed and no scored run was made.** The implementer
+raised two provable objections before launch under the packet's "stop and
+escalate" guardrail; the planner added a third that closes the idea entirely.
+Second consecutive packet closed at design time, and the second time the
+guardrail paid for itself.
+
+### 1. `corner_length` is 1.60 mm, not 3.2 mm — and ROADMAP's figure was the textbook error
+
+From the run's own keys (`kappa = 1.5`, `rho = 2750`, `Cp = 790` ⇒
+ρc = 2.1725e6, α = 6.9045e-7 m²/s):
+
+| basis for `v` | α/v |
+|---|---|
+| `nozzle_feed` = 4.3056e-4 m/s (prescribed, **mesh-independent** — the right choice) | **1.604 mm** |
+| `v_c` of C1_2mm (1.522 m/h) | 1.633 mm |
+| `v_c` of C1_1mm (1.459 m/h) | 1.704 mm |
+| **textbook granite k = 2.5, ρc = 2.2e6, v = 1.3 m/h** | **3.147 mm** ← reproduces ROADMAP's 3.2 mm exactly |
+
+**ROADMAP's `κ/v ≈ 3.2 mm` is precisely the textbook-granite error the packet
+warned against.** Corrected everywhere to **≈ 1.6 mm**. Two recorded findings
+shift with it, both getting *worse*:
+- D2j-0b's "steps exceeding the thermal length diverge" — the threshold is
+  **half** what was recorded, so **more** steps qualify;
+- "resolution is marginal everywhere" — **2 mm spans 0.8 cells of the ablation
+  layer and 1 mm spans 1.6**, not 1.6 and 3.2. At 2 mm a single thermal length
+  is not resolved.
+
+Since `L = max(dx, corner_length)`, at 1.604 mm the key is a **no-op at 2 mm**
+and active only at 1 mm and finer — so `C1_2mm` key-on would be byte-identical
+to key-off, exactly the gate inversion the packet predicted for a mis-derived
+constant.
+
+### 2. Criteria (a) and (e) were arithmetically incompatible — planner error
+
+Key-off C1 disk-mean rates (`d2j0b_plane/analysis.md`):
+
+| block | C1_2mm | C1_1mm | (a) needs 1 mm in | (e) capped 1 mm at |
+|---|---|---|---|---|
+| 50–100 | 1.151 | 0.996 | [1.093, 1.209] | 1.145 |
+| 100–150 | 0.968 | 0.690 | [0.920, 1.016] | **0.793** |
+| 150–200 | 0.759 | 0.414 | [0.721, 0.797] | **0.476** |
+
+The cascade **suppresses** the 1 mm rate, so closing the gap requires raising it
+by **+74 % to +93 %** in the last block — while (e) capped it at +15 % over that
+same suppressed value. **No overlap in two of three blocks: FAIL before launch.**
+**The planner anchored the ceiling to a cascade-corrupted reference and so wrote
+a gate that forbids its own success.** The correct reference is the **no-plane
+control C0 at the same mesh** — a physical bound, since removing heating cannot
+make drilling faster. Against C0 all three windows overlap, and it still
+correctly retro-rejects **D2k** (1 mm, 50–100 s: 1.651 vs C0's 1.085 = **+52 %**),
+the fix that passed this arbiter and then failed the Meier gate at 2.7× rate.
+
+### 3. THE DECIDING ARGUMENT — the regularised drain is worse than the one it rescues
+
+Anchored to D2o-0b's **measured** 402 K step (which reproduces its reported
+302 kW/m² exactly at k = 1.5, so this is arithmetic on a measurement):
+
+| configuration | L | `k·ΔT/L` | % of q_pin ≈ 520 kW/m² |
+|---|---|---|---|
+| 2 mm, unregularised (measured) | 2.000 mm | 302 kW/m² | **58 %** |
+| 1 mm, unregularised (measured) | 1.000 mm | 603 | 116 % |
+| **1 mm, regularised at κ/v** | 1.604 mm | **376** | **72 %** |
+| **0.5 mm, regularised at κ/v** | 1.604 mm | **376** | **72 %** |
+| regularised at 9.1 mm | 9.100 mm | 66 | 13 % |
+| control step, 2 mm | 2.000 mm | 58 | 11 % |
+
+**A 302 kW/m² drain (58 %) already halved the burner in D2o-0b (1.491 → 0.771
+m/h). The regularised drain is 376 kW/m², 25 % HIGHER.** The key converges the
+cascade at a value worse than the coarse-mesh number it was meant to rescue.
+
+**And it would have returned a clean PASS.** Because 1 mm and 0.5 mm are both
+clamped to the same 1.604 mm they **agree with each other by construction**, so
+(a) and (d) pass; and with a 72 % drain the rate sits far below C0, so the
+amended (e) passes too. **A three-mesh campaign would have certified a model
+25 % further from the truth than where it started** — worse than a clean fail,
+because it looks like progress.
+
+**The direction is wrong at any length.** A regularisation **reduces** the heat
+entering the wall and hands it back to the floor: floor recedes faster, wall
+stays cold, hole gets narrower — away from Meier, whose wall is a few mm wider
+than his skirt *because it received that heat*. A larger length (9.1 mm, the
+lateral diffusion length over the dwell) cuts the drain to the control's 13 %
+but only makes the wrong direction more efficient. **The packet's own reframing
+refutes the packet: the drain is heat delivered where the wall ought to spall,
+and a fix must SPEND it there. No version of this key can.**
+
+### What was kept
+
+The implementer's 2639-file identity sweep (key off) was allowed to finish.
+**The `corner_length` key is not to be kept in the tree** — a default-off key
+costs nothing to run but costs to maintain, and this one is now known to point
+the wrong way.
+
+### Method takeaways
+
+1. **Deriving a constant from the run's own keys is not a formality.** It
+   inverted this gate's meaning, and it exposed a wrong thermal length that had
+   been propagating through the roadmap since D2j-0b.
+2. **Anchor a ceiling to an artefact-free reference.** A gate measured against a
+   quantity the bug corrupts cannot be passed by fixing the bug.
+3. **Check that a proposed criterion set is jointly satisfiable before hashing.**
+   Two of three blocks had empty windows; that is arithmetic available at plan
+   time, not a discovery for the run.
+4. **A criterion that a fix satisfies by construction is not a criterion.** Both
+   D2p-0's slab rule and D2p-1's clamped pair would have passed with nothing left
+   to measure.
+
+---
+
+## D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, review-accepted; GATE PASSED 2639/2639)
+
+**The first packet in the D2 line to land its source change.** No behaviour
+change, no new key, no new field, no new diagnostic column. Two items escalated
+rather than forced. Study `tests/MMWSpalling/studies/d2q1_percellvoid/RESULTS.md`;
+nothing committed.
+
+### What changed
+
+`src/Integrator/MMWSpalling.H` and `src/Integrator/MMWSpalling/Removal.H`,
+187 insertions:
+- **`RepairRemovalStateAfterRegrid`**: `rem` is **preserved and cleaned** to an
+  exact 0/1 instead of re-derived from the column-linear `phi`; `phi` is
+  re-imposed, anchored on `rem`'s own `k_top`. The old form would have refilled
+  an interior void.
+- **Three `k_top` decision scans** (`:2792`, `:3982`, `Removal.H:237`): dropped
+  the redundant `&& phi >= 0` conjunct, leaving `removed` alone —
+  `ColumnTopSolid`'s existing rule.
+- **Beam path** now counts **solid cells** via the new
+  `ColumnSolidAboveCount(lev, k_top)`, not the geometric `k_top − k`. Built only
+  when the beam is on.
+- **Depth scan** (`Removal.H:689`): `max_steps` additionally clamped to the
+  contiguous solid run, via the new `ColumnSolidRunBelowTop`.
+- **Beam-closure invariant (b) retired** — it asserted phi/mask sync, i.e. that
+  `phi` is a void oracle. (a), contiguity, untouched.
+- `ColumnTopSolid` unchanged (already void-agnostic); its stale comment fixed.
+
+**`phi`'s surviving role is the sub-cell remainder** — it accumulates the
+fractional recession that decides *when* the next cell flips, which is why it
+could not simply be deleted. It is now written by the producers and **read by no
+decision path** except `surface_mf` (escalation 1).
+
+### The gate
+
+**2639/2639 byte-identical**, 11/11 witness runs rc = 0, verified independently
+by the reviewer against `ref_post_d2e.md5`. Ledger 1.6e-15…5.3e-15. All seven
+named regressions PASS (`spall_event`, `sp_lefm`, `regime_low_high_power`,
+`amr_microstructure_regrid`, `hu_end_to_end`, `test_feet`, `test_feet_d2c`).
+
+### Two escalations, both upheld on review
+
+1. **`UpdateSurfaceMaskFromPhi` could not be made identity-preserving —
+   REVERTED, not approximated.** Converting the mask from the `0 <= phi < dz`
+   window to "solid here, void directly above" changed **24 files, all in
+   `dev2d`**, and changed the *trajectory*. `input_2d_dev` sets no
+   `surface.follow_mask`, so this mask feeds `SurfaceCellFlux` — a live decision
+   path. **⇒ `surface_mf` remains phi-derived after this step.** The
+   implementer's pre-check (`surface_missing_cols` = 0) predicted it was safe and
+   was **wrong**: that counter is blind to a surface cell that is not the top
+   solid cell, which is what a `phi_top ≈ dz` tie produces.
+2. **The interior-void unit test is unsatisfiable as specified.** Exactly two
+   sites create void (`Removal.H:196`, `:1422`), both column-based and top-down,
+   so **no input can produce an interior void** — which is this packet's own
+   premise. Satisfying it needs a new key (forbidden) or new C++ scaffolding.
+   Deferred; see the stage-2a packet, which builds the scaffolding.
+
+### Takeaways
+
+1. **Batch the identity gate.** Three bisectable sweeps at ~12 min each localised
+   the single failure to one site immediately; one end-of-step sweep would have
+   said only "the refactor broke identity" across seven sites.
+2. **Never rebuild while a sweep is running** — it swaps the binary mid-sweep and
+   silently corrupts the result. This nearly happened.
+3. **THE BINARY sha256 IS NOT AN IDENTITY ORACLE ON THIS MACHINE.** Rebuilding
+   *unchanged, git-clean* source moved it (`62dea451…` → `83603563…`), and three
+   passing sweeps gave three different binaries. **Every packet that says "record
+   sha before/after" must be read as provenance only; the 2639 output files are
+   the oracle.** Project-wide correction.
+4. **A counter that detects one direction of a bug does not prove the other
+   direction is absent** — `surface_missing_cols` = 0 looked like clearance for
+   site 7 and was not. The gate caught what the pre-check could not.
+5. **Watch the cost of a gather before adding it.** The first
+   `ColumnSolidRunBelowTop` reduced an `ncols*nz` array *every removal step*
+   (~8M ints per step on a 200³ Meier run). Rewritten to reduce `ncols` ints via
+   `ReduceIntMax`. The `ncols*nz` gather survives only in `ColumnSolidAboveCount`,
+   gated on the beam being on, so the large runs never build it.
+
+### What stage 2 inherits (reviewer findings, non-blocking)
+
+- **Four new code paths are unverified, and identity cannot verify them.** The
+  gate proves only that nothing changed *while void stays contiguous*. The
+  solid-count beam path, the clamped depth scan, the `rem`-preserving regrid
+  repair and the `k_top` scans are exercised by nothing. **Write the
+  interior-void test before the mechanism that creates undercuts, not after.**
+- **`surface_mf` is still phi-derived.** Run stage 2 with
+  `surface.follow_mask = 1`, or fix that mask under its own gate — **an
+  undercut makes the phi window wrong rather than merely stale**, so this must be
+  an explicit instruction, not a note.
+- **Beam invariant (a) still asserts contiguity** and feeds
+  `beam_invariant_viol`; an undercut violates it by construction.
+- **No timing was taken** on `ColumnSolidAboveCount`'s `ncols*nz` reduction; the
+  witness beam runs are small. Measure before any large beam run is scored.
+- **Nit:** `ref_d2q1.md5` was written into `tree_sweep_0922/witness/`, a folder
+  the packet calls frozen while its own Commands section says to run that harness
+  in place. The two rules disagree and one should be reworded.
+
+---
+
+## D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberately not launched)
+
+**Items 0, 5, 6, 7, 8 complete; identity PASS at all three batches; the
+mechanism is live and correctly declines to fire under the cap.** The arbiter
+(item 4) was held at the packet's own checkpoint for review. Study
+`tests/MMWSpalling/studies/d2q2b_percell/RESULTS.md`; nothing committed.
+
+### What was built
+
+- **`spall.seed_void`** (6 ints, index space, default off) + `ApplySeedVoid` from
+  `Initialize`, **no output column** — the debug probe that makes an interior
+  void reachable. New `tests/MMWSpalling/unit/seed_void/`.
+- **Beam invariant (a) restated** as `n_above == 0` iff `k == k_top`, replacing
+  the contiguity form.
+- **`spall.per_cell_removal`** (default 0) with three preconditions
+  (`removal_enabled`, `side_face_flux = 1`, `follow_mask = 1`) and the
+  `connected_cluster` + `A_crit > 0` **incompatibility abort**.
+- **The criterion:** `UpdateSpAfterMechanics` scores **every exposed face** with
+  the key on; `sigma_at_depth` walks the **inward face normal** rather than only
+  −z. New `PerCellRemoval(lev, time, dt)` after `UpdateRemovalAfterCohesive`.
+- **`surface_patch.side_face_h_max`** (default 80 W/m²K), capped identically in
+  the **kernel and the ledger**.
+- **`pcr_overhang_cells`, `pcr_lateral_cells`**, registered last and only with
+  the key on.
+
+**Identity: 2639/2639 PASS in all three batches** (item 0; items 5+7;
+checkpoint 6+8), 11/11 rc = 0 each. All 8 regressions PASS.
+
+### Two defects found — the justification for item 0 existing at all
+
+1. **Implementer's own:** `queryarr("seed_void", …)` lacked the `spall.` prefix
+   that every key in `ParseSpallSettings` carries. **AMReX only WARNS on an
+   unconsumed key**, so the run completed with the feature silently off — and
+   *two clever assertions both passed against a state that did not exist*. Only
+   the "is the seeded box actually void" guard caught it.
+2. **LATENT IN D2q-1 — shipped byte-identical and WRONG.** `beam_closure_err`
+   read **1.429e-01** with an interior void: `P_inc` was tallied wherever
+   `is_top_solid` held, **a contiguity test**, so with an interior void **two
+   cells per column qualify and the incident beam power is double-counted**.
+   Predicted over-count 140/120 ⇒ −14.29 %; measured 1.429e-01. Fixed by the same
+   `k == k_top` restatement; now **1.957e-15**. **Byte-identity proved only that
+   nothing changed while void stayed contiguous — precisely the limit the D2q-1
+   reviewer named, now demonstrated with a number.**
+
+### The mechanism is live, and the zero was resolved rather than reported
+
+Both guards abort with their stated reasons. Key on at the arbiter's C1 keys,
+90 s, 2 mm: clean run, `side_faces` = 323, `ledger_err` ≤ 2.0e-15,
+`beam_invariant_viol` = 0. **`pcr_lateral_cells` = 0** — and of **300 candidate
+cells** (solid, lateral face exposed, not column top) **299 carry a written Sp**,
+**max 0.4533**, at **T ≤ 656.6 K** against a ~821 K firing point. **The criterion
+is live on lateral faces and correctly declines to fire**, which is what the
+80 W/m²K cap enforces. Whether the corner drain carries it over is the arbiter's
+question.
+
+### Takeaways
+
+1. **A probe needs a guard that the state under test exists.** Two sharp
+   assertions passed against an empty experiment because the key never parsed.
+2. **`ParseSpallSettings` takes the TOP-level `ParmParse`** — every key carries
+   its own `spall.` prefix, and a missing prefix is a **warning, not an error**,
+   so the feature silently disappears.
+3. **CONTIGUITY TESTS ARE THE RECURRING BUG CLASS IN THIS LINE.** "The cell above
+   is void" was used as a proxy for "this is the column top" in **two** separate
+   places (invariant (a) and the `P_inc` tally), breaking in **opposite**
+   directions once an undercut exists — one over-reports violations, the other
+   double-counts energy. **Grep for any remaining `rem(i,j,k+1)` used as a
+   top-of-column test before trusting any per-cell result.**
+4. **The per-cell criterion is LOCAL** — `a0 = 20 µm` against `dx = 2 mm` puts
+   every K_I sample inside the scored cell. That is what makes the removal pass
+   decomposition-independent **with no reduction**, and it is the same fact S1
+   recorded as "the criterion is a cell-average T threshold".
+5. **Decide-then-flip is load-bearing.** Sp is computed from the frozen state and
+   the flip reads only owned cells, so sweep order is unobservable. Flipping in
+   place while re-testing exposure would reintroduce the decomposition-dependence
+   bug class.
+6. **Restricting `PerCellRemoval` to non-top, laterally-exposed cells makes
+   criterion (f) EXACT**: a flat interior has no candidates, so the key-on rate
+   is produced by *identical code* rather than merely agreeing numerically. A
+   design improvement on the packet as written.
+7. **The implementer rebuilt while an identity sweep was running**, invalidating
+   it — the hazard this packet's own guardrails name. Killed, cleaned, re-run;
+   nothing was reported from the corrupted sweep. **The guardrail needs enforcing
+   by the harness, not by memory.**
+
+---
+
+## D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted)
+
+**VERDICT: P4 (the inert branch) CONFIRMED, exactly as pre-registered.**
+`pcr_lateral_cells = 0` at every step of all four runs, over 250 s, with up to
+3344–4041 non-top laterally-exposed candidate cells present. Per-cell removal
+never fired once. Study `tests/MMWSpalling/studies/d2q2c_arbiter/`.
+
+### What was run
+
+C1/C0 × 2 mm/1 mm on the D2j-0b arbiter (static hot disk, descending exclusion
+plane, `T_gas = 1600`), 250 s each, `side_face_h_max = 80 W/m²K`,
+`spall.per_cell_removal = 1`. `CRITERION.md` sha256 `6f837a70…`, read-only,
+hashed 23:41:26 **before `output/` existed**. Identity all keys off **2639/2639
+PASS** via the new `guarded_post_all.sh`, which verified the binary did not move
+mid-sweep. Regressions 8/8. `ledger_err ≤ 9.36e-15`. Source change was
+**comment-only** (a stale `BeamEnergyBalance` header still documenting the
+retired contiguity form of invariant (a)).
+
+### Results
+
+| criterion | result |
+|---|---|
+| (a) mesh gap ≤ 5 % | **FAIL** — C1 −10.9 / −22.2 / −30.3 % |
+| (e) ≤ C0 key-off + 15 % | **FAIL** — 5 of 6 blocks |
+| (f) nothing lateral until firing | **vacuous** — never fired |
+| **P4 inert** | **CONFIRMED** |
+
+**Neither (a) nor (e) failed because of per-cell removal, and the pre-registered
+attribution baseline settles it.** D2l's `f01` is side flux at h ≈ 70 with
+per-cell removal **absent from the codebase**: 1.4638 / 1.4450 / 1.3748 against
+this campaign's 1.4400 / 1.4260 / 1.3592, gaps −10.6/−20.2/−27.2 vs
+−10.9/−22.2/−30.3. **Within 2–3 % on rate and 1.5–3 points on gap — the campaign
+reproduced a pure side-heating run. The mechanism is undetectable, which a zero
+firing count predicts.**
+
+### The number the next line is built on
+
+**The wall reaches a STEADY 629.8–650.4 K at 2 mm and 726.5–746.2 K at 1 mm**
+against a measured `T_fire` of **822.2 ± 9.5 K** (reproduced from the campaign's
+own output at Sp ≈ 1: 822.1 ± 4.1 and 822.5 ± 7.9). Lateral `Sp` plateaus at
+0.44 / 0.68 and **does not grow between 50 s and 250 s**.
+⇒ **The deficit is STEADY-STATE, not dwell-limited.** The pre-flight framing
+("149.1 s of continuous exposure needed") was superseded by its own measurement:
+at this cap **no exposure duration would fire the wall**, because it equilibrates
+80–170 K below firing. That is the target the successor packet must close.
+
+### A genuine finding about something else
+
+**Capped side heating largely fixes the cascade when no corner is present.**
+C0's mesh gap goes −10.4/−15.3/−20.1 % (key off) → **−3.7/−4.5/−2.0 %** at
+h ≤ 80. With the exclusion plane C1 stays bad. Visible in one number:
+`side_P_face` is **35 W** on C1_2mm against **132 W** on C0_2mm, because the
+plane zeroes `h` above it. Consistent with D2l's `f_min = 0.5`: suppression
+scales with side-heating strength, and 80 is far below the ~350 that `f = 0.5`
+implies.
+
+### ⚠ TWO ORDERING DEFECTS — fix BEFORE any packet raises the wall temperature
+
+Both verified in code, **neither triggered here** (lateral `Sp` maxed at 0.4533),
+so every number above is clean. Both fire exactly when the mechanism starts
+working.
+
+1. **The cluster labeller scans the WHOLE column for `Sp >= 1`**
+   (`MMWSpalling.H:4490–4494`). Safe only while `Sp_field_mf` was written solely
+   at `k == ksurf`. D2q-2b item 6 writes `Sp` at non-top exposed cells ⇒ a
+   **lateral** cell reaching `Sp >= 1` marks its column firing, opens the detach
+   gate (`Removal.H:650`), and **the column TOP spalls vertically because a SIDE
+   face was ready.** Scoped by review: leaks **only on the weibull/cluster path**;
+   `per_face` reads `Sp` at the top cell and is unaffected.
+2. **`PerCellRemoval` tests lateral exposure against the LIVE `removed_mf`**
+   (`:4905–4909`) inside the same loop that flips it (`:4912`). A neighbour
+   flipped earlier in the same sweep can expose a cell that then fires — but only
+   within a box, since the ghost is stale across a seam. ⇒ D2q-2b's
+   "independent of box decomposition and iteration order" is **too strong**. Fix
+   by testing exposure against the frozen pre-pass set.
+
+### Other review findings (none blocked acceptance)
+
+- **The wall temperature is itself mesh-dependent (~100 K hotter at 1 mm).**
+  "Inert" holds at 2 mm and 1 mm but the trend runs **toward** firing under
+  refinement. Recorded as a live caveat on the verdict.
+- **(f) is not testable as written while the cap shares the key**: setting
+  `per_cell_removal = 0` also disables `side_face_h_max` (`:1434`, `:2672`), so a
+  key-off run is not a clean control. Vacuous here; decouple before relying on it.
+- **(d)'s `k·ΔT/dx` diagnostic against D2o-0b's 302 kW/m² / 58 % is UNREPORTED**
+  and was asked for regardless of verdict. Recoverable from existing plotfiles.
+- **Lateral and top faces lie on ONE `Sp(T)` curve** (−0.89/−1.05/+3.03 % in the
+  populated bins) — the "same physics" claim, measured.
+- nits: `CRITERION.md` §2 line numbers stale by 8 (the packet's own comment fix);
+  "5224 exposed lateral faces" is thermo `side_faces` (includes top cells), the
+  true non-top candidate set peaks at 3344/4041; `unit/amr_microstructure_regrid`
+  is **check-only** (re-reads 2026-09-17 plotfiles, runs no simulation), as are
+  `test_feet*`.
+
+### Takeaways
+
+1. **The inert result is the finding, and it was predicted.** P4 was
+   pre-registered from the pre-flight numbers. Do not read (a)/(e) as evidence
+   against per-cell removal — it never acted.
+2. **The attribution baseline earned its place.** Without D2l's `f01` on disk,
+   "rates rose and gaps stayed bad" would have looked like a verdict on the
+   mechanism. It is a verdict on side heating.
+3. **An anchor choice can flip a criterion.** (e) fails against C0 key-off as
+   pre-registered and would pass against C0 key-on. Pre-registering the anchor
+   *with its numbers in `CRITERION.md`* is what stopped this being decided after
+   the fact.
+4. **The guardrail is now in the harness, not in memory.** `guarded_post_all.sh`
+   fingerprints the binary before and after a sweep and exits 2 if it moved.
+5. **The stop check was right to pass the packet AND right about the risk** — the
+   caveat recorded with it (a lateral face is exposed for well under 250 s) is
+   what happened; the steady-state measurement then made it stronger.
+
+### The reframing that closed this line and opened the next (planner, 2026-09-23)
+
+**We do not need to remove the wall cell. We need it warm.** The 1/dx drain is
+unbounded **only because ΔT is pinned**, and ΔT is pinned **only because nothing
+heats the wall**. Verified in code:
+
+- `hj = (s > 0.0) ? h_f(...) : 0.0` (`MMWSpalling.H:1750`) — **any column above
+  the nozzle plane gets h = 0 exactly**, and `flame_Tg[col] = jet_T_ent`
+  (= 293.15 K, `:1758`), a value the code comment calls "harmless" **only because
+  h is zero**.
+- Those columns are excluded from the march, from the kernel's side term, and
+  from the sparse gather (`:2018–2020`), consistently.
+- Their tops still pay radiative (ε = 0.8) and convective (h_conv = 10) losses to
+  a 293 K ambient ⇒ **the wall's only thermal boundary condition is a cooling
+  one.**
+
+Arithmetic: warming the wall from 418 K (D2o-0b measured) to ~700 K cuts the step
+from 402 K to ~120 K and the drain from **302 kW/m² (58 % of q_pin) to ~90
+(17 %)** — no removal required.
+
+**And widening the hole does not need an undercut either.** Meier's skirt is
+80 mm OD in an 85–93 mm hole, so rock outside r = 40 mm is **never covered by the
+skirt** and can come off by ordinary vertical recession. The height function can
+already make a wider hole; it needs heat out there. D2m is consistent — there
+*is* recession at r = 45–50 mm, it is merely too slow.
+
+⇒ **D2q's per-cell removal stays built, gated and OFF.** Its justification ("the
+wall must spall to widen the hole") was probably wrong; its by-products (an
+authoritative `removed_mf`, the 14.29 % `P_inc` bug) stand. Successor = **D2r-0,
+the annulus march.**
+
+---
+
+## D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23)
+
+**The packet stopped on a rule the planner wrote, and the rule was wrong.**
+Items 1–3 PASS, item 4 STOPs at 1.46× against a 2× bar. No source change, no
+key, no build, no launch; `bin/` still carries the D2q-2c-provenance binary.
+Record: `tests/MMWSpalling/studies/d2r0_annulus/PREFLIGHT.md` + `preflight.py`
+(reproducible, reads frozen output by path, runs nothing).
+
+### What passed
+
+1. **Exhaust budget reproduced to the digit** — `jet_r_reach` 168.3 → **45.8 mm**,
+   `jet_P_face` 2756.7 → **997.0 W**, `jet_P_exhaust` → **17014.1 W** at
+   **1689.1 K**. Cross-checked against the march's own invariant: **mcp =
+   12.188 W/K**, m = **9.751 g/s** (m_ratio 2.58), and `mcp·(T_exh − T_ent)` =
+   17014.0 W vs the logged 17014.1 ⇒ **the 17 kW is genuine available enthalpy
+   referenced to `T_ent`, not an absolute-zero artefact.**
+2. **Wall `h` derivations** — area expansion (2 mm wall jet → 12.3 mm annulus,
+   6.15×) ⇒ **142 W/m²K**; Nusselt on the measured annulus (quarter area
+   7.66e-4 m², `D_h` = 24.6 mm, µ = 5.62e-5 Sutherland, `k_gas` = µ·cp/Pr = 0.100
+   from the **run's own cp**) ⇒ **Re = 5568**, Dittus-Boelter Nu 19.8 ⇒
+   **81 W/m²K**, ×1.24 entry length (L/D_h = 7.5) ⇒ **100**.
+   Floor anchor confirmed: the `h_expr` `LI0_2mm` actually ran gives **605.4
+   W/m²K at r = 45.8 mm** against the packet's stated 611 — the packet's quoted
+   expression is a **simplified stand-in, faithful to 1.5 % at this radius**, so
+   the anchor holds.
+3. **Affordability** — wall area **measured** from the frozen removal-event log
+   (a **360 mm cone**, mouth near r = 78 mm) = **0.0310 m² in the quarter**.
+   Counter-current `T_out = T_w + (T_gas − T_w)·exp(−hA/mcp)`: draw **1.4–5.7 kW
+   (8.5–33 %)**, cooling **118–465 K**, mouth `T_gas` **1223–1571 K**. No
+   depletion.
+
+### The STOP, and why it is a criterion error
+
+**Item 4: predicted drain reduction at the band's lower end = 1.46×, below 2×.**
+
+The packet set the band's floor at **h = 50**, derived by the planner from a
+**laminar** correlation using **`jet_mdot = 1e-3` read off the input key**. The
+marching flow is **9.751 g/s** (entrainment), giving **Re = 5568** — turbulent.
+**Laminar Nu applies below Re ≈ 2300, so 50 was an inapplicable correlation, not
+a conservative bound.** A laminar annulus does give 23 W/m²K, which clears item
+2's 20 threshold, but it is not a regime this flow is in.
+**The lowest value either honest derivation supports is 81.** The 2× bar is met
+from **h ≥ 73**. The implementer **declined to raise the band**, correctly: moving
+a pre-registered bar after seeing the result is tuning, and it is a planner call.
+
+### The wall-temperature model — method worth reusing
+
+Two closed forms were tried and **recorded as wrong**: a semi-infinite Robin
+without losses returns 915–1270 K (above the firing point), and a lumped steady
+balance with a conduction source misses its own sanity check by 372 K (790 K
+where D2o-0b measured 418 K). The implementer then anchored to a quantity the
+project had **already measured** — D2q-2c's wall at **630–650 K under h = 80,
+T_gas = 1600 K**, same code, same losses, 2 mm — and calibrated the quasi-steady
+rock sink from it: `h(T_g − T_s) = loss(T_s) + S(T_s − T_amb)` ⇒
+**S = 190 W/m²K** (181–200 across the anchor). The model returns the anchor at
+h = 80, so it is self-consistent where fitted.
+
+| h | `T_gas` | `T_wall` | step vs 820 K | drain | % q_pin | reduction |
+|---|---|---|---|---|---|---|
+| 50 | 1630 | 545 K | 275 K | 206 kW/m² | 40 % | **1.46×** |
+| 81 | — | ~645 | ~175 | ~131 | 25 % | ~2.3× |
+| 80 | 1598 | 639 | 181 | 136 | 26 % | 2.23× |
+| 142 | — | ~770 | ~50 | ~38 | 7 % | ~8× |
+| 150 | 1532 | 777 | 43 | 32 | 6 % | **9.39×** |
+| 250 | 1456 | 879 | −59 | −44 | −9 % | **flux reverses** |
+
+**The wall reaches `T_fire` = 822.2 K at h = 186.** Below that the wall is
+**warmed, not spalled** — which is what the packet intended, and it means
+`per_cell_removal` staying off costs nothing.
+
+### ⚠ THE LARGER FINDING — criterion (b) was passable with the mechanism OFF
+
+D2o-0b's 402 K step is an **h = 0** wall. **D2q-2c already measured a 630–650 K
+wall using the existing D2k side-face path at its default `side_face_h_max` = 80
+— a 181 K step, 2.23×, a PASS on criterion (b) with the annulus march switched
+off entirely.** The packet anchored (b) to `C0` (`jet_annulus = 0`) without
+stating whether `C0` carries `side_face_flux`. **Confirmed by the planner: the
+Meier baseline (`d2i_gate`) does NOT set it** (only `d2l_scan` does), so (b)
+would have scored the **D2k path, not the march** — the exact unattributability
+D2q-2c's §2 existed to prevent, discoverable only after a campaign.
+
+### ⚠ P3 IS PREDICTED FALSE — the enthalpy bound does not bind inside the hole
+
+The packet asserted "the bound is ENTHALPY, not geometry" and required the
+item-1.1 restriction be proved inert by showing `T_gas` at the last wall bin is
+within a few K of `T_ent`. **It will be 1223–1571 K**, having given up only
+8.5–33 %. ⇒ **the "recessed below the original surface" restriction is doing
+PHYSICS, not bounding gather cost**, and `A_wide` will differ materially from
+`A_mid`. A justification exists — gas past the mouth is no longer confined in an
+annulus, and Meier's sealed water-cooled wellhead ducts it away — **but it must
+be argued in the packet, not discovered in the campaign.**
+
+### Other planner errors found
+
+- **A single `h_ann` at the burner z-plane is invalid for the whole wall.** The
+  hole flares from r = 45.8 mm at the nozzle plane to ~52 mm mid-wall and ~78 mm
+  at the mouth; flow area grows 1.7–5×, so `h ~ u^0.8` falls **1.5× over the
+  confined part and up to 3.6× at the mouth**. Must be computed **per bin** —
+  natural given the ascending-z binning.
+- **`jet_mdot` is 3.7826e-3 (quarter), not the 1e-3 the packet quoted**, and the
+  marched `m` is 9.751e-3. This is the root of the band error.
+- **Affordability was understated**: 1.4–5.7 kW and 118–465 K, not ~1.15 kW and
+  ~100 K.
+- **The reference geometry is the D2i runaway — a 360 mm cone, not a 95 mm
+  cylinder.** Every measured area inherits that.
+
+### Takeaways
+
+1. **A pre-flight that closes a packet for an afternoon is the packet working.**
+   Three planner errors and one unattributable criterion were found before a
+   single core-hour was spent.
+2. **Derive a band's endpoints from the run's own state, not from an input key.**
+   Reading `jet_mdot` off the input instead of the marched `m` put the flow in
+   the wrong regime and set an indefensible floor.
+3. **An anchor must name every key that differs.** "Against C0" is not a
+   specification when C0's other keys decide what is being measured.
+4. **The implementer was right to refuse to move the bar.** Re-deriving a
+   pre-registered threshold after seeing the result is a planner act, done in
+   the open, with the reason recorded.
+
+---
+
+## D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23)
+
+**Not run. The packet's control leg did not exist in the code.** No source
+change, no build, no launch. Review recorded in `Claude_markdowns/2026-09-23.md`.
+
+### The blocking fact
+
+`side_hmax = (surface_patch.side_face_flux && spall_per_cell_removal)
+? surface_patch.side_face_h_max : Set::Scalar(-1.0)` at **`MMWSpalling.H:1435`
+and `:2673`. −1 means NO CAP.** The parser additionally **aborts** if
+`side_face_h_max` is set without per-cell removal (`:5936`).
+
+D2r-0b mandated `spall.per_cell_removal` **off on every leg** *and* specified
+`C1` as running "at default `side_face_h_max` = 80". **In fact `C1` and all five
+`A` legs would have run uncapped ~600 W/m²K on every side face** — D2k's f = 1
+configuration: **4.07 m/h against 1.49, absorbed power doubled, out of the 0.40 m
+box at ~400 s**, against 600 s legs. Every drain, wall-temperature and ceiling
+comparison would have sat inside the over-powered regime D2l had already killed,
+in runs that end before the scoring window closes.
+
+**This is the second consecutive packet to specify a control by intention rather
+than by the keys the code reads** (D2r-0's was "against C0" without stating that
+`d2i_gate` never sets `side_face_flux`). **Standing rule: a control is a key
+diff, and every key in it is verified in the source.**
+
+### The prior was contradicted by data already on disk
+
+D2r-0's pre-flight model predicted a **9× drain reduction at h ≈ 150**, which
+should close the mesh gap since the drain is the only 1/dx term. But:
+
+| run | effective side h | mesh gaps |
+|---|---|---|
+| **D2l `A_f02`** | **≈ 140** | **6 / 8 / 14 %** — fails |
+| D2q-2c, cap 80 | 80 | 11 / 22 / 30 % — fails |
+| D2l `A_f05` | ≈ 350 | passes |
+
+**Both cannot be true.** The one reconciliation: every one of those runs heated
+only **below** the nozzle plane. **Above-plane heating has never been tested** —
+and D2q-2c's **no-plane control converged to 3.7 / 4.5 / 2.0 %** at the same h,
+differing from the with-plane case in nothing but what the above-plane rock
+receives. ⇒ **the prior is UNCERTAIN, and the experiment sharpens to a single
+variable with a frozen baseline.**
+
+### Other findings carried into D2r-0c
+
+- **`f` and the cap are two unrelated fudges on a raw face count.**
+  `div_kgrad += side_f * (s_in − s_out) * (nfx*inv_dx + nfy*inv_dy)` (`:1633`);
+  `nfx + nfy` counts exposed **cell faces**. The staircase has **too much lateral
+  area and too little top area**, opposite signs, neither improving with
+  refinement. D2k's note says *"`f` corrects the staircase area, not `h`"*; D2l
+  then scanned it as a free dial. **Real fix = effective surface area from
+  `sn_cos_col` (`:4278`, already computed, already has a cos θ floor, used only
+  for the K_I sampling depth) ⇒ packet D2s.** Deferred because it changes every
+  existing run and would destroy the frozen baselines.
+- **No burner-body radius key exists anywhere in the file** — the per-bin annulus
+  area, hydraulic diameter and the shield sink all need one.
+- **The shield must be included, not deferred.** Omitting it inflates wall
+  temperature (helping the drain result) **and** absorbed power (hurting the rate
+  ceiling): it biases **both** scored quantities toward a false success. Same
+  loop, a ~350 K perimeter as a second sink per bin.
+- **Framing correction:** the band below the plane keeps impinging heating, so
+  the funnel is untouched. **This line is a mesh/drain remedy; the shape claim
+  belongs to a Meier wave scored on Ø(z), floor flatness against D2m's
+  v(r)/v_c = 0.83 at 29 mm and 0.62 at 39 mm, and cut radius vs skirt radius.**
+- **P5 named the wrong mechanism.** Meier's widening is the **floor cut extending
+  past the skirt at floor level** (D2m), not wall tops firing from above.
+- **The "knife-edge" concern is narrower than stated (planner).** Wall
+  temperatures 50–180 K below firing are only a threshold problem if the goal is
+  to make the wall *fire*. For drain reduction the response is **smooth in wall
+  temperature** — no threshold. Dropping P5 as an objective removes the concern.
+
+### User decisions recorded
+
+- **Cylindricity is the priority; the mesh gap is held in mind but secondary.**
+  Convergence is a permission slip for quoting numbers, not the goal — and D2m
+  showed a perfectly converged version of this model would still drill a cone,
+  because the mechanism that removes rock beyond the tool footprint is missing.
+- **The cap and `f` are both rejected as unphysical.** Replace with a computed
+  **effective surface area**; use `f = 0.2` meanwhile as a declared stand-in only.
+- **1 mm is affordable here:** the *arbiter* at 1 mm is **27.9 min** (D2l
+  measured), not the ~3 h of the Meier config, so the mesh pair stays in.
+
+---
+
+## D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23)
+
+**Not run. Four blocking facts, all verified in the tree.** The question was
+right and the one-variable framing was right; the packet built to answer it could
+not execute.
+
+1. **THE ARBITER NEVER RUNS THE MARCH.** `d2j0b_plane/run.py:83` sets
+   `surface_patch.h_expr` and `T_flame_expr` — prescribed expressions — and sets
+   **no `jet_closure`**, so it defaults to `none`. The march is gated:
+   `if (surface_patch.jet_enthalpy) JetEnthalpyMarch(...)` (`MMWSpalling.H:1793`).
+   ⇒ **an axial pass appended to the march would not execute on a single leg of
+   the campaign.** Every stream number in the D2r-0 pre-flight is a *Meier*
+   number and has no meaning on the arbiter.
+2. **The body radius exceeds the hole.** The arbiter is a flat plate with a hot
+   disk and no burner; a 33.5 mm shield inside a 30 mm scoring disk leaves zero
+   annulus area and a shield perimeter larger than the hole. **The shield and
+   `body_radius` belong to the Meier packet**, where a burner exists. The earlier
+   (correct) argument that the shield must not be deferred applies *there*.
+3. **The experiment was inert by construction, twice over.** `side_f` multiplies
+   **every** side face including above-plane ones, so the packet's item 5
+   ("`f` must not multiply the march's `h`") **stated a requirement with no
+   mechanism** — above-plane sides would have received 0.2 × 142 ≈ **28 W/m²K**.
+   And **above-plane TOP heating is already known to be inert**: the arbiter's own
+   `CRITERION.md` defines **C2 = h 100 / T 1000 above the plane, run at BOTH
+   meshes**, whose stated purpose is *"does keeping the exposed rock warm remove
+   the cascade?"*, with P4 pre-registering that it should behave like C0. It did
+   not. ⇒ tops at 142 with sides at 28 would have returned the null branch **for a
+   plumbing reason**, indistinguishable from the physics being wrong.
+4. **The baseline's validity was asserted, not shown.** **No input in the identity
+   set turns `side_face_flux` on** (every match in the tree is inside `output/`
+   artefacts), and D2q-2b/2c both modified that path. ⇒ 2639-file byte-identity
+   says nothing about the frozen `A_f02` pair. The packet **forbade the 3.2-minute
+   re-run that would prove it**, on a rationale that does not hold.
+
+### The sharper hypothesis this produced
+
+**The decisive face is the SIDE face of the ABOVE-PLANE column — the face the
+drain actually flows into — and nothing has ever heated it.**
+
+The drain flows from the firing cell into the **taller** column's buried
+interior. That column's top is above the plane, so its `h` is ~0, so its side
+faces receive `0 × f = 0`. This reads every frozen result consistently:
+
+| frozen evidence | what it heated | result |
+|---|---|---|
+| **D2j-0b `C2`** (both meshes) | above-plane **tops** only (no side flux — predates D2k) | **inert**, cascade unchanged |
+| **D2l `A_f02`** | below-plane **sides** at f = 0.2 (≈ 140); above-plane h ≈ 1e-3 ⇒ its sides ≈ **0** | gaps **6 / 8 / 14 %**, fails |
+| **D2j-0b `C0`** / D2q-2c no-plane | **every** column, so the sink faces too | **converges** (3.7 / 4.5 / 2.0 %) |
+
+⇒ the untested cell in that table is **above-plane side faces**, and it is exactly
+where the two converging cases differ from the two failing ones.
+
+### THE STANDING RULE THIS BUYS — three consecutive packets failed it
+
+D2r-0 anchored a criterion "against C0" without checking C0's keys; D2r-0b
+specified a cap the code ignores in the mandated state; D2r-0c specified a pass
+inside a routine the mandated configuration never calls.
+**All three are the same error: specifying behaviour without verifying the code
+path executes under the configuration being mandated.**
+⇒ **EVERY packet introducing a mechanism must, as pre-flight item 0, name the
+call site and demonstrate it is reached by every leg's key set.**
+
+### User decisions recorded
+
+- **Cylindricity is the priority**; the mesh gap is a permission slip, not the
+  goal. The arbiter is a flat plate and **carries no shape result**.
+- **The cap and `f` are rejected as unphysical**; the replacement is an effective
+  surface area from `sn_cos_col` (packet **D2s**), with `f = 0.2` used meanwhile
+  only as a declared stand-in.
+- Successor = **D2r-1**, prescribed above-plane heating on the arbiter, key-only
+  plus one small per-region side factor; the real march deferred to the Meier
+  packet and built only if D2r-1 passes.
+
+## D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES)
+
+**Verdict: the mesh gap closes, and the separator attributes it to the SIDE
+faces.** Gaps −6.4 / −8.0 / −14.0 % → **−2.3 / +0.7 / −2.0 %**, all inside the
+5 % bar. `S` (above-plane tops heated at the same h = 142, above-plane side
+factor forced to 0) reproduces the baseline to **≤ 0.08 % at both meshes**, so
+the tops are inert and the sides carry the whole effect. Independently
+re-confirms D2j-0b's `C2`. Full record:
+`tests/MMWSpalling/studies/d2r1_aboveplane_sides/RESULTS.md`.
+
+**Source change:** one key, `surface_patch.side_face_factor_above` (sentinel
+−1 = use `side_face_factor`, so unset is byte-identical; aborts without
+`side_face_flux`). Applied in the conduction kernel's side-face branch and
+mirrored in the ledger twin. New gated diagnostics `side_P_face_above`,
+`side_cols_above`, `wall_step_q`, `wall_step_n`; new `WallStepDiagnostic`
+called from the `BuildFlameColumns` tail — deliberately not from
+`JetEnthalpyMarch`, which the arbiter never calls (that is what made D2r-0c
+inert). The entire D2r-0c annulus implementation was reverted first: no march,
+no shield, no `body_radius`, no `jet_annulus` remains in `src/`.
+
+**Gates:** identity 2639/2639 key-unset via `guarded_post_all.sh`; regressions
+8/8; `ledger_err` ≤ 1.0e-14 on all six legs; Goal item 1 passed —
+`B_2mm`/`B_1mm` reproduce frozen `A_f02`/`A_f02_1mm` **byte for byte**, which
+mattered because **no input in the identity set turns `side_face_flux` on**, so
+tree identity said nothing about that baseline.
+
+**Criteria:** (a) PASS. (b) PASS — sides +4.50 / +9.49 / +13.86 % at 1 mm, tops
+≤ 0.08 %. (c) PASS — `side_P_face_above` 43.6 W (2 mm) / 246.3 W (1 mm) on `T`,
+exactly 0.00 on `S`. (d) drain reported: `T` 115.4 → 160.8 kW/m² (×1.39,
+sub-linear); `S` 116.6 → 131.5. (e) PASS — +4.52 / +9.56 / +13.94 % against the
+pre-registered 15 % bound.
+
+**The implementer pre-registered the NULL branch and was refuted on their own
+stated test.** P1 predicted +0.1…+1.5 % with "any block above +4 % refutes me";
+the result was +4.5 / +9.6 / +13.9 %. The error was extrapolating from the 2 mm
+legs, which have **24× too few** of the faces the mechanism acts on
+(`side_cols_above` 103 → 2441). **Do not size a 1/dx-coupled mechanism from the
+coarse leg.** `S_1mm` was added beyond the packet's five legs because `S_2mm`
+could not discriminate (the whole 2 mm effect is +0.1 %); without it the result
+would have read "above-plane heating" rather than "above-plane **side**
+heating".
+
+### ⚠ Caveats carried forward into D2s
+
+- **(e) BREACHES ITS OWN BOUND IN THE NEXT BLOCK, ON DATA ALREADY ON DISK.** The
+  runs go to 250 s; the frozen metric scores only to 200 s. Block **200–250 s
+  gives `T`/`B` = +19.06 %** at 1 mm against the 15 % ceiling, and the sequence
+  **+4.52 → +9.56 → +13.94 → +19.06 %** is monotone and not saturating. The mesh
+  gap in that block is still fine (−0.77 %), so **the gap stays closed while the
+  ceiling fails** — precisely the failure mode (e) exists to catch. Any
+  follow-on must score the 200–250 s block.
+- **THE DRAIN IS BARELY REDUCED IN POWER TERMS.** In watts (`wall_step_q ×
+  wall_step_n × dx·dz`, mean over t ≥ 150 s) the remedy at 1 mm **adds 197 W**
+  and lowers the drain from **75.4 W to 70.3 W — −6.8 %**; at 2 mm it adds
+  34.5 W for 50.0 → 49.1 W (−1.9 %). The gap closes by **compensating** the
+  drain, not by stopping it. Takeaway 3's "the signature of removing one"
+  overstates this. The per-face mean `wall_step_q` *rises* on `T` only because
+  the face population changes — **compare power, never the per-face mean.**
+- **THE INJECTED POWER RIDES A MESH-DIVERGENT AREA.** `side_cols_above` counts
+  *faces* of area `dx·dz`, so the heated area grows **×5.9 on `T`** (103 → 2441)
+  and **×12.4 on `S`** (102 → 5066) when `dx` halves. A converging description
+  of a fixed surface would hold that area constant. Two meshes cannot separate
+  genuine convergence from two artefacts cancelling.
+- **Pre-registration was weakened:** `CRITERION.md` was hashed at 14:23:55,
+  after the three 2 mm legs finished. Disclosed in its §0 with the known 2 mm
+  table. Mitigating: the scored criterion (a) depends only on the 1 mm legs
+  (14:43), and the implementer pre-registered a **failing** prediction and
+  reported their own refutation. Next time hash before the first leg.
+- **(e)'s premise is inexact:** `T` differs from `B` in **two** keys (above-plane
+  `h` 1e-3 → 142 *and* `side_face_factor_above`). The genuine one-key control is
+  `S`; since `S` ≈ `B` to 0.08 % the verdict is unaffected, but the follow-on
+  should anchor the ceiling to `S`.
+- nit: `side_cols_above` counts **faces** (`nfx + nfy`), not columns — the name
+  misleads whoever reads `thermo.dat` next.
+- nit: the finite-check at `:6059` is `(v >= 0.0 && !std::isfinite(v))`, so a
+  **NaN** fails `>= 0.0` and is silently accepted as "unset". `+inf` is caught.
+
+### Planner post-analysis, 2026-09-23 (arithmetic + frozen output, zero run cost)
+
+Four facts established from the code and the frozen event logs, all of which
+shape D2s:
+
+1. **The staircase area overestimate is BOUNDED by √3 ≈ 1.732.** For slopes
+   `gx`, `gy`, staircase area = footprint·(1 + |gx| + |gy|) and true area =
+   footprint·√(1 + gx² + gy²); their ratio maxes at **√3 at gx = gy = 1** and
+   falls back toward 1 both ways. **Therefore an effective-area treatment cannot
+   cure the mesh divergence.** Measured area growth ×5.9 (`T`) / ×12.4 (`S`) ⇒
+   the **true physical surface area grows ≥ ×3.4 / ×7.2** under refinement. The
+   surface is genuinely roughening; cos θ measures that faithfully rather than
+   removing it.
+2. **The surface roughness IS the artefact, and D2r-1 suppresses it.** Rebuilding
+   the final height field from each run's event log (last event per column) and
+   taking the cell-scale slope: baseline **2 mm mean |∇h| = 0.46**, baseline
+   **1 mm = 6.53** (17 % of columns pinned at the model's cos floor), with the
+   fix **1 mm = 0.77**. A coincidental cancellation of two errors would not
+   smooth the surface. This is the strongest available evidence the D2r-1 pass
+   is real. (Proxy only — whole scored disk, not the above-plane region, and
+   "last event wins" over-reads roughness where a column stalled early. The
+   plotfiles are on disk for an exact redo.)
+3. **The heated faces are the STEP FACES OF THE DRILLING FRONT, not a pit wall.**
+   The side-face branch sits in the full 3D `(i,j,k)` cell loop
+   (`MMWSpalling.H:1596–1658`), not restricted to `k == k_top_c`, so all depths
+   are eligible. But a face requires a **void lateral neighbour**: inside the
+   disk all columns recede together, and outside it (r > 30 mm) nothing is ever
+   removed, so the disk's outer boundary produces no faces at all. The 103 faces
+   at 2 mm are the front's roughness — which is exactly where the drain flows,
+   so D2r-1 heated the right thing. **"Above-plane" columns are the LAGGING
+   ones** (`s = z_nozzle − z_face`, `:1759`; `s ≤ 0` = has not kept up), i.e.
+   precisely the taller neighbours the drain pours into.
+4. **⚠ `sn_cos_col` DOES NOT EXIST in this configuration.** `ColumnSurfaceCos`
+   is called only under `if (spall_surface_normal)` (`:4390`, `Removal.H:257`),
+   and `spall.surface_normal=1` is set only for arbiter cases whose name ends in
+   `"n"` (`d2j0b_plane/run.py:73–88`). Legs `B`/`T`/`S` do not. **A packet that
+   says "use `sn_cos_col`" would be inert** — the D2r-0c error class exactly.
+   D2s must compute the slopes unconditionally when its own key is on.
+
+### ⚠⚠ CORRECTION 2026-09-23 — the planner post-analysis above is REFUTED. Read this before using any of it.
+
+A reviewer challenged the D2s premise; **I verified every claim against the
+frozen logs with no new runs, and all of them reproduce.** The four "planner
+post-analysis" points above are wrong in the ways recorded here. They are left
+in place rather than deleted so the error is traceable.
+
+**1. THE RESIDUAL MESH GAP IS THE MASK EDGE, NOT THE INTERIOR. Decisive table**
+(1 mm / 2 mm − 1, per block, reproduced exactly from the frozen event logs):
+
+| leg | r < 30 (scored) | r < 25 core | 25–30 rim |
+|---|---|---|---|
+| D2j-0b `C1`, sides off | −13.5 / −28.7 / −45.5 | −7.5 / −27.5 / −47.3 | stalled at both meshes |
+| D2l `f = 1.0` | +3.4 / +1.5 / −3.2 | +4.0 / +1.2 / −3.8 | +1.9 / +2.2 / −1.7 |
+| D2l `f = 0.2` (= D2r-1 `B`) | −6.4 / −8.0 / −14.0 | **−0.2 / +3.0 / −1.8** | **−21.4 / −33.3 / −44.1** |
+| D2l `f = 0.1` | −10.6 / −20.2 / −27.2 | −1.4 / −3.7 / −6.8 | −39.0 / −73.0 / −97.6 |
+| D2r-1 `T`, sides on | −2.3 / +0.7 / −2.0 | **−0.0 / +3.3 / −1.5** | **−7.8 / −5.2 / −3.7** |
+
+**D2k/D2l's side-face flux at `f = 0.2` cured the interior cascade.** The
+"6 / 8 / 14 %" that D2r-0, D2r-0b, D2r-0c, D2r-1 and the D2s draft all chased is
+**entirely the outer 5 mm annulus** — the abrupt edge of the heated patch against
+rock that is never removed. **D2r-1 fixed the rim cliff and changed the core by
+nothing** (−0.2 → −0.0, +3.0 → +3.3, −1.8 → −1.5).
+
+**2. "ABOVE-PLANE" IS THE MASK RIM, NOT THE DRILLING FRONT.** At t = 250 s,
+`z_nozzle` = 62.4 mm and the front sits **18–21 mm BELOW the plane**; nothing in
+the interior is above it. In-patch columns with `s <= 0`: **1 at 2 mm**
+(r = 29.83 mm) and **13 at 1 mm** (r = 29.71–29.91 mm), **11 of which never
+spall**. The `side_cols_above` growth 103 → 2441 is **mask-edge quantisation** —
+how many column centres land in the last 0.3 mm of the r = 30 mm mask (1 vs 13),
+times a cliff 44 cells deep at 2 mm and 88 at 1 mm: 1×44×2 ≈ 103, 13×88×2 ≈ 2441.
+**It is not surface roughening.** (In the baseline `B_1mm` **111** in-patch
+columns are above-plane, spanning r = 27.3–29.9 mm — a whole stalled annulus that
+D2r-1's key un-stalled.)
+
+**3. CRITERION (e) WAS MISREAD.** `T` is **flat at both meshes** —
+`T_1mm` = 1.5634 / 1.5682 / 1.5861 / 1.5846 m/h, `T_2mm` = 1.6001 / 1.5571 /
+1.6185 / 1.5969. `B_1mm` **decays** 1.4957 / 1.4314 / 1.3920 / **1.3309** as its
+rim stalls. **The "monotone climb to +19.06 %" is the denominator sinking, not
+the test drilling faster.** Nobody bought convergence by drilling faster; the
+ceiling was scored against a decaying baseline.
+
+**4. THE D2s WEIGHT WAS WRONG BY ~3.5×, AND THE STENCIL WAS MIS-SPECIFIED.** A
+staircase face exists only where the drop is **>= 1 cell**, so any column owning
+a face has local slope >= 1 and `w >= (sqrt(2)-1)/1 = 0.414` **by construction**.
+Measured on D2r-1's own surfaces: face-weighted `w` = **0.595** (2 mm) /
+**0.683** (1 mm); per-edge 0.73 / 0.91, min exactly 0.414. The draft's 0.11–0.18
+came from averaging slope over **flat columns that own no faces**. So there is no
+5.6× cut above the plane (~1.5×), and below the plane it is a **3× INCREASE**,
+not "almost nothing" — **P1, P3 and P4 refuted before launch**, and (a) would have
+passed trivially with `f` deleted on a non-result. Structurally worse: **central
+differences vanish on exactly the peak column that owns the faces**, so the
+stencil is wrong independent of the numbers. Any revival needs a **per-edge**
+weight from the drop across each face.
+
+**5. THE √3 BOUND DOES NOT TRANSFER TO LATERAL AREA.** The bound relates *total*
+staircase to *total* true area; the lateral ratio `g1/(A_true − 1) -> 2/g`
+**diverges** as slope -> 0. So "the true area grows >= x3.4" does not follow —
+and point 2 removes its premise anyway.
+
+**What survives from the draft:** the method (pre-flight item 0, reachability
+ledger, refuting evidence, "what would make this inert"), and the **`sn_cos_col`
+trap**, which is real and still true.
+
+**Successor: D2t** — retire the mask edge with a smooth radial taper of `h` and
+score **shape**, not a disk-mean rate. See `ACTIVE_STEP.md`.
+
+## D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES)
+
+**The project has a mesh-converged shape metric for the first time**, and the
+cliff is **removed rather than heated**. The single clearest number: under the
+sharp mask the innermost never-spalling column sat where `h` was at **1.000x
+peak** — rock under the full-strength jet that never spalled at all, which is
+the artefact four packets chased. Under the taper the innermost never-spalling
+column sits at **0.334x peak**, i.e. genuinely barely heated. Full record:
+`tests/MMWSpalling/studies/d2t_radial_taper/RESULTS.md`.
+
+**Key-only; no `src/` change was needed or made.** Taper flat to 18 mm, floor by
+34 mm, `surface_patch.radius = 50 mm` so the hard mask sits where `h` is at its
+floor. Four legs (`P`/`PA` x 2 mm/1 mm), 250 s.
+
+**Gates:** tree identity **2639/2639**; regressions 8 unit + `jet_d2c` + `dev2d`
++ `s1_smoke` + `side_face_flux`, `convective_patch`, `seed_void`, `sp_lefm`, all
+pass; `ledger_err` <= **8.1e-15**; domain clearance 40–42 mm; item-2
+compiled-taper thermal trace **PASS T1–T8**, self-calibrating to **699.99
+against a known 700**.
+
+**Criteria:** (a) **PASS** — core `max |z_1mm − z_2mm|` over r < 18 mm =
+**2.00 mm** (bar 4), band **1 bin** on `D(z)` (bar 1 bin). (b) **PASS** — zero
+never-spalled columns inside 26 mm on all four legs. (c) **PASS** — `PA` core
+2.02 mm, band 1 bin. (d) **PASS** — core within −3.2 % … **−5.0 %** of the
+recomputed `r < 18 mm` reference (bar 5 %). (e) latch reported.
+
+### The result that matters: the lever is what makes a diameter converge
+
+| | `D(z)` identical | one bin apart | direction |
+|---|---|---|---|
+| `P` (lever off) | **4 / 10** | 6 / 10 | `D_1mm <= D_2mm` at **every** depth |
+| `PA` (lever on) | **7 / 10** | 3 / 10 | — |
+
+At 40 / 50 / 60 mm depth `P` goes 46 -> 42 mm between meshes while `PA` stays
+46 -> 46. Band mesh gap per 50 s block:
+
+| band 18–34 mm | 50–100 | 100–150 | 150–200 | 200–250 |
+|---|---|---|---|---|
+| `P` (lever off) | −7.0 % | −24.2 % | **−34.7 %** | **−48.9 %** |
+| `PA` (lever on) | −6.4 % | −12.9 % | −11.8 % | **−6.3 %** |
+
+**Without the lever the band's mesh gap grows without bound; with it the gap
+halves and stops growing**, and `side_P_face` more than doubles. Two independent
+metrics agree: **the wall radius is mesh-dependent through the step drain, and
+above-plane side heating is what pins it.** This is not merely "D2r-1
+re-confirmed" — the lever is the mechanism that makes a hole diameter converge
+in this model, on a population ~50x larger than D2r-1's 13-column rim. The core
+is untouched by it (−0.8 / +2.3 / −0.3 / +0.2 vs −0.8 / +2.4 / −0.0 / +0.4),
+because a core column's lateral neighbours at its own `k_top` are solid.
+
+### The latch, confirmed (criterion (e))
+
+Crossings collapse while the above-plane population saturates: `P_1mm` 146 -> 21,
+`PA_1mm` 124 -> 5. Columns cross the plane once and stop — the two states are
+separated by the feed rate. **D2o-0b's sharp-corner pathology moved from `r` into
+`s`**, made load-bearing by the taper. The lever reduces crossings ~4x, i.e. it
+**stabilises** the wall rather than un-latching it.
+
+### ⚠ Caveats, and two corrections to the study's own write-up
+
+- **`D(z)`'s resolution EQUALS its bar.** `D = 2*r_centre` lives on a 4 mm
+  lattice, so "1 bin" means **adjacent bin**, not "4.0 mm measured". Honestly
+  flagged by the implementer as the weakest part of the result. *(A spurious
+  FAIL on first scoring — one bin evaluating to 4.0000000000000036 > 4.0 — was
+  fixed by comparing in integer bins; `CRITERION.md` is chmod 444 and hashed,
+  and the bar was not changed.)*
+- **`z(r)` in the band does NOT converge.** Max `|z_1mm − z_2mm|` over 18–34 mm
+  is **34.0 mm** (`P`) and **16.4 mm** (`PA`) at r = 23 mm. `D(z)` passes because
+  the wall is near-vertical, so a large *vertical* disagreement maps to a small
+  *radial* one. The packet chose `D(z)` for this reason in advance. **The band
+  converged in diameter, not in depth.**
+- **⚠ CORRECTION 1 (planner, verified):** `RESULTS.md` §2 states the `P` ladder is
+  "6 of 10 identical and 4 of 10 one bin apart". It is **4 identical and 6 one
+  bin apart**, with `D_1mm <= D_2mm` at every depth — a **systematic
+  one-directional bias**, not scatter.
+- **⚠ CORRECTION 2 (planner, verified):** P4 is recorded HELD, but its first
+  clause ("no step in `z(r)` larger than ~2 bins") is **refuted ~13x** — measured
+  largest steps **52.93 / 44.63 / 71.14 / 61.29 mm**. The verdict stands because
+  the packet made the step *reported*, not gated, and (b) passes on its
+  never-spalled clause. The physical reading: the profile is not smooth because
+  there is a **genuinely near-vertical wall**, which is also why `z(r)` diverges
+  in the band.
+- **(d) passes with little margin at 2 mm** (**−4.97 %** against a 5 % bar).
+  **Planner diagnostic, from the frozen logs:** taper minus sharp-mask recession
+  at 250 s is **a uniform −2.0 mm at BOTH meshes** for r = 1–11 mm — which
+  **cannot be cell quantisation**, since that would scale with `dz`. It is a real
+  ~1.8 % slowdown, plausibly the smaller hot footprint (full `h` to 18 mm instead
+  of 30 mm, so 36 % of the area) losing more heat in 3D. On top of that an
+  outer-bin deficit grows toward the taper (−2.5 / −4.1 at 2 mm; **−4.5 / −6.6 at
+  1 mm** for r = 17 / 19) — **~1.6x worse at the fine mesh, the drain's 1/dx
+  fingerprint.** The −5 % is the two added with area weighting. **A successor that
+  widens the taper pushes directly on this.**
+- Implementer's own pre-flight corrections: the packet's band count 159 / 629 was
+  right (their 156 / 624 was an area approximation); recession is 108–110 mm not
+  ~104; the front sits 21.9–23.6 mm below the plane not 18–21; `B_1mm` has 110
+  above-plane columns from 27.50 mm not 111 from 27.3.
+- **No Meier number, no validation claim, no claim the shape is right.** The
+  arbiter is a flat plate. `side_face_factor = 0.2` remains **underived** and was
+  not scanned.
+
+**P5 was declared open and no number invented** — the discipline that D2s failed.
+
+## D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by data on disk)
+
+**Never ran. No code written.** Two independent faults, both verified by the
+planner against the frozen logs after a reviewer challenge.
+
+### 1. FATAL — a SCALAR above-plane `h` is a blanket over the whole block top
+
+`surface_patch.radius = 0.2` and the quarter domain's corner is at r = 168 mm, so
+**every column is in the patch**. The nozzle rides 50 mm above the feet, so once
+the pads have receded ~50 mm the entire undisturbed free surface is *above* the
+plane. Measured on `d2i_gate/LI0_2mm` at t = 572 s (`nozzle_z` = 214 mm,
+`foot_z` = 164 mm):
+
+| | count |
+|---|---|
+| total columns | 3600 |
+| **above-plane (`s <= 0`)** | **3210 (89 %)** |
+| …of which **never touched** | **2294** |
+
+A scalar `jet_h_above = 142` at ~1690 K would deliver ~110 kW/m² gross to all of
+them — far above the ~24 kW/m² of losses — firing 2294 columns of undisturbed
+block top. **This is D2o-0's 1400 K blanket again, at 89 % of columns instead of
+73 %.** D2j-0b's "warm tops are inert" does **not** protect it: `C2` ran h = 100
+at 1000 K ≈ 20 kW/m², *below* losses.
+
+**The planner's error specifically:** the reviewer proposed a per-bin field and
+the planner overrode it with a scalar on a "simpler is safer" argument, without
+checking the geometry. **The patch covering the whole domain is exactly what makes
+the simple option the dangerous one.** The above-plane state must be an
+**expression in `r`**, confined to the annulus with a floor beyond.
+
+### 2. PREDICTION P2 REFUTED BY DATA ALREADY ON DISK — and it inverts the packet
+
+Interpolated Ø(z), computed with the packet's own metric on frozen runs:
+
+| depth [mm] | 10 | 25 | 50 | 75 | 100 | 150 | 200 |
+|---|---|---|---|---|---|---|---|
+| **model** (`d2i_gate/LI0_2mm`, 572 s) | **141** | 128 | 113 | 105 | 99 | 92 | 86 |
+| Meier, digitised | 96 | 92 | 88 | 87 | 87 | 86 | 85 |
+
+Mean Ø over 50–200 mm = **99 mm**; never below 86. `d2m_feet/R40` agrees at 250 s.
+**The model is ~45 mm TOO WIDE at the mouth and about right at 150–200 mm.**
+
+P2 predicted `M0` near 80 mm from D2m's "min Ø tracks `2 x foot_r_outer`". That
+conflated two quantities: **min Ø is the narrowest section, which sits near the
+drilling front** (`R40` reads 55 mm at 150 mm depth), not the diameter at a given
+shallow depth. ⇒ **the dominant error is a FUNNEL, and the lever D2u carried in
+as its headline mechanism WIDENS the hole — the wrong direction at every depth
+the reference covers.**
+
+### 3. THE COLLAR MECHANISM, located and quantified
+
+The Meier `h_expr` (`input_feet:163`) **never falls off**. Evaluated directly:
+
+| r [mm] | 5–18 | 25 | 30 | 40 | 50 | 76 | 120 | 168 |
+|---|---|---|---|---|---|---|---|---|
+| h [W/m²K] (s = 50 mm) | 1449 | 1092 | 912 | **686** | 549 | **362** | 229 | **164** |
+
+Every column with `s > 0` receives this, so **early in the run the entire block
+top is excavated at 160–360 W/m²K**. Physically r > 40 mm is under the skirt and
+in the exhaust annulus, **not** under a wall jet (`meier-burner-is-a-body`:
+impingement ~700–1500 vs grazing ~40 W/m²K).
+
+**The collar is made early, below the plane, and then freezes.** Measured:
+
+| t [s] | 100 | 200 | 300 | 340 | 450 | 572 |
+|---|---|---|---|---|---|---|
+| Ø @ 10 mm | 126 | **141** | 141 | 141 | 141 | 141 |
+| Ø @ 25 mm | 100 | 128 | 128 | 128 | 128 | 128 |
+| Ø @ 50 mm | 67 | 106 | **113** | 113 | 113 | 113 |
+| mouth ring r = 50–76 mm, recession | 11.0 | 27.9 | 33.3 | **33.6** | 33.6 | 33.6 |
+
+The mouth strips **33.6 mm** and then stops dead — because those columns pass
+above the plane and `h` goes to 0. **This is the floor/wall split D2o-0 attempted**
+(failed on a sharp corner, then a step-face cascade); **both failure modes now
+have remedies** — D2t's smooth radial taper and D2k/D2r-1's side-face heating.
+
+### 4. Four smaller faults, all verified
+
+- **`M1` was not a clean control.** With `side_face_factor_above` unset the
+  sentinel falls back to `side_face_factor`, so above-plane faces get 0.2 x the
+  flux — and with h = 0 against 293 K the Newton solve returns `q_in < 0`. **`M1`
+  would have COOLED them.** It must set `side_face_factor_above = 0.0`.
+- **Stale domain and timestep.** `input_feet` is 0.3 m deep at **4 ms**; the
+  frozen D2i/D2m runs use **`prob_hi = 0.12 0.12 0.4` and `timestep = 0.016`**,
+  and `input_feet_d2c` (0.4 m) already exists. The packet's 15-min estimate was
+  ~4x low.
+- **Reference band.** The csv is a **visible width = lower bound**; the thesis
+  says 85 mm and 3.42 L / 0.5 m implies 93. Score against **85–95 ± 5** and use
+  the csv for **shape** only.
+- **Declared gas temperature.** Measured `jet_T_exhaust` = **1690 K**,
+  `jet_T_rec` = 1689 K at 572 s — **uncooled**; the ~186 W/K jacket is not in the
+  model, so the drop must be declared rather than assumed away.
+
+**Successor: D2v** — a body-in-the-hole `h` map, attributed in three legs, with
+`M0` pre-registered as the measured table above rather than a guess.
