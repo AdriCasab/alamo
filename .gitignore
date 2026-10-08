@@ -80,3 +80,27 @@ venv/
 # .claude/ is tracked (phase command files). Machine-local settings are not:
 .claude/settings.local.json
 __pycache__/
+
+# ---- MMWSpalling run outputs (added 2026-10-08) ----
+# AMReX plotfile / checkpoint members, matched by name so any output prefix
+# (FH/, output/, plot/, ...) is covered without listing study directories.
+Header
+Cell_H
+Cell_D_*
+Checkpoint
+Level_[0-9]*/
+*.visit
+# ALAMO per-run provenance written beside the plotfiles (diff.patch is ~1.3 MB each).
+# Force-add a specific one with `git add -f` if a study needs it as evidence.
+metadata
+diff.patch
+# Per-run event / diagnostic logs emitted by the integrator (up to 600 MB each).
+tests/MMWSpalling/**/*removal_events.csv
+tests/MMWSpalling/**/*side_power.csv
+tests/MMWSpalling/**/*jet_profile.csv
+tests/MMWSpalling/**/*thermo.dat
+tests/MMWSpalling/**/.gate_cache/
+tests/MMWSpalling/**/*.bak
+# Validation reference packets are source material, not run output:
+# exempt them from the global *.txt rule above.
+!tests/MMWSpalling/validation/**/*.txt

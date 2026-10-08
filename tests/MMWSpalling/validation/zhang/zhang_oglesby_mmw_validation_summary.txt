@@ -1,0 +1,216 @@
+Zhang et al. (2023) / Oglesby et al. (2014) MMW granite-heating validation test
+================================================================================
+
+Purpose of the test
+-------------------
+This is a thermal validation test, not a direct drilling-depth validation.
+Zhang et al. reproduce an Oglesby et al. granite-heating experiment in which a
+flat granite surface is exposed to a time-varying millimetre-wave source.
+
+The main comparison quantity in Fig. 7 is the temperature at the rock surface,
+directly beneath the centre of the incident MMW source. The experiment measured
+thermal emission using a 137 GHz radiometer. Zhang et al. state that the
+experimental temperature in Fig. 7 has been corrected for emissivity; the
+correction factor used for the comparison is 0.7.
+
+What to reproduce in your own model
+-----------------------------------
+Recommended comparison quantity:
+  T_surface_center(t) = temperature at the top granite surface, directly under
+  the centre of the beam.
+
+Do not compare this validation case against drilling depth or borehole shape.
+The relevant result is the transient centre-surface temperature response to a
+piecewise-varying incident power.
+
+Geometry and initial conditions
+-------------------------------
+Material:
+  Granite
+
+Domain:
+  0.1 m x 0.1 m x 0.025 m
+
+Initial / ambient temperature:
+  297.5 K
+
+Beam/source position:
+  Centred on the upper surface of the granite block.
+
+Stand-off distance:
+  Zero in the validation simulation, because the experimental power was already
+  recorded at the rock surface.
+
+Beam/waveguide radius parameter:
+  omega_0 = 0.02 m   (2 cm)
+
+Note:
+  An earlier draft of this file listed omega_0 = 0.20 m taken from Zhang et al.
+  Table 4; that was a mistake. The intended value is 0.02 m. omega_0 = 0.02 m is
+  small relative to the 0.1 x 0.1 m face, so the in-plane Gaussian is fully
+  captured by the domain and no renormalisation of P(x) is required.
+
+Time-varying incident power used by Zhang
+-----------------------------------------
+These are the averaged incident powers used in the simulation, replacing the
+noisy experimental power trace:
+
+time interval [s]    incident power [W]
+-----------------    ------------------
+0-150                800
+150-390              1800
+390-510              2300
+510-750              2800
+750-850              1700
+850-1050             2800
+1050-1200            1700
+1200-1250            3200
+1250-1750            0
+
+Granite material model relationships from Zhang et al.
+------------------------------------------------------
+Use T in K and define theta = T - 273.15.
+
+Density:
+  for T < 1273 K:
+    rho(T) = -0.2877 * theta + 2884        [kg/m^3]
+  for T > 1273 K:
+    rho(T) = 2300                          [kg/m^3]
+
+Thermal conductivity:
+  for T <= 1273 K:
+    kappa(T) = 1 / (0.3154 + 3.8e-4 * theta) [W/(m K)]
+  for T > 1273 K:
+    kappa(T) = kappa(1273 K)                 [W/(m K)]
+
+  The paper text says kappa is held constant above some threshold, but Table 1
+  does not give the explicit threshold. We adopt 1273 K, matching the density
+  cap and the temperature beyond which the high-T data are not considered
+  reliable in the Zhang/Oglesby work (~1000-1300 K).
+
+Base specific heat:
+  Use T_c = T_m. For granite, the paper lists T_m = 1488-1533 K.
+  If a single value is needed, the midpoint is approximately 1510.5 K.
+
+  for T <= T_c:
+    cp(T) = -2.73e-4 * theta^2 + 0.894 * theta + 788       [J/(kg K)]
+
+  for T > T_c:
+    cp(T) = 0.184 * theta + 1249                           [J/(kg K)]
+
+Latent heat treatment used by Zhang:
+  The paper adds latent-heat contributions through an effective specific heat.
+  The table gives:
+    latent heat of fusion:       3.4e5 J/kg
+    fusion smoothing width:      200 K
+    latent heat of vaporisation: 4.8e6 J/kg
+    vaporisation range:          3233-3503 K
+    vaporisation smoothing width:270 K
+
+  Reproduction settings for the ALAMO enthalpy model:
+    fusion: spread the 3.4e5 J/kg latent heat over the 200 K window centred on
+            T_m = 1510.5 K (i.e. 1410.5 K to 1610.5 K).
+    vaporisation: spread the 4.8e6 J/kg latent heat across 3233-3503 K, with an
+            additional 270 K smoothing width if the integrator supports it.
+
+  This matches Zhang's effective-c_p smoothing in integral form even though
+  ALAMO uses an enthalpy formulation rather than a c_p modification.
+
+Boundary conditions and surface-loss parameters
+------------------------------------------------
+Radiation emissivity (granite, Zhang Table 1):
+  for T <= T_m:  epsilon = 0.7
+  for T > T_m:   epsilon = 0.3
+  This is the radiation BC emissivity used in the surface-loss term
+  q_loss = epsilon * sigma_SB * (T^4 - T_amb^4). It is distinct from the 0.7
+  factor used to correct the radiometer measurement.
+
+Convective heat-transfer coefficient (granite, Zhang Table 1):
+  h = 56 W/(m^2 K)
+  Zhang's Section 3.3 explains they tuned the surface-loss treatment rather
+  than using a free-convection value (5-25 W/(m^2 K)).
+
+MMW reflectivity:
+  R = 0   (Zhang does not subtract a surface reflection. Volumetric absorption
+           is handled entirely by the attenuation coefficient alpha_lambda.)
+
+Listed power schedule (800-3200 W):
+  Treat as the incident power recorded at the rock surface (stand-off zero).
+  No (1-R) factor is applied.
+
+Side and bottom boundary conditions:
+  Adiabatic Neumann on x_lo, x_hi, y_lo, y_hi, z_lo. Zhang does not state these
+  explicitly but says edges are sufficiently far away for surface-only losses
+  to dominate; adiabatic side/bottom is the safest reproduction assumption.
+
+Top boundary:
+  z_hi: surface losses (radiation + convection above) plus the volumetric
+        Beer-Lambert source from the MMW beam.
+
+Estimated temperature history from Fig. 7
+-----------------------------------------
+The following values are approximate digitised estimates from Fig. 7. They are
+not original data. Treat them as a visual benchmark only.
+
+The experimental curve is noisy, especially during the high-temperature stages.
+Expected uncertainty:
+  - roughly +/-50 to +/-100 K during smooth cooling;
+  - roughly +/-100 to +/-200 K during noisy high-temperature plateaus;
+  - larger uncertainty exactly at power-change times.
+
+time_s  experimental_T_K_est  simulation_T_K_est
+------  --------------------  ------------------
+     0                   300                 300
+    50                  1410                 989
+   100                  1630                1400
+   150                  1716                1678
+   200                  2100                2138
+   250                  2320                2215
+   300                  2272                2253
+   350                  2291                2282
+   400                  2392                2387
+   450                  2406                2507
+   500                  2435                2540
+   550                  2617                2703
+   600                  2713                2741
+   650                  2646                2761
+   700                  2655                2770
+   750                  2559                2636
+   800                  2339                2416
+   850                  2358                2387
+   900                  2521                2646
+   950                  2713                2741
+  1000                  2693                2780
+  1050                  2808                2641
+  1100                  2559                2440
+  1150                  2502                2397
+  1200                  2478                2579
+  1250                  2866                2850
+  1300                  1400                1621
+  1350                  1123                1381
+  1400                  1027                1238
+  1450                   950                1161
+  1500                   893                1084
+  1550                   854                1017
+  1600                   807                 989
+  1650                   778                 969
+  1700                   768                 950
+  1750                   740                 926
+
+Suggested reproduction workflow
+-------------------------------
+1. Run the granite block from t = 0 to 1750 s.
+2. Apply the power schedule above.
+3. Record the surface temperature directly beneath the beam centre.
+4. Compare your curve to the digitised temperature table above and to Fig. 7.
+5. Focus on reproducing:
+   - the rapid rise after each power increase;
+   - the gradual relaxation/plateau at each power level;
+   - the sharp drop and cooling tail after the power is set to zero at 1250 s.
+
+Main interpretation
+-------------------
+This validation mostly checks whether the thermal model, material properties,
+and boundary/surface treatment can reproduce the measured centre-surface
+temperature response. It does not validate melt flow, vapor removal, drilling
+rate, or final borehole geometry.

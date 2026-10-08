@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+"""P1b deliverable 3 -- the support rule on prescribed geometry.
+
+Six legs from one input and one binary. The slab is uniform and the flame sits
+at the rock's own temperature, so the differential criterion fires NOTHING by
+construction; the only thing that differs between legs is the void geometry.
+Any firing therefore came from the support rule.
+
+    TOWER   (0,0) stands 5 cells above its +x and +y neighbours => 2 exposed
+            sides => MUST FIRE, and must then STOP after exactly 3 firings
+            (10 -> 8 -> 6 mm fire; 4 mm is below the 6 mm threshold).
+    TOWER0  the same geometry with the rule OFF => nothing happens.
+    WALL    the i = 0 row stands 5 cells above its +x neighbour only => 1
+            exposed side => MUST NOT FIRE. Sparing the smooth cavity wall is
+            what makes this a repair and not a removal law.
+    FLAT    a real thermal skin, no void => 0 exposed sides => the rule is
+            inert and the leg is identical to FLAT0.
+    FLAT0   the same with the rule OFF.
+    SLAB    no skin, no void => zero firings from either rule.
+
+Plus a two-point bracket on the implied firing temperature, which is the
+packet's witness 8: it must sit at the criterion's own ~768 K and NOT ~240 K
+below it, which is where the absolute form at the same flaw would put it.
+
+Usage:  test [--check]      --check re-reduces existing output, runs nothing.
+"""
+import csv, os, shutil, subprocess, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN  = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INP  = os.path.join(HERE, "input")
+OUT  = os.path.join(HERE, "output")
+
+# (i >= 1, all j) and (i = 0, j >= 1): everything but the (0,0) column, over
+# the top 5 cells. ⚠ TWO boxes -- one box cannot express a tower.
+TOWER_SEED = "1 0 55 3 3 59 0 1 55 0 3 59"
+WALL_SEED  = "1 0 55 3 3 59"
+
+# ⚠ T_init == T_flame makes the Robin flux identically zero, which is how the
+# criterion is silenced on every leg but FLAT. FLAT is the one leg that needs a
+# REAL skin, or its "identical with the rule off" comparison is vacuous -- two
+# empty event logs are trivially identical and prove nothing.
+# name          seed         T_init    T_flame   h_conv    rule
+LEGS = [
+    ("TOWER",  TOWER_SEED,   "820.0",  "820.0",  "1.0",    "1"),
+    ("TOWER0", TOWER_SEED,   "820.0",  "820.0",  "1.0",    "0"),
+    ("WALL",   WALL_SEED,    "820.0",  "820.0",  "1.0",    "1"),
+    ("FLAT",   "",           "820.0",  "1500.0", "5000.0", "1"),
+    ("FLAT0",  "",           "820.0",  "1500.0", "5000.0", "0"),
+    ("SLAB",   "",           "820.0",  "820.0",  "1.0",    "1"),
+    # the witness-8 bracket, on the tower geometry
+    ("T745",   TOWER_SEED,   "745.0",  "745.0",  "1.0",    "1"),
+    ("T750",   TOWER_SEED,   "750.0",  "750.0",  "1.0",    "1"),
+]
+LADDER = ("T745", "T750")
+
+
+def run(name, seed, T_init, T_flame, h_conv, rule):
+    d = os.path.join(OUT, name)
+    if os.path.exists(d):
+        shutil.rmtree(d)
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN,
+            INP,
+            "plot_file=%s/run" % d,
+            "spall.support_rule=%s" % rule,
+            "surface_patch.T_flame=%s" % T_flame,
+            "surface_patch.h_conv=%s" % h_conv,
+            "hc.ic.constant.value=%s" % T_init]
+    if seed:
+        argv.append("spall.seed_void=%s" % seed)
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(OUT, name + ".log"), "w") as lg:
+        rc = subprocess.call(argv, stdout=lg, stderr=subprocess.STDOUT)
+    if rc != 0:
+        print("FAIL: leg %s exited %d" % (name, rc))
+    return rc
+
+
+def events(name):
+    f = os.path.join(OUT, name, "run_removal_events.csv")
+    return list(csv.DictReader(open(f))) if os.path.exists(f) else None
+
+
+def thermo(name):
+    f = os.path.join(OUT, name, "run", "thermo.dat")
+    if not os.path.exists(f):
+        return None, None
+    L = open(f).read().strip().split("\n")
+    h = L[0].split()
+    return h, [ln.split() for ln in L[1:]]
+
+
+def col(name, key):
+    h, rows = thermo(name)
+    if h is None or key not in h:
+        return []
+    i = h.index(key)
+    return [float(r[i]) for r in rows if len(r) > i]
+
+
+def main():
+    check = "--check" in sys.argv
+    fails = []
+    if not check:
+        if not os.path.exists(BIN):
+            print("FAIL: missing binary %s" % BIN); return 1
+        os.makedirs(OUT, exist_ok=True)
+        for lg in LEGS:
+            if run(*lg) != 0:
+                fails.append("leg %s did not run" % lg[0])
+        if fails:
+            for f in fails: print("FAIL:", f)
+            return 1
+
+    def need(cond, msg):
+        print(("  ok   " if cond else "  FAIL ") + msg)
+        if not cond: fails.append(msg)
+
+    # --- (b1) the tower fires, and then stops -----------------------------
+    print("TOWER -- 2 exposed sides, must fire and must self-extinguish")
+    ev = events("TOWER")
+    nfire = sum(col("TOWER", "sup_fires"))
+    need(ev is not None and len(ev) == 3,
+         "exactly 3 removal events (got %s)" % (len(ev) if ev else "none"))
+    need(nfire == 3.0, "sup_fires sums to 3 (got %g)" % nfire)
+    need(max(col("TOWER", "sup_cols") or [0]) == 1.0,
+         "exactly 1 column qualifies on geometry")
+    if ev:
+        need(all(e["regime"] == "5" for e in ev),
+             "every event is regime 5, not a criterion firing")
+        need(all(int(float(e["n_exposed"])) == 2 for e in ev),
+             "every event logs n_exposed = 2")
+        need(all(int(float(e["pillar"])) == 0 for e in ev),
+             "no event is flagged a pillar (a corner tower is not one)")
+        need(all(abs(int(float(e["n_voided"])) - 1) == 0 for e in ev),
+             "every event voids exactly 1 cell")
+        need(all(e["col_i"] == "0" and e["col_j"] == "0" for e in ev),
+             "only the standing column fires")
+    ev0 = events("TOWER0")
+    need(ev0 is not None and len(ev0) == 0,
+         "TOWER0 (rule off, same geometry) fires nothing")
+
+    # --- (b2) the wall is spared ------------------------------------------
+    print("WALL -- 1 exposed side, must NOT fire")
+    need(max(col("WALL", "sup_cols") or [0]) == 0.0,
+         "no column qualifies on geometry")
+    need(sum(col("WALL", "sup_fires")) == 0.0, "sup_fires is 0")
+    evw = events("WALL")
+    need(evw is not None and len(evw) == 0, "no removal events")
+
+    # --- (b3) the flat floor is untouched ---------------------------------
+    print("FLAT -- 0 exposed sides, must be identical to the rule off")
+    a, b = events("FLAT"), events("FLAT0")
+    need(a is not None and b is not None, "both legs produced an event log")
+    if a is not None and b is not None:
+        need(len(b) > 0,
+             "the ordinary criterion fires here (%d events) -- without that "
+             "the comparison is vacuous" % len(b))
+        need(len(a) == len(b),
+             "same number of events (%d vs %d)" % (len(a), len(b)))
+        shared = list(b[0].keys()) if b else []
+        ndiff = sum(1 for ra, rb in zip(a, b) for k in shared
+                    if ra[k] != rb[k])
+        need(ndiff == 0,
+             "every shared field is identical (%d differing)" % ndiff)
+        extra = [k for k in (a[0] if a else {}) if k not in shared]
+        need(extra == ["n_exposed", "pillar", "T_surf_sup"],
+             "the rule appends exactly its 3 columns (got %s)" % extra)
+    need(sum(col("FLAT", "sup_fires")) == 0.0, "sup_fires is 0")
+
+    # --- (b4) the uniform slab ---------------------------------------------
+    print("SLAB -- no gradient, no exposure")
+    evs = events("SLAB")
+    need(evs is not None and len(evs) == 0,
+         "zero firings from either rule (got %s)"
+         % (len(evs) if evs is not None else "no log"))
+
+    # --- witness 8: the implied firing temperature -------------------------
+    print("witness 8 -- the implied firing temperature")
+    lo = sum(col(LADDER[0], "sup_fires"))
+    hi = sum(col(LADDER[1], "sup_fires"))
+    need(lo == 0.0 and hi > 0.0,
+         "the threshold is bracketed by 745 K (%g firings) and 750 K (%g)"
+         % (lo, hi))
+    need(lo == 0.0,
+         "it is NOT at the absolute form's ~525 K -- a 745 K slab does not "
+         "fire")
+    Tm = [t for t in col("TOWER", "sup_T_mean") if t > 0.0]
+    print("  ..  T_surf at a support firing: %s"
+          % (("%.2f K" % Tm[0]) if Tm else "n/a"))
+
+    print()
+    if fails:
+        print("FAIL: %d check(s) failed" % len(fails))
+        return 1
+    print("PASS: all support-rule checks")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

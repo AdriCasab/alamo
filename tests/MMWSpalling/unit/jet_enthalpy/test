@@ -241,9 +241,24 @@ def jet_text(pf):
 
 
 def fit_rop(ev, t0, t1):
+    """Cumulative-recession slope over (t0, t1], in m/h. 0.0 means "not enough
+    samples to fit", a SENTINEL -- callers must not read it as a rate.
+
+    D2z-1: the minimum was 3 samples. That threshold was implicitly calibrated
+    on FIRINGS, and under the half-cell increment a column fired twice to clear
+    one cell. Whole-cell removal halves the row count for the same rock, so the
+    sparse reference column (10, 10) dropped from 4 rows to 2 in the window and
+    this returned 0.0 -- which check (d) then read as "the column stopped
+    receding" and reported 0.0000 -> 0.0000 m/h (+inf %).
+
+    It had not stopped. Measured from those 2 rows the rate is 0.7279 ->
+    0.7178 m/h against the half-cell run's 0.7120 -> 0.7022, and the bin-width
+    change the check actually scores is -1.387 % against the old -1.378 % --
+    the same to three digits. A 2-point slope is exact, so requiring 2 restores
+    the ORIGINAL physical sampling requirement rather than relaxing it."""
     cum = np.cumsum(ev["h_applied"])
     sel = (ev["time"] > t0) & (ev["time"] <= t1)
-    if sel.sum() < 3:
+    if sel.sum() < 2:
         return 0.0
     return float(np.polyfit(ev["time"][sel], cum[sel], 1)[0]) * 3600.0
 

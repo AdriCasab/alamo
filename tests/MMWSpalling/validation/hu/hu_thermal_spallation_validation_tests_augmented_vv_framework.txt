@@ -1,0 +1,177 @@
+Hu et al. (2018) thermal spallation validation — reference data
+================================================================
+
+Source: Hu et al., "Lowest Required Surface Temperature for Thermal Spallation
+in Granite and Sandstone Specimens: Experiments and Simulations", Rock
+Mechanics and Rock Engineering (2019).
+
+This file contains only the data and thresholds needed to reproduce the
+ALAMO MMWSpalling Hu validation tests (steps 4c, 7b, 8b, 11b, 14 in the
+implementation plan). Test placement, physics enablement, and pass criteria
+are documented in the plan, not here.
+
+
+1. Material constants (constant, room-temperature)
+==================================================
+
+Granite
+    rho   = 2640    kg/m^3
+    E     = 29.98   GPa
+    nu    = 0.19
+    sigma_s (yield) = 103.87 MPa
+    K_r   = 2.50    W/(m K)
+    C     = 827.20  J/(kg K)
+    alpha_t = 8.0e-6 1/K
+    alpha (thermal diffusivity) = 1.143e-6 m^2/s
+
+Sandstone
+    rho   = 2480    kg/m^3
+    E     = 16.63   GPa
+    nu    = 0.34
+    sigma_s (yield) = 80.11 MPa
+    K_r   = 4.96    W/(m K)
+    C     = 829.30  J/(kg K)
+    alpha_t = 1.0e-5 1/K
+    alpha = 2.412e-6 m^2/s
+
+
+2. Geometry and BCs
+===================
+
+Specimen: 0.1 m x 0.1 m x 0.1 m cube.
+Heated patch on top face: circular, diameter 0.03 m, centred at
+    (x, y) = (0.05 m, 0.05 m).
+Initial T: T_0 = 280.15 K.
+Ambient T: T_ext = 280.15 K.
+
+Heated-patch BC: prescribed Dirichlet T_B1(t) (linear trendlines from Hu
+Fig. 9; t in s, T in K):
+
+    Granite 1:    T_B1(t) = 4.42*t + 660.36
+    Granite 2:    T_B1(t) = 3.74*t + 638.22   <- primary case
+    Granite 3:    T_B1(t) = 5.25*t + 657.96
+    Sandstone 1:  T_B1(t) = 1.78*t + 736.29
+    Sandstone 2:  T_B1(t) = 2.46*t + 684.64   <- primary case
+    Sandstone 3:  T_B1(t) = 2.48*t + 700.42
+
+Outside the patch, top face: convective to T_ext.
+Sides + bottom: convective to T_ext (h_f is a calibration parameter; Hu
+does not give a numerical value — central early-time response is
+insensitive).
+
+Mechanical BCs (when mechanics is enabled):
+    bottom: roller, u_z = 0
+    other faces: traction-free
+    initial displacement: zero
+
+
+3. LRST and onset-spallation experimental table
+================================================
+
+Per-specimen:
+    Granite 1:    LRST = 780.15 K, onset = 26.0 s
+    Granite 2:    LRST = 773.15 K, onset = 37.0 s   <- primary
+    Granite 3:    LRST = 821.15 K, onset = 31.5 s
+    Sandstone 1:  LRST = 843.15 K, onset = 69.5 s
+    Sandstone 2:  LRST = 893.15 K, onset = 89.0 s   <- primary
+    Sandstone 3:  LRST = 863.15 K, onset = 71.5 s
+    Sandstone 4:  LRST = 770.15 K, onset = 33.0 s   <- outlier, exclude
+
+Averages:
+    Granite avg LRST   = 791.48 K
+    Granite avg onset  = 31.5 s
+    Sandstone avg LRST = 842.40 K   (incl. sandstone-4)
+    Sandstone 1-3 avg onset = 76.7 s   (excl. sandstone-4 outlier)
+
+
+4. Heat-flux equivalents (Test B in original framework)
+=======================================================
+
+Optional alternative drive mode using
+    T_surface = A*sqrt(t) + intercept
+
+A slopes [K / s^0.5]:
+    Granite 1: 32.75    Granite 2: 35.76    Granite 3: 39.21
+    Sandstone 1: 17.93  Sandstone 2: 29.94  Sandstone 3: 26.36
+
+Reported heat fluxes at LRST [W/m^2]:
+    Granite 1: 6.78e4   Granite 2: 7.40e4   Granite 3: 8.12e4
+    Sandstone 1: 5.07e4 Sandstone 2: 8.47e4 Sandstone 3: 7.46e4
+
+Averages:
+    Granite avg Q   = 7.43e4 W/m^2
+    Sandstone 1-3 avg Q = 7.00e4 W/m^2
+
+
+5. Probe / line definitions for field comparisons
+==================================================
+
+Hole 1 (thermocouple): 20 mm depth on the centreline.
+Hole-1 temperature-rise comparison uses
+    Delta T(t) = T(t) - T(0)
+to remove the ambiguous insertion-depth coordinate.
+
+Per-specimen K-thermocouple insertion depth in hole 1 (for completeness):
+    Granite 1: 30.0   Granite 2: 20.0   Granite 3: 30.0
+    Sandstone 1: 17.5 Sandstone 2: 20.0 Sandstone 3: 25.0  [mm]
+
+Field comparison at t = 30 s (Granite 2 vs Sandstone 2):
+
+    L1: horizontal line 5 mm below top surface, through heating-zone centre.
+        At x = 0.05 m: sandstone T is 12.58% higher than granite.
+    L2: vertical centreline through heating zone.
+        At z = 0.09 m: sandstone T is 18.90% higher than granite.
+
+    L3: horizontal line 5 mm below top surface.
+        At x = 0.05 m: granite sigma_v is 13.77% higher than sandstone.
+    L4: vertical centreline through heating zone.
+        At z = 0.10 m (top surface): granite sigma_v is 46.74% higher than
+        sandstone.
+
+    L5: rock surface line through heating zone.
+        At x = 0.05 m, both materials at t = 37 s:
+        granite f_b is 19.69% higher than sandstone.
+    L6: vertical centreline through heating zone.
+        Distance to surface < 3 mm:  granite f_b > sandstone f_b.
+        Distance to surface > 14 mm: both f_b < 0.1.
+
+
+6. Reported f_b at experimental onset (Hu's homogeneous elastic model)
+======================================================================
+
+f_b = sigma_v / sigma_s (Hu's breakage-probability indicator)
+
+    Granite 2 at t = 37 s:    max surface f_b = 0.91
+    Sandstone 2 at t = 89 s:  max surface f_b = 0.82
+
+Note: these are Granite-2-vs-Sandstone-2 values, NOT
+heterogeneous-vs-homogeneous values. Hu's simulation is homogeneous
+isotropic linear elastic.
+
+
+7. Reported simulation-vs-thermocouple errors
+=============================================
+
+Hu's simulation vs. measured hole-1 temperature history (Hu's homogeneous
+model):
+
+    Granite 1: 6.95%      Granite 2: 4.28%      Granite 3: 13.07%
+    Granite avg: 8.10%
+
+    Sandstone 1: 2.77%    Sandstone 2: 7.99%    Sandstone 3: 33.19%
+    Sandstone avg: 14.65%
+
+
+8. Caveats for exact reproduction
+=================================
+
+1. Flame is not modelled — Hu's numerical model uses the prescribed surface
+   temperature directly. MMW source is irrelevant here.
+2. Convective coefficient h_f is defined but not numerically specified.
+3. Mesh density is not reported (FE method, time step 0.1 s, swept prism
+   elements).
+4. Hu's f_b indicator does not include heterogeneity, micro-flaws, or
+   plasticity — it slightly underpredicts breakage probability at observed
+   onset.
+5. Sandstone 4 is a documented outlier (excluded from later analysis by
+   the authors).

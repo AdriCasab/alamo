@@ -1,0 +1,341 @@
+<title>The Standoff Window</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f5f4f0; --paper:#fbfaf7; --ink:#23272c; --muted:#5d6570; --line:#d6d2c8;
+  --accent:#2b5c7a; --accent-soft:#dbe7ef; --heat:#b5461c; --heat-soft:#f3dccf;
+  --rock:#d9d3c6; --grid:#e6e2d9; --ok:#2f6b3a; --ok-soft:#dfeadf; --bad:#9a3b2b; --bad-soft:#f1dcd7;
+  --warn:#8a6a1f; --warn-soft:#f1e8cf; --note:#efece4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#16191d; --paper:#1d2126; --ink:#e7e4dd; --muted:#a4aab3; --line:#3a3f46;
+    --accent:#86b6d6; --accent-soft:#243747; --heat:#e3865a; --heat-soft:#4a2c1f;
+    --rock:#3b3e43; --grid:#2a2f35; --ok:#7fc48c; --ok-soft:#22352a; --bad:#e08a78; --bad-soft:#3d2622;
+    --warn:#d9b45a; --warn-soft:#3a3320; --note:#22262c;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#16191d; --paper:#1d2126; --ink:#e7e4dd; --muted:#a4aab3; --line:#3a3f46;
+  --accent:#86b6d6; --accent-soft:#243747; --heat:#e3865a; --heat-soft:#4a2c1f;
+  --rock:#3b3e43; --grid:#2a2f35; --ok:#7fc48c; --ok-soft:#22352a; --bad:#e08a78; --bad-soft:#3d2622;
+  --warn:#d9b45a; --warn-soft:#3a3320; --note:#22262c;
+}
+body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:17px;line-height:1.55;padding-inline:16px;padding-block:32px 64px}
+.wrap{max-width:1040px;margin:0 auto}
+.col{max-width:68ch;margin:0 auto}
+h1,h2,h3{font-family:"Libre Franklin","Helvetica Neue",Arial,sans-serif;text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2.1rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:600;margin-top:2.6rem;margin-bottom:.6rem;padding-top:1rem;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;font-weight:600;margin-top:1.6rem;margin-bottom:.3rem}
+p{margin:0 0 1rem}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem}
+.lede{font-size:1.15rem;color:var(--muted);margin-top:.8rem}
+.summary{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--accent);padding:1rem 1.2rem;margin:1.6rem 0 0;border-radius:4px}
+.summary p:last-child{margin-bottom:0}
+.summary ol{margin:.4rem 0 0;padding-left:1.2rem}
+.summary li{margin-bottom:.35rem}
+figure{margin:1.8rem 0;padding:0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:14px 12px 8px}
+.scroll{overflow-x:auto}
+.scroll svg{display:block;min-width:640px;width:100%;height:auto}
+svg text{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;fill:var(--ink)}
+svg .t-muted{fill:var(--muted)}
+svg .grid{stroke:var(--grid)}
+svg .axis{stroke:var(--muted)}
+figcaption{font-size:.92rem;color:var(--muted);margin-top:.7rem;line-height:1.45;max-width:78ch}
+figcaption b{color:var(--ink);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:.95rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"Libre Franklin",Arial,sans-serif;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.9rem}
+.eq{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.92rem;background:var(--note);border-radius:4px;padding:.7rem 1rem;margin:.6rem 0 1rem;overflow-x:auto;white-space:pre;line-height:1.6}
+.note{background:var(--note);border-radius:4px;padding:.8rem 1rem;font-size:.95rem;margin:1rem 0}
+.note p:last-child{margin:0}
+.pill{display:inline-block;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.75rem;letter-spacing:.04em;padding:.1rem .5rem;border-radius:3px;border:1px solid currentColor}
+.p-ok{color:var(--ok)}.p-bad{color:var(--bad)}.p-warn{color:var(--warn)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{position:relative;padding-left:2.4rem;margin-bottom:1rem}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:.05rem;width:1.7rem;height:1.7rem;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.85rem;font-weight:500;display:flex;align-items:center;justify-content:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:.9rem 1rem}
+.card h3{margin-top:0;font-size:1rem}
+.card p{font-size:.95rem;margin-bottom:.4rem}
+.card p:last-child{margin:0}
+dl{margin:0}dt{font-weight:600;margin-top:.7rem}dd{margin:0 0 .2rem 0;color:var(--muted)}
+.small{font-size:.9rem;color:var(--muted)}
+ul,ol{padding-left:1.3rem}li{margin-bottom:.5rem}
+a{color:var(--accent)}
+@media (max-width:600px){body{font-size:16px}h1{font-size:1.7rem}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<div class="col">
+<div class="eyebrow">Flame-jet drilling model · proposed methodology for the next step · 29 September 2026</div>
+<h1>The Standoff Window</h1>
+<p class="lede">How we propose to close the remaining discrepancy in the Meier comparison: calibrate the one quantity the experiment did not measure against the one observable the photograph pins down, then validate on everything else and report the result as a band. A companion to <em>The Hole and the Floor</em>.</p>
+
+<div class="summary">
+<p><b>In short.</b> The model reproduces the hole but recedes its floor about twice too fast. A literature check shows the rock's flaking temperature is already mid-range, so the excess must sit in the heat the jet delivers, whose two ingredients, gas temperature and heat-transfer coefficient, Meier never measured. We propose to:</p>
+<ol>
+<li>run the model at the operator's lowering speed, as the experiment was run;</li>
+<li>calibrate one floor-heating factor, together with the flaking temperature, on a single observable with two sides: the photograph says the burner hung free and its floor was never more than about 100 mm below the nozzle;</li>
+<li>demand that the calibrated flux lies inside the range measured under a comparable burner, so the calibration cannot succeed by leaving physics;</li>
+<li>validate, without further adjustment, on hole diameter, removed volume, foot clearance and the free-descent speed;</li>
+<li>report the whole thing as a band over the two unmeasured inputs, with the calibrated pair placed against the literature.</li>
+</ol>
+</div>
+
+<h2>1. Where we start from</h2>
+<p>Three facts from the last two weeks set the problem. First, driven at Meier's 1.5 metres per hour with the wall heated by a coefficient derived from the gap around the burner, the model makes an 87 mm hole and removes 3.15 litres per half metre, against 85 mm and 3.42 litres measured. The hole is right. Second, in the same runs the gap between nozzle and floor grows past the photograph's ceiling of about 100 mm within the first hundred seconds and heads for roughly 200 mm. Read at a 100 mm gap, the floor recedes at 3.0 metres per hour against the operator's 1.5, a factor of 2.0 that is the same whichever way the wall is heated. The floor is wrong. Third, the temperature at which the model's rock flakes off, about 550 °C, sits in the middle of every direct measurement for this and similar granites, including the value the ETH group themselves use for Central Aare granite, the rock of the Grimsel site. Raising it to the top of the measured range buys at most a quarter of the gap.</p>
+
+<h2>2. The reasoning in one equation</h2>
+<p>Once drilling is steady, the floor recedes at the rate at which heat arrives divided by the heat needed to bring rock to its flaking temperature:</p>
+<div class="eq">v_floor = h · (T_gas − T_s)  /  ( ρ c · (T_s − T_0) )</div>
+<p>The two factors have a definite form in the model. The heat delivered to a floor cell at radius r from the jet axis and standoff s is a Robin condition whose coefficient comes from Martin's single-round-nozzle correlation, tapered radially onto the foot-ring value and weakened with distance beyond a plateau:</p>
+<div class="eq">q(r, s) = h(r, s) · ( T_gas − T_surf )
+h(r, s) = h₀ · Φ(r/D, s/D) · Δ(s),        Δ(s) = min(1, s₀/s),   s₀ = 90 mm,   D = 7.5 mm
+h(0, 90 mm) ≈ 1350 W/m²K,   h(0, 100 mm) ≈ 1216,   h(40 mm, 100 mm) ≈ 605</div>
+<p>The gas temperature at the floor is not an input either. It comes from an enthalpy march along the jet: the nozzle gas at T_noz entrains the burner's own exhaust and loses to the rock what the rock takes, so the gas that reaches the floor is cooler than the nozzle by an amount proportional to the heat extracted. With the total floor extraction P and the jet's heat capacity rate ṁ c_p,</p>
+<div class="eq">T_gas ≈ T_noz − P / (ṁ c_p) ,        T_noz = 1900 K (adiabatic),   T_gas = 1665 K measured in the runs</div>
+<p>Once the surface is receding steadily, the energy balance on a column gives the recession speed directly, and integrated over the floor it fixes the power the experiment implies:</p>
+<div class="eq">v_floor = q / e ,        e = ρ c (T_s − T_0) = 2.17 MJ/m³K × 530 K ≈ 1.35 J/mm³
+P_required = e · (π/4) D_hole² · v_feed = 1.35 J/mm³ × 5.67×10³ mm² × 0.417 mm/s ≈ 3.2 kW   (D_hole 85 mm, v_feed 1.5 m/h)
+P_model at 100 mm standoff ≈ 5.6 kW  ⇒  mean flux 0.95 MW/m² against a required 0.56</div>
+<p>Five quantities. Density and heat capacity are measured for the Grimsel rock to a few per cent, and the measured values push the floor slightly faster, not slower. The flaking temperature T_s is measured directly by pyrometry for granites at 500 to 650 °C and the model sits at 550. That leaves the heat-transfer coefficient h and the gas temperature T_gas, which enter as a product and which the thesis does not measure. The model currently uses a coefficient from a textbook correlation for subsonic jets, about 1200 to 1450 W/m²K under the nozzle, and a gas temperature of about 1700 K that follows from assuming an adiabatic 1900 K flame with no loss to the burner's water jacket. Both sit at the top of what has been measured. Kant and von Rohr's flux plate under a comparable burner gave coefficients of 630 to 1010 and fluxes of 0.45 to 0.87 MW/m²; Meier's own air-jet tests gave 0.4 to 1.6 kW/m²K; the thesis quotes 1450 to 1850 K for the gas; and the cooling water alone could remove 100 to 300 K. The model's floor flux at Meier's standoff, about 0.95 MW/m², exceeds the highest value Kant measured under a working spallation burner. So the calibration target is a reduction of the floor flux by roughly half, achievable with both ingredients inside their measured ranges, and the method has to make sure it stays there.</p>
+
+<h2>3. The observable: a window with two sides</h2>
+<p>Under a prescribed lowering speed the rate is an input, so the burner's speed cannot be scored. What can be scored is where the floor sits relative to the nozzle. If the floor recedes faster than the burner descends, the gap opens until the weakening of the jet with distance brings the two into balance. The model's map weakens as one over distance beyond 90 mm, so the equilibrium gap is:</p>
+<div class="eq">ds/dt = v_floor(s) − v_feed ,        v_floor(s) = R₉₀ · F · Δ(s) = R₉₀ · F · min(1, s₀/s)
+
+equilibrium (ds/dt = 0, s* > s₀):     s* = s₀ · R₉₀ · F / v_feed  ≈ 198 · F  mm      (s₀ = 90 mm, R₉₀ = 3.3 m/h, v_feed = 1.5 m/h)
+relaxation toward s*:                 d(δs)/dt = −(v_feed / s*) · δs   ⇒   τ = s*/v_feed ≈ 240 s at s* = 100 mm
+contact edge (no equilibrium above s₀): R₉₀ · F < v_feed   ⇒   F < v_feed / R₉₀ ;  with the undecayed early rate 4.2 m/h,  F_min ≈ 0.36</div>
+<p>where F is the floor-speed factor relative to the present model and R₉₀ is the undecayed recession rate. The relaxation time is why the runs are 800 s long: the plateau needs about three time constants. The formula is not free: at F = 1 it predicts 198 mm, and the earlier full-heating run, extrapolated from its own decaying increments, gives 192 mm. The photograph bounds s* from above: the bore is straight to 46 cm and ends in a rounded tip at 49.5 cm, so the floor led the feet by no more than about 5 cm, a gap of at most about 100 mm. And the thesis bounds it from below: the burner was contactless, hanging from the crane, which requires the floor at full flux to outrun the feed. At full flux the model's floor ran about 4.2 metres per hour, so contact begins below F = 1.5/4.2 = 0.36. Together:</p>
+<div class="eq">hung, floor within 100 mm   ⇔   0.36 ≤ F ≤ 0.50</div>
+<p>This is a calibration target with a width and two independent edges, not a fit to a point. A run that lands below the window has over-corrected as surely as one above it has under-corrected.</p>
+</div>
+
+<figure>
+<div class="fig">
+<div class="scroll"><svg id="fig-window" viewBox="0 0 980 380" role="img" aria-label="Equilibrium standoff against floor-speed factor, with the window allowed by the photograph and the grid cells marked"></svg></div>
+</div>
+<figcaption><b>Figure 1. The two-sided window.</b> Equilibrium gap between nozzle and floor against the floor-speed factor F, from the model's own distance law. The shaded band is what the photograph and the hanging burner allow together: a gap of at most 100 mm, and a floor fast enough that the feet never rest, which fails below F = 0.36. The present model sits at F = 1 with a gap near 200 mm, which the earlier runs confirmed to within a few per cent. Circles mark the seven planned runs with their pre-registered factors; the hollow one is predicted to make contact.</figcaption>
+</figure>
+
+<div class="col">
+<h2>4. The levers, and a subtlety in how they act</h2>
+<p>Two inputs are varied. The floor heating level, through a single multiplicative factor on the map that gives the floor its coefficient; the wall keeps its own derived coefficient and is not touched. And the flaking temperature, through the scale of the fracture-toughness table that the flaw criterion uses; the flaking temperature is not a typed number in the model but emerges from that table, so the mapping from scale to temperature is measured in short trial runs before the grid is fixed, and the firing window is required to stay narrow so that the lever moves the temperature and not the character of the criterion.</p>
+<p>The subtlety is that the two levers do not act independently of the gas. The model's jet conserves enthalpy, so gas that gives up less heat to the floor arrives hotter, and a cut in the coefficient is partly clawed back by a warmer gas. With the extraction proportional to the heating factor F_q, the gas temperature rises linearly toward the adiabatic value, and the floor-speed factor is the product of three ratios:</p>
+<div class="eq">T_gas(F_q) ≈ T_noz − (T_noz − T_gas,1) · F_q = 1900 − 235 · F_q   K        (anchored on the measured 1665 K at F_q = 1)
+
+F(F_q, T_s) = F_q · [ (T_gas(F_q) − T_s) / (T_gas,1 − T_s,1) ] · [ (T_s,1 − T_0) / (T_s − T_0) ] · [ (ρc)₁ / ρc ]
+
+F_q = 0.5, T_s = 823 K  →  F = 0.57  (not 0.50)         F_q = 0.5, T_s = 870 K  →  F = 0.50
+F_q = 0.35, T_s = 823 K →  F = 0.41                      F_q = 0.35, T_s = 920 K →  F = 0.32 (contact)</div>
+<p>Halving the coefficient therefore reduces the floor speed by 43 per cent rather than 50, and the ladder of heating factors is set at 1.0, 0.5 and 0.35 rather than 1.0, 0.7 and 0.5 to straddle the window. The back-reaction is checked in the trial runs before the grid is committed; if the measured gas temperature is off by more than 40 K the grid is recomputed.</p>
+<p>The flaking temperature is reached through the flaw criterion. A surface cell is removed when the stress intensity of a pre-existing crack of length a_f under the thermal stress of the heated skin exceeds the rock's toughness at that temperature, which the model takes from Nasseri's table for Westerly granite scaled by a single factor κ:</p>
+<div class="eq">σ(z) = E α (T(z) − T_0) / (1 − ν)
+K_I  = 2 √(a_f/π) ∫₀¹ σ(z_c + ξ a_f) f_K(ξ) dξ ,      f_K(ξ) = (1.3 − 0.3 ξ^{5/4}) / √(1 − ξ²)
+fire when  K_I ≥ κ · K_Ic(T)          K_Ic: 1.43, 1.35, 0.98, 0.43, 0.22 MPa√m at 25, 250, 450, 650, 850 °C
+
+since a_f ≪ cell size, σ is uniform over the flaw and the condition is a temperature threshold:
+κ(T_s) ≈ c · (T_s − T_0) / K_Ic(T_s),   c = K_Ic(823 K)/530 K   ⇒   κ ≈ 1.3 for 870 K,  ≈ 2.2 for 920 K  (hand estimate; measured in the trial runs)</div>
+<p>The firing window, the spread between the 10th and 90th percentile of the temperature at which cells actually fire, is 16 K today. It must stay under 30 K at every κ, otherwise the scale is changing the character of the criterion rather than its temperature.</p>
+
+<table>
+<thead><tr><th>Input</th><th>Model now</th><th>Measured range</th><th>Single-change floor factor</th></tr></thead>
+<tbody>
+<tr><td>Gas temperature at the floor</td><td>1665 K (nozzle 1900 K)</td><td>1450 to 1850 K at the nozzle; cooling loss 100 to 300 K</td><td class="num">1600 K: 0.88 · 1450 K: 0.71</td></tr>
+<tr><td>Coefficient under the nozzle</td><td>1216 W/m²K at 100 mm</td><td>630 to 1010 (Kant); 400 to 1600 (Meier's air jets)</td><td class="num">1000: 0.82 · 800: 0.66 · 630: 0.52</td></tr>
+<tr><td>Flaking temperature</td><td>823 K</td><td>770 to 920 K measured directly</td><td class="num">870 K: 0.87 · 920 K: 0.75</td></tr>
+<tr><td>Density × heat capacity</td><td>2.17 MJ/m³K</td><td>1.96 to 2.08 measured</td><td class="num">1.96: 1.11 (wrong way)</td></tr>
+</tbody>
+</table>
+<p class="small">Factors are relative to the present model. Gas temperature and coefficient enter only as a product, so the calibration fixes the product; the split between them is reported as the uncertainty, not resolved.</p>
+
+<h2>5. The grid</h2>
+<p>Seven runs of 800 seconds each, long enough for the gap to reach its plateau, plus one identity run that proves the code is unchanged. The control at full heating must plateau near 190 to 200 mm; if it does not, the distance law behind the whole prediction is wrong and the grid is not scored. Two cells at full heating with a raised flaking temperature are not run, because they are predicted to fail by a wide margin and carry no information the half-heating row does not.</p>
+</div>
+
+<figure>
+<div class="fig">
+<div class="scroll"><svg id="fig-grid" viewBox="0 0 980 330" role="img" aria-label="Three by three grid of heating factor against flaking temperature with predicted standoff and verdict in each cell"></svg></div>
+</div>
+<figcaption><b>Figure 2. The pre-registered grid.</b> Each cell shows the predicted floor-speed factor and equilibrium gap. Green cells are predicted to land inside the window; red above it; the hollow cell is predicted to over-correct into contact; grey cells are not run. The prediction, written before the runs, is that the window closes on the half-heating row with a raised flaking temperature, and on neither the control nor the half-heating row at the present flaking temperature.</figcaption>
+</figure>
+
+<div class="col">
+<h2>6. The gates a cell must pass</h2>
+<ol class="steps">
+<li><b>The window, both halves.</b> The gap must plateau, with a slope below 2 mm per 100 seconds over the last 200 seconds, at or below 100 mm; and the rock under the foot ring must stay clear of the foot plane after the first minute:
+<div class="eq">(i)   s(t) = z_nozzle(t) − z_floor(t),   z_nozzle(t) = z₀ − v_feed · t ;      |ds/dt| < 2 mm / 100 s  over t ∈ [600, 800] s,   s_plateau ≤ 100 mm
+(ii)  z_tip(t) = z_nozzle(t) − 50 mm ;   contact  ⇔  max_{28 mm ≤ r ≤ 40 mm} z_face(r, t) ≥ z_tip(t)   for any t > 60 s</div> The foot test is computed from the surface profile, not from the code's own collision guard, which watches the nozzle axis and cannot fire. Contact at the very start is by construction and is excluded.</li>
+<li><b>The flux gate.</b> The stagnation flux the calibrated cell actually applies at its own plateau gap must lie inside the range Kant measured under a working burner:
+<div class="eq">q_stag = F_q · h(0, s*) · ( T_gas(F_q) − T_s )   ∈   [0.45, 0.87] MW/m²
+e.g.  F_q 0.5, T_s 870 K, s* 99 mm:  0.5 × 1228 × (1782 − 870) ≈ 0.56 MW/m²      F_q 0.35, T_s 823 K, s* 82 mm:  0.35 × 1351 × (1818 − 823) ≈ 0.47 MW/m²</div> This is the gate that stops the calibration from succeeding by leaving physics. It is scored on flux rather than on the coefficient alone, because the coefficient and the gas temperature are degenerate on the floor: a cell whose coefficient looks low at the model's hot gas is a perfectly ordinary coefficient at a cooler gas inside the thesis's range. The split is reported, not scored.</li>
+<li><b>Diameter</b> over 120 to 250 mm depth, within 85 ± 5 mm, on every cell that passes the window. The wall widens by an exposure integral, so its prediction follows from the same factor:
+<div class="eq">ΔD = 2 ∫ v_wall dt ≈ 2 · v_wall · τ_exp ,   τ_exp ∝ 1/v_feed ;    v_wall ∝ h_wall (T_exh − T_s) / (ρc (T_s − T_0))
+D(F) ≈ 80 mm + 7.1 mm · F_wall ,   F_wall ≈ F for the wall's own ratio  ⇒  D ≈ 82–87 mm on the passing cells</div> The section starts below the 100 mm depth where Meier paused the burner and ends where the wall has had at least 200 seconds to form.</li>
+<li><b>Volume</b> at or below 3.42 litres per half metre, with the shortfall stated; Meier's figure includes a mouth and a pause bulge the model never makes.</li>
+<li><b>Firing window</b> between the 10th and 90th percentile of flaking temperature no wider than 30 K on every cell, so the toughness lever is shown to move a temperature and nothing else.</li>
+<li><b>Energy identity</b> closed to within 0.02 W on every cell, and byte-identical output on the identity run against its frozen reference:
+<div class="eq">| P_jet,face − ( P_top + P_side + P_side,loss ) |  ≤  0.02 W        and        | E_stored − ∫ (P_in − P_out) dt | / E_stored ≲ 10⁻¹⁴</div></li>
+</ol>
+<p>Cells that make sustained foot contact are unphysical from that moment, since the prescribed burner passes through rock, and their diameter and volume are void thereafter. The control at full heating ends with its floor within 20 mm of the bottom of the 0.5 m domain, which is adiabatic; its plateau is therefore read over 400 to 600 seconds, before the bottom is felt.</p>
+
+<h2>7. What is calibrated, what is validated, and what would refute the approach</h2>
+<div class="two">
+<div class="card"><h3>Calibrated, on the window alone</h3><p>The floor-heating factor and the flaking temperature. Two numbers, one observable with two edges.</p></div>
+<div class="card"><h3>Validated, with nothing adjusted</h3><p>Diameter along the steady section, removed volume, foot clearance, and afterwards the free-descent speed when the same settings are run with the burner resting on its feet, which must land in 1.3 to 1.6 metres per hour.</p></div>
+</div>
+<p style="margin-top:1rem">Written down before the runs:</p>
+<ul>
+<li>The window closes on the half-heating row with the flaking temperature at 870 or 920 K, and on neither the control nor the half-heating row at 823 K. Any other pattern refutes the factor model.</li>
+<li>If a flaking temperature above 920 K were needed, that would refute the rock-side explanation rather than calibrate it, because 920 K is already the top of the directly measured range.</li>
+<li>If the control does not plateau near 190 to 200 mm, the distance law is wrong and every predicted gap goes with it.</li>
+<li>The passing cell's diameter lands at 82 to 87 mm, because the wall widens in proportion to the same ratio that governs the floor, and its volume at 2.6 to 3.0 litres per half metre.</li>
+<li>The lower-right corner of the grid, heating at 0.35 with the flaking temperature at 920 K, makes contact.</li>
+</ul>
+
+<h2>8. Then the band, and how the result will be stated</h2>
+<p>Around the calibrated cell, four further runs take the corners of the two unmeasured inputs: flaking temperature 50 K either side of the calibrated value, and nozzle temperature at 1450 and 1850 K. They are reported as intervals on gap, diameter, volume and, in the resting mode, drilling speed. Because coefficient and gas temperature enter only as a product, the calibrated heating factor is also translated into each of them alone, so the reader can judge it against the measured ranges either way:</p>
+<div class="eq">equivalent coefficient at the model's gas:    h_eq = F_q · h(0, s*)                       compare with 630–1010 (Kant), 400–1600 (Meier Ch. 3)
+equivalent gas at the model's coefficient:    T_eq = T_s + F_q · ( T_gas(F_q) − T_s )     compare with 1450–1850 K and the cooling-loss estimate
+band:   { T_s,cal ± 50 K } × { T_noz = 1450, 1850 K }   →   [s*], [D], [V], [v_free]</div>
+<p> The statement we expect to be able to make is this: with every rock property measured or taken from the literature, the wall heating derived from the gap geometry, and one heat-delivery factor calibrated inside the range measured under a comparable burner, the model reproduces the geometry, the volume, the standoff and the advance rate of a real drilling test, and the remaining uncertainty is dominated by two quantities the experiment did not record. The observation that the measured rate falls inside the model's band is a consequence of that statement, not the statement itself; a band over the flaking temperature alone spans 0.9 to 4.4 metres per hour and would contain almost anything.</p>
+
+<h2>9. Cost and risks</h2>
+<ul>
+<li>Seven trial runs of two minutes to map the toughness scale to temperature and to verify the gas back-reaction; then eight runs of roughly 35 to 50 minutes, about four hours at two in parallel; then the analysis. The band is another four runs.</li>
+<li>No source code changes. The two levers already exist as inputs. The identity run and a whole-tree comparison, forced to bypass a cache keyed on the binary, prove nothing else moved.</li>
+<li>The distance law is validated only at full flux and beyond 150 mm; the lower edge of the window rests on its flat plateau out to 90 mm, which has not been tested independently. If the window closes only on the 0.35 row, that plateau, not the flux level, becomes the suspect.</li>
+<li>The nozzle temperature of 1900 K, an adiabatic flame with no wall loss, is the least defensible fixed input. The degeneracy report will express the calibrated factor as an equivalent nozzle temperature so it can be judged against 1450 to 1850 K and the cooling-water estimate.</li>
+<li>Independent data exist that would test the calibrated pair without any of Meier's unknowns: drilling speeds measured at ETH on Central Aare granite at known coefficients and flame temperature. Obtaining them is a library request.</li>
+</ul>
+
+<h2>10. Beyond this step: telling spallation from melting</h2>
+<p>A separate weakness, not on the path to closing Meier but relevant to the millimetre-wave cases that follow, is that the model's spall criterion is a temperature threshold with no dependence on how steeply the rock is heated. In equations, the four additions are:</p>
+<div class="eq">1. gradient gate:        δ_fp : T(δ_fp) = T_s − ΔT_fp ;   spall only if  δ_fp ≤ δ_max   ⇔   G = q_eff / k ≥ G_min = ΔT_fp / δ_max
+                         q_eff = q_cond(0) + ∫₀^{δ_max} S(z) dz ;   Kant's h_min ≈ 500 W/m²K  ⇒  q_min ≈ 0.4 MW/m²,  G_min ≈ 160–200 K/mm,  δ_max ≈ 0.25–0.6 mm
+2. surface temperature:  T_surf = T̄_cell + q_eff Δz / (2k)      (linear)      or      T_s − T_0 = (T̄ − T_0) (Δz/ℓ) / (1 − e^{−Δz/ℓ}),  ℓ = κ/v   (steady front)
+3. absorption:           dI/dz = −α(T) I ,   S = α(T) I ,   α = (2π f / c) √ε′ tan δ(T)
+4. delamination:         Δε = α_th [ T̄(0..h_f) − T̄(h_f..2h_f) ] ≈ α_th G h_f ,   σ_m = E Δε /(1−ν)
+                         buckle if σ_m ≥ σ_c = 1.22 E (h_f/b)² /(1−ν²) ;  release if  G_r = (1−ν²) h_f σ_m² /(2E) · (1 − σ_c/σ_m)(1 + 3σ_c/σ_m) ≥ K_Ic(T)² (1−ν²)/E</div>
+<p>In words: A flame heats a thin skin, which buckles off; a millimetre-wave beam heats centimetres of rock almost uniformly, which cannot buckle and instead heats on to melting. Four additions would let the model place that boundary itself: a gate that allows a flake only when the temperature drops a set amount within a flake thickness of the surface, anchored on Kant's measured minimum coefficient; a reconstruction of the true surface temperature inside the top cell, so the melt check sees the surface and not the cell average; a millimetre-wave absorption that rises with temperature, so the beam localises and the surface runs away to melt as observed; and, later, a proper buckling-delamination criterion driven by the temperature mismatch across the flake, which contains the gradient by construction. The first two are a small packet with tests already in the repository; they also bear on the Meier wall, whose derived coefficient sits below Kant's threshold and would not spall under such a gate.</p>
+
+<h2>Symbols</h2>
+<div class="scroll"><table>
+<thead><tr><th>Symbol</th><th>Meaning</th><th>Value used</th></tr></thead>
+<tbody>
+<tr><td>h(r, s), h₀, Φ, Δ(s)</td><td>floor heat-transfer coefficient, its prefactor, Martin's radial-standoff shape, and the distance decay</td><td>1350 W/m²K at the axis and 90 mm; Δ = min(1, 90 mm/s)</td></tr>
+<tr><td>T_noz, T_gas, T_exh</td><td>gas temperature at the nozzle, at the floor, and in the exhaust that heats the wall</td><td>1900 / 1665 / 1552 K</td></tr>
+<tr><td>T_s, T_0, ΔT_fp</td><td>flaking temperature, initial rock temperature, drop from surface to failure plane</td><td>823 K, 293 K, 50–100 K</td></tr>
+<tr><td>ρc, e</td><td>volumetric heat capacity; heat to bring rock to T_s</td><td>2.17 MJ/m³K; 1.35 J/mm³</td></tr>
+<tr><td>v_feed, v_floor, R₉₀</td><td>lowering speed; floor recession; undecayed recession at 90 mm</td><td>1.5 m/h; measured; 3.3 m/h</td></tr>
+<tr><td>s, s*, s₀, τ</td><td>nozzle-to-floor gap, its equilibrium, the plateau limit of the map, the relaxation time</td><td>—, 198·F mm, 90 mm, s*/v_feed</td></tr>
+<tr><td>F, F_q, κ</td><td>floor-speed factor; heating factor on the map; toughness scale</td><td>calibrated</td></tr>
+<tr><td>K_I, K_Ic(T), a_f, f_K</td><td>stress intensity, toughness table, flaw length, weight function</td><td>a_f 4–20 µm Weibull, m = 20</td></tr>
+<tr><td>E, ν, α_th</td><td>modulus, Poisson ratio, thermal expansion (thermal stress only)</td><td>30 GPa, 0.30, 8×10⁻⁶ /K</td></tr>
+<tr><td>q_stag</td><td>stagnation flux at the cell's own plateau gap, the flux gate</td><td>0.45–0.87 MW/m² allowed</td></tr>
+</tbody></table></div>
+
+<h2>Terms</h2>
+<dl>
+<dt>Standoff, or gap</dt><dd>Vertical distance from the nozzle exit to the rock beneath it; the feet set a minimum of 50 mm.</dd>
+<dt>Floor-speed factor F</dt><dd>The floor's recession rate at a given standoff relative to the present model. The photograph and the hanging burner together require 0.36 to 0.50.</dd>
+<dt>Flaking temperature</dt><dd>Surface temperature at which a cell is removed; emerges from the toughness table and the flaw population, 823 K at present.</dd>
+<dt>Heating factor</dt><dd>A single multiplier on the coefficient map that heats the floor; the wall coefficient is separate and untouched.</dd>
+<dt>Back-reaction</dt><dd>The rise in gas temperature when less heat is extracted, because the modelled jet conserves enthalpy.</dd>
+</dl>
+<p class="small" style="margin-top:2rem">Sources: T. Meier, <em>Thermal spallation drilling</em>, ETH Zürich 2017, Ch. 3 and Ch. 8; M. A. Kant and P. Rudolf von Rohr, minimal boundary conditions for spallation of granitic rocks (2016); Kant et al., thermal properties of Central Aare granite (2017) and the Stanford Geothermal Workshop paper (2017); Wilkinson and Tester (1993); Krietsch et al., Grimsel rock-mass dataset (2018). Model runs of 28–29 September 2026 and the reviewer's notes of the same dates.</p>
+</div>
+</div>
+
+<script>
+(function(){
+  const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const NS='http://www.w3.org/2000/svg';
+  function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+  function txt(p,x,y,s,a){const t=el('text',Object.assign({x:x,y:y,'font-size':11},a||{}),p);t.textContent=s;return t;}
+  function chart(svg,o){
+    const W=o.w,H=o.h,m=o.m;
+    const xs=v=>m.l+(v-o.x0)/(o.x1-o.x0)*(W-m.l-m.r);
+    const ys=v=>H-m.b-(v-o.y0)/(o.y1-o.y0)*(H-m.t-m.b);
+    const g=el('g',{},svg);
+    o.yt.forEach(v=>{el('line',{x1:m.l,x2:W-m.r,y1:ys(v),y2:ys(v),class:'grid','stroke-width':1},g);txt(g,m.l-8,ys(v)+4,String(v),{'text-anchor':'end','font-size':11,class:'t-muted'});});
+    o.xt.forEach(v=>{el('line',{x1:xs(v),x2:xs(v),y1:H-m.b,y2:H-m.b+5,class:'axis','stroke-width':1},g);txt(g,xs(v),H-m.b+18,o.xf?o.xf(v):String(v),{'text-anchor':'middle','font-size':11,class:'t-muted'});});
+    el('line',{x1:m.l,x2:W-m.r,y1:H-m.b,y2:H-m.b,class:'axis','stroke-width':1},g);
+    el('line',{x1:m.l,x2:m.l,y1:m.t,y2:H-m.b,class:'axis','stroke-width':1},g);
+    txt(g,(m.l+W-m.r)/2,H-6,o.xl,{'text-anchor':'middle','font-size':11.5,class:'t-muted'});
+    const yl=txt(g,14,(m.t+H-m.b)/2,o.yl,{'text-anchor':'middle','font-size':11.5,class:'t-muted'});
+    yl.setAttribute('transform','rotate(-90 14 '+((m.t+H-m.b)/2)+')');
+    return {g,xs,ys};
+  }
+
+  /* Figure 1: window */
+  (function(){
+    const svg=document.getElementById('fig-window');
+    const c=chart(svg,{w:980,h:380,m:{l:64,r:24,t:24,b:48},x0:0.2,x1:1.1,y0:0,y1:230,xt:[0.2,0.4,0.6,0.8,1.0],xf:v=>v.toFixed(1),yt:[0,50,100,150,200],xl:'floor-speed factor F (relative to the present model)',yl:'equilibrium nozzle-to-floor gap, mm'});
+    const muted=css('--muted'),accent=css('--accent'),heat=css('--heat');
+    // allowed band: F 0.36..0.50 and s* between 71 and 100
+    el('rect',{x:c.xs(0.36),y:c.ys(100),width:c.xs(0.50)-c.xs(0.36),height:c.ys(0)-c.ys(100),fill:css('--ok-soft'),opacity:.9},c.g);
+    txt(c.g,c.xs(0.43),c.ys(20),'window',{'text-anchor':'middle','font-size':11,fill:css('--ok'),'font-weight':500});
+    // contact region
+    el('rect',{x:c.xs(0.2),y:c.ys(230),width:c.xs(0.36)-c.xs(0.2),height:c.ys(0)-c.ys(230),fill:css('--bad-soft'),opacity:.6},c.g);
+    txt(c.g,c.xs(0.28),c.ys(215),'feet rest on rock',{'text-anchor':'middle','font-size':10.5,class:'t-muted'});
+    txt(c.g,c.xs(0.28),c.ys(203),'(floor slower than feed)',{'text-anchor':'middle','font-size':10.5,class:'t-muted'});
+    // ceiling
+    el('line',{x1:c.xs(0.2),x2:c.xs(1.1),y1:c.ys(100),y2:c.ys(100),stroke:muted,'stroke-width':1.2,'stroke-dasharray':'5 4'},c.g);
+    txt(c.g,c.xs(1.09),c.ys(100)-6,'photograph: gap ≤ 100 mm',{'text-anchor':'end','font-size':10.5,class:'t-muted'});
+    el('line',{x1:c.xs(0.2),x2:c.xs(1.1),y1:c.ys(50),y2:c.ys(50),stroke:muted,'stroke-width':1,'stroke-dasharray':'2 3'},c.g);
+    txt(c.g,c.xs(1.09),c.ys(50)-5,'feet height, 50 mm',{'text-anchor':'end','font-size':10.5,class:'t-muted'});
+    // s* = 198 F line (valid where s*>90; below 90 the flux is undecayed and the curve is flat at 50..90 region conceptually) draw for F>=0.36
+    let pts=[];for(let F=0.36;F<=1.1;F+=0.01){pts.push(c.xs(F).toFixed(1)+','+c.ys(198*F).toFixed(1));}
+    el('polyline',{points:pts.join(' '),fill:'none',stroke:accent,'stroke-width':2.4},c.g);
+    txt(c.g,c.xs(0.98),c.ys(198*0.98)-10,'s* = 198 · F',{'text-anchor':'end','font-size':11,fill:accent});
+    // grid cells
+    const cells=[[1.0,'control'],[0.570,''],[0.498,''],[0.433,''],[0.414,''],[0.362,'']];
+    cells.forEach(([F,l])=>{el('circle',{cx:c.xs(F),cy:c.ys(198*F),r:5,fill:accent},c.g);});
+    el('circle',{cx:c.xs(0.316),cy:c.ys(71),r:5,fill:'none',stroke:heat,'stroke-width':1.8},c.g);
+    txt(c.g,c.xs(0.316),c.ys(71)+18,'contact',{'text-anchor':'middle','font-size':10,fill:heat});
+    txt(c.g,c.xs(1.0)+8,c.ys(198)+4,'present model',{'font-size':10.5,class:'t-muted'});
+  })();
+
+  /* Figure 2: grid */
+  (function(){
+    const svg=document.getElementById('fig-grid');
+    const cols=['T_s 823 K (present)','T_s 870 K','T_s 920 K'];
+    const rows=['heating 1.00','heating 0.50','heating 0.35'];
+    const data=[
+      [{F:1.000,s:198,v:'bad',n:'control'},{F:0.868,s:172,v:'skip'},{F:0.749,s:148,v:'skip'}],
+      [{F:0.570,s:113,v:'bad'},{F:0.498,s:99,v:'ok',n:'edge'},{F:0.433,s:86,v:'ok'}],
+      [{F:0.414,s:82,v:'ok',n:'standoff only'},{F:0.362,s:72,v:'ok',n:'lower edge'},{F:0.316,s:62,v:'contact'}]
+    ];
+    const left=150,top=44,cw=255,ch=80,gap=8;
+    const fill={ok:css('--ok-soft'),bad:css('--bad-soft'),skip:css('--grid'),contact:css('--paper')};
+    const stroke={ok:css('--ok'),bad:css('--bad'),skip:css('--line'),contact:css('--heat')};
+    const label={ok:'inside the window',bad:'above the ceiling',skip:'not run',contact:'over-corrected: contact'};
+    cols.forEach((cl,j)=>txt(svg,left+j*(cw+gap)+cw/2,top-14,cl,{'text-anchor':'middle','font-size':12,'font-weight':500}));
+    rows.forEach((rl,i)=>{
+      txt(svg,left-12,top+i*(ch+gap)+ch/2+4,rl,{'text-anchor':'end','font-size':12,'font-weight':500});
+      data[i].forEach((d,j)=>{
+        const x=left+j*(cw+gap),y=top+i*(ch+gap);
+        el('rect',{x:x,y:y,width:cw,height:ch,rx:4,fill:fill[d.v],stroke:stroke[d.v],'stroke-width':d.v==='contact'?1.8:1,'stroke-dasharray':d.v==='contact'?'4 3':'none'},svg);
+        if(d.v!=='skip'){
+          txt(svg,x+14,y+28,'F = '+d.F.toFixed(2)+'   gap ≈ '+d.s+' mm',{'font-size':12.5,'font-weight':500});
+          txt(svg,x+14,y+50,label[d.v]+(d.n?'  ·  '+d.n:''),{'font-size':11,fill:stroke[d.v]});
+        } else {
+          txt(svg,x+14,y+28,'F = '+d.F.toFixed(2)+'   gap ≈ '+d.s+' mm',{'font-size':12.5,class:'t-muted'});
+          txt(svg,x+14,y+50,'not run: fails by a wide margin',{'font-size':11,class:'t-muted'});
+        }
+      });
+    });
+    txt(svg,left,top+3*(ch+gap)+14,'Gap predicted from s* = 198·F with the gas back-reaction included; ± 5 % on every value. Verdicts are pre-registered, not results.',{'font-size':10.5,class:'t-muted'});
+  })();
+})();
+</script>

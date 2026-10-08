@@ -39,7 +39,9 @@ The typical loop:
 
 After opening this file, read only these additional files by default:
 
-1. `ROADMAP.md` — current status, active milestone, and next milestones.
+1. `ROADMAP.md` — **read `## Standing rules` first**: programme invariants that are
+   never archived (unit conventions, scoring traps, coupled calibrations). Then current
+   status, the active step, and next milestones.
 2. `ACTIVE_STEP.md` — the detailed task packet for the active coding step.
 
 Then use the project rules, commands, ALAMO gotchas, and guardrails below.
@@ -144,7 +146,38 @@ python3 tests/MMWSpalling/<step>/test tests/MMWSpalling/<step>/output
 ## Context Budget Rules
 
 - Keep `CLAUDE.md` short and operational.
-- Keep `ROADMAP.md` short enough to read every session.
+- **`ROADMAP.md`: budget the hand-written sections, not the total.** The file is read at
+  startup by every phase, so the cost is context; the danger is the notes turning into a
+  second archive. A single total cap measured the wrong thing: the **generated**
+  `## Current Status` list grows one line per archived step and carries no decisions, so a
+  total cap shrank the hand-written part every time a step was archived. Rule (set
+  2026-10-07, replacing the 300 → 400 total cap):
+  - **Generated list excluded.** The block from the `## Current Status` heading to the line
+    before `Active step:` is written by `docs/project/tools/roadmap_status.py` and is not
+    counted. Never hand-edit it.
+  - **Hand-written content ≤ 350 lines.** Everything else in the file. Check:
+    `awk '/^## Current Status/{g=1} /^Active step:/{g=0} !g{n++} END{print n}' ROADMAP.md`
+    (287 on 2026-10-07).
+  - **Section budgets inside that:** `## Standing rules` **10–15 bullets, never archived**
+    (unit conventions, scoring traps, coupled calibrations); `## Known Stale/Important Notes`
+    **≤ 40 bullets of ≤ 3 lines**, each a pointer to the evidence; `Active step:` plus
+    `Next milestones` together **≤ 100 lines**; `## Validation Story` ≤ 20 lines.
+  - **Total alarm at 600 lines** (`wc -l`), so a runaway is still caught by a one-line check.
+  - ⚠ A line cap is gamed by long lines. If lines run past ~200 characters, count words
+    instead: the hand-written part should stay under **5,000 words**.
+  - ⚠ The cap is what matters: without it the standing block becomes the new notes section
+    and the notes section becomes the new archive. A check on a label ("exactly one
+    `Active step:`") passes while the section under it grows (log 2026-10-02 §1).
+- **`ACTIVE_STEP.md` under 500 lines**, carrying only what the implementer executes.
+  Argument and history go to `Claude_markdowns/<date>.md` and `ARCHIVE_DONE.md`.
+  ⚠ Keep the number that is the *specification*; move the number that is *provenance*.
+  - ⚠ Raised 300 -> 500 by the user on 2026-10-07: compressing the packet was costing more
+    planning time than the bloat cost, and the cap also has to hold the implementer's
+    `## Claude completion notes` and the reviewer's `## Review findings`, which append to the
+    same file and are only archived at the next `/plan`. 300 bound the *planner's* packet
+    alone and was breached by the phases that follow it (P2-2 reached 444).
+- **`ARCHIVE_DONE.md` carries a heading index at the top**, regenerated on append.
+  Pointers into a 14,000-line file with no index are worse than the bloat they replace.
 - Put detailed completed history in `docs/project/ARCHIVE_DONE.md`, not
   `ROADMAP.md`.
 - Keep each completed-step summary in

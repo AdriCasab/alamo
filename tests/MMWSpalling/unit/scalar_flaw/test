@@ -13,7 +13,9 @@
 #       in both. (a differs from a0 by <= 5e-11 under D.)
 #   (c) In S and D, removal_events.csv is a complete log:
 #       - one row per (step, column) removal: unique (time, col), every row
-#         h_applied > 0, and every h_col first-firing row appears in it;
+#         h_applied > 0, every h_col first-firing row appears in it, and the
+#         two counts are EQUAL (D2z-1: whole-cell removal makes an event a
+#         removal; this was `>` while a column fired twice per cell);
 #       - sum n_voided == removed cells in the final plotfile;
 #       - sum h_applied == level-set recession of the column (<= 1e-12 m);
 #       - T_top of rows with n_voided == 1 == frozen T of the voided cell
@@ -170,8 +172,16 @@ for n in ("S", "D"):
     unique = len(keys) == r.size
     hcol_t = set(np.round(h["time"], 9).tolist())
     rem_t = set(np.round(r["time"], 9).tolist())
+    # D2z-1: this used to assert r.size > h.size -- MORE removal rows than
+    # h_col first-firing rows. That inequality was the twice-per-cell artefact:
+    # under the half-cell increment a column fired twice to clear one cell, so
+    # 52 removal rows accompanied 26 h_col rows and 26 voided cells. Whole-cell
+    # removal deletes exactly that behaviour, so the two are now 1:1 (26 rows,
+    # 26 h_col rows, the same 26 cells voided, h_applied exactly dz). The
+    # assertion is updated to ==, which is the stronger statement the packet
+    # set out to make: an event in removal_events.csv IS a removal.
     check(f"c {n} one row per (step, column) removal",
-          unique and np.all(r["h_applied"] > 0.0) and hcol_t <= rem_t and r.size > h.size,
+          unique and np.all(r["h_applied"] > 0.0) and hcol_t <= rem_t and r.size == h.size,
           f"{r.size} rows (unique {unique}), min h_applied {r['h_applied'].min():.3e} m, "
           f"all {h.size} h_col first-firing times present: {hcol_t <= rem_t}")
     last = fields(plotfiles(P[n])[-1], ["Temp", "removed", "phi"])

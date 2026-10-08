@@ -1,0 +1,519 @@
+<title>Flame-Jet Model State</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  --bg:#f2f4f6; --panel:#ffffff; --ink:#1a222c; --muted:#5a6673; --rule:#d6dce2;
+  --accent:#2b5c7a; --accent-ink:#ffffff; --eqbg:#f7f9fb;
+  --ship:#2f7a5a; --ship-bg:#e4f2ea; --prop:#9a6200; --prop-bg:#fbefd4; --retire:#7a3a2a; --retire-bg:#f6e4df;
+  --callout:#e8f0f6; --callout-rule:#2b5c7a;
+  --rock:#d9d3c7; --rock-ink:#6b6151; --hot:#c8553d; --warm:#e0a03a; --cool:#2b5c7a;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121a21; --panel:#18222b; --ink:#e6eaee; --muted:#9aa7b3; --rule:#2c3944;
+    --accent:#7fb3d5; --accent-ink:#0f1a22; --eqbg:#1c2731;
+    --ship:#7fd0a8; --ship-bg:#173127; --prop:#f0c060; --prop-bg:#3a2d10; --retire:#f0a090; --retire-bg:#3a2320;
+    --callout:#1b2e3c; --callout-rule:#7fb3d5;
+    --rock:#3a4149; --rock-ink:#b9b2a4; --hot:#e8745c; --warm:#f0c060; --cool:#7fb3d5;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121a21; --panel:#18222b; --ink:#e6eaee; --muted:#9aa7b3; --rule:#2c3944;
+  --accent:#7fb3d5; --accent-ink:#0f1a22; --eqbg:#1c2731;
+  --ship:#7fd0a8; --ship-bg:#173127; --prop:#f0c060; --prop-bg:#3a2d10; --retire:#f0a090; --retire-bg:#3a2320;
+  --callout:#1b2e3c; --callout-rule:#7fb3d5;
+  --rock:#3a4149; --rock-ink:#b9b2a4; --hot:#e8745c; --warm:#f0c060; --cool:#7fb3d5;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.55;padding-inline:16px;padding-block:0 64px;}
+.wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:0 48px;}
+@media (min-width:980px){.wrap{grid-template-columns:minmax(0,1fr) 240px;}}
+header.top{grid-column:1/-1;padding-block:40px 20px;border-bottom:1px solid var(--rule);margin-bottom:28px;}
+.eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;}
+h1{font-family:var(--sans);font-weight:600;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0 0 14px;text-wrap:balance;}
+.lede{font-size:19px;max-width:70ch;margin:0;color:var(--ink);}
+.meta{font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 20px;}
+main{min-width:0;}
+nav.toc{display:none;}
+@media (min-width:980px){
+  nav.toc{display:block;position:sticky;top:env(safe-area-inset-top,0px);align-self:start;padding-top:6px;font-family:var(--sans);font-size:13px;}
+  nav.toc ol{list-style:none;margin:0;padding:0;border-left:1px solid var(--rule);}
+  nav.toc li a{display:block;padding:5px 0 5px 14px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;margin-left:-1px;}
+  nav.toc li a:hover,nav.toc li a:focus-visible{color:var(--accent);border-left-color:var(--accent);outline:none;}
+  nav.toc .toclabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;}
+}
+section{margin-bottom:44px;}
+h2{font-family:var(--sans);font-weight:600;font-size:24px;line-height:1.2;margin:0 0 6px;text-wrap:balance;}
+h3{font-family:var(--sans);font-weight:600;font-size:17px;margin:26px 0 8px;}
+.secno{font-family:var(--mono);font-size:13px;color:var(--accent);display:block;margin-bottom:4px;}
+p{max-width:70ch;margin:0 0 14px;}
+ul,ol{max-width:70ch;margin:0 0 14px;padding-left:22px;}
+li{margin-bottom:6px;}
+code,.k{font-family:var(--mono);font-size:.88em;background:var(--eqbg);padding:1px 5px;border-radius:3px;}
+.tag{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px;vertical-align:middle;}
+.tag.ship{color:var(--ship);background:var(--ship-bg);}
+.tag.prop{color:var(--prop);background:var(--prop-bg);}
+.tag.retire{color:var(--retire);background:var(--retire-bg);}
+.callout{background:var(--callout);border-left:3px solid var(--callout-rule);padding:14px 18px;border-radius:0 6px 6px 0;margin:0 0 18px;max-width:78ch;}
+.callout p{margin:0 0 8px;} .callout p:last-child{margin:0;}
+.tablewrap{overflow-x:auto;margin:0 0 18px;border:1px solid var(--rule);border-radius:6px;background:var(--panel);}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:14px;}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--rule);}
+th{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--eqbg);}
+tr:last-child td{border-bottom:none;}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:0 0 18px;}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 18px;}
+.panel h4{font-family:var(--sans);font-size:14px;font-weight:600;margin:0 0 8px;}
+.panel p,.panel ul{font-size:15px;margin-bottom:8px;}
+.panel ul{padding-left:18px;}
+.diagram{overflow-x:auto;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:12px;margin:0 0 18px;}
+pre.mermaid{margin:0;}
+figure{margin:0 0 22px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px 10px;}
+figure svg{display:block;width:100%;height:auto;max-width:100%;}
+figure .ax{font-family:var(--sans);font-size:11px;fill:var(--muted);}
+figure .lbl{font-family:var(--sans);font-size:11px;fill:var(--ink);}
+figure .ttl{font-family:var(--sans);font-size:12px;font-weight:600;fill:var(--ink);}
+figcaption{font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:8px;max-width:78ch;line-height:1.45;}
+figcaption b{color:var(--ink);font-weight:600;}
+.figrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:0 0 22px;}
+.figrow figure{margin:0;}
+.bneck{border-left:3px solid var(--retire);background:var(--panel);border-radius:0 6px 6px 0;padding:14px 18px;margin:0 0 16px;}
+.bneck h3{margin:0 0 8px;}
+.bneck .row{display:grid;grid-template-columns:minmax(0,1fr);gap:4px 18px;font-family:var(--sans);font-size:14.5px;}
+@media (min-width:720px){.bneck .row{grid-template-columns:120px minmax(0,1fr);}}
+.bneck .row dt{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding-top:3px;}
+.bneck .row dd{margin:0 0 6px;}
+.foot{font-family:var(--sans);font-size:13px;color:var(--muted);border-top:1px solid var(--rule);padding-top:14px;margin-top:40px;max-width:78ch;}
+a{color:var(--accent);}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important;}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">ALAMO · MMWSpalling · Meier flame-jet validation programme</p>
+  <h1>Where the thermal-spallation model stands</h1>
+  <p class="lede">A reviewer's account of the P-series, from the surface-temperature reconstruction (P0) to the lateral flake sink (P1g-2): what each step established, the findings that changed the design, the six things now in the way, the tests that would clear them, and what is and is not quotable against Meier.</p>
+  <div class="meta"><span>5 October 2026, revised with figures</span><span>Steps covered: P0 → P1g-2</span><span>Source logs: <code>Claude_markdowns/2026-09-30a.md</code> §15, daily logs 10-01 → 10-04</span></div>
+</header>
+
+<main>
+
+<section id="goal">
+  <span class="secno">1</span>
+  <h2>The goal and the benchmark</h2>
+  <p>The model is meant to be a physically correct, mesh-independent description of thermal spallation that reproduces Meier's 2017 flame-jet drilling experiment on Grimsel (Central Aare) granite, and that works unchanged for millimetre-wave heating. Meier's run is the benchmark because it is fully instrumented: a prescribed feed of 1.5 m/h, a bore of 85 to 96 mm diameter, a standoff that his own figures cap at about 100 mm, a thermal budget, and a cuttings size distribution with an average under 100 µm and a 90th percentile under 300 µm.</p>
+  <p>The programme runs as a three-phase loop (plan, implement, verify) driven by separate agents. This document is the independent reviewer's reading of the results, not the implementer's or the planner's.</p>
+</section>
+
+<section id="model">
+  <span class="secno">2</span>
+  <h2>The model in one page</h2>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A[Jet heat transfer<br/>wall-jet h map, enthalpy march] --> B[Enthalpy conduction<br/>in the rock]
+  B --> C[Surface temperature<br/>two-cell exponential reconstruction]
+  C --> D{Fracture criterion<br/>K_I = sigma*sqrt(pi a)*Y vs K_Ic(T)}
+  D -->|column top| E[Vertical flake<br/>sub-cell remap of the column]
+  D -->|open side face| F[Lateral flake<br/>bank thickness, shift row, void at dx]
+  E --> G[Energy ledger<br/>identity gate: 2639 files]
+  F --> G
+  </pre></div>
+  <div class="grid2">
+    <div class="panel"><h4>Heat in</h4><p>A Martin wall-jet coefficient map h(r, s), radially confined to the burner footprint, with a jet enthalpy march in radial bins so the gas cools as it gives up heat. Side faces of steps are heated through an explicit coefficient (169.3 W m⁻² K⁻¹ on Meier runs) with a staircase area correction so a round wall on a square grid gets the right area.</p></div>
+    <div class="panel"><h4>Heat in the rock</h4><p>Enthalpy conduction with Grimsel properties (k 1.5 W m⁻¹ K⁻¹, ρc 2.17 MJ m⁻³ K⁻¹, α 6.9×10⁻⁷ m² s⁻¹). The surface temperature is reconstructed from the top two cells assuming an exponential skin, and the Robin boundary condition is applied at that reconstructed temperature.</p></div>
+    <div class="panel"><h4>Removal</h4><p>A linear-elastic fracture criterion on a per-cell Weibull flaw (8 µm scale, modulus 20) against the Nasseri toughness table. The thermoelastic stress is the <em>absolute</em> surface stress on the control configuration; a <em>differential</em> form (stress jump across the flake) was adopted in P1 and is now in question. Flake thickness is 0.4 of the skin, capped at 1.5 mm.</p></div>
+    <div class="panel"><h4>Geometry</h4><p>Vertical recession is sub-cell: the column's enthalpy profile is shifted by the flake thickness. Lateral recession on open side faces was whole-cell until this week; it now banks the earned thickness per column (P1g-1) and shifts the row of rock behind the face (P1g-2). The rock is one phase and one grain.</p></div>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 680 300" role="img" aria-label="Half cross-section of the drilled hole showing three radius bands: the floor interior where heat enters from above, a transition band, and the wall band where heat enters from the side">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--hot)"/></marker>
+        <marker id="arrc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--cool)"/></marker>
+      </defs>
+      <!-- rock -->
+      <rect x="40" y="40" width="600" height="240" style="fill:var(--rock)"/>
+      <!-- hole: floor at y=170 from x=40 to 440 (r 0..50 mm), wall rising to the top at x=440..470 -->
+      <path d="M40,40 L40,172 Q 300,170 380,168 Q 430,165 455,120 L 470,40 Z" style="fill:var(--panel)"/>
+      <!-- burner body -->
+      <rect x="40" y="40" width="330" height="48" rx="3" style="fill:var(--eqbg);stroke:var(--rule)"/>
+      <text x="205" y="68" text-anchor="middle" class="lbl">burner body, Ø 80 mm footprint</text>
+      <!-- axis line -->
+      <line x1="40" y1="30" x2="40" y2="290" style="stroke:var(--muted);stroke-dasharray:4 4"/>
+      <text x="44" y="296" class="ax">axis, r = 0</text>
+      <!-- radius ticks: 8 px per mm, r=0 at x=40 -->
+      <g class="ax">
+        <line x1="200" y1="280" x2="200" y2="286" style="stroke:var(--muted)"/><text x="200" y="297" text-anchor="middle">20 mm</text>
+        <line x1="280" y1="280" x2="280" y2="286" style="stroke:var(--muted)"/><text x="280" y="297" text-anchor="middle">30</text>
+        <line x1="360" y1="280" x2="360" y2="286" style="stroke:var(--muted)"/><text x="360" y="297" text-anchor="middle">40</text>
+        <line x1="440" y1="280" x2="440" y2="286" style="stroke:var(--muted)"/><text x="440" y="297" text-anchor="middle">50</text>
+        <line x1="520" y1="280" x2="520" y2="286" style="stroke:var(--muted)"/><text x="520" y="297" text-anchor="middle">60</text>
+      </g>
+      <!-- band shading under the surface -->
+      <path d="M40,172 Q 120,171 200,170 L200,200 L40,200 Z" style="fill:var(--cool);opacity:.25"/>
+      <path d="M200,170 L280,169 L280,200 L200,200 Z" style="fill:var(--warm);opacity:.3"/>
+      <path d="M280,169 Q 330,168 380,168 Q 430,165 455,120 L 470,40 L 520,40 L 520,200 L 280,200 Z" style="fill:var(--hot);opacity:.28"/>
+      <!-- heat arrows: floor vertical -->
+      <g style="stroke:var(--cool);stroke-width:2" marker-end="url(#arrc)">
+        <line x1="80" y1="130" x2="80" y2="162"/><line x1="130" y1="130" x2="130" y2="162"/><line x1="180" y1="130" x2="180" y2="162"/>
+      </g>
+      <!-- wall arrows: horizontal into the wall -->
+      <g style="stroke:var(--hot);stroke-width:2" marker-end="url(#arr)">
+        <line x1="410" y1="110" x2="452" y2="118"/><line x1="420" y1="80" x2="462" y2="80"/><line x1="340" y1="130" x2="380" y2="160"/>
+      </g>
+      <!-- skin depth labels -->
+      <text x="60" y="222" class="lbl">floor, r &lt; 20 mm</text>
+      <text x="60" y="238" class="ax">heated from above · skin ℓ 1.3–1.4 mm</text>
+      <text x="60" y="252" class="ax">flake 0.55 mm · cap binds 0 %</text>
+      <text x="206" y="222" class="lbl">20–30</text>
+      <text x="206" y="238" class="ax">ℓ 2.2 mm</text>
+      <text x="206" y="252" class="ax">cap 12 %</text>
+      <text x="290" y="222" class="lbl">wall band, r ≥ 30 mm</text>
+      <text x="290" y="238" class="ax">heated through its side · vertical profile flat</text>
+      <text x="290" y="252" class="ax">two-cell read ℓ 4–12 mm · flake = cap 1.5 mm · 100 % at r ≥ 40</text>
+      <text x="290" y="268" class="ax">≈ 60 % of removed volume lives here</text>
+    </svg>
+    <figcaption><b>Figure 1. The hole in half section, with the three populations the rest of this page keeps returning to.</b> Under the burner the floor is heated from above, the skin is resolved and the flake thickness is a measured quantity. From about 30 mm outward the columns are heated through their side, the vertical temperature profile is nearly flat, and the two-cell reconstruction returns a skin of 4 to 12 mm, so the flake thickness is whatever the 1.5 mm cap says. Numbers from Leg B's event log, t &gt; 100 s, r in 5 mm bands.</figcaption>
+  </figure>
+</section>
+
+<section id="series">
+  <span class="secno">3</span>
+  <h2>What each step established</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Step</th><th>What it did</th><th>What it found</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>P0</td><td>Reconstructed surface temperature for the criterion</td><td>Criterion mesh-independent to 0.16 %, but the Robin BC still used the cell average, so the one-dimensional rate spread went from 7 % to 86 %</td><td><span class="tag ship">accepted</span></td></tr>
+      <tr><td>P0b</td><td>Robin BC on the reconstructed temperature; flake thickness from the skin; column remap</td><td>Rate spread 86 % → 1.5 %. Introduced the 1.5 mm flake cap as a stopgap; it binds on 30 % of floor firings</td><td><span class="tag ship">accepted</span></td></tr>
+      <tr><td>P1</td><td>Differential (flake-referenced) criterion with an 80 µm flaw refit</td><td>Refit and criterion cancel structurally (flaw and drive fraction are one calibration). Meier run collides at 177.6 s with 152 of 316 floor columns frozen</td><td><span class="tag ship">accepted, with collision</span></td></tr>
+      <tr><td>P1b / P1c</td><td>Support rule: remove columns with 2 (then 3) exposed sides</td><td>Two sides drills the grid diagonals of a round wall (12 mm on axes, 250 mm at 45°); three sides switches the rule off</td><td><span class="tag retire">negative</span></td></tr>
+      <tr><td>P1e</td><td>Face-based staircase area factor</td><td>Cures the stall (65 → 3 frozen columns) but the hole stays lobed on the grid axes: a cell-scale anisotropy any per-column criterion keeps</td><td><span class="tag retire">negative</span></td></tr>
+      <tr><td>P1f</td><td>Lateral face criterion with whole-cell removal</td><td>First Leg B fired 224,359 times on cold rock: stress intensity in Pa√m compared to toughness in MPa√m. Fixed. Corrected Leg B: 1,110 physical firings, volume 0.990 of control, 9 buried cells, ledger identical to control</td><td><span class="tag ship">accepted</span></td></tr>
+      <tr><td>P1g-0</td><td>Criterion's Newton length made equal to the kernel's</td><td>Lateral firing temperature spread across sectors 10.9 K → 3.8 K. Deep diagonal deficit fell only from 100 % to 93 %</td><td><span class="tag ship">accepted</span></td></tr>
+      <tr><td>P1g-0b</td><td>Criterion's side coefficient cap made equal to the kernel's; four-site argument lock</td><td>Criterion had judged on h = 80 while the kernel heated with 169.3, a face 35 K too cool. Consistent, the lateral mode reaches threshold 10 to 32 K below the vertical mode's tenth percentile deep in the hole</td><td><span class="tag ship">accepted</span></td></tr>
+      <tr><td>P1g-1</td><td>Lateral banking: void only when a full cell of thickness has accrued</td><td>Conservation exact to 10⁻¹⁶, and physically inert: identical void times to whole-cell, because nothing thermal happens on a bank</td><td><span class="tag ship">accepted, inert</span></td></tr>
+      <tr><td>P1g-2</td><td>Thermal half: shift the row of rock behind a banking face by the flake thickness</td><td>Attributable (refused rows move 0, shifting rows move). Onset delayed by one re-heat (4 to 7 s); recession over 60 s at 95 % of whole-cell; decay read moves by over 5 % on a fifth to a third of banks</td><td><span class="tag ship">accepted, with relabels</span></td></tr>
+    </tbody>
+  </table></div>
+  <p>Earlier work (the D2 series, September) fixed the jet-side picture: the funnel-shaped mouth was a boundary-condition artefact cured by the radially confined coefficient map; the step-face cascade that made results mesh-dependent was cured by heating the side faces; the floor flux is about twice what Meier's kinematics imply, and the standoff the model settles at is 170 to 180 mm against Meier's ceiling of about 100 mm.</p>
+</section>
+
+<section id="findings">
+  <span class="secno">4</span>
+  <h2>Four findings that changed the design</h2>
+
+  <h3>A per-column criterion cannot be round on a square grid</h3>
+  <p>A 45° wall carries the same arc with √2 fewer columns, so any criterion that scores one column at a time sees √2 more heat per column on the diagonals. P1b, P1c and P1e all ran into this from different sides. The lateral face criterion removed the bias from the <em>lateral</em> mode: once the Newton length and the coefficient matched the kernel, the sector spread of lateral firing temperature was 3.8 K. The vertical mode still carries it, and it is the residual behind the deep diagonal deficit.</p>
+  <div class="figrow">
+    <figure><div id="fig-sector"></div>
+      <figcaption><b>Figure 2. Lateral firing temperature by azimuth sector, before and after the Newton-length fix (P1g-0).</b> Before, the diagonal sectors fired 8 to 10 K hotter than the axes because the criterion divided by a slanted length the kernel never used. After, the spread is 3.8 K across six sectors. Cell temperature at firing, r 40 to 60 mm, Leg B.</figcaption></figure>
+    <figure><div id="fig-deficit"></div>
+      <figcaption><b>Figure 3. The diagonal firing deficit by depth, before and after P1g-0.</b> Positive means the diagonals fire less often per column than the axes. The mouth is cured. Deep in the hole the deficit barely moves, which is what sent the review looking for a second mismatch and found the coefficient cap.</figcaption></figure>
+  </div>
+
+  <h3>One function call, five mismatches</h3>
+  <p>The lateral criterion calls the same face-flux routine the kernel does. Over three steps it was found to pass a different unit (Pa versus MPa), a different conduction length (the slanted normal distance instead of the cell width), a different coefficient (capped unconditionally where the kernel caps conditionally), a scope test with one of the kernel's two conditions, and a scalar conductivity where the kernel reads a field. Each was documented in a nearby comment and each shipped. The fix was a lock test that parses all four lateral call sites by argument position, strips comments, and fails on any undeclared difference. The verify phase now carries a diff-review checklist built from exactly these classes.</p>
+  <figure><div id="fig-race"></div>
+    <figcaption><b>Figure 4. The race between the two removal modes, by depth band.</b> Bars are the cell temperature at which the vertical mode removes (tenth and fiftieth percentile). The line is the cell temperature at which a side face reaches the lateral threshold once the criterion uses the kernel's own coefficient. Deeper than 100 mm the lateral requirement sits under the vertical mode's coolest decile by 10 to 32 K, so a side face fires before the column above it does. This is why the lateral mode had to become sub-cell before it could be switched on at scale. Gas temperature backed out of the logged triple, 1465 to 1599 K, not assumed.</figcaption></figure>
+
+  <h3>The flake cap is a wall-band effect, and it is the same population three times</h3>
+  <div class="figrow">
+    <figure><div id="fig-cap"></div>
+      <figcaption><b>Figure 5a. Share of vertical firings at the 1.5 mm cap, by radius.</b> Zero under the burner, total from 40 mm outward. Leg B, t &gt; 100 s.</figcaption></figure>
+    <figure><div id="fig-ell"></div>
+      <figcaption><b>Figure 5b. The skin length the two-cell read returns, by radius.</b> The dashed line is the kinematic skin α/v at 1.5 m/h. On the floor the read is three times the kinematic skin and resolved. On the wall it is a flat profile mistaken for a long skin.</figcaption></figure>
+  </div>
+  <p>About 60 % of the removed volume comes from the capped bands, so the cap sits under the hole's diameter and volume, not under the descent rate. The columns the cap governs are side-heated columns with a flat vertical profile. They are the columns that froze under the differential form in P1 (78 % multi-sided, stuck at 48 mm depth) and the columns the lateral face criterion was built to read. The cap, the P1 collision and the lateral mode are one problem.</p>
+
+  <h3>The flake thickness has a statistical derivation, and the model's constant is at its edge</h3>
+  <p>Rauenzahn, Walsh and the Meier reference all derive the spall thickness from Weibull statistics: with stress decaying into the rock and failure probability rising as stress to the power <em>m</em>, the median flake is 2.3 to 2.7 skin lengths over <em>m</em> for the cone-shaped stressed volume the literature assumes. The model's 0.4 corresponds to an <em>m</em> near 7; the spallation literature fits 8 to 17 and our own input carries 20. Three Grimsel measurements of spall size (Höser's 200 µm average, Rossi's 250 µm population, Meier's 90th percentile under 300 µm) bracket 0.2 to 0.3 mm, which with Walsh's near-equant aspect ratio at that size means a thickness of 0.1 to 0.25 mm and an <em>m</em> of roughly 15 to 30. The same four sources drive the crack with the absolute surface stress, not the stress jump across the flake.</p>
+  <figure><div id="fig-weibull"></div>
+    <figcaption><b>Figure 6. Median flake thickness against the Weibull modulus, at the 1.66 mm skin of a 1.5 m/h floor.</b> The curve is 2.67 ℓ/m. The shaded band is the thickness implied by the three Grimsel size measurements. The model's present floor flake (0.55 mm, equivalent to m ≈ 7) sits above the band; the input's modulus of 20 would put it inside. Wilkinson's spallation fits for Barre and Westerly granite are marked for scale. None of the Grimsel sources is in the repository yet.</figcaption></figure>
+  <div class="callout"><p>Two caveats stand on this finding. None of the new sources is in the repository yet, so by the programme's own rule the numbers are unbacked until Höser, Rossi 2020, Shen 2018 and Wilkinson 1993 land under <code>tests/MMWSpalling/validation/</code> with figure citations. And the modulus must be fitted from onset or surface-temperature data, from Kant's 21 Grimsel legs or from Meier's own run, not chosen to land in the bracket.</p></div>
+</section>
+
+<section id="bottlenecks">
+  <span class="secno">5</span>
+  <h2>What is actually in the way: six bottlenecks</h2>
+  <p>Each one below says what is stuck, why, what unblocks it, and how we would know it is cleared. They are ordered by dependency, not by size. The diagram at the end shows how they chain.</p>
+
+  <div class="bneck"><h3>1. A side-heated column has no vertical gradient to read</h3>
+    <dl class="row">
+      <dt>What is stuck</dt><dd>Everything outside r ≈ 30 mm, which is about 60 % of the removed volume. The flake thickness there is a constant (1.5 mm), not a result. The hole is 10 to 12 mm wider than Meier's at every depth, and whether it ends at 97 or 85 mm is decided by how fast this band recedes, so the width is not a prediction until the constant goes.</dd>
+      <dt>Why</dt><dd>The vertical criterion reconstructs the skin from the top two cells of a column. On a wall heated through its side, those two cells are nearly the same temperature, the read returns 4 to 12 mm (Figure 5b), and the cap takes over. The same columns froze under the differential form in P1 because a flat read gives zero drive.</dd>
+      <dt>What unblocks</dt><dd>Two things, both now partly built. The lateral face mode reads the horizontal gradient these columns do have, and since P1g-2 it recedes sub-cell. A thickness law that needs no vertical read: skin from the surface flux (ℓ_q = k(T_s − T₀)/q) and thickness from the Weibull integral, 2.3 to 2.7 ℓ/m.</dd>
+      <dt>Cleared when</dt><dd>With the lateral mode on at scale, the cap share at r ≥ 40 mm falls from 100 % toward zero, the flake thickness on the wall becomes a distribution, and the volume excess over the control moves. Tests 1, 2 and 7 below.</dd>
+    </dl></div>
+
+  <div class="bneck"><h3>2. Two definitions of the driving stress, and a flaw size that moves with them</h3>
+    <dl class="row">
+      <dt>What is stuck</dt><dd>P1g-3 and every step after it. The planner cannot write a thickness law or a flaw refit without knowing which stress the crack sees.</dd>
+      <dt>Why</dt><dd>The control uses the absolute surface stress. P1 switched to the stress jump across the flake and refit the flaw from 8 to 80 µm to compensate; the two changes multiply to 2.46 × 0.402 ≈ 1, so they cancel structurally and are one calibration. The differential form has no external source behind it and needs thick flakes to have any drive. It is a physics decision, and it is the user's.</dd>
+      <dt>What unblocks</dt><dd>A decision, not a run. The external sources all drive the crack with the absolute stress; the soaked-wall problem that motivated P1 is now served by the lateral mode instead.</dd>
+      <dt>Cleared when</dt><dd>The form is chosen and the flaw size re-anchored on Kant's onset legs in the same step. If differential is kept, the P1 freeze population must be shown to fire laterally rather than freeze (Test 8).</dd>
+    </dl></div>
+
+  <div class="bneck"><h3>3. The spall temperature is a fixed number, and it is the wrong fixed number</h3>
+    <dl class="row">
+      <dt>What is stuck</dt><dd>P2, the gas-side flux calibration. If it runs now it will tune the jet to compensate for a rock-side error.</dd>
+      <dt>Why</dt><dd>The model removes rock at a cell temperature near 756 K regardless of flux, set by the 8 µm flaw and the toughness table. Kant measured 823 K for Grimsel, about 14 % on the rate. The literature also makes the spall temperature rise weakly with flux, because a thinner skin stresses less rock: at m ≥ 15 that is 3 to 4 % per doubling, small, but the level is the lever.</dd>
+      <dt>What unblocks</dt><dd>Fitting m from Kant's 21 onset legs, which is the only route to the rock's own modulus rather than an input's. The stressed-volume Weibull then gives both the level and the flux dependence from one parameter, and the same m sets the flake thickness.</dd>
+      <dt>Cleared when</dt><dd>The model's onset temperature against flux reproduces Kant's legs, and Wilkinson's 920 to 1100 K at 1 to 1.5 MW/m² on Barre is reproduced as an external check. Tests 3 and 6.</dd>
+    </dl></div>
+
+  <div class="bneck"><h3>4. The jet puts twice the flux on the floor that Meier's feed allows</h3>
+    <dl class="row">
+      <dt>What is stuck</dt><dd>The rate and standoff comparison. The model drills Meier's feed only by retreating to a standoff of 170 to 180 mm, against his ceiling of about 100 mm.</dd>
+      <dt>Why</dt><dd>At Meier's standoff the floor flux is 2.0 to 2.2 times what his kinematics imply. The September ladder showed the two obvious levers (flux level and feed) have no window: cutting the level starves the pad ring and shrinks the fired radius rather than the depth. The binding term is the radial shape of the coefficient map across 28 to 40 mm, not its level.</dd>
+      <dt>What unblocks</dt><dd>Nothing on the rock side, which is why it is parked. It is deliberately queued behind bottlenecks 1 to 3, because the volume comparison it feeds is 60 % cap-governed and the spall temperature it would calibrate against is not yet the rock's.</dd>
+      <dt>Cleared when</dt><dd>A pinned-feed leg at 1.5 m/h settles at a standoff of 100 mm or less with the rock side fixed, and the per-sector bore sits in 85 to 96 mm over 150 to 450 mm depth. Tests 9 and 10.</dd>
+    </dl></div>
+
+  <div class="bneck"><h3>5. Sub-cell lateral recession has not been shown to do the one thing it exists for</h3>
+    <dl class="row">
+      <dt>What is stuck</dt><dd>The claim that the lateral mode is mesh-independent. The whole point of banking and shifting was to stop a 2 mm cell being voided for a 1.5 mm flake, which would make the wall recession scale with the mesh.</dd>
+      <dt>Why</dt><dd>The unit fixture is 60 s long with seven voids per column on rows of four to six cells. P1g-2 shows the shift delays the first void by one re-heat (4 to 7 s) and that after 60 s the shifting group has removed 95 % of what whole-cell removal did (Figure 7). That cannot separate "delayed onset, same rate" from "lower rate", and it was run on one mesh. The vertical mode also still carries its own diagonal deficit at depth (+93 % at 200 to 300 mm), which only a shape leg will read.</dd>
+      <dt>What unblocks</dt><dd>A longer fixture leg on a deeper row at 2 mm and 1 mm, scoring cumulative recession depth against time. The row width already permits it.</dd>
+      <dt>Cleared when</dt><dd>The recession-depth curves at the two meshes agree within a stated bar after onset, and the per-track accumulator conflation seen in the burst of consecutive-step voids is measured rather than noted. Tests 4 and 5.</dd>
+    </dl></div>
+  <figure><div id="fig-cum"></div>
+    <figcaption><b>Figure 7. Cumulative lateral voids on the P1g-2 fixture, whole-cell removal against the thermal sink.</b> The sink delays the first voids by about seven seconds, then the two curves converge: 94 against 95 cells at the end. The heat input is unchanged, so the rock heated to threshold per unit time is unchanged. What the sub-cell machinery changes is the transient and the per-event structure, which is the mesh question, and the fixture is too short to answer it. Event CSVs <code>C1_WHOLE</code> and <code>C1_THERM</code>, regime 6, all columns.</figcaption></figure>
+
+  <div class="bneck"><h3>6. Nothing since P0b is quotable, and every Meier leg is expensive</h3>
+    <dl class="row">
+      <dt>What is stuck</dt><dd>Any sentence of the form "the model gives Meier X". None can be written today.</dd>
+      <dt>Why</dt><dd>Every P-series run since P0b has used a configuration (absolute form, 8 µm flaw, 1.5 mm cap) that bottlenecks 1 to 3 are about to change twice. A Meier leg is a quarter domain of 60 × 60 × 300 cells run for 500 s in 31,250 steps on four ranks, and the toolchain is not byte-reproducible, so a lost output cannot be regenerated. Several such legs were spent this week finding mismatches in one function call.</dd>
+      <dt>What unblocks</dt><dd>Order. Decide the form, land the thickness law and the fitted modulus, then run one Leg B and one Leg A under the final configuration, archived before any harness can delete them.</dd>
+      <dt>Cleared when</dt><dd>A results file for a leg that passed its own gates says a Meier number is quotable, per sector, over 150 to 450 mm.</dd>
+    </dl></div>
+
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  R[Land references<br/>Höser, Rossi, Shen, Wilkinson] --> M[Fit m from Kant onset legs]
+  F{Form decision<br/>absolute vs differential} --> P3[P1g-3 thickness law<br/>ℓ_q + 2.67 ℓ/m]
+  M --> P3
+  M --> TS[Stressed-volume T_s q<br/>level and flux dependence]
+  P3 --> LB[Leg B at scale<br/>lateral mode on]
+  X[Mesh test of sub-cell<br/>recession, 2 and 1 mm] --> LB
+  LB --> LA[Leg A shape leg<br/>per-sector bore vs Meier]
+  TS --> P2[P2 gas-side flux level<br/>rate and standoff]
+  LA --> P2
+  </pre></div>
+</section>
+
+<section id="meier">
+  <span class="secno">6</span>
+  <h2>Where the Meier comparison stands</h2>
+  <div class="callout"><p><strong>No rate, volume, width or standoff is quotable from P1 through P1g-2.</strong> Every P-series run since P0b has used the absolute form with the 8 µm flaw and the 1.5 mm cap, a configuration the programme is about to change, and the lateral runs were unit tests or control-plus-two-keys legs, not Meier comparisons.</p></div>
+  <div class="grid2">
+    <div class="panel"><h4>Settled on the jet side</h4><ul><li>The mouth: 144 mm → 100 mm once the coefficient map was radially confined. Within 5 mm of Meier at all depths on that leg.</li><li>The step-face cascade that made results mesh-dependent is removed by heating the side faces.</li><li>Roundness under the control configuration: 1.003 to 1.019.</li></ul></div>
+    <div class="panel"><h4>The live error</h4><ul><li>Floor flux 2.0 to 2.2 times what Meier's kinematics imply at his standoff.</li><li>Equilibrium standoff 170 to 180 mm against a ceiling of about 100 mm.</li><li>Self-paced, the hole is 10 to 12 mm wider than Meier's at every depth below the mouth (98 vs 86 mm at 150 to 200 mm, 97 vs 85 at 200 to 300) and descends at about 3.2 m/h, twice his feed. The extra width is the capped wall band. At Meier's feed the width comes out near his only because the burner sits at twice his standoff.</li></ul></div>
+    <div class="panel"><h4>Healthy</h4><ul><li>The floor interior: decay length resolved, cap never binds, flake 0.55 mm.</li><li>Energy ledger identical to the control on every lateral leg (1.45×10⁻⁴ relative).</li><li>Identity: 0 of 2,639 frozen files differ with new keys off, on every step.</li></ul></div>
+    <div class="panel"><h4>Not yet tested</h4><ul><li>Mesh independence of sub-cell lateral recession (the reason it exists).</li><li>The lateral mode at scale under the consistent coefficient.</li><li>The spall temperature's level: 756 K in the model against Kant's 823 K for Grimsel, about 14 % on the rate.</li></ul></div>
+  </div>
+</section>
+
+<section id="decisions">
+  <span class="secno">7</span>
+  <h2>Open decisions</h2>
+  <ol>
+    <li><strong>The criterion form.</strong> Return to the absolute surface stress, which the control runs and all four external sources use, or keep the differential form adopted in P1, which needs thick flakes to have any drive and froze soaked columns. This is a physics decision and it depends on nothing else in the queue.</li>
+    <li><strong>The flake thickness law.</strong> Replace 0.4 of the skin capped at 1.5 mm with 2.3 to 2.7 skin lengths over <em>m</em>, with the skin taken from the surface flux rather than two cell temperatures. This removes a cap and a constant and ties thickness to the flaw statistics already in the input.</li>
+    <li><strong>Where <em>m</em> comes from.</strong> Fit it to Kant's onset legs or to Meier's run by Lyu's method. The thickness is then a prediction, and Rossi's second spall population near 1 mm is a prediction about the slowly receding wall that cannot be reached by fitting.</li>
+    <li><strong>The spall temperature level before the gas side.</strong> P2, the flux-level calibration, must not absorb a rock-side temperature error into the jet. The flux dependence of the spall temperature is weak at <em>m</em> of 15 or more (3 to 4 % per doubling); the level is the lever.</li>
+  </ol>
+</section>
+
+<section id="tests">
+  <span class="secno">8</span>
+  <h2>Tests to run next</h2>
+  <p>Each test names its cost, the question it answers, and the reading registered before it runs. The first three cost no compute: they are reductions of logs already on disk. A fixture is minutes; a Meier leg is hours and should wait for the configuration to settle.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>#</th><th>Test</th><th>Cost</th><th>Question</th><th>Pre-registered reading</th><th>Clears</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Flux-based skin ℓ_q = k(T_s − T₀)/q against the two-cell read, by radius, on Leg B's logs</td><td>offline</td><td>Does a skin that needs no vertical gradient cure the flat-column inflation?</td><td>Floor: the two agree within about 30 %. Wall: ℓ_q near 5 mm against the two-cell 8 to 12 mm. If ℓ_q also inflates on the wall the problem is the flux, not the read.</td><td>1</td></tr>
+      <tr><td>2</td><td>Weibull thickness 2.67 ℓ/m on Leg B for m = 8, 13, 20, floor and wall scored separately</td><td>offline</td><td>Which m puts the floor flake inside Meier's size distribution without a cap?</td><td>At m = 20 the floor median is 0.13 to 0.27 mm, inside Meier's p90 of 300 µm. At m = 8 it is 0.55 to 0.66 mm, twice p90. The wall at m = 20 lands near 1 to 1.5 mm, the scale of Rossi's second population.</td><td>1, 2</td></tr>
+      <tr><td>3</td><td>Fit m from Kant's 21 Grimsel onset legs (onset temperature against flux), cross-checked against Wilkinson's Barre 8 and Westerly 13</td><td>offline</td><td>What is Grimsel's modulus, measured rather than assumed?</td><td>A slope consistent with m between 10 and 25. An m below 8 or above 40 means the onset data are not Weibull-limited at these fluxes and the thickness law needs another anchor.</td><td>3</td></tr>
+      <tr><td>4</td><td>Thin-flake limit on the lateral fixture: flake fraction 0.1 against 0.4, cumulative voids at 60 s</td><td>fixture</td><td>Is the recession rate energy-limited, so thickness only shapes the surface?</td><td>Cumulative recession within 5 % of each other after onset. If so, thickness is decoupled from the rate and can be changed without touching the Meier calibration.</td><td>1, 5</td></tr>
+      <tr><td>5</td><td>Mesh test of sub-cell recession: at least 200 s on a deep row at 2 mm and 1 mm, cumulative recession depth against time, same physical seed</td><td>fixture, longer</td><td>Is the lateral mode mesh-independent?</td><td>Depth curves agree within 5 % after onset; onset delay scales with the re-heat time, not the cell size. Record the burst of consecutive-step voids per track at each mesh as a measured residual.</td><td>5</td></tr>
+      <tr><td>6</td><td>Pinned-surface energy balance on the steady-column fixture: v = q_net / [ρc(T_s − T₀) + flake enthalpy]</td><td>fixture</td><td>Does the model reproduce the classical steady state in the thin-flake limit?</td><td>Rate within 3 % of the analytic value at two fluxes. This is the Rauenzahn steady state and fixes the energy side before T_s is moved.</td><td>3</td></tr>
+      <tr><td>7</td><td>Leg B at scale with the lateral sub-cell mode on: cap share by radius, volume against control, buried cavities, ledger</td><td>Meier leg</td><td>Does the lateral instrument take the wall band off the cap?</td><td>Cap share at r ≥ 40 mm falls well below 100 %; volume moves toward control minus the wall-band excess; buried cells stay single digits; ledger within 5×10⁻³. If the cap share does not move, the lateral thresholds are not being reached at scale and Figure 4 is wrong somewhere.</td><td>1</td></tr>
+      <tr><td>8</td><td>Form witness, only if the differential form is kept: P1's freeze population (two or more exposed sides, 25 to 35 mm radius, shallow) with the lateral mode on</td><td>Meier leg</td><td>Does the lateral mode serve the columns the differential form froze?</td><td>Those columns fire laterally and the run reaches 500 s without collision. Any frozen fraction above a few percent means the differential form still needs the lateral read to be complete, and absolute is the safer form.</td><td>2</td></tr>
+      <tr><td>9</td><td>Leg A, the shape leg, under the final configuration: bore per azimuth sector and the Ø(z) profile against Meier over 150 to 450 mm</td><td>Meier leg</td><td>Is the hole round and the right size at depth once the wall band is physical?</td><td>Sector spread under 5 %; diameter within Meier's 85 to 96 mm band over the calibrated section. The 100 mm depth is excluded, it is the pause underream.</td><td>1, 5</td></tr>
+      <tr><td>10</td><td>Standoff diagnostic now: a pinned-feed leg at 1.5 m/h reading the floor spall temperature and the settled standoff, as a baseline before P2</td><td>Meier leg</td><td>How much of the 2× floor-flux excess does the rock-side fix remove on its own?</td><td>Standoff falls from 170 to 180 mm toward 100 mm as T_s rises to Kant's level; the remainder is the gas side's to close. Diagnostic only, not a quotable number.</td><td>4</td></tr>
+    </tbody>
+  </table></div>
+  <p>Order: 1, 2 and 3 this week on existing logs; 4 and 6 while the form is decided; the form decision; P1g-3; 5; then 7, 9 and 10 once, under the final configuration; 8 only if differential is kept. P2 after all of them.</p>
+</section>
+
+<section id="process">
+  <span class="secno">9</span>
+  <h2>Process lessons the programme now carries as rules</h2>
+  <ul>
+    <li>Diagnose with the field, score with the rate. Event-log variables are conditioned on firing and can invert a comparison; three readings of one bad statistic once gave three different stories.</li>
+    <li>A quantity that decides a branch must be an output, in stated units. The unit bug was invisible because the ratio it inflated was never logged.</li>
+    <li>Firing assertions are two-sided. A lower bound cannot detect over-firing; a quantity bounded by the mechanism's own action cannot be its discriminator.</li>
+    <li>Never hard-code a quantity the run logs. A gas temperature of 1200 K typed into a scoring script reversed a conclusion that the logged triple inverted exactly.</li>
+    <li>A cited artefact that is not in the repository is not evidence. Scoring scripts are code.</li>
+    <li>A re-specified criterion must test the same claim. P1g-1's continuity gate was re-specified to assert the absence of the sink the step was meant to build.</li>
+    <li>Archive before any harness deletes its own output; two pairs of legs were lost that way on a non-reproducible toolchain.</li>
+    <li>The verify phase reads the diff with a checklist and writes a table: duplication of existing code, consistency across sibling call sites, units at comparisons, dead keys, relaxed checks, new tests red on the pre-fix binary.</li>
+  </ul>
+</section>
+
+<section id="numbers">
+  <span class="secno">10</span>
+  <h2>Key numbers</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Quantity</th><th class="num">Value</th><th>Where it comes from</th></tr></thead>
+    <tbody>
+      <tr><td>Meier feed and bore</td><td class="num">1.5 m/h, 85 to 96 mm</td><td>Meier 2017 reference</td></tr>
+      <tr><td>Thermal skin at 1.5 m/h</td><td class="num">1.66 mm</td><td>α/v with α = 6.9×10⁻⁷ m² s⁻¹</td></tr>
+      <tr><td>Floor decay length read by the model</td><td class="num">1.3 to 1.4 mm</td><td>Leg B event log, r &lt; 20 mm</td></tr>
+      <tr><td>Wall decay length read by the model</td><td class="num">8 to 12 mm</td><td>Leg B event log, r ≥ 40 mm</td></tr>
+      <tr><td>Flake cap and its grip</td><td class="num">1.5 mm; 0 % floor, 100 % wall</td><td>input; Leg B</td></tr>
+      <tr><td>Spall temperature, model</td><td class="num">756 K</td><td>8 µm flaw, Nasseri table, absolute form</td></tr>
+      <tr><td>Spall temperature, Grimsel literature</td><td class="num">823 K</td><td>Kant 2017</td></tr>
+      <tr><td>Lateral firing temperature spread by sector</td><td class="num">10.9 K → 3.8 K</td><td>P1g-0</td></tr>
+      <tr><td>Criterion versus kernel face temperature before P1g-0b</td><td class="num">35 K too cool</td><td>P1g-0b (c1)</td></tr>
+      <tr><td>Lateral requirement below vertical p10, deep</td><td class="num">10 to 32 K</td><td>P1g-0b (d1), MARGIN_BY_BAND</td></tr>
+      <tr><td>Sink onset delay; 60 s recession vs whole-cell</td><td class="num">4 to 7 s; 95 %</td><td>P1g-2 fixture</td></tr>
+      <tr><td>Weibull median flake, 2.3 to 2.7 ℓ/m at 1.5 m/h</td><td class="num">0.26 mm (m 15), 0.20 mm (m 20)</td><td>Rauenzahn Eq. 4.99; Walsh 2014</td></tr>
+      <tr><td>Grimsel spall sizes measured</td><td class="num">200 µm avg; 250 µm and 1 mm populations; p90 &lt; 300 µm</td><td>Höser 2016; Rossi 2020; Meier 2017</td></tr>
+      <tr><td>Floor flux excess at Meier's standoff</td><td class="num">2.0 to 2.2×</td><td>D2ac</td></tr>
+      <tr><td>Meier leg size</td><td class="num">60 × 60 × 300 cells, 500 s, 31,250 steps</td><td>Leg B command line</td></tr>
+      <tr><td>Identity gate</td><td class="num">0 of 2,639</td><td>every step since D2q</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<p class="foot">Written by the reviewing agent from the daily logs and the planner brief. Figures are drawn from the committed scoring files named in their captions (<code>P1G0_SCORED.txt</code>, <code>MARGIN_BY_BAND.txt</code>, the 10-02 §24 cap-by-radius reduction, and the P1g-2 event CSVs); nothing here is a Meier comparison figure. The latest accepted step is P1g-2; the next planning action is P1g-3 after the reference landing and the form decision.</p>
+
+</main>
+
+<nav class="toc" aria-label="Contents">
+  <p class="toclabel">Contents</p>
+  <ol>
+    <li><a href="#goal">1 Goal and benchmark</a></li>
+    <li><a href="#model">2 The model in one page</a></li>
+    <li><a href="#series">3 What each step established</a></li>
+    <li><a href="#findings">4 Four findings</a></li>
+    <li><a href="#bottlenecks">5 Six bottlenecks</a></li>
+    <li><a href="#meier">6 The Meier comparison</a></li>
+    <li><a href="#decisions">7 Open decisions</a></li>
+    <li><a href="#tests">8 Tests to run next</a></li>
+    <li><a href="#process">9 Process rules</a></li>
+    <li><a href="#numbers">10 Key numbers</a></li>
+  </ol>
+</nav>
+</div>
+
+<script>
+(function(){
+  var C={a:'var(--accent)',w:'var(--warm)',h:'var(--hot)',g:'var(--ship)',m:'var(--muted)',rule:'var(--rule)',ink:'var(--ink)'};
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function fmt(v){return (Math.abs(v)>=100||Number.isInteger(v))?String(Math.round(v)):(Math.abs(v)>=10?v.toFixed(1):v.toFixed(2));}
+  // grouped bars with optional overlay line (same y axis)
+  function bars(id,o){
+    var W=620,H=o.H||290,ml=58,mr=16,mt=30,mb=50,pw=W-ml-mr,ph=H-mt-mb;
+    var y=function(v){return mt+ph*(1-(v-o.ymin)/(o.ymax-o.ymin));};
+    var n=o.cats.length,gw=pw/n,ns=o.series.length,bw=gw*0.72/ns,base=y(Math.max(o.ymin,Math.min(o.base==null?o.ymin:o.base,o.ymax)));
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.label)+'">';
+    s+='<text x="'+ml+'" y="16" class="ttl">'+esc(o.title)+'</text>';
+    o.ticks.forEach(function(t){s+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y(t)+'" y2="'+y(t)+'" style="stroke:'+C.rule+'"/><text x="'+(ml-6)+'" y="'+(y(t)+4)+'" text-anchor="end" class="ax">'+t+'</text>';});
+    if(o.ylab) s+='<text x="12" y="'+(mt+ph/2)+'" transform="rotate(-90 12 '+(mt+ph/2)+')" text-anchor="middle" class="ax">'+esc(o.ylab)+'</text>';
+    o.cats.forEach(function(c,i){
+      s+='<text x="'+(ml+i*gw+gw/2)+'" y="'+(H-mb+16)+'" text-anchor="middle" class="ax">'+esc(c)+'</text>';
+      o.series.forEach(function(sr,j){
+        var v=sr.vals[i]; if(v==null) return;
+        var x=ml+i*gw+gw*0.14+j*bw, yv=y(v), top=Math.min(yv,base), hgt=Math.abs(base-yv);
+        s+='<rect x="'+x+'" y="'+top+'" width="'+(bw-3)+'" height="'+Math.max(hgt,0.5)+'" style="fill:'+sr.color+(sr.fade?';opacity:.45':'')+'"/>';
+        if(o.vlabels) s+='<text x="'+(x+(bw-3)/2)+'" y="'+(v>=(o.base||o.ymin)?top-4:top+hgt+12)+'" text-anchor="middle" class="lbl">'+fmt(v)+'</text>';
+      });
+    });
+    (o.lines||[]).forEach(function(ln){
+      var pts=ln.vals.map(function(v,i){return (ml+i*gw+gw/2)+','+y(v);}).join(' ');
+      s+='<polyline points="'+pts+'" style="fill:none;stroke:'+ln.color+';stroke-width:2.5"/>';
+      ln.vals.forEach(function(v,i){s+='<circle cx="'+(ml+i*gw+gw/2)+'" cy="'+y(v)+'" r="4" style="fill:'+ln.color+'"/>';
+        if(ln.labels) s+='<text x="'+(ml+i*gw+gw/2+7)+'" y="'+(y(v)-6)+'" class="lbl">'+fmt(v)+'</text>';});
+    });
+    (o.hlines||[]).forEach(function(h){s+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y(h.v)+'" y2="'+y(h.v)+'" style="stroke:'+h.color+';stroke-dasharray:6 4;stroke-width:1.5"/><text x="'+(W-mr)+'" y="'+(y(h.v)-5)+'" text-anchor="end" class="lbl">'+esc(h.text)+'</text>';});
+    // legend
+    var lx=ml, ly=H-8;
+    o.series.concat((o.lines||[]).map(function(l){return {name:l.name,color:l.color,line:true};})).forEach(function(sr){
+      if(!sr.name) return;
+      s+=sr.line?'<line x1="'+lx+'" x2="'+(lx+16)+'" y1="'+(ly-4)+'" y2="'+(ly-4)+'" style="stroke:'+sr.color+';stroke-width:2.5"/>':'<rect x="'+lx+'" y="'+(ly-10)+'" width="12" height="10" style="fill:'+sr.color+(sr.fade?';opacity:.45':'')+'"/>';
+      s+='<text x="'+(lx+20)+'" y="'+ly+'" class="ax">'+esc(sr.name)+'</text>'; lx+=22+sr.name.length*6.2;
+    });
+    s+='</svg>'; var el=document.getElementById(id); if(el) el.innerHTML=s;
+  }
+  // xy line chart
+  function xy(id,o){
+    var W=620,H=o.H||300,ml=58,mr=16,mt=30,mb=50,pw=W-ml-mr,ph=H-mt-mb;
+    var x=function(v){return ml+pw*(v-o.xmin)/(o.xmax-o.xmin);}, y=function(v){return mt+ph*(1-(v-o.ymin)/(o.ymax-o.ymin));};
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.label)+'">';
+    s+='<text x="'+ml+'" y="16" class="ttl">'+esc(o.title)+'</text>';
+    o.yticks.forEach(function(t){s+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y(t)+'" y2="'+y(t)+'" style="stroke:'+C.rule+'"/><text x="'+(ml-6)+'" y="'+(y(t)+4)+'" text-anchor="end" class="ax">'+t+'</text>';});
+    o.xticks.forEach(function(t){s+='<text x="'+x(t)+'" y="'+(H-mb+16)+'" text-anchor="middle" class="ax">'+t+'</text>';});
+    s+='<text x="'+(ml+pw/2)+'" y="'+(H-mb+32)+'" text-anchor="middle" class="ax">'+esc(o.xlab)+'</text>';
+    if(o.ylab) s+='<text x="12" y="'+(mt+ph/2)+'" transform="rotate(-90 12 '+(mt+ph/2)+')" text-anchor="middle" class="ax">'+esc(o.ylab)+'</text>';
+    (o.bands||[]).forEach(function(b){s+='<rect x="'+ml+'" y="'+y(b.hi)+'" width="'+pw+'" height="'+(y(b.lo)-y(b.hi))+'" style="fill:'+b.color+';opacity:.18"/><text x="'+(ml+6)+'" y="'+(y(b.hi)+13)+'" class="lbl">'+esc(b.text)+'</text>';});
+    (o.hlines||[]).forEach(function(h){s+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y(h.v)+'" y2="'+y(h.v)+'" style="stroke:'+h.color+';stroke-dasharray:6 4;stroke-width:1.5"/><text x="'+(W-mr)+'" y="'+(y(h.v)-5)+'" text-anchor="end" class="lbl">'+esc(h.text)+'</text>';});
+    o.series.forEach(function(sr){
+      var pts=[];
+      if(sr.step){ sr.pts.forEach(function(p,i){ if(i>0) pts.push(x(p[0])+','+y(sr.pts[i-1][1])); pts.push(x(p[0])+','+y(p[1])); }); }
+      else sr.pts.forEach(function(p){pts.push(x(p[0])+','+y(p[1]));});
+      s+='<polyline points="'+pts.join(' ')+'" style="fill:none;stroke:'+sr.color+';stroke-width:2.5'+(sr.dash?';stroke-dasharray:7 5':'')+'"/>';
+      if(sr.dots) sr.pts.forEach(function(p){s+='<circle cx="'+x(p[0])+'" cy="'+y(p[1])+'" r="4" style="fill:'+sr.color+'"/>';});
+    });
+    (o.marks||[]).forEach(function(m){s+='<circle cx="'+x(m.x)+'" cy="'+y(m.y)+'" r="5" style="fill:'+m.color+';stroke:var(--panel);stroke-width:1.5"/><text x="'+(x(m.x)+(m.dx||8))+'" y="'+(y(m.y)+(m.dy||4))+'" class="lbl">'+esc(m.text)+'</text>';});
+    var lx=ml, ly=H-6;
+    o.series.forEach(function(sr){ if(!sr.name) return; s+='<line x1="'+lx+'" x2="'+(lx+16)+'" y1="'+(ly-4)+'" y2="'+(ly-4)+'" style="stroke:'+sr.color+';stroke-width:2.5'+(sr.dash?';stroke-dasharray:7 5':'')+'"/><text x="'+(lx+20)+'" y="'+ly+'" class="ax">'+esc(sr.name)+'</text>'; lx+=22+sr.name.length*6.2; });
+    s+='</svg>'; var el=document.getElementById(id); if(el) el.innerHTML=s;
+  }
+
+  var sectors=['0–15°','15–30°','30–45°','45–60°','60–75°','75–90°'];
+  bars('fig-sector',{title:'Lateral firing temperature by sector, r 40–60 mm (K)',label:'Grouped bars of firing temperature by sector before and after the P1g-0 fix',
+    cats:sectors,ymin:715,ymax:745,ticks:[720,730,740],base:715,vlabels:true,
+    series:[{name:'before P1g-0 (spread 10.9 K)',vals:[728.5,730.4,738.3,738.5,730.0,727.6],color:C.h,fade:true},{name:'after (spread 3.8 K)',vals:[728.0,728.0,731.3,730.2,727.5,728.4],color:C.a}]});
+
+  bars('fig-deficit',{title:'Diagonal firing deficit vs axes, r 40–60 mm (%)',label:'Grouped bars of the diagonal firing deficit by depth band before and after the P1g-0 fix',
+    cats:['0–100 mm','100–200','200–300','300–400'],ymin:-20,ymax:110,ticks:[0,25,50,75,100],base:0,vlabels:true,
+    series:[{name:'before P1g-0',vals:[19.8,100,100,83.5],color:C.h,fade:true},{name:'after',vals:[-5.2,100,92.9,45.4],color:C.a}]});
+
+  bars('fig-race',{title:'Cell temperature at which each mode removes, by depth band (K)',label:'Vertical removal temperature percentiles as bars with the lateral requirement as a line, by depth band',H:320,
+    cats:['0–100 mm','100–200','200–300','300–400'],ymin:580,ymax:740,ticks:[600,650,700],base:580,vlabels:true,ylab:'cell temperature, K',
+    series:[{name:'vertical mode, p10',vals:[605,689,702,706],color:C.a,fade:true},{name:'vertical mode, p50',vals:[695,705,715,715],color:C.a}],
+    lines:[{name:'lateral requirement (h = 169.3)',vals:[689.4,678.7,674.8,674.3],color:C.h,labels:true}]});
+
+  var rb=['0–10','10–20','20–30','30–35','35–40','40–45','45–50'];
+  bars('fig-cap',{title:'Firings at the 1.5 mm cap, by radius (%)',label:'Bars of cap share by radius band',H:280,
+    cats:rb,ymin:0,ymax:110,ticks:[0,25,50,75,100],base:0,vlabels:true,
+    series:[{name:'share of vertical firings capped',vals:[0,0,12.3,58.4,90.5,100,100],color:C.h}]});
+  bars('fig-ell',{title:'Skin length from the two-cell read, p50 by radius (mm)',label:'Bars of median decay length by radius band with the kinematic skin marked',H:280,
+    cats:rb,ymin:0,ymax:12,ticks:[0,2,4,6,8,10,12],base:0,vlabels:true,
+    series:[{name:'ℓ read, median',vals:[1.34,1.44,2.16,4.14,7.17,8.04,10.5],color:C.a}],
+    hlines:[{v:1.66,color:C.g,text:'kinematic skin α/v at 1.5 m/h: 1.66 mm'}]});
+
+  var ell=1.66, mlist=[5,6,7,8,10,12,13,15,17,20,25,30,35,40];
+  xy('fig-weibull',{title:'Median flake thickness vs Weibull modulus m, ℓ = 1.66 mm (mm)',label:'Curve of median flake thickness against Weibull modulus with the Grimsel measured band shaded',H:320,
+    xmin:4,xmax:42,ymin:0,ymax:1.0,xticks:[5,10,15,20,25,30,35,40],yticks:[0,0.2,0.4,0.6,0.8,1.0],xlab:'Weibull modulus m',ylab:'median flake thickness, mm',
+    bands:[{lo:0.10,hi:0.25,color:C.g,text:'Grimsel sizes → thickness 0.10–0.25 mm (Höser, Rossi, Meier; Walsh aspect ratio)'}],
+    hlines:[{v:0.55,color:C.h,text:'model floor flake today 0.55 mm (c_f 0.4 ≈ m 7)'}],
+    series:[{name:'2.67 ℓ / m',pts:mlist.map(function(m){return [m,2.67*ell/m];}),color:C.a,dots:true}],
+    marks:[{x:8,y:2.67*ell/8,color:C.w,text:'Barre, m 8 (Wilkinson)',dx:8,dy:-8},{x:13,y:2.67*ell/13,color:C.w,text:'Westerly, m 13',dx:8,dy:-6},{x:20,y:2.67*ell/20,color:C.w,text:'input weibull.m = 20',dx:8,dy:14}]});
+
+  var tW=[[0,0],[5,0],[10,0],[15,12],[20,16],[25,50],[30,72],[40,84],[50,94],[60,95]];
+  var tT=[[0,0],[5,0],[10,0],[15,6],[20,7],[25,44],[30,63],[40,84],[50,93],[60,94]];
+  xy('fig-cum',{title:'Cumulative lateral voids on the fixture (cells)',label:'Step curves of cumulative voided cells against time for whole-cell removal and the thermal sink',H:300,
+    xmin:0,xmax:60,ymin:0,ymax:100,xticks:[0,10,20,30,40,50,60],yticks:[0,25,50,75,100],xlab:'time, s',ylab:'cells voided, all columns',
+    series:[{name:'whole-cell removal (95 at 60 s)',pts:tW,color:C.m,step:true,dots:true},{name:'banking + thermal shift (94 at 60 s)',pts:tT,color:C.a,step:true,dots:true}],
+    marks:[{x:15,y:12,color:C.h,text:'onset: whole-cell fires first',dx:8,dy:-4},{x:20,y:7,color:C.h,text:'sink lags by one re-heat, ≈7 s',dx:8,dy:14}]});
+})();
+</script>

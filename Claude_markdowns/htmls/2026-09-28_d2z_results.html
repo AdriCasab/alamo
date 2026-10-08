@@ -1,0 +1,269 @@
+<title>The Staircase Fix</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f5f2; --paper:#ffffff; --ink:#1d2226; --ink-2:#4a545b; --ink-3:#7a848b;
+  --rule:#d9ddd8; --accent:#116b66; --accent-soft:#e3efed; --heat:#c56a1e; --heat-soft:#f7e6d6;
+  --good:#2f7a3a; --good-soft:#e4f1e5; --warn:#9a5b00; --warn-soft:#f7ecd6; --rock:#b9b3a8; --rock-2:#8e877b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#15191c; --paper:#1d2226; --ink:#e9ece8; --ink-2:#b4bcc0; --ink-3:#7f8990;
+    --rule:#313a40; --accent:#5fbdb5; --accent-soft:#173634; --heat:#e78a3c; --heat-soft:#3b2a1a;
+    --good:#7cc98a; --good-soft:#1d3322; --warn:#e0a94b; --warn-soft:#3a2e15; --rock:#5a5850; --rock-2:#8a867c;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#15191c; --paper:#1d2226; --ink:#e9ece8; --ink-2:#b4bcc0; --ink-3:#7f8990;
+  --rule:#313a40; --accent:#5fbdb5; --accent-soft:#173634; --heat:#e78a3c; --heat-soft:#3b2a1a;
+  --good:#7cc98a; --good-soft:#1d3322; --warn:#e0a94b; --warn-soft:#3a2e15; --rock:#5a5850; --rock-2:#8a867c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.55;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:74ch;margin:0 auto}
+header{padding-block:48px 24px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+h1{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:clamp(34px,5vw,46px);line-height:1.1;margin:10px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+.lede{font-family:"Newsreader",Georgia,serif;font-size:21px;line-height:1.45;color:var(--ink-2);margin:0}
+h2{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:28px;line-height:1.2;margin:56px 0 14px;text-wrap:balance}
+h3{font-size:17px;font-weight:600;margin:28px 0 8px;color:var(--ink)}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin-bottom:6px}
+strong{font-weight:600}
+em{font-style:italic}
+a{color:var(--accent)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 24px;margin:20px 0 0;padding:0;list-style:none}
+.toc li{margin:0}
+.toc a{text-decoration:none;color:var(--ink-2);border-bottom:1px solid var(--rule)}
+.toc a:hover{color:var(--accent);border-color:var(--accent)}
+.summary{background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--accent);padding:18px 22px;margin:28px 0 0}
+.summary p:last-child{margin:0}
+figure{margin:22px 0;background:var(--paper);border:1px solid var(--rule);padding:14px 16px 10px}
+figure svg{display:block;width:100%;height:auto;max-width:100%}
+figcaption{font-size:14px;color:var(--ink-2);margin-top:8px;line-height:1.45}
+.tbl{overflow-x:auto;margin:18px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:14px}
+tr.hl td{background:var(--accent-soft)}
+.pill{display:inline-block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;letter-spacing:.04em;padding:2px 8px;border-radius:3px;background:var(--rule);color:var(--ink-2);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.heat{background:var(--heat-soft);color:var(--heat)}
+.aside{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:14px 0;margin:22px 0;color:var(--ink-2);font-size:15.5px}
+.aside p:last-child{margin:0}
+.steps{counter-reset:s;list-style:none;padding:0;margin:18px 0}
+.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--rule);margin:0}
+.steps li::before{content:counter(s);font-family:"Newsreader",Georgia,serif;font-size:26px;line-height:1;color:var(--accent);font-weight:600}
+.steps li:last-child{border-bottom:1px solid var(--rule)}
+.steps b{display:block;font-weight:600;margin-bottom:3px}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:8px 18px;margin:0;font-size:15.5px}
+dt{font-weight:600}
+dd{margin:0;color:var(--ink-2)}
+@media (max-width:520px){dl{grid-template-columns:1fr}dd{margin-bottom:8px}}
+.k{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.92em;color:var(--ink-2)}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Flame-jet drilling model · progress note · 28 September 2026</div>
+  <h1>Removing the staircase error without a tuning constant</h1>
+  <p class="lede">What we tested this week, what the runs showed, and what we plan to do next. Written for a reader who knows heat transfer and numerical methods but not this code.</p>
+  <ul class="toc">
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#goal">Where this sits</a></li>
+    <li><a href="#problem">The problem</a></li>
+    <li><a href="#idea">The idea tested</a></li>
+    <li><a href="#test">How we tested it</a></li>
+    <li><a href="#results">What the runs showed</a></li>
+    <li><a href="#means">What it means</a></li>
+    <li><a href="#next">Next steps</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ul>
+</header>
+
+<section id="summary" class="summary">
+  <p><strong>In one paragraph.</strong> Our drilling model removes rock in whole grid cells, one vertical column at a time, so the surface it computes is a staircase. Heat leaked sideways through the vertical faces of that staircase, and the leak grew as the grid was refined, so the predicted drilling rate depended on the grid. Until now that was hidden by a tuned constant. This week we replaced the constant with a rule derived from the timing of the removals themselves, with no adjustable number, and ran a pre-registered two-grid test. The grid dependence went from a clear failure without the constant to about one percent with the new rule, matching what the tuned constant achieved, and the shape of the staircase is now the same on both grids. A second, unplanned benefit is that a stall at the edge of the heated area, which had resisted several earlier attempts, is also cured. Two of the pre-registered checks failed on paper, and we traced both to the measurement being taken over the wrong set of faces rather than to the physics. The next step is to run the real experiment geometry.</p>
+</section>
+
+<h2 id="goal">Where this sits in the programme</h2>
+<p>The long-term aim is a model of rock removal by an intense heat source that can be trusted for shape and rate, first for a flame jet and later for a millimetre-wave beam. The benchmark is Meier's laboratory experiment: a 38 kW methane burner drilling into granite at about 1.3 metres per hour, producing a hole about 85 to 95 mm across.</p>
+<p>Before any comparison with that experiment means anything, the model has to give the same answer when the grid is refined. It did not. Halving the cell size changed the predicted rate by tens of percent in the plain model. Everything in this note is about removing that grid dependence in a way that is defensible, so that whatever disagreement remains with Meier is physics and not numerics.</p>
+
+<h2 id="problem">The problem: a staircase that leaks heat</h2>
+<p>The model tracks the rock surface column by column. When the top cell of a column gets hot enough to break away, that whole cell is removed and the column drops by one cell. Neighbouring columns do not drop at the same instant, so between any two neighbours there is usually a small vertical step, one cell high, that exists until the taller neighbour catches up.</p>
+
+<figure>
+<svg viewBox="0 0 720 300" role="img" aria-labelledby="f1t">
+<title id="f1t">Two neighbouring columns, one a cell taller, with heat leaking sideways across the step face</title>
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--heat)"/></marker>
+</defs>
+<!-- gas -->
+<rect x="0" y="0" width="720" height="300" fill="var(--paper)"/>
+<text x="24" y="34" font-family="Source Sans 3, sans-serif" font-size="15" fill="var(--ink-2)">hot gas above the surface</text>
+<!-- shorter column (left) -->
+<rect x="120" y="150" width="200" height="130" fill="var(--rock)"/>
+<rect x="120" y="150" width="200" height="40" fill="var(--heat-soft)" stroke="var(--heat)" stroke-width="1.5"/>
+<!-- taller column (right) -->
+<rect x="320" y="110" width="200" height="170" fill="var(--rock)"/>
+<rect x="320" y="110" width="200" height="40" fill="var(--heat-soft)" stroke="var(--heat)" stroke-width="1.5"/>
+<rect x="320" y="150" width="200" height="40" fill="var(--rock-2)" opacity=".55"/>
+<!-- cell grid lines -->
+<g stroke="var(--paper)" stroke-width="1" opacity=".8">
+  <line x1="120" y1="190" x2="520" y2="190"/><line x1="120" y1="230" x2="520" y2="230"/><line x1="320" y1="150" x2="320" y2="280"/>
+</g>
+<!-- step face -->
+<line x1="320" y1="110" x2="320" y2="150" stroke="var(--heat)" stroke-width="4"/>
+<!-- leak arrow -->
+<line x1="230" y1="170" x2="405" y2="170" stroke="var(--heat)" stroke-width="3" marker-end="url(#arr)"/>
+<text x="240" y="160" font-family="Source Sans 3, sans-serif" font-size="14" fill="var(--heat)">heat leaks sideways</text>
+<!-- labels -->
+<text x="130" y="142" font-family="Source Sans 3, sans-serif" font-size="14" fill="var(--ink-2)">column that just lost a cell</text>
+<text x="330" y="102" font-family="Source Sans 3, sans-serif" font-size="14" fill="var(--ink-2)">neighbour, one cell taller</text>
+<text x="130" y="177" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--heat)">hot top cell ≈ 820 K</text>
+<text x="330" y="177" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--ink)">buried, cooler cell</text>
+<text x="330" y="137" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--heat)">hot top cell</text>
+<!-- dz bracket -->
+<line x1="545" y1="110" x2="545" y2="150" stroke="var(--ink-3)" stroke-width="1"/>
+<line x1="540" y1="110" x2="550" y2="110" stroke="var(--ink-3)" stroke-width="1"/>
+<line x1="540" y1="150" x2="550" y2="150" stroke="var(--ink-3)" stroke-width="1"/>
+<text x="556" y="135" font-family="IBM Plex Mono, monospace" font-size="13" fill="var(--ink-2)">one cell, Δz</text>
+<text x="24" y="290" font-family="Source Sans 3, sans-serif" font-size="13.5" fill="var(--ink-3)">Leak per face ∝ k · ΔT / Δx.  Halve the cell and the leak per face doubles while the number of faces also grows.</text>
+</svg>
+<figcaption>The hot top cell of the column that just dropped sits beside a cooler buried cell of its taller neighbour. Heat conducts across that face at a rate set by the temperature difference over one cell width, so it grows as the grid is refined. Cooling the fresh top cell delays its next removal, which makes the step last longer, which leaks more heat. On a fine grid this feedback runs away and the whole floor slows down.</figcaption>
+</figure>
+
+<p>Two things about this leak matter. First, it is an artefact of representing a smooth receding surface as a staircase; the real surface has no such step. Second, its size depends on the grid, which is exactly the property a numerical model must not have. On our standard benchmark the plain model drilled 19 % slower at the finer grid over the inner disc and 40 % slower once the edge of the heated area was included.</p>
+
+<h3>What we had been doing about it</h3>
+<p>The earlier remedy was to heat the vertical step faces from the hot gas as well, using a fixed fraction of the face area. With that fraction set to 0.2 the two grids agreed to within half a percent on the inner disc. But 0.2 was a tuned number with no derivation, and we later measured that it also doubled the drilling rate in the real experiment geometry. A constant that fixes one grid and breaks the physics elsewhere is not a fix.</p>
+
+<h2 id="idea">The idea tested: pay for the step you actually have</h2>
+<p>The key observation, made by measuring the removal logs last week, is that on a healthy floor the steps are small. Neighbouring columns drop at nearly the same rate; one is simply a little ahead of the other in its cycle. If a column removes a cell every 4.5 seconds and its neighbour last dropped one second earlier, the true height difference between their surfaces is not one full cell but about one fifth of a cell. The model sees a full-cell step because it can only represent whole cells, but the timing tells us the real height.</p>
+
+<figure>
+<svg viewBox="0 0 720 260" role="img" aria-labelledby="f2t">
+<title id="f2t">The true step height is a fraction of a cell, read from where each column is in its removal cycle</title>
+<rect x="0" y="0" width="720" height="260" fill="var(--paper)"/>
+<!-- staircase as modelled -->
+<g>
+<text x="24" y="30" font-family="Source Sans 3, sans-serif" font-size="14" font-weight="600" fill="var(--ink)">As the grid stores it</text>
+<rect x="24" y="120" width="140" height="110" fill="var(--rock)"/>
+<rect x="164" y="80" width="140" height="150" fill="var(--rock)"/>
+<line x1="164" y1="80" x2="164" y2="120" stroke="var(--heat)" stroke-width="4"/>
+<text x="176" y="106" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--heat)">step = 1 cell</text>
+</g>
+<!-- true surfaces -->
+<g>
+<text x="400" y="30" font-family="Source Sans 3, sans-serif" font-size="14" font-weight="600" fill="var(--ink)">Where the surfaces really are</text>
+<rect x="400" y="120" width="140" height="110" fill="var(--rock)"/>
+<rect x="540" y="80" width="140" height="150" fill="var(--rock)"/>
+<!-- dashed true surface lines -->
+<line x1="400" y1="104" x2="540" y2="104" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<line x1="540" y1="96" x2="680" y2="96" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<line x1="540" y1="96" x2="540" y2="104" stroke="var(--accent)" stroke-width="4"/>
+<text x="548" y="70" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--accent)">true step δ ≈ 0.2 cell</text>
+<text x="404" y="150" font-family="Source Sans 3, sans-serif" font-size="12.5" fill="var(--ink-2)">40 % through its cycle</text>
+<text x="546" y="150" font-family="Source Sans 3, sans-serif" font-size="12.5" fill="var(--ink-2)">60 % through its cycle</text>
+</g>
+<text x="24" y="250" font-family="Source Sans 3, sans-serif" font-size="13.5" fill="var(--ink-3)">δ = cells apart + (phase of the shorter column) − (phase of the taller column), each phase = time since its last removal ÷ its removal interval.</text>
+</svg>
+<figcaption>Each column's surface is somewhere between its last removed cell and the next one. How far is given by how long ago it last dropped, compared with how often it drops. Taking the difference between two neighbours gives a real, sub-cell step height δ. On a healthy floor δ is typically 0.05 to 0.2 of a cell.</figcaption>
+</figure>
+
+<p>With δ in hand, the new rule does two things to each step, and neither has a number to tune:</p>
+<ul>
+  <li><strong>Heating in proportion to the true height.</strong> The hot gas heats the vertical face with an area δ·Δz·Δy, the area a step of that height actually presents, instead of a fixed 0.2 of a full cell. We ran two versions: the face treated as vertical (area proportional to δ) and treated as a gentle ramp between the two surfaces (area proportional to √(1+δ²)−1, which is much smaller for small δ).</li>
+  <li><strong>Less conduction across a fresh step.</strong> A step that is only a fifth of a cell high should not conduct like a full-cell face. The conductance is scaled by a factor that goes smoothly from 0 at δ = 0 to exactly 1 at δ = 1, with the shape set by how far heat diffuses during one removal interval. That length comes from the rock's thermal diffusivity and the measured removal rate, both already in the model.</li>
+</ul>
+<p>Before running anything we made the removal increment consistent, so that each event removes exactly one cell, and re-established the baselines on that footing. That was last week's work and is not repeated here.</p>
+
+<h2 id="test">How we tested it</h2>
+<p>The benchmark is deliberately simpler than the experiment: a hot disc 60 mm across on a flat granite block, with a prescribed gas temperature and heat-transfer coefficient, and a reference plane that descends at the known steady rate. There is no burner body and no jet model, so the only thing that can differ between grids is the numerics of removal. We run it at 2 mm and 1 mm cells and compare the drilling rate averaged over the inner 50 mm of the disc between 50 and 200 seconds.</p>
+<p>All pass and fail thresholds were written down and hashed before the first run, and the runs were scored against that file. The reference level of grid agreement is the tuned constant's own: 0.38 % between the two grids.</p>
+
+<div class="tbl">
+<table>
+<thead><tr><th>Run</th><th>Grid</th><th>What it isolates</th></tr></thead>
+<tbody>
+<tr><td>Identity</td><td>2 mm</td><td>The new code with every new switch off must reproduce last week's run byte for byte. It does, over all 500 seconds.</td></tr>
+<tr><td>No fix at all</td><td>2 mm</td><td>The plain staircase, for scale. Also checks that switching the new diagnostics on changes nothing when the physics is off. It changes nothing.</td></tr>
+<tr><td>Tuned constant 0.2</td><td>2 mm and 1 mm</td><td>Last week's reference pair, read from disk, never re-run.</td></tr>
+<tr><td>New rule, vertical face</td><td>2 mm and 1 mm</td><td>The closure with the vertical-face area law.</td></tr>
+<tr><td>New rule, ramp</td><td>2 mm and 1 mm</td><td>The closure with the ramp area law. Same conductance correction.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="results">What the runs showed</h2>
+
+<h3>1. The grid dependence is gone, under both versions</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Treatment of step faces</th><th class="num">Inner disc, r &lt; 25 mm</th><th class="num">Whole disc, r &lt; 30 mm</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>None (plain staircase)</td><td class="num">−18.9 %</td><td class="num">−40.0 %</td><td><span class="pill warn">fails</span></td></tr>
+<tr><td>Tuned constant 0.2</td><td class="num">+0.38 %</td><td class="num">−9.1 %</td><td><span class="pill good">inner ok</span> <span class="pill warn">edge fails</span></td></tr>
+<tr class="hl"><td>New rule, vertical face</td><td class="num">+1.39 %</td><td class="num">−0.71 %</td><td><span class="pill good">both ok</span></td></tr>
+<tr class="hl"><td>New rule, ramp</td><td class="num">+1.06 %</td><td class="num">−2.57 %</td><td><span class="pill good">inner ok</span> <span class="pill">edge drifting</span></td></tr>
+</tbody>
+</table>
+</div>
+<p>The numbers are the change in drilling rate when the cell size is halved, so zero is perfect. The pre-registered pass mark was 5 %, with a stricter 2 % mark for "as good as the tuned constant". Both versions of the new rule pass both marks on the inner disc. The scatter between 50-second sub-windows is about one percentage point on every run, so differences smaller than that are noise, and by our own rule the two versions are tied on the inner disc.</p>
+<p>The right-hand column was recorded for information only, because the tuned constant was known to fail there. That failure is a stall of the outermost ring of columns, 25 to 30 mm from the axis, which we had chased through several earlier attempts. The vertical-face version of the new rule cures it. The ramp version helps but the ring is slowly reopening late in the run. The reason is physical: the columns at the edge move slowly, so their steps are larger, around half a cell, and the ramp law gives a half-cell step only a quarter of the heating the vertical-face law gives it. Because this column was not the pre-registered test, we report it as a finding rather than a verdict.</p>
+
+<h3>2. The staircase itself is now grid-independent</h3>
+<p>The rate is the headline, but the more convincing evidence is the state of the floor. From the removal logs we measure, over the inner disc, how much of the time a step exists between any two neighbours and how high the steps are on average.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Treatment</th><th class="num">A step exists, 2 mm → 1 mm</th><th class="num">Mean true step δ, 2 mm → 1 mm</th></tr></thead>
+<tbody>
+<tr class="hl"><td>New rule, vertical face</td><td class="num">5.9 % → 5.9 %</td><td class="num">0.095 → 0.096</td></tr>
+<tr class="hl"><td>New rule, ramp</td><td class="num">13.3 % → 12.4 %</td><td class="num">0.214 → 0.203</td></tr>
+<tr><td>Tuned constant 0.2</td><td class="num">7.9 % → 11.2 %</td><td class="num">0.157 → 0.270</td></tr>
+<tr><td>None</td><td class="num">44.5 % (22 % two or more cells deep)</td><td class="num">1.15</td></tr>
+</tbody>
+</table>
+</div>
+<p>Under the new rule the floor looks the same on both grids. Under the tuned constant it does not: refining the grid makes steps more frequent and higher, and the rate only agreed because the extra heating happened to compensate at these two grids. A fixed constant cannot be grid-independent in general; a rule that responds to the measured step can. Steps of two or more cells, the seed of the runaway, do not occur at all under either version of the new rule.</p>
+<p>Notice also that the vertical-face version heals the floor better than the tuned constant while delivering less heat to the side faces overall. Heating in proportion to the step height acts as a restoring force: the largest steps get the most help. A constant does not discriminate.</p>
+
+<h3>3. Two checks failed on paper, and why we do not believe them</h3>
+<p>Two of the pre-registered checks came out as failures: the sideways heat leak fell only 3-fold where we had asked for 8-fold, and the live in-code estimate of the step height disagreed with an independent offline estimate by a factor of 2.7. Both turned out to be the same mistake, and it is one we have made before in a different place.</p>
+<p>The in-code diagnostics sum over every face where one column is taller than its neighbour, anywhere in the domain. That includes the vertical wall of the crater, where the drilled interior meets rock outside the heated disc that never moves, and the stalled outer ring. Those steps are 5 to 25 cells high. The correction deliberately leaves a full-cell step alone, so those faces contribute their full leak by design. On the run in question 78 % of the faces the diagnostic counted were wall or ring. We reconstructed the diagnostic's population from the removal logs, matched its face count to 0.3 % and its mean correction factor to within 0.02, and then restricted to the interior: there the estimated reduction is 30 to 40-fold. Likewise, once the offline step-height estimate is run over the same set of faces the code uses, the two agree to within 1.6 % on all four runs.</p>
+<p>So the physics passed and the measurement was placed on the wrong faces. The fix is to give both diagnostics the same radial mask the scored rate already has. We record it as a failed check nonetheless, because the thresholds were written before the run and that is the point of writing them down.</p>
+
+<div class="aside">
+<p><strong>Housekeeping that also passed.</strong> The identity run reproduces last week's result exactly, so nothing changed when the new switches are off. The energy ledger closes to round-off on every run. The one check we could not perform here is the bookkeeping between the removal kernel and the jet's energy budget, because this benchmark has no jet; that check waits for the experiment geometry.</p>
+</div>
+
+<h2 id="means">What this does and does not mean</h2>
+<p>It means the grid dependence we have been fighting since the summer was a numerical artefact of the staircase representation, and it is now removed by a rule with no adjustable number. The tuned constant can be retired. Whatever disagreement remains between the model and Meier's experiment can no longer be blamed on the grid.</p>
+<p>It does not mean the model now agrees with the experiment. On the experiment geometry the model still drills about 1.6 times too fast under the burner's support ring and removes too much rock near the mouth. Those are physics questions about how heat reaches the rock under the burner body and along the hole wall, and this week's work has made them cleanly separable from the numerics. That was the intent.</p>
+<p>It also does not settle which version of the area law is right. On the inner disc they tie. At the disc edge the vertical-face version is better. On the experiment geometry, where about half the steps are several cells deep, the two versions differ by a factor of 2.4 in how they treat those deep steps, so that run should discriminate.</p>
+
+<h2 id="next">Next steps</h2>
+<ol class="steps">
+  <li><b>Run the experiment geometry with both versions.</b> Two runs of about 25 minutes each, scored against Meier on hole shape at several depths, rock volume removed and burner descent, never on rate alone. The pre-registered expectation is that the fix does not by itself close the shape gap, because that gap is physics.</li>
+  <li><b>Put the two diagnostics on the right faces.</b> Mask the leak measurement and the live step-height estimate to the scored region, then re-score the two checks that failed on paper. No physics changes.</li>
+  <li><b>Quantify how good the timing-based step height is.</b> We claimed it is within a factor of 1.35 to 1.75 of the true continuous surface position. That number should be computed from these runs rather than carried forward.</li>
+  <li><b>Then return to the physics.</b> Two levers remain: the heat-transfer coefficient on the hole wall, which the model currently sets from an impinging-jet correlation where a grazing-flow value is more appropriate, and the heating under the burner's support ring, where the model treats a shielded region as open flame. Both are measurable against the shape and volume data.</li>
+  <li><b>Repeat the experiment geometry at 1 mm.</b> About six hours. Only worth doing once the physics levers are settled, since it is the confirmation run rather than a diagnostic one.</li>
+</ol>
+
+<h2 id="glossary">Glossary</h2>
+<dl>
+  <dt>Column</dt><dd>A vertical stack of grid cells at one (x, y) position. The rock surface is the top solid cell of each column.</dd>
+  <dt>Step</dt><dd>A height difference between two neighbouring columns. In the grid it is a whole number of cells; the true height δ is a fraction.</dd>
+  <dt>Phase</dt><dd>How far a column is through its removal cycle: time since it last dropped a cell, divided by how often it drops one. Zero just after a drop, one just before the next.</dd>
+  <dt>Closure</dt><dd>A rule that supplies something the grid cannot represent directly, here the sub-cell step height and its effect on heating and conduction.</dd>
+  <dt>Grid gap</dt><dd>The percentage change in a result when the cell size is halved. Zero means the result does not depend on the grid.</dd>
+  <dt>Pre-registered</dt><dd>Pass and fail thresholds written to a file and hashed before any run starts, so the outcome cannot move the goalposts.</dd>
+  <dt>Inner disc</dt><dd>The region within 25 mm of the axis, inside the 30 mm heated disc, where the model was already known to behave and where the test is scored.</dd>
+</dl>
+</div>

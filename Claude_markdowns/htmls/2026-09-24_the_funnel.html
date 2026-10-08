@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Funnel</title>
+<meta name="description" content="How a boundary condition that never fell off in radius made the simulated borehole 50 percent too wide at the mouth, and what fixing it revealed.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground:#f4f5f6; --surface:#ffffff; --sunk:#eceef0; --ink:#16191d;
+    --muted:#5c666f; --faint:#8b949c; --rule:#d9dde1; --rule-firm:#b9c1c8;
+    --hot:#d1490b; --hot-soft:#fbe6d8; --cold:#2f6f86; --cold-soft:#dfeaef;
+    --rock:#cfd5da; --rock-deep:#b3bbc2; --stop:#a8341a;
+    --ok:#2e6b4f; --ok-soft:#dceee4; --violet:#6b4a9e;
+    --display:"Newsreader",Georgia,"Times New Roman",serif;
+    --body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#14171a; --surface:#1c2024; --sunk:#23282d; --ink:#e8eaed;
+      --muted:#a0a8af; --faint:#767e85; --rule:#2d343a; --rule-firm:#3d454c;
+      --hot:#f0763a; --hot-soft:#3a2113; --cold:#6fb4cc; --cold-soft:#17313b;
+      --rock:#394148; --rock-deep:#4a535b; --stop:#e4694b;
+      --ok:#6cba92; --ok-soft:#16301f; --violet:#a98ad6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#14171a; --surface:#1c2024; --sunk:#23282d; --ink:#e8eaed;
+    --muted:#a0a8af; --faint:#767e85; --rule:#2d343a; --rule-firm:#3d454c;
+    --hot:#f0763a; --hot-soft:#3a2113; --cold:#6fb4cc; --cold-soft:#17313b;
+    --rock:#394148; --rock-deep:#4a535b; --stop:#e4694b;
+    --ok:#6cba92; --ok-soft:#16301f; --violet:#a98ad6;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--body); font-size:17px; line-height:1.62;
+    -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:820px; margin:0 auto; padding:56px 16px 80px; }
+  .mast { margin-bottom:40px; }
+  .kicker { font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted); margin:0 0 14px; }
+  h1 { font-family:var(--display); font-weight:700;
+    font-size:clamp(2.1rem,6vw,3.1rem); line-height:1.08; margin:0 0 16px;
+    letter-spacing:-0.015em; }
+  .standfirst { font-family:var(--display); font-size:clamp(1.05rem,2.6vw,1.3rem);
+    line-height:1.45; color:var(--muted); margin:0; text-wrap:pretty; }
+  h2 { font-family:var(--display); font-weight:600;
+    font-size:clamp(1.4rem,3.6vw,1.85rem); line-height:1.2; margin:0 0 12px;
+    letter-spacing:-0.01em; }
+  h3 { font-size:1.02rem; font-weight:600; margin:28px 0 8px; }
+  p { margin:0 0 16px; text-wrap:pretty; }
+  ul { margin:0 0 16px; padding-left:22px; }
+  li { margin-bottom:8px; }
+  code { font-family:var(--mono); font-size:.85em; background:var(--sunk);
+    padding:1px 5px; border-radius:3px; }
+  strong { font-weight:600; }
+  .partline { display:flex; align-items:center; gap:14px; margin:56px 0 24px; }
+  .partline .n { font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--hot); white-space:nowrap; }
+  .partline .bar { height:1px; background:var(--rule-firm); flex:1; }
+  .evidence, .note, .fig { background:var(--surface); border:1px solid var(--rule);
+    border-radius:5px; padding:20px 22px; margin:26px 0; }
+  .note { background:var(--sunk); border-color:transparent; }
+  .evidence > :last-child, .note > :last-child, .fig > :last-child { margin-bottom:0; }
+  .cap { font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); margin:0 0 12px; }
+  .tablewrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { border-collapse:collapse; width:100%; font-size:.92rem;
+    font-variant-numeric:tabular-nums; }
+  th, td { text-align:left; padding:8px 14px 8px 0;
+    border-bottom:1px solid var(--rule); white-space:nowrap; }
+  th { font-family:var(--mono); font-weight:600; font-size:10.5px;
+    letter-spacing:.07em; text-transform:uppercase; color:var(--muted); }
+  td.num { font-family:var(--mono); font-size:.87rem; }
+  tr:last-child td { border-bottom:none; }
+  .bad { color:var(--stop); font-weight:600; }
+  .good { color:var(--ok); font-weight:600; }
+  .dim { color:var(--faint); }
+  figure { margin:26px 0; }
+  figure svg { width:100%; height:auto; display:block; }
+  figcaption { font-size:.86rem; color:var(--muted); margin-top:10px;
+    line-height:1.5; }
+  .schem { font-family:var(--body); font-size:11.5px; fill:var(--muted); }
+  .schem.hd { font-size:12.5px; fill:var(--ink); font-weight:600; }
+  .keynum { display:flex; flex-wrap:wrap; gap:8px 10px; margin:18px 0; }
+  .keynum div { background:var(--sunk); border-radius:4px; padding:9px 13px;
+    font-size:.85rem; line-height:1.35; }
+  .keynum b { font-family:var(--mono); font-size:.95rem; display:block; }
+  .lab { font-family:var(--mono); font-size:10.5px; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--hot); font-weight:600;
+    display:block; margin:20px 0 6px; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 18px; font-size:.82rem;
+    color:var(--muted); margin-top:10px; }
+  .legend span { display:flex; align-items:center; gap:7px; }
+  .sw { width:16px; height:3px; border-radius:2px; flex:none; display:inline-block; }
+  footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--rule);
+    font-size:.85rem; color:var(--faint); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <p class="kicker">ALAMO · MMWSpalling · packet D2v · 24 September 2026</p>
+  <h1>The Funnel</h1>
+  <p class="standfirst">A convective boundary condition that never fell off with
+  radius was quietly excavating the entire rock surface. Removing it turned a
+  simulated borehole from a cone into a cylinder — and exposed an energy
+  accounting hole that had been invisible for eleven packets.</p>
+</header>
+
+<p>This note describes one experiment in an ongoing programme to model
+<strong>thermal spallation drilling</strong>: boring through hard rock not with a
+mechanical bit but with a flame jet, which heats the surface fast enough that
+thermal stress flakes it away in millimetre-scale chips. The reference
+experiment is Thierry Meier's 2017 field trial at the Grimsel underground
+laboratory, where a 38 kW methane–oxygen burner drilled half a metre into
+granite in 1383 seconds.</p>
+
+<p>The simulation is built in ALAMO, an adaptive-mesh finite-volume framework.
+It solves enthalpy-form heat conduction in the rock, computes the thermoelastic
+stress field, applies a Weibull-statistical spallation criterion, and removes
+material when that criterion fires. The question this packet answers is narrow
+and specific: <strong>does the model cut a hole of the right shape?</strong></p>
+
+<div class="partline"><span class="n">Part 1</span><span class="bar"></span></div>
+<h2>Why shape, and not drilling rate</h2>
+
+<p>The obvious thing to score a drilling model against is its rate of
+penetration. We do not, and the reason is worth stating because it governs
+everything that follows.</p>
+
+<p>An earlier packet in this programme found that the model reproduced Meier's
+drilling rate of roughly 1.5 m/h while simultaneously removing
+<strong>1.9 times too much rock</strong>. Both statements were true at once: the
+model was cutting a hole that was too wide and advancing at about the right
+speed, so the volumetric error and the rate error happened to cancel in the one
+number being checked. The agreement was a coincidence of two compensating
+mistakes.</p>
+
+<p>Rate is a single scalar, and a single scalar cannot tell you
+<em>where</em> a model is wrong. Shape can. So the score is the hole's
+<strong>diameter as a function of depth</strong>, Ø(z), compared against a
+profile digitised from Figure 8.8 of Meier's thesis — a photograph of the
+granite block sawn through the finished hole.</p>
+
+<div class="note">
+  <p class="cap">On the reference</p>
+  <p>The digitised profile is a <strong>visible width</strong> measured from a
+  photograph, so it is a <em>lower bound</em> on the true diameter: the saw cut
+  need not pass exactly through the hole's axis. Its precision is about
+  ±5 mm. The thesis quotes a nominal 85 mm; the reported excavated volume of
+  3.42 litres over 0.5 m implies a mean nearer 93 mm. We therefore never quote
+  agreement tighter than ±5 mm, and we treat the digitised curve as a
+  <em>shape</em> reference rather than an absolute calibration.</p>
+</div>
+
+<p>Meier's hole is close to a cylinder: 96 mm at 10 mm depth, tapering gently
+to 85 mm at 200 mm. There is a mild collar near the mouth — about 10 mm of
+widening over the top 75 mm — but no funnel.</p>
+
+<div class="partline"><span class="n">Part 2</span><span class="bar"></span></div>
+<h2>What the model was doing instead</h2>
+
+<p>Applying the shape metric to runs already on disk gave this:</p>
+
+<div class="evidence">
+<p class="cap">Diameter vs depth, before the fix</p>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Depth [mm]</th><th>10</th><th>25</th><th>50</th><th>75</th><th>100</th><th>150</th><th>200</th></tr></thead>
+<tbody>
+<tr><td>Meier</td><td class="num">96</td><td class="num">92</td><td class="num">88</td><td class="num">87</td><td class="num">87</td><td class="num">86</td><td class="num">85</td></tr>
+<tr><td>Model</td><td class="num bad">144</td><td class="num bad">129</td><td class="num bad">114</td><td class="num">105</td><td class="num">100</td><td class="num">85</td><td class="num bad">66</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<p>The model was cutting a <strong>funnel</strong>: about 50 % too wide at the
+mouth, crossing the reference around 150 mm depth, and finishing far too narrow
+at 200 mm. This is a qualitatively different failure from being uniformly too
+wide or too narrow, and it points at something that acts strongly near the
+surface and weakly deep down.</p>
+
+<p>A caution about an easy misreading here, because it cost us a whole packet.
+An earlier study reported that the model's <em>minimum</em> diameter tracks the
+burner's foot radius to within 2 mm — about 80 mm. From that we predicted the
+hole would come out around 80 mm and therefore too <em>narrow</em>. That was
+wrong, because the minimum diameter is the narrowest section of the hole, which
+sits down near the drilling front, and it is a different quantity from the
+diameter at a given shallow depth. The two coexist perfectly happily: the hole
+is 144 mm at the mouth and pinches to 66 mm at the bottom.</p>
+
+<h3>The cause: a boundary condition with no outer edge</h3>
+
+<p>The flame jet is represented not by solving the gas flow but by a convective
+boundary condition on the rock surface: a heat transfer coefficient
+<em>h</em>(r, s) and a gas temperature, where <em>r</em> is radius from the jet
+axis and <em>s</em> is the stand-off distance between the nozzle and the rock.
+The coefficient came from a wall-jet correlation — high under the impinging
+core, decaying outward as the jet spreads.</p>
+
+<p>Evaluating that expression directly shows the problem:</p>
+
+<div class="keynum">
+  <div><b>1449</b>W/m²K inside r = 18 mm</div>
+  <div><b>686</b>at r = 40 mm</div>
+  <div><b>362</b>at r = 76 mm</div>
+  <div><b>164</b>at r = 168 mm, the domain corner</div>
+</div>
+
+<p>It decays roughly as 1/r and <strong>never reaches a floor</strong>. Combined
+with a patch radius set to 200 mm — larger than the entire computational domain
+— this meant that <em>every column of rock in the simulation</em> was receiving
+several hundred watts per square metre per kelvin of convective heating from a
+jet whose nozzle is 7.5 mm across.</p>
+
+<p>Physically that is indefensible. Meier's burner is a body sitting inside the
+hole: an 80 mm slotted skirt resting on the rock, a water-cooled shield above
+it, exhaust venting up the annulus between the burner and the wall. Rock beyond
+about 40 mm radius is underneath the skirt or in that exhaust annulus. It sees
+grazing flow of order 40 W/m²K, not impingement of 362.</p>
+
+<figure>
+<svg viewBox="0 0 720 370" role="img" aria-label="Heat transfer coefficient versus radius, before and after confinement">
+  <rect x="70" y="40" width="620" height="290" fill="var(--surface)" stroke="var(--rule)"/>
+  <g stroke="var(--rule)" stroke-width="1">
+    <line x1="70" y1="330" x2="690" y2="330"/>
+    <line x1="70" y1="245" x2="690" y2="245"/>
+    <line x1="70" y1="160" x2="690" y2="160"/>
+    <line x1="70" y1="76"  x2="690" y2="76"/>
+  </g>
+  <g class="schem" text-anchor="end">
+    <text x="62" y="334">1</text><text x="62" y="249">10</text>
+    <text x="62" y="164">100</text><text x="62" y="80">1000</text>
+  </g>
+  <text class="schem" x="20" y="190" transform="rotate(-90 20 190)" text-anchor="middle">h [W/m²K], log scale</text>
+  <g class="schem" text-anchor="middle">
+    <text x="70" y="350">0</text><text x="173" y="350">20</text>
+    <text x="277" y="350">40</text><text x="359" y="350">56</text>
+    <text x="463" y="350">76</text><text x="587" y="350">100</text>
+    <text x="690" y="350">120</text>
+    <text x="380" y="366">radius from the jet axis [mm]</text>
+  </g>
+  <rect x="277" y="40" width="82" height="290" fill="var(--cold-soft)" opacity=".55"/>
+  <rect x="380" y="40" width="83" height="290" fill="var(--hot-soft)" opacity=".5"/>
+  <text class="schem" x="318" y="56" text-anchor="middle">wall blend</text>
+  <text class="schem" x="421" y="56" text-anchor="middle">mouth blend</text>
+  <polyline fill="none" stroke="var(--hot)" stroke-width="2.4"
+    points="96,62 122,62 163,62 199,72 225,79 251,85 277,89 297,93 318,96 339,99 359,102 380,104 401,107 421,109 442,111 463,113 509,117 587,123 690,130"/>
+  <polyline fill="none" stroke="var(--cold)" stroke-width="2.4"
+    points="80,62 163,62 199,72 225,79 251,85 277,89 297,98 318,113 339,134 359,147 380,147 401,154 421,173 442,216 458,290 463,330"/>
+  <polyline fill="none" stroke="var(--violet)" stroke-width="2.2" stroke-dasharray="6 4"
+    points="80,147 380,147 401,154 421,173 442,216 458,290 463,330"/>
+  <text class="schem hd" x="600" y="118" fill="var(--hot)">old map</text>
+  <text class="schem" x="600" y="134" fill="var(--muted)">never falls off</text>
+  <text class="schem hd" x="150" y="140" fill="var(--violet)">wall branch</text>
+  <text class="schem hd" x="196" y="230" fill="var(--cold)">floor branch</text>
+</svg>
+<figcaption><strong>Figure 1.</strong> The old coefficient (orange) decays as
+1/r and is still delivering 164 W/m²K at the corner of the domain, 168 mm from
+a 7.5 mm nozzle. The replacement holds the impingement correlation out to the
+skirt radius of 40 mm, blends over 16 mm to an annulus value of 142 W/m²K, and
+blends again to nothing by 76 mm. The dashed violet line is the separate
+<em>wall</em> branch — see Part 3.</figcaption>
+</figure>
+
+<h3>Why the collar formed early and then froze</h3>
+
+<p>Two further measurements pinned the mechanism down. First, the mouth diameter
+is <strong>final by 200 seconds</strong> and does not move for the remaining
+six minutes of the run: 141 mm at 200 s, 141 mm at 572 s. Second, the ring of
+rock between 50 and 76 mm radius recedes 33.6 mm by 300 s and then
+<strong>stops dead</strong>.</p>
+
+<p>The explanation is a discontinuity in the model. The burner descends as it
+drills, and the code treats the nozzle plane as a hard switch: columns of rock
+<em>below</em> the plane receive the jet's heat transfer coefficient; columns
+<em>above</em> it receive exactly zero. Early in the run the whole rock surface
+is below the plane, so the whole surface is excavated at 160–360 W/m²K. As the
+burner sinks, the outer rock passes above the plane, its heating is cut to zero,
+and it stops. The funnel is carved in the first few minutes and then
+fossilised.</p>
+
+<div class="partline"><span class="n">Part 3</span><span class="bar"></span></div>
+<h2>The fix, and one trap inside it</h2>
+
+<p>The remedy is to give the burner a <strong>radially confined heat-transfer
+map</strong> that reflects it being a body inside a hole rather than a point
+source in free space. Three zones:</p>
+
+<ul>
+<li><strong>Impingement</strong>, r ≤ 40 mm: the existing correlation,
+unchanged. 40 mm is the skirt radius — this is the rock the jet actually
+strikes.</li>
+<li><strong>Annulus</strong>, blending to 142 W/m²K by 56 mm: the wall of the
+hole, seeing exhaust flowing up past it. The 142 comes from an area-expansion
+argument on the annulus flow, anchored to the measured mass flow; the
+defensible band from independent correlations is 81–250 W/m²K at a Reynolds
+number of 5568.</li>
+<li><strong>Outside</strong>, blending to zero by 76 mm: rock beyond the mouth,
+which in the real experiment sits under a sealed water-cooled wellhead.</li>
+</ul>
+
+<p>Both blends are at least eight cells wide at the working mesh. That is not
+cosmetic. An earlier attempt at this same floor/wall split used a
+<em>step</em> in <em>h</em> and failed twice — once by jamming the burner, once
+by generating a 402 K lateral temperature step between adjacent columns that
+drove a numerical heat-leakage cascade. A separate packet established that the
+transition must be smooth over several cells. That is why this attempt was worth
+making: both of the earlier failure modes now have known remedies.</p>
+
+<h3>The trap: you cannot use the same map above and below the plane</h3>
+
+<p>The first draft of this packet applied one blended map everywhere. Checking
+the arithmetic before running showed that this would have decided the experiment
+by construction.</p>
+
+<p>The impingement term clamps its stand-off argument to a minimum of 15 mm. For
+a column <em>above</em> the nozzle plane the geometric stand-off is negative, so
+the clamp returns the <em>strongest</em> near-field value. Blended at the wall
+radius, an above-plane column at 42–47 mm would have received:</p>
+
+<div class="evidence">
+<p class="cap">Rejected design — heat flux into the wall, above the plane</p>
+<div class="tablewrap">
+<table>
+<thead><tr><th>r [mm]</th><th>40</th><th>42</th><th>45</th><th>47</th><th>50</th><th>52</th></tr></thead>
+<tbody>
+<tr><td>blended h [W/m²K]</td><td class="num">557</td><td class="num">467</td><td class="num">350</td><td class="num">282</td><td class="num">193</td><td class="num">142</td></tr>
+<tr><td>flux vs 1690 K gas [kW/m²]</td><td class="num bad">483</td><td class="num bad">405</td><td class="num bad">303</td><td class="num bad">245</td><td class="num">168</td><td class="num">123</td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin-top:14px">The floor of the hole receives about 520 kW/m². The
+wall would have received up to 483 — roughly a metre per hour of lateral
+recession — and the hole would have been driven out to wherever the blend
+happened to hand over, <strong>regardless of any physics</strong>.</p>
+</div>
+
+<p>The fix is to branch on the stand-off inside the expression: below the plane
+the blend, above the plane a flat annulus value. That is the dashed violet line
+in Figure 1. It is the difference between a boundary condition that models a
+wall and one that manufactures a diameter.</p>
+
+<div class="partline"><span class="n">Part 4</span><span class="bar"></span></div>
+<h2>The result</h2>
+
+<p>Three runs, identical except for the listed changes, on a 2 mm mesh over
+about 400 seconds of drilling.</p>
+
+<div class="keynum">
+  <div><b>M0</b>the existing map, untouched</div>
+  <div><b>M1</b>+ confined map, no above-plane heating</div>
+  <div><b>M2</b>+ above-plane wall heating</div>
+</div>
+
+<p>Before anything is attributed, M0 has to be provably the same run as the
+frozen reference it is compared against. It is: M0's removal-event log and its
+integrated-diagnostics file are <strong>byte-identical</strong> to the archived
+run, 114 599 event rows and 4 184 diagnostic rows. Any difference between M1 and
+M0 is therefore caused by the listed keys and nothing else.</p>
+
+<figure>
+<svg viewBox="0 0 720 420" role="img" aria-label="Hole diameter versus depth for the reference and three model runs">
+  <rect x="80" y="50" width="600" height="340" fill="var(--surface)" stroke="var(--rule)"/>
+  <g stroke="var(--rule)" stroke-width="1">
+    <line x1="213" y1="50" x2="213" y2="390"/>
+    <line x1="347" y1="50" x2="347" y2="390"/>
+    <line x1="480" y1="50" x2="480" y2="390"/>
+    <line x1="613" y1="50" x2="613" y2="390"/>
+    <line x1="80" y1="131" x2="680" y2="131"/>
+    <line x1="80" y1="212" x2="680" y2="212"/>
+    <line x1="80" y1="293" x2="680" y2="293"/>
+    <line x1="80" y1="374" x2="680" y2="374"/>
+  </g>
+  <g class="schem" text-anchor="middle">
+    <text x="80" y="408">60</text><text x="213" y="408">80</text>
+    <text x="347" y="408">100</text><text x="480" y="408">120</text>
+    <text x="613" y="408">140</text>
+    <text x="380" y="40">hole diameter [mm]</text>
+  </g>
+  <g class="schem" text-anchor="end">
+    <text x="72" y="135">50</text><text x="72" y="216">100</text>
+    <text x="72" y="297">150</text><text x="72" y="378">200</text>
+  </g>
+  <text class="schem" x="22" y="220" transform="rotate(-90 22 220)" text-anchor="middle">depth below surface [mm]</text>
+  <polyline fill="none" stroke="var(--ink)" stroke-width="3"
+    points="320,66 293,90 267,131 260,171 260,212 260,252 253,293 247,333 247,374"/>
+  <polyline fill="none" stroke="var(--hot)" stroke-width="2.2"
+    points="642,66 541,90 442,131 382,171 343,212 309,252 247,293 182,333 122,374"/>
+  <polyline fill="none" stroke="var(--ok)" stroke-width="2.8"
+    points="349,66 316,90 291,131 277,171 271,212 265,252 260,293 254,333 248,374"/>
+  <polyline fill="none" stroke="var(--violet)" stroke-width="2.2" stroke-dasharray="7 4"
+    points="593,66 581,90 563,131 546,171 517,212 472,252 425,293 383,333 343,374"/>
+  <text class="schem hd" x="648" y="60" fill="var(--hot)" text-anchor="end">M0</text>
+  <text class="schem hd" x="360" y="62" fill="var(--ok)">M1</text>
+  <text class="schem hd" x="600" y="66" fill="var(--violet)">M2</text>
+  <text class="schem hd" x="300" y="62" fill="var(--ink)" text-anchor="end">Meier</text>
+</svg>
+<figcaption><strong>Figure 2.</strong> Depth increases downward, so each curve
+reads like the wall of the hole. M0 (orange) is a funnel that crosses the
+reference. M1 (green) is a near-cylinder that stays inside the reference's ±5 mm
+at every depth. M2 (violet) is the same run with above-plane wall heating added,
+and it balloons.</figcaption>
+</figure>
+
+<p>The scored criterion is the mean absolute difference from the reference at
+10, 25 and 50 mm depth — the depths where the funnel lives. It falls from
+<strong>37.2 mm to 3.8 mm</strong>, against a bar of 20 mm fixed and hashed
+before the runs. M1 tracks the reference within 4.4 mm at the mouth and 0.2 mm
+at 200 mm depth.</p>
+
+<p>The confinement also works exactly where it was built to work. Mean recession
+of rock beyond 76 mm radius — the rock that should never be touched — is
+<strong>0.000 mm</strong> on M1, against 0.216 mm on M0. And a pre-launch
+thermal trace confirmed the compiled boundary condition really is the intended
+one: over the 2463 columns beyond 76 mm, the maximum temperature rise was
+<strong>0.013 K</strong>, where the old map ran 362 W/m²K.</p>
+
+<div class="partline"><span class="n">Part 5</span><span class="bar"></span></div>
+<h2>M2, and the hole in the energy budget</h2>
+
+<p>The third run was meant to test a separate mechanism. A previous packet had
+established that heating the exposed vertical faces of rock above the nozzle
+plane is what makes the hole's diameter converge under mesh refinement. M2 turns
+that on. It was expected to widen the hole modestly.</p>
+
+<p>It widened it by <strong>37 to 41 mm at every depth</strong> and stripped
+76.7 mm of rock from the 50–76 mm ring, against M1's 0.5 mm.</p>
+
+<p>The cause is a genuine conservation defect, found during this packet and not
+anticipated by it. The jet's energy is tracked by an enthalpy march: the gas
+starts hot at the nozzle, is binned by radius, gives up heat to each ring of
+rock in turn, and the accumulated transfer is capped by the gas's own enthalpy.
+That march contains two loops, and <strong>both skip columns above the nozzle
+plane</strong>.</p>
+
+<div class="note">
+  <p class="cap">Why this was invisible</p>
+  <p>Skipping above-plane columns is what allows a prescribed above-plane gas
+  temperature to survive the march at all — so the skip looks like a feature.
+  But it also means heat delivered above the plane is <strong>never deducted
+  from the jet's enthalpy budget</strong>. The march's internal invariant (power
+  to the face must not exceed the enthalpy cap) covers below-plane columns only.
+  The global energy ledger cannot catch it either, because the flux <em>is</em>
+  counted there — the ledger closes to 1.2 × 10⁻¹⁴, as it should. Energy is
+  conserved domain-wide; it is the <em>jet</em> that is being over-drawn.</p>
+</div>
+
+<p>So M2's above-plane heat source is limited only by the radial confinement,
+never by the gas actually having that energy to give. The 2.4 kW it delivers is
+free. <strong>This must be fixed before any packet widens the annulus band</strong>,
+and it makes M2's result uninterpretable as physics — though entirely
+interpretable as a diagnostic, which is how it is being used.</p>
+
+<div class="partline"><span class="n">Part 6</span><span class="bar"></span></div>
+<h2>What this does and does not establish</h2>
+
+<p>The result is strong enough that the caveats matter more than usual.</p>
+
+<h3>The diameter is substantially an input, not a prediction</h3>
+
+<p>M1's wall sits at about 44 mm radius, which is <em>inside</em> the 40–56 mm
+blend. The hole's radius is therefore largely set by where that blend hands
+over. The radii were chosen from the burner's engineering drawing — the 40 mm
+skirt, the 76 mm measured mouth ring — and not from Meier's hole, so this is not
+tuning. But it means the model is being told roughly where the wall should be,
+and it is putting it there. The honest statement is that the funnel has been
+removed down to the geometry that was supplied, not that the hole diameter has
+been predicted.</p>
+
+<h3>This is one mesh</h3>
+
+<p>Everything here is a 2 mm calculation. A previous packet showed that the
+above-plane heating mechanism reveals itself as a <em>difference between
+meshes</em>, which a single mesh cannot see by construction. No convergence
+claim is made, and none can be. The 1 mm run is the next expensive step.</p>
+
+<h3>The model still drills about twice too fast</h3>
+
+<p>M1 cuts 362 mm in 402 seconds — 3.2 m/h, against Meier's 1.3–1.6. This is
+inherited from the baseline configuration, which is a known runaway case, and is
+not caused by the confinement; M0 runs at 2.5 m/h. But it means the excavated
+volume (M1 at 0.82× the reference, pro-rata) is not a meaningful comparison
+either, and the rate will have to be confronted even though this packet
+deliberately did not score it.</p>
+
+<h3>One number in the map is still underived</h3>
+
+<p>The factor that scales heating on exposed vertical faces is set to 0.2. It
+has never been derived from anything; it was introduced as a placeholder, and it
+sets the magnitude of the wall heating. It is frozen and unscanned in this
+packet, which keeps the comparison clean, but it is a genuine loose end and it
+should be retired by derivation rather than by fitting.</p>
+
+<h3>A prediction that was refuted, and in which direction</h3>
+
+<p>Before the runs we pre-registered that the 16 mm blend imposes a numerical
+floor of about 96–100 mm on the achievable diameter, with the prediction
+counting as refuted if any leg cut below 92 mm at shallow depth.
+<strong>M1 cut 91.69 mm at 50 mm depth.</strong> Refuted — narrowly, and in the
+favourable direction. The floor argument was correct in form but about 5 mm
+pessimistic.</p>
+
+<p>We record this because the discipline is the point. Predictions are written
+down with explicit refutation thresholds and hashed before the runs start, so
+that a result cannot be reinterpreted after the fact. In this programme that
+practice has already caught a case where an earlier packet's author predicted
+their own mechanism would fail, was refuted by their own stated test, and
+reported it.</p>
+
+<div class="partline"><span class="n">Part 7</span><span class="bar"></span></div>
+<h2>Where this goes</h2>
+
+<p>Three things follow, in order.</p>
+
+<p><strong>Fix the enthalpy accounting.</strong> Above-plane heat has to be
+drawn from the same budget as below-plane heat. Until then M2's number is a
+diagnostic, not a measurement, and no packet can responsibly widen the annulus
+band.</p>
+
+<p><strong>Run the fine mesh.</strong> A 1 mm calculation over the same window
+costs roughly three hours. It settles whether the near-cylinder survives
+refinement, and it looks specifically at the wall, where an earlier packet
+established that the vertical profile does <em>not</em> converge even where the
+diameter does.</p>
+
+<p><strong>Then confront the rate.</strong> With shape under control and a
+converged metric, the factor-of-two in penetration rate becomes the next
+well-posed question rather than a confounded one.</p>
+
+<div class="note">
+  <p class="cap">The methodological point</p>
+  <p>Eleven packets in this line failed or were withdrawn before this one
+  passed. Four of them were chasing a residual mesh discrepancy that turned out
+  to be the abrupt edge of a prescribed boundary condition rather than a physical
+  mechanism at all; two more were withdrawn before launch when pre-flight
+  arithmetic showed they would have decided their own result by construction.
+  What eventually worked was not a better model but a better <em>metric</em>:
+  replacing a single averaged rate with a spatially resolved profile, which
+  immediately said <em>where</em> the model was wrong. Every packet since has
+  been cheaper and more decisive than the ones before it.</p>
+</div>
+
+<footer>
+  <p>ALAMO MMWSpalling · packet D2v, run and scored 24 September 2026 ·
+  three legs on a 2 mm mesh, ~400 s each. Criteria hashed read-only before
+  launch; baseline verified byte-identical to the archived reference; tree
+  identity 2639/2639 with the new keys unset. Full record in
+  <code>tests/MMWSpalling/studies/d2v_hmap/RESULTS.md</code>.</p>
+</footer>
+
+</div>
+</body>
+</html>

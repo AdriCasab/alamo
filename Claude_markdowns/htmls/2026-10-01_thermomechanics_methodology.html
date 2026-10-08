@@ -1,0 +1,308 @@
+<title>Flake Front Thermomechanics</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --bg:#f2f4f6; --panel:#ffffff; --ink:#1a222c; --muted:#5a6673; --rule:#d6dce2;
+  --accent:#2b5c7a; --accent-ink:#ffffff; --eqbg:#f7f9fb;
+  --ship:#2f7a5a; --ship-bg:#e4f2ea; --prop:#9a6200; --prop-bg:#fbefd4; --retire:#7a3a2a; --retire-bg:#f6e4df;
+  --callout:#e8f0f6; --callout-rule:#2b5c7a;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121a21; --panel:#18222b; --ink:#e6eaee; --muted:#9aa7b3; --rule:#2c3944;
+    --accent:#7fb3d5; --accent-ink:#0f1a22; --eqbg:#1c2731;
+    --ship:#7fd0a8; --ship-bg:#173127; --prop:#f0c060; --prop-bg:#3a2d10; --retire:#f0a090; --retire-bg:#3a2320;
+    --callout:#1b2e3c; --callout-rule:#7fb3d5;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121a21; --panel:#18222b; --ink:#e6eaee; --muted:#9aa7b3; --rule:#2c3944;
+  --accent:#7fb3d5; --accent-ink:#0f1a22; --eqbg:#1c2731;
+  --ship:#7fd0a8; --ship-bg:#173127; --prop:#f0c060; --prop-bg:#3a2d10; --retire:#f0a090; --retire-bg:#3a2320;
+  --callout:#1b2e3c; --callout-rule:#7fb3d5;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.55;padding-inline:16px;padding-block:0 64px;}
+.wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:0 48px;}
+@media (min-width:980px){.wrap{grid-template-columns:minmax(0,1fr) 240px;}}
+header.top{grid-column:1/-1;padding-block:40px 20px;border-bottom:1px solid var(--rule);margin-bottom:28px;}
+.eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;}
+h1{font-family:var(--sans);font-weight:600;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0 0 14px;text-wrap:balance;}
+.lede{font-size:19px;max-width:70ch;margin:0;color:var(--ink);}
+.meta{font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 20px;}
+main{min-width:0;}
+nav.toc{display:none;}
+@media (min-width:980px){
+  nav.toc{display:block;position:sticky;top:env(safe-area-inset-top,0px);align-self:start;padding-top:6px;font-family:var(--sans);font-size:13px;}
+  nav.toc ol{list-style:none;margin:0;padding:0;border-left:1px solid var(--rule);}
+  nav.toc li a{display:block;padding:5px 0 5px 14px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;margin-left:-1px;}
+  nav.toc li a:hover,nav.toc li a:focus-visible{color:var(--accent);border-left-color:var(--accent);outline:none;}
+  nav.toc .toclabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;}
+}
+section{margin-bottom:44px;}
+h2{font-family:var(--sans);font-weight:600;font-size:24px;line-height:1.2;margin:0 0 6px;text-wrap:balance;}
+h3{font-family:var(--sans);font-weight:600;font-size:17px;margin:26px 0 8px;}
+.secno{font-family:var(--mono);font-size:13px;color:var(--accent);display:block;margin-bottom:4px;}
+p{max-width:70ch;margin:0 0 14px;}
+ul,ol{max-width:70ch;margin:0 0 14px;padding-left:22px;}
+li{margin-bottom:6px;}
+code,.k{font-family:var(--mono);font-size:.88em;background:var(--eqbg);padding:1px 5px;border-radius:3px;}
+.eq{display:grid;grid-template-columns:72px minmax(0,1fr);gap:0 14px;align-items:start;background:var(--eqbg);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;margin:14px 0 16px;overflow-x:auto;}
+.eq .no{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:6px;white-space:nowrap;}
+.eq .body{min-width:0;}
+.eq .body .mj{font-size:17px;}
+.eq .note{font-family:var(--sans);font-size:13.5px;color:var(--muted);margin-top:6px;}
+.tag{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px;vertical-align:middle;margin-left:8px;}
+.tag.ship{color:var(--ship);background:var(--ship-bg);}
+.tag.prop{color:var(--prop);background:var(--prop-bg);}
+.tag.retire{color:var(--retire);background:var(--retire-bg);}
+.callout{background:var(--callout);border-left:3px solid var(--callout-rule);padding:14px 18px;border-radius:0 6px 6px 0;margin:18px 0 20px;max-width:78ch;}
+.callout p:last-child{margin-bottom:0;}
+.callout h3{margin-top:0;}
+.tablewrap{overflow-x:auto;margin:14px 0 18px;}
+table{border-collapse:collapse;font-family:var(--sans);font-size:14px;min-width:420px;}
+th,td{text-align:left;padding:7px 12px 7px 0;border-bottom:1px solid var(--rule);vertical-align:top;}
+th{font-weight:600;color:var(--muted);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;padding-right:18px;}
+.sym{font-family:var(--sans);font-size:14px;}
+.sym dt{font-family:var(--mono);font-weight:500;float:left;clear:left;width:7.5em;}
+.sym dd{margin:0 0 6px 8em;}
+.legend{font-family:var(--sans);font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;}
+footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:16px;font-family:var(--sans);font-size:13px;color:var(--muted);max-width:none;}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;}}
+html{scroll-behavior:smooth;}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">MMWSpalling · thermomechanical methodology · 1 October 2026</p>
+  <h1>Flake Front Thermomechanics</h1>
+  <p class="lede">How the ALAMO flame-jet ablation model turns a temperature field into removed rock: the conduction problem, the sub-cell surface reconstruction, the thermal stress, the fracture criterion and the energy-conserving removal, with the equations as implemented and the proposed change in how the driving stress is computed.</p>
+  <div class="meta">
+    <span>Reference case: Meier (2017) Ch. 8, Grimsel granite, Ø80 mm burner, 38 kW, 1.5 m/h feed</span>
+    <span>Code state: P0b revision 7 accepted; P1 revision 3 ready for implementation</span>
+  </div>
+  <div class="legend">
+    <span><span class="tag ship" style="margin-left:0">shipped</span> in the accepted binary</span>
+    <span><span class="tag prop" style="margin-left:0">proposed</span> in the P1 packet, not yet run</span>
+    <span><span class="tag retire" style="margin-left:0">retired</span> previously used, withdrawn</span>
+  </div>
+</header>
+
+<main>
+
+<section id="overview">
+  <span class="secno">0</span>
+  <h2>What kind of model this is</h2>
+  <p>The model is a discrete-flake thermal-spallation ablation front. Heat enters the rock through a flame boundary condition on an evolving surface, conducts into the solid, and raises an in-plane compressive thermal stress in the heated skin. When that stress drives a surface flaw to the rock's fracture toughness, a flake of finite thickness detaches, carrying its enthalpy with it, and the surface recedes. The rate at which rock leaves is then set by energy: every joule that enters must leave as flake enthalpy once the front is steady.</p>
+  <p>Two scales define the numerics. The conduction mesh is 2 mm. The flakes are 0.3 to 1 mm and the thermal skin at the front is about 1 mm. Everything below one cell is therefore reconstructed, not resolved, and the reconstruction is the hinge of the whole method. The pipeline below is in execution order, once per time step, per surface column.</p>
+</section>
+
+<section id="conduction">
+  <span class="secno">1</span>
+  <h2>Heat conduction in the solid</h2>
+  <p>The conserved state is the volumetric enthalpy. Temperature is recovered from it by inverting the enthalpy relation, which includes latent terms near melting that are inert at spallation temperatures.</p>
+  <div class="eq"><div class="no">(1.1)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$\frac{\partial H}{\partial t} = \nabla\!\cdot\!\big(k\,\nabla T\big) + S,\qquad H = \rho c\,(T - T_0)\;+\;\text{latent terms}$$</div>
+    <div class="note">Explicit finite-volume update on a fixed Cartesian grid. Face conductances are harmonic means; a face touching a void cell carries zero flux and a void cell's own conductivity is zeroed. Grain-boundary contact resistance and damage-dependent conductivity exist as options and are off on the Meier legs.</div>
+  </div></div>
+  <p>The volumetric source \(S\) is the millimetre-wave path. For the flame case it is zero and all heating enters through the boundary.</p>
+  <div class="eq"><div class="no">(1.2)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$S(r,z) = \alpha\, I_0\, e^{-2r^2/\omega_0^2}\, e^{-\alpha z},\qquad\text{integrated analytically over each cell in } z$$</div>
+    <div class="note">Gaussian beam of waist \(\omega_0\) and Beer–Lambert attenuation \(\alpha\). The per-cell analytic integral replaced pointwise sampling, which lost up to half the beam power when \(\alpha\,\Delta z \gtrsim 1\).</div>
+  </div></div>
+  <p>Material constants on the Meier legs: \(E = 30\) GPa, \(\nu = 0.30\), \(\beta = 8\times10^{-6}\) K\(^{-1}\), \(k = 1.5\) W/m K, \(\rho = 2750\) kg/m\(^3\), \(c = 790\) J/kg K, so \(\kappa = 6.9\times10^{-7}\) m\(^2\)/s and \(E\beta/(1-\nu) = 0.343\) MPa per kelvin.</p>
+</section>
+
+<section id="bc">
+  <span class="secno">2</span>
+  <h2>The flame boundary condition</h2>
+  <p>Each surface column receives a convective flux from the gas, less radiative and convective losses. Since P0b the condition is written on the reconstructed surface temperature of §3, not on the cell average, which is what made the delivered power mesh-independent.</p>
+  <div class="eq"><div class="no">(2.1)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$q_{\rm net} = h\,(T_g - T_s)\;-\;\varepsilon(T_s)\,\sigma_{\rm SB}\,(T_s^4 - T_a^4)\;-\;h_c\,(T_s - T_a)$$</div>
+    <div class="note"><code>surface_patch.robin_form = surface</code>. The earlier forms remain as controls: <code>cell</code> uses the cell average, <code>face</code> solves a linear half-cell Newton, <code>pinned</code> clamps the face at the firing temperature. All three show a 11 to 16 % mesh spread in the steady rate that the surface form reduces to 1.5 %.</div>
+  </div></div>
+  <p>The coefficient \(h\) and gas temperature \(T_g\) come from an empirical map and an enthalpy march. The map is a wall-jet correlation in the Martin form, a function of radius from the nozzle axis and of the local standoff between the nozzle plane and the floor at that radius, with a raised-cosine blend to a wall value beyond 40 mm and to zero by 76 mm. The march depletes \(T_g\) along the floor in proportion to the heat already delivered, so the model is closed-loop in the gas.</p>
+  <div class="eq"><div class="no">(2.2)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$h(r,s) = h_{\rm ref}\,\frac{G(r,s)}{G_{\rm ref}}\;f(s)\;w(r),\qquad f(s)=\min\!\left(1,\tfrac{0.09}{s}\right)\ \text{for } s>90\ \text{mm}$$</div>
+    <div class="note">Measured consequence on the revision-7 Meier leg, 60 to 160 s: delivered flux 0.80 MW/m² on the axis, 1.19 to 1.45 at 38 to 42 mm where the bowl is shallowest and the standoff shortest, 1.0 at 42 to 46 mm, 0.45 at 50 to 52 mm, under 0.2 beyond 56 mm. The radial tail of this map, not the criterion, sets the bore width between 42 and 50 mm.</div>
+  </div></div>
+  <p>Exposed vertical faces of the staircase receive a side flux through the same routine: the owning column's \(h\) and \(T_g\) inside 40 mm, and a wall coefficient of 169 W/m²K against the live exhaust temperature beyond it. Under the surface form the wall uses the linear face Newton, since a wall that cannot recede conducts diffusively and its near-face profile is close to linear.</p>
+</section>
+
+<section id="recon">
+  <span class="secno">3</span>
+  <h2>Sub-cell surface reconstruction</h2>
+  <p>A steadily receding front has an exact exponential temperature profile below the surface, with decay length \(\ell = \kappa/v\). The model fits that shape to the top two cell averages of each column and reads off the surface temperature and the decay length. This is the one surface temperature used by the boundary condition, the criterion and the removal.</p>
+  <div class="eq"><div class="no">(3.1)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$x = \ln\!\frac{T_{\rm top}-T_0}{T_1-T_0},\qquad \ell_{\rm eff} = \frac{\Delta z}{x},\qquad T_s = T_0 + (T_{\rm top}-T_0)\,\frac{x}{1-e^{-x}}$$</div>
+    <div class="note">Guards: a non-decaying pair holds the column's last valid \(x\) (the flat-hold); \(x\) is capped at 4 so \(\ell_{\rm eff} \ge \Delta z/4\); \(T_s\) is capped at the gas temperature. On the Meier floor \(x\) is 1 to 2, so the surface is 100 to 250 K above its cell average. Smoothing of \(x\) in time was tried and removed: it fired cold starts on the clamp.</div>
+  </div></div>
+  <div class="eq"><div class="no">(3.2)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$h_f = \min\!\big(c_f\,\ell_{\rm eff},\; h_{\max}\big),\qquad \bar T_f = T_0 + (T_s - T_0)\,\frac{1-e^{-h_f/\ell_{\rm eff}}}{h_f/\ell_{\rm eff}}$$</div>
+    <div class="note">Flake thickness and flake-mean temperature. \(c_f = 0.4\) is empirical, from measured flake thicknesses of 0.1 to 1 mm (Wilkinson 1989, Rauenzahn 1986). \(h_{\max} = 1.5\) mm is a declared empirical bound that never binds on the resolved floor and binds on essentially every firing beyond 40 mm radius, where the two-cell ratio reads flat.</div>
+  </div></div>
+  <p>Measured accuracy: the firing surface temperature is mesh-independent to 0.12 to 0.35 % across 2, 1 and 0.5 mm on both the Kant onset cube and the one-dimensional column. The known weaknesses are cold starts, where the second cell has not warmed and the fit over-reads the surface, and side-heated columns, where the second cell is warm for reasons unrelated to the surface and the fit returns a long, meaningless \(\ell_{\rm eff}\).</p>
+  <div class="callout">
+    <h3>Estimator successor, held out of the current packet</h3>
+    <p>The surface heat flux is known exactly from (2.1), and Fourier's law fixes the surface slope, \(\mathrm{d}T/\mathrm{d}z|_0 = -q/k\). A fit anchored on that slope and the top-cell energy needs no second cell and is three to four times more accurate on cold starts. On columns pre-warmed from the side, however, it correctly resolves the thin hot skin and fires them, which would cancel the criterion change of §4 wherever the map still delivers floor-intensity flux. It is therefore scheduled as its own step, after the criterion lands, and the right form there is a three-parameter fit with the substrate temperature as the base, \(T(z) = T_b + A\,e^{-z/\ell}\), from \(T_{\rm top}\), \(T_1\) and \(q\).</p>
+  </div>
+</section>
+
+<section id="stress">
+  <span class="secno">4</span>
+  <h2>Thermal stress and the driving stress</h2>
+  <p>For a half-space with a one-dimensional temperature profile and a free surface the thermoelastic solution is exact and local: the in-plane stress at a depth depends only on the temperature at that depth. The gradient enters only through the shape of \(T(z)\). This holds for the flame case because the heated depth, about 1 mm, is small against the heated radius of 40 mm.</p>
+  <div class="eq"><div class="no">(4.1)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$\sigma_{xx}(z) = \sigma_{yy}(z) = -\,\frac{E\,\beta\,\big(T(z) - T_{\rm ref}\big)}{1-\nu}\;-\;\frac{\nu}{1-\nu}\,p,\qquad \sigma_{zz} = 0$$</div>
+    <div class="note">Kant (2017) eq. 5; Rauenzahn (1986) eq. 3.4; Boley and Weiner. Compression negative; \(p\) is a confining pressure, zero on the Meier legs. In the code the compressive magnitude is carried as \(E\beta(T - T_{\rm ref})/(1-\nu) + \sigma_{\rm conf}\).</div>
+  </div></div>
+  <p>Where the heated depth is not small against the heated spot, as in millimetre-wave heating with absorption depths of 3 to 30 mm under a 10 to 20 mm beam, the in-plane constraint is relieved and (4.1) is wrong. The model then takes \(\sigma_{xx}(z)\) from a full thermoelastic equilibrium solve with the thermal eigenstrain, the <code>stress_mf</code> branch. The criterion below accepts either source.</p>
+
+  <h3>How the stress was used until now</h3>
+  <p>The criterion of §5 loaded the absolute compressive stress of (4.1) onto a flaw of 8 to 40 µm. Against a 2 mm cell such a flaw samples a single point, so the criterion was a function of the surface temperature alone. Measured on the revision-7 Meier leg, the superheat at firing is 465 to 469 K in every radial band from the axis to the wall, while the drop from surface to top-cell average ranges from 250 K on the axis to 31 K at the wall. Columns pre-warmed from the side by the hole wall, with no gradient to speak of, fired exactly as the floor did. They carried 36 % of removed rock and held the bore at about 100 mm against Meier's 85.</p>
+  <div class="eq"><div class="no">(4.2)<span class="tag retire">retired</span></div><div class="body">
+    <div class="mj">$$\sigma_{\rm drive}(z) = \frac{E\,\beta\,\big(T(z) - T_{\rm ref}\big)}{1-\nu} + \sigma_{\rm conf}\qquad(\text{absolute form, } T_{\rm ref} = 293.15\ \text{K})$$</div>
+    <div class="note">Stays in the code as <code>spall.driving_stress = absolute</code>, the byte-identical default, and as the control for the unit test below.</div>
+  </div></div>
+
+  <div class="callout">
+    <h3>The latest change: a differential driving stress across the flake</h3>
+    <p>A surface layer only buckles off if it is more compressed than the rock immediately beneath it. The physically relevant quantity is the stress jump between the candidate flake and its substrate, which is the buckling-delamination drive of Evans and Hutchinson. The proposal replaces the ambient reference in (4.2) with the temperature at one flake thickness below the point being evaluated.</p>
+  </div>
+  <div class="eq"><div class="no">(4.3)<span class="tag prop">proposed</span></div><div class="body">
+    <div class="mj">$$\sigma_{\rm drive}(z) = \max\!\Big(0,\;\frac{E\,\beta\,\big[\,T(z) - T(z + h_f)\,\big]}{1-\nu}\Big),\qquad T(\zeta) = T_0 + (T_s - T_0)\,e^{-\zeta/\ell_{\rm eff}}$$</div>
+    <div class="note"><code>spall.driving_stress = differential</code>, <code>spall.driving_ref = flake</code>. The reference temperature is read from the exponential reconstruction, never by stepping a cell index, which at \(h_f \approx 0.45\) mm against \(\Delta z = 2\) mm would land in the same cell and make the stress identically zero. The confining term cancels under the subtraction, which is correct: a uniformly compressed layer has no delamination drive. On the mechanics-solve branch the same statement reads \(\sigma_{xx}(z) - \sigma_{xx}(z+h_f)\).</div>
+  </div></div>
+  <h3>How \(h_f\) is chosen</h3>
+  <p>The flake thickness is not selected by the fracture criterion. It is prescribed by the thermal profile through (3.2): a fixed fraction \(c_f = 0.4\) of the reconstructed decay length, capped at 1.5 mm. On a steady front \(\ell = \kappa/v\), so a faster front sheds thinner flakes; at Meier's rates that gives 0.4 to 0.7 mm, inside the measured 0.1 to 1 mm band, which is the only justification for \(c_f\). A stress-intensity criterion cannot choose the thickness itself: the depth scan that tried landed at half a cell on every mesh, and since \(K_I \propto \sqrt a\) while the differential stress saturates for cracks deeper than \(\ell\), maximising \(K_I\) over depth runs to the search limit. Thickness as an output needs an energy-release statement, \(G \sim (1-\nu^2)\sigma^2 h/2E\) against a critical value, which is an owed successor.</p>
+  <p>In (4.3) the same \(h_f\) is used twice, deliberately: it is the slab that would be removed, and it is where the substrate is taken to begin. Since the flaw (8 to 71 µm) is far smaller than the flake, the stress is effectively constant over the flaw and the drive reduces to \(E\beta\,(T_s - T(h_f))/(1-\nu)\). On the Meier floor that is \(0.33 \times 467\ \text{K} = 154\ \text{K}\), a drive of 53 MPa against 160 MPa in the absolute form. Where the reconstruction is wrong, on the side-heated band, the flake and the reference are wrong together, which is why the suppression there is partly the estimator's doing rather than physics.</p>
+  <p>Three properties follow directly from (4.3).</p>
+  <ul>
+    <li><strong>On a self-similar receding front the drive is a fixed fraction of the superheat.</strong> With \(h_f = c_f\,\ell_{\rm eff}\) the jump is \((T_s - T_0)(1 - e^{-c_f}) = 0.330\,(T_s - T_0)\) whatever \(\ell\) is. Kant's validated criterion is flux-blind, and this preserves that exactly. On the shipped Kant legs the fraction is 0.330 on both the slow deep profile and the fast thin one.</li>
+    <li><strong>On a uniformly preheated slab the drive is zero</strong>, not small. A column at the firing temperature all the way down cannot fire. Nothing in the model has passed that test before; it is the packet's unit test.</li>
+    <li><strong>A fixed reference depth would have the wrong sign against the data.</strong> With \(d_{\rm ref} = 1\) mm the drive fraction is \(1 - e^{-d_{\rm ref}/\ell}\), so a sharper front gets more drive and fires cooler, the opposite of Wilkinson's measured rise of spall temperature with flux. On the Kant legs it gives 0.240 against 0.665, so one flaw size cannot land both inside the measured onset band. That form is retained only as a comparison arm.</li>
+  </ul>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Kant onset leg</th><th class="num">fires at</th><th class="num">ℓ<sub>eff</sub></th><th class="num">h<sub>f</sub></th><th class="num">drive fraction, fixed 1 mm</th><th class="num">drive fraction, flake</th></tr></thead>
+      <tbody>
+        <tr><td>h = 150 W/m²K, slow and deep</td><td class="num">463 K superheat</td><td class="num">3.65 mm</td><td class="num">1.46 mm</td><td class="num">0.240</td><td class="num">0.330</td></tr>
+        <tr><td>h = 500 W/m²K, fast and thin</td><td class="num">466 K superheat</td><td class="num">0.91 mm</td><td class="num">0.37 mm</td><td class="num">0.665</td><td class="num">0.330</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Because the drive on a normal front falls to a third of its former value, the flaw size must be refitted once, against the Kant laboratory onset only. The estimate is \(a_0\) from 8 µm to about 71 µm, with the grain-boundary flaw held at five times that. Nothing is fitted against Meier and the toughness table is not scaled.</p>
+  <p>What this change does and does not reach. On the floor under the burner the firing temperature, the rate and the energetics are unchanged by construction. Beyond 50 mm radius, where the top flux is under 0.45 MW/m² and the columns are side-heated, the drive collapses and those columns stop firing: that is the genuine physics content. Between 40 and 50 mm the map still delivers 0.65 to 1.45 MW/m², floor-intensity heat; rock given that flux spalls under any correct criterion, and any suppression the differential form produces there comes from the reconstruction's blindness to a thin hot skin on pre-warmed rock, not from physics. That band belongs to the map's radial tail.</p>
+  <p>A second gradient effect is deliberately not in (4.3). A steeper gradient stresses a thinner layer, which samples fewer flaws and raises the spall temperature. That is the statistical route behind Wilkinson's measured \(T_s(q)\), and it needs per-grain or stressed-volume flaw draws. It is a separate, additive step.</p>
+</section>
+
+<section id="fracture">
+  <span class="secno">5</span>
+  <h2>The fracture criterion</h2>
+  <p>The driving stress loads a surface flaw of size \(a\) through the Tada edge-crack weight function. The integral accepts a depth-varying stress, so (4.3) drops in without change.</p>
+  <div class="eq"><div class="no">(5.1)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$K_I = 2\sqrt{\frac{a}{\pi}}\int_0^{\pi/2} \sigma_{\rm drive}\!\big(a\sin\theta\big)\, g(\sin\theta)\,\mathrm{d}\theta \;\approx\; 1.12\,\sigma\sqrt{\pi a}\ \text{ for uniform } \sigma$$</div>
+    <div class="note">Simpson quadrature, 128 segments. Evaluated at two sites that share one routine: the onset field used for diagnostics and anchoring, and the depth scan that fires the column.</div>
+  </div></div>
+  <div class="eq"><div class="no">(5.2)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$\text{fire when}\quad K_I \;\ge\; K_{Ic}(T_s),\qquad K_{Ic}\text{ from Nasseri: }1.43,\,1.35,\,0.98,\,0.43,\,0.22\ \text{MPa}\sqrt{\rm m}\text{ at }298,\,523,\,723,\,923,\,1123\ \text{K}$$</div>
+    <div class="note">Linear between table points, clamped at the ends, unscaled. The fall of toughness with temperature is what lets a side-warmed column at 740 K fire on about a third less drive than cold rock: side heat weakens, top flux drives.</div>
+  </div></div>
+  <div class="eq"><div class="no">(5.3)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$a = a_0\,(-\ln u)^{1/m},\qquad u\sim U(0,1)\ \text{per cell},\qquad a_{0,\rm ig} = 8\ \mu\text{m},\ a_{0,\rm gb} = 40\ \mu\text{m},\ m = 20$$</div>
+    <div class="note">The flaw size is the fitted quantity and it was fitted to Kant's onset. Drawing per cell makes the onset move 3.7 % with mesh because refinement draws more lottery tickets; per-grain draws are owed.</div>
+  </div></div>
+  <p>Effective temperature scale. For a given profile shape (5.1) is linear in the superheat and (5.2) falls with temperature, so the criterion collapses to a surface-temperature threshold, about 760 K for Grimsel with the current flaw size. Under (4.3) that remains true on every self-similar front and stops being true exactly where it should: a flat slab at 760 K has no jump and does not fire.</p>
+</section>
+
+<section id="removal">
+  <span class="secno">6</span>
+  <h2>Removal and energy conservation</h2>
+  <p>A firing removes the flake of (3.2). The removal is sub-cell: the column's enthalpy profile is shifted upward by \(h_f\) using the exponential sub-cell shape, so the material that leaves through the top carries exactly the flake's enthalpy and nothing is subtracted by hand. A per-column offset records how far the true surface has receded inside the top cell; when it crosses a full cell the cell is voided and the remainder of its profile is handed to the cell below.</p>
+  <div class="eq"><div class="no">(6.1)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$H_k' = (1-b)\,H_{k+m} + b\,H_{k+m+1},\qquad b = \frac{1-e^{-r/\ell}}{1-e^{-\Delta z/\ell}},\qquad E_{\rm flake} = \rho c\,h_f\,(\bar T_f - T_0)\,A$$</div>
+    <div class="note">Two-cell exponential blend; the sum telescopes, so the energy removed equals the flake enthalpy exactly. Only the conserved \(H\) is remapped; \(T\) is re-inverted and the ghost layer refilled. Writing a blended \(T\) directly left stale ghosts at lateral box seams and broke layout invariance; that was found and fixed.</div>
+  </div></div>
+  <p>The thermal frame stays whole-cell: the conduction kernel never reads the partial fraction, and the top cell is thermally a full cell whose top face is the surface. The price is that neighbouring columns can be misaligned by up to one cell in lateral conduction, the same class of approximation as the staircase itself.</p>
+  <div class="eq"><div class="no">(6.2)<span class="tag ship">shipped</span></div><div class="body">
+    <div class="mj">$$v = \frac{q_{\rm net}}{\rho c\,(\bar T_f - T_0)} = \frac{c_f}{1-e^{-c_f}}\;\frac{q_{\rm net}}{\rho c\,(T_s - T_0)}\;\approx\;1.21\times\text{the continuum ablation limit}$$</div>
+    <div class="note">Steady-state rate. The offset above the continuum limit is physics: a flake of finite thickness leaves cooler than the surface, so less energy is spent per unit volume. Measured on the column: 1.17, 1.21, 1.30 at \(c_f\) = 0.3, 0.4, 0.5 against 1.16, 1.21, 1.27 predicted; the flake-mean temperature ratio \((1-e^{-c_f})/c_f\) reproduces to four decimals on every mesh.</div>
+  </div></div>
+  <p>Energy accounting closes on the solid cells with the flake sink included: to 5×10⁻⁴ on the column and 10⁻⁴ on the Meier leg, after adding the enthalpy of cells that leave below the 15 mm gather window.</p>
+</section>
+
+<section id="state">
+  <span class="secno">7</span>
+  <h2>Where the method stands against measurement</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Quantity</th><th>Result</th><th>Reading</th></tr></thead>
+      <tbody>
+        <tr><td>Steady rate, 1-D column, 2 / 1 / 0.5 mm</td><td class="num">2.506 / 2.506 / 2.544 m/h, spread 1.51 %</td><td>Mesh-independent; controls on the older boundary forms spread 11 to 16 %</td></tr>
+        <tr><td>Firing superheat, Kant cube, both heating rates</td><td class="num">0.12 to 0.16 % across meshes, 462 to 466 K</td><td>Inside Kant's 390 to 560 K band; the pre-P0 criterion's true surface moved 14 to 37 %</td></tr>
+        <tr><td>Meier axis rate, prescribed 1.5 m/h feed, 60 to 160 s</td><td class="num">3.24 m/h, standoff 133 mm, rate still decaying</td><td>Under a prescribed descent the rate is pinned to the feed at equilibrium; the free observables are the standoff, heading to about 250 mm against Meier's ceiling of 100, and the width</td></tr>
+        <tr><td>Bore on the converged 150 to 300 mm section</td><td class="num">100.6 mm vs Meier 85 ± 5</td><td>Mouth funnel pre-dates P0; body widening came with P0 and is the map's radial tail plus gradient-blind firing beyond 50 mm</td></tr>
+        <tr><td>Energy ledger with the flake sink</td><td class="num">5×10⁻⁴ column, 10⁻⁴ Meier</td><td>Removal is enthalpy-limited; volume is not the invariant</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Open items, in order: the differential drive of (4.3) with the Kant pair as its discriminator; the map's radial fall-off between 40 and 50 mm; the estimator successor of §3; the statistical spall-temperature rise with flux; the gas-side rate level, spall blowing and temperature-dependent gas heat capacity; and feet mode, where the burner rests on the pad ring so the standoff is pinned and the rate is free, which is the configuration Meier actually ran.</p>
+</section>
+
+<section id="unified">
+  <span class="secno">8</span>
+  <h2>One criterion for flame and millimetre wave</h2>
+  <p>The driving stress of (4.3) is the unifying statement. For the flame, \(\sigma(z)\) comes from the local form (4.1) because the heated depth is small against the heated radius. For millimetre-wave heating it comes from the mechanics solve because it is not. The criterion (5.1) to (5.2) and the stress jump across the flake do not change between them. Two things are not yet unified. With volumetric heating and surface losses the temperature maximum can sit below the surface; the jump is then negative, the clamp gives zero surface-flake drive, which is correct, and failure in that regime is a subsurface tensile mode needing its own criterion. And the flake-thickness law (3.2) reads a decay length from an exponential fit that means nothing for a volumetric profile; there the thickness must come from the stress profile itself.</p>
+</section>
+
+<section id="symbols">
+  <span class="secno">9</span>
+  <h2>Symbols</h2>
+  <dl class="sym">
+    <dt>H, T, T₀</dt><dd>volumetric enthalpy, temperature, ambient 293.15 K</dd>
+    <dt>k, ρ, c, κ</dt><dd>conductivity, density, specific heat, diffusivity</dd>
+    <dt>E, ν, β</dt><dd>Young's modulus, Poisson's ratio, linear expansion coefficient</dd>
+    <dt>h, T_g</dt><dd>convective coefficient and gas temperature from the map and march</dd>
+    <dt>T_s, T_top, T_1</dt><dd>reconstructed surface temperature, top-cell and next-cell averages</dd>
+    <dt>x, ℓ_eff</dt><dd>two-cell ratio exponent and reconstructed decay length</dd>
+    <dt>h_f, c_f, h_max</dt><dd>flake thickness, its fraction of ℓ, and its empirical bound</dd>
+    <dt>T̄_f</dt><dd>flake-mean temperature</dd>
+    <dt>σ_drive</dt><dd>stress loading the flaw: absolute (4.2) today, differential (4.3) proposed</dd>
+    <dt>a, a₀, m</dt><dd>flaw size, Weibull scale and modulus</dd>
+    <dt>K_I, K_Ic</dt><dd>stress intensity and temperature-dependent toughness</dd>
+    <dt>q_net, v</dt><dd>net surface flux and recession rate</dd>
+  </dl>
+</section>
+
+</main>
+
+<nav class="toc" aria-label="Contents">
+  <p class="toclabel">Pipeline</p>
+  <ol>
+    <li><a href="#overview">0 What kind of model</a></li>
+    <li><a href="#conduction">1 Conduction</a></li>
+    <li><a href="#bc">2 Flame boundary</a></li>
+    <li><a href="#recon">3 Surface reconstruction</a></li>
+    <li><a href="#stress">4 Thermal stress</a></li>
+    <li><a href="#fracture">5 Fracture criterion</a></li>
+    <li><a href="#removal">6 Removal and energy</a></li>
+    <li><a href="#state">7 Against measurement</a></li>
+    <li><a href="#unified">8 Flame and MMW</a></li>
+    <li><a href="#symbols">9 Symbols</a></li>
+  </ol>
+</nav>
+
+<footer>
+  Sources: ALAMO <code>src/Integrator/MMWSpalling.H</code> and <code>MMWSpalling/Removal.H</code> at P0b revision 7; <code>ACTIVE_STEP.md</code> P1 revision 3; study records under <code>tests/MMWSpalling/studies/p0b_one_surface_T/</code>; reviewer notes <code>Claude_markdowns/2026-10-01.md</code>. Literature: Kant et al. 2017; Rauenzahn 1986 and Wilkinson 1989 (MIT); Evans and Hutchinson 1984; Boley and Weiner.
+</footer>
+</div>
+
+<script>
+window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' }, options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>

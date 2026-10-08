@@ -1,0 +1,2 @@
+caffeinate -dis mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/p0_steady_column/input amr.thermo.int=1 amr.thermo.plot_int=1 energy_ledger.enabled=1 spall.flake_fraction=weibull plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p1g3_thickness/ledger_2x2/V_FRAC/FH
+7908bd6b0a95d547c8e336dae58ce4b450dde61c3d997daa1413245ebfb9eec0  /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++

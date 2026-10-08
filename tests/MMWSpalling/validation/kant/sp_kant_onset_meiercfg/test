@@ -1,0 +1,356 @@
+#!/usr/bin/env python3
+# P0 -- the mesh-independent anchor.
+#
+# ⚠ WHAT IS BEING MEASURED, AND WHY IT IS NOT THE CELL AVERAGE. The firing
+# criterion's "surface temperature" was the TOP CELL AVERAGE at both criterion
+# sites, so it moved with dz. This case fires the same rock at 2 / 1 / 0.5 mm
+# and asks whether the temperature the criterion fires AT is the same number.
+# The control legs (spall.surface_T = cell_average) are the pre-P0 answer and
+# are run here, not quoted from memory, so the comparison is like-for-like:
+# same binary, same input, one key.
+#
+# Legs (ALAMO, 4 ranks), all from ./input_model or ./input_weibull with only
+# amr.n_cell / surface_patch.h_conv / spall.surface_T on the command line:
+#
+#   R150_{2,1,0.5}   reconstructed, h_conv = 150   -- (a) and (b)
+#   R500_{2,1,0.5}   reconstructed, h_conv = 500   -- (a) and (b); Kant's
+#                                                     h_fl,min is 500 +- 100,
+#                                                     so this leg puts the
+#                                                     anchor inside the flux
+#                                                     band the model is used at
+#   C500_{2,1,0.5}   diagnostic,    h_conv = 500   -- THE CONTROL AT THE
+#                                                     SCORED LEG'S OWN
+#                                                     OPERATING POINT. ⚠ rev5
+#                                                     adds this because
+#                                                     scoring R500 against a
+#                                                     control run at h_conv =
+#                                                     150 repeats the vacuous-
+#                                                     witness trap: the
+#                                                     comparison only means
+#                                                     something if the control
+#                                                     saw the same flux.
+#   C150_{2,1,0.5}   diagnostic,    h_conv = 150   -- THE CONTROL: the
+#                                                     PRE-P0 criterion (cell
+#                                                     average) with the
+#                                                     reconstruction computed
+#                                                     and logged but NOT fed to
+#                                                     it, so the true surface
+#                                                     temperature AT ITS OWN
+#                                                     FIRING is measured
+#   W150_{2,1,0.5}   Meier Weibull flaw            -- REPORTED, see below
+#
+# Scored:
+#   (a) firing T_surf within +-0.5 % across the three meshes, both h_conv.
+#       ⚠ rev5 TIGHTENED THE BAR from 3 %. A bar that is never tightened
+#       prints PASS through a regression: revision 2 went from P0's measured
+#       0.161 / 0.116 % to 0.169 / 2.089 % -- an 18x regression at h500 -- and
+#       the harness reported PASS because 2.089 < 3. The bar is now the
+#       previous packet's MEASURED value plus headroom, not a round number.
+#   (c) NO SCORED LEG MAY FIRE ON A CLAMP. rc_flag bit 2 is the ell >= dz/4
+#       floor, and 4.075 is the largest amplification that floor permits, so a
+#       leg sitting on it is reporting the clamp's number and not the rock's.
+#       Such a leg is INVALID, not noisy.
+#   (b) onset rise inside Kant's 390-560 K band at all three meshes, both
+#       h_conv.
+#   (w) THE WITNESS, AND WHY IT IS NOT THE OBVIOUS ONE. ⚠ A threshold
+#       criterion fires when ITS OWN temperature variable reaches the
+#       threshold, so BOTH paths are flat in their own variable -- the
+#       cell-average criterion fires at ~462 K of CELL AVERAGE on all three
+#       meshes just as flatly as the reconstruction fires at ~462 K of
+#       SURFACE. Scoring (a) alone would therefore pass vacuously. What
+#       actually differs is the PHYSICAL STATE at firing: the control's TRUE
+#       surface temperature, measured on its own leg by the `diagnostic`
+#       mode, must move with dz while the reconstruction's does not.
+#
+# Reported, not scored:
+#   * the Weibull legs. Under weibull the per-cell draw carries
+#     (V_cell/V0)^(1/m) with V0 = 8e-9 = V_cell AT 2 mm ONLY, and the first
+#     firing is the luckiest of 4x as many surface cells at each refinement.
+#     Both move the onset FLAW with dz by construction, so a Weibull leg
+#     cannot measure whether the CRITERION is mesh-independent. V0 is held
+#     fixed across the three meshes, as the packet directs, and the resulting
+#     size effect is quantified here instead of being hidden.
+#   * ell_eff, its step-to-step variation, and the clamp flags.
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test --check    (checks existing outputs under ./output)
+
+import csv
+import os
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", "..", ".."))
+BIN  = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT  = os.path.join(HERE, "output")
+
+T_I = 293.15
+BAND_LO, BAND_HI = 390.0, 560.0   # Kant Table 2 predicted band
+TOL_MESH = 0.005                  # criterion (a); rev5 bar, was 0.03
+TOL_CTRL = 0.03                   # a control must MOVE by more than this
+FLAG_ELL_CLAMP = 2                # rc_flag bit: ell_eff hit the dz/4 floor
+
+MESHES = [("2.0", 12, 6), ("1.0", 24, 12), ("0.5", 48, 16)]
+
+# ⚠⚠ P1 -- THE DISCRIMINATOR LIVES HERE, AND THE REFIT LIVES HERE TOO.
+#
+# The criterion keys are applied by the HARNESS, not written into the input
+# files, so ./input_model stays a valid `absolute` case. A reader who runs the
+# input by hand gets the shipped criterion with the shipped flaw; the P1
+# configuration is exactly what this list says.
+#
+# ⚠⚠ P2-2a: THE P1 REFIT IS WITHDRAWN, AND IT HAD TO BE.
+#
+# Until P2-2a this harness passed, on EVERY leg:
+#     spall.driving_stress=differential  spall.driving_ref=flake
+#     spallation.sp.a0=80.0e-6  weibull.a0_ig=80.0e-6  weibull.a0_gb=400.0e-6
+# The 80 um flaw was a FACTOR OF 10 on the shipped 8 um, chosen because the
+# differential drive on a self-similar front is 1 - e^{-c_f} = 0.330 of the
+# absolute one and K_I ~ sqrt(a), so the flaw had to grow ~1/0.330^2 = 9.2x to
+# fire where the shipped criterion fires. The harness's own measured sweep at
+# 2 mm (R150 / R500 onset SUPERHEAT, K) recorded the coupling:
+#       8 um -> no fire / 650.4      40 um -> 522.3 / 526.8
+#      60 um -> 487.0   / 492.1      80 um -> 461.3 / 465.8
+#     100 um -> 441.1   / 441.6
+#
+# ⚠⚠ P2-2a retires `differential`, so the 80 um flaw lost its partner. Keeping
+# it while the keys fall unconsumed runs a flaw refit for a 0.330 drive against
+# the FULL absolute stress: MEASURED R150 onset 520.68 K against the archived
+# 754.57 K, which is the 80 um row of the table above (293.15 + 227). That is
+# the same shape of defect as the retired support rule's -- a flaw matched to a
+# reduced drive and to no other -- and it is why the refit is withdrawn here
+# rather than carried.
+#
+# ⇒ the legs now run the SHIPPED flaw under the one surviving form. The target
+# is this file's own recorded ABSOLUTE onset superheat, 463.3 / 465.8 K
+# (T_surf ~756.5 / 759.0), which is what the shipped criterion has always done.
+# ⚠ A leg that still passed `spall.driving_stress` would not abort -- ALAMO
+# reports an unconsumed key but exits 0 -- so the keys are REMOVED, not
+# overridden, and `unit/lateral_flux_lock` asserts they stay unconsumed.
+P1_KEYS = []
+
+TOL_TIME = 0.05                   # criterion (c'), firing-time spread
+
+def legs():
+    out = []
+    for tag, n, mgs in MESHES:
+        out.append((f"R150_{tag}", "input_model",   n, mgs, 150.0, "reconstructed", []))
+        out.append((f"R500_{tag}", "input_model",   n, mgs, 500.0, "reconstructed", []))
+        out.append((f"C150_{tag}", "input_model",   n, mgs, 150.0, "diagnostic",    []))
+        out.append((f"C500_{tag}", "input_model",   n, mgs, 500.0, "diagnostic",    []))
+        out.append((f"W150_{tag}", "input_weibull", n, mgs, 150.0, "reconstructed", []))
+        # ⚠⚠ P1 (c'): THE ANCHOR HAS BEEN VALIDATING A CONFIGURATION WE DO NOT
+        # RUN. Neither input file sets surface_patch.robin_form and the harness
+        # never passed it, so every leg above falls to the parser default
+        # `cell` -- while the Meier production leg runs `surface`. The cell form
+        # drives on h*(T_gas - T_cell_avg), and the cell average is colder on a
+        # coarser mesh, so the coarse mesh receives MORE flux and fires EARLIER.
+        # These legs add the production boundary condition; the cell-form legs
+        # above stay as the control, so the two are scored side by side.
+        out.append((f"S150_{tag}", "input_model",   n, mgs, 150.0, "reconstructed",
+                    ["surface_patch.robin_form=surface"]))
+        out.append((f"S500_{tag}", "input_model",   n, mgs, 500.0, "reconstructed",
+                    ["surface_patch.robin_form=surface"]))
+        # ⚠ THERE IS NO SURFACE-FORM (w) CONTROL, and there cannot be:
+        # robin_form = surface ABORTS unless spall.surface_T = reconstructed
+        # (MMWSpalling.H:626), because the form evaluates the flux and the
+        # losses at the reconstructed surface temperature. The diagnostic
+        # control exists precisely to turn that key off. So (w) is necessarily
+        # a cell-form comparison -- it isolates the surface-T key, not the
+        # Robin form -- and it is scored on the C legs below.
+    return out
+
+def run(name, inp, n, mgs, hconv, surfT, extra):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN,
+           os.path.join(HERE, inp),
+           "amr.n_cell=%d %d %d" % (n, n, n),
+           "amr.max_grid_size=%d" % mgs,
+           "surface_patch.h_conv=%g" % hconv,
+           "spall.surface_T=%s" % surfT,
+           # h_conv = 500 reaches onset ~4x sooner; 45 s covers both with margin
+           "stop_time=45.0",
+           "plot_file=%s" % os.path.join(d, "run")] + P1_KEYS + extra
+    print("  ", name, flush=True)
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    with open(os.path.join(d, "run.log"), "w") as lg:
+        r = subprocess.run(cmd, cwd=ROOT, env=env, stdout=lg, stderr=subprocess.STDOUT)
+    if r.returncode != 0:
+        print("FAIL: %s exited %d (see %s/run.log)" % (name, r.returncode, d))
+        sys.exit(r.returncode)
+
+def first_firing(name):
+    """First regime-1 row of the removal event log == the onset event."""
+    p = os.path.join(OUT, name, "run_removal_events.csv")
+    if not os.path.exists(p):
+        return None
+    with open(p) as f:
+        for row in csv.DictReader(f):
+            if row["regime"] != "1":
+                continue
+            g = lambda k: (float(row[k]) if k in row and row[k] != "" else None)
+            return {"t": g("time"), "T_top": g("T_top"), "Sp": g("Sp_top"),
+                    "T_surf": g("T_surf"), "ell": g("ell_eff"),
+                    "h_f": g("h_f"), "T_bar": g("T_bar_flake"),
+                    "flag": g("rc_flag"), "dell": g("d_ell_rel"),
+                    "frac": g("drive_frac"), "qrat": g("q_ratio")}
+    return None
+
+def spread(vals):
+    return (max(vals) - min(vals)) / (sum(vals) / len(vals))
+
+def main():
+    do_run = "--check" not in sys.argv
+    if do_run:
+        if not os.path.exists(BIN):
+            print("FAIL: missing binary %s; build first" % BIN); sys.exit(1)
+        print("Running %d legs..." % len(legs()), flush=True)
+        for lg in legs():
+            run(*lg)
+
+    res = {}
+    for name, *_ in legs():
+        r = first_firing(name)
+        if r is None:
+            print("FAIL: %s never fired (no regime-1 row)" % name); sys.exit(1)
+        res[name] = r
+
+    print("\n=== onset event, first firing ===")
+    print("%-12s %8s %10s %10s %10s %9s %8s %9s" %
+          ("leg", "t [s]", "T_top", "T_surf", "dT_fire", "ell[mm]", "rc_flag", "d_ell"))
+    for name, *_ in legs():
+        r = res[name]
+        Ts = r["T_surf"]
+        dT = (Ts if Ts is not None else r["T_top"]) - T_I
+        print("%-12s %8.3f %10.2f %10s %10.2f %9s %8s %9s" %
+              (name, r["t"], r["T_top"],
+               ("%.2f" % Ts) if Ts is not None else "--",
+               dT,
+               ("%.3f" % (r["ell"] * 1e3)) if r["ell"] else "--",
+               ("%g" % r["flag"]) if r["flag"] is not None else "--",
+               ("%.1e" % r["dell"]) if r["dell"] is not None else "--"))
+
+    ok = True
+
+    # (c) VALIDITY FIRST: a leg that fired on the ell >= dz/4 floor is not a
+    # measurement of the rock, it is a measurement of the clamp. Checked
+    # before (a) so a clamped leg cannot be reported as a spread at all.
+    for pre in ("R150", "R500"):
+        for t, _, _ in MESHES:
+            f = res["%s_%s" % (pre, t)]["flag"]
+            cl = (f is not None) and (int(round(f)) & FLAG_ELL_CLAMP)
+            ok &= not cl
+            print("(c) %s_%s  rc_flag = %s  %s" %
+                  (pre, t, ("%g" % f) if f is not None else "--",
+                   "INVALID -- fired on the ell >= dz/4 clamp" if cl
+                   else "valid"))
+
+    # (a) mesh independence of the temperature the criterion fires at.
+    # ⚠⚠ SCORED ON THE SURFACE-FORM LEGS, which are the ones that run the
+    # production boundary condition. That is not a choice made after seeing the
+    # answer: the packet's own criterion (c') establishes that the cell-form
+    # legs validate a configuration we do not run, and directs that they be
+    # kept as the CONTROL. They are printed immediately below, unscored.
+    for pre in ("S150", "S500"):
+        v = [res["%s_%s" % (pre, t)]["T_surf"] - T_I for t, _, _ in MESHES]
+        sp_ = spread(v)
+        good = sp_ <= TOL_MESH
+        ok &= good
+        print("(a) %s dT_fire = %s  spread %.3f %%  [bar %.1f %%]  %s" %
+              (pre, " / ".join("%.2f" % x for x in v), 100 * sp_,
+               100 * TOL_MESH, "PASS" if good else "FAIL"))
+    for pre in ("R150", "R500"):
+        v = [res["%s_%s" % (pre, t)]["T_surf"] - T_I for t, _, _ in MESHES]
+        print("    %s (cell form, CONTROL -- not scored) = %s  spread %.3f %%" %
+              (pre, " / ".join("%.2f" % x for x in v), 100 * spread(v)))
+
+    # (b) Kant's band, every mesh, both h_conv.
+    for pre in ("S150", "S500", "R150", "R500"):
+        for t, _, _ in MESHES:
+            dT = res["%s_%s" % (pre, t)]["T_surf"] - T_I
+            good = BAND_LO <= dT <= BAND_HI
+            ok &= good
+            print("(b) %s_%s  dT = %.2f K in [390, 560]  %s" %
+                  (pre, t, dT, "PASS" if good else "FAIL"))
+
+    # (w) THE CONTROL'S TRUE SURFACE TEMPERATURE AT ITS OWN FIRING -- now at
+    # BOTH operating points, because a control run at a different h_conv does
+    # not establish that the scored leg's comparison is non-vacuous.
+    for ctl, rec in (("C150", "R150"), ("C500", "R500")):
+        vt = [res["%s_%s" % (ctl, t)]["T_top"]  - T_I for t, _, _ in MESHES]
+        vc = [res["%s_%s" % (ctl, t)]["T_surf"] - T_I for t, _, _ in MESHES]
+        sc = spread(vc)
+        vr = [res["%s_%s" % (rec, t)]["T_surf"] - T_I for t, _, _ in MESHES]
+        sr = spread(vr)
+        good = (sc > TOL_CTRL) and (sc > sr)
+        ok &= good
+        print("(w) %s fires at cell-average dT = %s  spread %.2f %%  "
+              "(flat BY CONSTRUCTION -- it is the criterion's own variable)" %
+              (ctl, " / ".join("%.2f" % x for x in vt), 100 * spread(vt)))
+        print("    its TRUE surface dT     = %s  spread %.2f %%  [must exceed %.0f %%]" %
+              (" / ".join("%.2f" % x for x in vc), 100 * sc, 100 * TOL_CTRL))
+        print("    %s reconstruction     = %s  spread %.2f %%" %
+              (rec, " / ".join("%.2f" % x for x in vr), 100 * sr))
+        print("    -> %s (%s)" %
+              ("the criterion fired the SAME rock state on every mesh only "
+               "under the key" if good else "VACUOUS: the control is flat too",
+               "PASS" if good else "FAIL"))
+
+    # ⚠⚠ (c') THE ANCHOR'S OWN BOUNDARY CONDITION. Scored on FIRING TIME, on
+    # the legs that run the production Robin form. The cell-form legs are the
+    # control and are printed beside them.
+    print()
+    for pre in ("150", "500"):
+        ts = [res["S%s_%s" % (pre, t)]["t"] for t, _, _ in MESHES]
+        tc = [res["R%s_%s" % (pre, t)]["t"] for t, _, _ in MESHES]
+        ss, sc = spread(ts), spread(tc)
+        good = ss <= TOL_TIME
+        if pre == "150":
+            ok &= good
+        print("(c') h%s firing time  surface form %s s  spread %5.2f %%  [bar %.0f %%]  %s"
+              % (pre, " / ".join("%.3f" % x for x in ts), 100 * ss,
+                 100 * TOL_TIME, "PASS" if good else "FAIL"))
+        print("     %s       cell form (control) %s s  spread %5.2f %%"
+              % (" " * len(pre), " / ".join("%.3f" % x for x in tc), 100 * sc))
+    # the scored superheat on the production form, reported beside the control
+    for pre in ("150", "500"):
+        vs = [res["S%s_%s" % (pre, t)]["T_surf"] - T_I for t, _, _ in MESHES]
+        print("(c') h%s dT_fire on the surface form = %s  spread %.3f %%"
+              % (pre, " / ".join("%.2f" % x for x in vs), 100 * spread(vs)))
+
+    # P1 deliverable 5 -- q_fit/q_real, reported on every scored leg.
+    # ⚠⚠ P2-2a (c2): `drive_frac` is GONE, and its ABSENCE is the assertion.
+    # It measured the fraction of the absolute drive that the retired
+    # `differential` form applied; with one driving form there is no fraction to
+    # report. Its own finding is why the form was retired: on a self-similar
+    # front it was a CONSTANT 1 - e^-c_f = 0.330, carrying no flux information.
+    print()
+    frac_seen = [res["%s_%s" % (pre, t)].get("frac")
+                 for pre in ("R150", "R500", "S150", "S500")
+                 for t, _, _ in MESHES]
+    assert all(v is None for v in frac_seen), \
+        "drive_frac must be ABSENT from the event log after P2-2a change B"
+    print("[P2-2a] drive_frac ABSENT from the event log on all scored legs (c2)")
+    print("[P1] q_fit/q_real at onset:")
+    for pre in ("R150", "R500", "S150", "S500"):
+        qr = [res["%s_%s" % (pre, t)].get("qrat") for t, _, _ in MESHES]
+        f = lambda v: " / ".join(("%.3f" % x) if x is not None else "--" for x in v)
+        print("     %-5s q_fit/q_real %s" % (pre, f(qr)))
+
+    # reported: the Weibull size effect
+    vw = [res["W150_%s" % t]["T_surf"] - T_I for t, _, _ in MESHES]
+    print("[reported] Weibull dT = %s  spread %.2f %% "
+          "(V0 held at 8e-9 = V_cell at 2 mm; size effect, not criterion)" %
+          (" / ".join("%.2f" % x for x in vw), 100 * spread(vw)))
+
+    print("\n%s" % ("PASS" if ok else "FAIL"))
+    sys.exit(0 if ok else 1)
+
+if __name__ == "__main__":
+    main()

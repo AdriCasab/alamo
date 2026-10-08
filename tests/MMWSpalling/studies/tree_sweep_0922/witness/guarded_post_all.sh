@@ -31,6 +31,17 @@ cd "$ROOT" || exit 1
 fingerprint() { stat -f "%m %z" "$BIN"; shasum -a 256 "$BIN" | awk '{print $1}'; }
 
 BEFORE=$(fingerprint)
+SHA=$(echo "$BEFORE" | tail -1)
+# Shared with guarded_post_all_par.sh -- see its header for why the cache is
+# keyed on the BINARY HASH and nothing else.
+CACHE=$W/.gate_cache; mkdir -p "$CACHE"
+FORCE=0; [ "${2:-}" = "--force" ] && FORCE=1
+if [ "$FORCE" = "0" ] && [ -f "$CACHE/$SHA" ]; then
+    echo "GUARD: gate already passed for binary ${SHA:0:16}…"
+    echo "GUARD: $(cat "$CACHE/$SHA")"
+    echo "GUARD: nothing to do -- pass --force to re-run anyway."
+    exit 0
+fi
 echo "GUARD: binary pinned at $(echo "$BEFORE" | tail -1 | cut -c1-16)…  label=$LABEL"
 echo "GUARD: do NOT run 'make' until this sweep finishes."
 
@@ -50,4 +61,6 @@ if [ "$BEFORE" != "$AFTER" ]; then
     exit 2
 fi
 echo "GUARD: binary unchanged across the sweep; $LABEL identity result is valid."
+echo "$LABEL passed $(date '+%F %T'), $(wc -l < "$W/$LABEL.md5" | tr -d ' ') files" \
+     > "$CACHE/$SHA"
 exit $RC

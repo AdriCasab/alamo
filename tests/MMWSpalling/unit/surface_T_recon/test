@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+# P0 unit test -- spall.surface_T and spall.removal_energy.
+#
+# This checks the ARITHMETIC and the GUARDS, not the physics. The physics is
+# scored in validation/kant/sp_kant_onset_meiercfg and
+# validation/p0_steady_column.
+#
+# Variants (4 ranks, 6 s of the 1-D steady column at 2 mm):
+#   A   ./input                                          reconstructed + flake
+#   B   ./input spall.removal_energy=cell                reconstructed + cell
+#   C   ./input spall.surface_T=diagnostic ... =cell     logged, NOT applied
+#   D   ./input spall.surface_T=cell_average ... =cell   pre-P0
+#
+# Checks:
+#   (1) THE RECONSTRUCTION IS EXACTLY INVERTIBLE, both directions, on every
+#       logged row: integrating the reconstructed profile over the whole cell
+#       returns the CELL AVERAGE it was built from, and the flake average
+#       follows from (T_surf, ell_eff, h_f). Fails if any one of the three
+#       formulas disagrees with the other two.
+#   (2) T_surf > T_top on every firing, and ell_eff > 0. Equal values mean the
+#       endpoint edit did not reach the criterion (the packet's witness).
+#   (3) THE HEADER IS GATED. D's removal_events.csv header is the pre-P0
+#       header character for character; A/B/C's carries exactly the six
+#       appended columns. A new field breaks the 2639-file identity on the
+#       header alone, whatever the numbers do.
+#   (4) `diagnostic` LOGS WITHOUT APPLYING: C writes T_surf, and C's firing
+#       T_top equals D's to 1e-12 -- i.e. the criterion is bit-for-bit the
+#       pre-P0 criterion. This is what makes the control leg in the
+#       validation cases a real control.
+#   (5) PARTIAL RECESSION IS REAL: A has h_applied < dz on at least one row
+#       and more than one firing per void; B has h_applied == dz exactly on
+#       every row and exactly one void per firing. ⚠ D2z-0 retired the
+#       sub-cell increment for a PLUMBING reason and its assertions
+#       (n_voided == 1, h/dz == 1.00000) are restated, not deleted -- this
+#       check is what proves the restatement is exercised.
+#   (6) THE GUARDS ABORT: flake without reconstructed; an unknown surface_T;
+#       an unknown removal_energy; reconstructed with stress_source =
+#       mechanics; and (rev7) a flake bound at or above the search depth, or a
+#       negative one.
+#
+# Usage: test           (runs ALAMO, then checks)
+
+import csv, math, os, shutil, subprocess, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN  = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT  = os.path.join(HERE, "output")
+INP  = os.path.join(HERE, "input")
+DZ   = 0.002
+T0   = 293.15
+
+HDR_PRE = ("time,col_i,col_j,regime,k_top,T_top,a_f,Sp_top,"
+           "h_scan,h_applied,n_voided")
+# ⚠ P0b added ell_raw and delta to the reconstruction block. `ell_raw` is
+# now a WITNESS rather than a curiosity: with the rev5 EMA deleted it must
+# equal ell_eff on every step that has a usable two-cell pair.
+HDR_P0  = HDR_PRE + ",T_surf,ell_eff,h_f,T_bar_flake,rc_flag,d_ell_rel"
+HDR_P0B = HDR_P0 + ",ell_raw,delta"
+
+VARIANTS = {
+    "A": [],
+    "B": ["spall.removal_energy=cell"],
+    "C": ["spall.surface_T=diagnostic", "spall.removal_energy=cell"],
+    "D": ["spall.surface_T=cell_average", "spall.removal_energy=cell"],
+}
+
+ABORTS = [
+    ("flake without reconstructed",
+     ["spall.surface_T=cell_average", "spall.removal_energy=flake"],
+     "requires spall.surface_T"),
+    ("unknown surface_T",
+     ["spall.surface_T=surface"], "must be 'cell_average'"),
+    ("unknown removal_energy",
+     ["spall.removal_energy=whole"], "must be 'cell' or 'flake'"),
+    ("reconstructed on the mechanics stress path",
+     ["spall.stress_source=mechanics"], "local_thermoelastic"),
+    # rev7 deliverable 1. A flake bound at or above the SEARCH depth is inert
+    # and would hide that the search depth is doing the bounding -- which is
+    # the fault the key exists to fix, so it is refused rather than ignored.
+    ("flake bound at the search depth",
+     ["spall.flake_h_max=0.015"], "must be SMALLER than spall.h_spall_max"),
+    ("negative flake bound",
+     ["spall.flake_h_max=-1"], "must be finite and >= 0"),
+]
+
+def run(tag, extra, expect_fail=False):
+    d = os.path.join(OUT, tag)
+    if os.path.isdir(d): shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np",
+            "1" if expect_fail else "4", BIN, INP] + extra +
+           ["plot_file=%s" % os.path.join(d, "run")])
+    env = os.environ.copy(); env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    r = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)
+    return r
+
+def rows(tag):
+    p = os.path.join(OUT, tag, "run_removal_events.csv")
+    with open(p) as f:
+        hdr = f.readline().rstrip("\n")
+    with open(p) as f:
+        rs = [r for r in csv.DictReader(f) if r["regime"] == "1"]
+    return hdr, rs
+
+def main():
+    if not os.path.exists(BIN):
+        print("FAIL: missing binary"); sys.exit(1)
+    fails = []
+
+    print("running variants...", flush=True)
+    for tag, extra in VARIANTS.items():
+        r = run(tag, extra)
+        if r.returncode != 0:
+            print("FAIL: variant %s exited %d\n%s" % (tag, r.returncode, r.stderr[-2000:]))
+            sys.exit(1)
+
+    data = {t: rows(t) for t in VARIANTS}
+
+    # (1) EXACT INVERTIBILITY, on every logged row, two ways.
+    #   (1a) the defining relation: integrating the reconstructed profile
+    #        T0 + (T_surf-T0) e^{-z/ell} over the whole cell must give back the
+    #        CELL AVERAGE the reconstruction was built from.
+    #   (1b) the flake average must follow from (T_surf, ell_eff, h_f).
+    # Together these fail if any one of the three formulas is inconsistent with
+    # the other two -- the strongest arithmetic check available from the log.
+    n1 = 0
+    for tag in ("A", "B", "C"):
+        for r in data[tag][1]:
+            Ts, el, hf = (float(r["T_surf"]), float(r["ell_eff"]), float(r["h_f"]))
+            Tt, Tb = float(r["T_top"]), float(r["T_bar_flake"])
+            if el <= 0.0:          # flat fallback: no profile to invert
+                continue
+            n1 += 1
+            x = DZ / el
+            Tt_pred = T0 + (Ts - T0) * (1.0 - math.exp(-x)) / x
+            u  = hf / el
+            Tb_pred = T0 + (Ts - T0) * (1.0 - math.exp(-u)) / u
+            e1 = abs(Tt_pred - Tt) / Tt
+            e2 = abs(Tb_pred - Tb) / Tb
+            if e1 > 1e-9 or e2 > 1e-9:
+                fails.append("(1) %s at t=%s: cell-average rel err %.3e, "
+                             "flake-average rel err %.3e" % (tag, r["time"], e1, e2))
+                break
+    if n1 == 0:
+        fails.append("(1) VACUOUS: no row carried a usable ell_eff")
+    print("(1) reconstruction invertible on %d rows (both directions): %s"
+          % (n1, "PASS" if not any(f.startswith("(1)") for f in fails) else "FAIL"))
+
+    # (2) the endpoint edit reached the criterion
+    bad = [r for r in data["A"][1]
+           if not (float(r["T_surf"]) > float(r["T_top"]) and float(r["ell_eff"]) > 0.0)]
+    if bad: fails.append("(2) %d rows with T_surf <= T_top or ell_eff <= 0" % len(bad))
+    print("(2) T_surf > T_top and ell_eff > 0 on all %d A rows: %s"
+          % (len(data["A"][1]), "PASS" if not bad else "FAIL"))
+
+    # (3) the header is gated
+    for tag, want in (("A", HDR_P0B), ("B", HDR_P0B), ("C", HDR_P0B), ("D", HDR_PRE)):
+        if data[tag][0] != want:
+            fails.append("(3) %s header\n     got  %s\n     want %s"
+                         % (tag, data[tag][0], want))
+    print("(3) removal_events.csv header gated on the key: %s"
+          % ("PASS" if not any(f.startswith("(3)") for f in fails) else "FAIL"))
+
+    # (3b) P0b rev5 WITNESS: the EMA is gone, so the reported ell_eff must be
+    # the RAW two-cell estimate on every row that has one. A difference means a
+    # filter survived somewhere, or the flat-hold is firing more often than the
+    # rc_flag says.
+    nraw, badraw = 0, 0
+    for r in data["A"][1]:
+        er, ee = float(r.get("ell_raw") or 0.0), float(r["ell_eff"])
+        if er <= 0.0 or int(float(r["rc_flag"])) & 1:
+            continue                      # flat-hold rows are allowed to differ
+        nraw += 1
+        if abs(er - ee) > 1e-12 * max(ee, 1e-30):
+            badraw += 1
+    if nraw == 0:
+        fails.append("(3b) VACUOUS: no row carried a raw estimate")
+    elif badraw:
+        fails.append("(3b) ell_eff != ell_raw on %d of %d non-flat rows -- a "
+                     "filter survived" % (badraw, nraw))
+    print("(3b) ell_eff == ell_raw on all %d non-flat rows (the EMA is gone): %s"
+          % (nraw, "PASS" if not any(f.startswith("(3b)") for f in fails) else "FAIL"))
+
+    # (4) diagnostic logs without applying
+    ca, da = data["C"][1], data["D"][1]
+    ok4 = len(ca) == len(da) and len(ca) > 0
+    if ok4:
+        for rc_, rd in zip(ca, da):
+            if abs(float(rc_["T_top"]) - float(rd["T_top"])) > 1e-12 * float(rd["T_top"]) \
+               or rc_["time"] != rd["time"]:
+                ok4 = False; break
+    if not ok4: fails.append("(4) diagnostic changed the criterion (C != D)")
+    if ok4 and not all(float(r["T_surf"]) > 0.0 for r in ca):
+        ok4 = False; fails.append("(4) diagnostic logged no T_surf")
+    print("(4) diagnostic logs but does not apply (C == D, %d rows): %s"
+          % (len(ca), "PASS" if ok4 else "FAIL"))
+
+    # (5) partial recession is real under flake and absent under cell
+    a_sub = [r for r in data["A"][1] if float(r["h_applied"]) < DZ - 1e-12]
+    a_fpv = len(data["A"][1]) / max(1, sum(int(r["n_voided"]) for r in data["A"][1]))
+    b_bad = [r for r in data["B"][1] if float(r["h_applied"]) != DZ
+             or int(r["n_voided"]) != 1]
+    ok5 = len(a_sub) > 0 and a_fpv > 1.0 and not b_bad
+    if not ok5:
+        fails.append("(5) A: %d sub-dz rows, %.3f firings/void; B: %d bad rows"
+                     % (len(a_sub), a_fpv, len(b_bad)))
+    print("(5) flake recedes sub-cell (%d rows, %.3f firings/void), cell does not: %s"
+          % (len(a_sub), a_fpv, "PASS" if ok5 else "FAIL"))
+
+    # (6) the guards abort, with a message that names the cause
+    print("running abort guards...", flush=True)
+    for name, extra, frag in ABORTS:
+        r = run("abort", extra, expect_fail=True)
+        txt = (r.stdout or "") + (r.stderr or "")
+        if r.returncode == 0 or frag not in txt:
+            fails.append("(6) '%s' did not abort on '%s' (rc=%d)" % (name, frag, r.returncode))
+        print("    %-45s %s" % (name, "abort" if r.returncode != 0 else "NO ABORT"))
+    print("(6) all %d guards abort: %s"
+          % (len(ABORTS),
+             "PASS" if not any(f.startswith("(6)") for f in fails) else "FAIL"))
+
+    if fails:
+        print("\n".join(["", "FAILURES:"] + ["  " + f for f in fails]))
+        print("\nFAIL"); sys.exit(1)
+    print("\nPASS")
+
+if __name__ == "__main__":
+    main()

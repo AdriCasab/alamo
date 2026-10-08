@@ -1,0 +1,217 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P1f deliverable 5 -- THE LATERAL CRITERION on prescribed geometry.
+#
+# 8 x 8 x 60 at 2 mm (16 x 16 x 120 mm). ⚠ 8x8 and NOT the 4x4 of
+# unit/side_staircase: a 45 deg riser needs interior columns with a margin, and
+# every assertion in the `test` is on INTERIOR columns only -- plane-adjacent
+# columns deviate by construction (the quarter-domain mirror gives them a
+# different open-face count).
+#
+# ⚠ robin_form = surface, not pinned: the lateral scope test is
+#   lat_wall = (robin_form == surface) && r2 >= side_face_h_r_min^2
+# so the pinned form makes the mode unreachable. surface in turn requires
+# spall.surface_T = reconstructed.
+#
+# ⚠ side_face_h_r_min = 1 mm so the prescribed risers count as HOLE WALL (7a),
+# not floor risers (7b, out of scope and excluded for a measured 25 % floor-rate
+# reason).
+#
+# Legs, all by command-line override (see `test`):
+#   STEP1   a 1-cell step   -> the face cell IS the top cell, so lateral removal
+#           and top-cell removal coincide => byte-identical to drive-only
+#   RISER   a 10-cell riser -> EXACTLY ONE cell voided per firing, at the riser
+#           depth read FROM THE LOG (⚠ not a fixed number: flaws are drawn per
+#           cell, so which cell fires is not predictable)
+#   AXIS / DIAG  an axis-aligned vs a 45 deg riser -> lateral drive within 5 %,
+#           with the raw two-cell temperature ratios PRINTED so a miss can be
+#           attributed to the field rather than to the stencil. ⚠ 5 %, not 1 %:
+#           the stencil is exact for a PLANAR profile and a 45 deg apex field is
+#           not planar at cell scale.
+#   SLAB    no void at all -> fires nothing
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/lateral_drive/output/run
+
+timestep  = 0.05
+stop_time = 60.0
+
+# ⚠⚠ 60 s, NOT 2 s, AND dt = 0.05 s. The isotropy check reads a TWO-CELL log
+# ratio, which is only meaningful once the lateral profile spans more than a cell.
+# Diffusive penetration is sqrt(4*alpha*t): at 2 s that is 2.3 mm = ~1 cell and the
+# measured ell_lat was 0.28 mm = dz/7, i.e. a delta function -- the two-cell read
+# was being asked to resolve a step, and axis vs 45 deg differed by 18.7 % for that
+# reason and not because of the stencil. At 60 s penetration is ~13 mm, so ell_lat
+# lands in the 3-5 mm range the real wall shows. dt = 0.05 s keeps
+# alpha*dt/dx^2 = 0.009, far inside stability, so this is 1200 steps not 30000.
+
+amr.plot_int        = 5000
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 8 8 60
+amr.blocking_factor = 1
+amr.max_grid_size   = 32
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.016 0.016 0.120
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, scalar flaw (weibull off) ---
+spallation.model         = sp_weibull
+# P1e: the side-face machinery the correction lives behind. All four
+# AreaOfDelta sites are inside side_face_step_height, and the parser refuses
+# the staircase key without it (and without side_face_flux).
+surface_patch.side_face_flux        = 1
+surface_patch.side_face_step_height = 1
+surface_patch.side_face_area_law    = wetted
+surface_patch.side_face_staircase   = 1
+# ⚠ the lateral scope test is r >= side_face_h_r_min; this 16 mm domain reaches
+# r ~ 22 mm, so the cut must be small enough that the prescribed risers count as
+# HOLE WALL (the 7a branch) rather than floor risers.
+surface_patch.side_face_h_r_min     = 0.001
+surface_patch.side_face_h           = 169.3
+surface_patch.side_face_T           = 1200.0
+
+# P1f: OFF here; every leg sets them on the command line.
+spall.lateral_drive   = 0
+spall.lateral_removal = 0
+
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 0
+
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.0
+spall.surface_normal         = 0
+spall.removal_events_csv     = 1
+
+# ⚠ REQUIRED by surface_patch.robin_form = surface (MMWSpalling.H:643), which the
+# lateral scope test (lat_wall) in turn requires. Not optional and not cosmetic.
+spall.surface_T              = reconstructed
+spall.removal_energy         = cell
+
+vapor.enabled = 0
+confining.p   = 1.0e6
+
+beam.P0         = 0.0
+beam.profile    = uniform
+beam.radius     = 0.042
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.0
+beam.y0         = 0.0
+beam.z0         = 0.12
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+bit.enabled = 0
+
+# --- Surface losses to lab air ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+# --- The patch: covers the whole block, pinned, idle clock off ---
+surface_patch.enabled            = 1
+surface_patch.mode               = convective_flame
+surface_patch.robin_form         = surface
+
+surface_patch.face               = zhi
+surface_patch.x0                 = 0.0
+surface_patch.y0                 = 0.0
+surface_patch.radius             = 0.050
+surface_patch.T_ext              = 293.15
+# The corner column heats ten times harder than the rest, so a step forms.
+# ⚠⚠ THE TOP FLUX IS ZEROED SO ONLY THE LATERAL MODE CAN FIRE.
+# T_flame_expr equals the rock IC, so the top Robin flux is identically zero and
+# the vertical differential criterion fires nothing -- the same device
+# unit/support_rule uses. The SIDE faces are heated independently through the
+# explicit (side_face_h, side_face_T) pair, so the lateral mode has a real drive
+# while the vertical one has none. Any firing here is the lateral mode's.
+#
+# ⚠ It is ALSO required for a second reason: spall.seed_void sets `removed` but
+# deliberately NOT `phi`, so after seeding, phi(k_top) is ~21 mm while rem says
+# the cell above is void. The vertical whole-cell path recedes phi by dz = 2 mm,
+# which cannot reach the flip, so a leg that fires vertically trips D2z-1's
+# "voided 0 cells, expected 1" assertion. Verified: that abort reproduces with
+# the lateral keys OFF, so it is a property of seed_void + vertical firing, not
+# of the lateral mode.
+surface_patch.h_expr             = "2000.0"
+surface_patch.T_flame_expr       = "293.15"
+# Static plane far above the block: s > 0 everywhere, so nothing is excluded.
+# The EXCL variant overrides nozzle_z0 / nozzle_feed to sweep it downward.
+surface_patch.nozzle_z0                = 0.130
+surface_patch.nozzle_feed              = 0.0
+surface_patch.nozzle_collision_radius  = 0.0005
+
+surface.follow_mask   = 1
+energy_ledger.enabled = 1
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

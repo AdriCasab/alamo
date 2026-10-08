@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""P1e deliverable 3 / criterion (d) -- the staircase factor on prescribed geometry.
+
+Six legs, one input, one binary. The factor is EXACT on every leg, so there is
+no tolerance anywhere in this file.
+
+    WALL    / WALL0    one open face      -> factor exactly 1, and the leg must
+                                            be identical to the key being off
+    PILLAR            opposing faces      -> factor exactly 1 (a pillar is not a
+                                            sloped wall)
+    CORNER            one x + one y       -> factor exactly 0.70710678...
+    FLAT    / FLAT0   no open face        -> never applies, identical to off
+
+⚠ Identity is checked on the SHARED thermo columns, not on the removal event log:
+with the key off the four `side_sc_*` / `side_P_in35` columns are not registered
+at all, and a short leg can produce an EMPTY event log, which would make the
+comparison vacuous (the trap P1b's FLAT leg fell into).
+"""
+import math, os, shutil, subprocess, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN  = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INP  = os.path.join(HERE, "input")
+OUT  = os.path.join(HERE, "output")
+
+# ⚠ a MULTIPLE of 6 ints: one box cannot express a tower.
+WALL_SEED   = "1 0 55 3 3 59"                      # void i>=1  -> i=0 has +x open
+PILLAR_SEED = "1 0 55 1 3 59 3 0 55 3 3 59"        # void i=1 and i=3 -> i=2 opposing
+CORNER_SEED = "1 0 55 3 3 59 0 1 55 0 3 59"        # void all but (0,0)
+
+LEGS = [("WALL",   WALL_SEED,   "1"),
+        ("WALL0",  WALL_SEED,   "0"),
+        ("PILLAR", PILLAR_SEED, "1"),
+        ("CORNER", CORNER_SEED, "1"),
+        ("FLAT",   "",          "1"),
+        ("FLAT0",  "",          "0")]
+
+ROOT2 = 1.0 / math.sqrt(2.0)
+
+
+def run(name, seed, key):
+    d = os.path.join(OUT, name)
+    if os.path.exists(d):
+        shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN,
+            INP, "plot_file=%s/run" % d,
+            "surface_patch.side_face_staircase=%s" % key]
+    if seed:
+        argv.append("spall.seed_void=%s" % seed)
+    with open(os.path.join(OUT, name + ".log"), "w") as lg:
+        return subprocess.call(argv, stdout=lg, stderr=subprocess.STDOUT)
+
+
+def thermo(name):
+    f = os.path.join(OUT, name, "run", "thermo.dat")
+    if not os.path.exists(f):
+        return None, None
+    L = open(f).read().strip().split("\n")
+    return L[0].split(), [r.split() for r in L[1:]]
+
+
+def series(name, key):
+    h, rows = thermo(name)
+    if h is None or key not in h:
+        return None
+    i = h.index(key)
+    return [float(r[i]) for r in rows if len(r) > i]
+
+
+def tokens(name, key):
+    """The field exactly as thermo.dat PRINTS it.
+
+    ⚠⚠ thermo.dat is a TEXT file written with %g -- SIX significant digits
+    (1/sqrt(2) appears as `0.707107`). Comparing float(token) to the full double
+    can never be bit-exact and failed at 2.2e-07, which is the file's rounding,
+    not the kernel's error. Comparing the PRINTED TOKEN to "%g" %% want is exact
+    at the precision the file actually carries, and says so out loud rather than
+    hiding a tolerance."""
+    h, rows = thermo(name)
+    if h is None or key not in h:
+        return None
+    i = h.index(key)
+    return [r[i] for r in rows if len(r) > i]
+
+
+def main():
+    fails = []
+    if "--check" not in sys.argv:
+        if not os.path.exists(BIN):
+            print("FAIL: missing binary"); return 1
+        os.makedirs(OUT, exist_ok=True)
+        for lg in LEGS:
+            if run(*lg) != 0:
+                print("FAIL: leg %s exited non-zero" % lg[0]); fails.append(lg[0])
+        if fails:
+            return 1
+
+    def need(ok, msg):
+        print(("  ok    " if ok else "  FAIL  ") + msg)
+        if not ok: fails.append(msg)
+
+    # ---- the factor itself, exact -------------------------------------
+    for name, want, what in (("WALL",   1.0,   "one open face -> exactly 1"),
+                             ("PILLAR", 1.0,   "opposing faces -> exactly 1"),
+                             ("CORNER", ROOT2, "45 deg corner -> exactly 1/sqrt(2)")):
+        print("%s" % name)
+        m = series(name, "side_sc_mean")
+        c = series(name, "side_sc_cols")
+        if not m:
+            need(False, "side_sc_mean is registered and non-empty"); continue
+        tk = tokens(name, "side_sc_mean")
+        wtok = "%g" % want
+        act = [v for v, n in zip(tk, c or [1] * len(tk)) if n > 0]
+        if not act:
+            need(False, "at least one column contributes a corrected face "
+                        "(side_sc_cols > 0) -- otherwise the leg proves nothing")
+            continue
+        bad = [v for v in act if v != wtok]
+        need(not bad,
+             "%s: side_sc_mean prints exactly %s on all %d contributing steps "
+             "(%d differing%s)" % (what, wtok, len(act), len(bad),
+                                   "" if not bad else ": e.g. " + bad[0]))
+        mtk = tokens(name, "side_sc_min")
+        if mtk:
+            act_mn = [v for v, n in zip(mtk, c or [1] * len(mtk)) if n > 0]
+            need(all(v == wtok for v in act_mn),
+                 "side_sc_min also prints exactly %s (no column escaped the "
+                 "factor)" % wtok)
+
+    # ---- identity when the factor is 1 --------------------------------
+    for on, off in (("WALL", "WALL0"), ("FLAT", "FLAT0")):
+        print("%s vs %s -- the factor is 1, so the physics must not move" % (on, off))
+        ha, ra = thermo(on)
+        hb, rb = thermo(off)
+        if ha is None or hb is None:
+            need(False, "both legs produced thermo.dat"); continue
+        shared = [k for k in hb if k in ha]
+        need(len(shared) >= 10,
+             "the two legs share %d thermo columns" % len(shared))
+        need(len(ra) == len(rb),
+             "same number of thermo rows (%d vs %d)" % (len(ra), len(rb)))
+        ndiff = 0
+        for rowa, rowb in zip(ra, rb):
+            for k in shared:
+                if rowa[ha.index(k)] != rowb[hb.index(k)]:
+                    ndiff += 1
+        need(ndiff == 0,
+             "every shared thermo field is identical (%d differing)" % ndiff)
+        extra = [k for k in ha if k not in hb]
+        need(sorted(extra) == ["side_P_in35", "side_sc_cols", "side_sc_mean",
+                               "side_sc_min"],
+             "the key adds exactly its 4 diagnostics (got %s)" % sorted(extra))
+        # ⚠⚠ NON-VACUITY. Two identical all-zero columns prove nothing -- the trap
+        # P1b's FLAT leg fell into. ⚠ side_P_face is the wrong probe for FLAT: it
+        # is zero there BY CONSTRUCTION (no open face), so use a column that
+        # actually moves in both legs.
+        probe = "side_P_face" if on == "WALL" else "ledger_E_H"
+        pv = series(off, probe)
+        need(bool(pv) and len(set(pv)) > 5,
+             "%s varies over the run (%d distinct values), so the identity is "
+             "not vacuous" % (probe, len(set(pv)) if pv else 0))
+
+    # ---- FLAT must have no contributing column ------------------------
+    print("FLAT -- no open face anywhere")
+    c = series("FLAT", "side_sc_cols")
+    need(c is not None and max(c) == 0.0,
+         "side_sc_cols is 0 at every step (got max %s)"
+         % (max(c) if c else "n/a"))
+
+    print()
+    if fails:
+        print("FAIL: %d check(s) failed" % len(fails)); return 1
+    print("PASS: the staircase factor is exact on every prescribed geometry, and "
+          "it is inert\n      wherever it equals 1.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

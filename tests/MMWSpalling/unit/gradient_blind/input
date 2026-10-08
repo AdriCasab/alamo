@@ -1,0 +1,169 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P1 deliverable 4 / P2-2a change C -- THE UNIFORM PREHEATED SLAB.
+#
+# A column held UNIFORMLY at the firing temperature, with NO heat source
+# (the flame gas is held at the ROCK'S OWN temperature, so the Robin flux is
+# identically zero; beam off, losses off), so the profile never develops a
+# gradient. ⚠ h_conv = 0 is refused by the parser under convective_flame, which
+# is why the gas temperature rather than the coefficient is used to zero it.
+#
+#   MUST NOT FIRE. A slab restrained by nothing carries no thermal stress. The
+#       criterion references the COLUMN MINIMUM temperature, so on a uniform
+#       column the stress bracket is a number minus itself: exactly zero by
+#       cancellation, not small.
+#
+# ⚠⚠ THIS EXPECTATION WAS INVERTED BY P2-2a, AND THE INVERSION IS THE POINT.
+# Until then this file asserted that `spall.driving_stress = absolute` MUST
+# FIRE, and it did -- 80 firings. The test was written to CERTIFY the defect:
+# the criterion referenced `phases[0].T_ref`, a DECLARED INPUT CONSTANT of
+# 293.15 K, so it saw hundreds of kelvin of phantom superheat on a slab that
+# had merely been soaking and could not tell it from a thermal skin about to
+# spall. The retired `differential` mode read zero here correctly; its legs are
+# gone because there is now ONE form, right in both limits, and the key
+# `spall.driving_stress` no longer exists.
+#
+# The initial temperature 820 K sits well above where the shipped Kant legs
+# fire (T_surf 756-759 K) -- Sp ~ 1.4 rather than ~1.0 -- so the PRE-P2-2a
+# expression fired immediately. That margin is what makes the zero below a
+# statement about the expression and not about the run length: the drive is not
+# merely under threshold here, it is identically zero.
+#
+# ⚠ removal_energy = cell, NOT flake. On an EXACTLY flat column the
+# reconstruction returns ell_eff -> infinity and ReconFromX falls back to
+# h_f = dz, which lands the flake bottom exactly on a cell boundary -- the phi
+# tie of Removal.H:145-148. The remap then predicts 0 voids where 1 flips and
+# the "voids == crossings" assertion stops the run. That is the assertion doing
+# its job on a degenerate input, not a defect, and it is irrelevant to what
+# this test measures: whether the criterion FIRES, not how much it sheds.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/gradient_blind/output/run
+
+timestep  = 0.008
+stop_time = 0.040
+
+amr.plot_int        = 100000
+amr.max_level       = 0
+amr.n_cell          = 4 4 60
+amr.blocking_factor = 2
+amr.max_grid_size   = 32
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+# 8 x 8 x 120 mm. Laterally uniform (whole face heated, Neumann sides), so the
+# problem is 1-D; 120 mm of depth keeps the front well clear of the base for
+# 60 s at every leg's rate.
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.008 0.008 0.120
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 0.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+damage.enabled = 0
+
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 8.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 0
+
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.004
+spall.removal_events_csv     = 1
+
+# ⚠ REQUIRED, NOT COSMETIC. Without surface.follow_mask the convective patch
+# is applied at the FIXED domain top (MMWSpalling.H: `k_top_c = ... : sp_topk`),
+# so the moment the first cell is voided the heating stops dead and the column
+# cools for the rest of the run. Measured on this case before the key was set:
+# the new top cell sat at 295.9 K after 59 s of nominal 0.55 MW/m^2.
+surface.follow_mask = 1
+spall.surface_normal         = 0
+
+spall.surface_T      = reconstructed
+spall.removal_energy = cell
+
+vapor.enabled = 0
+confining.p   = 0.0
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.004
+beam.y0     = 0.004
+beam.z0     = 0.120
+beam.alpha_expr = 1.0
+beam.R      = 0.0
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 293.15
+
+surface_patch.enabled = 1
+surface_patch.mode    = convective_flame
+surface_patch.face    = zhi
+surface_patch.x0      = 0.004
+surface_patch.y0      = 0.004
+surface_patch.radius  = 0.05
+surface_patch.h_conv  = 1.0
+surface_patch.T_flame = 820.0
+surface_patch.T_ext   = 293.15
+
+hc.heat.alpha = 6.9045e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 820.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

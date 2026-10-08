@@ -1,0 +1,151 @@
+Kant & von Rohr (2016) flame-spallation threshold — reference data
+==================================================================
+
+Source: Kant, M.A. and von Rohr, P.R. (2016), "Minimal required boundary
+conditions for the thermal spallation process of granitic rocks",
+International Journal of Rock Mechanics & Mining Sciences 84, 177-186.
+
+This file contains only the data and thresholds needed to reproduce the
+ALAMO MMWSpalling Kant validation test (step 15 in the implementation
+plan). Test placement, physics enablement, and pass criteria are
+documented in the plan, not here.
+
+Key fact: this is a flame-jet experiment (methane-air burner impinging
+orthogonally on granite), not an MMW experiment. The MMW beam is disabled
+for this test; the heated patch on the top face uses a convective Robin BC
+
+    q = h_fl * (T_flame - T_surface)
+
+with (T_flame, h_fl) tabulated by stand-off distance below.
+
+
+1. Material constants (constant, room-temperature; Kant Table 2)
+================================================================
+
+Bethel granite (Vermont, USA)
+    lambda (k) = 2.62   W/(m K)
+    cp         = 784    J/(kg K)
+    rho        = 2566   kg/m^3
+    kappa      = 1.3e-6 m^2/s
+    E          = 58     GPa
+    UCS        = 152    MPa
+
+Gotthard granite (Gurtnellen, Switzerland)
+    lambda (k) = 3.27   W/(m K)
+    cp         = 792    J/(kg K)
+    rho        = 2594   kg/m^3
+    kappa      = 1.6e-6 m^2/s
+    E          = 54     GPa
+    UCS        = 214    MPa
+
+Poisson's ratio nu: not reported by Kant. Assume nu = 0.25 for baseline,
+or sweep nu in [0.20, 0.30] as a sensitivity study.
+
+Initial rock T: 293.15 K unless otherwise specified.
+
+
+2. Geometry and BCs
+===================
+
+Sample: 250 x 250 x 150 mm block (large enough that side/bottom BCs do
+not affect the central early-time response).
+Heated patch on top face: centred circular patch.
+    Baseline diameter: 30 mm.
+    Sensitivity sweep at one SOD: 20 / 30 / 40 mm
+    (Kant does not give a complete spatial heat-flux distribution; treat
+    the patch diameter as a robustness check, not a tuned parameter.)
+
+Side + bottom thermal: adiabatic.
+Mechanical: minimal bottom support (e.g. roller) to remove rigid-body
+modes; avoid artificial confinement.
+
+Heated-patch BC:
+    q = h_fl * (T_flame - T_surface)
+
+
+3. Table 4: SOD-indexed flame BC parameters
+============================================
+
+    SOD [mm]   q_sens [kW/m^2]   theta_s,sens [degC]   T_flame [degC]   h_fl [W/(m^2 K)]
+    50         720               511                   1450             766
+    80         866               552                   1410             1009
+    110        755               495                   1360             873
+    130        609               435                   1250             747
+    150        450               389                   1100             633
+
+Note: h_fl was measured indirectly via a heat-flux sensor plate replacing
+the rock under the same burner settings. Sensor-calibration-dominated
+uncertainty is ~17%.
+
+Equivalent temperatures in K (T[K] = T[degC] + 273.15):
+    SOD 50:  T_flame = 1723.15 K
+    SOD 80:  T_flame = 1683.15 K
+    SOD 110: T_flame = 1633.15 K
+    SOD 130: T_flame = 1523.15 K
+    SOD 150: T_flame = 1373.15 K
+
+For SOD = 140 and 160 (used in the spall/no-spall outcome table below)
+Kant does not tabulate (T_flame, h_fl). Interpolate linearly between the
+tabulated SODs, or use the boundary values (SOD 130 / SOD 150) for
+threshold testing.
+
+
+4. Spall / no-spall experimental outcomes
+=========================================
+
+Each (SOD, rock) combination tested with three samples.
+
+    SOD [mm]   Gotthard      Bethel
+    50         spall         spall
+    80         spall         spall
+    110        spall         spall
+    130        spall         spall
+    140        no spall      spall
+    150        no spall      spall
+    160        no spall      no spall
+
+Transitions:
+    Gotthard transitions spall -> no-spall between SOD = 130 and 140 mm.
+    Bethel   transitions spall -> no-spall between SOD = 150 and 160 mm.
+Bethel remains spallable at larger SODs than Gotthard.
+
+
+5. Threshold values
+===================
+
+Mean spallation surface temperature theta_SP:           ~600 degC
+Mean failure-plane temperature theta_FP:                ~550 degC
+Temperature drop on single spall detachment:            ~100 degC over a
+                                                        few milliseconds
+Minimal required surface temperature theta_SP,min:      ~500 degC (+/- 50)
+Minimal required heat-transfer coefficient h_fl,min:    ~500 W/(m^2 K)
+                                                        (+/- 100)
+Upper bound (granitic melting at atmospheric pressure): ~1000 degC
+
+Surface-temperature measurement uncertainty in the spallation range:
+~5-6%.
+
+
+6. Pyrometer emissivity (measurement-specific, NOT radiation BC)
+================================================================
+
+These are pyrometer emissivities at lambda = 2.3 um and viewing angle
+30 deg. They are NOT the correct greybody emissivities for a simulation
+radiation boundary condition.
+
+    Gotthard:  epsilon = 0.549 +/- 12%
+    Bethel:    epsilon = 0.434 +/- 17%
+
+
+7. Caveats for exact reproduction
+=================================
+
+1. Stagnation-point heat-transfer coefficient only — no full spatial flux
+   map.
+2. Numerical model details (mesh, mechanical BCs) not given by Kant.
+3. Poisson's ratio not reported (assume 0.25).
+4. Pyrometer emissivity is measurement-specific.
+5. Test threshold behaviour, not exact spall sequence.
+6. A purely homogeneous continuum damage model may not reproduce the
+   Bethel-vs-Gotthard ranking exactly without grain-scale heterogeneity
+   (quartz/feldspar mismatch) or rock-specific damage parameters.

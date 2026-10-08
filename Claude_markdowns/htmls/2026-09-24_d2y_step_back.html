@@ -1,0 +1,244 @@
+<title>D2y Step Back</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F6; --panel:#FFFFFF; --panel2:#E9EDF1; --ink:#1A222B; --muted:#5B6673; --rule:#D3D9DF;
+  --ember:#C4471C; --ember-soft:#F6DCD2; --meier:#1F6F78; --meier-soft:#D6E9EB;
+  --good:#2E7D4F; --bad:#B23A2A; --warn:#9A6B00; --warn-soft:#F5E9C8;
+  --cold:#8FA3B5; --void:#F7F9FA; --solid:#C9D3DC; --hot:#E2703F;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#141A20; --panel:#1C242C; --panel2:#232D37; --ink:#E6EBF0; --muted:#A3AFBB; --rule:#33404C;
+    --ember:#F08A5D; --ember-soft:#4A2B1F; --meier:#5FC1CB; --meier-soft:#173E43;
+    --good:#6CC08B; --bad:#F08078; --warn:#E3B84C; --warn-soft:#3E3416;
+    --cold:#5F7385; --void:#111820; --solid:#3A4753; --hot:#F08A5D;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141A20; --panel:#1C242C; --panel2:#232D37; --ink:#E6EBF0; --muted:#A3AFBB; --rule:#33404C;
+  --ember:#F08A5D; --ember-soft:#4A2B1F; --meier:#5FC1CB; --meier-soft:#173E43;
+  --good:#6CC08B; --bad:#F08078; --warn:#E3B84C; --warn-soft:#3E3416;
+  --cold:#5F7385; --void:#111820; --solid:#3A4753; --hot:#F08A5D;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding-inline:20px;padding-block:40px 80px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+header{border-bottom:1px solid var(--rule);padding-bottom:24px;margin-bottom:8px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+h1{font-size:clamp(28px,4.5vw,40px);line-height:1.1;margin:8px 0 12px;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+.lede{font-size:18px;color:var(--muted);max-width:66ch;margin:0}
+h2{font-size:22px;font-weight:600;margin:52px 0 10px;letter-spacing:-.005em;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .n{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ember);font-weight:500}
+h3{font-size:16px;font-weight:600;margin:24px 0 6px}
+p{max-width:68ch;margin:0 0 14px}
+ul,ol{max-width:68ch;padding-left:22px;margin:0 0 14px}
+li{margin-bottom:6px}
+strong{font-weight:600}
+.key{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--ember);padding:14px 18px;margin:18px 0;max-width:none}
+.key p:last-child{margin:0}
+.aside{background:var(--panel2);padding:14px 18px;margin:18px 0;border-radius:4px}
+.aside p:last-child{margin:0}
+.meier{color:var(--meier);font-weight:600}
+.model{color:var(--ember);font-weight:600}
+.tbl{overflow-x:auto;margin:16px 0 22px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:500;padding:8px 10px;border-bottom:1px solid var(--rule)}
+td{padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hl td{background:var(--ember-soft)}
+tr.mr td{background:var(--meier-soft)}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid currentColor;font-weight:500;white-space:nowrap}
+.pill.good{color:var(--good)} .pill.bad{color:var(--bad)} .pill.warn{color:var(--warn)} .pill.mute{color:var(--muted)}
+figure{margin:20px 0 26px;background:var(--panel);border:1px solid var(--rule);padding:16px}
+figure svg{display:block;width:100%;height:auto;max-width:100%}
+figcaption{font-size:14px;color:var(--muted);margin-top:10px;max-width:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:16px 0 22px}
+.card{background:var(--panel);border:1px solid var(--rule);padding:14px 16px}
+.card h3{margin:0 0 6px;font-size:15px}
+.card p{font-size:15px;margin:0}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:0 14px;margin:14px 0;padding:14px 16px;border:1px solid var(--rule);background:var(--panel)}
+.opt.rec{border-color:var(--ember)}
+.opt .tag{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);padding-top:2px}
+.opt.rec .tag{color:var(--ember)}
+.opt h3{margin:0 0 4px;font-size:16px}
+.opt p{font-size:15px;margin:0 0 6px}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;max-width:none;margin:0}
+dt{font-weight:600;font-size:15px}
+dd{margin:0;font-size:15px;color:var(--muted)}
+.foot{margin-top:56px;padding-top:16px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted)}
+@media (max-width:520px){dl{grid-template-columns:1fr} dd{margin-bottom:8px} .opt{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Meier flame-jet validation · 24 September 2026 · reviewer's summary</div>
+  <h1>Where the Meier work stands, and what the D2y packet is for</h1>
+  <p class="lede">A plain-language account of the goal, the one problem that keeps coming back, what the next packet proposes, and what I think it will and will not tell us.</p>
+</header>
+
+<h2><span class="n">1</span>The goal, restated</h2>
+<p>We are building a spallation-drilling model in ALAMO and we want to trust it before it is used for anything else. Meier's flame-jet experiment is the test. He drilled granite with a <span class="meier">methane–air burner of about 38 kW</span>, resting on feet, and measured three things we can compare against:</p>
+<div class="tbl"><table>
+<tr><th>Quantity</th><th>Meier measured</th><th>How good the number is</th></tr>
+<tr class="mr"><td>Hole shape, diameter against depth</td><td class="num">96 → 85 mm over 10–200 mm; a cylinder, no funnel</td><td>Visible width from a photograph. A lower bound, about ±5 mm.</td></tr>
+<tr class="mr"><td>Rate of advance</td><td class="num">1.30 m/h (0.5 m in 1383 s)</td><td>Operator-controlled feed, so one-sided: the rock could go faster, the burner did not.</td></tr>
+<tr class="mr"><td>Volume removed</td><td class="num">Ø 85 nominal, Ø 93 by water filling</td><td>Whole-hole average, robust.</td></tr>
+</table></div>
+<p>Success means the model reproduces those three at once, <strong>with no tuned parameter</strong>, and gives the same answer at 2 mm and 1 mm cell size. That last condition is the one we keep failing and it is why we are here. Your stated priority has been cylindricity first, rate second.</p>
+
+<h2><span class="n">2</span>Where the model stands today</h2>
+<p>Every run uses the same burner: 0.4 m of rock, 2 mm cells, feet at radius 28–40 mm, nozzle 50 mm above the feet, heat applied through a coefficient <span class="mono">h</span> that falls off with radius (the "map" from D2v). The rows differ only in how the model treats the <em>vertical</em> faces between neighbouring columns, which is the subject of this whole packet line.</p>
+<div class="tbl"><table>
+<tr><th>Run</th><th>Side faces</th><th>Shape error at equal depth</th><th>Burner rate</th><th>Volume vs Meier</th><th>Reading</th></tr>
+<tr class="mr"><td>Meier</td><td>—</td><td class="num">0 by definition</td><td class="num">1.30 m/h</td><td class="num">1.00×</td><td>The target</td></tr>
+<tr><td>Before the map (M0)</td><td>off</td><td class="num">37 mm (mouth 144 mm)</td><td class="num">1.50 m/h</td><td class="num">—</td><td>Rate in band, shape a funnel. The rate agreement was a coincidence.</td></tr>
+<tr class="hl"><td>A</td><td>off</td><td class="num">2.3 mm</td><td class="num">1.25 m/h</td><td class="num">0.67×</td><td>Best shape. But the rate is throttled by a drain the map creates at 38–46 mm, and it removes too little rock.</td></tr>
+<tr><td>M1</td><td>on, factor f = 0.2</td><td class="num">2.7 mm</td><td class="num">3.12 m/h</td><td class="num">0.82×</td><td>Shape held, rate doubled.</td></tr>
+<tr><td>D</td><td>on, derived geometric area</td><td class="num">overshoots the wall band</td><td class="num">3.80 m/h</td><td class="num">—</td><td>The "honest" area is the worst on rate.</td></tr>
+<tr><td>C, E</td><td>on, only beyond 38 mm</td><td class="num">overshoot</td><td class="num">2.1 m/h</td><td class="num">—</td><td>The un-throttled rate of the pad ring's top faces: 1.6× Meier.</td></tr>
+</table></div>
+<div class="key">
+<p><strong>The honest position.</strong> Shape is solved to within the data's own error, by fixing a boundary condition rather than by tuning. Rate is not solved: the only in-band run gets there by an artefact, and the un-throttled model drills 1.6× too fast. Mesh convergence is bought with a side-face heating term whose size has never had a physical justification. Removing that term without reopening the mesh gap is what D2x tried and D2y tries again.</p>
+</div>
+
+<h2><span class="n">3</span>The problem that keeps coming back</h2>
+<p>The model removes rock one whole cell at a time, column by column. Two neighbouring columns therefore never sit at exactly the same height: one is always a cell ahead of the other. That makes a small vertical step, and a step has a side face. This is the origin of everything below.</p>
+
+<figure>
+<svg viewBox="0 0 640 300" role="img" aria-labelledby="stepT">
+<title id="stepT">Two columns of cells; the right column is one cell lower; heat leaks sideways from its hot top cell into the left column's buried cell.</title>
+<!-- column A (taller) x 80..260, column B (shorter) x 260..440 ; cell 60x50 -->
+<g font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--ink)">
+<!-- void -->
+<rect x="80" y="20" width="360" height="60" fill="var(--void)" stroke="none"/>
+<rect x="260" y="80" width="180" height="50" fill="var(--void)"/>
+<text x="260" y="45" text-anchor="middle" fill="var(--muted)">gas above the rock (hot)</text>
+<!-- column A solid -->
+<rect x="80" y="80" width="180" height="50" fill="var(--hot)" stroke="var(--rule)"/>
+<rect x="80" y="130" width="180" height="50" fill="var(--solid)" stroke="var(--rule)"/>
+<rect x="80" y="180" width="180" height="50" fill="var(--solid)" stroke="var(--rule)"/>
+<!-- column B solid -->
+<rect x="260" y="130" width="180" height="50" fill="var(--hot)" stroke="var(--rule)"/>
+<rect x="260" y="180" width="180" height="50" fill="var(--solid)" stroke="var(--rule)"/>
+<!-- riser face -->
+<rect x="256" y="80" width="8" height="50" fill="var(--ember)"/>
+<text x="272" y="97" font-size="12" fill="var(--ember)">exposed side face</text>
+<text x="272" y="112" font-size="12" fill="var(--ember)">(a "riser", one cell tall)</text>
+<!-- labels -->
+<text x="170" y="108" text-anchor="middle" font-weight="600">A, top cell · ~820 K</text>
+<text x="350" y="158" text-anchor="middle" font-weight="600">B, top cell · ~820 K</text>
+<text x="170" y="158" text-anchor="middle" fill="var(--muted)">A, buried cell · cold</text>
+<!-- drain arrow -->
+<line x1="300" y1="160" x2="215" y2="160" stroke="var(--bad)" stroke-width="3" marker-end="url(#ar)"/>
+<text x="258" y="200" text-anchor="middle" font-size="12" fill="var(--bad)">lateral drain, k·ΔT / dx</text>
+<text x="258" y="216" text-anchor="middle" font-size="12" fill="var(--bad)">grows as the cell shrinks</text>
+<text x="170" y="60" text-anchor="middle" fill="var(--muted)" font-size="12">column A (one cell taller)</text>
+<text x="350" y="122" text-anchor="middle" fill="var(--muted)" font-size="12">column B (a cell ahead)</text>
+<!-- legend -->
+<rect x="470" y="90" width="14" height="14" fill="var(--hot)"/><text x="490" y="102">surface cell, pinned near firing</text>
+<rect x="470" y="115" width="14" height="14" fill="var(--solid)"/><text x="490" y="127">buried rock</text>
+<rect x="470" y="140" width="14" height="14" fill="var(--void)" stroke="var(--rule)"/><text x="490" y="152">removed</text>
+<text x="470" y="200" font-size="12" fill="var(--muted)">Cells are 2 mm; the thermal</text>
+<text x="470" y="216" font-size="12" fill="var(--muted)">skin under the surface is about</text>
+<text x="470" y="232" font-size="12" fill="var(--muted)">1.6 mm, so one cell down is</text>
+<text x="470" y="248" font-size="12" fill="var(--muted)">already cold.</text>
+</g>
+<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--bad)"/></marker></defs>
+</svg>
+<figcaption>The step-face drain. B's hot top cell sits next to A's cold buried cell and loses heat sideways into it. The loss per face scales like 1/dx, so halving the cell doubles it. That is the mesh gap: at 1 mm the floor drills up to 47 % slower than at 2 mm when nothing is done about the step.</figcaption>
+</figure>
+
+<p>The history of the fix, in four sentences. <strong>D2k</strong> heated the exposed side face with the same coefficient as the top, scaled by a factor <span class="mono">f</span>; at f = 0.2 the mesh gap closed. <strong>D2w</strong> showed that the same f = 0.2 doubles the drilling rate on Meier. <strong>D2x</strong> replaced f with the geometric area of the riser, which is at least 0.41 of a footprint per one-cell step and averaged 0.67, so the honest area is three times the f that had worked, and the rate went to 3.8 m/h. <strong>D2y</strong> notices that most of that area is not real.</p>
+
+<div class="aside">
+<p><strong>Why the side face heals the step.</strong> It is worth being precise, because it decides the packet. The exposed face of a one-cell step is on A's <em>top</em> cell, the same cell that already gets a full footprint of top heating. So heating the riser gives A's top cell 1 + f footprints, A spalls faster and catches up with B. The cold buried cell that B drains into has no exposed face and never receives anything. <strong>The cure works by paying the taller column to outrun the step, not by stopping the drain.</strong></p>
+</div>
+
+<h2><span class="n">4</span>What D2y proposes</h2>
+<p>D2y says the area the model feeds through the side faces is inflated in two ways, and it fixes both without touching the heating coefficient.</p>
+<div class="grid2">
+<div class="card"><h3>Error 1 — jitter</h3><p>On a floor that is really flat, the one-cell steps between neighbours are quantisation noise, not geometry. On run D's floor, 45 % of the risers are single-cell and they carry a third of the weighted side area. A flat floor should have no side area at all.</p></div>
+<div class="card"><h3>Error 2 — the 2-D sum</h3><p>The code adds the slope contribution from x and from y separately. The true area of a tilted surface is one square root of both together. At slope 1 in both directions the sum over-counts by 13 %, at slope 2 by 24 %.</p></div>
+</div>
+<p>The scheme, worked on one example. Take a flat floor at 2 mm cells whose columns, because of quantised removal, sit at heights 0, 2, 0, 2, 0 mm. Today each tall column has two exposed 2 mm risers and is fed 1 + 0.41 + 0.41 footprints; the floor as a whole absorbs about 1.4 footprints per column. The true surface is flat and should absorb 1.0.</p>
+<ol>
+<li><strong>Smooth first.</strong> Before computing any area, fit a plane through the column heights within 6 mm of the column. Over that disc the 0, 2, 0, 2 pattern averages out and the fitted slope is near zero; a real 45° cone returns slope 1. The cliff rule: if one neighbour is 40 mm lower because it is the hole wall, leave it out of the fit, or the fit will think the floor tilts steeply toward it.</li>
+<li><strong>One area per column.</strong> The column's total surface area is its footprint times the slope factor from the fit: flat gives 1.0, a 45° cone gives 1.41, the correct area of a tilted face. If most neighbours were excluded as cliffs the column is on a wall, and there the raw count of faces is used instead, because for a vertical wall the raw count is exactly right.</li>
+<li><strong>Share it, do not zero it.</strong> The column now has a fixed budget, 1.0 footprints on the flat floor. It has a top face and, say, one riser of equal raw size: give each half. The alternative, top keeps 1.0 and the riser gets 0, is what the packet calls the trap, because heating the riser is what has been closing the steps. (For a one-cell step both halves land in the same cell, so the split changes bookkeeping rather than heat. That is exactly what P1 tests.)</li>
+<li><strong>Assert conservation.</strong> After the split, check every column: top plus risers equals the total, to round-off, and report the largest miss in the thermo file the way the energy ledger already is. This is what stops a future edit from quietly adding area again.</li>
+</ol>
+<div class="aside">
+<p><strong>Isn't a real wellbore rough?</strong> It is, at the flake scale, about the 1.6 mm thermal skin, and that scale does not change with the grid. The model's steps are exactly one cell tall, 2 mm at 2 mm and 1 mm at 1 mm, and add a fixed 0.41 footprints per step at every mesh: an amplitude set by dz and an area that never converges to anything physical. And a jet's h is quoted per projected area; roughness inside the boundary layer does not receive the full h on its extra surface, and a correlation measured on a real face already includes it. Counting the geometric area of mm-scale steps on top of a plate h double counts. If physical roughness is ever wanted in the model, it should enter with a physical length, not with dz.</p>
+</div>
+<p>The change touches eight places in the heat kernel, the jet-budget march and the energy ledger, including a new top-face area multiplier on the primary heating path that does not exist today. It comes with an identity leg, a regression that asserts the code aborts when the old factor and the new scheme are both set, and the usual pre-registered predictions.</p>
+
+<h3>The legs</h3>
+<div class="tbl"><table>
+<tr><th>Leg</th><th>What it is</th><th>Cost</th><th>What it decides</th></tr>
+<tr><td class="mono">V2, V1</td><td>The hot-disc arbiter at 2 mm and 1 mm, conservative scheme on</td><td class="num">4 + 28 min</td><td><strong>The gate</strong>: does the interior mesh gap stay within 5 %?</td></tr>
+<tr><td class="mono">V2L, V2S, V1L</td><td>Same, with the smoothing disc doubled or the cliff test loosened</td><td class="num">4 + 4 + 28 min</td><td>Do the two numerical parameters change the answer? If they do, the scheme is f under a new name.</td></tr>
+<tr><td class="mono">W</td><td>Meier at 2 mm, A's keys plus the conservative side term</td><td class="num">25 min</td><td>How much of D's 3.8 m/h was the over-count; whether the wall band still overshoots.</td></tr>
+<tr><td class="mono">Z0</td><td>D's exact run with the new key absent</td><td class="num">~25 min</td><td>Byte-identity: the default is off.</td></tr>
+</table></div>
+
+<h2><span class="n">5</span>What the run will show, and why I think the gate is already decided</h2>
+<p>The packet itself predicts that its gate will fail. I agree, and I want to say why in one paragraph, because it changes how much the run is worth.</p>
+<p>On the arbiter's flat floor the smoothed slope from jitter is about 0.2, so the column total comes out at about 1.02 footprints. That total is split half to the top and half to the riser, and both halves land in A's top cell. So A's top cell receives 1.02 footprints. Under f = 0 it received 1.00. The arbiter is known to converge when that cell gets 1.1 to 1.2 and not to converge at 1.0.</p>
+<div class="tbl"><table>
+<tr><th>Scheme</th><th>Heat into the taller column's top cell</th><th>Interior mesh gap, three time blocks</th><th>Status</th></tr>
+<tr><td>No side term (f = 0)</td><td class="num">1.00 footprints</td><td class="num">−7.5 / −27.5 / −47 %</td><td><span class="pill bad">fails</span></td></tr>
+<tr><td>f = 0.2 (D2k)</td><td class="num">1.20</td><td class="num">−0.2 / +3.0 / −1.8 %</td><td><span class="pill good">converges</span></td></tr>
+<tr><td>Derived area (D2x)</td><td class="num">1.41</td><td class="num">not run on the arbiter</td><td><span class="pill mute">over-fed</span></td></tr>
+<tr class="hl"><td>Conservative (D2y)</td><td class="num">≈ 1.02</td><td class="num">expected to look like f = 0</td><td><span class="pill warn">P1 predicted refuted</span></td></tr>
+</table></div>
+<p>So the 1 mm gate leg is a 28-minute confirmation of arithmetic. That is not a criticism of the packet's honesty. It is a reason to spend the effort differently.</p>
+<p><strong>What the packet does buy.</strong> Three things stand regardless of the gate: the conservation bookkeeping is right and should exist; the Meier leg W is genuinely new, because the wall and the floor cone have real slopes where the 2-D correction changes the area, so it tells us how much of D's rate was the over-count; and the two new witnesses, the lifetime of one-cell steps and the drain flux in watts by region, are the first instruments aimed at the drain itself rather than at its symptoms.</p>
+
+<h2><span class="n">6</span>What we have learned that will not change</h2>
+<ul>
+<li><strong>The funnel was a boundary condition</strong>, not a physics gap: confining the heating coefficient to the hole cut the shape error from 37 mm to under 3 mm with nothing tuned.</li>
+<li><strong>The early rate agreement was two errors cancelling.</strong> The model removed too much rock at an in-band rate. Scoring rate alone would have hidden it; scoring shape and volume found it.</li>
+<li><strong>The mesh gap is a discretisation artefact of whole-cell column removal.</strong> It was reproduced with no feet and no jet. It is not a property of granite or of the flame.</li>
+<li><strong>f was a compensation, never a coefficient.</strong> Every attempt to derive it from geometry gives a larger number that breaks the rate, and every value that fixes the rate is below the geometric floor.</li>
+<li><strong>The un-throttled model drills 1.6× too fast</strong>, at the top-face rate of the pad ring under the feet. Meier's burner covers that ring with a 12 mm steel skirt that has three exhaust slots; the model heats it as open impingement. That is the remaining physics lever, and it is independent of the side-face question.</li>
+<li><strong>Meier's data constrains shape better than rate.</strong> The width is a lower bound, the feed was operator-controlled, the volume is the one robust number.</li>
+</ul>
+
+<h2><span class="n">7</span>Options</h2>
+<div class="opt"><div class="tag">A</div><div><h3>Run D2y as written</h3><p>About a day of code on eight sites and 1.5 hours of compute. Gate expected to fail; W and the witnesses informative. Cleanest audit trail; the slowest route to the fix.</p></div></div>
+<div class="opt rec"><div class="tag">B · recommended</div><div><h3>Trim the gate, keep the bookkeeping, write the successor now</h3><p>Keep the conservation code, the identity leg Z0, the 2 mm arbiter V2 as a four-minute arithmetic check against the f = 0 result, and the Meier leg W. Demote V1 to optional. Write the successor packet in parallel because its conclusion is already known: the steps need a closure of their own, separate from area.</p><p>The natural closure uses something the code already has. Each column carries a sub-cell remainder of how far its surface has receded inside its top cell. The true height difference between two neighbours is the difference of those continuous heights, not a whole cell. Give the riser that true height as its area, and scale the sideways conductance across the step by the same fraction. A step of a tenth of a cell then makes a tenth of a drain and a tenth of a riser. No factor, no smoothing length, and the cliff handover becomes unnecessary because a real wall has a real height.</p></div></div>
+<div class="opt"><div class="tag">C</div><div><h3>Skip D2y, go straight to the sub-cell closure</h3><p>Fastest, but it leaves the 2-D over-count in place and loses the W measurement that separates the over-count from the drain. The successor would have to carry the conservation change anyway.</p></div></div>
+<p>Whatever is chosen for the side faces, the rate question is a separate packet: the pad-ring heating under the skirt. Fixing the area will not make the model drill at Meier's speed, and the packet says so.</p>
+
+<h2><span class="n">8</span>Small print</h2>
+<dl>
+<dt>Column</dt><dd>One vertical stack of cells. Rock is removed from the top of a column one whole cell at a time.</dd>
+<dt>Riser</dt><dd>The vertical face exposed where one column is higher than its neighbour.</dd>
+<dt>Footprint</dt><dd>The heat a flat top face receives, used as the unit for how much a cell is fed.</dd>
+<dt>Jitter</dt><dd>One-cell height differences between neighbours on a floor that is really flat, caused by quantised removal.</dd>
+<dt>Arbiter</dt><dd>A stripped-down test: hot disc on flat rock, prescribed feed, no jet, no feet. Used to measure the mesh gap without Meier's complications.</dd>
+<dt>Gate</dt><dd>The pass/fail criterion a packet must meet: here, 2 mm and 1 mm agree within 5 % over the inner 25 mm of the disc.</dd>
+<dt>Equal depth</dt><dd>Diameters are compared at the same burner descent, never the same time, because the runs advance at different speeds.</dd>
+<dt>Numbers</dt><dd>Floor slope medians and cliff fractions differ between the planner's measurement and mine by about a third (different populations). Immaterial now that the cliff test is relative to the local median.</dd>
+</dl>
+
+<h2><span class="n">9</span>Addendum, same day: the measurement that picks the successor</h2>
+<p>After the review, the other agent and I agreed to measure the steps directly from the removal event logs of runs that already exist. No code, no new runs. Each column's height between two removals is taken as receding linearly, which the logs support: a column's interval between removals varies by only 1–11 %. For every pair of neighbours at a one-cell step, that gives the <em>true</em> sub-cell height difference and how long the step lives.</p>
+<div class="tbl"><table>
+<tr><th>Arbiter, inner 25 mm</th><th>Step present</th><th>Two cells or more</th><th>True step height at birth</th><th>Below half a cell</th><th>Lifetime, in flip intervals</th></tr>
+<tr><td>f = 0.2, 2 mm (converged)</td><td class="num">8–11 %</td><td class="num">none</td><td class="num">0.05–0.07 cells</td><td class="num">100 %</td><td class="num">0.05–0.07</td></tr>
+<tr><td>f = 0.2, 1 mm (converged)</td><td class="num">9–15 %</td><td class="num">none</td><td class="num">0.06–0.09</td><td class="num">94–99 %</td><td class="num">0.07–0.09</td></tr>
+<tr><td>f = 0, 2 mm</td><td class="num">29 → 44 %</td><td class="num">1 → 9 %</td><td class="num">0.17 → 0.41</td><td class="num">80 → 58 %</td><td class="num">0.17 → 0.39</td></tr>
+<tr><td>f = 0, 1 mm</td><td class="num">31 → 44 %</td><td class="num">6 → 14 %</td><td class="num">0.21 → 0.45</td><td class="num">75 → 55 %</td><td class="num">0.20 → 0.39</td></tr>
+</table></div>
+<p>Arrows are the 50–100 s block to the 150–200 s block. On Meier's central floor the picture is the same: run D's steps are 0.19 cells tall and live a fifth of a flip; run A's are 0.69 cells, and 46 % of the time A's neighbours differ by two cells or more. A does not lack jitter. It has the worst steps of any run.</p>
+<div class="key">
+<p><strong>What this settles.</strong> On a floor that converges, the one-cell steps are phase lags of five to nine hundredths of a cell. Their true side area is about 0.07 footprints, not the 0.41 D2x charged nor the 0.2 that f supplied. The long-lived, near-full-cell steps are not a second kind of step needing a thermal fix; they are what the cascade looks like while it develops when nothing heals the phase lags. So the successor is the geometric closure: give each riser its true height as area, and scale the sideways conduction across the step to what the taller column's near-surface cell would pass if it sat at its true depth. Both scale with the true step height, so the drain on a flat floor falls by roughly fourteen times relative to f = 0. That is why it can plausibly converge where D2y, which removes the healing and leaves the drain untouched, cannot. What it does not settle is whether paying only the true height keeps the floor in the phase-lag state at 1 mm. The arbiter at 2 mm and 1 mm decides that, and it is a genuine test with an unknown answer.</p>
+</div>
+<p>Consequences for the plan: D2y's premise is superseded and it should be parked. Its bookkeeping, the eight call sites, the abort and the identity leg, carry over into the closure packet. Running A at 1 mm still answers whether the shape holds under refinement, but not whether the side-face line can be deleted: A's rate is already cascade-throttled at 2 mm.</p>
+<div class="foot">Sources: ACTIVE_STEP.md (D2y, revised after pre-flight), studies d2j0b_plane, d2l_scan, d2v_hmap, d2w_attribution, d2x_areasplit, Claude_markdowns/2026-09-23.md and 2026-09-24.md, meier_thesis_notes.md. Companion to htmls/2026-09-24_the_funnel.html.</div>
+</div>

@@ -1,0 +1,431 @@
+<title>Level and Shape</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f5f4f0; --paper:#fbfaf7; --ink:#23272c; --muted:#5d6570; --line:#d6d2c8;
+  --accent:#2b5c7a; --accent-soft:#dbe7ef; --heat:#b5461c; --heat-soft:#f3dccf;
+  --rock:#d9d3c6; --rock-dark:#bfb7a6; --void:#fbfaf7; --grid:#e6e2d9;
+  --ok:#2f6b3a; --ok-soft:#dcebdD; --bad:#9a3b2b; --bad-soft:#f1dad4; --warn:#8a6a14; --warn-soft:#f3ead0; --note:#efece4;
+  --l1:#2b5c7a; --l2:#7a4a9c; --l3:#3f8a63; --l4:#c8792a; --steel:#6d7683;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#16191d; --paper:#1d2126; --ink:#e7e4dd; --muted:#a4aab3; --line:#3a3f46;
+    --accent:#86b6d6; --accent-soft:#243747; --heat:#e3865a; --heat-soft:#4a2c1f;
+    --rock:#3b3e43; --rock-dark:#4c5057; --void:#1d2126; --grid:#2a2f35;
+    --ok:#7fc48c; --ok-soft:#1f3a26; --bad:#e08a78; --bad-soft:#452420; --warn:#e2c16a; --warn-soft:#3d3418; --note:#22262c;
+    --l1:#86b6d6; --l2:#c19ae0; --l3:#7fc9a0; --l4:#e9a55c; --steel:#9aa3ae;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#16191d; --paper:#1d2126; --ink:#e7e4dd; --muted:#a4aab3; --line:#3a3f46;
+  --accent:#86b6d6; --accent-soft:#243747; --heat:#e3865a; --heat-soft:#4a2c1f;
+  --rock:#3b3e43; --rock-dark:#4c5057; --void:#1d2126; --grid:#2a2f35;
+  --ok:#7fc48c; --ok-soft:#1f3a26; --bad:#e08a78; --bad-soft:#452420; --warn:#e2c16a; --warn-soft:#3d3418; --note:#22262c;
+  --l1:#86b6d6; --l2:#c19ae0; --l3:#7fc9a0; --l4:#e9a55c; --steel:#9aa3ae;
+}
+body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:17px;line-height:1.55;padding-inline:16px;padding-block:32px 64px}
+.wrap{max-width:1040px;margin:0 auto}
+.col{max-width:68ch;margin:0 auto}
+h1,h2,h3{font-family:"Libre Franklin","Helvetica Neue",Arial,sans-serif;text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2.1rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:600;margin-top:2.6rem;margin-bottom:.6rem;padding-top:1rem;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;font-weight:600;margin-top:1.6rem;margin-bottom:.3rem}
+p{margin:0 0 1rem}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem}
+.lede{font-size:1.15rem;color:var(--muted);margin-top:.8rem}
+.summary{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--accent);padding:1rem 1.2rem;margin:1.6rem 0 0;border-radius:4px}
+.summary p:last-child{margin-bottom:0}
+.summary ul{margin:.4rem 0 0;padding-left:1.2rem}
+.summary li{margin-bottom:.35rem}
+figure{margin:1.8rem 0;padding:0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:14px 12px 8px}
+.scroll{overflow-x:auto}
+.scroll svg{display:block;min-width:640px;width:100%;height:auto}
+svg text{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;fill:var(--ink)}
+svg .t-muted{fill:var(--muted)}
+svg .grid{stroke:var(--grid)}
+svg .axis{stroke:var(--muted)}
+figcaption{font-size:.92rem;color:var(--muted);margin-top:.7rem;line-height:1.45;max-width:78ch}
+figcaption b{color:var(--ink);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:.95rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"Libre Franklin",Arial,sans-serif;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.9rem}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}.warn{color:var(--warn);font-weight:600}
+.pill{display:inline-block;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:.12rem .5rem;border-radius:3px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)}.p-bad{background:var(--bad-soft);color:var(--bad)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-na{background:var(--note);color:var(--muted)}
+.note{background:var(--note);border-radius:4px;padding:.8rem 1rem;font-size:.95rem;margin:1rem 0}
+.note p:last-child{margin:0}
+.key{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-size:.85rem;color:var(--muted);margin:.4rem 0 .2rem;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+.key span::before{content:"";display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:.4rem;background:currentColor}
+.k1{color:var(--l1)}.k2{color:var(--l2)}.k3{color:var(--l3)}.k4{color:var(--l4)}.kh{color:var(--heat)}.ks{color:var(--steel)}
+dl{margin:0}
+dt{font-weight:600;margin-top:.7rem}
+dd{margin:0 0 .2rem 0;color:var(--muted)}
+ol,ul{padding-left:1.3rem}
+li{margin-bottom:.5rem}
+.steps li{margin-bottom:.9rem}
+.small{font-size:.9rem;color:var(--muted)}
+.scroll-t{overflow-x:auto;margin:1rem 0 1.4rem}
+a{color:var(--accent)}
+@media (max-width:600px){body{font-size:16px}h1{font-size:1.7rem}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<div class="col">
+<div class="eyebrow">Flame-jet drilling model · Meier comparison, results to date · 30 September 2026</div>
+<h1>Level and Shape</h1>
+<p class="lede">What the last two studies measured, why turning the heat down did not bring the model into agreement with Thierry Meier's 2017 drilling test, and the short list of what still stands between the model and a pass.</p>
+
+<div class="summary">
+<p><b>In one paragraph.</b> The model now drills a hole of the right diameter and volume, and it does so at the experiment's own feed rate. Its remaining error is the position of the floor: the hot gas removes rock under the burner about twice as fast as the experiment did, so the floor runs 8 to 10 cm further ahead of the burner than the experiment allows. Last week's study tried to close that by turning the floor heat down. It cannot be closed that way. Reducing the heat does not slow the whole floor; it shrinks the circle of rock that flakes at all, so the outer part of the floor stalls and the burner's feet run into it. The fix is not the amount of heat but how it is spread across the floor, and one more inputs-only study should settle whether that closes the comparison.</p>
+<ul>
+<li><b>Right already:</b> hole diameter 87 to 91 mm against 85, volume 3.2 litres per half metre against 3.4, wall heating derived rather than tuned, no model constant changed since the wall coefficient was derived.</li>
+<li><b>Wrong:</b> the floor sits 180 mm below the nozzle at full heat; the experiment's floor sat 65 to 100 mm below it.</li>
+<li><b>Ruled out:</b> the rock's own properties. Measured flaking temperatures for this granite bracket the model's value, so the rock side can move the answer by at most a quarter and the heat side must supply the rest.</li>
+<li><b>Found:</b> the floor shape at full heat matches the experiment's rounded tip to within a millimetre. Only the level of heat is wrong, not where the model puts the rock. But lowering the level breaks the shape, so level and shape have to be set together.</li>
+<li><b>Next:</b> a capped heat profile across the floor, tested in one study of four runs, with the pass conditions written down before it runs.</li>
+</ul>
+</div>
+
+<h2>1. What "passing" means</h2>
+<p>The experiment is a single hole drilled into a block of Grimsel granite with a small oxygen–methane burner, 38 kW of fuel, lowered by a winch at a set speed for 23 minutes. Meier reported the hole's diameter, its volume, its shape in cross-section, and the winch speed. Our reading of his cross-section photograph adds one more number: at the end of the run the floor of the hole was at most 5 cm ahead of the burner's feet, so the distance from the burner's nozzle to the floor was between 65 and 100 mm. The lower figure is the burner resting on its 50 mm feet at the rim of the rounded tip; the upper figure is the burner hanging with the floor 5 cm below the feet.</p>
+<p>That distance is not a number Meier reports, and it is worth being precise about where it comes from. He reports the winch speed, and he measured it from the burner's position against marks on the supply coil, with the crane's load cell telling him whether the burner hung or rested on the rock. The burner therefore travelled essentially the full depth of the hole in 23 minutes: at 1.5 metres per hour it would have travelled more than the block is deep, so it cannot have stopped short. Had the floor run 18 cm ahead of the nozzle, as the model's does, the burner would have travelled 31 cm and Meier would have recorded 0.8 metres per hour. So the floor stayed close to the burner, within the tolerance of the photograph, and the 100 mm bound is that statement in millimetres. It is soft to a few centimetres; the qualitative rule behind it is firm: the floor does not run away from the burner, and the feet are on or near the rock, never inside it. Under a prescribed descent this is the only form in which the experiment's rate can be tested at all, because the rate is an input.</p>
+<p>We run the model the same way the experiment was run: the burner descends at 1.5 metres per hour whatever the rock does. The rate is therefore an input, not a result. What the model has to get right is everything that follows from that kinematics. The checklist, and where each item stands after the two studies, is:</p>
+
+<div class="scroll-t">
+<table>
+<thead><tr><th>Condition</th><th>Target</th><th>Best result so far</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Hole diameter between 120 and 250 mm depth</td><td>85 ± 5 mm</td><td>87 to 91 mm at full heat</td><td><span class="pill p-warn">edge of band</span></td></tr>
+<tr><td>Volume removed per half metre</td><td>≤ 3.42 L</td><td>3.16 L at full heat</td><td><span class="pill p-ok">pass</span></td></tr>
+<tr><td>Nozzle-to-floor distance at the end</td><td>65 to 100 mm</td><td>180 mm at full heat, still opening; 97 mm at half heat</td><td><span class="pill p-bad">fail at full, pass at half</span></td></tr>
+<tr><td>Feet never inside the rock after the start</td><td>within a few mm of the rock</td><td>clear at full heat; 15 to 290 mm inside rock at reduced heat</td><td><span class="pill p-bad">pass at full, fail at half</span></td></tr>
+<tr><td>Floor shape</td><td>rounded tip, radius ≈ hole radius</td><td>matches to 1 mm at full heat; breaks at r &gt; 30 mm at reduced heat</td><td><span class="pill p-warn">level-dependent</span></td></tr>
+<tr><td>Heat flux on the floor</td><td>0.45–0.87 MW/m² measured for spallation; 0.5–0.6 from the energy budget</td><td>1.05 at full heat; 0.56 at half heat</td><td><span class="pill p-warn">half heat passes</span></td></tr>
+<tr><td>Flaking temperature</td><td>within the measured range 770–1190 K</td><td>823 K, unchanged</td><td><span class="pill p-ok">pass</span></td></tr>
+<tr><td>Energy conserved, no hidden change</td><td>power ledger closes; reference runs byte-identical</td><td>closes to 0.01 W; identical</td><td><span class="pill p-ok">pass</span></td></tr>
+</tbody>
+</table>
+</div>
+<p>No single run passes the third and fourth rows together. That is the whole of what is left, and the rest of this page is about why, and what would change it.</p>
+
+<figure>
+<div class="fig">
+<div class="key"><span class="kh">Meier's hole, traced from his cross-section photograph</span><span class="k1">model at full heat, 650 s</span><span class="ks">burner at its final position</span></div>
+<div class="scroll"><svg id="fig0" viewBox="0 0 1000 600" role="img" aria-label="Target wellbore and the model's wellbore at the same scale"></svg></div>
+</div>
+<figcaption><b>Figure 1. The target and the model, to the same scale.</b> Left: Meier's hole at the end of his 23-minute run, traced from the sawn cross-section in his thesis (figure 8.8), with the burner drawn where the winch record puts it. The bore is 85 to 90 mm wide from 5 cm down to 46 cm, the mouth is about 10 cm wide, the pause at 8 cm left a small widening, and the tip is rounded with about the bore's radius. The floor leads the feet by at most 5 cm. Right: the model at full heat after 650 seconds, the longest run that fits the block. Its bore is 87 to 93 mm over the same depths and its tip has the same rounded shape, but the floor is 130 mm below the feet and 180 mm below the nozzle, and still moving away. The model's run is shorter, so the two holes differ in depth by construction; the comparison is the width of the bore and the distance between burner and floor. Tracing tolerance about 5 mm.</figcaption>
+</figure>
+
+<h2>2. The two studies</h2>
+<h3>Study one: run at the experiment's speed</h3>
+<p>Until last week the model chose its own descent speed from a force balance, and we compared that speed with Meier's. The first study switched to the experiment's kinematics: the burner is lowered at the winch speed and the model answers with the hole. Three variants were run, differing in how the walls of the hole are heated. The one with the wall heating derived from the annular gap between burner and wall gave a hole of 87 mm and 3.15 litres per half metre, both inside Meier's report. The floor, however, opened away from the burner: after 500 seconds the nozzle-to-floor distance was 170 to 180 mm and still growing, where the experiment held 100 mm or less. Read as a heat balance, the model's floor was receiving about twice the heat needed to keep pace with the winch, so it ran ahead until the jet had weakened enough, at distance, to match. That factor of two was independent of how the walls were heated.</p>
+
+<h3>The rock side, checked against the literature</h3>
+<p>Before touching the heat we asked whether the rock could be responsible. The model flakes rock when its surface reaches about 823 K. Direct measurements of the surface temperature at which granite flakes under a flame span roughly 770 to 1190 K, and the values for this specific granite cluster around 800 to 900 K. So the model sits in the middle of the measured range. Raising the flaking temperature to the top of the measured band slows the floor by about a quarter, not by half. The elastic modulus and thermal expansion of the Grimsel rock, as measured, would push the flaking temperature the wrong way. The conclusion was that the heat delivered to the floor is too high and the rock is not the lever.</p>
+
+<h3>Study two: turn the floor heat down</h3>
+<p>The second study kept everything else and scaled the floor heat to 100, 50, 35 and 30 per cent, with and without a flaking temperature raised to 870 K, plus one run with a cooler jet. Two things were pre-registered as the pass condition: the nozzle-to-floor distance must settle at or below 100 mm, and the burner's feet must not be inside the rock after the first minute.</p>
+<p>The first condition behaved. A simple rule fitted before the study, that the floor settles where the weakened jet delivers exactly the heat the winch speed costs, predicted the settled distance on every run to within 4 per cent: 203 mm predicted against 180 measured and still opening at full heat, 148 against 145 with the cooler jet, 112 against 111 at half heat, 99 against 97 at half heat with the hotter flaking. At 35 per cent it predicted contact, and the floor sat at 55 mm, which is the height of the feet.</p>
+<p>The second condition did not. On every reduced-heat run the feet went into the rock and stayed there. At half heat the ring of rock under the feet was 15 to 20 mm above the foot plane for the whole run; at 35 per cent it was 120 mm above by 400 seconds; on the three lowest runs the nozzle itself reached rock at 28 mm radius and the run stopped. So the runs that settled the floor at the right distance did so with the burner buried in a shoulder of unremoved rock. No setting of the two levers passed both conditions. The window is empty.</p>
+
+<h2>3. Why: the level moves the shape</h2>
+<p>The reason is visible in how far each radius of the floor receded. At full heat the floor is a rounded bowl: the axis leads the rock at 36 mm radius by 19 mm, and the whole bore recedes together. At half heat the axis and the inner floor barely change, but the rock between 32 and 40 mm radius recedes by only 276 mm where the axis recedes 380, and the rock at the edge of the bore hardly moves at all. Heat that is turned down uniformly does not slow the floor uniformly. There is a radius beyond which the rock no longer gets hot enough to flake, and lowering the heat pulls that radius inward. The burner, descending on its schedule, lands on the shoulder that is left.</p>
+
+<figure>
+<div class="fig">
+<div class="key"><span class="k1">full heat, 650 s</span><span class="k2">half heat</span><span class="k3">half heat, flaking at 870 K</span><span class="k4">35 % heat</span><span class="ks">burner feet and nozzle at the end</span><span class="kh">rounded tip of the bore radius, for comparison</span></div>
+<div class="scroll"><svg id="fig1" viewBox="0 0 960 540" role="img" aria-label="Floor cross-sections at the end of four runs"></svg></div>
+</div>
+<figcaption><b>Figure 2. The floor at the end of each run, drawn to scale from the measured recession in six radial bands.</b> Rock is shaded; the burner's feet plane and nozzle are drawn where the winch had put them at that time. The dashed red curve is a hemisphere of the hole's radius hung from the axis depth, which is the shape of Meier's tip. At full heat the model's floor lies on that curve out to 36 mm radius and the feet are more than 100 mm clear of the rock, but the floor is 180 mm from the nozzle instead of 65 to 100. At reduced heat the floor comes up to the right distance while the rock under the feet stops receding and the feet pass through it, which the model permits only because the descent is prescribed. The panels are end-of-run snapshots; on the half-heat run the feet ring catches up only in the last minutes, and the note in each panel gives the interpenetration measured over the run. The full-heat run was stopped at 650 seconds because by 800 its floor would have reached the bottom of the half-metre block. The quantities compared, floor distance, diameter and volume per length, are settled values that do not depend on the run length; the depths in the drawing do, and should not be compared between panels.</figcaption>
+</figure>
+
+<p>Two things follow from the figure that were not obvious before the study. First, at full heat the model already puts the rock in the right place: the tip is a hemisphere to within a millimetre of the experiment's. What is wrong at full heat is the level of heat alone. Second, the level cannot be lowered without breaking the shape, because the heat under the burner's feet, at 28 to 40 mm radius, is already only half to seven tenths of the heat on the axis. Halve everything and the feet ring falls below the point at which rock flakes at the winch speed.</p>
+
+<figure>
+<div class="fig">
+<div class="key"><span class="k1">nozzle-to-floor distance at the end</span><span class="k4">rock under the feet, above the foot plane</span><span class="ks">Meier's band, 65 to 100 mm</span></div>
+<div class="scroll"><svg id="fig2" viewBox="0 0 900 400" role="img" aria-label="Standoff and foot interpenetration against heat level"></svg></div>
+</div>
+<figcaption><b>Figure 3. The two halves of the pass condition against the floor heat level.</b> Heat level is the floor flux relative to the full-heat run, corrected for each run's measured gas temperature and flaking temperature. As the level falls the floor comes up into Meier's band, and at the same time the rock under the feet rises above the foot plane. The two curves cross the wrong way: there is no level at which the floor is in the band and the feet are clear. The dotted line is the settled-distance rule fitted before the study; it held to 4 per cent.</figcaption>
+</figure>
+
+<h2>4. Where the shape of the heat comes from</h2>
+<p>The model heats the floor with a standard impinging-jet correlation for a single round nozzle, with a radial fall-off taken from free-jet data. Evaluated at the working standoff it is flat out to 16 mm radius and then falls: 71 per cent of the axis value at 28 mm, 51 per cent at 40 mm, 27 per cent at 48 mm. The feet sit at 28 to 40 mm. That fall-off is what a jet does when it strikes an open plate and its spent gas runs away sideways as a thin wall jet.</p>
+<p>Whether the real distribution is broader than that cannot be settled from jet theory alone. Meier's burner sits in a bore eleven nozzle diameters wide with a closed end, under a water-cooled body that nearly fills it, and all of its exhaust, about 15 grams per second of hot gas, has to turn at the corner of the floor and leave upward through a 10 mm annular gap at some 25 to 30 metres per second. That flow keeps the outer floor in fast hot gas rather than in a decaying wall jet, and it is a plausible reason for a broader profile. It is not a derivation, and the page does not present it as one.</p>
+<p>Two pieces of evidence do point the same way, and they are independent of the jet. The first is the model's own firing record. Reading the flaking events by radius gives the recession rate of each ring of the floor against the winch speed of 41.7 mm per 100 seconds:</p>
+<div class="scroll-t">
+<table>
+<thead><tr><th>ring of the floor</th><th class="num">full heat, 400–600 s</th><th class="num">half heat, 700–800 s</th><th class="num">half heat at 870 K</th><th class="num">35 % heat</th></tr></thead>
+<tbody>
+<tr><td>0 to 36 mm radius</td><td class="num">48–50</td><td class="num">43</td><td class="num">43–44</td><td class="num">19–42</td></tr>
+<tr><td>36 to 40 mm, under the feet</td><td class="num">48</td><td class="num">32</td><td class="num">9</td><td class="num">0</td></tr>
+<tr><td>40 to 44 mm, the bore edge</td><td class="num">50</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">Recession in mm per 100 s, from the flaking-event logs of the second study. The feed is 41.7.</p>
+<p>At full heat every ring inside 44 mm recedes together, faster than the winch. At half heat the inner floor tracks the winch exactly, the ring under the feet falls behind, and the bore edge stops. Converting each run's standoff and map value into an absolute flux, the model stops flaking below about 0.2 to 0.25 MW/m² and needs about 0.45 to keep pace with the winch. For the feet ring to keep pace it must receive about nine tenths of what the axis receives, which is to say the profile has to be nearly flat out to 40 mm.</p>
+<p>The second piece of evidence is Meier's own energy budget set against the measured flaking threshold. His 38 kW, the measured rate and the hole's area leave about 0.5 to 0.6 MW/m² on average across the floor. Kant and von Rohr measured that granite under a flame does not flake below about 0.45 MW/m². A profile peaked two to one, like the free-jet correlation, would put the outer floor at 0.3 to 0.35 and the bore could not have advanced at full width at the winch speed. Yet it did. So the experiment itself says the floor flux was within about 20 per cent of uniform across the bore. That is why the next study caps the profile rather than scaling it, and why the cap is not a fit: it is what the energy budget and the flaking threshold together require. What remains to be shown is that a model with that profile still produces the right diameter on its own, with nothing beyond 40 mm radius touched. A profile chosen to hit the diameter would prove nothing; a profile required by the energy budget that then delivers the diameter would.</p>
+
+<figure>
+<div class="fig">
+<div class="key"><span class="k1">present profile at full heat</span><span class="k2">present profile at half heat</span><span class="k3">proposed capped profile</span><span class="kh">flux measured to cause flaking, 0.45–0.87</span><span class="ks">Meier's energy budget, 0.5–0.6</span></div>
+<div class="scroll"><svg id="fig3" viewBox="0 0 900 420" role="img" aria-label="Radial heat flux profiles on the floor at 100 mm standoff"></svg></div>
+</div>
+<figcaption><b>Figure 4. Heat flux across the floor at a 100 mm nozzle-to-floor distance.</b> The shaded strip marks the feet ring. Halving the present profile puts the feet ring at 0.27 to 0.38 MW/m², below the flux at which flaking has been measured to occur, which is why the ring stalls. The proposed profile caps the axis at a fraction of its present value, between 0.45 and 0.50, and leaves everything beyond 40 mm exactly as it is. At a cap of 0.5 the capped value equals the present profile's own value at 40 mm, so the change is a removal of the central excess and nothing else. The axis then sees the flux that settles the floor at 90 to 105 mm, and the feet ring sees the same flux as the axis.</figcaption>
+</figure>
+
+<h2>5. What is missing until the test passes</h2>
+<p>The list is short, and it is ordered. Each item is a study the other agents can run from inputs alone unless stated.</p>
+<ol class="steps">
+<li><b>The capped-profile study, four runs, about the cost of the last one.</b> Two runs with the floor heat capped at 0.45 and 0.50 of its present axis value and the flaking temperature left at 823 K; one control that spreads the present total floor power flat across the bore without lowering it; and the identity run that proves nothing else changed. Written down before it runs: the two capped runs settle the floor at 90 to 105 mm with the rock under the feet within 5 mm of the foot plane; the flat control settles near 170 mm with the feet clear, showing that shape alone does not move the floor; the diameter between 120 and 250 mm depth and the volume are reported for all runs and used to choose none. The floor profile is reported against the hemisphere. If a capped run gives a flat floor rather than a rounded one, the cap has overshot and the profile that is right lies between the present one and the cap.</li>
+<li><b>Declaring the pass.</b> If a capped run meets the first three conditions and its diameter lands within 85 ± 5 mm on its own, the comparison closes on geometry, volume, floor position and feet clearance at the experiment's own kinematics, with the wall coefficient derived and one stated assumption about the radial spread of the jet's heat in a confined bore. If the diameter drifts above 90 mm instead, the assumption is wrong in the way that matters, and the next lever is the heat beyond 40 mm radius, which the study will have deliberately not touched.</li>
+<li><b>The uncertainty band, four more runs.</b> Around the passing profile, the four corners of nozzle gas temperature within the thesis's 1450 to 1850 K and flaking temperature within 800 to 900 K. The floor position and diameter are then quoted as intervals, and the sentence "the measured hole lies within the model's band" becomes a consequence of measured inputs rather than a claim.</li>
+<li><b>One follow-on the pass does not cover.</b> Under prescribed descent the burner has no force balance, so "the feet are clear" means "the model is consistent with the winch speed", not "the model would choose it". A single free-descent run with the passing profile, letting the model pick its speed, should return 1.3 to 1.5 metres per hour. That is the rate check, and it is cheap once the profile is fixed.</li>
+</ol>
+
+<h3>What stays open after a pass</h3>
+<ul>
+<li><b>The radial profile is asserted, not derived.</b> A confined-jet heat-transfer model would derive it; that is a separate piece of work and not needed for the comparison to close.</li>
+<li><b>The nozzle gas temperature is an upper bound.</b> The model uses the adiabatic flame temperature of 1900 K; the burner's cooling water removed 2 to 6 kW that the model does not subtract. This is why the band in item 3 spans 1450 to 1850 K.</li>
+<li><b>Sideways removal.</b> The model can only remove rock downward, column by column. With a flatter floor there is no shoulder for the feet to catch on, so this limitation stops mattering for this test, but it remains a limitation.</li>
+<li><b>Resolution.</b> All of this is at 2 mm cells without adaptive refinement. The earlier mesh studies showed the floor rate converged to within 3 per cent between 4 and 2 mm; the profile study should be spot-checked at one finer mesh once it passes, not before.</li>
+</ul>
+
+<h2>6. A note on the two disagreements this week</h2>
+<p>Two readings of the second study were put forward and are worth recording because they change what the next study is.</p>
+<p><b>Is the model's floor a cone?</b> The recession table shows the outermost band, 40 to 48 mm, receding far less than the axis even at full heat, and it is tempting to call the floor a cone. That band straddles the wall of a 87 to 90 mm hole, so half of it is wall. Inside the bore the full-heat floor is a hemisphere to within a millimetre, which is the shape Meier's photograph shows. The consequence is that the next study should watch the floor profile and treat a flat floor as an overshoot, not as success.</p>
+<p><b>Can the profile be flattened at constant total power?</b> Under free descent the rate follows the total power and the shape follows the distribution, and it was suggested that flattening the profile without lowering it would do. Under a prescribed descent the floor's position is set by the heat on the axis alone: the axis runs ahead until the jet has weakened enough with distance to match the winch. Spreading the present power flat leaves the axis at about nine tenths of its present flux and the floor near 170 mm. That run is kept in the study as the control that demonstrates exactly this, and the candidate runs lower the axis and feed the feet ring in one move.</p>
+
+<h2>Terms used on this page</h2>
+<dl>
+<dt>Nozzle-to-floor distance, or standoff</dt><dd>The vertical distance from the burner's nozzle exit to the rock on the axis of the hole. The feet are 50 mm long, so a burner resting on flat rock has a standoff of 50 mm.</dd>
+<dt>Feet, foot plane, feet ring</dt><dd>The burner stands on a skirt 80 mm across whose lower edge is the foot plane. The rock under that edge, at 28 to 40 mm radius, is the feet ring. Rock above the foot plane means the feet would be inside rock.</dd>
+<dt>Floor heat, floor flux</dt><dd>The heat delivered by the hot gas per unit area of the floor, in megawatts per square metre. The present model delivers about 1.05 MW/m² on the axis at a 100 mm standoff; flaking has been measured to occur at 0.45 to 0.87.</dd>
+<dt>Flaking temperature</dt><dd>The surface temperature at which the model removes a flake. It is not set directly but emerges from the fracture criterion; it is 823 K at the reference setting and can be moved by scaling the rock's fracture toughness.</dd>
+<dt>Prescribed descent</dt><dd>Lowering the burner at the experiment's winch speed regardless of what the rock does, as the experiment did. The model then has no force balance, so contact between feet and rock has to be detected and declared rather than resisted.</dd>
+<dt>The window</dt><dd>The set of model settings for which the standoff lies in Meier's band and the feet are clear. The second study showed it is empty for the two levers tried.</dd>
+</dl>
+<p class="small">Sources: Meier, T. (2017), doctoral thesis, ETH Zürich, chapter 8, table 8.2 and figure 8.8; Kant and von Rohr, flame-spallation measurements on Central Aare granite; the study records under tests/MMWSpalling/studies/d2ac_feed and d2ad_fluxcal, and the daily notes of 29 and 30 September 2026.</p>
+</div>
+</div>
+
+<script>
+(function(){
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+  function txt(parent, x, y, s, attrs){ const t=el("text",Object.assign({x,y,"font-size":12},attrs||{}),parent); t.textContent=s; return t; }
+
+  // ---------- Figure 0: target vs model bores ----------
+  (function(){
+    const svg=document.getElementById("fig0");
+    const muted=css("--muted"), grid=css("--grid"), steel=css("--steel"), heat=css("--heat"), rock=css("--rock"), rockD=css("--rock-dark");
+    const top=40,H=520,zmax=520,rmax=70,panelW=300,gap=100,left=90;
+    const sz=H/zmax, sr=(panelW/2)/rmax;
+    for(let z=0; z<=zmax; z+=50){ const y=top+z*sz; el("line",{x1:left-6,x2:left+2*panelW+gap,y1:y,y2:y,stroke:grid},svg); txt(svg,left-10,y+4,String(z),{"text-anchor":"end","font-size":11,fill:muted}); }
+    txt(svg,14,top-18,"depth below the original surface, mm",{"font-size":11,fill:muted});
+    // profiles as [z, r] down the wall then tip
+    function hemi(R,zRim,n){ const out=[]; for(let k=1;k<=n;k++){ const a=k/n*Math.PI/2; out.push([zRim+R*Math.sin(a), R*Math.cos(a)]); } return out; }
+    const meier=[[0,50],[40,50],[52,44],[70,45],[80,48],[92,45],[110,44],[200,43.5],[300,43.5],[400,43],[452,43]].concat(hemi(43,452,14));
+    const model=[[0,50],[20,50],[40,48.2],[60,47],[80,46.7],[100,46.4],[120,46.2],[150,45.8],[175,45.5],[200,45.1],[225,44.8],[250,44.4],[275,44],[300,43.6],[360,43.6]]
+      .concat([[383,36],[392,28],[398,20],[401.3,12],[402,4],[402,0]]);
+    const panels=[
+      {name:"Meier, end of run · 1383 s",col:heat,prof:meier,feet:450,tip:495,dims:[["mouth ≈ 100 mm",20,58],["bore 85–90 mm",250,50],["tip 495 mm",495,50]]},
+      {name:"model, full heat · 650 s",col:css("--l1"),prof:model,feet:270.8,tip:402,dims:[["mouth ≈ 100 mm",20,58],["bore 87–93 mm",250,50],["floor 402 mm",402,50]]}
+    ];
+    panels.forEach((P,i)=>{
+      const x0=left+i*(panelW+gap), xc=x0+panelW/2, toX=r=>xc+r*sr, toY=z=>top+z*sz;
+      const g=el("g",{},svg);
+      let d=`M ${x0} ${toY(0)} L ${x0} ${toY(zmax)} L ${x0+panelW} ${toY(zmax)} L ${x0+panelW} ${toY(0)} `;
+      const pr=P.prof;
+      d+=`L ${toX(pr[0][1])} ${toY(pr[0][0])} `;
+      for(const [z,r] of pr) d+=`L ${toX(r)} ${toY(z)} `;
+      for(const [z,r] of pr.slice().reverse()) d+=`L ${toX(-r)} ${toY(z)} `;
+      d+=" Z";
+      el("path",{d,fill:rock,stroke:rockD,"stroke-width":1},g);
+      // wall outline in the panel colour
+      let o=""; for(const [z,r] of pr) o+=`${o?"L":"M"} ${toX(r)} ${toY(z)} `; for(const [z,r] of pr.slice().reverse()) o+=`L ${toX(-r)} ${toY(z)} `;
+      el("path",{d:o,fill:"none",stroke:P.col,"stroke-width":2},g);
+      // burner
+      const zf=P.feet, zn=zf-50;
+      el("rect",{x:toX(-33.5),y:toY(Math.max(0,zn-160)),width:67*sr,height:(zn-Math.max(0,zn-160))*sz,fill:"none",stroke:steel,"stroke-width":1.2},g);
+      el("line",{x1:toX(-40),x2:toX(40),y1:toY(zf),y2:toY(zf),stroke:steel,"stroke-width":2},g);
+      el("line",{x1:toX(-40),x2:toX(-40),y1:toY(zn),y2:toY(zf),stroke:steel,"stroke-width":1.5},g);
+      el("line",{x1:toX(40),x2:toX(40),y1:toY(zn),y2:toY(zf),stroke:steel,"stroke-width":1.5},g);
+      el("line",{x1:toX(-40),x2:toX(40),y1:toY(zn),y2:toY(zn),stroke:steel,"stroke-width":1.5},g);
+      el("rect",{x:toX(-3.75),y:toY(zn-14),width:7.5*sr,height:14*sz,fill:steel},g);
+      // standoff arrow
+      const sx=toX(8);
+      el("line",{x1:sx,x2:sx,y1:toY(zn),y2:toY(P.tip),stroke:P.col,"stroke-width":1.5},g);
+      el("line",{x1:sx-4,x2:sx+4,y1:toY(zn),y2:toY(zn),stroke:P.col,"stroke-width":1.5},g);
+      el("line",{x1:sx-4,x2:sx+4,y1:toY(P.tip),y2:toY(P.tip),stroke:P.col,"stroke-width":1.5},g);
+      const s=Math.round(P.tip-zn);
+      txt(g,toX(46),toY((zn+P.tip)/2)+4,(i===0?"≤ ":"")+`${s} mm nozzle to floor`,{"font-size":11,fill:P.col,"font-weight":500});
+      txt(g,toX(-44),toY(zf)+4,"feet",{"text-anchor":"end","font-size":10,fill:muted});
+      // dims
+      P.dims.forEach(([lab,z,r])=>{ txt(g,toX(r)+6,toY(z)+4,lab,{"font-size":10,fill:muted}); });
+      txt(svg,xc,top-4,P.name,{"text-anchor":"middle","font-size":12,fill:P.col,"font-weight":500});
+      [-50,0,50].forEach(r=>{ txt(svg,toX(r),top+H+16,String(Math.abs(r)),{"text-anchor":"middle","font-size":10,fill:muted}); });
+    });
+    txt(svg,left+panelW+gap/2,top+H+32,"radius from the hole axis, mm",{"text-anchor":"middle","font-size":11,fill:muted});
+  })();
+
+  // ---------- Figure 1: floor cross-sections ----------
+  (function(){
+    const svg=document.getElementById("fig1");
+    const legs=[
+      {name:"full heat", t:"650 s", col:css("--l1"), rec:[402.0,401.3,398.1,392.2,383.2,238.1], feet:270.8, dia:90.5, note:"feet clear from 100 s on", ok:true},
+      {name:"half heat", t:"800 s", col:css("--l2"), rec:[394.0,392.4,389.0,383.8,355.0,46.6], feet:333.3, dia:88, note:"feet 15–20 mm in rock through the run"},
+      {name:"half heat, 870 K", t:"800 s", col:css("--l3"), rec:[380.0,378.3,375.0,368.8,275.8,25.7], feet:333.3, dia:88, note:"feet in rock; 275 mm at the ring edge"},
+      {name:"35 % heat", t:"800 s", col:css("--l4"), rec:[338.0,336.7,332.6,323.3,136.9,23.8], feet:333.3, dia:88, note:"feet 120 mm in rock at 400 s"}
+    ];
+    const bands=[0,8,16,24,32,40,48];
+    const panelW=200, gap=20, left=60, top=40, H=430, zmax=450, rmax=52;
+    const sz=H/zmax, sr=(panelW/2)/rmax;
+    const rock=css("--rock"), rockD=css("--rock-dark"), voidc=css("--void"), steel=css("--steel"), heat=css("--heat"), muted=css("--muted"), grid=css("--grid");
+    // depth axis
+    for(let z=0; z<=zmax; z+=50){
+      const y=top+z*sz;
+      el("line",{x1:left-6,x2:left+4*panelW+3*gap,y1:y,y2:y,stroke:grid,"stroke-width":1},svg);
+      txt(svg,left-10,y+4,String(z),{"text-anchor":"end","font-size":11,fill:muted});
+    }
+    txt(svg,14,top-18,"depth below the original surface, mm",{"font-size":11,fill:muted});
+    legs.forEach((L,i)=>{
+      const x0=left+i*(panelW+gap), xc=x0+panelW/2;
+      const g=el("g",{},svg);
+      // rock: polygon around the floor profile (mirrored), full width to panel edges
+      const pts=[];
+      const yTop=top;
+      // right side going down the wall: wall is at r = dia/2 from surface to floor at that radius
+      // build floor as step profile at band centres, mirrored
+      const prof=[]; // [r, z]
+      for(let b=0;b<6;b++){ const r0=bands[b], r1=bands[b+1]; prof.push([r0,L.rec[b]],[r1,L.rec[b]]); }
+      // clamp beyond bore radius to the wall
+      const R=L.dia/2;
+      const right=prof.map(([r,z])=>[Math.min(r,R),z]);
+      // rock polygon: start at panel left top, go to left wall at surface, down the left profile mirrored, across, up the right, to panel right top, down to bottom, back
+      const toX=r=>xc+r*sr, toY=z=>top+z*sz;
+      let d=`M ${x0} ${toY(0)} L ${x0} ${toY(zmax)} L ${x0+panelW} ${toY(zmax)} L ${x0+panelW} ${toY(0)} L ${toX(R)} ${toY(0)} `;
+      // down right wall to the floor at r=R: floor z at the last band containing R
+      const rr=right.slice().reverse();
+      // right side: go from top of wall down to floor
+      const zAtR = L.rec[Math.min(5,Math.floor(R/8))];
+      d+=`L ${toX(R)} ${toY(zAtR)} `;
+      for(const [r,z] of rr){ if(r<=R) d+=`L ${toX(r)} ${toY(z)} `; }
+      // now at axis, go down the left side (mirror)
+      for(const [r,z] of right){ if(r<=R) d+=`L ${toX(-r)} ${toY(z)} `; }
+      d+=`L ${toX(-R)} ${toY(zAtR)} L ${toX(-R)} ${toY(0)} Z`;
+      el("path",{d,fill:rock,stroke:rockD,"stroke-width":1},g);
+      // hemisphere from axis depth
+      const hs=[]; const za=L.rec[0]; const Rh=R;
+      for(let k=-40;k<=40;k++){ const r=Rh*k/40; const z=za-(Rh-Math.sqrt(Math.max(0,Rh*Rh-r*r))); hs.push(`${k===-40?"M":"L"} ${toX(r)} ${toY(z)}`); }
+      el("path",{d:hs.join(" "),fill:"none",stroke:heat,"stroke-width":1.5,"stroke-dasharray":"5 4"},g);
+      // burner: skirt from surface? draw body 67 mm wide from top to foot plane, feet at r 28-40 to foot plane, nozzle 50 mm above foot plane
+      const zf=L.feet, zn=zf-50;
+      el("rect",{x:toX(-33.5),y:toY(Math.max(0,zn-120)),width:67*sr,height:(zn-Math.max(0,zn-120))*sz,fill:"none",stroke:steel,"stroke-width":1.2},g);
+      // skirt / feet
+      el("line",{x1:toX(-40),x2:toX(40),y1:toY(zf),y2:toY(zf),stroke:steel,"stroke-width":2},g);
+      el("line",{x1:toX(-40),x2:toX(-40),y1:toY(zn),y2:toY(zf),stroke:steel,"stroke-width":1.5},g);
+      el("line",{x1:toX(40),x2:toX(40),y1:toY(zn),y2:toY(zf),stroke:steel,"stroke-width":1.5},g);
+      el("line",{x1:toX(-40),x2:toX(40),y1:toY(zn),y2:toY(zn),stroke:steel,"stroke-width":1.5},g);
+      // nozzle
+      el("rect",{x:toX(-3.75),y:toY(zn-14),width:7.5*sr,height:14*sz,fill:steel},g);
+      // standoff arrow
+      const sx=toX(6);
+      el("line",{x1:sx,x2:sx,y1:toY(zn),y2:toY(za),stroke:L.col,"stroke-width":1.5},g);
+      el("line",{x1:sx-4,x2:sx+4,y1:toY(za),y2:toY(za),stroke:L.col,"stroke-width":1.5},g);
+      el("line",{x1:sx-4,x2:sx+4,y1:toY(zn),y2:toY(zn),stroke:L.col,"stroke-width":1.5},g);
+      const s=Math.round(za-zn);
+      txt(g,toX(9),toY(zn)+16,`${s} mm`,{"font-size":11,fill:L.col,"font-weight":500});
+      // feet-ring interpenetration label
+      txt(g,x0+4,top+16,L.note,{"font-size":10,fill:L.ok?css("--ok"):css("--bad"),"font-weight":500});
+      // title
+      txt(svg,xc,top-4,`${L.name} · ${L.t}`,{"text-anchor":"middle","font-size":12,fill:L.col,"font-weight":500});
+      // radius ticks
+      [-40,0,40].forEach(r=>{ txt(svg,toX(r),top+H+16,String(Math.abs(r)),{"text-anchor":"middle","font-size":10,fill:muted}); });
+    });
+    txt(svg,left+2*panelW+1.5*gap,top+H+32,"radius from the hole axis, mm",{"text-anchor":"middle","font-size":11,fill:muted});
+  })();
+
+  // ---------- Figure 2: standoff and interpenetration vs level ----------
+  (function(){
+    const svg=document.getElementById("fig2");
+    const muted=css("--muted"), grid=css("--grid"), steel=css("--steel");
+    const pts=[
+      {F:1.02,s:180,pen:-3,open:true,lab:"full"},
+      {F:0.75,s:145,pen:15,lab:"cooler jet"},
+      {F:0.57,s:111,pen:17,lab:"half"},
+      {F:0.50,s:97,pen:20,lab:"half, 870 K"},
+      {F:0.43,s:55,pen:123,lab:"35 %"}
+    ];
+    // two panels
+    function panel(x0,w,title,ymin,ymax,ylab,key,band){
+      const top=40,H=290,y0=top+H;
+      const sx=F=>x0+(F-0.3)/(1.1-0.3)*w, sy=v=>y0-(v-ymin)/(ymax-ymin)*H;
+      txt(svg,x0,top-16,title,{"font-size":12,"font-weight":500});
+      for(let v=ymin; v<=ymax; v+= (ymax-ymin)/5){ const y=sy(v); el("line",{x1:x0,x2:x0+w,y1:y,y2:y,stroke:grid},svg); txt(svg,x0-6,y+4,String(Math.round(v)),{"text-anchor":"end","font-size":10,fill:muted}); }
+      [0.3,0.5,0.7,0.9,1.1].forEach(F=>{ txt(svg,sx(F),y0+16,F.toFixed(1),{"text-anchor":"middle","font-size":10,fill:muted}); });
+      txt(svg,x0+w/2,y0+32,"floor heat level relative to full heat",{"text-anchor":"middle","font-size":11,fill:muted});
+      txt(svg,x0-40,top-2,ylab,{"font-size":10,fill:muted});
+      if(band){ el("rect",{x:x0,y:sy(band[1]),width:w,height:sy(band[0])-sy(band[1]),fill:steel,opacity:.18},svg); txt(svg,x0+w-4,sy(band[1])-4,"Meier 65–100",{"text-anchor":"end","font-size":10,fill:muted}); }
+      return {sx,sy};
+    }
+    const A=panel(70,340,"floor distance from the nozzle, mm",0,250,"mm",null,[65,100]);
+    // predictor line s*=198F, valid to contact at F=0.45
+    const l=[]; for(let F=0.45;F<=1.1;F+=0.02){ l.push(`${l.length?"L":"M"} ${A.sx(F)} ${A.sy(198*F)}`); }
+    el("path",{d:l.join(" "),fill:"none",stroke:css("--l1"),"stroke-width":1,"stroke-dasharray":"3 4"},svg);
+    txt(svg,A.sx(0.9)+6,A.sy(198*0.9)-10,"settled-distance rule",{"font-size":10,fill:css("--l1")});
+    pts.forEach(p=>{ el("circle",{cx:A.sx(p.F),cy:A.sy(p.s),r:5,fill:css("--l1")},svg); if(p.open){ el("line",{x1:A.sx(p.F),x2:A.sx(p.F),y1:A.sy(p.s),y2:A.sy(p.s+22),stroke:css("--l1"),"stroke-width":1.5},svg); txt(svg,A.sx(p.F)-8,A.sy(p.s+30),"still opening",{"text-anchor":"end","font-size":10,fill:css("--l1")}); }
+      txt(svg,A.sx(p.F)+8,A.sy(p.s)+4,p.lab,{"font-size":10,fill:muted}); });
+    const B=panel(520,340,"rock under the feet above the foot plane, mm",-20,140,"mm",null,null);
+    el("line",{x1:B.sx(0.3),x2:B.sx(1.1),y1:B.sy(0),y2:B.sy(0),stroke:muted,"stroke-width":1.2},svg);
+    txt(svg,B.sx(1.1)-4,B.sy(0)-5,"foot plane",{"text-anchor":"end","font-size":10,fill:muted});
+    txt(svg,B.sx(0.31),B.sy(4)-4,"feet inside rock ↑",{"font-size":10,fill:css("--bad")});
+    pts.forEach(p=>{ el("circle",{cx:B.sx(p.F),cy:B.sy(p.pen),r:5,fill:css("--l4")},svg); txt(svg,B.sx(p.F)+8,B.sy(p.pen)+4,p.lab,{"font-size":10,fill:muted}); });
+    txt(svg,B.sx(0.31),B.sy(128),"values at 400 s; worst points reach 275–289 mm",{"font-size":10,fill:muted});
+  })();
+
+  // ---------- Figure 3: radial flux profiles ----------
+  (function(){
+    const svg=document.getElementById("fig3");
+    const muted=css("--muted"), grid=css("--grid"), steel=css("--steel"), heat=css("--heat");
+    const x0=70,w=760,top=40,H=300,y0=top+H;
+    const sx=r=>x0+r/50*w, sy=q=>y0-q/1.2*H;
+    // present profile fractions
+    const frac=[[0,1],[16,1],[28,.71],[40,.51],[48,.27],[50,.22]];
+    const qax=1.05;
+    for(let q=0;q<=1.2;q+=0.2){ el("line",{x1:x0,x2:x0+w,y1:sy(q),y2:sy(q),stroke:grid},svg); txt(svg,x0-8,sy(q)+4,q.toFixed(1),{"text-anchor":"end","font-size":10,fill:muted}); }
+    [0,10,20,30,40,50].forEach(r=>{ txt(svg,sx(r),y0+16,String(r),{"text-anchor":"middle","font-size":10,fill:muted}); });
+    txt(svg,x0+w/2,y0+32,"radius from the hole axis, mm",{"text-anchor":"middle","font-size":11,fill:muted});
+    txt(svg,x0-56,top-14,"MW/m² at 100 mm standoff",{"font-size":10,fill:muted});
+    // bands
+    el("rect",{x:x0,y:sy(.87),width:w,height:sy(.45)-sy(.87),fill:heat,opacity:.12},svg);
+    txt(svg,x0+w-4,sy(.87)+12,"flaking measured 0.45–0.87",{"text-anchor":"end","font-size":10,fill:heat});
+    el("rect",{x:x0,y:sy(.6),width:w,height:sy(.5)-sy(.6),fill:steel,opacity:.25},svg);
+    txt(svg,x0+w-4,sy(.5)-4,"energy budget 0.5–0.6",{"text-anchor":"end","font-size":10,fill:muted});
+    // feet ring
+    el("rect",{x:sx(28),y:top,width:sx(40)-sx(28),height:H,fill:steel,opacity:.14},svg);
+    txt(svg,sx(34),top+12,"feet ring",{"text-anchor":"middle","font-size":10,fill:muted});
+    el("line",{x1:sx(44),x2:sx(44),y1:top,y2:y0,stroke:muted,"stroke-dasharray":"2 3"},svg);
+    txt(svg,sx(44)+4,top+12,"bore wall",{"font-size":10,fill:muted});
+    function line(pts,col,dash,wd){ const d=pts.map((p,i)=>`${i?"L":"M"} ${sx(p[0])} ${sy(p[1])}`).join(" "); el("path",{d,fill:"none",stroke:col,"stroke-width":wd||2,"stroke-dasharray":dash||"none"},svg); }
+    line(frac.map(([r,f])=>[r,f*qax]),css("--l1"));
+    line(frac.map(([r,f])=>[r,f*qax*0.5]),css("--l2"));
+    // capped at 0.5 and 0.45
+    const cap=c=>frac.map(([r,f])=>[r,Math.min(f,c)*qax]);
+    line(cap(0.5),css("--l3"),null,2.5);
+    line(cap(0.45),css("--l3"),"6 4",1.5);
+    txt(svg,sx(2),sy(1.05)-8,"present, full heat 1.05",{"font-size":10,fill:css("--l1")});
+    txt(svg,sx(2),sy(.525)+16,"present, half heat",{"font-size":10,fill:css("--l2")});
+    txt(svg,sx(17),sy(.525)-8,"capped 0.50 → 0.53 flat to 40 mm",{"font-size":10,fill:css("--l3")});
+    txt(svg,sx(17),sy(.47)+14,"capped 0.45 → 0.47",{"font-size":10,fill:css("--l3")});
+  })();
+})();
+</script>

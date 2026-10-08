@@ -19,6 +19,27 @@ mechanism's witness diagnostic must be non-zero on test legs and zero on
 controls. A grep proves reachability in principle; a smoke run proves it
 happened, and catches what no grep can.
 
+⚠⚠ **Step zero is the project's only outside read of the packet.** The planner's own
+re-read is a self-check and cannot catch a planner blind spot. If a ledger row does not
+resolve against the code — including the **conjunction** of conditions a deliverable
+requires — **stop and report it. That is a planner bug, not yours** (log 2026-10-02 §1).
+
+**Run order and gating.** Run the packet's `## Criteria` rows **in its stated run
+order**. After a **gating** row fails, launch **no further long legs or sweeps**: report
+that row as the result. Diagnostics that fall out of runs already made are still
+reported.
+
+**Tests per edit, and the one gate.** Pick the two or three tests covering the sites in
+the packet's ledger from the table in
+`tests/MMWSpalling/studies/tree_sweep_0922/witness/WHICH_TESTS.md`
+— that is a ~2-minute check per build. The **full tree gate runs ONCE
+per packet, on the binary that ships.** Its claim is a property of that binary: with
+every new key off, it reproduces the frozen tree. ⚠⚠ **A second full gate needs a stated
+discriminating reason, and "attribution" is not one** — bisecting with targeted tests
+after a failure is cheaper than pre-paying a 10-minute sweep before it. ⚠ The harness
+memoises by binary sha; **do not pass `--force`** unless the binary is unchanged and you
+mean to re-run anyway.
+
 ## Inputs you should read, in order
 
 1. `CLAUDE.md` (already loaded — project rules, ALAMO architecture, commands,
@@ -41,6 +62,27 @@ under-specified — stop and ask the user to run `/plan` again.
    - Mirror existing ALAMO patterns (integrator inheritance, ParmParse,
      `Numeric/` reuse, IC/BC `select_default`, microstructure paths, etc.).
    - Default-off any new behavior unless the step explicitly turns it on.
+   - ⚠ **Any change to a file the identity gate hashes — including an added event-log
+     column — is either keyed off by default or declared as a re-pin request in the
+     completion notes. Never both silently.**
+   - ⚠⚠ **Every new removal regime owes its own ledger term.** An omitted term takes a
+     cell's enthalpy out of the books unrecorded; the energy invariant is what finds it,
+     and the per-cell arithmetic is what turns the suspicion into a diagnosis.
+   - ⚠⚠ **A fix claimed to be bookkeeping-only must be PROVEN so**, not asserted: keep
+     the pre-fix run and show the rebuilt binary reproduces its event log byte for byte.
+     On a toolchain that is not byte-reproducible, "it only touches a reported scalar" is
+     an argument, not evidence.
+   - ⚠⚠ **`--check` cannot re-validate an anchor after a source change** — it re-reduces
+     output written by the old binary. Re-run the cheapest leg and compare bytes.
+   - ⚠ **Archive a harness's output directory before re-running it** if the harness
+     `rmtree`s its own legs and their hashes live in an earlier manifest; on a
+     non-byte-reproducible toolchain that provenance is otherwise unrecoverable.
+   - ⚠ **Do not demand bit-exactness from a text diagnostic.** `thermo.dat` is written
+     with `%g` — six significant digits — so compare the printed token to
+     `"%g" % want`, not the full double.
+   - ⚠ **Non-vacuity:** an assertion that probes a quantity which is zero **by
+     construction** on both legs will "match" two zeros and prove nothing. Probe
+     something the mechanism actually moves.
    - Do not touch `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`,
      `configure`, or `LICENSE`.
    - Do not regress completed validation tests.
@@ -56,12 +98,16 @@ under-specified — stop and ask the user to run `/plan` again.
 4. **Update `ACTIVE_STEP.md` at the end of the phase**:
    - Change `Status:` to `completed` (or `blocked` if you genuinely cannot
      finish; explain).
-   - Append `## Claude completion notes` with: files changed, tests run, test
-     result (pass/fail/skipped), and any tests not run with the reason.
-   - Append `## Implementation takeaways` with: gotchas, design choices,
-     input parameter names, changed assumptions, caveats. Write these for the
-     reviewer and the next planner — they are the durable record of this
-     step.
+   - Append `## Claude completion notes`: files changed, and **the packet's
+     `## Criteria` table filled in** — measured value, pass/fail, and the output path,
+     one row per criterion. **No free-form prose for what the table already carries.**
+     Tests not run are rows with the reason in the measured column.
+   - ⚠ **Do not quote anything the packet marked unquotable.**
+   - Append `## Implementation takeaways` with **only what the diff and the outputs
+     cannot show**: gotchas, design choices, input parameter names, changed assumptions,
+     caveats, and anything a reader would otherwise have to re-derive. ⚠ Do not restate
+     what the filled criteria table already carries. Write these for the reviewer and
+     the next planner — they are the durable record of this step.
 
 Do **not** rewrite the next `ACTIVE_STEP.md`. That is the planner's job. Do
 **not** archive yourself in `docs/project/ARCHIVE_DONE.md` or

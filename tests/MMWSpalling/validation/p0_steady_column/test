@@ -1,0 +1,459 @@
+#!/usr/bin/env python3
+# P0b -- ONE surface temperature for the BC, the criterion and the removal.
+#
+# P0 gave the CRITERION a real surface temperature and left the BC and the
+# removal energy on the cell average. The errors that used to cancel then
+# stopped cancelling and this column's steady-rate mesh spread went
+# 7.1 % (pre-P0) -> 86.2 %. This harness scores the three sides together.
+#
+# Legs (ALAMO, 4 ranks), all from ./input with only amr.n_cell,
+# surface_patch.robin_form and spall.flake_c_f on the command line:
+#
+#   S_{2,1,0.5}   robin_form = surface, c_f = 0.4      -- SCORED
+#   C_/F_/P_      robin_form = cell / face / pinned    -- CONTROLS. ⚠ They must
+#                                                         still show the spread;
+#                                                         if they match S the
+#                                                         new form fell through
+#                                                         to an existing one.
+#   B3_/B5_       surface, c_f = 0.3 / 0.5             -- reported bracket
+#
+# Scored:
+#   (a) rate mesh spread over 2 / 1 / 0.5 mm on `surface`, bar 2 %.
+#       ⚠ rev5 tightened the bar from 10 % to the packet's 2 %. Revision 2
+#       measured 2.57 % against a 10 % bar and called it a pass; an
+#       event-anchored re-reduction of the same legs gives 1.68 %, and the
+#       pre-registered prediction for this packet is 0.8-1.5 %.
+#       ⚠⚠ THE SPREAD, NEVER THE ABSOLUTE RATE -- the ~1.2x offset above the
+#       continuum ablation limit is PHYSICS (a thick flake leaves cooler than
+#       the surface, so less energy is spent per unit volume), not a
+#       convergence failure.
+#   (c') the scheme's OWN energy balance: v*rho*c*(T_bar_f - T0) against the
+#       run-mean net flux from the ledger, +-5 % at each mesh. Spread alone
+#       would pass a mesh-independent but energetically WRONG scheme.
+#   (c'') the domain ledger closes WITH the sink, < 0.5 %.
+#       ⚠ Scored on ledger_err_solid, not ledger_err: the all-cell E_H sums
+#       void cells too (their H is frozen, not reset), so removal has never
+#       been a sink in its eyes. See MMWSpalling.H ledger_E_H_solid.
+#   (x) no cascade.
+#
+# Reported: P2 (level vs the continuum limit), P6 (T_bar/(T_surf-T0)), P3
+# (ell_eff continuity across firings), and ell_eff against ell_raw -- which
+# rev5 turned into a WITNESS rather than a report: with the EMA deleted the
+# two must now agree on every step that has a usable two-cell pair, so a
+# difference means the flat-hold is firing more often than claimed.
+
+import csv, os, shutil, subprocess, sys
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN  = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT  = os.path.join(HERE, "output")
+
+T0, RHO_C = 293.15, 2750.0 * 790.0
+H_CONV, T_FLAME = 600.0, 1673.15
+AREA = 0.008 * 0.008
+W_LO, W_HI = 20.0, 55.0
+TOL_MESH, TOL_RATE, TOL_LEDGER = 0.02, 0.05, 0.005
+
+MESHES = [("2.0", 4, 60), ("1.0", 8, 120), ("0.5", 16, 240)]
+# (name, robin_form, c_f, driving_stress, a0 [m]).
+# ⚠⚠ The last two fields were added by revision 5 and the six original rows
+# carry EXACTLY the values that were previously hardcoded in run(), so their
+# argv -- and therefore their event-log sha256 in MANIFEST.md -- is unchanged.
+# Do not reorder this tuple without re-checking that.
+VARIANTS = [("S",  "surface", 0.4, "differential", "80.0e-6"),
+            ("C",  "cell",    0.4, "differential", "80.0e-6"),
+            ("F",  "face",    0.4, "differential", "80.0e-6"),
+            ("P",  "pinned",  0.4, "differential", "80.0e-6"),
+            ("B3", "surface", 0.3, "differential", "80.0e-6"),
+            ("B5", "surface", 0.5, "differential", "80.0e-6"),
+            # ⚠⚠ revision 5 deliverable 1 -- THE MISSING CONTROL for (d).
+            # (d)'s attribution ("the refit broke mesh-independence, not the
+            # criterion") rested on a 4.30 % number with no preserved run behind
+            # it. These two legs are that run.
+            #   A80 = the attribution number: absolute criterion at the SAME
+            #         80 um flaw the refit mandates. Expected ~4.30 %.
+            #   A08 = the self-validation: absolute at the ORIGINAL 8 um flaw,
+            #         which is P0b rev7's leg S configuration exactly. It MUST
+            #         come back at 1.51 % (2.506/2.506/2.544 m/h). If it does
+            #         not, the harness moved under us between P0b and now and
+            #         the A80-vs-P1 comparison is VOID -- withdraw (d)'s
+            #         attribution rather than restate it.
+            # ⚠ The flaw here is the DETERMINISTIC SCALAR spallation.sp.a0
+            # (input:83), not weibull.a0_ig, because weibull.enabled = 0
+            # (input:88). weibull.a0_ig is the Kant/Meier key and is inert here.
+            ("A80", "surface", 0.4, "absolute", "80.0e-6"),
+            ("A08", "surface", 0.4, "absolute", "8.0e-6")]
+
+# The legs that carry the ORIGINAL six-variant scoring. (a), (c'), (c''), [P6],
+# [P2], [P3] are defined on these; the A legs are a control arm for (d) only.
+SCORED = ("S", "C", "F", "P", "B3", "B5")
+
+def legs():
+    return [("%s_%s" % (v, t), nx, nz, rf, cf, ds, a0)
+            for t, nx, nz in MESHES for v, rf, cf, ds, a0 in VARIANTS]
+
+def run(name, nx, nz, rf, cf, ds, a0):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d): shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN,
+           os.path.join(HERE, "input"),
+           "amr.n_cell=%d %d %d" % (nx, nx, nz),
+           "surface_patch.robin_form=%s" % rf,
+           "spall.flake_c_f=%g" % cf,
+           # rev7 deliverable 1 / criterion (i): the flake bound is carried on
+           # the column legs too, so (a) is measured in the SHIPPED
+           # configuration and the "binds on ~0 % of the column's firings" half
+           # of (i) comes from the same legs that score (a). Smoke-measured at
+           # 0.00 % on both 2.0 and 0.5 mm, h_f 0.449-0.696 mm against a
+           # 1.5 mm bound.
+           "spall.flake_h_max=0.0015",
+           # P1: the gradient-aware criterion and its ONE refit, exactly as the
+           # Kant anchor carries them. The column is a self-similar receding
+           # front, so the drive fraction is 1 - e^{-c_f} = 0.330 everywhere and
+           # the refit restores the level -- criterion (d') checks that it did.
+           # ⚠ driving_ref is passed on every leg, including the `absolute`
+           # control arm, where it is unread. `flake` is also the parser
+           # default, so this key is provably inert there and the argv stays
+           # uniform across the matrix.
+           "spall.driving_stress=%s" % ds, "spall.driving_ref=flake",
+           "spallation.sp.a0=%s" % a0,
+           "energy_ledger.enabled=1", "amr.thermo.int=1", "amr.thermo.plot_int=25",
+           "plot_file=%s" % os.path.join(d, "run")]
+    print("  ", name, flush=True)
+    env = os.environ.copy(); env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    with open(os.path.join(d, "run.log"), "w") as lg:
+        r = subprocess.run(cmd, cwd=ROOT, env=env, stdout=lg, stderr=subprocess.STDOUT)
+    if r.returncode != 0:
+        print("FAIL: %s exited %d (see %s/run.log)" % (name, r.returncode, d))
+        sys.exit(r.returncode)
+
+def read(name):
+    d = os.path.join(OUT, name)
+    p = os.path.join(d, "run_removal_events.csv")
+    rows = [r for r in csv.DictReader(open(p))
+            if r["regime"] == "1" and r["col_i"] == "0" and r["col_j"] == "0"]
+    if len(rows) < 5: return None
+    g = lambda k: (np.array([float(r[k]) for r in rows])
+                   if k in rows[0] else None)
+    t, h = g("time"), g("h_applied")
+    m = (t >= W_LO) & (t <= W_HI)
+    if m.sum() < 5: return None
+    # ⚠⚠ THREE ESTIMATORS OF THE SAME RATE, AND WHY THE SCORED ONE CHANGED.
+    # The recession is a STAIRCASE of ~0.5 mm flake steps. Summing the steps
+    # that happen to land inside a fixed [W_LO, W_HI] and dividing by the
+    # window length is bias-free but carries a whole quantum of noise from each
+    # edge: ~0.5 mm on ~24 mm of recession is +-2 %, WHICH IS THE BAR ITSELF.
+    # Measured on this matrix by sweeping the (arbitrary) window edges over
+    # 99 choices: the window estimator's answer for the scored leg ranges
+    # 0.29 % to 7.77 %, a 7.5-point range, while the least-squares slope of the
+    # same staircase ranges 0.06 % to 1.77 %. An estimator whose dependence on
+    # an arbitrary window edge is four times the bar cannot test the bar.
+    # ⚠ This is an a-priori property of the estimator -- it is visible on the
+    # CONTROL legs too (their window spread ranges 5-12 points, their slope
+    # spread ~1) -- so it is not a rule chosen after seeing the answer.
+    #   v_win  window sum / window length     (the rev2 estimator; reported)
+    #   v_evt  recession strictly BETWEEN the first and last firing (reported)
+    #   v_lsq  least-squares slope of the cumulative staircase       (SCORED)
+    o = {"v_win": h[m].sum() / (W_HI - W_LO), "n": int(m.sum())}
+    tw = t[m]
+    o["v_evt"] = (h[m][1:].sum() / (tw[-1] - tw[0])) if m.sum() > 2 else o["v_win"]
+    cum = np.cumsum(h)
+    A = np.vstack([tw, np.ones(m.sum())]).T
+    o["v_lsq"] = float(np.linalg.lstsq(A, cum[m], rcond=None)[0][0])
+    o["v"] = o["v_lsq"]
+    o["t"], o["h"] = t, h
+    o["dz"] = 0.120 / {"2.0": 60, "1.0": 120, "0.5": 240}[name.split("_")[-1]]
+    for k, nm in (("dfrac", "drive_frac"), ("qrat", "q_ratio")):
+        vv = g(nm)
+        if vv is not None: o[k] = float(np.median(vv[m]))
+    fg = g("rc_flag")
+    if fg is not None:
+        o["flagbits"] = float(np.mean([(int(round(x)) & 16) > 0 for x in fg[m]]))
+    nv = g("n_voided")
+    o["fpv"] = m.sum() / max(1.0, nv[m].sum())
+    for k in ("T_surf", "T_top", "T_bar_flake", "ell_eff", "h_f", "ell_raw"):
+        v = g(k)
+        o[k] = float(v[m].mean()) if v is not None else None
+    el = g("ell_eff")
+    if el is not None and m.sum() > 2:
+        e = el[m]; o["dell"] = float(np.median(np.abs(np.diff(e)) / e[:-1]))
+    # thermo
+    th = None
+    for dp, _, fs in os.walk(d):
+        if "thermo.dat" in fs: th = os.path.join(dp, "thermo.dat"); break
+    if th:
+        L = open(th).read().split("\n"); hd = L[0].split()
+        rs = [x.split() for x in L[1:] if x.strip()]
+        col = lambda k: (np.array([float(r[hd.index(k)]) for r in rs])
+                         if k in hd else None)
+        tt = col("time")
+        pr, pl = col("ledger_P_robin"), col("ledger_P_loss")
+        sel = (tt >= W_LO) & (tt <= W_HI)
+        if pr is not None and sel.sum() > 0:
+            o["q_net"] = float((pr[sel] - pl[sel]).mean()) / AREA
+        es = col("ledger_err_solid")
+        if es is not None: o["err_solid"] = float(es[-1])
+        ea = col("ledger_err")
+        if ea is not None: o["err_all"] = float(ea[-1])
+        ss = col("surf_side_share")
+        if ss is not None: o["side_share"] = float(ss[-1])
+    return o
+
+def spread(v): return (max(v) - min(v)) / float(np.mean(v))
+
+def main():
+    # ⚠⚠ --only <PREFIX>[,<PREFIX>...] runs just those variants and leaves every
+    # other leg directory untouched. run() rmtree's what it runs, so without
+    # this a re-run to add a control arm would DESTROY the event logs that
+    # MANIFEST.md hashes. The reduction below always reads the whole matrix
+    # from disk regardless of what was run.
+    only = None
+    for i, a in enumerate(sys.argv):
+        if a == "--only" and i + 1 < len(sys.argv):
+            only = set(sys.argv[i + 1].split(","))
+    if "--check" not in sys.argv:
+        if not os.path.exists(BIN): print("FAIL: missing binary"); sys.exit(1)
+        todo = [lg for lg in legs()
+                if only is None or lg[0].rsplit("_", 1)[0] in only]
+        print("Running %d of %d legs...%s"
+              % (len(todo), len(legs()),
+                 "" if only is None else "  (--only %s)" % ",".join(sorted(only))),
+              flush=True)
+        for lg in todo: run(*lg)
+    res = {}
+    for name, *_ in legs():
+        # ⚠ A leg that has never been run is MISSING, not failing. Only the A
+        # control arm may be absent (it is scored in (d) alone, which says so
+        # explicitly); a missing S/C/F/P/B leg is still a hard failure, because
+        # every other criterion is defined on those.
+        if not os.path.isfile(os.path.join(OUT, name, "run_removal_events.csv")):
+            if name.rsplit("_", 1)[0] in SCORED:
+                print("FAIL: %s has no event log" % name); sys.exit(1)
+            print("note: %s not on disk -- skipped (run with --only %s)"
+                  % (name, name.rsplit("_", 1)[0]))
+            continue
+        r = read(name)
+        if r is None: print("FAIL: %s produced no steady window" % name); sys.exit(1)
+        res[name] = r
+
+    print("\n=== steady window %.0f-%.0f s, column (0,0) ===" % (W_LO, W_HI))
+    print("%-8s %8s %9s %9s %9s %8s %7s %9s %9s" %
+          ("leg", "v[m/h]", "T_surf", "T_top", "ell[mm]", "h_f[mm]", "f/void",
+           "err_solid", "|dell|"))
+    for name in [n for n, *_ in legs() if n in res]:
+        r = res[name]
+        print("%-8s %8.3f %9.2f %9.2f %9.3f %8.3f %7.3f %9.2e %9.2e" %
+              (name, r["v"] * 3600, r["T_surf"], r["T_top"], r["ell_eff"] * 1e3,
+               r["h_f"] * 1e3, r["fpv"], r.get("err_solid", float("nan")),
+               r.get("dell", float("nan"))))
+    ok = True
+
+    # (a) -- all three estimators, scored on v_lsq
+    print("(a) rate mesh spread.  SCORED on the least-squares staircase slope;"
+          " the other two are reported beside it.")
+    for pre in SCORED:
+        row = []
+        for key in ("v_lsq", "v_evt", "v_win"):
+            v = [res["%s_%s" % (pre, t)][key] for t, _, _ in MESHES]
+            row.append((key, v, spread(v)))
+        sp = row[0][2]
+        tag = ""
+        if pre == "S":
+            ok &= sp <= TOL_MESH
+            tag = "  [bar %.0f %%]  %s" % (100 * TOL_MESH,
+                                           "PASS" if sp <= TOL_MESH else "FAIL")
+        print("(a) %-3s lsq %s = %6.2f %%%s" %
+              (pre, " / ".join("%.3f" % (x * 3600) for x in row[0][1]), 100 * sp, tag))
+        for key, v, s2 in row[1:]:
+            print("        %-3s %s = %6.2f %%" %
+                  (key[2:], " / ".join("%.3f" % (x * 3600) for x in v), 100 * s2))
+
+    # the estimator's own dependence on the arbitrary window edges. Printed for
+    # every leg so the reader can see that the scored estimator is the stable
+    # one on the CONTROLS as well, where the answer is large and not in doubt.
+    print("(a) window-edge sensitivity (99 choices, W_LO 18-26, W_HI 48-58):")
+    print("      %-4s %19s %19s" % ("leg", "window estimator", "lsq slope [SCORED]"))
+    for pre in SCORED:
+        sw, sl = [], []
+        for lo in np.arange(18.0, 26.1, 1.0):
+            for hi in np.arange(48.0, 58.1, 1.0):
+                ww, ll = [], []
+                for tg, _, _ in MESHES:
+                    r = res["%s_%s" % (pre, tg)]
+                    t_, h_ = r["t"], r["h"]
+                    mm = (t_ >= lo) & (t_ <= hi)
+                    if mm.sum() < 5: ww = None; break
+                    ww.append(h_[mm].sum() / (hi - lo))
+                    A = np.vstack([t_[mm], np.ones(mm.sum())]).T
+                    ll.append(float(np.linalg.lstsq(A, np.cumsum(h_)[mm],
+                                                    rcond=None)[0][0]))
+                if ww is None: continue
+                sw.append(spread(ww)); sl.append(spread(ll))
+        print("      %-4s %8.2f - %8.2f %8.2f - %8.2f   %%"
+              % (pre, 100 * min(sw), 100 * max(sw), 100 * min(sl), 100 * max(sl)))
+        if pre == "S" and 100 * max(sl) > 100 * TOL_MESH:
+            print("           ⚠ the scored estimator exceeds the bar for SOME "
+                  "window choice -- the pass is not edge-robust")
+    # the controls must NOT match the scored leg
+    same = all(abs(res["S_%s" % t]["v"] - res["%s_%s" % (c, t)]["v"]) < 1e-9
+               for t, _, _ in MESHES for c in ("C", "F", "P"))
+    if same:
+        ok = False; print("(a) FAIL: `surface` is identical to a control -- it fell through")
+
+    # (c')
+    print("(c') v*rho*c*(T_bar - T0) vs the ledger's net flux:")
+    for t, _, _ in MESHES:
+        r = res["S_%s" % t]
+        if "q_net" not in r: print("    %-5s no ledger" % t); ok = False; continue
+        lhs = r["v"] * RHO_C * (r["T_bar_flake"] - T0)
+        e = lhs / r["q_net"] - 1.0
+        good = abs(e) <= TOL_RATE; ok &= good
+        print("    %-5s v rho c dT_bar = %9.1f W/m2   q_net = %9.1f   err %+6.2f %%  %s"
+              % (t, lhs, r["q_net"], 100 * e, "PASS" if good else "FAIL"))
+
+    # (c'')
+    for t, _, _ in MESHES:
+        r = res["S_%s" % t]
+        e = abs(r.get("err_solid", 9.9)); good = e <= TOL_LEDGER; ok &= good
+        print("(c'') %-5s |ledger_err_solid| = %.3e  [bar 5e-3]  %s   "
+              "(all-cell ledger_err = %.3f, which cannot see removal)"
+              % (t, e, "PASS" if good else "FAIL", r.get("err_all", float("nan"))))
+
+    # (x) NO CASCADE. ⚠ rev5 corrected this test. It used to demand
+    # firings/void >= 0.9, i.e. AT MOST ONE CELL PER FIRING -- which is right
+    # only while h_f <= dz. Under the flake remap a firing legitimately voids
+    # ceil((h_f - phi_top)/dz) cells, and at c_f = 0.5 on the 0.5 mm mesh
+    # h_f = 0.578 mm > dz, so B5_0.5 was flagged for doing exactly what the
+    # model is specified to do. The strict form of this check already lives in
+    # the code as a hard assertion (voids == crossings, Removal.H), which no
+    # leg tripped; what the harness can add is the geometric bound.
+    casc = []
+    for n in [x for x, *_ in legs() if x in res]:
+        r = res[n]
+        vpf = 1.0 / max(r["fpv"], 1e-30)          # cells voided per firing
+        bound = np.ceil(r["h_f"] / r["dz"]) + 1e-9 if r.get("dz") else 1.0 + 1e-9
+        if vpf > bound + 1e-9: casc.append((n, vpf, bound))
+    ok &= not casc
+    print("(x) voided cells per firing within the flake's own geometric bound "
+          "ceil(h_f/dz): %s" % ("PASS" if not casc else "FAIL %s" % casc))
+
+    # (i) rev7: the bound must be INERT here. Measured from the same legs.
+    nb = []
+    for name in [n for n, *_ in legs() if n in res]:
+        fl = res[name].get("flagbits")
+        if fl is not None: nb.append((name, fl))
+    if nb:
+        worst = max(x[1] for x in nb)
+        ok &= worst < 0.01
+        print("(i) spall.flake_h_max binds on %.2f %% of firings at worst (%s)  "
+              "[must be ~0 here; it binds on Meier]  %s"
+              % (100 * worst, max(nb, key=lambda x: x[1])[0],
+                 "PASS" if worst < 0.01 else "FAIL"))
+
+    # ⚠⚠ (d) revision 5 deliverable 1 -- THE ATTRIBUTION, WITH ITS CONTROL.
+    # (d) fails its 2 % bar at 2.85 %. The claim being tested is NOT the bar --
+    # that bar was set against rev7's 1.51 %, measured with a flaw TEN TIMES
+    # smaller -- but the attribution: at the SAME flaw size, does the
+    # differential criterion make mesh-independence better or worse?
+    #   A08  absolute,     8 um  -> must reproduce P0b's 1.51 %   [self-check]
+    #   A80  absolute,    80 um  -> the attribution number
+    #   S    differential, 80 um -> P1
+    # PASS is A80 > S, i.e. the refit costs more spread than the criterion does.
+    # ⚠ If A08 does not reproduce 1.51 % the harness moved under us since P0b
+    # and the whole comparison is VOID -- the attribution must then be
+    # WITHDRAWN, not restated.
+    print("\n(d) attribution -- same estimator, same meshes, same binary:")
+    A08_REF, A08_REF_V = 0.0151, (2.506, 2.506, 2.544)
+    dsp = {}
+    for pre, lbl in (("A08", "absolute,  8 um  (= P0b rev7 leg S)"),
+                     ("A80", "absolute, 80 um  (the mandated refit)"),
+                     ("S",   "differential, 80 um  (P1)")):
+        if any("%s_%s" % (pre, t) not in res for t, _, _ in MESHES):
+            print("    %-4s %-38s NOT RUN" % (pre, lbl)); continue
+        v = [res["%s_%s" % (pre, t)]["v_lsq"] for t, _, _ in MESHES]
+        dsp[pre] = spread(v)
+        print("    %-4s %-38s %s m/h   spread %5.2f %%"
+              % (pre, lbl, " / ".join("%.3f" % (x * 3600) for x in v),
+                 100 * dsp[pre]))
+    if "A08" in dsp:
+        dev = abs(dsp["A08"] / A08_REF - 1.0)
+        good = dev <= 0.10
+        ok &= good
+        print("    A08 vs P0b's archived %.2f %% (%s m/h): %+.1f %%  %s"
+              % (100 * A08_REF, " / ".join("%.3f" % x for x in A08_REF_V),
+                 100 * (dsp["A08"] / A08_REF - 1.0),
+                 "PASS -- the comparison is valid" if good else
+                 "⚠⚠ FAIL -- the harness MOVED; (d)'s attribution is VOID "
+                 "and must be WITHDRAWN, not restated"))
+    if "A80" in dsp and "S" in dsp:
+        good = dsp["A80"] > dsp["S"]
+        ok &= good
+        print("    ATTRIBUTION: A80 %.2f %% %s P1 %.2f %%  ->  %s"
+              % (100 * dsp["A80"], ">" if good else "<=", 100 * dsp["S"],
+                 "PASS: the refit costs more spread than the criterion does"
+                 if good else
+                 "⚠⚠ FAIL: the criterion, not the refit, owns (d)'s failure"))
+
+    # (d') P1: the level, against revision 7's measured 2.506 m/h on leg S.
+    # ⚠ Reported, never refitted to. If it has moved more than 10 % the refit is
+    # wrong and that is the finding.
+    v7 = 2.506
+    v_now = res["S_2.0"]["v_lsq"] * 3600
+    print("(d') level on S_2.0: %.3f m/h vs rev 7's %.3f  (%+.1f %%)  %s"
+          % (v_now, v7, 100 * (v_now / v7 - 1),
+             "within 10 %" if abs(v_now / v7 - 1) <= 0.10 else "⚠ MOVED > 10 %"))
+    fr = [res["S_%s" % t].get("dfrac") for t, _, _ in MESHES]
+    qr = [res["S_%s" % t].get("qrat") for t, _, _ in MESHES]
+    f = lambda x: " / ".join(("%.3f" % y) if y is not None else "--" for y in x)
+    print("[P1] drive_frac %s   q_fit/q_real %s   (0.330 expected on a "
+          "self-similar front)" % (f(fr), f(qr)))
+
+    # reported
+    print("\n[P6] (T_bar - T0)/(T_surf - T0), expected (1-e^-cf)/cf:")
+    for pre, cf in (("B3", 0.3), ("S", 0.4), ("B5", 0.5)):
+        want = (1 - np.exp(-cf)) / cf
+        got = [(res["%s_%s" % (pre, t)]["T_bar_flake"] - T0) /
+               (res["%s_%s" % (pre, t)]["T_surf"] - T0) for t, _, _ in MESHES]
+        print("     c_f=%.1f  %s   expected %.4f" %
+              (cf, " / ".join("%.4f" % x for x in got), want))
+    print("[P2] level vs the continuum limit q = rho c v dT_s, expected 1/((1-e^-cf)/cf):")
+    for pre, cf in (("B3", 0.3), ("S", 0.4), ("B5", 0.5)):
+        got = []
+        for t, _, _ in MESHES:
+            r = res["%s_%s" % (pre, t)]
+            if "q_net" not in r: continue
+            got.append(r["v"] * RHO_C * (r["T_surf"] - T0) / r["q_net"])
+        print("     c_f=%.1f  %s   expected %.3f" %
+              (cf, " / ".join("%.3f" % x for x in got), cf / (1 - np.exp(-cf))))
+    print("[P3] median |d ell/ell| across consecutive firings on S: %s" %
+          " / ".join("%.2e" % res["S_%s" % t].get("dell", float("nan"))
+                     for t, _, _ in MESHES))
+    print("[1.2] side-face share of P_robin on S: %s" %
+          " / ".join("%.3f" % res["S_%s" % t].get("side_share", float("nan"))
+                     for t, _, _ in MESHES))
+    print("[5.1] smoothed vs raw ell_eff on S [mm]: %s" %
+          " / ".join("%.3f vs %.3f" % (res["S_%s" % t]["ell_eff"] * 1e3,
+                                       res["S_%s" % t]["ell_raw"] * 1e3)
+                     for t, _, _ in MESHES))
+    # ⚠⚠ WHY THIS HARNESS IS RED, AND WHAT IS NOT WRONG.
+    # (a)'s 2 % bar is P0b's, set against rev7's 1.51 % measured at an 8 um
+    # flaw. P1 mandates an 80 um flaw and leg S reads 2.85 %, so (a) is red and
+    # stays red -- the bar is NOT lowered to fit, because lowering a bar after
+    # seeing the number is how a model stops being tested.
+    # The (d) block above is what tests the claim at this flaw size, and it is
+    # green: A80 (absolute, same 80 um) is WORSE at 4.30 %, so the refit owns
+    # the regression, not the criterion. Both numbers have to be read together.
+    if ok is False and spread([res["S_%s" % t]["v_lsq"]
+                               for t, _, _ in MESHES]) > TOL_MESH:
+        print("\n⚠ note: (a) is red at the P0b 2 % bar, which was set with a "
+              "flaw 10x smaller. See the (d) block -- the attribution, not the "
+              "bar, is what this revision scores. The bar is deliberately NOT "
+              "relaxed.")
+    print("\n%s" % ("PASS" if ok else "FAIL"))
+    sys.exit(0 if ok else 1)
+
+if __name__ == "__main__":
+    main()

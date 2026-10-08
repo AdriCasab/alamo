@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+"""P2-2b (b6) -- the rebuilt enthalpy table must carry the latent heat.
+
+Two legs from one input file:
+
+  constant   `microstructure.phase0.law` unset  -> Table built from
+             `Material::Constant` (rho, Cp scalars). This is the shipped path
+             and it has always carried the boxcars.
+  grimsel    `law = grimsel`                    -> Table built from the LAW.
+             ⚠ Grimsel parses only `T_ref`, so `T_m`/`fus_width`/`L_m`/
+             `T_vap_lo`/`T_vap_hi`/`L_v` must be COPIED onto the law object
+             before `Build`, or the latent heat vanishes with no symptom.
+
+THE ASSERTION, and why it is in two halves. Comparing H against an analytic
+integral would measure quadrature as much as implementation, so each leg is
+checked against the SAME trapezoid on the SAME grid the code uses
+(`Table::Build`: T_min = 200, dT = 0.5, H shifted so H(T_ref) == 0) -- that
+half is exact to round-off. The second half is the one that can actually fail:
+the measured H minus the SAME integral computed with the boxcars SUPPRESSED
+must equal rho*L_m. ⚠ Without that half the test would pass on a table that
+dropped the latent heat, because the first half would simply agree with a
+no-latent reference.
+
+Usage: test   (runs ALAMO twice, then checks)
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT = os.path.join(HERE, "output")
+sys.path.insert(0, os.path.join(ROOT, "tests", "MMWSpalling", "studies", "p2_2_props"))
+
+import fabcmp  # noqa: E402
+import grimsel as G  # noqa: E402
+
+# deck values -- kept in step with `input` by the assertions below
+T_REF, T_INIT = 293.15, 1600.0
+T_M, FUS_W, L_M = 1473.0, 50.0, 335000.0
+RHO_C, CP_C = 2750.0, 790.0
+# Table::Build's own grid
+T_MIN, DT, T_MAX = 200.0, 0.5, 5000.0
+
+LEGS = (("constant", []),
+        ("grimsel", ["microstructure.phase0.law=grimsel"]))
+
+
+def rhocp(T, law, latent=True):
+    """`Material::effective_rhocp` = rho(T)*[cp(T) + boxcars], exactly as
+    `Material.H:30-43` forms it."""
+    if law == "grimsel":
+        rho, cp = G.RHO, G.c_p(T - 273.15)
+    else:
+        rho, cp = RHO_C, CP_C
+    if latent and FUS_W > 0.0:
+        if T_M - 0.5 * FUS_W <= T <= T_M + 0.5 * FUS_W:
+            cp += L_M / FUS_W
+    return rho * cp
+
+
+def table_H(law, T_at, latent=True):
+    """Trapezoid on Build's grid, shifted so H(T_ref) == 0 -- the same
+    construction, so a mismatch is an implementation difference."""
+    n = int((T_MAX - T_MIN) / DT) + 1
+    Ts = [T_MIN + i * DT for i in range(n)]
+    H, acc = [0.0], 0.0
+    for i in range(1, n):
+        acc += 0.5 * (rhocp(Ts[i - 1], law, latent) + rhocp(Ts[i], law, latent)) * DT
+        H.append(acc)
+
+    def at(T):
+        x = (T - T_MIN) / DT
+        i = int(x)
+        i = max(0, min(n - 2, i))
+        f = x - i
+        return H[i] + f * (H[i + 1] - H[i])
+    return at(T_at) - at(T_REF)
+
+
+def run(tag, extra):
+    d = os.path.join(OUT, tag)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN,
+            os.path.join(HERE, "input")] + extra +
+           ["plot_file=%s" % os.path.join(d, "run")])
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    with open(os.path.join(d, "run.log"), "w") as lg:
+        return subprocess.call(cmd, cwd=ROOT, stdout=lg, stderr=subprocess.STDOUT)
+
+
+def read_component(tag, name):
+    """Mean of `name` over the first cell plotfile -- the field is uniform, so
+    the mean is the value and a decomposition cannot bias it."""
+    import struct
+    # ⚠ `plot_file=<leg>/run` makes a DIRECTORY `run` and writes `00000cell`
+    # INSIDE it, so the plotfiles are one level deeper than the leg directory.
+    d = os.path.join(OUT, tag, "run")
+    if not os.path.isdir(d):
+        return None
+    cells = sorted(x for x in os.listdir(d) if x.endswith("cell"))
+    if not cells:
+        return None
+    base = os.path.join(d, cells[0])
+    hdr = os.path.join(base, "Header")
+    lvl = os.path.join(base, "Level_0")
+    fabs, tot, n = [], 0.0, 0
+    for f in sorted(os.listdir(lvl)):
+        if not f.startswith("Cell_D"):
+            continue
+        fs = fabcmp.read_fabs(os.path.join(lvl, f))
+        if not fs:
+            continue
+        ncomp = fs[0][0]
+        names = fabcmp.var_names(hdr, ncomp)
+        if name not in names:
+            return None
+        c = names.index(name)
+        for _, npts, comp in fs:
+            vals = struct.unpack("<%dd" % npts, comp[c])
+            tot += sum(vals)
+            n += npts
+    return (tot / n) if n else None
+
+
+def main():
+    if not os.path.exists(BIN):
+        print("FAIL: missing binary"); return 1
+    fails = []
+
+    def need(ok, msg):
+        print("  %s  %s" % ("ok  " if ok else "FAIL", msg))
+        if not ok:
+            fails.append(msg)
+
+    print("P2-2b (b6) THE LATENT HEAT SURVIVES THE REBUILT TABLE\n")
+    print("  deck: T_ref %.2f  T_init %.1f  T_m %.1f  fus_width %.1f  L_m %.0f"
+          % (T_REF, T_INIT, T_M, FUS_W, L_M))
+    print("  melt window [%.1f, %.1f]; T_init is above it, so the whole boxcar"
+          % (T_M - 0.5 * FUS_W, T_M + 0.5 * FUS_W))
+    print("  is inside H(T_init) - H(T_ref).\n")
+
+    for tag, extra in LEGS:
+        rc = run(tag, extra)
+        if rc != 0:
+            need(False, "%s exited %d" % (tag, rc))
+            continue
+        H = read_component(tag, "H")
+        if H is None:
+            need(False, "%s: could not read the H field" % tag)
+            continue
+        want = table_H(tag, T_INIT, latent=True)
+        want_no = table_H(tag, T_INIT, latent=False)
+        rho = G.RHO if tag == "grimsel" else RHO_C
+        # ⚠⚠ THE BAR IS NOT rho*L_m. `Table::Build` integrates the boxcar with
+        # the TRAPEZOID RULE on its own grid, and a trapezoid over a rectangle
+        # over-books it by exactly dT/fus_width. Derivation, from the grid and
+        # the window alone -- no measurement in it: the closed window
+        # [T_m - w/2, T_m + w/2] holds w/dT + 1 grid points; the rule gives each
+        # interior interval weight dT and each of the two intervals straddling
+        # an edge weight dT/2 (the outside endpoint contributes 0), so the
+        # effective width is (w/dT)*dT + dT = w + dT. Here 50 -> 50.5, i.e.
+        # +1.000 %, and the measurement agrees to the digit on BOTH legs.
+        # ⚠ It scales as dT/w, so a 5 K window would be over-booked by 10 %.
+        quad = 1.0 + DT / FUS_W
+        latent_expected = rho * L_M * quad
+        rel = abs(H - want) / abs(want)
+        latent_seen = H - want_no
+        rel_lat = abs(latent_seen - latent_expected) / latent_expected
+        print("  --- %s ---" % tag)
+        print("      H measured            %.6e J/m3" % H)
+        print("      H same-grid trapezoid %.6e J/m3   rel %.3e" % (want, rel))
+        print("      H with boxcars OFF    %.6e J/m3" % want_no)
+        print("      latent seen           %.6e J/m3" % latent_seen)
+        print("      latent expected       %.6e J/m3   rel %.3e"
+              % (latent_expected, rel_lat))
+        print("        = rho*L_m %.6e x quadrature %.5f (= 1 + dT/fus_width)"
+              % (rho * L_M, quad))
+        need(rel <= 1e-9,
+             "%s: H matches the same-grid trapezoid to 1e-9 (%.3e)" % (tag, rel))
+        # ⚠⚠ THE HALF THAT CAN FAIL: a table that dropped the latent heat would
+        # still satisfy the row above, because it would agree with a no-latent
+        # reference. This one measures the boxcar itself.
+        need(rel_lat <= 1e-9,
+             "%s: the table CARRIES the latent heat, rho*L_m*(1+dT/w), to "
+             "1e-9 (%.3e)" % (tag, rel_lat))
+        # The boxcar must be PRESENT at all, stated separately so a dropped
+        # latent heat reads as its own failure and not as a tolerance miss.
+        need(latent_seen > 0.5 * rho * L_M,
+             "%s: the boxcar is present at all (%.3e J/m3, >= half rho*L_m)"
+             % (tag, latent_seen))
+
+    print()
+    if fails:
+        print("FAILURES:")
+        for f in fails:
+            print("  " + f)
+        print("\nFAIL")
+        return 1
+    print("both forms build H(T) from their own rho and c_p AND carry the")
+    print("latent heat. ⚠ Neither production deck sets a phase-change scalar,")
+    print("so this is the only witness the hazard has.")
+    print()
+    print("⚠⚠ FINDING, not a failure: `Table::Build`'s trapezoid over-books the")
+    print("   latent heat by dT/fus_width -- +1.00 % at this deck's 50 K window,")
+    print("   and it would be +10 % at 5 K. Identical on both forms, so P2-2b")
+    print("   did not introduce it; it is a property of the shipped quadrature.")
+    print("\nPASS")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
