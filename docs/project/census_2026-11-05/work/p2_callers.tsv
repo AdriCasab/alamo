@@ -1,0 +1,93 @@
+Advance	
+AdvanceConstAlpha	Advance
+AdvanceMaterial	Advance
+AdvanceMaterialImplicit	Advance
+AdvanceMicrostructure	Advance
+AlphaBetaFraction	ThermalFreeStrain
+ApplySeedVoid	Initialize
+BeamEnergyBalance	AdvanceMicrostructure
+BeamIncidentIntensity	BeamEnergyBalance; BeamSource
+BeamSource	AdvanceConstAlpha; AdvanceMaterial; AdvanceMaterialImplicit; AdvanceMicrostructure; BeamEnergyBalance
+BuildEnthalpyTable	Initialize
+BuildFaceList	AdvanceMicrostructure
+BuildFlameColumns	AdvanceMicrostructure
+BuildPinEffective	AdvanceMicrostructure
+BuildSurfaceTColumns	Advance
+CellToNodeAverageInDomain	UpdateModel
+CheckSurfaceCovered	Removal.H:UpdateRemovalAfterCohesive:2550
+ColumnSolidAboveCount	AdvanceMicrostructure; BeamEnergyBalance
+ColumnSolidRunBelowTop	BuildSurfaceTColumns; Removal.H:UpdateRemovalAfterCohesive:868
+ColumnSurfaceCos	Removal.H:UpdateRemovalAfterCohesive:555; UpdateSpAfterMechanics
+ColumnTopSolid	AdvanceMicrostructure; BuildFaceList; CheckSurfaceCovered; Removal.H:UpdateRemovalAfterCohesive:444; TagCellsForRefinement
+ConvertTtoH	Initialize
+DamageGrowthRHS	IntegrateDamageRK4; UpdateDamageAfterMechanics
+EnergyLedger	AdvanceMicrostructure
+FaceCentre	FaceListPath; JetEnthalpyMarch
+FaceH	FaceListHeat
+FaceHr	FaceH; FaceListPath
+FaceListDiagnostics	AdvanceMicrostructure
+FaceListHeat	BuildFlameColumns
+FaceListPath	FaceListHeat
+FaceListTg	BuildFlameColumns
+FaceWeight	BuildFaceList
+FeetDescent	BuildFlameColumns
+FillFractionGhosts	BuildFaceList
+FiniteMatrix	UpdateDamageAfterMechanics
+FrGauss	FrSmoothAt
+FrInitFraction	BuildFaceList; FaceRemoval.H:RecedeAlongLines:355
+FrPathOffsets	FaceListPath
+FrSmoothAt	FrSmoothedGradient
+FrSmoothedGradient	BuildFaceList
+GatherColumnSurface	BuildSurfaceTColumns; UpdateSpAfterMechanics; UpdateSpClusters
+InitPhi	Initialize
+InitSurfaceMask	Initialize; RefreshMicrostructureDerivedFields; Regrid
+Initialize	InitializeMicrostructure
+InitializeFlaws	InitializeMicrostructure
+InitializeMicrostructure	Initialize; RefreshMicrostructureDerivedFields; Regrid
+IntegrateDamageRK4	UpdateDamageAfterMechanics
+InvertHtoT	Advance; FaceRemoval.H:RecedeAlongLines:922; Regrid; Removal.H:UpdateRemovalAfterCohesive:2568
+JetEnthalpyMarch	BuildFlameColumns
+LawSigma	Removal.H:ScanSigmaT:140; UpdateSpAfterMechanics
+MeltSkeleton	Removal.H:UpdateRemovalAfterCohesive:1477
+Parse	MMWSpalling; struct SurfacePatch
+ParseBitSettings	Parse
+ParseCohesiveSettings	Parse
+ParseDamageSettings	Parse
+ParseSpallSettings	Parse
+ParseSpallationModel	Parse
+ParseVaporSettings	Parse
+PatchDiagnostics	AdvanceMicrostructure
+PinRule	BuildPinEffective; JetEnthalpyMarch
+PrincipalStressRatio	Removal.H:UpdateRemovalAfterCohesive:1652
+RawSurfaceX	BuildSurfaceTColumns; FaceRemoval.H:FrAssignTs:235; FaceRemoval.H:RecedeAlongLines:501
+ReconFromX	BuildSurfaceTColumns; FaceRemoval.H:FrAssignTs:240; FaceRemoval.H:RecedeAlongLines:504
+RefreshKappaEff	FaceRemoval.H:RecedeAlongLines:929; InitializeMicrostructure; Removal.H:UpdateRemovalAfterCohesive:2576; UpdateDamageAfterMechanics
+RefreshMicrostructureDerivedFields	RepairMechanicsAfterRegrid; TimeStepBegin; TimeStepComplete
+Regrid	
+RepairMechanicsAfterRegrid	Regrid
+RepairRemovalStateAfterRegrid	Regrid
+ResetCohesiveDiagnostics	InitializeMicrostructure
+RockLaw	FaceRemoval.H:RecedeAlongLines:470; Removal.H:ElasticConstants:42; Removal.H:UpdateRemovalAfterCohesive:1063; UpdateSpAfterMechanics
+SetPhaseFractionsConstAlpha	ConvertTtoH
+SharedSurfaceRecon	Removal.H:UpdateRemovalAfterCohesive:1316; UpdateSpAfterMechanics
+SolidFacePath	AdvanceMicrostructure; BeamEnergyBalance
+SplitMix64	InitializeFlaws
+StoreInitialTemperature	Initialize
+SurfaceCellFlux	AdvanceMicrostructure; EnergyLedger; FaceRemoval.H:FrFaceFlux:148; FaceRemoval.H:FrFaceFlux:153; FaceRemoval.H:RecedeAlongLines:523; JetEnthalpyMarch; PatchDiagnostics
+SurfaceGasTempCap	BuildSurfaceTColumns; FaceRemoval.H:FrAssignTs:229; FaceRemoval.H:RecedeAlongLines:469
+SurfaceOwner	AdvanceMicrostructure; BeamEnergyBalance; BuildSurfaceTColumns; FeetDescent; JetEnthalpyMarch; Removal.H:UpdateRemovalAfterCohesive:1851; Removal.H:UpdateRemovalAfterCohesive:276; Removal.H:UpdateRemovalAfterCohesive:439; Removal.H:UpdateRemovalAfterCohesive:769; Removal.H:UpdateRemovalAfterCohesive:771; Removal.H:UpdateRemovalAfterCohesive:779; UpdateSpAfterMechanics; UpdateSpClusters
+SurfaceRobinT	AdvanceMicrostructure; EnergyLedger; JetEnthalpyMarch; PatchDiagnostics
+TagCellsForRefinement	
+ThermalFreeStrain	UpdateMicrostructureFreeStrain; UpdateModel
+TimeStepBegin	
+TimeStepComplete	
+UpdateCohesiveAfterMechanics	Advance
+UpdateDamageAfterMechanics	Advance
+UpdateMicrostructureFreeStrain	InitializeMicrostructure; UpdateModel
+UpdateModel	RepairMechanicsAfterRegrid
+UpdatePropertyFields	Advance
+UpdateSpAfterMechanics	Advance
+UpdateSpClusters	Advance
+UpdateSurfaceMaskFromPhi	FaceRemoval.H:RecedeAlongLines:928; InitSurfaceMask; Removal.H:UpdateRemovalAfterCohesive:2575
+WeibullSizeFactor	Removal.H:UpdateRemovalAfterCohesive:1203; UpdateSpAfterMechanics
+removal_enabled	AdvanceMaterial; AdvanceMicrostructure; BeamEnergyBalance; EnergyLedger; GatherColumnSurface; InitSurfaceMask; Initialize; Parse; Regrid; Removal.H:UpdateRemovalAfterCohesive:272; TagCellsForRefinement

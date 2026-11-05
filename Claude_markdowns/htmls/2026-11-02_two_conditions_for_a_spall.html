@@ -1,0 +1,410 @@
+<title>Two Conditions for a Spall</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f5f7f6; --paper:#ffffff; --ink:#172220; --ink2:#4f5c58; --ink3:#7d8884;
+  --rule:#d9dfdc; --rule2:#eceff0; --tint:#e8eeec;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s8:#e34948;
+  --band:rgba(27,175,122,.16); --grid:#e4e8e6; --warn:#fff4e8; --warnink:#8a4a12;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#15191a; --paper:#1d2224; --ink:#edf1ee; --ink2:#b9c2bd; --ink3:#86918c;
+    --rule:#30393a; --rule2:#262d2f; --tint:#232b2c;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s8:#e66767;
+    --band:rgba(25,158,112,.22); --grid:#2a3233; --warn:#2b2218; --warnink:#f0b57a;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#15191a; --paper:#1d2224; --ink:#edf1ee; --ink2:#b9c2bd; --ink3:#86918c;
+  --rule:#30393a; --rule2:#262d2f; --tint:#232b2c;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s8:#e66767;
+  --band:rgba(25,158,112,.22); --grid:#2a3233; --warn:#2b2218; --warnink:#f0b57a;
+}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Serif",Georgia,serif;font-size:17px;line-height:1.55;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:860px;margin:0 auto}
+header{padding-block:48px 24px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+h1{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:clamp(30px,5vw,44px);line-height:1.1;margin:10px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+.lede{font-size:19px;color:var(--ink2);max-width:62ch}
+h2{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:24px;margin:52px 0 10px;text-wrap:balance;letter-spacing:-.005em}
+h2 .n{color:var(--ink3);font-weight:500;margin-right:10px;font-variant-numeric:tabular-nums}
+h3{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:17px;margin:28px 0 6px}
+p{max-width:68ch;margin:10px 0}
+ul,ol{max-width:68ch;padding-left:22px}
+li{margin:6px 0}
+.eq{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:15px;background:var(--tint);border-left:3px solid var(--s1);padding:10px 14px;margin:14px 0;overflow-x:auto;line-height:1.7}
+.eq .lab{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+.eq i{font-style:italic}
+.eq sub,.eq sup{font-size:11px}
+.sym{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.92em}
+figure{margin:22px 0;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:14px 14px 10px}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13.5px;color:var(--ink2);margin-top:10px;line-height:1.45}
+figcaption b{color:var(--ink);font-weight:600}
+.ctl{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13.5px;color:var(--ink2);margin:0 0 8px}
+.ctl label{display:flex;align-items:center;gap:8px}
+.ctl input[type=range]{width:180px;accent-color:var(--s1)}
+.ctl output{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink);min-width:6ch;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;color:var(--ink2);margin:6px 0 2px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;border-radius:1px}
+.legend i.dash{border-top-style:dashed}
+.legend b{display:inline-block;width:14px;height:10px;border-radius:2px}
+table{border-collapse:collapse;width:100%;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;margin:14px 0;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule2);vertical-align:top}
+th{font-weight:600;color:var(--ink2);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+td.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13.5px}
+.tbl{overflow-x:auto}
+.note{background:var(--warn);color:var(--warnink);border-radius:6px;padding:12px 16px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14.5px;max-width:72ch;margin:16px 0}
+.note b{font-weight:600}
+.tag{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border:1px solid var(--rule);border-radius:3px;color:var(--ink3);vertical-align:middle}
+.verdict{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0}
+.verdict div{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14.5px}
+.verdict div b{display:block;font-weight:600;margin-bottom:3px}
+@media (min-width:700px){.verdict{grid-template-columns:1fr 1fr}}
+.src{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13.5px;color:var(--ink2)}
+.src li{margin:4px 0}
+a{color:var(--s1)}
+.axis text{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:11px;fill:var(--ink3)}
+.axis line,.axis path{stroke:var(--rule);fill:none}
+.grid line{stroke:var(--grid)}
+.lbl{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:11.5px;fill:var(--ink2)}
+.lbl.k{fill:var(--ink)}
+.title{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;font-weight:600;fill:var(--ink)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;padding:6px 8px;border-radius:4px;transform:translate(-50%,-120%);white-space:nowrap;display:none}
+.figwrap{position:relative}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">ALAMO · MMWSpalling · 2026-11-02 · a reading of P2-14a and the literature study</div>
+  <h1>Two conditions for a spall, not one blended drive</h1>
+  <p class="lede">Why the constraint depth produces an onset that climbs toward the minimum flux, why no value of it can avoid that, and how the same two goals are met by keeping the stress local and adding a separate thickness condition. Every figure is computed on this page from the equations shown; the measured bands and the P2-14a numbers are overlaid as they stand on disk.</p>
+</header>
+
+<h2><span class="n">1</span>What the constraint depth was asked to do</h2>
+<p>The direction document gave the constraint depth <span class="sym">d</span> two jobs, and both are legitimate:</p>
+<ol>
+  <li><b>A minimum heat flux.</b> A face that is slowly soaked should stop spalling. Kant measured this on Gotthard and Bethel granite: spalls at 130 mm standoff, none at 140 to 160 mm, which is a flux of roughly 0.3 to 0.5 MW/m².</li>
+  <li><b>A meaning under a beam.</b> Under volumetric deposition the surface flux is not the surface gradient, so a rule written on the temperature profile is needed. Reading the profile is right; the question is <i>what</i> to read from it.</li>
+</ol>
+<p>It does both by changing the stress formula. The drive at a depth <span class="sym">z</span> becomes the temperature difference between that depth and a point <span class="sym">d</span> further in:</p>
+<div class="eq"><span class="lab">the constraint-depth drive (P2-2e, ported to the face list in P2-14a)</span>
+σ<sub>d</sub>(z) = R · E(T<sub>z</sub>) · ∫<sub>T(z+d)</sub><sup>T(z)</sup> α(θ) dθ / (1 − ν)
+</div>
+<p>When the heated layer is thick, the point at <span class="sym">z + d</span> is already warm, the integral is short, and the stress is small. That is how the minimum flux appears. It is also, as the next sections show, how the onset climb appears, and the two cannot be separated because they are the same term.</p>
+
+<h2><span class="n">2</span>The stress in heated rock is local</h2>
+<p>For a body that is wide compared with the heated region, with a free surface, the in-plane thermal stress at any depth depends only on the temperature at that depth. The hot rock is compressed because it wants to expand and the cold rock beside it will not move. There is no reference depth in this result, and it holds for surface heating and volumetric heating alike (Timoshenko and Goodier; Lu and Fleck 1998 in the limit of a thick plate).</p>
+<div class="eq"><span class="lab">half-space, free surface, temperature varying with depth only; compression negative</span>
+σ<sub>xx</sub>(z) = σ<sub>yy</sub>(z) = − E · β · [T(z) − T<sub>0</sub>] / (1 − ν),      σ<sub>zz</sub> = 0
+</div>
+<p>Figure 1 draws two temperature profiles and the stress each produces. The left profile is a flame: a thin hot skin. The right is a beam with surface losses: the peak sits a few millimetres down. In both the stress is compressive wherever the rock is hot. The dashed curves are what the constraint-depth construction reads instead: the difference between <span class="sym">T(z)</span> and <span class="sym">T(z + 2 mm)</span>. Under the flame it reads a fraction of the true rise. Under the beam it reads a negative number at the surface, and the model concludes there is no drive at all.</p>
+
+<figure>
+  <div class="legend"><span><i style="border-color:var(--s1)"></i>temperature rise T − T₀</span><span><i style="border-color:var(--s2)"></i>local stress −σ/(Eβ/(1−ν)), i.e. the true drive</span><span><i class="dash" style="border-color:var(--s2)"></i>constraint-depth drive T(z) − T(z+d), d = 2 mm</span></div>
+  <svg id="fig1" viewBox="0 0 860 330" role="img" aria-label="Temperature and stress profiles under a flame and under a beam"></svg>
+  <figcaption><b>Figure 1.</b> Left: a surface flux of 1 MW/m² for 1.5 s on rock with k = 2.5 W/m·K, κ = 0.9 mm²/s, surface rise 557 K (the exact constant-flux solution). Right: a schematic volumetric profile with the peak about 3 mm below a cooled surface. The true drive (orange, solid) is simply the temperature rise, so both surfaces are compressed. The constraint-depth drive (dashed) under-reads the flame by about a sixth and reads the beam surface as negative, which is where P2-2e's beam column fired zero times and the model's 69 % negative-read share came from.</figcaption>
+</figure>
+
+<h2><span class="n">3</span>What the constraint depth does to the onset against flux</h2>
+<p>Take the simplest case that can be solved exactly: constant properties, a semi-infinite body, a constant surface flux <span class="sym">q</span>. The temperature rise is</p>
+<div class="eq"><span class="lab">constant flux on a half-space (Carslaw and Jaeger §2.9)</span>
+T(z,t) − T<sub>0</sub> = (2q/k) · √(κt) · ierfc( z / 2√(κt) ),      ierfc(x) = e<sup>−x²</sup>/√π − x·erfc(x)
+</div>
+<p>The constraint-depth drive at the surface is <span class="sym">D(t) = T(0,t) − T(d,t)</span>. It grows with time but saturates: as the gradient becomes steady, <span class="sym">D → q·d/k</span>. Spalling requires <span class="sym">D ≥ ΔT<sub>c</sub></span>, the critical rise that the stress criterion needs at the flaw. So a minimum flux exists, exactly as intended:</p>
+<div class="eq"><span class="lab">the minimum flux the construction produces</span>
+q<sub>min</sub> = k · ΔT<sub>c</sub> / d
+</div>
+<p>Figure 2 asks the next question: <i>at what surface temperature does the face fire</i> when the flux is above that minimum? Move the slider and watch the curve. For any <span class="sym">d</span>, the onset is flat at high flux and climbs steeply as the flux approaches <span class="sym">q<sub>min</sub></span>. The measured bands sit under it as shaded regions, and the P2-14a production-form results from the calibration deck are the dots.</p>
+
+<figure class="figwrap">
+  <div class="ctl">
+    <label>constraint depth d <input type="range" id="dSl" min="1" max="12" step="0.5" value="6"> <output id="dOut">6.0 mm</output></label>
+    <span>k = 2.5 W/m·K, κ = 0.9 mm²/s, ΔT<sub>c</sub> = 557 K, T₀ = 293 K, 200 s exposure</span>
+    <span id="qminOut"></span>
+  </div>
+  <div class="legend"><span><i style="border-color:var(--s1)"></i>onset temperature, constraint-depth model (this page)</span><span><i style="border-color:var(--ink3)"></i>d = 0, flat at 850 K</span><span><b style="background:var(--band)"></b>measured first-spall bands</span><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.5" fill="var(--s2)"/></svg>P2-14a d = 2 mm (binary)</span><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.5" fill="none" stroke="var(--s2)" stroke-width="2"/></svg>P2-14a d = 0</span></div>
+  <svg id="fig2" viewBox="0 0 860 400" role="img" aria-label="Onset temperature versus heat flux for the constraint-depth model and measured bands"></svg>
+  <div class="tip" id="tip2"></div>
+  <figcaption><b>Figure 2.</b> Onset surface temperature against flux. Shaded: Wilkinson and Tester 1993 (Barre and Westerly, 400 to 600 °C over 0.2 to 2.9 MW/m²), Kant and von Rohr 2016 (Gotthard and Bethel, 540 to 630 °C over 0.45 to 0.87 MW/m²), Höser 2016 (Grimsel, 430 to 600 °C over 4.3 to 7.4 MW/m²). Dots: the P2-14a calibration-deck series, filled for d = 2 mm (1001, 918, 879 K at 0.34, 0.75, 1.59 MW/m²; no firing at 0.12) and open for d = 0 (848 to 853 K). The slider's model has constant properties, so its d is not the binary's d: the binary's 2 mm with temperature-dependent tables behaves like 6 to 8 mm here, which is why the slider starts at 6. The shape is what matters, and it is the same.</figcaption>
+</figure>
+
+<h2><span class="n">4</span>Why no value of d can remove the climb</h2>
+<p>Divide the drive equation through by <span class="sym">ΔT<sub>c</sub></span> and write the flux as a multiple of the minimum, <span class="sym">Q = q/q<sub>min</sub></span>. The time to fire and the surface temperature at firing then depend only on <span class="sym">Q</span>. Every parameter, <span class="sym">d</span>, <span class="sym">k</span>, <span class="sym">κ</span>, <span class="sym">ΔT<sub>c</sub></span>, drops out:</p>
+<div class="eq"><span class="lab">universal form, constant properties; τ = d / 2√(κt) at the moment of firing</span>
+fire when  (Q/τ) · [ 1/√π − ierfc(τ) ] = 1,      then  T<sub>s,fire</sub> − T<sub>0</sub> = ΔT<sub>c</sub> · Q / (√π · τ)
+</div>
+<p>Figure 3 plots that single curve. It is the shape of the constraint-depth law, independent of the number chosen for <span class="sym">d</span>. Flatness within ten per cent needs a flux at least twice the minimum. At one and a half times the minimum the face fires 40 per cent hotter than the flat level. At one and a quarter times, twice as hot.</p>
+
+<figure>
+  <svg id="fig3" viewBox="0 0 860 360" role="img" aria-label="Universal onset climb of the constraint-depth law against flux ratio"></svg>
+  <figcaption><b>Figure 3.</b> The onset rise relative to the flat level, against flux relative to the minimum, for the constraint-depth law with constant properties. The orange marker is Kant 2016's last spalling standoff on Gotthard: a flux 1.1 to 1.5 times his measured minimum, where the pyrometer read 570 °C, <i>lower</i> than at the high-flux end (620 °C). The law puts that point at 900 to 1100 °C. The P2-14a binary points, placed at Q using the bracket it measured (q<sub>min</sub> between 0.12 and 0.34 MW/m²), sit on the same curve within the uncertainty of that bracket.</figcaption>
+</figure>
+
+<p>This is the sense in which the problem is the form and not the value. Re-fitting <span class="sym">d</span> slides Figure 2 left or right along the flux axis. It cannot flatten it. Kant's own data walk down to within about 1.3 times his threshold and stay flat, which the curve says is impossible for this construction.</p>
+
+<div class="note"><b>A note on the binary.</b> P2-2e found that the binary needs d = 1.5 to 2.0 mm to reproduce Kant's bracket, where the offline constant-property calculation needed 7 to 10 mm. The difference is the temperature dependence of the Grimsel tables (expansion triples between 300 and 500 °C). That changes the number, not the shape: the P2-14a series climbed by 122 K over a factor 4.7 in flux, in line with Figure 3.</div>
+
+<h2><span class="n">5</span>The two conditions the literature actually uses</h2>
+<p>The only derived minimum flux in the spallation literature does not touch the stress. It is Preston's buckling idea, made quantitative by Dey and Kranz and carried by Rauenzahn and Tester as their Equations 15 and 16. A compressed layer over a cold substrate can only pop out as a flake if it is thin compared with the span of the flaw it detaches along. A thick layer under the same stress stays put.</p>
+
+<h3>Condition A: the stress at the surface flaw (unchanged, d = 0)</h3>
+<div class="eq"><span class="lab">the existing criterion, referenced to the initial temperature</span>
+Sp = K<sub>I</sub> / K<sub>Ic</sub>(T<sub>s</sub>) ≥ 1,      K<sub>I</sub> = 1.12 · σ(T<sub>s</sub>) · √(π a),      σ(T<sub>s</sub>) = R · E(T<sub>s</sub>) · ∫<sub>T<sub>0</sub></sub><sup>T<sub>s</sub></sup> α dθ / (1 − ν)
+</div>
+<p>This fixes a critical surface temperature from the rock alone. It is flat with flux by construction, which is what the data show. On Grimsel it is the banked 843.76 K.</p>
+
+<h3>Condition B: the layer must be thin enough to buckle</h3>
+<p>A plate of thickness <span class="sym">x</span> under biaxial compression <span class="sym">σ</span> buckles over a span <span class="sym">L</span> when <span class="sym">σ</span> exceeds the plate's critical stress. With <span class="sym">σ</span> set by the thermal strain, the condition becomes a pure aspect ratio:</p>
+<div class="eq"><span class="lab">Rauenzahn and Tester 1989, Eq. 16, after Preston and Dey and Kranz</span>
+L / x ≥ C<sub>L</sub>,      C<sub>L</sub> = π / √( 6 (1 + ν) · β·ΔT<sub>s</sub> )
+</div>
+<p>For Grimsel at onset the strain integral is about 7.6 × 10⁻³, which gives <span class="sym">C<sub>L</sub> ≈ 13</span>: a flake must be at least thirteen times wider than it is thick. The flake thickness scales with the heated layer. The model already carries that rule as <span class="sym">x = c<sub>f</sub>·δ</span> with <span class="sym">c<sub>f</sub> = 0.4</span>, and the heated-layer depth is the surface rise divided by the surface gradient:</p>
+<div class="eq"><span class="lab">heated-layer depth and the resulting minimum flux</span>
+δ = ΔT<sub>s</sub> / (dT/dz)<sub>surface</sub> = k · ΔT<sub>s</sub> / q   (flame),      x = c<sub>f</sub>·δ,      spall possible iff  L<sub>max</sub> ≥ C<sub>L</sub> · c<sub>f</sub> · k·ΔT<sub>s</sub> / q
+<br>⇒  q<sub>min</sub> = C<sub>L</sub> · c<sub>f</sub> · k · ΔT<sub>s</sub> / L<sub>max</sub>
+</div>
+<p>Here <span class="sym">L<sub>max</sub></span> is the largest span a flake can bridge: the lateral size of the flaw population, observed as spall diameters of ten to twenty grains, one to a few centimetres. Figure 4 shows the minimum flux this gives against that span, with Kant's measured band. Spans of 1.4 to 2.3 cm reproduce his 0.33 to 0.5 MW/m² with no free parameter beyond the span itself.</p>
+
+<figure>
+  <div class="ctl"><span>C<sub>L</sub> = 13, c<sub>f</sub> = 0.4, k = 2.5 W/m·K, ΔT<sub>s</sub> = 557 K</span></div>
+  <div class="legend"><span><i style="border-color:var(--s1)"></i>q<sub>min</sub> from the buckling condition</span><span><b style="background:var(--band)"></b>Kant 2016 measured minimum, 0.33 to 0.5 MW/m²</span><span><b style="background:var(--tint);border:1px solid var(--rule)"></b>observed spall diameters, 10 to 20 grains</span></div>
+  <svg id="fig4" viewBox="0 0 860 340" role="img" aria-label="Minimum flux from the buckling condition against flaw span"></svg>
+  <figcaption><b>Figure 4.</b> The minimum flux from Condition B against the largest flaw span. It is a hyperbola, so the span is well constrained by the measured band. Above the minimum the onset temperature is Condition A's, flat. Below it nothing fires at any temperature. That is a step, which is what Figures 2 and 3 show the data to be.</figcaption>
+</figure>
+
+<h3>Sanity check on the bracket the constraint depth was fitted to</h3>
+<p>Kant's Gotthard bracket, with Condition A flat at about 570 °C and the layer depth <span class="sym">δ = kΔT<sub>s</sub>/q</span>:</p>
+<div class="tbl"><table>
+<thead><tr><th>Standoff</th><th>Flux q</th><th>Layer depth δ</th><th>Flake x = 0.4 δ</th><th>Span needed C<sub>L</sub>·x</th><th>Kant observed</th></tr></thead>
+<tbody id="brTbl"></tbody>
+</table></div>
+<p>Any largest span between about 1.4 and 2.2 cm puts 130 mm on the spalling side and 150 mm on the silent side, with the onset temperature untouched. The constraint depth reproduced the same bracket only inside a 1.5 to 2.0 mm window, and at the price of the climb.</p>
+
+<h2><span class="n">6</span>What this says about the beam, and about your 10 GHz observation</h2>
+<p>Under volumetric deposition the layer depth is no longer <span class="sym">kΔT/q</span>. It is read from the profile and is at least the absorption depth. Condition A is unchanged: the surface is compressed in proportion to its own temperature rise, so the onset is reachable. Condition B then asks whether a flaw spans thirteen times a flake that is now thick. If the absorption depth is a few millimetres, centimetre spans suffice and the model predicts thick flakes delaminating near the depth where the compression falls off. If it is centimetres, no flaw in a granite spans the required tens of centimetres and the brittle law switches itself off; the surface then goes on to the solidus. That is a regime boundary set by absorption depth, which the constraint depth could not express because it answered "no spall" regardless.</p>
+
+<div class="note"><b>The 10 GHz case is probably not a half-space.</b> The literature study found one room-temperature measurement of granite absorption at 28 GHz (Woskov, Barre granite), giving a power penetration depth of about 36 mm. Loss of this type scales roughly with frequency, so at 10 GHz the cold penetration depth is of order 100 mm, falling to perhaps 20 mm when hot. A laboratory block of ten centimetres is then heated nearly through. In a finite body the stress is no longer local: it is referenced to the <i>mean</i> temperature of the body, and a surface that is cooler than the mean, because it loses heat to the air, is in <b>tension</b>.</div>
+
+<div class="eq"><span class="lab">free plate of thickness H heated through its depth (Lu and Fleck 1998); T̄ is the mean over the thickness</span>
+σ<sub>xx</sub>(z) = E · β · [ T̄ − T(z) ] / (1 − ν)      ⇒  a surface with T(z=0) &lt; T̄ is in tension
+</div>
+
+<figure>
+  <svg id="fig5" viewBox="0 0 860 300" role="img" aria-label="Three heating geometries and the sign of the surface stress"></svg>
+  <figcaption><b>Figure 5.</b> Three geometries. Left, a flame on a half-space: a thin compressed skin, Preston buckling, flat onset. Middle, a beam with absorption depth of millimetres on a half-space: a thick compressed layer, flakes near the absorption depth if a flaw spans them, otherwise melt. Right, a beam whose penetration depth is comparable to the block: the body heats through, the cooled skin is in tension, and the surface fails by tensile cracking or exfoliation, a thermal-shock mode rather than flame spallation. Which of the last two your experiment is in depends on block size against penetration depth, and that is the first thing to establish.</figcaption>
+</figure>
+
+<p>So the observation that granite spalls at low intensity and melts at high intensity is consistent with the two-condition picture in either geometry, but the mechanism differs, and so does what to measure:</p>
+<ul>
+  <li><b>Block size against penetration depth.</b> If the block is smaller than about three penetration depths, you are in the right-hand panel and the flame onset data do not apply directly.</li>
+  <li><b>Where the flakes form and how thick they are.</b> Buckling flakes are wide and thin, inside the spot, and leave a compressive-layer thickness. Tensile exfoliation produces cracks at the surface first, often at the spot edge, and flakes that follow cracks.</li>
+  <li><b>Time to first spall against intensity, and whether it happens after the beam is off.</b> Spalling after shut-off is a finite-body signature: the surface cools fastest and goes further into tension.</li>
+  <li><b>Transmission or reflected power during heating.</b> The literature says the sharp absorption event is the melt, not a solid-state runaway. A trace through a slab would show whether that holds at 10 GHz.</li>
+</ul>
+
+<h2><span class="n">7</span>What the two conditions change in the model, and what they do not</h2>
+<div class="verdict">
+  <div><b>Unchanged</b>Condition A is today's criterion at d = 0: the Grimsel tables, the 8 µm flaw, the relief factor 0.531, the banked 843.76 K. The flat onset the data show is already in it.</div>
+  <div><b>Retired</b>The reference depth inside the stress formula. Its two goals survive; its mechanism does not, because that mechanism is the climb.</div>
+  <div><b>Added</b>Condition B: fire only if a flaw of span L ≥ C<sub>L</sub>·x exists, with x the flake thickness from the heated-layer depth read off the temperature profile, so it works for any heat source. One new rock property, the span distribution L<sub>max</sub>, in metres.</div>
+  <div><b>Made explicit</b>The flake thickness rule x = 0.4 δ with its 1.5 mm cap. The cap equals kΔT<sub>s</sub>/q at about 1.2 MW/m² and has been acting as a hidden minimum-flux rule. Under Condition B it is no longer needed for that purpose and should be tested on its own.</div>
+</div>
+
+<h3>Checks that would confirm or refute this on the existing binary</h3>
+<ol>
+  <li><b>Kant's five standoffs at d = 0 with Condition B.</b> Flat onset at 130 mm and above, silence at 140 to 160 mm, for one span value. Compare the span found with the spall diameters in his photographs.</li>
+  <li><b>The calibration-deck flux series.</b> Flat within the Weibull scatter from 0.34 to 1.6 MW/m², and silent at 0.12 MW/m² for a span under about 5 cm.</li>
+  <li><b>The beam columns of P2-2e.</b> At 1/α = 0.5 mm the behaviour should be flame-like. At 1/α = 10 mm the condition should demand a span of order 5 cm, so it should switch off and let the column melt. Both are thirty-second runs.</li>
+  <li><b>Höser at 15 s.</b> No volume loss relative to today's d = 0 run on the floor, and the walls governed by the span rule rather than by a hotter reference.</li>
+</ol>
+
+<h3>What remains uncertain</h3>
+<ul>
+  <li>The Dey and Kranz paper with the numerical form of the buckling bound was not obtainable; the constant 13 comes from Rauenzahn and Tester's expression and the Grimsel strain integral.</li>
+  <li>The span L<sub>max</sub> is a lateral flaw size of centimetres. The Weibull draw in the code is a crack depth of micrometres. They are different populations and the first has never been measured on Grimsel.</li>
+  <li>The thickness rule x = 0.4 δ has never been checked against a measured Grimsel flake. Höser's 200 to 300 µm figure is a fragment-size peak, not a thickness.</li>
+  <li>Under a beam the right definition of δ from a profile with an interior peak needs choosing and testing; the natural choice is the depth where the compression has fallen to a fixed fraction of its surface value.</li>
+</ul>
+
+<h2><span class="n">8</span>Sources used on this page</h2>
+<ul class="src">
+  <li>Rauenzahn &amp; Tester 1989, Int. J. Rock Mech. Min. Sci. 26, 381–399: Eqs. 2, 15, 16; torch onsets; the rejection of the quartz-transition mechanism. On disk: franck_material/RockFailureMechanism.pdf.</li>
+  <li>Wilkinson &amp; Tester 1993, Rock Mech. Rock Eng. 26: onset flat over 0.2–2.9 MW/m²; steady-state means rise, a different quantity.</li>
+  <li>Kant &amp; Rudolf von Rohr 2016, Int. J. Rock Mech. Min. Sci. 84: Table 1 spall/no-spall by standoff, Fig. 11 onset by standoff. On disk: franck_material/MinimalBoundaryConditions.pdf.</li>
+  <li>Höser 2016, ETH thesis: Grimsel onset 430–600 °C at 4.3–7.4 MW/m². Notes: tests/MMWSpalling/validation/hoeser/.</li>
+  <li>Walsh, Lomov &amp; Roberts 2011, GRC Transactions: Preston buckling and Dey &amp; Kranz's plate-buckling bound as the minimum-flux argument.</li>
+  <li>Lu &amp; Fleck 1998, Acta Mater. 46: thermal stress in a free plate, σ = Eβ(T̄ − T)/(1−ν); half-space as the thick limit.</li>
+  <li>Carslaw &amp; Jaeger, Conduction of Heat in Solids §2.9: constant-flux half-space solution used in Figures 1–3.</li>
+  <li>Woskov &amp; Michael 2011, MIT PSFC: 28 GHz Barre granite absorption at room temperature.</li>
+  <li>P2-14a study: tests/MMWSpalling/studies/p2_14a_cref_face/RESULTS.txt, rows c1–c3. P2-2e ladder: studies/p2_2e_cref/D_REF.txt, OFFLINE.txt, CHECKS.txt.</li>
+  <li>Literature report, 2026-11-02: Claude_markdowns/reports/Granite spallation and melt physics.md.</li>
+</ul>
+</div>
+
+<script>
+(function(){
+const SQ=Math.sqrt, PI=Math.PI, SPI=Math.sqrt(Math.PI);
+function erfc(x){ // Numerical Recipes erfcc, rel err < 1.2e-7
+  const z=Math.abs(x), t=1/(1+0.5*z);
+  const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
+  return x>=0?r:2-r;
+}
+function ierfc(x){ return Math.exp(-x*x)/SPI - x*erfc(x); }
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+function el(n,a,parent){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,cls,anchor){const t=el('text',{x,y,class:cls||'lbl','text-anchor':anchor||'start'},parent);t.textContent=s;return t;}
+function path(pts,parent,stroke,dash,w){const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');return el('path',{d,fill:'none',stroke,'stroke-width':w||2,'stroke-dasharray':dash||'none','stroke-linejoin':'round'},parent);}
+function axes(svg,X,Y,xt,yt,xl,yl,opt){
+  opt=opt||{}; const g=el('g',{class:'axis'},svg), gr=el('g',{class:'grid'},svg);
+  yt.forEach(v=>{const y=Y(v);el('line',{x1:X.r[0],x2:X.r[1],y1:y,y2:y},gr);txt(g,X.r[0]-8,y+4,opt.yf?opt.yf(v):v,'lbl','end');});
+  xt.forEach(v=>{const x=X(v);el('line',{x1:x,x2:x,y1:Y.r[0],y2:Y.r[0]+5},g);txt(g,x,Y.r[0]+18,opt.xf?opt.xf(v):v,'lbl','middle');});
+  el('line',{x1:X.r[0],x2:X.r[1],y1:Y.r[0],y2:Y.r[0]},g);
+  el('line',{x1:X.r[0],x2:X.r[0],y1:Y.r[0],y2:Y.r[1]},g);
+  txt(svg,(X.r[0]+X.r[1])/2,Y.r[0]+40,xl,'lbl k','middle');
+  const ty=txt(svg,X.r[0]-52,(Y.r[0]+Y.r[1])/2,yl,'lbl k','middle'); ty.setAttribute('transform',`rotate(-90 ${X.r[0]-52} ${(Y.r[0]+Y.r[1])/2})`);
+}
+function lin(d0,d1,r0,r1){const f=v=>r0+(v-d0)*(r1-r0)/(d1-d0);f.r=[r0,r1];f.inv=p=>d0+(p-r0)*(d1-d0)/(r1-r0);return f;}
+function log(d0,d1,r0,r1){const l0=Math.log10(d0),l1=Math.log10(d1);const f=v=>r0+(Math.log10(v)-l0)*(r1-r0)/(l1-l0);f.r=[r0,r1];f.inv=p=>Math.pow(10,l0+(p-r0)*(l1-l0)/(r1-r0));return f;}
+
+// ---------- Figure 1 ----------
+(function(){
+  const svg=document.getElementById('fig1'); svg.innerHTML='';
+  const k=2.5,kap=0.9e-6,q=1e6,dT=557,d=0.002;
+  const srt=dT*k*SPI/(2*q); // sqrt(kappa t) so that surface rise = dT
+  const flame=z=>(2*q/k)*srt*ierfc(z/(2*srt));
+  const beamA=1.0/(2.5*Math.exp(-3/10)-1.5*Math.exp(-3/2.5)); // normalise the peak (≈3 mm) to dT
+  const beam=z=>{const zm=z*1000;return dT*beamA*(2.5*Math.exp(-zm/10)-1.5*Math.exp(-zm/2.5));};
+  const panels=[{x0:70,title:'Flame: surface flux 1 MW/m², 1.5 s',f:flame},{x0:470,title:'Beam: deposition over ~8 mm, cooled surface',f:beam}];
+  panels.forEach(p=>{
+    const X=lin(0,16,p.x0,p.x0+340), Y=lin(-250,650,290,50);
+    txt(svg,p.x0,30,p.title,'title');
+    axes(svg,X,Y,[0,4,8,12,16],[-200,0,200,400,600],'depth below the face z, mm','K  (rise, or drive)');
+    el('line',{x1:X.r[0],x2:X.r[1],y1:Y(0),y2:Y(0),stroke:css('--ink3'),'stroke-width':1},svg);
+    const T=[],D=[]; for(let i=0;i<=160;i++){const z=i*0.0001;T.push([X(z*1000),Y(p.f(z))]);D.push([X(z*1000),Y(p.f(z)-p.f(z+d))]);}
+    path(T,svg,css('--s1'));
+    const S=T.map(pt=>[pt[0]+2.5,pt[1]+2.5]); path(S,svg,css('--s2'),null,2);
+    path(D,svg,css('--s2'),'6 5',2);
+    const z0=p.f(0), dd0=p.f(0)-p.f(d);
+    txt(svg,X(0.3),Y(z0)-8,'surface rise '+Math.round(z0)+' K','lbl');
+    txt(svg,X(3.2),Y(dd0)+(dd0<0?18:-6),'T(z)−T(z+2 mm) at the face: '+(dd0>0?'+':'')+Math.round(dd0)+' K','lbl');
+    if(p.f===beam){const zp=3;txt(svg,X(zp)+6,Y(p.f(zp/1000))-6,'peak ≈ 3 mm down','lbl');}
+  });
+})();
+
+// ---------- Figure 2 ----------
+const F2={k:2.5,kap:0.9e-6,dTc:557,T0:293.15,tmax:200};
+function onsetTs(q,d){ // returns surface T at firing or null
+  const {k,kap,dTc,T0,tmax}=F2;
+  const drive=t=>{const s=SQ(kap*t);return (2*q/k)*s*(1/SPI-ierfc(d/(2*s)));};
+  if(drive(tmax)<dTc) return null;
+  let lo=1e-4,hi=tmax; for(let i=0;i<60;i++){const m=SQ(lo*hi);(drive(m)<dTc)?lo=m:hi=m;}
+  const t=SQ(lo*hi); return {T:T0+(2*q/k)*SQ(kap*t)/SPI,t};
+}
+const bands=[
+  {name:'Wilkinson & Tester 1993, Barre/Westerly',q:[0.2,2.9],T:[673,873]},
+  {name:'Kant & von Rohr 2016, Gotthard/Bethel',q:[0.45,0.87],T:[813,903]},
+  {name:'Höser 2016, Grimsel',q:[4.3,7.4],T:[703,873]}];
+const p14d2=[[0.336,1001.43],[0.755,918.32],[1.587,879.45]], p14d0=[[0.124,847.74],[0.411,850.43],[0.822,851.40],[1.640,852.98]];
+function drawFig2(d){
+  const svg=document.getElementById('fig2'); svg.innerHTML='';
+  const X=log(0.1,10,70,830), Y=lin(700,1400,350,40);
+  axes(svg,X,Y,[0.1,0.2,0.5,1,2,5,10],[700,800,900,1000,1100,1200,1300,1400],'heat flux q, MW/m²  (log scale)','onset surface temperature, K',{xf:v=>v});
+  bands.forEach(b=>{el('rect',{x:X(b.q[0]),y:Y(b.T[1]),width:X(b.q[1])-X(b.q[0]),height:Y(b.T[0])-Y(b.T[1]),fill:css('--band')},svg);});
+  txt(svg,X(0.21),Y(873)-6,'Wilkinson & Tester','lbl'); txt(svg,X(0.46),Y(903)-6,'Kant 2016','lbl'); txt(svg,X(4.4),Y(873)-6,'Höser (Grimsel)','lbl');
+  // d=0 line
+  el('line',{x1:X.r[0],x2:X.r[1],y1:Y(F2.T0+F2.dTc),y2:Y(F2.T0+F2.dTc),stroke:css('--ink3'),'stroke-width':1.5,'stroke-dasharray':'2 4'},svg);
+  txt(svg,X(6.5),Y(F2.T0+F2.dTc)-6,'d = 0: '+Math.round(F2.T0+F2.dTc)+' K, flat','lbl');
+  // model curve
+  const pts=[]; let qfirst=null;
+  for(let i=0;i<=240;i++){const q=Math.pow(10,-1+2*i/240)*1e6;const r=onsetTs(q,d*1e-3);if(r){if(qfirst===null)qfirst=q;const y=Math.max(Y.r[1],Y(r.T));pts.push([X(q/1e6),y]);}}
+  if(pts.length)path(pts,svg,css('--s1'),null,2.5);
+  const qmin=F2.k*F2.dTc/(d*1e-3)/1e6;
+  if(qmin>0.1&&qmin<10){el('line',{x1:X(qmin),x2:X(qmin),y1:Y.r[0],y2:Y.r[1],stroke:css('--s1'),'stroke-width':1,'stroke-dasharray':'3 4'},svg);txt(svg,X(qmin)+5,Y.r[1]+14,'q_min = kΔT_c/d = '+qmin.toFixed(2)+' MW/m²','lbl');}
+  document.getElementById('qminOut').textContent='q_min = '+qmin.toFixed(2)+' MW/m²';
+  p14d0.forEach(p=>el('circle',{cx:X(p[0]),cy:Y(p[1]),r:5,fill:css('--paper'),stroke:css('--s2'),'stroke-width':2},svg));
+  p14d2.forEach(p=>el('circle',{cx:X(p[0]),cy:Y(p[1]),r:5,fill:css('--s2'),stroke:css('--paper'),'stroke-width':1.5},svg));
+  txt(svg,X(0.124)+8,Y(1001)+4,'← no firing at 0.12 MW/m² (d = 2 mm)','lbl');
+  // hover
+  const tip=document.getElementById('tip2'); const hit=el('rect',{x:X.r[0],y:Y.r[1],width:X.r[1]-X.r[0],height:Y.r[0]-Y.r[1],fill:'transparent'},svg);
+  hit.addEventListener('mousemove',ev=>{const b=svg.getBoundingClientRect();const px=(ev.clientX-b.left)*860/b.width;const q=X.inv(px);const r=onsetTs(q*1e6,d*1e-3);tip.style.display='block';tip.style.left=(ev.clientX-b.left)+'px';tip.style.top=(ev.clientY-b.top)+'px';tip.textContent=r?`q ${q.toFixed(2)} MW/m² → fires at ${r.T.toFixed(0)} K after ${r.t<10?r.t.toFixed(1):r.t.toFixed(0)} s`:`q ${q.toFixed(2)} MW/m² → never fires in 200 s`;});
+  hit.addEventListener('mouseleave',()=>tip.style.display='none');
+}
+const dSl=document.getElementById('dSl'), dOut=document.getElementById('dOut');
+function upd(){const d=parseFloat(dSl.value);dOut.textContent=d.toFixed(1)+' mm';drawFig2(d);}
+dSl.addEventListener('input',upd); upd();
+
+// ---------- Figure 3 ----------
+(function(){
+  const svg=document.getElementById('fig3');
+  const X=log(1,10,70,830), Y=lin(0.9,2.6,310,40);
+  axes(svg,X,Y,[1,1.25,1.5,2,3,5,10],[1.0,1.2,1.4,1.6,1.8,2.0,2.2,2.4,2.6],'flux relative to the minimum, Q = q / q_min  (log scale)','onset rise ÷ flat level',{xf:v=>v,yf:v=>v.toFixed(1)});
+  // measured flatness band ±10%
+  el('rect',{x:X.r[0],y:Y(1.1),width:X.r[1]-X.r[0],height:Y(0.9)-Y(1.1),fill:css('--band')},svg);
+  txt(svg,X(5),Y(1.1)-6,'measured bands: flat within about ±10 %','lbl');
+  const pts=[]; for(let i=0;i<=300;i++){const Q=Math.pow(10,i/300*Math.log10(10)); if(Q<=1.001)continue;
+    // solve (Q/tau)(1/sqrt(pi)-ierfc(tau))=1 for tau
+    let lo=1e-4,hi=10; for(let j=0;j<70;j++){const m=0.5*(lo+hi);const v=(Q/m)*(1/SPI-ierfc(m));(v>1)?lo=m:hi=m;}
+    const tau=0.5*(lo+hi); const ratio=Q/(SPI*tau); pts.push([X(Q),Y(Math.min(ratio,2.6))]);}
+  path(pts,svg,css('--s1'),null,2.5);
+  [[1.25,2.02],[1.5,1.41],[2,1.10]].forEach(p=>{el('circle',{cx:X(p[0]),cy:Y(p[1]),r:3.5,fill:css('--s1')},svg);txt(svg,X(p[0])+7,Y(p[1])-6,`Q ${p[0]}: ×${p[1].toFixed(2)}`,'lbl');});
+  // Kant last spalling point: Q 1.1–1.5, measured ratio ~1 (570 vs 620 °C -> 0.93–1.0)
+  el('rect',{x:X(1.1),y:Y(1.0),width:X(1.5)-X(1.1),height:Y(0.93)-Y(1.0),fill:css('--s2'),opacity:.85},svg);
+  txt(svg,X(1.1),Y(1.0)-8,'Kant 2016, Gotthard 130 mm: Q ≈ 1.1–1.5, measured ×0.93–1.0','lbl');
+  // binary points: Q with qmin in [0.12,0.34]; use 0.25 midpoint; ratio = (T-293)/557
+  const qm=0.25; p14d2.forEach(p=>{const Q=p[0]/qm, r=(p[1]-293.15)/557; el('circle',{cx:X(Q),cy:Y(r),r:5,fill:css('--s2'),stroke:css('--paper'),'stroke-width':1.5},svg);});
+  txt(svg,X(9.8),Y(1.05)+20,'P2-14a binary, d = 2 mm, placed at q_min ≈ 0.25 MW/m²','lbl','end');
+})();
+
+// ---------- Figure 4 + table ----------
+(function(){
+  const CL=13,cf=0.4,k=2.5,dT=557;
+  const qmin=L=>CL*cf*k*dT/L/1e6;
+  const svg=document.getElementById('fig4');
+  const X=lin(0.5,6,70,830), Y=lin(0,1.6,290,40);
+  axes(svg,X,Y,[1,2,3,4,5,6],[0,0.25,0.5,0.75,1,1.25,1.5],'largest flaw span a flake can bridge, L_max, cm','minimum flux, MW/m²',{yf:v=>v.toFixed(2)});
+  el('rect',{x:X(1),y:Y.r[1],width:X(5)-X(1),height:Y.r[0]-Y.r[1],fill:css('--tint'),stroke:css('--rule')},svg);
+  txt(svg,X(3),Y.r[1]+14,'observed spall diameters (10–20 grains)','lbl','middle');
+  el('rect',{x:X.r[0],y:Y(0.5),width:X.r[1]-X.r[0],height:Y(0.33)-Y(0.5),fill:css('--band')},svg);
+  txt(svg,X(5.2),Y(0.5)-6,'Kant 2016 minimum','lbl');
+  const pts=[];for(let L=0.5;L<=6;L+=0.02){pts.push([X(L),Y(Math.min(1.6,qmin(L/100)))]);} path(pts,svg,css('--s1'),null,2.5);
+  const L1=CL*cf*k*dT/0.5e6*100, L2=CL*cf*k*dT/0.33e6*100;
+  [L1,L2].forEach(L=>{el('line',{x1:X(L),x2:X(L),y1:Y(qmin(L/100)),y2:Y.r[0],stroke:css('--s1'),'stroke-width':1,'stroke-dasharray':'3 4'},svg);txt(svg,X(L),Y.r[0]-6,L.toFixed(1)+' cm','lbl','middle');});
+  // table
+  const rows=[['130 mm',0.51,'spalls'],['150 mm',0.34,'no spall']];
+  const tb=document.getElementById('brTbl');
+  rows.forEach(r=>{const del=k*dT/(r[1]*1e6);const x=cf*del;const span=CL*x;const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r[0]}</td><td class="num">${r[1].toFixed(2)} MW/m²</td><td class="num">${(del*1000).toFixed(1)} mm</td><td class="num">${(x*1000).toFixed(2)} mm</td><td class="num">${(span*100).toFixed(1)} cm</td><td>${r[2]}</td>`;tb.appendChild(tr);});
+})();
+
+// ---------- Figure 5 ----------
+(function(){
+  const svg=document.getElementById('fig5');
+  const panels=[
+    {x0:20,title:'Flame on a half-space',sub:'thin compressed skin → buckling flake',prof:z=>Math.exp(-z/0.08),body:1.0,tension:false,depth:'skin ≈ 1–4 mm'},
+    {x0:300,title:'Beam, absorption ≪ block',sub:'thick compressed layer → thick flake or melt',prof:z=>(2.5*Math.exp(-z/0.3)-1.5*Math.exp(-z/0.075))/1.4,body:1.0,tension:false,depth:'layer ≈ 1/α'},
+    {x0:580,title:'Beam, penetration ≈ block',sub:'heated through; cooled skin in tension',prof:z=>0.75+0.25*Math.sin(Math.PI*Math.min(z,1))-0.25*Math.exp(-z/0.08),body:1.0,tension:true,depth:'whole body'}];
+  panels.forEach(p=>{
+    const x0=p.x0,w=260,top=60,h=190;
+    txt(svg,x0,24,p.title,'title'); txt(svg,x0,42,p.sub,'lbl');
+    // rock block with vertical gradient drawn as stripes
+    const n=40; for(let i=0;i<n;i++){const z=i/n;const T=Math.max(0,Math.min(1,p.prof(z)));const c=T;const col=`rgba(235,104,52,${(0.08+0.75*c).toFixed(3)})`;el('rect',{x:x0,y:top+i*h/n,width:w*0.6,height:h/n+0.5,fill:col},svg);}
+    el('rect',{x:x0,y:top,width:w*0.6,height:h,fill:'none',stroke:css('--ink3')},svg);
+    txt(svg,x0+4,top-6,'face','lbl');
+    // profile curve to the right
+    const pts=[];for(let i=0;i<=n;i++){const z=i/n;pts.push([x0+w*0.62+p.prof(z)*w*0.35,top+z*h]);} path(pts,svg,css('--s1'),null,2);
+    txt(svg,x0+w*0.62,top+h+14,'T(z) →','lbl');
+    // surface stress arrows
+    const y=top+8; const sx=x0+w*0.3; const c=p.tension?css('--s8'):css('--s1');
+    if(p.tension){ path([[sx-30,y],[sx-60,y]],svg,c,null,2.5); path([[sx+30,y],[sx+60,y]],svg,c,null,2.5); txt(svg,sx,y+22,'surface in TENSION','lbl k','middle'); }
+    else { path([[sx-60,y],[sx-30,y]],svg,c,null,2.5); path([[sx+60,y],[sx+30,y]],svg,c,null,2.5); txt(svg,sx,y+22,'surface in compression','lbl k','middle'); }
+    txt(svg,x0+4,top+h-8,p.depth,'lbl');
+  });
+})();
+})();
+</script>

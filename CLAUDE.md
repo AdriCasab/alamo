@@ -131,6 +131,10 @@ mpirun --oversubscribe --bind-to none -np 4 \
 python3 tests/MMWSpalling/<step>/test tests/MMWSpalling/<step>/output
 # Or, if the test needs numpy/yt on this machine:
 /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/<step>/test
+
+# Remote Control (drive phases from the iPhone app / claude.ai/code).
+# Server rooted in this repo; -c resumes the last session. Header has setup.
+docs/project/tools/rc.sh
 ```
 
 ## Do Not Touch
@@ -158,7 +162,8 @@ python3 tests/MMWSpalling/<step>/test tests/MMWSpalling/<step>/output
   - **Hand-written content ≤ 350 lines.** Everything else in the file. Check:
     `awk '/^## Current Status/{g=1} /^Active step:/{g=0} !g{n++} END{print n}' ROADMAP.md`
     (287 on 2026-10-07).
-  - **Section budgets inside that:** `## Standing rules` **10–15 bullets, never archived**
+  - **Section budgets inside that:** `## Standing rules` **10–20 bullets, never archived** (raised 15 → 20 by the user on 2026-10-12:
+    the block had sat at 15/15 while two new programme invariants earned a slot)
     (unit conventions, scoring traps, coupled calibrations); `## Known Stale/Important Notes`
     **≤ 40 bullets of ≤ 3 lines**, each a pointer to the evidence; `Active step:` plus
     `Next milestones` together **≤ 100 lines**; `## Validation Story` ≤ 20 lines.

@@ -1,0 +1,321 @@
+#!/usr/bin/env python3
+"""P2-3 (a2) -- the wall enthalpy march.
+
+WHAT IT REPLACES. Every side face above the nozzle plane sees ONE SCALAR,
+`side_T_eff` = `jet_T_exhaust`, at every height -- 1,504 K on the P2-2f m13 leg,
+identically for a face 10 mm down the bore and one 400 mm down. That uniform hot
+gas is the mechanism that ballooned D2v's M2 mouth to Ø 137 mm against Meier's
+96. `surface_patch.jet_wall_march = 1` marches the gas UP the bore the way the
+floor march marches it OUT across the floor, so it arrives at the mouth cooled
+by the rock it heated on the way.
+
+Legs, all off `unit/jet_enthalpy/input_quarter` (24x24x40 at 2 mm, which
+already carries `jet_closure = enthalpy`), with the nozzle fed DOWN past the
+undrilled rim so above-plane faces exist at all -- see BASE:
+  W    factor_above = 1, march ON,  1 rank  -- the leg under test
+  W4   factor_above = 1, march ON,  4 ranks -- (d) rank independence
+  NC0  factor_above = 0, march ON,  1 rank  -- (c) the negative case
+  OFF  factor_above = 1, march OFF, 1 rank  -- (e) the old behaviour
+
+⚠ THE MARCH IS TESTED ON THE **TYPED** COEFFICIENT, not the derived law. The two
+are independent: the march decides what GAS TEMPERATURE a face stands in, the
+law decides its COEFFICIENT. Mixing them here would mean a failure could be
+either, and on this 48 mm fixture box the bore never clears WJ_R_SHIELD = 33.5 mm
+by two cells, so the law would be inert anyway (`wall_law_on` 0) and the test
+would be measuring the fallback while claiming to measure the law. The law's own
+reach is witnessed on the real leg by `side_h_used_n_above` (a5) and its routing
+by `unit/lateral_flux_lock` (a3).
+
+⚠ (e) IS TWO-SIDED ON PURPOSE. "The march is off so nothing changed" is not
+checkable by a column that does not exist when it is off. So (e) asserts BOTH
+that the new columns are absent AND that the wall takes STRICTLY MORE power with
+the march off than on -- uniform gas at the floor-exit temperature is hotter
+than the marched profile at every height above the first bin, so if the two legs
+agreed, the march would be inert.
+
+Usage: test
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+UNIT = os.path.join(ROOT, "tests", "MMWSpalling", "unit")
+IN_Q = os.path.join(UNIT, "jet_enthalpy", "input_quarter")
+OUT = os.path.join(HERE, "output")
+
+# ⚠⚠ WHY A DESCENDING PRESCRIBED NOZZLE AND NOT THE FEET DECK. The march acts
+# on ABOVE-PLANE faces (s = nozzle_z - column_top <= 0), and on `robin_feet`'s
+# deck there are NONE: the nozzle rides 46 mm above the rock (nozzle_z 0.126 vs
+# top 0.080) for the whole run, so `side_cols_above` is 0 at every step and the
+# first version of this fixture tested nothing while reporting two passing rows.
+# Above-plane faces exist only once the nozzle has descended PAST the undrilled
+# rim, which is jet_d2c case QF's situation ("373/576 columns have s <= 0" after
+# the crossing). So: start the nozzle 5 mm ABOVE the top so the centre drills,
+# then feed it down at 1 mm/s so it passes the rim at about t = 5 s, leaving a
+# drilled centre below plane and an undrilled rim above it.
+# ⚠ standing rule 6: `nozzle_collision_radius` defaults to `radius` (0.2 m here,
+# wider than the 48 mm box) under prescribed feed -- effectively no guard -- so
+# it is set EXPLICITLY.
+BASE = ["stop_time=15.0",
+        "surface_patch.nozzle_z0=0.085",
+        "surface_patch.nozzle_feed=0.001",
+        "surface_patch.nozzle_collision_radius=0.010",
+        "surface_patch.side_face_flux=1",
+        "surface_patch.side_face_h=169.3",
+        "surface_patch.side_face_T=live",
+        "surface_patch.jet_profile_interval=0.5",
+        "amr.thermo.int=1", "amr.thermo.plot_int=1",
+        "energy_ledger.enabled=1",
+        "spall.surface_T=reconstructed", "spall.removal_energy=flake"]
+
+LEGS = {
+    "W":   (["surface_patch.side_face_factor_above=1.0", "surface_patch.jet_wall_march=1"], 1),
+    "W4":  (["surface_patch.side_face_factor_above=1.0", "surface_patch.jet_wall_march=1"], 4),
+    "NC0": (["surface_patch.side_face_factor_above=0.0", "surface_patch.jet_wall_march=1"], 1),
+    "OFF": (["surface_patch.side_face_factor_above=1.0"], 1),
+}
+
+FAILS = []
+
+
+def check(ok, msg, detail=""):
+    print("  %s  %s" % ("ok  " if ok else "FAIL", msg))
+    if detail:
+        print("        %s" % detail)
+    if not ok:
+        FAILS.append(msg)
+
+
+def run(tag, extra, nproc):
+    d = os.path.join(OUT, tag)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(nproc),
+            BIN, IN_Q] + BASE + extra +
+           ["plot_file=%s" % os.path.join(d, "run")])
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    with open(os.path.join(d, "run.log"), "w") as lg:
+        lg.write(" ".join(cmd) + "\n\n")
+        lg.flush()
+        return subprocess.call(cmd, cwd=ROOT, stdout=lg,
+                               stderr=subprocess.STDOUT, env=env)
+
+
+def thermo(tag):
+    d = os.path.join(OUT, tag)
+    hits = []
+    for dp, _, fn in os.walk(d):
+        hits += [os.path.join(dp, f) for f in fn if f.endswith("thermo.dat")]
+    if not hits:
+        return None
+    lines = [ln.split() for ln in open(sorted(hits)[0]).read().splitlines() if ln.split()]
+    head, rows = lines[0], lines[1:]
+    out = {}
+    for i, nm in enumerate(head):
+        col = []
+        for r in rows:
+            if i < len(r):
+                try:
+                    col.append(float(r[i]))
+                except ValueError:
+                    pass
+        out[nm] = col
+    return out
+
+
+def wall_profile(tag):
+    """rows of <tag>/run_wall_profile.csv as dicts of float."""
+    d = os.path.join(OUT, tag)
+    hits = []
+    for dp, _, fn in os.walk(d):
+        hits += [os.path.join(dp, f) for f in fn if f.endswith("wall_profile.csv")]
+    if not hits:
+        return None
+    lines = open(sorted(hits)[0]).read().splitlines()
+    if len(lines) < 2:
+        return []
+    head = lines[0].split(",")
+    out = []
+    for ln in lines[1:]:
+        f = ln.split(",")
+        if len(f) != len(head):
+            continue
+        try:
+            out.append({h: float(v) for h, v in zip(head, f)})
+        except ValueError:
+            continue
+    return out
+
+
+def main():
+    print("P2-3 (a2) -- the wall enthalpy march")
+    print("=" * 72)
+    for tag, (extra, np_) in LEGS.items():
+        rc = run(tag, extra, np_)
+        print("  leg %-4s rc=%d  np=%d" % (tag, rc, np_))
+        if rc != 0:
+            FAILS.append("leg %s rc=%d" % (tag, rc))
+    if FAILS:
+        print("\nFAILED: %s" % "; ".join(FAILS))
+        return 1
+
+    th = {t: thermo(t) for t in LEGS}
+    for t, v in th.items():
+        if v is None:
+            FAILS.append("no thermo for %s" % t)
+    if FAILS:
+        print("\nFAILED: %s" % "; ".join(FAILS))
+        return 1
+
+    def tail(t, nm):
+        return th[t].get(nm, [])[1:]
+
+    # ---- (a) THE BUDGET IDENTITY, every step ----
+    face = tail("W", "jet_P_face")
+    wall = tail("W", "jet_P_wall")
+    exh = tail("W", "jet_P_exhaust")
+    cap = tail("W", "jet_P_cap")
+    n = min(len(face), len(wall), len(exh), len(cap))
+    # ⚠⚠ THE 1e-9 BAR CANNOT BE TAKEN FROM thermo.dat, AND DEMANDING IT HERE WAS
+    # THIS TEST'S OWN BUG (standing rule 7(iv)). The file is written with `%g`
+    # -- SIX significant digits -- so with jet_P_cap ~ 2.6e3 W each of the four
+    # columns is quantised at ~1e-2 W and their sum carries ~3e-2 W of pure
+    # FORMATTING error, which is 4.4e3 times a 1e-9 relative tolerance. The
+    # first run duly reported "worst = 4.43e+03 x tol" on a binary whose own
+    # internal assertion at 1e-9 had passed 4,999 times.
+    # ⇒ the 1e-9 claim is carried by the BINARY: JetEnthalpyMarch ABORTS if
+    #   |P_face + P_wall + P_exhaust - P_cap| > 1e-9 * budget, on every step, in
+    #   full double precision. rc = 0 over every leg IS that witness.
+    # ⇒ what the printed columns can honestly check is that the identity holds
+    #   to the PRINTING precision, which is what this row does.
+    GTOL = 1.0e-5
+    worst, worst_i = 0.0, -1
+    for i in range(n):
+        den = max(abs(cap[i]), 1.0)
+        rel = abs(face[i] + wall[i] + exh[i] - cap[i]) / den
+        if rel > worst:
+            worst, worst_i = rel, i
+    check(n > 0 and worst <= GTOL,
+          "(a) jet_P_face + jet_P_wall + jet_P_exhaust == jet_P_cap to the "
+          "PRINTED precision, every step (the 1e-9 bar is the binary's own "
+          "abort, which rc = 0 witnesses)",
+          "%d rows, worst relative residual %.3g (bar %.0e, set by `%%g`'s six "
+          "significant digits, NOT by the physics)" % (n, worst, GTOL))
+
+    # ---- (b) the gas cools MONOTONICALLY up the bore ----
+    wp = wall_profile("W")
+    if not wp:
+        check(False, "(b) wall_profile.csv exists and has rows",
+              "no <plot_file>_wall_profile.csv written")
+    else:
+        bad, nt, worstd = 0, 0, 0.0
+        bytime = {}
+        for r in wp:
+            bytime.setdefault(r["time"], []).append(r)
+        for t, rs in bytime.items():
+            rs.sort(key=lambda x: x["k"])
+            nt += 1
+            for i in range(1, len(rs)):
+                d = rs[i]["T_gas"] - rs[i - 1]["T_gas"]
+                if d > 1e-9:
+                    bad += 1
+                    worstd = max(worstd, d)
+        check(bad == 0,
+              "(b) wall_T_gas[k] is monotone NON-INCREASING in k on every "
+              "profile snapshot",
+              "%d snapshots, %d increasing pairs (worst +%.3g K). The gas can "
+              "only lose enthalpy to the wall, so a rise means a bin was "
+              "credited heat." % (nt, bad, worstd))
+        # non-vacuity: it must actually COOL, not merely fail to rise
+        drop = 0.0
+        for t, rs in bytime.items():
+            rs.sort(key=lambda x: x["k"])
+            if len(rs) > 1:
+                drop = max(drop, rs[0]["T_gas"] - rs[-1]["T_gas"])
+        check(drop > 1.0,
+              "(b2) and it DOES cool -- a flat profile would pass (b) vacuously",
+              "largest floor-to-mouth drop over a snapshot: %.2f K" % drop)
+
+    # ---- (c) THE NEGATIVE CASE ----
+    w0 = tail("NC0", "jet_P_wall")
+    mouth0 = tail("NC0", "wall_T_mouth")
+    exh0 = tail("NC0", "jet_T_exhaust")
+    allzero = bool(w0) and all(x == 0.0 for x in w0)
+    same = (bool(mouth0) and bool(exh0)
+            and all(("%g" % a) == ("%g" % b) for a, b in zip(mouth0, exh0)))
+    check(allzero and same,
+          "(c) factor_above = 0 => jet_P_wall EXACTLY 0 and the mouth IS the "
+          "floor exit",
+          "%d rows, max |jet_P_wall| = %.3g; wall_T_mouth == jet_T_exhaust on "
+          "every row: %s" % (len(w0), max((abs(x) for x in w0), default=0.0), same))
+
+    # ---- (d) RANK INDEPENDENCE ----
+    w1, w4 = tail("W", "jet_P_wall"), tail("W4", "jet_P_wall")
+    m1, m4 = tail("W", "wall_T_mouth"), tail("W4", "wall_T_mouth")
+    nn = min(len(w1), len(w4))
+    # ⚠ thermo.dat is %g (six significant digits) -- compare the PRINTED token,
+    # not the double (standing rule 7(iv)).
+    dw = sum(1 for i in range(nn) if ("%g" % w1[i]) != ("%g" % w4[i]))
+    dm = sum(1 for i in range(min(len(m1), len(m4)))
+             if ("%g" % m1[i]) != ("%g" % m4[i]))
+    check(nn > 0 and dw == 0 and dm == 0,
+          "(d) jet_P_wall and wall_T_mouth are RANK-COUNT INDEPENDENT (1 vs 4)",
+          "%d rows compared, %d jet_P_wall and %d wall_T_mouth tokens differ"
+          % (nn, dw, dm))
+
+    # ---- (e) THE MARCH OFF REPRODUCES THE OLD BEHAVIOUR ----
+    absent = ("jet_P_wall" not in th["OFF"] and "wall_T_mouth" not in th["OFF"]
+              and "wall_bins" not in th["OFF"] and "wall_L_fit" not in th["OFF"])
+    pa_off = tail("OFF", "side_P_face_above")
+    pa_on = tail("W", "side_P_face_above")
+    s_off = sum(pa_off) / len(pa_off) if pa_off else 0.0
+    s_on = sum(pa_on) / len(pa_on) if pa_on else 0.0
+    check(absent, "(e) with the march OFF the four new columns are ABSENT "
+                  "(keyed off by default -- what keeps the 2639 tree clean)",
+          "OFF has %d columns, W has %d" % (len(th["OFF"]), len(th["W"])))
+    check(s_off > 0.0 and s_on > 0.0 and s_on < s_off,
+          "(e2) and the march is NOT inert: the wall takes STRICTLY LESS power "
+          "with it on",
+          "mean side_P_face_above: OFF %.4f W vs ON %.4f W (ratio %.4f). "
+          "Uniform gas at the floor-exit T is hotter than the marched profile "
+          "at every height above the first bin, so equality would mean the "
+          "march changed nothing."
+          % (s_off, s_on, (s_on / s_off) if s_off else float("nan")))
+
+    # ---- the ledger must still close on the marched leg ----
+    les = tail("W", "ledger_err_solid")
+    worst_l = max((abs(x) for x in les), default=0.0)
+    check(bool(les) and worst_l <= 5.0e-3,
+          "(f) ledger_err_solid <= 5e-3 on the marched leg -- the resolver did "
+          "not break the kernel/ledger mirror",
+          "max %.4e over %d rows" % (worst_l, len(les)))
+
+    print("=" * 72)
+    if FAILS:
+        print("FAILED %d: %s" % (len(FAILS), "; ".join(FAILS)))
+        return 1
+    print("PASS")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+# ⚠⚠ THE P2-4 BODY ROWS ARE NOT HERE, AND CANNOT BE. The cold body's
+# coefficient is the wall law's DUCT scalar with no typed fallback, so
+# `wall_law_ready` must be true -- which needs a bore wider than
+# WJ_R_SHIELD + 2dx (> 75 mm across) AND a domain deep enough for the bore
+# measurement's own band (it drops 100 mm below the mouth and 20 mm above the
+# floor; this 80 mm-deep box leaves nothing, so `wall_r_bore` is identically 0).
+# Probed on this deck: wall_law_on 0, body_h_used 0, body_noLaw_n 4998 of 4998.
+# Every body row would then pass or fail for a reason unrelated to the code --
+# and (g), "a hot body draws exactly zero", would report a PASS on a zero caused
+# by the law never switching on. ⇒ the body gate lives on the Meier deck, in
+# `studies/p2_4_body/gate_a1.py`.

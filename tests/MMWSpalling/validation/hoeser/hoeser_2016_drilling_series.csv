@@ -1,0 +1,26 @@
+# Höser 2016 (Diss. ETH 23896), Grimsel granite, nozzle D1 = 7.9 mm unless stated, 30 s runs, 47 MPa uniaxial load unless stated.
+# q_sen = PSI calorimeter flux at the same (Q_f, L), confined ring, axis value [MW/m2]; values read off figures (+-5 % of axis span).
+series,Q_f_kW,L,D_nozzle_mm,load_MPa,t_s,q_sen_MWm2,removal_cm3_per_min,figure
+firing_rate,23,8,7.9,47,30,4.3,17,5.18
+firing_rate,28,8,7.9,47,30,5.2,27,5.18
+firing_rate,33,8,7.9,47,30,6.4,33,5.18
+firing_rate,38,8,7.9,47,30,7.4,46,5.18
+standoff,38,8,7.9,47,30,7.4,46,5.19
+standoff,38,10,7.9,47,30,6.1,35,5.19
+standoff,38,11,7.9,47,30,5.4,23,5.19
+standoff,38,13,7.9,47,30,4.3,21,5.19
+load,38,8,7.9,0,30,7.4,26,5.12
+load,38,8,7.9,17.5,30,7.4,52,5.12
+load,38,8,7.9,28.9,30,7.4,54,5.12
+load,38,8,7.9,37.4,30,7.4,64,5.12
+load,38,8,7.9,47,30,7.4,66,5.12
+time,38,8,7.9,47,15,7.4,64,5.9
+time,38,8,7.9,47,30,7.4,66,5.9
+time,38,8,7.9,47,60,7.4,81,5.9
+time,38,8,7.9,47,90,7.4,90,5.9
+nozzle,23,9,7.9,47,90,2.5,7.0,5.25
+nozzle,23,10,7.9,47,90,3.4,11.0,5.25
+nozzle,23,12,7.9,47,90,4.0,14.5,5.25
+nozzle,54,8,12.1,47,90,2.6,15.4,5.25
+nozzle,54,9,12.1,47,90,3.4,18.0,5.25
+nozzle,54,10,12.1,47,90,4.0,19.4,5.25

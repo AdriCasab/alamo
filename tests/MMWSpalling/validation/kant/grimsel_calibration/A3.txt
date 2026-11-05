@@ -1,0 +1,11 @@
+a3 -- HOS_R (input_lab re-pointed + G1's argv minus the shared keys) vs G1, to 15 s
+====================================================================================================
+  rc 0; binary 0a96a095ad30f45e (G1 ran on P2-11's binary; same default-path code, P2-12 r2/r5)
+  plotfile 00000cell: 7 files, 0 differ, 0 only on one side
+  plotfile 00000node: 7 files, 0 differ, 0 only on one side
+  plotfile 01875cell: 7 files, 0 differ, 0 only on one side
+  plotfile 01875node: 7 files, 0 differ, 0 only on one side
+  thermo: 313 rows to 15 s, 87 non-timer columns, 0 rows differ
+  run_removal_events.csv: 5067 lines, exact prefix of G1's YES; G1 has 5067 lines with time < 15 s
+  run_jet_profile.csv: 1066 lines, exact prefix of G1's YES; G1 has 1066 lines with time < 15 s
+a3 PASS (gate)

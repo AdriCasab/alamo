@@ -1,0 +1,1348 @@
+#!/usr/bin/env python3
+"""P1g-0b (a1)/(a2) -- ONE CRITERION, ONE KERNEL: the lateral flux argument lock.
+
+⚠⚠ WHY THIS FILE EXISTS. Three times now, the lateral criterion has passed
+`SurfaceCellFlux` something the flux itself never used, and each time it took a
+campaign to find:
+
+  * P1f  d9  : `K_Ic` in MPa·√m compared against `K_I` in Pa·√m   -- 1e6×
+  * P1g-0    : the Newton LENGTH `d_n` where the kernel passes `DX[0]` -- ×0.71
+               on a 45° corner
+  * P1g-0b   : the COEFFICIENT, capped unconditionally at 80 W/m²K where the
+               kernel caps only under `side_face_flux && per_cell_removal`
+
+All three are the same defect shape in the same function call, and all three were
+invisible because the agreement was documented in COMMENTS. Comments are what
+failed. This is a test.
+
+⚠ THIS TEST IS ALMOST ENTIRELY A SOURCE ASSERTION AND HAS NO `input`, like the
+(a1)/(a1b) blocks in `unit/lateral_drive/test`. ⚠⚠ P2-2a adds the ONE exception:
+a short run per RETIRED KEY, because "the key is gone" cannot be proved by
+reading source -- a deleted parse leaves the key accepted-and-ignored by any
+other reader, and for `spall.support_rule` the failure mode is SILENT
+over-removal 240 K early rather than an abort. Those legs use `stop_time=0.0`
+and are skipped under `--check`. Everything else needs no simulation because
+the property it checks -- that four call sites agree argument by argument -- is a
+property of the source, and checking it at runtime would require the very
+configurations the aborts forbid.
+
+⚠⚠ FAIL CLOSED. Any parse failure, any site that stops being found, any argument
+position that is neither identical nor declared below, is a FAILURE. A lock that
+degrades to "found nothing, nothing to check" is how the first three survived.
+"""
+import os, re, subprocess, sys, tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+MMW = os.path.join(ROOT, "src", "Integrator", "MMWSpalling.H")
+REM = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "Removal.H")
+
+# The signature, from MMWSpalling.H's declaration of SurfaceCellFlux. Positions
+# are what the lock is written against; a change in the signature must break it.
+SIG = ["in_patch", "face_form", "surf_c", "h", "T_gas", "kc", "dz", "Tc",
+       "eps_lo", "eps_hi", "T_eps_b", "sig_SB", "h_c", "T_a",
+       "q_in", "q_out", "q_robin", "q_loss",
+       "T_pin", "branch", "T_surf_in", "T_face_out"]
+
+# ---------------------------------------------------------------------------
+# THE LOCK. One entry per argument position. Either:
+#   SAME     -- must be textually identical across all four lateral sites
+#   (cond)   -- may differ, and this is the stated condition under which the
+#               four are nonetheless equal. A condition is a CLAIM; if the
+#               arguments become identical the entry must be promoted to SAME,
+#               which this test also enforces so the table cannot rot.
+# ⚠ Local NAMES differ between sites by design (`h_side` / `h_s`), so most rows
+# are conditions on the VALUE, not on the spelling. A row whose condition is
+# "same value, different local name" is still a row: it is the statement that
+# somebody checked.
+SAME = "SAME"
+LOCK = {
+    "in_patch":  ("value", "all four pass the literal `true`"),
+    "face_form": ("value", "criterion hard-codes `true`; kernel/march/ledger pass "
+                           "`sp_surfform ? true : sp_face`. EQUAL ONLY under "
+                           "robin_form = surface AND side_face_closure = follow "
+                           "-- BOTH, see MMWSpalling.H:1825-1828. ENFORCED by the "
+                           "runtime abort in Removal.H (P1g-0b deliverable 3)"),
+    "surf_c":    ("value", "all four pass the literal 1.0 -- the lateral area "
+                           "factor is applied by the CALLER, not inside the flux"),
+    "h":         ("value", "`h_side`/`h_s`: the explicit (side_face_h, side_face_T) "
+                           "pair, capped through the SAME conjunction at criterion/"
+                           "kernel/ledger after P1g-0b. ⚠⚠ THE MARCH APPLIES NO CAP "
+                           "-- see the (a1) block below, which is where that is "
+                           "asserted and explained"),
+    "T_gas":     ("value", "`T_side`/`T_s`: side_T_eff on the wall branch at all four"),
+    "kc":        ("value", "per-cell `kappa_mf` with the same damage factor at all "
+                           "four after P1g-0b deliverable 3. ⚠ The kernel also "
+                           "zeroes kc on a void cell; the criterion's cell is solid "
+                           "by construction, so that branch is unreachable there"),
+    "dz":        ("value", "`DX[0]` at all four -- fixed in P1g-0. ⚠ NOT the "
+                           "wall-normal `d_n`, which belongs to the SLOPE only"),
+    "Tc":        ("value", "the same cell's temperature under different accessors "
+                           "(`T(i,j,k)` / `sT[idx]` / `Tc`)"),
+    "eps_lo":    ("value", "losses.epsilon at all four"),
+    "eps_hi":    ("value", "losses.epsilon_high at all four"),
+    "T_eps_b":   ("value", "losses.T_eps_break at all four"),
+    "sig_SB":    ("value", "losses.sigma_SB at all four"),
+    "h_c":       ("value", "losses.h_conv at all four"),
+    "T_a":       ("value", "losses.T_amb at all four"),
+    "q_in":      ("out",   "out-parameter, local name only"),
+    "q_out":     ("out",   "out-parameter, local name only"),
+    "q_robin":   ("out",   "out-parameter, local name only"),
+    "q_loss":    ("out",   "out-parameter, local name only"),
+    "T_pin":     ("value", "criterion hard-codes 0.0; the others pass "
+                           "`tpe ? tpe[col] : 0.0`, and `tpe` is non-null only when "
+                           "robin_form = pinned. EQUAL BY SCOPE, and ENFORCED by the "
+                           "second runtime abort (which cannot fire independently of "
+                           "the first -- pinned already fails surfform)"),
+    "branch":    ("out",   "diagnostic out-parameter; nullptr at the lateral sites"),
+    "T_surf_in": ("value", "`lat_Ts*`: `(sp_surfform && !lat_wall) ? SurfaceRobinT : 0`. "
+                           "EQUAL BY SCOPE -- the criterion runs only on the WALL "
+                           "branch, where every site's value is 0 (P1f's original "
+                           "blocker finding)"),
+    "T_face_out": ("value", "the criterion alone passes `&T_face`; the other three "
+                            "leave the nullptr default, so no kernel face temperature "
+                            "exists to assert against. ⚠ P1g owes exposing it -- it "
+                            "also closes (k3)"),
+}
+
+
+def strip_comments(text):
+    """blank out // and /* */ comments, PRESERVING newlines so every line number
+    this test reports still matches the file.
+
+    ⚠⚠ Not cosmetic. The first run of this lock FAILED because
+    `side_hmax = surface_patch.side_face_h_max;` -- the defect -- is quoted
+    verbatim inside the comment that explains the fix. A source assertion that
+    reads comments as code cannot tell a fix from a description of the bug it
+    fixed, which is a particularly bad failure mode for THIS test."""
+    out, i, n = [], 0, len(text)
+    while i < n:
+        if text.startswith("//", i):
+            j = text.find("\n", i)
+            j = n if j < 0 else j
+            out.append(" " * (j - i)); i = j
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append("".join(c if c == "\n" else " " for c in text[i:j]))
+            i = j
+        elif text[i] in "\"'":
+            q, j = text[i], i + 1
+            while j < n and text[j] != q:
+                j += 2 if text[j] == "\\" else 1
+            j = min(j + 1, n)
+            # keep string literals: the abort MESSAGES are what (a3) checks
+            out.append(text[i:j]); i = j
+        else:
+            out.append(text[i]); i += 1
+    return "".join(out)
+
+
+def calls(path, text):
+    """every SurfaceCellFlux call in `text`, as (line, [args]) -- brace matched.
+    ⚠ Fails closed: an unbalanced call raises rather than being skipped."""
+    out = []
+    for m in re.finditer(r"SurfaceCellFlux\s*\(", text):
+        head = text[:m.start()].rstrip()
+        if head.endswith("static void") or head.endswith("void"):
+            continue                      # the declaration, not a call
+        depth, j = 1, m.end()
+        while depth and j < len(text):
+            if text[j] == "(":
+                depth += 1
+            elif text[j] == ")":
+                depth -= 1
+            j += 1
+        if depth:
+            raise RuntimeError("unbalanced SurfaceCellFlux call at %s:%d"
+                               % (path, text[:m.start()].count("\n") + 1))
+        body, args, d2, cur = text[m.end():j - 1], [], 0, ""
+        for ch in body:
+            if ch in "([{":
+                d2 += 1
+            elif ch in ")]}":
+                d2 -= 1
+            if ch == "," and d2 == 0:
+                args.append(cur); cur = ""
+            else:
+                cur += ch
+        args.append(cur)
+        # normalise whitespace, and strip /*comment*/ argument labels
+        norm = []
+        for a in args:
+            a = re.sub(r"/\*.*?\*/", " ", a)
+            norm.append(" ".join(a.split()))
+        out.append((text[:m.start()].count("\n") + 1, norm))
+    return out
+
+
+def main():
+    fails = []
+
+    def need(ok, msg):
+        print(("  ok    " if ok else "  FAIL  ") + msg)
+        if not ok:
+            fails.append(msg)
+
+    # ⚠ every assertion below reads CODE, never comments -- see strip_comments.
+    mmw, rem = strip_comments(open(MMW).read()), strip_comments(open(REM).read())
+    try:
+        cm, cr = calls(MMW, mmw), calls(REM, rem)
+    except RuntimeError as e:
+        print("  FAIL  parse failed (fail closed): %s" % e)
+        return 1
+
+    # ---- identify the FOUR lateral sites ---------------------------------
+    # ⚠ by CONTENT, not by line number: P1g-0 moved these sites by ~25 lines
+    # when a comment grew, and a line-pinned lock would have silently missed.
+    lateral = [("kernel", MMW, ln, a) for ln, a in cm
+               if any("lat_" in x for x in a)]
+    lateral += [("criterion", REM, ln, a) for ln, a in cr]
+    print("P1g-0b (a2) THE LATERAL FLUX ARGUMENT LOCK")
+    print("     %d SurfaceCellFlux calls in src/ (%d in MMWSpalling.H, %d in "
+          "Removal.H)" % (len(cm) + len(cr), len(cm), len(cr)))
+    for tag, path, ln, a in lateral:
+        print("       %-10s %-16s :%-5d  %2d args"
+              % (tag, os.path.basename(path), ln, len(a)))
+    need(len(lateral) == 4,
+         "exactly FOUR lateral SurfaceCellFlux sites found (%d) -- kernel, "
+         "march, ledger, criterion" % len(lateral))
+    if len(lateral) != 4:
+        return 1
+
+    # ---- every position is either identical or declared ------------------
+    width = max(len(a) for _t, _p, _l, a in lateral)
+    need(width <= len(SIG),
+         "no call passes more arguments than the signature declares (%d <= %d)"
+         % (width, len(SIG)))
+    undeclared = [SIG[i] for i in range(min(width, len(SIG)))
+                  if SIG[i] not in LOCK]
+    need(not undeclared,
+         "every argument position reaching a lateral site is DECLARED in the "
+         "lock (%s)" % (", ".join(undeclared) if undeclared else "all declared"))
+
+    print("\n     position-by-position, across the four sites:")
+    for i in range(min(width, len(SIG))):
+        name = SIG[i]
+        vals = []
+        for tag, _p, _l, a in lateral:
+            vals.append(a[i] if i < len(a) else "<default>")
+        same = len(set(vals)) == 1
+        kind, why = LOCK.get(name, ("?", "UNDECLARED"))
+        mark = "identical" if same else "differs"
+        print("       %-11s %-10s %s" % (name, mark,
+                                         " | ".join(v[:26] for v in vals)))
+        if kind == "?":
+            need(False, "argument %d (%s) is not declared in the lock" % (i, name))
+            continue
+        # ⚠ a declared difference that has become identical must be PROMOTED,
+        # or the table rots into a list of excuses nobody rechecks.
+        if same and kind == "value" and "all four" not in why:
+            print("         ⚠ now IDENTICAL -- promote this row to 'all four' in "
+                  "the lock")
+        if not same:
+            print("         condition: %s" % why)
+
+    # ---- (a1) THE CAP: one conjunction, or a stated reason ---------------
+    print("\nP1g-0b (a1) THE COEFFICIENT CAP -- one condition at every site")
+    COND = r"surface_patch\.side_face_flux\s*&&\s*spall_per_cell_removal"
+    sites = [("criterion Removal.H", rem), ("kernel+ledger MMWSpalling.H", mmw)]
+    n_rem = len(re.findall(r"side_hmax\s*=\s*\n?\s*\(?" + COND, rem))
+    n_mmw = len(re.findall(r"side_hmax\s*=\s*\n?\s*\(?" + COND, mmw))
+    print("     `side_hmax` resolved through the conjunction: Removal.H %d, "
+          "MMWSpalling.H %d" % (n_rem, n_mmw))
+    # ⚠⚠ P2-8 GROUP A: the cap is DELETED, not resolved. `side_face_h_max` acted
+    # only under spall.per_cell_removal = 1, which no deck and no input sets, so
+    # every site's `side_hmax` was -1 (no cap) on every live run. The clause is
+    # restated, not weakened: the one-conjunction property it protected is now
+    # the stronger "no site has a cap at all", asserted on CODE lines.
+    code_rm = "\n".join(l.split("//")[0] for l in rem.split("\n"))
+    code_mm = "\n".join(l.split("//")[0] for l in mmw.split("\n"))
+    n_cap = (len(re.findall(r"\bside_hmax\b", code_rm + code_mm))
+             + len(re.findall(r"side_face_h_max", code_rm + code_mm)))
+    need(n_rem == 0 and n_mmw == 0 and n_cap == 0,
+         "P2-8 group A: the coefficient cap is DELETED at every site -- criterion, "
+         "kernel, ledger, wall march (%d conjunction sites, %d code mentions)"
+         % (n_rem + n_mmw, n_cap))
+    bare = re.findall(r"side_hmax\s*=\s*surface_patch\.side_face_h_max\s*;",
+                      rem + mmw)
+    need(not bare,
+         "NO site caps unconditionally any more (%d such assignment(s)) -- that "
+         "was the defect" % len(bare))
+
+    # ⚠⚠ THE MARCH. It applies no cap at all. The packet requires either the
+    # same conjunction or a recorded reason; the reason is recorded HERE and the
+    # test asserts the recording exists, so it cannot be quietly deleted.
+    march = [x for x in lateral if x[0] == "kernel" and "_m" in " ".join(x[3])]
+    print("\n     the MARCH site: %s"
+          % ("found at :%d" % march[0][2] if march else "NOT FOUND"))
+    need(len(march) == 1, "the march site is still identifiable (%d)" % len(march))
+    MARCH_REASON = (
+        "The march applies NO cap. It is a WEIGHT, not a flux: its result feeds "
+        "`q_tot += side_f_m * a_rob * sN * w` and is normalised across the "
+        "column's faces, so a factor applied to every face cancels. ⚠⚠ BUT the "
+        "cancellation is only exact while the cap binds UNIFORMLY. The moment "
+        "`spall.per_cell_removal = 1` the kernel and ledger cap and the march "
+        "does not, and MMWSpalling.H:3180-3185's own comment says that breaks "
+        "the power identity. `spall.per_cell_removal` is set by exactly one "
+        "thing in the tree -- studies/d2q2c_arbiter/run.py -- which sits OUTSIDE "
+        "the tree gate and is the one place the cap was ever live. ⇒ THIS IS A "
+        "DECLARED, UNCLOSED LATENT DEFECT, not a cleared row.")
+    print("       recorded reason:")
+    for ln in MARCH_REASON.split(". "):
+        if ln.strip():
+            print("         %s." % ln.strip().rstrip("."))
+    # ⚠ P2-8 group A CLOSES the latent defect recorded above by deleting the cap
+    # at the other sites, so the march's missing cap is no longer a difference.
+    need(n_cap == 0,
+         "the march's missing cap is no longer a latent defect: no site caps "
+         "(P2-8 group A deleted side_face_h_max)")
+
+    # ---- (a3) the runtime aborts exist ----------------------------------
+    print("\nP1g-0b (a3) THE RUNTIME ABORTS (deliverable 3)")
+    # ⚠ P2-8 group A: `side_face_closure` is DELETED, so `sp_surfform` carries
+    # ONE condition and the criterion's assertion is that one condition.
+    need(re.search(r"surfform_eq\s*=\s*\n?\s*surface_patch\.robin_form\s*==\s*"
+                   r"SurfacePatch::RobinForm::Surface\s*;", rem) is not None
+         and not re.search(r"SideTForm|side_T_form",
+                           "\n".join(l.split("//")[0] for l in (rem + mmw).split("\n"))),
+         "the criterion asserts robin_form = surface, the ONE condition `sp_surfform` "
+         "carries now that side_face_closure is deleted (P2-8 group A)")
+    need(len(re.findall(r"Util::Abort\(INFO,\s*\"spall\.lateral_drive", rem)) == 2,
+         "both latent conditions abort at runtime (%d abort sites)"
+         % len(re.findall(r"Util::Abort\(INFO,\s*\"spall\.lateral_drive", rem)))
+    need(re.search(r"kappa_damage_alpha\s*!=\s*0\.0", rem) is not None
+         and re.search(r"kpa\(i,\s*j,\s*k\)", rem) is not None,
+         "`kc` is FIXED rather than guarded -- the criterion reads the per-cell "
+         "kappa field with the kernel's damage factor, retiring the row for "
+         "damage and multi-phase together")
+
+    # ---- P2-1 (b3): THE RESOLUTION LOCK ---------------------------------
+    # ⚠⚠ WHY THIS BLOCK EXISTS. The `h` row above is a VALUE claim: it records
+    # that four sites pass equal numbers under names that differ by design
+    # (`h_side`/`h_s`). It therefore CANNOT catch the change P2-1 makes --
+    # converting three sites to a per-height resolution and leaving one on the
+    # column scalar passes the value row unchanged, and the run would simply be
+    # wrong in a way no test reads. This block locks the RESOLUTION instead:
+    # the four sites must pass the SAME NAME, and that name must be the output
+    # of the ONE resolver, which must exist exactly once.
+    print("\nP2-1 (b3) THE RESOLUTION LOCK -- per FACE, not per scalar")
+    H_POS = SIG.index("h")
+    hvals = []
+    for tag, _p, ln, a in lateral:
+        hvals.append(a[H_POS] if H_POS < len(a) else "<default>")
+    print("     the `h` argument at the four sites: %s" % " | ".join(hvals))
+    need(len(set(hvals)) == 1,
+         "all four lateral sites pass the SAME `h` expression (%d distinct: %s)"
+         % (len(set(hvals)), ", ".join(sorted(set(hvals)))))
+
+    # the resolver itself: declared once, called once per role.
+    DECL = r"Set::Scalar\s+SideFaceH\s*\("
+    CALL = r"SideFaceH\s*\("
+    n_decl = len(re.findall(DECL, mmw)) + len(re.findall(DECL, rem))
+    n_call = (len(re.findall(CALL, mmw)) + len(re.findall(CALL, rem))) - n_decl
+    print("     SideFaceH: %d declaration(s), %d call site(s)" % (n_decl, n_call))
+    need(n_decl == 1,
+         "the per-face resolver is declared EXACTLY ONCE (%d) -- two copies is "
+         "how the criterion/kernel family of bugs starts" % n_decl)
+    # ⚠⚠ FOUR ROLES BECAME FIVE IN P2-3, AND THIS LOCK IS WHERE THAT IS
+    # DECLARED. The wall enthalpy march bills the stream for what the wall
+    # takes, so it must resolve the coefficient through the SAME per-face
+    # resolver as the criterion, the kernel, the floor march and the ledger -- a
+    # march that used a different coefficient from the kernel would break the
+    # budget identity, which is the check that catches a kernel<->march split.
+    # The count is raised deliberately: this clause going RED on the fifth call
+    # site is how the extension was noticed rather than slipped through.
+    ROLES = ("lateral criterion", "kernel", "floor march", "ledger",
+             "wall march (P2-3)")
+    need(n_call == len(ROLES),
+         "every one of the %d roles calls the resolver (%d call sites, want "
+         "%d: %s) -- a role left on the column scalar is exactly the defect "
+         "Removal.H:589-594 pre-registers"
+         % (len(ROLES), n_call, len(ROLES), ", ".join(ROLES)))
+
+    # ⚠ and the name they pass must BE the resolver's result, not a scalar that
+    # merely happens to be spelled alike at all four.
+    need(all(v == "h_face" for v in hvals),
+         "the shared `h` expression is `h_face`, the resolver's own output "
+         "(got: %s)" % ", ".join(sorted(set(hvals))))
+    # ⚠ `side_hmax` is the ONE other permitted right-hand side: the cap, which
+    # every role re-applies to the resolved value through the same conjunction
+    # the (a1) block above locks. Anything else means a role is resolving `h`
+    # some second way, which is the whole defect.
+    # ⚠ Captured as an identifier, not matched with a negative lookahead: `\s*`
+    # backtracks past a lookahead and the assertion would pass vacuously.
+    OK_RHS = {"SideFaceH", "side_hmax"}
+    # ⚠ P2-8: under `surface_patch.face_list` the criterion's h_face is the
+    # LIST's F2 value (h_dir[d] = e.h, one heat resolver, FaceH) and the
+    # key-off branch is still SideFaceH. Two names, both declared here, each
+    # pinned to one spelling below so a third source cannot hide behind them.
+    OK_RHS_REM = OK_RHS | {"fl_on_c", "h_dir"}
+    n_fl_t = len(re.findall(r"h_face\s*=\s*fl_on_c\s*\?\s*Set::Scalar\(0\.0\)\s*\n?\s*:\s*SideFaceH\(",
+                            rem))
+    n_fl_d = len(re.findall(r"h_face\s*=\s*h_dir\[d\];", rem))
+    need(n_fl_t == 1 and n_fl_d == 1,
+         "P2-8: Removal.H's two face-list h_face assignments are exactly the "
+         "key-off SideFaceH ternary and the list's own h_dir[d] (%d, %d)"
+         % (n_fl_t, n_fl_d))
+    for nm, txt in (("MMWSpalling.H", mmw), ("Removal.H", rem)):
+        rhs = re.findall(r"h_face\s*=\s*([A-Za-z_]\w*)", txt)
+        ok = OK_RHS_REM if nm == "Removal.H" else OK_RHS
+        bad = sorted({x for x in rhs if x not in ok})
+        need(not bad,
+             "%s assigns `h_face` only from the resolver or the cap (%d "
+             "assignment(s), offending: %s)"
+             % (nm, len(rhs), ", ".join(bad) if bad else "none"))
+
+    # the datum the resolver branches on must be ONE array, built by ONE
+    # helper -- not re-derived per role.
+    need(len(re.findall(r"ColumnWallCorner\s*\(", mmw)) >= 2,
+         "the height datum comes from one named helper, ColumnWallCorner, "
+         "declared and called (%d occurrence(s))"
+         % len(re.findall(r"ColumnWallCorner\s*\(", mmw)))
+
+    # ---- P2-2a (b4) + (b8): ONE RESTRAINT REFERENCE, NO SECOND FORM ------
+    # ⚠⚠ WHY EACH CLAUSE. Three things can go wrong here and none shows in any
+    # output:
+    #   * applying the restraint reference at ONE firing site. The code at
+    #     MMWSpalling.H's sigma site pre-registers the invariant that BOTH must
+    #     change together -- the Meier run fires on the depth scan, the ONSET
+    #     diagnostic fires at the Sp_field site -- and P0 closed the gap between
+    #     them deliberately. Changing one re-opens it.
+    #   * leaving `spall.support_rule` PARSED but unguarded. Its 80 um flaw is
+    #     matched to the self-similar 0.3297 drive alone; against full stress the
+    #     same flaw fires ~240 K lower. The failure mode is SILENT over-removal,
+    #     not an abort, so only an unused-key assertion separates "deleted" from
+    #     "parsed, guard gone".
+    #   * smuggling the strain table into the criterion. That is P2-2b. It would
+    #     move E from 30.0 to 53.3 GPa and break the identity gate, and it is the
+    #     only way the anchor trap can bite in this step.
+    print("\nP2-2a (b4) ONE STRESS REFERENCE, ONE DRIVING FORM")
+
+    # --- the reference is the STORED INITIAL FIELD, at BOTH firing sites ------
+    need(len(re.findall(r"RegisterNewFab\(value\.T_init_mf", mmw)) == 1,
+         "`T_init_mf` is registered exactly once")
+    need(len(re.findall(r"Set::Field<Set::Scalar> T_init_mf;", mmw)) == 1,
+         "`T_init_mf` is declared exactly once")
+
+    # --- (b9) WRITE-ONCE, AND UNPLOTTED --------------------------------------
+    # ⚠⚠ A second write turns the reference back into "the current temperature"
+    # and silently restores the defect: the bracket would collapse to zero
+    # everywhere and spalling would stop. Registering it PLOTTED would put it in
+    # the 34-component hashed cell plotfiles and re-pin the whole tree for a
+    # diagnostic nobody asked for.
+    print("\nP2-2a (b9) THE REFERENCE IS WRITE-ONCE AND UNPLOTTED")
+    need(len(re.findall(r'RegisterNewFab\(value\.T_init_mf,\s*\n?\s*'
+                        r'nullptr, 1, 1, "T_init", false\)', mmw)) == 1,
+         "it is registered UNPLOTTED (`false`) -- a plotted field re-pins the "
+         "tree")
+    need(len(re.findall(r"void StoreInitialTemperature\(int lev\)", mmw)) == 1,
+         "there is exactly ONE writer, `StoreInitialTemperature`")
+    writers = re.findall(r"StoreInitialTemperature\(lev\);", mmw)
+    need(len(writers) == 1,
+         "it is CALLED exactly once (%d) -- a second call would reset the "
+         "reference to the hot state" % len(writers))
+    # the single call must sit in Initialize, never in Advance or the per-step
+    # property refresh. Locate it by the enclosing function.
+    # ⚠ Guarded: on a binary without the field this clause must FAIL, not raise
+    # -- a lock that throws stops the clauses after it from running at all,
+    # which is how a "RED pre-change" demonstration can silently under-report.
+    encl = None
+    if "StoreInitialTemperature(lev);" in mmw:
+        before = mmw[:mmw.index("StoreInitialTemperature(lev);")]
+        for m in re.finditer(r"\n    (?:void|Set::Scalar|bool|int) ([A-Za-z_]\w*)\s*\(", before):
+            encl = m.group(1)
+    need(encl == "Initialize",
+         "the write sits in `Initialize` (found: %s) -- never in Advance or "
+         "UpdatePropertyFields" % (encl or "no call at all"))
+    for fn in ("Advance", "UpdatePropertyFields", "Regrid", "TimeStepBegin"):
+        # the writer's name must not appear anywhere inside these functions
+        mm = re.search(r"\n    void %s\(" % fn, mmw)
+        if not mm:
+            continue
+        body = mmw[mm.start():mm.start() + 6000]
+        body = body[:body.find("\n    }\n") + 1] if "\n    }\n" in body else body
+        need("StoreInitialTemperature" not in body,
+             "`%s` does not write the reference" % fn)
+    # ⚠⚠ REVIEW ROW 5 -- THE SILENT FALLBACK, CLOSED STRUCTURALLY.
+    # Both read sites fall back to the typed constant when the field is unset
+    # (`if (!T0_a) return te_Tref;` and `Removal.H`'s null-profile branch), i.e.
+    # to the exact defect being removed, and nothing counts it. The review named
+    # it as the one path that can restore the defect with no symptom.
+    # ⚠ A RUNTIME COUNTER IS THE STRONGER FIX AND IT IS DEFERRED, ON PURPOSE:
+    # it changes the binary, which invalidates the tree gate this packet already
+    # spent and forces a second full sweep for a diagnostic. P2-2b re-pins the
+    # tree anyway (E moves 30.0 -> 53.3 GPa), so the counter belongs there.
+    # What IS closed here, and at zero gate cost, is REACHABILITY: the field is
+    # registered in the same block and under the same condition as
+    # `T_ref_phase_mf`, and the criterion already cannot run without that field's
+    # phase data. So on any deck that reaches the criterion, `T_init_mf` exists
+    # and the fallback is unreachable -- a structural argument instead of a guess.
+    reg = re.search(r"RegisterNewFab\(value\.T_ref_phase_mf.*?"
+                    r"RegisterNewFab\(value\.T_init_mf", mmw, re.S)
+    need(reg is not None,
+         "`T_init_mf` is registered in the SAME block as `T_ref_phase_mf`, with "
+         "no conditional between them, so the criterion cannot reach its "
+         "fallback on a deck whose phase data it already requires")
+    if reg:
+        between = reg.group(0)
+        need("if (" not in between and "#if" not in between,
+             "nothing guards `T_init_mf`'s registration that does not equally "
+             "guard `T_ref_phase_mf`'s (found a conditional between them)")
+
+    # and it must not be the eigenstrain's field
+    need("T_ref_phase_mf" != "T_init_mf" and
+         len(re.findall(r"T_init_mf", mmw + rem)) >= 4,
+         "the stored field is SEPARATE from T_ref_phase_mf, which the "
+         "eigenstrain reads and which is plotted")
+
+    # --- the two criterion brackets read the stored field, not the constant --
+    print("\nP2-2a (b4) BOTH FIRING SITES READ IT")
+    need(len(re.findall(r"\(T_z - T0_z\)", rem)) == 1,
+         "the depth scan's bracket is (T_z - T0_z)")
+    need(len(re.findall(r"auto T0_at_didx = ", rem)) == 1
+         and len(re.findall(r"T0_at_didx\(", rem)) >= 1,
+         "the depth scan reads it through ONE depth-indexed reader, the same "
+         "addressing `T_at_didx` uses for the temperature -- so the bracket is "
+         "a difference of two reads at one cell, with no box-seam artefact")
+    # ⚠ P2-2e: the two Sp_field branches now subtract the REFERENCE RESOLVER's
+    # output (`Tref_h`, `Tref_d`) instead of calling T0_at(...) inline, because
+    # under spallation.sp.constraint_depth > 0 the reference is the live
+    # temperature d behind the face. The P2-2a property this clause protects --
+    # BOTH branches read the STORED initial field, not the declared constant --
+    # is therefore asserted through the resolver: each branch subtracts its
+    # resolved reference exactly once, each reference comes from `Tref_at`, and
+    # `Tref_at`'s d = 0 path IS `T0_at(...)`. Not weakened: the old count of 2
+    # is now a count of 2 resolver reads plus the d = 0 identity. (The lock
+    # caught this edit, as it should; declared here and in ACTIVE_STEP.)
+    need(len(re.findall(r"- Tref_h\)", mmw)) == 1
+         and len(re.findall(r"- Tref_d\)", mmw)) == 1,
+         "BOTH Sp_field branches subtract their resolved reference "
+         "(Tref_h, Tref_d) -- the conjunction the code at the sigma site "
+         "pre-registers")
+    need(len(re.findall(r"const Set::Scalar Tref_h = Tref_at\(", mmw)) == 1
+         and len(re.findall(r"const Set::Scalar Tref_d = Tref_at\(", mmw)) == 1,
+         "both Sp_field references come from the ONE resolver `Tref_at`")
+    need(re.search(r"if \(!cref_on_sp\) return T0_at\(ii, jj, kk\);", mmw)
+         is not None,
+         "`Tref_at` returns T0_at(...) -- the stored field -- whenever "
+         "constraint_depth is 0, so the P2-2a reference is unchanged at default")
+    # the declared constant survives ONLY as the fallback and in the two uses
+    # that are not stress brackets (the lateral exponential asymptote, the
+    # lateral enthalpy datum).
+    need(len(re.findall(r"return std::isfinite\(v\) \? v : phase_T_ref_loc;", rem)) == 1
+         and len(re.findall(r"return std::isfinite\(v\) \? v : te_Tref;", mmw)) == 1,
+         "each site falls back to the DECLARED constant when the field is "
+         "absent or non-finite -- today's behaviour, so a cell with no stored "
+         "value cannot silently acquire a zero bracket")
+    for pat, nm in ((r"\(T_recon_at\(dv\) - te_Tref\)", "Sp_field surface lerp"),
+                    (r"\(T_a\(i_d, j_d, k_d\) - te_Tref\)", "Sp_field cell sample"),
+                    (r"\(T_z - phase_T_ref_loc\)", "depth scan")):
+        need(len(re.findall(pat, mmw + rem)) == 0,
+             "no stress bracket still subtracts the DECLARED constant (%s)" % nm)
+    # rev 6's column minimum is REMOVED, not left dormant
+    for name in ("ColumnMinTempBelowTop", "T_restraint_loc", "te_Trest"):
+        n = len(re.findall(r"\b%s\b" % name, mmw)) + len(re.findall(r"\b%s\b" % name, rem))
+        need(n == 0,
+             "rev 6's column minimum `%s` is REMOVED, not dormant (%d)"
+             % (name, n))
+
+    # --- the second driving form is GONE, not defaulted off ---
+    for name in ("sp_driving_diff", "sp_driving_ref_flake", "sp_driving_ref_depth",
+                 "DrivingRefT", "DrivingRefDepth", "lat_diff_loc", "rc_dfrac"):
+        n = len(re.findall(r"\b%s\b" % name, mmw)) + len(re.findall(r"\b%s\b" % name, rem))
+        need(n == 0, "`%s` is deleted, not defaulted off (%d uses)" % (name, n))
+    need("driving_stress" not in mmw and "driving_ref" not in mmw,
+         "no `spall.driving_stress` / `spall.driving_ref` key is parsed")
+
+    # --- the support rule is GONE, mechanism included ---
+    for name in ("sp_support_rule", "sp_support_min_sides", "sp_support_step_min",
+                 "drive_frac_force", "n_exposed_col", "pillar_col",
+                 "support_fires_col", "support_Tsurf_col",
+                 "sup_cols", "sup_fires", "sup_pillars", "sup_T_mean"):
+        n = len(re.findall(r"\b%s\b" % name, mmw)) + len(re.findall(r"\b%s\b" % name, rem))
+        need(n == 0, "support rule: `%s` is gone (%d uses)" % (name, n))
+
+    # --- (b8) THE SCOPE LOCK: no property change rides along --------------
+    print("\nP2-2a (b8) THE SCOPE LOCK -- the strain table stays in P2-2b")
+    need(len(re.findall(r"\bphase_beta_loc\b", rem)) >= 1
+         and len(re.findall(r"\bphase_E_loc\b", rem)) >= 1,
+         "the criterion still reads the per-phase scalars phase_E_loc / "
+         "phase_beta_loc -- a constant beta has NO anchor, which is exactly why "
+         "the reference can be swapped with no property change")
+    # ⚠⚠ RETIRED BY ARRIVAL, 2026-10-08. This clause read "`Grimsel`,
+    # `strain_of`, `sigma_thermal` do not appear in Removal.H -- wiring the
+    # strain table into the criterion is P2-2b". P2-2b is now implemented, so
+    # the guard has reached the step it was holding the door for, and keeping
+    # it would forbid the deliverable. ⚠ Its WARNING still stands and is the
+    # reason the conversion is branch-gated: the law moves E from the deck's
+    # 30.0 GPa to 53.3 GPa at the cold end, so a law path reached under the
+    # shipped default WOULD break the identity gate. What replaces the ban is
+    # the narrower rule that the law enters Removal.H ONLY through the one
+    # entry point, never as a raw property read.
+    need(len(re.findall(r"\bGrimsel\b", rem)) ==
+         len(re.findall(r"Numeric::Material::Grimsel \*(?:scan_g|lat_g|kic_g_loc)", rem)),
+         "every mention of `Grimsel` in Removal.H is a law POINTER for the one "
+         "entry point -- the criterion never names the law to read a property "
+         "off it (%d mentions, %d pointers)"
+         % (len(re.findall(r"\bGrimsel\b", rem)),
+            len(re.findall(r"Numeric::Material::Grimsel \*(?:scan_g|lat_g|kic_g_loc)", rem))))
+    for name in ("strain_of", "E_of", "alpha_of"):
+        n = len(re.findall(r"\b%s\b" % name, rem))
+        need(n == 0,
+             "`%s` does not appear in Removal.H (%d) -- the criterion gets its "
+             "stress from LawSigma, never by assembling the law's pieces itself"
+             % (name, n))
+
+    # --- the relief factor still resolves through one member --------------
+    # ⚠ seven stress expressions became FOUR, not one: `one expression` in the
+    # packet means one FORM, not one code site. The four are the lateral
+    # criterion, the depth scan, and the Sp_field site's two branches.
+    STRESS = [("lateral criterion", rem, r"relief_loc \* phase_E_loc \* phase_beta_loc"),
+              ("depth scan", rem, r"f_skel \* \(sp_relief \* phase_E_loc"),
+              ("Sp_field recon", mmw, r"te_relief \* te_E \* te_beta\s*\n?\s*\* \(T_recon_at"),
+              ("Sp_field cell", mmw, r"te_relief \* te_E \* te_beta\s*\n?\s*\* \(T_a\(")]
+    found = 0
+    for nm, txt, pat in STRESS:
+        n = len(re.findall(pat, txt))
+        found += n
+        print("       %-20s %d" % (nm, n))
+    need(found == 4,
+         "all FOUR surviving stress expressions carry a relief factor (%d) -- a "
+         "subset relieves the wall and not the floor" % found)
+    prod = (len(re.findall(r"phase_E_loc\s*\n?\s*\*?\s*phase_beta_loc", rem))
+            + len(re.findall(r"te_E \* te_beta", mmw)))
+    need(prod == 4,
+         "there are exactly FOUR E*beta products, so none is left un-relieved "
+         "(%d)" % prod)
+    need(len(re.findall(r"Set::Scalar sp_relief = 1\.0;", mmw)) == 1,
+         "`sp_relief` is declared exactly once, with the identity default")
+    for alias, txt, nm in (("te_relief", mmw, "MMWSpalling.H"),
+                           ("relief_loc", rem, "Removal.H")):
+        rhs = re.findall(r"%s\s*=\s*([A-Za-z_]\w*)" % alias, txt)
+        need(rhs and all(r == "sp_relief" for r in rhs),
+             "%s's `%s` comes only from sp_relief (%s)"
+             % (nm, alias, ", ".join(sorted(set(rhs))) or "never assigned"))
+
+    # ==== P2-2d (b4), deliverable 10: THREE CLAUSES =======================
+    print("\nP2-2d (b4) THE AT-TEMPERATURE TOUGHNESS ROUTE AND THE FLAW READS")
+
+    both2 = mmw + "\n" + rem
+
+    # ---- clause 1: the route is INERT at default and LIVE when selected ----
+    # ⚠⚠ Default MUST stay `nasseri_table` or (b1) cannot hold. The enum value
+    # existing is not the same as the four sites consulting it, which is the
+    # inert-key failure this line of packets has hit three times.
+    need('std::string("nasseri_table")' in mmw,
+         "`spallation.sp.kic.law` still DEFAULTS to nasseri_table")
+    # ⚠ COUNT THE EVALUATOR CALLS, NOT THE ENUM MENTIONS. A first version
+    # matched `KIcLaw::GrimselTable` followed by `&&` or `)` and read SIX,
+    # because the parse, the cross-key abort and the `scale` branch all mention
+    # the enum without being toughness sites. The thing being enumerated is
+    # "places that evaluate the at-temperature toughness", so count exactly
+    # that -- the `(a1)` lesson about a pattern that cannot match what it must.
+    n_sites = len(re.findall(r"K_Ic_of\(", both2))
+    need(n_sites == 4,
+         "all FOUR toughness sites EVALUATE the route (%d) -- MMWSpalling.H's "
+         "Sp_field site plus Removal.H's lateral face and the depth scan's TWO "
+         "textually identical blocks" % n_sites)
+    # ⚠ K_Ic0 comes from the LAW, never a new scalar. A `grimsel_table` leg
+    # must NOT be made to supply `spallation.sp.kic.K_Ic0`: that would let a
+    # deck set a level disagreeing with the table it is reading.
+    need("|| value.kic_law == KIcLaw::GrimselTable" in mmw,
+         "`grimsel_table` takes `kic.scale`, NOT a hand-typed `kic.K_Ic0` -- "
+         "its K_Ic0 is the law's")
+    for frag in ("kic_g->K_Ic_of(", "kic_g_loc->K_Ic_of("):
+        need(frag in both2,
+             "the route reads `Grimsel::K_Ic_of` through a hoisted law pointer "
+             "(`%s`)" % frag)
+    # the cross-key check must live where `phases` EXISTS. ⚠ MEASURED: beside
+    # the key's own parse it aborts every legal leg, because
+    # ParseSpallationModel runs before phases is resized.
+    i_parse = mmw.find("pp.query_default(\"spallation.sp.kic.law\"")
+    i_check = mmw.find("KIcLaw::GrimselTable && value.phases.empty()")
+    need(i_check > 0 and i_check < i_parse,
+         "the `needs phase 0` cross-key abort sits with the other "
+         "microstructure cross-key aborts, BEFORE the spall parse in file "
+         "order -- beside the key it would fire on every legal leg")
+
+    # ---- clause 2: ONE size factor, at ALL THREE flaw reads ---------------
+    # ⚠⚠ THIS CLAUSE USED TO ASSERT "exactly 2" AND SO MECHANISED THE BUG.
+    # rev 5 enumerated two flaw reads -- the criterion's and the lateral
+    # face's -- and locked that count in. There are THREE. A removal needs
+    # BOTH `detach_true` (criterion gate, flaw scaled at MMWSpalling.H:7403)
+    # AND `h_col > 0` from the thickness scan (Removal.H:2001), and the scan's
+    # own read took the flaw RAW. So the effective flaw was the SMALLER of the
+    # two and the size term could only ever DELAY a firing, never advance one.
+    # A count is exactly the wrong instrument for "did we find them all" --
+    # the same lesson as (a1)'s rho/Cp predicate, now twice over.
+    need(len(re.findall(r"Set::Scalar WeibullSizeFactor\(", mmw)) == 1,
+         "there is exactly ONE size factor")
+    READS = (
+        ("criterion / Sp_field", mmw, "a_loc *= WeibullSizeFactor(lq * lq * lq)"),
+        ("lateral face",         rem, "a_f *= WeibullSizeFactor(ell * ell * ell)"),
+        ("thickness scan",       rem, "a_f *= WeibullSizeFactor(lq_sc * lq_sc * lq_sc)"),
+    )
+    for nm, txt, frag in READS:
+        need(frag in txt,
+             "flaw read `%s` applies the ONE size factor" % nm)
+    callers = len(re.findall(r"WeibullSizeFactor\(", both2)) - 1
+    need(callers == len(READS),
+         "all %d flaw reads scale and nothing else calls the factor (%d)"
+         % (len(READS), callers))
+    # ⚠⚠ AND THE EQUALITY IS BY CONFIGURATION, NOT UNCONDITIONAL. Under
+    # `size_volume = cell` the factor is identically 1, so the three reads
+    # agree; under `flux` each scales by its OWN column's length and they do
+    # NOT agree in general. Asserting unconditional equality would be false.
+    m_sf2 = re.search(r"Set::Scalar WeibullSizeFactor\([\s\S]*?\n    \}", mmw)
+    need(m_sf2 is not None and "if (!sp_size_flux) return 1.0;" in m_sf2.group(0),
+         "the factor returns exactly 1 under `cell`, which is what makes the "
+         "three reads equal there and keeps every frozen anchor identical")
+    # the scan's scaling must be gated on the same key, or `cell` stops being
+    # byte-identical and (b1) breaks for a reporting reason.
+    need("if (sp_size_flux)" in rem,
+         "the scan's new scaling is gated on `sp_size_flux`, so `cell` stays "
+         "byte-identical")
+    need("weibull_V_ref" in mmw and "weibull.V_ref" in mmw,
+         "`V_ref` is a SEPARATE key from `weibull.V0`")
+    m_sf = re.search(r"Set::Scalar WeibullSizeFactor\([\s\S]*?\n    \}", mmw)
+    need(m_sf is not None, "the size factor body is locatable")
+    if m_sf:
+        body = m_sf.group(0)
+        need("weibull_V_ref" in body and "weibull_V0" not in body,
+             "under `flux` the size factor reads V_ref and NOT V0 -- V0 stays "
+             "the mesh anchor, and sharing it would import the 8x cross-deck "
+             "difference in V0 into a quantity unrelated to the mesh")
+    need("weibull.size_volume = flux requires weibull.V_ref" in mmw,
+         "`flux` with V_ref unset ABORTS rather than silently borrowing V0")
+
+    # ---- clause 2b: the diagnostic column is RANK-REDUCED -----------------
+    # ⚠⚠ `rc_ellq` was filled owner-only and written from the IO rank's LOCAL
+    # copy while being absent from the reduce block, so the CSV's `ell_q` was
+    # positive iff rank 0 owned the column -- `col_j <= 11 && k_top <= 11`, on
+    # 100 % of rows. That read as an inert lever and cost a review round.
+    need("ReduceRealSum(rc_ellq.data(), ncols)" in rem,
+         "`rc_ellq` is rank-reduced with the other recon columns -- a "
+         "per-column diagnostic written from one rank's local copy is a "
+         "decomposition signature, not a measurement")
+
+    # ---- clause 3: the two reads' CONDUCTIVITY, settled -------------------
+    # ⚠⚠ PRE-REGISTERED AS RED BEFORE DELIVERABLE 6, AND IT WAS. The vertical
+    # read built `ell_q` from `phases[0].kappa`, the deck's per-phase SCALAR,
+    # while the lateral read uses the per-cell field. They agree under
+    # `law = constant` and DIVERGE under the Grimsel law, where lambda halves
+    # by 600 degC. That red was a PRE-EXISTING inconsistency, not a regression:
+    # it survived P2-2b only because `(a1)`'s predicate scans `rho` and `Cp`
+    # and not `kappa`. The reading against HEAD source is recorded in
+    # `p2_2d_kic/LOCK_prechange_ellq.txt`, not scored.
+    m_ef = re.search(r"if \(q_net > 0\.0 && Ts_pre > T0\)[\s\S]{0,200}", mmw)
+    need(m_ef is not None, "the vertical ell_q construction is locatable")
+    if m_ef:
+        seg = m_ef.group(0)
+        need("phases[0].kappa * (Ts_pre - T0)" not in seg,
+             "the VERTICAL ell_q no longer multiplies by the per-phase SCALAR "
+             "kappa -- that was the pre-existing split with the lateral read")
+        need("k_use" in seg,
+             "it takes a resolved conductivity (`k_use`) instead")
+    need("Ktop[c] : phases[0].kappa" in mmw,
+         "`k_use` comes from the per-cell `kappa_mf` gather, falling back to "
+         "the scalar only if the field is unavailable")
+    # ⚠ NOT `(*kappa_mf[lev]).const_array(mfi)` ALONE -- that reads `ok` on
+    # PRE-CHANGE source, because kappa_mf is const_array'd at several existing
+    # sites, so it discriminates nothing. What is new is the per-column gather
+    # itself, in the SAME loop and with the SAME k_top indexing as Ttop.
+    need("Ktop[c] = KA(i, j, kt);" in mmw,
+         "the per-column conductivity is gathered in the SAME loop as Ttop, "
+         "with the same k_top indexing -- a separate loop could pick a "
+         "different top cell")
+    need("ReduceRealSum(Ktop.data(), ncols)" in mmw,
+         "and it is rank-reduced like Ttop -- a per-box gather read without "
+         "reduction is the P1g-2c defect")
+    # ⚠ the evaluation temperature must be STATED in the source, because it
+    # moves V_ref ~25 % and an unstated choice gets written up as a measurement.
+    # ⚠⚠ THE ONE CLAUSE THAT MUST READ COMMENTS, AND WHY. Every other
+    # assertion here reads comment-STRIPPED source on purpose, so a comment
+    # claiming a property can never satisfy a lock. But this clause's subject
+    # IS the documentation: the packet requires the evaluation temperature to
+    # be STATED, because it moves V_ref ~25 % and an unstated choice gets
+    # written up as a measurement. So it reads the RAW file, deliberately, and
+    # it is the only clause that does.
+    mmw_raw = open(MMW).read()
+    need("TOP CELL CENTRE" in mmw_raw,
+         "the evaluation temperature is STATED in the source as the top cell "
+         "centre -- ell_q^3 spans 8.36e-9 to ~1.67e-8 across that choice")
+
+    # ---- P2-2b (b4), deliverable 7: ONE STRAIN AND ONE STIFFNESS SOURCE ---
+    # The hazard Grimsel.H's header records: three independent attempts at the
+    # SAME thermoelastic stress produced three different wrong answers, because
+    # each site wrote its own formula. A relief factor R fitted downstream
+    # absorbs the error silently, so no run can detect it. ⇒ the rule is
+    # structural: ONE formula, ONE caller, and the law's raw pieces are off
+    # limits to everyone but the cache writer.
+    print("\nP2-2b (b4) deliverable 7: ONE THERMOELASTIC STRESS")
+
+    both = mmw + "\n" + rem
+
+    need(both.count("sigma_thermal(") == 1,
+         "`sigma_thermal` is called from exactly ONE place in the integrator "
+         "(%d)" % both.count("sigma_thermal("))
+    need(len(re.findall(r"static Set::Scalar LawSigma\(", mmw)) == 1,
+         "`LawSigma` -- the one entry point -- is defined exactly once")
+    need(len(re.findall(r"const Numeric::Material::Grimsel \*RockLaw\(\) const",
+                        mmw)) == 1,
+         "`RockLaw()` decides law-on/law-off in exactly one place, so the two "
+         "firing sites cannot answer it differently")
+
+    # ⚠⚠ THE TWO HALVES OF THE PROPERTY SET ARE SEPARATELY KEYED.
+    # The first implementation gated the criterion on the PHASE's thermal law
+    # (`phases[0].grimsel_law`), so `law = grimsel` switched conduction and
+    # mechanics on together. Deliverable 9's Kant ladder then had three rungs
+    # with two distinct states -- K1 (thermal only) and K2 (+ mechanical) would
+    # have been the SAME RUN -- and (c1) could not have attributed the onset
+    # shift to either half. Nothing in the packet's own criteria would have
+    # failed; the ladder would simply have reported a coincidence.
+    need("spall.stress_law" in mmw,
+         "`spall.stress_law` exists -- the MECHANICAL half has its own key")
+    need("sp_stress_law_grimsel" in mmw,
+         "the mechanical half has its own flag, not the phase's thermal one")
+    m_rl = re.search(r"RockLaw\(\) const[\s\S]*?\n    \}", mmw)
+    need(m_rl is not None, "RockLaw's body is locatable")
+    if m_rl:
+        need("grimsel_law" not in m_rl.group(0),
+             "RockLaw does NOT read the phase's thermal `grimsel_law` -- the "
+             "criterion and conduction are independently switchable")
+        need("sp_stress_law_grimsel" in m_rl.group(0),
+             "RockLaw gates on `spall.stress_law` alone")
+    # ⚠ and the law's coefficients must bind under EITHER half, or a leg
+    # running the mechanical set alone gets a default-constructed law and
+    # `grimsel.alpha_cap_theta` -- (c7)'s whole sensitivity -- is silently
+    # ignored, reporting "no sensitivity" where the key was never read.
+    m_pl = re.search(r'query_default\(pfx \+ "\.law"[\s\S]{0,2000}?'
+                     r'queryclass<Numeric::Material::Grimsel>', mmw)
+    need(m_pl is not None,
+         "the per-phase grimsel block is parsed in the same region as `.law`")
+    if m_pl:
+        seg = m_pl.group(0)
+        need('if (plaw == "grimsel")' not in seg,
+             "the grimsel coefficient block is parsed UNCONDITIONALLY, not "
+             "inside the thermal-law branch -- so alpha_cap_theta binds for a "
+             "mechanical-only leg too")
+
+    # ⚠⚠ THE TWO-FIRING-SITE INVARIANT, MADE MECHANICAL. MMWSpalling.H:7246
+    # pre-registers that the `Sp_field` site and the depth scan must change
+    # together -- P0 closed the gap between them deliberately. A packet that
+    # converted one would leave the diagnostic measuring a different criterion
+    # than the one that fires, which is unfalsifiable from any output.
+    for where, txt, tag in (("Removal.H depth scan", rem, "LawSigma(scan_g"),
+                            ("Removal.H lateral",    rem, "LawSigma(lat_g"),
+                            ("MMWSpalling.H Sp_field", mmw, "LawSigma(te_g")):
+        need(tag in txt, "%s routes its stress through LawSigma" % where)
+    # the Sp_field site has TWO branches (inside / outside the top half-cell)
+    need(mmw.count("LawSigma(te_g") == 2,
+         "BOTH `Sp_field` branches convert -- the reconstructed top half-cell "
+         "AND the sampled cell (%d of 2)" % mmw.count("LawSigma(te_g"))
+
+    # The law's RAW pieces belong to the per-cell cache writer and to nobody
+    # else. Anyone else reading E_of/strain_of/alpha_of/mu_of is building a
+    # second stress formula, which is the defect this block exists to stop.
+    CACHE_OK = (
+        "EE   (i, j, k) = g.E_of(Tc);",
+        "muu  (i, j, k) = g.mu_of(Tc);",
+        "? (g.strain_of(Tc) - g.strain_of(T_r)) / dT",
+        ": g.alpha_of(Tc);",
+    )
+    raw = []
+    for nm, txt in (("MMWSpalling.H", mmw), ("Removal.H", rem)):
+        for ln, line in enumerate(txt.split("\n"), 1):
+            if not re.search(r"\.(E_of|strain_of|alpha_of|mu_of)\s*\(", line):
+                continue
+            if any(frag in line for frag in CACHE_OK):
+                continue
+            raw.append("%s:%d %s" % (nm, ln, line.strip()[:66]))
+    for o in raw:
+        print("       ** %s" % o)
+    need(not raw,
+         "the law's raw strain/stiffness pieces are read ONLY by the per-cell "
+         "cache writer (%d other reader(s))" % len(raw))
+
+    # ⚠⚠ deliverable 4: STRAIN IS NEVER INTERPOLATED IN SPACE. A strain or
+    # stress FIELD would be interpolated by AMR on regrid and at box seams, and
+    # the criterion would read a spatially smeared strain instead of the one at
+    # its own reconstructed temperature.
+    # ⚠ NOT a ban on field NAMES. A first pass here asserted that no
+    # `strain_mf`/`stress_mf` exists and failed on `stress_mf`, which is the
+    # MECHANICS solve's own nodal stress -- 15 uses, pre-existing, and the
+    # Step-19 stress source reads it legitimately. Banning a name catches the
+    # wrong thing. The invariant that actually encodes "strain is never
+    # interpolated in space" is that the stress entry point is a PURE FUNCTION
+    # OF TEMPERATURE: it reads no field and knows no cell index. If a cached
+    # strain field is ever introduced and read here, this fails.
+    m = re.search(r"static Set::Scalar LawSigma\([\s\S]*?\{([\s\S]*?)\n    \}",
+                  mmw)
+    need(m is not None, "the LawSigma body is locatable for inspection")
+    if m:
+        body = m.group(1)
+        need("_mf" not in body,
+             "LawSigma reads NO field -- strain and stiffness come from the "
+             "law at the local temperature, never from an interpolated field")
+        need("(i, j, k)" not in body and "(i,j,k)" not in body,
+             "LawSigma knows no cell index, so it cannot smear strain across "
+             "cells")
+
+    # ⚠⚠ BYTE-IDENTITY UNDER THE SHIPPED DEFAULT IS STRUCTURAL, NOT HOPED FOR.
+    # Each site keeps its pre-P2-2b expression VERBATIM in the else-branch.
+    # Rewriting the default as relief*(E*beta*dT/(1-nu)) is algebraically the
+    # same and NOT bit-identical -- it re-associates the multiply -- which
+    # would break (b1) on a tree where the new law is switched off.
+    need("C_th * jump" in rem,
+         "the lateral site keeps `C_th * jump` verbatim for `law = constant`")
+    need(rem.count("* phase_beta_loc") >= 1 and "phase_E_loc" in rem,
+         "the depth scan keeps its scalar expression for `law = constant`")
+    need(mmw.count("te_relief * te_E * te_beta") == 2,
+         "both `Sp_field` branches keep the scalar expression too (%d of 2)"
+         % mmw.count("te_relief * te_E * te_beta"))
+
+    # ---- P2-2b (a1)/(b4): THE RULE, AS A PREDICATE ------------------------
+    # WHY A PREDICATE AND NOT A COUNT. rev 1 barred this as "five sites and no
+    # sixth", having found five by grepping for the PRODUCT `rho * Cp`. Two
+    # sites read `rho` and `Cp` as SEPARATE scalars and cannot match a product
+    # pattern, so the bar could only be satisfied by repeating the search error
+    # that produced it. A count is brittle against exactly what it must catch.
+    #
+    # THE RULE: no site in the rock path reads `rho` or `Cp` as a per-phase
+    # constant, and nothing stores a pre-multiplied `rho*Cp`. Three classes are
+    # permitted, each asserted to be exactly where it belongs:
+    #   * the PARSE block            -- where the scalars enter at all;
+    #   * the `constant`-law object  -- site 4's else-branch; for a constant
+    #                                   phase the Constant object IS the law;
+    #   * the ONE field writer       -- site 5, per-phase becomes per-cell.
+    print("\nP2-2b (a1) NO PER-PHASE SCALAR rho/Cp IN THE ROCK PATH")
+
+    ALLOWED = {
+        'pp.query_required(pfx + ".rho"':                  "parse block",
+        'pp.query_required(pfx + ".Cp"':                   "parse block",
+        "phase_materials[p].m_rho   = phases[p].rho":      "constant-law object",
+        "phase_materials[p].m_cp    = phases[p].Cp":       "constant-law object",
+        "rh[p]  = phases[p].rho":                          "the one field writer",
+        "Cpv[p] = phases[p].Cp":                           "the one field writer",
+        "phases[p].grimsel.rho(phases[p].T_ref)":          "the one field writer (law)",
+        "phases[p].grimsel.cp (phases[p].T_ref)":          "the one field writer (law)",
+    }
+    offenders = []
+    for nm, txt in (("MMWSpalling.H", mmw), ("Removal.H", rem)):
+        for ln, line in enumerate(txt.split("\n"), 1):
+            bare = line.split("//")[0]
+            if not re.search(r"phases\[[^\]]*\]\.(rho|Cp)\b", bare):
+                continue
+            if any(frag in bare for frag in ALLOWED):
+                continue
+            offenders.append("%s:%d %s" % (nm, ln, line.strip()[:68]))
+    for o in offenders:
+        print("       ** %s" % o)
+    need(not offenders,
+         "every per-phase scalar read of rho/Cp sits in one of the three "
+         "permitted classes (%d offender(s))" % len(offenders))
+
+    # Each permitted class must still EXIST. Without this the block passes
+    # vacuously on a tree where the scalars were deleted outright and the fields
+    # are therefore never filled -- the failure the packet diagnosed at :5380,
+    # where UpdatePropertyFields returns unless some phase sets law = grimsel.
+    for frag, cls in sorted(ALLOWED.items()):
+        n = (mmw + rem).count(frag)
+        need(n == 1,
+             "the permitted site `%s` (%s) exists exactly once (%d)"
+             % (frag[:42], cls, n))
+
+    # NO stored pre-multiplied product survives IN CODE (the retirement note
+    # names them in a comment, deliberately, so the audit trail stays).
+    code = "\n".join(l.split("//")[0] for l in (mmw + "\n" + rem).split("\n"))
+    for name in ("rev_rhoCp", "pin_rhoCp"):
+        n_code = len(re.findall(r"\b%s\b" % name, code))
+        need(n_code == 0,
+             "the stored product `%s` is retired from code (%d)" % (name, n_code))
+    for name in ("pin_rho", "pin_Cp", "col_rho", "col_Cp"):
+        n = len(re.findall(r"\b%s\b" % name, code))
+        need(n >= 2, "`%s` is carried separately (%d uses)" % (name, n))
+
+    # site 4 builds the enthalpy table FROM THE LAW, with the latent heat copied
+    need(len(re.findall(r"phase_tables\[p\]\.Build\(g\)", mmw)) == 1,
+         "site 4 builds the enthalpy table from the LAW under grimsel_law")
+    for f in ("T_m", "fus_width", "L_m", "T_vap_lo", "T_vap_hi", "L_v"):
+        need(len(re.findall(r"g\.%s\s*=\s*phases\[p\]\.%s;" % (f, f), mmw)) == 1,
+             "`%s` is copied onto the law object before Build -- Grimsel parses "
+             "only T_ref, so it would otherwise sit at the base default and the "
+             "latent heat would vanish silently" % f)
+
+    # --- THE RUN ASSERTION: a retired key must be UNCONSUMED ---------------
+    # ⚠⚠ The only clause here that separates "key deleted" from "key parsed,
+    # guard gone". For `spall.support_rule` the latter fires 240 K early IN
+    # SILENCE, so source greps alone are not enough -- a deleted parse leaves
+    # the key accepted and ignored by every other reader.
+    #
+    # ⚠⚠ THE PACKET EXPECTED AN ABORT AND THERE IS NONE. P2-2a's ledger cites
+    # IO/ParmParse.H's unused-input check, but that fires inside
+    # `queryclass<T>(prefix)` for keys UNDER that prefix; a top-level
+    # `spall.*` key given on the command line is not covered, and MEASURED:
+    # `spall.support_rule=1` exits 0, and so does `this.key.is.nonsense=42`.
+    # What IS available is AMReX's own end-of-run report, which lists the key as
+    #     [TOP]::spall.support_rule(nvals = 1)  :: [1]
+    # so the discriminating property survives intact, and TWO-SIDED on one
+    # binary: a key that is still parsed is CONSUMED and must be ABSENT from the
+    # report, a retired key must be PRESENT. The second half is what makes this
+    # non-vacuous -- without it, a run that ignored every key would "pass".
+    if "--check" not in sys.argv:
+        print("\nP2-2a (b4) THE RETIRED KEYS MUST BE UNCONSUMED (AMReX report)")
+        gb = os.path.join(ROOT, "tests", "MMWSpalling", "unit",
+                          "gradient_blind", "input")
+
+        def unused_for(key):
+            d = tempfile.mkdtemp(prefix="lockkey_")
+            r = subprocess.run(
+                ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "1",
+                 os.path.join(ROOT, "bin", "mmwspalling-3d-g++"), gb, key,
+                 "stop_time=0.0", "plot_file=%s" % os.path.join(d, "run")],
+                cwd=ROOT, capture_output=True, text=True)
+            txt = (r.stdout or "") + (r.stderr or "")
+            name = key.split("=")[0]
+            return bool(re.search(r"\[TOP\]::%s\(" % re.escape(name), txt))
+
+        for key in ("spall.support_rule=1", "spall.support_min_sides=2",
+                    "spall.support_step_min=0.006",
+                    "spall.driving_stress=differential",
+                    "spall.driving_ref=flake",
+                    "spall.driving_ref_depth=0.001"):
+            u = unused_for(key)
+            print("       %-38s %s" % (key, "unconsumed" if u else "** CONSUMED **"))
+            need(u, "retired key `%s` is UNCONSUMED -- it is gone, not parsed "
+                    "and ignored" % key)
+        # ⚠⚠ P2-8 GROUP A: SIX `surface_patch.*` keys DELETED. Unlike the
+        # top-level `spall.*` keys above, these sit under `queryclass<
+        # SurfacePatch>("surface_patch")`, whose unused-key check ABORTS, so the
+        # property here is the stronger one the packet names: the run must
+        # FAIL. Each is given at its former DEFAULT value, so an abort can only
+        # mean "the key is gone", never "the value was refused".
+        def aborts_for(keys):
+            d = tempfile.mkdtemp(prefix="lockkeyA_")
+            r = subprocess.run(
+                ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "1",
+                 os.path.join(ROOT, "bin", "mmwspalling-3d-g++"), gb] + keys
+                + ["stop_time=0.0", "plot_file=%s" % os.path.join(d, "run")],
+                cwd=ROOT, capture_output=True, text=True)
+            return r.returncode != 0, (r.stdout or "") + (r.stderr or "")
+        GROUP_A = ("surface_patch.side_face_factor=1.0",
+                   "surface_patch.side_face_r_min=0.0",
+                   "surface_patch.side_face_area_exact=0",
+                   "surface_patch.side_face_closure=follow",
+                   "surface_patch.side_face_h_max=80.0",
+                   "surface_patch.side_face_h_scale=1.0")
+        print("\nP2-8 (a2) THE SIX GROUP-A KEYS MUST ABORT (queryclass strict check)")
+        for key in GROUP_A:
+            ab, txt = aborts_for([key])
+            name = key.split("=")[0].split(".", 1)[1]
+            named = name in txt
+            print("       %-42s %s%s" % (key, "ABORTS" if ab else "** RUNS **",
+                                         "" if named else "  (key not named in output)"))
+            need(ab and named, "retired key `%s` ABORTS the run and the output names "
+                               "it -- it is gone, not parsed and ignored" % key)
+        # the control: the SAME prefix with a live key must run, or "aborts"
+        # would be true of a binary that refuses every surface_patch key.
+        ab, txt = aborts_for(["surface_patch.side_face_flux=0"])
+        print("       %-42s %s" % ("surface_patch.side_face_flux=0 (live)",
+                                   "runs (good)" if not ab else "** ABORTS **"))
+        need(not ab, "a LIVE surface_patch key still runs -- the abort clause "
+                     "above is not vacuous")
+        # and the code: no parse of any of the six survives
+        code_all = "\n".join(l.split("//")[0] for l in (mmw + "\n" + rem).split("\n"))
+        for key in GROUP_A:
+            nm = key.split("=")[0].split(".", 1)[1]
+            n = len(re.findall(r'"%s"' % re.escape(nm), code_all))
+            need(n == 0, "no code line names the retired key `%s` (%d)" % (nm, n))
+
+        # the other side: a key that still exists must be consumed, or the
+        # assertion above would pass for a binary that reads no keys at all.
+        for key in ("spall.flake_c_f=0.4", "spall.h_spall_max=0.015"):
+            u = unused_for(key)
+            print("       %-38s %s" % (key, "consumed (good)" if not u
+                                       else "** UNCONSUMED **"))
+            need(not u, "live key `%s` is still CONSUMED -- the clause above is "
+                        "not vacuous" % key)
+
+    # ---- P2-3 (a3): THE GAS-TEMPERATURE LOCK, FIVE READERS ---------------
+    # ⚠⚠ WHY A SECOND SITE LOCK. P2-1 locked the COEFFICIENT (`SideFaceH`) across
+    # four sites. P2-3 changes the GAS TEMPERATURE, which has FIVE readers, and
+    # the fifth is in a different file: Removal.H's lateral criterion. A
+    # criterion standing in different gas from the kernel decides whether a face
+    # fires against a flux the kernel never applies -- the P2-0 lesson, where the
+    # packet's own site list omitted the criterion and counted a Parse predicate
+    # instead.
+    #
+    # ⚠ The criterion's read ALSO had to MOVE, not just change: `T_side` there
+    # was hoisted once per column, outside the per-k loop, which is correct for
+    # one scalar and wrong the moment the value depends on height.
+    print("\nP2-3 (a3) THE GAS-TEMPERATURE LOCK -- five readers, one resolver")
+    DECL_T = r"Set::Scalar\s+SideFaceTgas\s*\("
+    CALL_T = r"SideFaceTgas\s*\("
+    nd_t = len(re.findall(DECL_T, mmw)) + len(re.findall(DECL_T, rem))
+    nc_t = (len(re.findall(CALL_T, mmw)) + len(re.findall(CALL_T, rem))) - nd_t
+    print("     SideFaceTgas: %d declaration(s), %d call site(s)" % (nd_t, nc_t))
+    need(nd_t == 1,
+         "the gas-temperature resolver is declared EXACTLY ONCE (%d)" % nd_t)
+    # four PER-FACE readers go through it; the fifth is scalar by nature.
+    need(nc_t == 4,
+         "the four PER-FACE readers all call it (%d call sites, want 4): kernel, "
+         "lateral criterion, floor march, ledger" % nc_t)
+    # and one of them must be in Removal.H -- the site that gets missed.
+    n_rem_t = len(re.findall(CALL_T, rem))
+    print("     of those, %d call site(s) are in Removal.H (the criterion)" % n_rem_t)
+    need(n_rem_t == 1,
+         "the LATERAL CRITERION in Removal.H resolves the gas temperature "
+         "through the resolver -- this is the site P2-0 missed, so it is named "
+         "and counted separately rather than folded into a total")
+
+    # every per-face call must pass a HEIGHT, not a constant: a resolver called
+    # with a fixed k would return one scalar again and the lock would pass.
+    # ⚠ BALANCED PARENS, and the first spelling of this clause got it wrong:
+    # a regex stopping at the first `)` splits `SideFaceTgas(static_cast<int>(c),
+    # k)` inside the cast and reports arity 1 for all three MMWSpalling.H sites.
+    # The arguments have to be taken at paren DEPTH 1.
+    def call_args(src, fn):
+        out = []
+        for m in re.finditer(fn + r"\s*\(", src):
+            i, depth, start, args = m.end(), 1, m.end(), []
+            while i < len(src) and depth > 0:
+                ch = src[i]
+                if ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth -= 1
+                    if depth == 0:
+                        args.append(src[start:i].strip())
+                        break
+                elif ch == "," and depth == 1:
+                    args.append(src[start:i].strip())
+                    start = i + 1
+                i += 1
+            out.append(args)
+        return out
+
+    bad_k = []
+    for src, nm in ((mmw, "MMWSpalling.H"), (rem, "Removal.H")):
+        for args in call_args(src, "SideFaceTgas"):
+            if len(args) == 1 and args[0].startswith("int col"):
+                continue                      # the declaration itself
+            if len(args) != 2:
+                bad_k.append((nm, ", ".join(args), "arity %d" % len(args)))
+            elif re.fullmatch(r"-?\d+", args[1]):
+                bad_k.append((nm, ", ".join(args), "CONSTANT height"))
+    for nm, a, why in bad_k:
+        print("     ** %s: SideFaceTgas(%s) -- %s" % (nm, a, why))
+    need(not bad_k,
+         "every per-face call passes a (column, height) pair with a NON-CONSTANT "
+         "height -- a fixed k would silently restore the single scalar")
+
+    # the bare scalar must survive ONLY as the resolver's own fallback and the
+    # one site that has no face: the wall law's gas PROPERTIES.
+    # ⚠⚠ AND THE SHARP FORM OF THE INVARIANT. Counting bare `side_T_eff` reads
+    # is the wrong test and the first spelling of this clause failed on it: NINE
+    # remain and all nine are correct -- five are the resolver's OWN fallback
+    # returns, two are the face-less wall-law property site spread over two
+    # lines, and two are `side_T_ex` fallback locals that the per-face reads no
+    # longer consume. A count cannot tell those from a regression.
+    #
+    # What must never happen is that a face is HEATED with the scalar. So:
+    # no `SurfaceCellFlux(` call may pass `side_T_eff` or `side_T_ex` as its
+    # gas-temperature argument. That argument is positional (5th: the `T_gas`
+    # slot, after enable/face/weight/h), and the P2-1 block above has already
+    # established the call signature.
+    T_POS = 4
+    bad_flux = []
+    nflux = 0
+    for src, nm in ((mmw, "MMWSpalling.H"), (rem, "Removal.H")):
+        for args in call_args(src, "SurfaceCellFlux"):
+            if len(args) <= T_POS:
+                continue
+            nflux += 1
+            tg = args[T_POS]
+            if re.fullmatch(r"side_T_eff|side_T_ex", tg):
+                bad_flux.append((nm, tg))
+    print("     SurfaceCellFlux call sites inspected: %d" % nflux)
+    for nm, tg in bad_flux:
+        print("     ** %s: a face is heated with the bare scalar `%s`" % (nm, tg))
+    need(nflux >= 4 and not bad_flux,
+         "NO SurfaceCellFlux call heats a face with the bare scalar: every "
+         "gas temperature reaching a face comes from the resolver (%d call "
+         "sites inspected, %d violations)" % (nflux, len(bad_flux)))
+
+    # ⚠⚠ THE NEGATIVE CONTROL. Every clause above is satisfied by the CURRENT
+    # source, so none of them has yet been shown to be capable of failing. The
+    # pre-change source cannot be re-run (the binary has moved on), so the
+    # discriminating test is done on TEXT: revert the resolver to the bare
+    # scalar in a copy and require the clauses to go RED. A lock that has never
+    # been observed to fail is a comment.
+    print("\n     NEGATIVE CONTROL (the pre-change spelling must go RED):")
+    mmw_pre = re.sub(CALL_T, "side_T_eff_OLD(", mmw)
+    rem_pre = re.sub(CALL_T, "side_T_eff_OLD(", rem)
+    nd_pre = len(re.findall(DECL_T, mmw_pre)) + len(re.findall(DECL_T, rem_pre))
+    nc_pre = (len(re.findall(CALL_T, mmw_pre))
+              + len(re.findall(CALL_T, rem_pre))) - nd_pre
+    nrem_pre = len(re.findall(CALL_T, rem_pre))
+    print("       with the resolver reverted: %d call site(s), %d in Removal.H"
+          % (nc_pre, nrem_pre))
+    bad_pre = []
+    for src, nm in ((mmw_pre, "MMWSpalling.H"), (rem_pre, "Removal.H")):
+        for args in call_args(src, "SurfaceCellFlux"):
+            if len(args) > T_POS and re.fullmatch(r"side_T_eff|side_T_ex",
+                                                  args[T_POS]):
+                bad_pre.append(nm)
+    print("       and with it reverted, %d SurfaceCellFlux call(s) heat a face "
+          "with the bare scalar" % len(bad_pre))
+    need(nc_pre != 4 and nrem_pre != 1,
+         "the clauses above FAIL on the pre-change spelling (%d call sites, %d "
+         "in Removal.H) -- so they discriminate, and (a3)'s \"RED pre-change\" "
+         "is demonstrated rather than asserted" % (nc_pre, nrem_pre))
+
+    # ---- P2-4 (a2): THE COLD BODY READS THE LAW, NOT A PRIVATE NUMBER -----
+    # ⚠⚠ The body is a SINK, not a FACE. It has no area law, no criterion and no
+    # removal, so `SideFaceH`'s role count and the cap-site count must NOT move
+    # -- if either does, something gave the body a face's machinery.
+    print("\nP2-4 (a2) THE COLD BODY -- one read of the law's duct scalar")
+    body_h_lines = [ln for ln in mmw.splitlines()
+                    if "jet_body_h_scale" in ln and "wall_h_duct" in ln]
+    print("     lines combining jet_body_h_scale with wall_h_duct: %d"
+          % len(body_h_lines))
+    for ln in body_h_lines:
+        print("       %s" % ln.strip()[:92])
+    need(len(body_h_lines) == 1,
+         "the body's coefficient is formed in EXACTLY ONE place, as the scale "
+         "times the law's duct scalar (%d sites)" % len(body_h_lines))
+    # no typed fallback: the body must never fall back to side_face_h or a literal
+    # ⚠ THE FALLBACK TEST IS ON THE COEFFICIENT, not on "any literal near the
+    # word jet_body". The first spelling matched `jet_body_T = 320.0` -- the body
+    # TEMPERATURE's key default, which is a legitimate typed value and not a
+    # coefficient fallback at all. What must be true is narrower: `body_h` is
+    # assigned in exactly one statement, and that statement's only alternatives
+    # are the law's duct product and ZERO.
+    decl = re.search(r"const\s+Set::Scalar\s+body_h\s*=(.*?);", mmw, re.S)
+    n_assign = len(re.findall(r"\bbody_h\s*=[^=]", mmw))
+    rhs = decl.group(1) if decl else ""
+    print("     `body_h` assignments: %d" % n_assign)
+    print("       RHS: %s" % " ".join(rhs.split())[:100])
+    need(n_assign == 1 and decl is not None,
+         "`body_h` is assigned in EXACTLY ONE statement (%d)" % n_assign)
+    need("wall_h_duct" in rhs and "0.0" in rhs
+         and "side_face_h" not in rhs and "jet_T_nozzle" not in rhs,
+         "its only alternatives are the law's duct scalar and ZERO -- no typed "
+         "fallback, so when the law is not ready the term is zero and the step "
+         "is COUNTED (body_noLaw_n), which is what makes an inert sink visible "
+         "instead of silent")
+    # the counts the body must NOT have moved
+    need(n_call == len(ROLES),
+         "P2-4 did NOT add a SideFaceH role (%d, still %d): the body is a sink, "
+         "not a face" % (n_call, len(ROLES)))
+    need(n_mmw == 0,
+         "no cap site exists at all (%d; P2-8 group A deleted the three P2-4 "
+         "counted): a sink takes no coefficient cap" % n_mmw)
+    # and the area must carry the sector fraction, in the one place it is formed
+    area_lines = [ln for ln in mmw.splitlines()
+                  if "WJ_R_SHIELD" in ln and "wall_sector" in ln]
+    need(len(area_lines) == 1,
+         "the body's perimeter is formed ONCE from WJ_R_SHIELD and wall_sector "
+         "(%d sites) -- a second spelling is how a sector fraction gets dropped, "
+         "which reads as 4x the cooling" % len(area_lines))
+
+    print("\n     NEGATIVE CONTROL (the pre-change spelling must go RED):")
+    mmw_nb = mmw.replace("surface_patch.jet_body_h_scale * wall_h_duct",
+                         "SOME_PRIVATE_H")
+    nb = len([ln for ln in mmw_nb.splitlines()
+              if "jet_body_h_scale" in ln and "wall_h_duct" in ln])
+    print("       with the duct read replaced by a private h: %d site(s)" % nb)
+    need(nb == 0,
+         "the clause above FAILS when the body stops reading the law (%d sites) "
+         "-- so it discriminates" % nb)
+
+    # ---- P2-8 (a3): THE FACE LIST -- one builder, one heat rule, one area rule
+    # ⚠⚠ The bug family this file exists for is a consumer reading its OWN
+    # h / T / area. Under `surface_patch.face_list` every consumer must read
+    # the ONE list: built once (F1+F3), heated once (F2), and the four flux
+    # readers through the one face-Newton call (F4). Asserted on CODE lines.
+    print("\nP2-8 (a3) THE FACE LIST -- one list builder, one heat resolver, one weight function")
+    code_m = "\n".join(l.split("//")[0] for l in mmw.split("\n"))
+    code_r = "\n".join(l.split("//")[0] for l in rem.split("\n"))
+    def ndecl(pat):
+        return len(re.findall(pat, code_m)) + len(re.findall(pat, code_r))
+    def ncall(name, decl):
+        return (len(re.findall(r"\b%s\s*\(" % name, code_m))
+                + len(re.findall(r"\b%s\s*\(" % name, code_r)) - decl)
+    for name, dpat, want_calls, where in (
+            ("BuildFaceList", r"void\s+BuildFaceList\s*\(", 1,
+             "once per step, in AdvanceMicrostructure"),
+            ("FaceListHeat", r"void\s+FaceListHeat\s*\(", 1,
+             "once per step, in BuildFlameColumns before the march"),
+            ("FaceH", r"Set::Scalar\s+FaceH\s*\(", 1,
+             "only inside FaceListHeat -- the ONE heat resolver"),
+            ("FaceWeight", r"static\s+Set::Scalar\s+FaceWeight\s*\(", 1,
+             "only inside BuildFaceList -- the ONE area rule"),
+            ("FaceListFlux", r"static\s+void\s+FaceListFlux\s*\(", 4,
+             "kernel, ledger, march, diagnostics -- the ONE non-top face flux")):
+        nd = ndecl(dpat)
+        nc = ncall(name, nd)
+        print("     %-14s %d declaration(s), %d call(s)  [%s]" % (name, nd, nc, where))
+        need(nd == 1, "`%s` is declared EXACTLY ONCE (%d)" % (name, nd))
+        need(nc == want_calls, "`%s` has exactly %d call site(s) -- %s (%d)"
+             % (name, want_calls, where, nc))
+    # the heat resolver is the ONLY place h_expr is evaluated per face
+    fh_body = re.search(r"void\s+FaceListHeat\s*\(.*?\n    \}\n", code_m, re.S)
+    need(fh_body is not None and "FaceH(" in fh_body.group(0),
+         "FaceH is called from INSIDE FaceListHeat")
+    bfc = re.search(r"void\s+BuildFlameColumns\s*\(.*?\n    \}\n", code_m, re.S)
+    need(bfc is not None and re.search(r"FaceListHeat\(.*?JetEnthalpyMarch\(",
+                                       bfc.group(0), re.S) is not None,
+         "F2 runs BEFORE the march inside BuildFlameColumns (the march bills every "
+         "face at this step's h)")
+    adv = re.search(r"void\s+AdvanceMicrostructure\s*\(.*?\n    \}\n", code_m, re.S)
+    need(adv is not None and re.search(r"BuildFaceList\(.*?BuildFlameColumns\(",
+                                       adv.group(0), re.S) is not None,
+         "F1 is built BEFORE BuildFlameColumns (and so before the march)")
+    # the five consumers read the LIST
+    need(adv is not None and "flp[q]" in adv.group(0) and "fli(i, j, k, 0)" in adv.group(0),
+         "the KERNEL reads the list per cell (flp / fli)")
+    led = re.search(r"void\s+EnergyLedger\s*\(.*?\n    \}\n", code_m, re.S)
+    need(led is not None and "fli_l(i, j, k, 0)" in led.group(0)
+         and "FaceListFlux(" in led.group(0),
+         "the LEDGER mirrors the list per cell")
+    mar = re.search(r"void\s+JetEnthalpyMarch\s*\(.*?\n    \}\n", code_m, re.S)
+    need(mar is not None and "fl_col_first[c]" in mar.group(0)
+         and re.search(r"side_on\s*=\s*surface_patch\.side_face_flux\s*&&\s*!fl_on_m",
+                       mar.group(0)) is not None,
+         "the MARCH bills the list's faces per column and builds no slot gather "
+         "under the key (slot builder and side term both replaced)")
+    need("fla(i, j, k, 0)" in code_r and "h_dir[e.dir] = e.h" in code_r
+         and re.search(r"if\s*\(k\s*==\s*kT\)\s*continue;", code_r) is not None,
+         "the CRITERION takes exposure and h from the list and leaves the column-top "
+         "cell to the vertical criterion (the transitional rule)")
+    need(re.search(r"h_q\s*\*\s*\(T_face_gas\s*-\s*T_face\)", code_r) is not None,
+         "the criterion's q_net_l uses the FACE's h and gas under the key")
+    # group B is not read under the key at the old side sites
+    need(re.search(r"r2_col <= sp_r2 && !fl_on;", code_m) is not None
+         and re.search(r"side_on\s*=\s*sp_on\s*&&\s*surface_patch\.side_face_flux\s*&&\s*!fl_on_l",
+                       code_m) is not None,
+         "the kernel's and the ledger's old side-face blocks are OFF under the key")
+
+    print()
+    if fails:
+        print("FAIL: %d check(s) failed" % len(fails))
+        return 1
+    print("PASS: the four lateral flux sites agree argument by argument, all four\n"
+          "      resolve `h` PER FACE through the one resolver, the stress-free\n"
+          "      reference is the STORED INITIAL FIELD -- write-once, unplotted,\n"
+          "      read at BOTH firing sites -- the\n"
+          "      second driving form and the support rule are DELETED rather than\n"
+          "      defaulted off, their keys go UNCONSUMED while live keys still\n"
+          "      bind, no strain table has entered the criterion, and all five\n"
+          "      gas-temperature readers -- the criterion among them -- resolve\n"
+          "      through the one height-aware resolver.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

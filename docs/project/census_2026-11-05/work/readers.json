@@ -1,0 +1,8416 @@
+{
+"spall.lateral_drive": [],
+"spall.lateral_removal": [],
+"spall.lateral_subcell": [],
+"spall.lateral_thermal": [],
+"spall.per_cell_removal": [],
+"surface_patch.side_face_flux": [],
+"surface_patch.side_face_h": [],
+"surface_patch.side_face_T": [],
+"surface_patch.side_face_h_r_min": [],
+"surface_patch.side_face_h_law": [],
+"surface_patch.side_face_h_datum": [],
+"surface_patch.side_face_factor_above": [],
+"surface_patch.side_face_area_law": [],
+"surface_patch.side_face_step_height": [],
+"surface_patch.side_face_staircase": [],
+"surface_patch.step_diag_radius": [],
+"surface_patch.jet_wall_march": [],
+"surface_patch.jet_wall_mdot": [],
+"surface_patch.jet_body": [],
+"surface_patch.jet_body_T": [],
+"surface_patch.jet_body_h_scale": [],
+"spallation.sp.constraint_depth": [],
+"hc.heat.alpha": [
+{
+"mem": "therm_alpha",
+"file": "MMWSpalling.H",
+"line": 1476,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar a_th = therm_alpha;"
+},
+{
+"mem": "therm_alpha",
+"file": "MMWSpalling.H",
+"line": 7554,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar therm_alpha = NAN;"
+},
+{
+"mem": "therm_alpha",
+"file": "Removal.H",
+"line": 297,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar alpha_eff   = spall_alpha_override ? spall_alpha   : therm_alpha;"
+}
+],
+"phase.T_ref": [
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 1362,
+"func": "UpdateModel",
+"tag": "read",
+"text": "Set::Scalar Tref = T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 6681,
+"func": "ConvertTtoH",
+"tag": "read",
+"text": "const Set::Scalar Tref = T_ref, Tm = T_m, Tvm = T_v;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 6733,
+"func": "InvertHtoT",
+"tag": "read",
+"text": "const Set::Scalar Tref = T_ref, Tm = T_m, Tvm = T_v;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 6941,
+"func": "ThermalFreeStrain",
+"tag": "read",
+"text": "Set::Scalar T_ref,"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 6946,
+"func": "ThermalFreeStrain",
+"tag": "read",
+"text": "return beta * (T - T_ref)"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 7555,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar T_ref = 0.0;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 8379,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar T_ref     = 273.15;"
+}
+],
+"phase.T_m": [
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 6638,
+"func": "SetPhaseFractionsConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar Tm = T_m, Tv = T_v;"
+},
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 6681,
+"func": "ConvertTtoH",
+"tag": "read",
+"text": "const Set::Scalar Tref = T_ref, Tm = T_m, Tvm = T_v;"
+},
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 6733,
+"func": "InvertHtoT",
+"tag": "read",
+"text": "const Set::Scalar Tref = T_ref, Tm = T_m, Tvm = T_v;"
+},
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 7556,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar T_m   = 1.0e30;"
+},
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 8380,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar T_m       = 1.0e30;"
+}
+],
+"phase.T_v": [
+{
+"mem": "T_v",
+"file": "MMWSpalling.H",
+"line": 6638,
+"func": "SetPhaseFractionsConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar Tm = T_m, Tv = T_v;"
+},
+{
+"mem": "T_v",
+"file": "MMWSpalling.H",
+"line": 6681,
+"func": "ConvertTtoH",
+"tag": "read",
+"text": "const Set::Scalar Tref = T_ref, Tm = T_m, Tvm = T_v;"
+},
+{
+"mem": "T_v",
+"file": "MMWSpalling.H",
+"line": 6733,
+"func": "InvertHtoT",
+"tag": "read",
+"text": "const Set::Scalar Tref = T_ref, Tm = T_m, Tvm = T_v;"
+},
+{
+"mem": "T_v",
+"file": "MMWSpalling.H",
+"line": 7557,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar T_v   = 1.0e30;"
+}
+],
+"phase.lh_m": [
+{
+"mem": "lh_m",
+"file": "MMWSpalling.H",
+"line": 6683,
+"func": "ConvertTtoH",
+"tag": "read",
+"text": "const Set::Scalar HL  = HS + lh_m;"
+},
+{
+"mem": "lh_m",
+"file": "MMWSpalling.H",
+"line": 6734,
+"func": "InvertHtoT",
+"tag": "read",
+"text": "const Set::Scalar Lhm = lh_m, Lhv = lh_v;"
+},
+{
+"mem": "lh_m",
+"file": "MMWSpalling.H",
+"line": 7558,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar lh_m  = 0.0;"
+}
+],
+"phase.lh_v": [
+{
+"mem": "lh_v",
+"file": "MMWSpalling.H",
+"line": 6685,
+"func": "ConvertTtoH",
+"tag": "read",
+"text": "const Set::Scalar HV  = HLV + lh_v;"
+},
+{
+"mem": "lh_v",
+"file": "MMWSpalling.H",
+"line": 6734,
+"func": "InvertHtoT",
+"tag": "read",
+"text": "const Set::Scalar Lhm = lh_m, Lhv = lh_v;"
+},
+{
+"mem": "lh_v",
+"file": "MMWSpalling.H",
+"line": 7559,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar lh_v  = 0.0;"
+}
+],
+"losses.epsilon": [
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 1484,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 1525,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 1657,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 1851,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 2608,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "jkc[c], DX[2], jTc[c], eps_rad, eps_rad_hi, T_eps_break,"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 2995,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "(Ts_pre <= T_eps_break) ? eps_rad : eps_rad_hi;"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 3156,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "kc, DX[2], Tc, eps_rad, eps_rad_hi, T_eps_break, sigma_SB,"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 4170,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "eps_rad",
+"file": "MMWSpalling.H",
+"line": 7561,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar eps_rad      = 0.0;"
+},
+{
+"mem": "eps_rad",
+"file": "Removal.H",
+"line": 1352,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "(Ts <= T_eps_break) ? eps_rad"
+},
+{
+"mem": "eps_rad",
+"file": "FaceRemoval.H",
+"line": 149,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "eps_rad",
+"file": "FaceRemoval.H",
+"line": 154,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "eps_rad",
+"file": "FaceRemoval.H",
+"line": 524,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+}
+],
+"losses.sigma_SB": [
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 1485,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 1526,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 1658,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 1852,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 2609,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "sigma_SB, h_conv, T_amb, q_in, q_out, q_rob, q_los, Tpin,"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 2998,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "- ep * sigma_SB"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 3156,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "kc, DX[2], Tc, eps_rad, eps_rad_hi, T_eps_break, sigma_SB,"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 4170,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "sigma_SB",
+"file": "MMWSpalling.H",
+"line": 7564,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar sigma_SB = 0.0;"
+},
+{
+"mem": "sigma_SB",
+"file": "Removal.H",
+"line": 1357,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "- eps * sigma_SB"
+},
+{
+"mem": "sigma_SB",
+"file": "FaceRemoval.H",
+"line": 149,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "sigma_SB",
+"file": "FaceRemoval.H",
+"line": 154,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "sigma_SB",
+"file": "FaceRemoval.H",
+"line": 524,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+}
+],
+"losses.h_conv": [
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 1485,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 1526,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 1658,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 1852,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 2609,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "sigma_SB, h_conv, T_amb, q_in, q_out, q_rob, q_los, Tpin,"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 3001,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "- h_conv * (Ts_pre - T_amb);"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 3157,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "h_conv, T_amb, q_in, q_out, q_rob, q_los,"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 4170,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 7565,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar h_conv   = 0.0;"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 7823,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar h_conv  = 0.0;"
+},
+{
+"mem": "h_conv",
+"file": "Removal.H",
+"line": 1360,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "- h_conv * (Ts - T_amb);"
+},
+{
+"mem": "h_conv",
+"file": "FaceRemoval.H",
+"line": 149,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "h_conv",
+"file": "FaceRemoval.H",
+"line": 154,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "h_conv",
+"file": "FaceRemoval.H",
+"line": 524,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+}
+],
+"losses.T_amb": [
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 1485,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 1526,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 1658,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 1852,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 2609,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "sigma_SB, h_conv, T_amb, q_in, q_out, q_rob, q_los, Tpin,"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 3000,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "- T_amb * T_amb * T_amb * T_amb)"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 3001,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "- h_conv * (Ts_pre - T_amb);"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 3110,
+"func": "PinRule",
+"tag": "read",
+"text": "pin_rho[c] * pin_Cp[c] * dz * (pin_T[c] - T_amb) / q_pin;"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 3157,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "h_conv, T_amb, q_in, q_out, q_rob, q_los,"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 4170,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "T_amb",
+"file": "MMWSpalling.H",
+"line": 7566,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar T_amb    = 0.0;"
+},
+{
+"mem": "T_amb",
+"file": "Removal.H",
+"line": 1359,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "- T_amb*T_amb*T_amb*T_amb)"
+},
+{
+"mem": "T_amb",
+"file": "Removal.H",
+"line": 1360,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "- h_conv * (Ts - T_amb);"
+},
+{
+"mem": "T_amb",
+"file": "FaceRemoval.H",
+"line": 149,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "T_amb",
+"file": "FaceRemoval.H",
+"line": 154,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "T_amb",
+"file": "FaceRemoval.H",
+"line": 524,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+}
+],
+"losses.epsilon_high": [
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 1484,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 1525,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 1657,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 1851,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 2608,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "jkc[c], DX[2], jTc[c], eps_rad, eps_rad_hi, T_eps_break,"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 2995,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "(Ts_pre <= T_eps_break) ? eps_rad : eps_rad_hi;"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 3156,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "kc, DX[2], Tc, eps_rad, eps_rad_hi, T_eps_break, sigma_SB,"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 4170,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "eps_rad_hi",
+"file": "MMWSpalling.H",
+"line": 7562,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar eps_rad_hi   = 0.0;"
+},
+{
+"mem": "eps_rad_hi",
+"file": "Removal.H",
+"line": 1353,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": ": eps_rad_hi;"
+},
+{
+"mem": "eps_rad_hi",
+"file": "FaceRemoval.H",
+"line": 149,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "eps_rad_hi",
+"file": "FaceRemoval.H",
+"line": 154,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "eps_rad_hi",
+"file": "FaceRemoval.H",
+"line": 524,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+}
+],
+"losses.T_eps_break": [
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 1484,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 1525,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 1657,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 1851,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 2608,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "jkc[c], DX[2], jTc[c], eps_rad, eps_rad_hi, T_eps_break,"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 2995,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "(Ts_pre <= T_eps_break) ? eps_rad : eps_rad_hi;"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 3156,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "kc, DX[2], Tc, eps_rad, eps_rad_hi, T_eps_break, sigma_SB,"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 4170,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "T_eps_break",
+"file": "MMWSpalling.H",
+"line": 7563,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar T_eps_break  = 1.0e30;"
+},
+{
+"mem": "T_eps_break",
+"file": "Removal.H",
+"line": 1352,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "(Ts <= T_eps_break) ? eps_rad"
+},
+{
+"mem": "T_eps_break",
+"file": "FaceRemoval.H",
+"line": 149,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "T_eps_break",
+"file": "FaceRemoval.H",
+"line": 154,
+"func": "FrFaceFlux",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+},
+{
+"mem": "T_eps_break",
+"file": "FaceRemoval.H",
+"line": 524,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,"
+}
+],
+"material.type": [
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 1135,
+"func": "Initialize",
+"tag": "read",
+"text": "if (material && microstructure_enabled)"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 1139,
+"func": "Initialize",
+"tag": "read",
+"text": "if (material && !material_table.built()) BuildEnthalpyTable();"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 1458,
+"func": "Advance",
+"tag": "read",
+"text": "else if (material && solver_kind == SolverKind::Implicit) AdvanceMaterialImplicit(lev, time, dt);"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 1459,
+"func": "Advance",
+"tag": "read",
+"text": "else if (material)                                        AdvanceMaterial(lev, time, dt);"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 1517,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Numeric::Material::Material *mat = material;"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 1644,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "Util::Assert(INFO, TEST(material != nullptr));"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 1649,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Numeric::Material::Material *mat = material;"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 6628,
+"func": "BuildEnthalpyTable",
+"tag": "read",
+"text": "if (!material) return;"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 6629,
+"func": "BuildEnthalpyTable",
+"tag": "read",
+"text": "material_table.Build(*material);"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 6650,
+"func": "ConvertTtoH",
+"tag": "read",
+"text": "const Numeric::Material::Table *gtab = material ? &material_table : nullptr;"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 6700,
+"func": "InvertHtoT",
+"tag": "read",
+"text": "const Numeric::Material::Table *gtab = material ? &material_table : nullptr;"
+},
+{
+"mem": "material",
+"file": "MMWSpalling.H",
+"line": 7568,
+"func": null,
+"tag": "decl",
+"text": "Numeric::Material::Material *material = nullptr;"
+}
+],
+"solver": [
+{
+"mem": "solver_kind",
+"file": "MMWSpalling.H",
+"line": 1458,
+"func": "Advance",
+"tag": "read",
+"text": "else if (material && solver_kind == SolverKind::Implicit) AdvanceMaterialImplicit(lev, time, dt);"
+},
+{
+"mem": "solver_kind",
+"file": "MMWSpalling.H",
+"line": 7576,
+"func": null,
+"tag": "decl",
+"text": "SolverKind  solver_kind        = SolverKind::Explicit;"
+}
+],
+"implicit.tol_rel": [
+{
+"mem": "implicit_tol_rel",
+"file": "MMWSpalling.H",
+"line": 1758,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "mlmg.solve({&T_new}, {&rhs_mf}, implicit_tol_rel, implicit_tol_abs);"
+},
+{
+"mem": "implicit_tol_rel",
+"file": "MMWSpalling.H",
+"line": 7577,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar implicit_tol_rel   = 1.0e-10;"
+}
+],
+"implicit.tol_abs": [
+{
+"mem": "implicit_tol_abs",
+"file": "MMWSpalling.H",
+"line": 1758,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "mlmg.solve({&T_new}, {&rhs_mf}, implicit_tol_rel, implicit_tol_abs);"
+},
+{
+"mem": "implicit_tol_abs",
+"file": "MMWSpalling.H",
+"line": 7578,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar implicit_tol_abs   = 0.0;"
+}
+],
+"implicit.max_iter": [
+{
+"mem": "implicit_max_iter",
+"file": "MMWSpalling.H",
+"line": 1752,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "mlmg.setMaxIter(implicit_max_iter);"
+},
+{
+"mem": "implicit_max_iter",
+"file": "MMWSpalling.H",
+"line": 7579,
+"func": null,
+"tag": "decl",
+"text": "int         implicit_max_iter  = 100;"
+}
+],
+"implicit.verbose": [
+{
+"mem": "implicit_verbose",
+"file": "MMWSpalling.H",
+"line": 1753,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "mlmg.setVerbose(implicit_verbose);"
+},
+{
+"mem": "implicit_verbose",
+"file": "MMWSpalling.H",
+"line": 7580,
+"func": null,
+"tag": "decl",
+"text": "int         implicit_verbose   = 0;"
+}
+],
+"alpha": [
+{
+"mem": "alpha",
+"file": "MMWSpalling.H",
+"line": 1392,
+"func": "UpdateModel",
+"tag": "read",
+"text": "F0 += (eta(i, j, k, n) * alpha[n]) * (Tavg - Tref) * Set::Matrix::Identity();"
+}
+],
+"microstructure.nphases": [
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 2935,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "const Set::Scalar T0  = phases.empty() ? 0.0 : phases[0].T_ref;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 3009,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "? Ktop[c] : phases[0].kappa;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 4516,
+"func": "UpdatePropertyFields",
+"tag": "read",
+"text": "for (const auto& ph : phases) any = any || ph.grimsel_law;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 4520,
+"func": "UpdatePropertyFields",
+"tag": "read",
+"text": "const int n_phases = static_cast<int>(phases.size());"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 4522,
+"func": "UpdatePropertyFields",
+"tag": "read",
+"text": "for (int p = 0; p < n_phases; ++p) use[p] = phases[p].grimsel_law ? 1 : 0;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 4550,
+"func": "UpdatePropertyFields",
+"tag": "read",
+"text": "const Numeric::Material::Grimsel& g = phases[p].grimsel;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 5176,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const int n_phases = static_cast<int>(phases.size());"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 5244,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "Set::Scalar A_D = phases[p].A_D;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 6029,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "te_Tref = phases[0].T_ref;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 6049,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "phases.empty() ? nullptr : &phases[0].grimsel;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 6614,
+"func": "RockLaw",
+"tag": "read",
+"text": "return (sp_stress_law_grimsel && !phases.empty())"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 6615,
+"func": "RockLaw",
+"tag": "read",
+"text": "? &phases[0].grimsel : nullptr;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7025,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (phase_tables.size() != phases.size())"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7029,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials.resize(phases.size());"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7030,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_tables.resize(phases.size());"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7031,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "for (size_t p = 0; p < phases.size(); ++p)"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7033,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].m_rho   = phases[p].rho;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7034,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].m_cp    = phases[p].Cp;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7035,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].m_kappa = phases[p].kappa;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7036,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_ref     = phases[p].T_ref;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7037,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_m       = phases[p].T_m;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7038,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].fus_width = phases[p].fus_width;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7039,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].L_m       = phases[p].L_m;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7040,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_vap_lo  = phases[p].T_vap_lo;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7041,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_vap_hi  = phases[p].T_vap_hi;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7042,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].L_v       = phases[p].L_v;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7057,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (phases[p].grimsel_law)"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7059,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Numeric::Material::Grimsel g = phases[p].grimsel;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7060,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_ref     = phases[p].T_ref;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7061,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_m       = phases[p].T_m;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7062,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.fus_width = phases[p].fus_width;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7063,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.L_m       = phases[p].L_m;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7064,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_vap_lo  = phases[p].T_vap_lo;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7065,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_vap_hi  = phases[p].T_vap_hi;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7066,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.L_v       = phases[p].L_v;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7095,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "std::vector<Set::Scalar> cdf(phases.size(), 0.0);"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7097,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "for (size_t p = 0; p < phases.size(); ++p)"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7099,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "acc += phases[p].fraction;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7106,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "int pid = (int)phases.size() - 1;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7107,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "for (size_t p = 0; p < phases.size(); ++p)"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7120,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "const int n_phases = static_cast<int>(phases.size());"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7201,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "kap[p] = phases[p].kappa;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7202,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "bet[p] = phases[p].beta;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7203,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Ev[p]  = phases[p].E;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7204,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "muv[p] = phases[p].mu;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7205,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Trv[p] = phases[p].T_ref;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7206,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_eps[p]   = phases[p].alpha_beta_linear_strain;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7207,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_T0[p]    = phases[p].alpha_beta_T0;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7208,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_width[p] = phases[p].alpha_beta_width;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7226,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (phases[p].grimsel_law)"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7228,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "rh[p]  = phases[p].grimsel.rho(phases[p].T_ref);"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7229,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Cpv[p] = phases[p].grimsel.cp (phases[p].T_ref);"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7233,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "rh[p]  = phases[p].rho;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7234,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Cpv[p] = phases[p].Cp;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7388,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "k_arith    += phi * phases[p].kappa;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7389,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (phases[p].kappa > 0.0)"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 7390,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "k_harm_inv += phi / phases[p].kappa;"
+},
+{
+"mem": "phases",
+"file": "MMWSpalling.H",
+"line": 8414,
+"func": null,
+"tag": "decl",
+"text": "std::vector<MineralPhase> phases;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 34,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "if (phases.empty()) return c;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 35,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.E    = phases[0].E;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 36,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.beta = phases[0].beta;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 37,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "if (!(phases[0].E > 0.0 && phases[0].mu > 0.0)) return c;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 43,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.nu = law ? law->nu : phases[0].E / (2.0 * phases[0].mu) - 1.0;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 111,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "phases.empty() ? nullptr : &phases[0].grimsel;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 688,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (phases.empty())"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 698,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "\"\", phases[0].E, \"\","
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 699,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "phases[0].mu);"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 701,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "phase_T_ref_loc = phases[0].T_ref;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 702,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "phase_kappa_loc = phases[0].kappa;"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 1667,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "Set::Scalar H_vap = ptabs[p_top].H_of_T(phases[p_top].T_vap_lo);"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 1675,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "Set::Scalar L_tot = Cp_p * (phases[p_top].T_vap_lo - T0_v)"
+},
+{
+"mem": "phases",
+"file": "Removal.H",
+"line": 1676,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "+ phases[p_top].L_m + phases[p_top].L_v;"
+},
+{
+"mem": "phases",
+"file": "FaceRemoval.H",
+"line": 228,
+"func": "FrAssignTs",
+"tag": "read",
+"text": "const Set::Scalar T0r = phases.empty() ? 0.0 : phases[0].T_ref;"
+},
+{
+"mem": "phases",
+"file": "FaceRemoval.H",
+"line": 468,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "const Set::Scalar T0r = phases.empty() ? 0.0 : phases[0].T_ref;"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 1135,
+"func": "Initialize",
+"tag": "read",
+"text": "if (material && microstructure_enabled)"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 1155,
+"func": "Initialize",
+"tag": "read",
+"text": "if (microstructure_enabled) InitializeMicrostructure(lev, /*announce=*/true,"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 1182,
+"func": "TimeStepBegin",
+"tag": "read",
+"text": "if (microstructure_enabled && max_level > 0 &&"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 1194,
+"func": "TimeStepComplete",
+"tag": "read",
+"text": "if (microstructure_enabled && max_level > 0 &&"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 1208,
+"func": "Regrid",
+"tag": "read",
+"text": "if (microstructure_enabled)"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 1242,
+"func": "UpdateModel",
+"tag": "read",
+"text": "if (microstructure_enabled)"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 1457,
+"func": "Advance",
+"tag": "read",
+"text": "if      (microstructure_enabled)                          AdvanceMicrostructure(lev, time, dt);"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 4514,
+"func": "UpdatePropertyFields",
+"tag": "read",
+"text": "if (!microstructure_enabled) return;"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 5165,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "Util::Assert(INFO, TEST(microstructure_enabled));"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 5329,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "Util::Assert(INFO, TEST(microstructure_enabled));"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 6654,
+"func": "ConvertTtoH",
+"tag": "read",
+"text": "const bool micro = microstructure_enabled;"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 6704,
+"func": "InvertHtoT",
+"tag": "read",
+"text": "const bool micro = microstructure_enabled;"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 6898,
+"func": "RepairMechanicsAfterRegrid",
+"tag": "read",
+"text": "if (microstructure_enabled && max_level > 0)"
+},
+{
+"mem": "microstructure_enabled",
+"file": "MMWSpalling.H",
+"line": 8404,
+"func": null,
+"tag": "decl",
+"text": "bool microstructure_enabled = false;"
+},
+{
+"mem": "microstructure_enabled",
+"file": "Removal.H",
+"line": 273,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "Util::Assert(INFO, TEST(microstructure_enabled));"
+},
+{
+"mem": "microstructure_enabled",
+"file": "Removal.H",
+"line": 794,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (microstructure_enabled && ncols > 0)"
+},
+{
+"mem": "microstructure_enabled",
+"file": "Removal.H",
+"line": 1073,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (microstructure_enabled && rho_mf[lev] && Cp_mf[lev])"
+}
+],
+"microstructure.mode": [
+{
+"mem": "micro_mode",
+"file": "MMWSpalling.H",
+"line": 7082,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (micro_mode == MicroMode::Voronoi && grain_centres.empty())"
+},
+{
+"mem": "micro_mode",
+"file": "MMWSpalling.H",
+"line": 7123,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (micro_mode == MicroMode::Voronoi)"
+},
+{
+"mem": "micro_mode",
+"file": "MMWSpalling.H",
+"line": 8407,
+"func": null,
+"tag": "decl",
+"text": "MicroMode micro_mode = MicroMode::Voronoi;"
+}
+],
+"microstructure.number_of_grains": [
+{
+"mem": "num_grains",
+"file": "MMWSpalling.H",
+"line": 7088,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "grain_centres.assign(3 * num_grains, 0.0);"
+},
+{
+"mem": "num_grains",
+"file": "MMWSpalling.H",
+"line": 7089,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "for (int g = 0; g < num_grains; ++g)"
+},
+{
+"mem": "num_grains",
+"file": "MMWSpalling.H",
+"line": 7102,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "grain_phase_ids.assign(num_grains, 0);"
+},
+{
+"mem": "num_grains",
+"file": "MMWSpalling.H",
+"line": 7103,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "for (int g = 0; g < num_grains; ++g)"
+},
+{
+"mem": "num_grains",
+"file": "MMWSpalling.H",
+"line": 7125,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "const int n_grains = num_grains;"
+},
+{
+"mem": "num_grains",
+"file": "MMWSpalling.H",
+"line": 8405,
+"func": null,
+"tag": "decl",
+"text": "int  num_grains  = 0;"
+}
+],
+"microstructure.seed": [
+{
+"mem": "micro_seed",
+"file": "MMWSpalling.H",
+"line": 7084,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "std::mt19937 rng(static_cast<unsigned int>(micro_seed));"
+},
+{
+"mem": "micro_seed",
+"file": "MMWSpalling.H",
+"line": 8406,
+"func": null,
+"tag": "decl",
+"text": "int  micro_seed  = 1;"
+}
+],
+"microstructure.phase_expr": [
+{
+"mem": "phase_parser",
+"file": "MMWSpalling.H",
+"line": 8408,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser            phase_parser;"
+},
+{
+"mem": "phase_f",
+"file": "MMWSpalling.H",
+"line": 7158,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "auto pf = phase_f;"
+},
+{
+"mem": "phase_f",
+"file": "MMWSpalling.H",
+"line": 8409,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<3> phase_f;"
+}
+],
+"microstructure.grain_expr": [
+{
+"mem": "grain_parser",
+"file": "MMWSpalling.H",
+"line": 8411,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser            grain_parser;"
+},
+{
+"mem": "grain_f",
+"file": "MMWSpalling.H",
+"line": 7160,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "auto gf = grain_f;"
+},
+{
+"mem": "grain_f",
+"file": "MMWSpalling.H",
+"line": 8412,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<3> grain_f;"
+},
+{
+"mem": "has_grain_expr",
+"file": "MMWSpalling.H",
+"line": 7159,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "const bool has_gexpr = has_grain_expr;"
+},
+{
+"mem": "has_grain_expr",
+"file": "MMWSpalling.H",
+"line": 8413,
+"func": null,
+"tag": "decl",
+"text": "bool                     has_grain_expr = false;"
+}
+],
+"microstructure.phase<i>.name": [
+{
+"mem": "name",
+"file": "MMWSpalling.H",
+"line": 338,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default (pfx + \"\",     value.phases[i].name,"
+}
+],
+"microstructure.phase<i>.fraction": [
+{
+"mem": "fraction",
+"file": "MMWSpalling.H",
+"line": 340,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\", value.phases[i].fraction);"
+},
+{
+"mem": "fraction",
+"file": "MMWSpalling.H",
+"line": 350,
+"func": "Parse",
+"tag": "parse",
+"text": "Util::Assert(INFO, TEST(value.phases[i].fraction >= 0.0));"
+},
+{
+"mem": "fraction",
+"file": "MMWSpalling.H",
+"line": 7099,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "acc += phases[p].fraction;"
+},
+{
+"mem": "fraction",
+"file": "MMWSpalling.H",
+"line": 419,
+"func": "Parse",
+"tag": "parse",
+"text": "for (auto &p : value.phases) fsum += p.fraction;"
+},
+{
+"mem": "fraction",
+"file": "MMWSpalling.H",
+"line": 421,
+"func": "Parse",
+"tag": "parse",
+"text": "for (auto &p : value.phases) p.fraction /= fsum;"
+}
+],
+"microstructure.phase<i>.kappa": [
+{
+"mem": "kappa",
+"file": "MMWSpalling.H",
+"line": 341,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\",    value.phases[i].kappa);"
+},
+{
+"mem": "kappa",
+"file": "MMWSpalling.H",
+"line": 3009,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "? Ktop[c] : phases[0].kappa;"
+},
+{
+"mem": "kappa",
+"file": "MMWSpalling.H",
+"line": 7035,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].m_kappa = phases[p].kappa;"
+},
+{
+"mem": "kappa",
+"file": "MMWSpalling.H",
+"line": 7201,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "kap[p] = phases[p].kappa;"
+},
+{
+"mem": "kappa",
+"file": "MMWSpalling.H",
+"line": 7388,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "k_arith    += phi * phases[p].kappa;"
+},
+{
+"mem": "kappa",
+"file": "MMWSpalling.H",
+"line": 7389,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (phases[p].kappa > 0.0)"
+},
+{
+"mem": "kappa",
+"file": "MMWSpalling.H",
+"line": 7390,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "k_harm_inv += phi / phases[p].kappa;"
+},
+{
+"mem": "kappa",
+"file": "Removal.H",
+"line": 702,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "phase_kappa_loc = phases[0].kappa;"
+}
+],
+"microstructure.phase<i>.beta": [
+{
+"mem": "beta",
+"file": "MMWSpalling.H",
+"line": 342,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\",     value.phases[i].beta);"
+},
+{
+"mem": "beta",
+"file": "MMWSpalling.H",
+"line": 7202,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "bet[p] = phases[p].beta;"
+},
+{
+"mem": "beta",
+"file": "Removal.H",
+"line": 36,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.beta = phases[0].beta;"
+}
+],
+"microstructure.phase<i>.E": [
+{
+"mem": "E",
+"file": "MMWSpalling.H",
+"line": 343,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\",        value.phases[i].E);"
+},
+{
+"mem": "E",
+"file": "MMWSpalling.H",
+"line": 7203,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Ev[p]  = phases[p].E;"
+},
+{
+"mem": "E",
+"file": "Removal.H",
+"line": 35,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.E    = phases[0].E;"
+},
+{
+"mem": "E",
+"file": "Removal.H",
+"line": 37,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "if (!(phases[0].E > 0.0 && phases[0].mu > 0.0)) return c;"
+},
+{
+"mem": "E",
+"file": "Removal.H",
+"line": 43,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.nu = law ? law->nu : phases[0].E / (2.0 * phases[0].mu) - 1.0;"
+},
+{
+"mem": "E",
+"file": "Removal.H",
+"line": 698,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "\"\", phases[0].E, \"\","
+}
+],
+"microstructure.phase<i>.mu": [
+{
+"mem": "mu",
+"file": "MMWSpalling.H",
+"line": 344,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\",       value.phases[i].mu);"
+},
+{
+"mem": "mu",
+"file": "MMWSpalling.H",
+"line": 7204,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "muv[p] = phases[p].mu;"
+},
+{
+"mem": "mu",
+"file": "Removal.H",
+"line": 37,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "if (!(phases[0].E > 0.0 && phases[0].mu > 0.0)) return c;"
+},
+{
+"mem": "mu",
+"file": "Removal.H",
+"line": 43,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.nu = law ? law->nu : phases[0].E / (2.0 * phases[0].mu) - 1.0;"
+},
+{
+"mem": "mu",
+"file": "Removal.H",
+"line": 699,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "phases[0].mu);"
+}
+],
+"microstructure.phase<i>.rho": [
+{
+"mem": "rho",
+"file": "MMWSpalling.H",
+"line": 345,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\",      value.phases[i].rho);"
+},
+{
+"mem": "rho",
+"file": "MMWSpalling.H",
+"line": 7033,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].m_rho   = phases[p].rho;"
+},
+{
+"mem": "rho",
+"file": "MMWSpalling.H",
+"line": 7233,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "rh[p]  = phases[p].rho;"
+}
+],
+"microstructure.phase<i>.Cp": [
+{
+"mem": "Cp",
+"file": "MMWSpalling.H",
+"line": 346,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\",       value.phases[i].Cp);"
+},
+{
+"mem": "Cp",
+"file": "MMWSpalling.H",
+"line": 7034,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].m_cp    = phases[p].Cp;"
+},
+{
+"mem": "Cp",
+"file": "MMWSpalling.H",
+"line": 7234,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Cpv[p] = phases[p].Cp;"
+}
+],
+"microstructure.phase<i>.alpha_attenuation": [
+{
+"mem": "alpha_atten",
+"file": "MMWSpalling.H",
+"line": 348,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_atten);"
+}
+],
+"microstructure.phase<i>.A_D": [
+{
+"mem": "A_D",
+"file": "MMWSpalling.H",
+"line": 349,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_required(pfx + \"\",      value.phases[i].A_D);"
+},
+{
+"mem": "A_D",
+"file": "MMWSpalling.H",
+"line": 5244,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "Set::Scalar A_D = phases[p].A_D;"
+}
+],
+"microstructure.phase<i>.law": [
+{
+"mem": "grimsel_law",
+"file": "MMWSpalling.H",
+"line": 375,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].grimsel_law = true;"
+},
+{
+"mem": "grimsel_law",
+"file": "MMWSpalling.H",
+"line": 4522,
+"func": "UpdatePropertyFields",
+"tag": "read",
+"text": "for (int p = 0; p < n_phases; ++p) use[p] = phases[p].grimsel_law ? 1 : 0;"
+},
+{
+"mem": "grimsel_law",
+"file": "MMWSpalling.H",
+"line": 7057,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (phases[p].grimsel_law)"
+},
+{
+"mem": "grimsel_law",
+"file": "MMWSpalling.H",
+"line": 7226,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (phases[p].grimsel_law)"
+},
+{
+"mem": "grimsel_law",
+"file": "MMWSpalling.H",
+"line": 912,
+"func": "Parse",
+"tag": "parse",
+"text": "for (const auto& ph : value.phases) any_law = any_law || ph.grimsel_law;"
+},
+{
+"mem": "grimsel_law",
+"file": "MMWSpalling.H",
+"line": 4516,
+"func": "UpdatePropertyFields",
+"tag": "read",
+"text": "for (const auto& ph : phases) any = any || ph.grimsel_law;"
+}
+],
+"microstructure.phase<i>.T_ref": [
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 387,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default(pfx + \"\",     value.phases[i].T_ref,     273.15);"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 2935,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "const Set::Scalar T0  = phases.empty() ? 0.0 : phases[0].T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 6029,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "te_Tref = phases[0].T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 7036,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_ref     = phases[p].T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 7060,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_ref     = phases[p].T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 7205,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Trv[p] = phases[p].T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 7228,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "rh[p]  = phases[p].grimsel.rho(phases[p].T_ref);"
+},
+{
+"mem": "T_ref",
+"file": "MMWSpalling.H",
+"line": 7229,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "Cpv[p] = phases[p].grimsel.cp (phases[p].T_ref);"
+},
+{
+"mem": "T_ref",
+"file": "Removal.H",
+"line": 701,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "phase_T_ref_loc = phases[0].T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "FaceRemoval.H",
+"line": 228,
+"func": "FrAssignTs",
+"tag": "read",
+"text": "const Set::Scalar T0r = phases.empty() ? 0.0 : phases[0].T_ref;"
+},
+{
+"mem": "T_ref",
+"file": "FaceRemoval.H",
+"line": 468,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "const Set::Scalar T0r = phases.empty() ? 0.0 : phases[0].T_ref;"
+}
+],
+"microstructure.phase<i>.T_m": [
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 388,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default(pfx + \"\",       value.phases[i].T_m,       1.0e30);"
+},
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 7037,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_m       = phases[p].T_m;"
+},
+{
+"mem": "T_m",
+"file": "MMWSpalling.H",
+"line": 7061,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_m       = phases[p].T_m;"
+}
+],
+"microstructure.phase<i>.fus_width": [
+{
+"mem": "fus_width",
+"file": "MMWSpalling.H",
+"line": 389,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default(pfx + \"\", value.phases[i].fus_width, 0.0);"
+},
+{
+"mem": "fus_width",
+"file": "MMWSpalling.H",
+"line": 7038,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].fus_width = phases[p].fus_width;"
+},
+{
+"mem": "fus_width",
+"file": "MMWSpalling.H",
+"line": 7062,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.fus_width = phases[p].fus_width;"
+}
+],
+"microstructure.phase<i>.L_m": [
+{
+"mem": "L_m",
+"file": "MMWSpalling.H",
+"line": 390,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default(pfx + \"\",       value.phases[i].L_m,       0.0);"
+},
+{
+"mem": "L_m",
+"file": "MMWSpalling.H",
+"line": 7039,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].L_m       = phases[p].L_m;"
+},
+{
+"mem": "L_m",
+"file": "MMWSpalling.H",
+"line": 7063,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.L_m       = phases[p].L_m;"
+},
+{
+"mem": "L_m",
+"file": "Removal.H",
+"line": 1676,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "+ phases[p_top].L_m + phases[p_top].L_v;"
+}
+],
+"microstructure.phase<i>.T_vap_lo": [
+{
+"mem": "T_vap_lo",
+"file": "MMWSpalling.H",
+"line": 391,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default(pfx + \"\",  value.phases[i].T_vap_lo,  1.0e30);"
+},
+{
+"mem": "T_vap_lo",
+"file": "MMWSpalling.H",
+"line": 7040,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_vap_lo  = phases[p].T_vap_lo;"
+},
+{
+"mem": "T_vap_lo",
+"file": "MMWSpalling.H",
+"line": 7064,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_vap_lo  = phases[p].T_vap_lo;"
+},
+{
+"mem": "T_vap_lo",
+"file": "Removal.H",
+"line": 1667,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "Set::Scalar H_vap = ptabs[p_top].H_of_T(phases[p_top].T_vap_lo);"
+},
+{
+"mem": "T_vap_lo",
+"file": "Removal.H",
+"line": 1675,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "Set::Scalar L_tot = Cp_p * (phases[p_top].T_vap_lo - T0_v)"
+}
+],
+"microstructure.phase<i>.T_vap_hi": [
+{
+"mem": "T_vap_hi",
+"file": "MMWSpalling.H",
+"line": 392,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default(pfx + \"\",  value.phases[i].T_vap_hi,  1.0e30);"
+},
+{
+"mem": "T_vap_hi",
+"file": "MMWSpalling.H",
+"line": 7041,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].T_vap_hi  = phases[p].T_vap_hi;"
+},
+{
+"mem": "T_vap_hi",
+"file": "MMWSpalling.H",
+"line": 7065,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.T_vap_hi  = phases[p].T_vap_hi;"
+}
+],
+"microstructure.phase<i>.L_v": [
+{
+"mem": "L_v",
+"file": "MMWSpalling.H",
+"line": 393,
+"func": "Parse",
+"tag": "parse",
+"text": "pp.query_default(pfx + \"\",       value.phases[i].L_v,       0.0);"
+},
+{
+"mem": "L_v",
+"file": "MMWSpalling.H",
+"line": 7042,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "phase_materials[p].L_v       = phases[p].L_v;"
+},
+{
+"mem": "L_v",
+"file": "MMWSpalling.H",
+"line": 7066,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "g.L_v       = phases[p].L_v;"
+},
+{
+"mem": "L_v",
+"file": "Removal.H",
+"line": 1676,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "+ phases[p_top].L_m + phases[p_top].L_v;"
+}
+],
+"microstructure.phase<i>.alpha_beta.enabled": [
+{
+"mem": "alpha_beta_enabled",
+"file": "MMWSpalling.H",
+"line": 412,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_enabled = (ab_enabled != 0);"
+},
+{
+"mem": "alpha_beta_enabled",
+"file": "MMWSpalling.H",
+"line": 414,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_enabled ? ab_linear : 0.0;"
+},
+{
+"mem": "alpha_beta_linear_strain",
+"file": "MMWSpalling.H",
+"line": 413,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_linear_strain ="
+},
+{
+"mem": "alpha_beta_linear_strain",
+"file": "MMWSpalling.H",
+"line": 7206,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_eps[p]   = phases[p].alpha_beta_linear_strain;"
+}
+],
+"microstructure.phase<i>.alpha_beta.T0": [
+{
+"mem": "alpha_beta_T0",
+"file": "MMWSpalling.H",
+"line": 402,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_T0, 846.15);"
+},
+{
+"mem": "alpha_beta_T0",
+"file": "MMWSpalling.H",
+"line": 7207,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_T0[p]    = phases[p].alpha_beta_T0;"
+}
+],
+"microstructure.phase<i>.alpha_beta.width": [
+{
+"mem": "alpha_beta_width",
+"file": "MMWSpalling.H",
+"line": 404,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_width, 10.0);"
+},
+{
+"mem": "alpha_beta_width",
+"file": "MMWSpalling.H",
+"line": 407,
+"func": "Parse",
+"tag": "parse",
+"text": "Util::Assert(INFO, TEST(value.phases[i].alpha_beta_width >= 0.0));"
+},
+{
+"mem": "alpha_beta_width",
+"file": "MMWSpalling.H",
+"line": 7208,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_width[p] = phases[p].alpha_beta_width;"
+}
+],
+"microstructure.phase<i>.alpha_beta.dV": [
+{
+"mem": "alpha_beta_dV",
+"file": "MMWSpalling.H",
+"line": 406,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_dV, 0.0063);"
+},
+{
+"mem": "alpha_beta_dV",
+"file": "MMWSpalling.H",
+"line": 408,
+"func": "Parse",
+"tag": "parse",
+"text": "Util::Assert(INFO, TEST(value.phases[i].alpha_beta_dV > -1.0));"
+},
+{
+"mem": "alpha_beta_dV",
+"file": "MMWSpalling.H",
+"line": 410,
+"func": "Parse",
+"tag": "parse",
+"text": "std::cbrt(1.0 + value.phases[i].alpha_beta_dV) - 1.0;"
+},
+{
+"mem": "alpha_beta_linear_strain",
+"file": "MMWSpalling.H",
+"line": 413,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_linear_strain ="
+},
+{
+"mem": "alpha_beta_linear_strain",
+"file": "MMWSpalling.H",
+"line": 7206,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_eps[p]   = phases[p].alpha_beta_linear_strain;"
+}
+],
+"microstructure.phase<i>.alpha_beta.linear_strain": [
+{
+"mem": "alpha_beta_linear_strain",
+"file": "MMWSpalling.H",
+"line": 413,
+"func": "Parse",
+"tag": "parse",
+"text": "value.phases[i].alpha_beta_linear_strain ="
+},
+{
+"mem": "alpha_beta_linear_strain",
+"file": "MMWSpalling.H",
+"line": 7206,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "ab_eps[p]   = phases[p].alpha_beta_linear_strain;"
+}
+],
+"microstructure.phase<i>.grimsel.cp.a": [],
+"microstructure.phase<i>.grimsel.cp.b": [],
+"microstructure.phase<i>.grimsel.cp.th0": [],
+"microstructure.phase<i>.grimsel.lambda.a": [],
+"microstructure.phase<i>.grimsel.lambda.th0": [],
+"microstructure.phase<i>.grimsel.rho": [],
+"microstructure.phase<i>.grimsel.E0": [],
+"microstructure.phase<i>.grimsel.nu": [],
+"microstructure.phase<i>.grimsel.K_Ic0": [],
+"microstructure.phase<i>.grimsel.alpha_cap_theta": [],
+"microstructure.phase<i>.grimsel.T_ref": [],
+"conductivity.kappa_damage_alpha": [
+{
+"mem": "kappa_damage_alpha",
+"file": "MMWSpalling.H",
+"line": 1857,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar a_D     = kappa_damage_alpha;"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "MMWSpalling.H",
+"line": 2500,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "jkc[col] = kp(i, j, k) * std::exp(-kappa_damage_alpha * Df(i, j, k));"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "MMWSpalling.H",
+"line": 3152,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "const Set::Scalar kc = kp(i, j, k) * std::exp(-kappa_damage_alpha * Df(i, j, k));"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "MMWSpalling.H",
+"line": 3711,
+"func": "BuildFaceList",
+"tag": "read",
+"text": "const Set::Scalar a_D = kappa_damage_alpha;"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "MMWSpalling.H",
+"line": 4080,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const Set::Scalar a_D = kappa_damage_alpha;"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "MMWSpalling.H",
+"line": 5114,
+"func": "RefreshKappaEff",
+"tag": "read",
+"text": "const Set::Scalar a_D = kappa_damage_alpha;"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "MMWSpalling.H",
+"line": 8454,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar kappa_damage_alpha = 0.0;"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "FaceRemoval.H",
+"line": 453,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "Gc[2 * l + 1] = (kappa_damage_alpha != 0.0)"
+},
+{
+"mem": "kappa_damage_alpha",
+"file": "FaceRemoval.H",
+"line": 454,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "? kp(p[0], p[1], p[2]) * std::exp(-kappa_damage_alpha * Df(p[0], p[1], p[2]))"
+}
+],
+"conductivity.h_gb0": [
+{
+"mem": "h_gb_conductance",
+"file": "MMWSpalling.H",
+"line": 1861,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar h_gb0   = h_gb_conductance;"
+},
+{
+"mem": "h_gb_conductance",
+"file": "MMWSpalling.H",
+"line": 8455,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar h_gb_conductance   = 0.0;"
+}
+],
+"damage.ic.type": [
+{
+"mem": "ic_damage",
+"file": "MMWSpalling.H",
+"line": 7342,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (ic_damage) ic_damage->Initialize(lev, D_mf);"
+},
+{
+"mem": "ic_damage",
+"file": "MMWSpalling.H",
+"line": 8456,
+"func": null,
+"tag": "decl",
+"text": "IC::IC<Set::Scalar> *ic_damage = nullptr;"
+}
+],
+"surface.follow_mask": [
+{
+"mem": "surface_follow_mask",
+"file": "MMWSpalling.H",
+"line": 1827,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const bool follow_mask = surface_follow_mask;"
+},
+{
+"mem": "surface_follow_mask",
+"file": "MMWSpalling.H",
+"line": 4069,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const bool follow_mask = surface_follow_mask;"
+},
+{
+"mem": "surface_follow_mask",
+"file": "MMWSpalling.H",
+"line": 7603,
+"func": null,
+"tag": "decl",
+"text": "bool surface_follow_mask = false;"
+}
+],
+"energy_ledger.enabled": [
+{
+"mem": "ledger_enabled",
+"file": "MMWSpalling.H",
+"line": 1829,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "(void_aware && (P_now > 0.0 || follow_mask || ledger_enabled))"
+},
+{
+"mem": "ledger_enabled",
+"file": "MMWSpalling.H",
+"line": 2081,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "if (ledger_enabled) EnergyLedger(lev, time, dt, k_top_col);"
+},
+{
+"mem": "ledger_enabled",
+"file": "MMWSpalling.H",
+"line": 7613,
+"func": null,
+"tag": "decl",
+"text": "bool        ledger_enabled               = false;"
+}
+],
+"surface.refine_depth": [
+{
+"mem": "surface_refine_depth",
+"file": "MMWSpalling.H",
+"line": 4991,
+"func": "TagCellsForRefinement",
+"tag": "read",
+"text": "if (!(removal_enabled() && surface_refine_depth > 0.0)) return;"
+},
+{
+"mem": "surface_refine_depth",
+"file": "MMWSpalling.H",
+"line": 4996,
+"func": "TagCellsForRefinement",
+"tag": "read",
+"text": "const int n_below = static_cast<int>(std::ceil(surface_refine_depth  / dz));"
+},
+{
+"mem": "surface_refine_depth",
+"file": "MMWSpalling.H",
+"line": 7606,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar surface_refine_depth  = 0.0;"
+}
+],
+"surface.refine_height": [
+{
+"mem": "surface_refine_height",
+"file": "MMWSpalling.H",
+"line": 4997,
+"func": "TagCellsForRefinement",
+"tag": "read",
+"text": "const int n_above = static_cast<int>(std::ceil(surface_refine_height / dz));"
+},
+{
+"mem": "surface_refine_height",
+"file": "MMWSpalling.H",
+"line": 7607,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar surface_refine_height = 0.0;"
+}
+],
+"beam.P0": [],
+"beam.omega0": [
+{
+"mem": "omega0",
+"file": "MMWSpalling.H",
+"line": 1119,
+"func": "Parse",
+"tag": "parse",
+"text": "value.vapor_A_beam = 0.5 * pi * value.beam.omega0 * value.beam.omega0;"
+},
+{
+"mem": "omega0",
+"file": "MMWSpalling.H",
+"line": 1478,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "omega0",
+"file": "MMWSpalling.H",
+"line": 1519,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "omega0",
+"file": "MMWSpalling.H",
+"line": 1651,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "omega0",
+"file": "MMWSpalling.H",
+"line": 1845,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "omega0",
+"file": "MMWSpalling.H",
+"line": 4834,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "const Set::Scalar Pi = BeamIncidentIntensity(P_now, beam.omega0, beam.lambda,"
+},
+{
+"mem": "omega0",
+"file": "MMWSpalling.H",
+"line": 4840,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "const Set::Scalar Q = BeamSource(P_now, beam.omega0, beam.lambda,"
+},
+{
+"mem": "omega0",
+"file": "Removal.H",
+"line": 336,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar bw0_v  = beam.omega0;"
+}
+],
+"beam.lambda": [
+{
+"mem": "lambda",
+"file": "MMWSpalling.H",
+"line": 1478,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "lambda",
+"file": "MMWSpalling.H",
+"line": 1519,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "lambda",
+"file": "MMWSpalling.H",
+"line": 1651,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "lambda",
+"file": "MMWSpalling.H",
+"line": 1845,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;"
+},
+{
+"mem": "lambda",
+"file": "MMWSpalling.H",
+"line": 4834,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "const Set::Scalar Pi = BeamIncidentIntensity(P_now, beam.omega0, beam.lambda,"
+},
+{
+"mem": "lambda",
+"file": "MMWSpalling.H",
+"line": 4840,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "const Set::Scalar Q = BeamSource(P_now, beam.omega0, beam.lambda,"
+}
+],
+"beam.x0": [
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 1479,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 1520,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 1652,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 1846,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 4835,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.x0, beam.y0, beam.z0,"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 4841,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.x0, beam.y0, beam.z0, beam.R,"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 5873,
+"func": "ParseBitSettings",
+"tag": "parse",
+"text": "pp.query_default(\"\",         value.bit_x0,         value.beam.x0);"
+},
+{
+"mem": "x0",
+"file": "Removal.H",
+"line": 337,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar bx0_v  = beam.x0;"
+}
+],
+"beam.y0": [
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 1479,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 1520,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 1652,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 1846,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 4835,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.x0, beam.y0, beam.z0,"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 4841,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.x0, beam.y0, beam.z0, beam.R,"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 5874,
+"func": "ParseBitSettings",
+"tag": "parse",
+"text": "pp.query_default(\"\",         value.bit_y0,         value.beam.y0);"
+},
+{
+"mem": "y0",
+"file": "Removal.H",
+"line": 338,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar by0_v  = beam.y0;"
+}
+],
+"beam.z0": [
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 1479,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 1520,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 1652,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 1846,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;"
+},
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 4835,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.x0, beam.y0, beam.z0,"
+},
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 4841,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.x0, beam.y0, beam.z0, beam.R,"
+},
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 4849,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "const Set::Scalar s_bot = (path >= 0.0 ? path : (beam.z0 - z)) + 0.5 * dz;"
+},
+{
+"mem": "z0",
+"file": "MMWSpalling.H",
+"line": 5875,
+"func": "ParseBitSettings",
+"tag": "parse",
+"text": "pp.query_default(\"\",         value.bit_z0,         value.beam.z0);"
+}
+],
+"beam.R": [
+{
+"mem": "R",
+"file": "MMWSpalling.H",
+"line": 1480,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar bR  = beam.R;"
+},
+{
+"mem": "R",
+"file": "MMWSpalling.H",
+"line": 1521,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar bR  = beam.R;"
+},
+{
+"mem": "R",
+"file": "MMWSpalling.H",
+"line": 1653,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar bR  = beam.R;"
+},
+{
+"mem": "R",
+"file": "MMWSpalling.H",
+"line": 1847,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar bR  = beam.R;"
+},
+{
+"mem": "R",
+"file": "MMWSpalling.H",
+"line": 4841,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.x0, beam.y0, beam.z0, beam.R,"
+},
+{
+"mem": "R",
+"file": "MMWSpalling.H",
+"line": 4845,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "if (at_col_top) P_inc += (1.0 - beam.R) * Pi * A;"
+},
+{
+"mem": "R",
+"file": "MMWSpalling.H",
+"line": 4850,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "P_trans += (1.0 - beam.R) * Pi * std::exp(-a * s_bot) * A;"
+},
+{
+"mem": "R",
+"file": "Removal.H",
+"line": 328,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar oneR   = 1.0 - beam.R;"
+}
+],
+"beam.profile": [
+{
+"mem": "profile",
+"file": "MMWSpalling.H",
+"line": 1481,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const int         bprof = beam.profile;"
+},
+{
+"mem": "profile",
+"file": "MMWSpalling.H",
+"line": 1522,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const int         bprof = beam.profile;"
+},
+{
+"mem": "profile",
+"file": "MMWSpalling.H",
+"line": 1654,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const int         bprof = beam.profile;"
+},
+{
+"mem": "profile",
+"file": "MMWSpalling.H",
+"line": 1848,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const int         bprof = beam.profile;"
+},
+{
+"mem": "profile",
+"file": "MMWSpalling.H",
+"line": 4836,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.profile, beam.radius, x, y, z);"
+},
+{
+"mem": "profile",
+"file": "MMWSpalling.H",
+"line": 4842,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.profile, beam.radius, alpha_f,"
+},
+{
+"mem": "profile",
+"file": "MMWSpalling.H",
+"line": 4860,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "if (beam.profile == Numeric::MMWBeam::Uniform &&"
+}
+],
+"beam.radius": [
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 1482,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "const Set::Scalar brad  = beam.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 1523,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar brad  = beam.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 1655,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "const Set::Scalar brad  = beam.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 1849,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar brad  = beam.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 4836,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.profile, beam.radius, x, y, z);"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 4842,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "beam.profile, beam.radius, alpha_f,"
+}
+],
+"beam.alpha_expr": [
+{
+"mem": "alpha_f",
+"file": "MMWSpalling.H",
+"line": 1483,
+"func": "AdvanceConstAlpha",
+"tag": "read",
+"text": "auto alpha_f = beam.alpha_f;"
+},
+{
+"mem": "alpha_f",
+"file": "MMWSpalling.H",
+"line": 1524,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "auto alpha_f = beam.alpha_f;"
+},
+{
+"mem": "alpha_f",
+"file": "MMWSpalling.H",
+"line": 1656,
+"func": "AdvanceMaterialImplicit",
+"tag": "read",
+"text": "auto alpha_f = beam.alpha_f;"
+},
+{
+"mem": "alpha_f",
+"file": "MMWSpalling.H",
+"line": 1850,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "auto alpha_f = beam.alpha_f;"
+},
+{
+"mem": "alpha_f",
+"file": "MMWSpalling.H",
+"line": 4763,
+"func": "BeamEnergyBalance",
+"tag": "read",
+"text": "auto alpha_f = beam.alpha_f;"
+}
+],
+"beam.schedule.t_end": [],
+"beam.schedule.P": [],
+"damage.enabled": [
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 1211,
+"func": "Regrid",
+"tag": "read",
+"text": "/*reset_damage=*/!damage_enabled);"
+},
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 1264,
+"func": "UpdateModel",
+"tag": "read",
+"text": "if (damage_enabled)"
+},
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 1290,
+"func": "UpdateModel",
+"tag": "read",
+"text": "if (damage_enabled) Dc = D_mf[lev]->array(mfi);"
+},
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 1291,
+"func": "UpdateModel",
+"tag": "read",
+"text": "const bool damage_on = damage_enabled;"
+},
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 5164,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "if (!damage_enabled) return;"
+},
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 6889,
+"func": "RefreshMicrostructureDerivedFields",
+"tag": "read",
+"text": "InitializeMicrostructure(lev, announce, !damage_enabled);"
+},
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 7350,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (damage_enabled && reset_damage)"
+},
+{
+"mem": "damage_enabled",
+"file": "MMWSpalling.H",
+"line": 8460,
+"func": null,
+"tag": "decl",
+"text": "bool damage_enabled = false;"
+}
+],
+"damage.phi_deg": [
+{
+"mem": "damage_phi_deg",
+"file": "MMWSpalling.H",
+"line": 8461,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_phi_deg = 0.0;"
+},
+{
+"mem": "damage_phi_rad",
+"file": "MMWSpalling.H",
+"line": 8462,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_phi_rad = 0.0;"
+},
+{
+"mem": "damage_alpha_dp",
+"file": "MMWSpalling.H",
+"line": 5177,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar alpha_dp = damage_alpha_dp;"
+},
+{
+"mem": "damage_alpha_dp",
+"file": "MMWSpalling.H",
+"line": 8464,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_alpha_dp = 0.0;"
+},
+{
+"mem": "damage_k_dp",
+"file": "MMWSpalling.H",
+"line": 5178,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar k_dp     = damage_k_dp;"
+},
+{
+"mem": "damage_k_dp",
+"file": "MMWSpalling.H",
+"line": 8465,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_k_dp = 1.0;"
+}
+],
+"damage.cohesion": [
+{
+"mem": "damage_cohesion",
+"file": "MMWSpalling.H",
+"line": 8463,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_cohesion = 1.0;"
+},
+{
+"mem": "damage_k_dp",
+"file": "MMWSpalling.H",
+"line": 5178,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar k_dp     = damage_k_dp;"
+},
+{
+"mem": "damage_k_dp",
+"file": "MMWSpalling.H",
+"line": 8465,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_k_dp = 1.0;"
+}
+],
+"damage.psi0": [
+{
+"mem": "damage_psi0",
+"file": "MMWSpalling.H",
+"line": 5179,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar psi0     = damage_psi0;"
+},
+{
+"mem": "damage_psi0",
+"file": "MMWSpalling.H",
+"line": 8466,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_psi0 = 0.0;"
+}
+],
+"damage.n": [
+{
+"mem": "damage_n",
+"file": "MMWSpalling.H",
+"line": 5180,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar n_exp    = damage_n;"
+},
+{
+"mem": "damage_n",
+"file": "MMWSpalling.H",
+"line": 8467,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_n = 1.0;"
+}
+],
+"damage.m": [
+{
+"mem": "damage_m",
+"file": "MMWSpalling.H",
+"line": 5181,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar m_exp    = damage_m;"
+},
+{
+"mem": "damage_m",
+"file": "MMWSpalling.H",
+"line": 8468,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_m = 1.0;"
+}
+],
+"damage.gb_multiplier": [
+{
+"mem": "damage_gb_multiplier",
+"file": "MMWSpalling.H",
+"line": 5182,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar gb_mult  = damage_gb_multiplier;"
+},
+{
+"mem": "damage_gb_multiplier",
+"file": "MMWSpalling.H",
+"line": 8469,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_gb_multiplier = 1.0;"
+}
+],
+"damage.stiffness_floor": [
+{
+"mem": "damage_stiffness_floor",
+"file": "MMWSpalling.H",
+"line": 1292,
+"func": "UpdateModel",
+"tag": "read",
+"text": "const Set::Scalar stiff_floor = damage_stiffness_floor;"
+},
+{
+"mem": "damage_stiffness_floor",
+"file": "MMWSpalling.H",
+"line": 8470,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar damage_stiffness_floor = 1.0e-6;"
+}
+],
+"damage.prescribed_stress.enabled": [
+{
+"mem": "damage_prescribed_stress_enabled",
+"file": "MMWSpalling.H",
+"line": 5170,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "if (!damage_prescribed_stress_enabled)"
+},
+{
+"mem": "damage_prescribed_stress_enabled",
+"file": "MMWSpalling.H",
+"line": 5183,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "const bool prescribed = damage_prescribed_stress_enabled;"
+},
+{
+"mem": "damage_prescribed_stress_enabled",
+"file": "MMWSpalling.H",
+"line": 8477,
+"func": null,
+"tag": "decl",
+"text": "bool damage_prescribed_stress_enabled = false;"
+}
+],
+"damage.prescribed_stress.xx_expr": [
+{
+"mem": "damage_sxx_f",
+"file": "MMWSpalling.H",
+"line": 5184,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "auto sxx_f = damage_sxx_f;"
+},
+{
+"mem": "damage_sxx_f",
+"file": "MMWSpalling.H",
+"line": 8480,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> damage_sxx_f, damage_syy_f, damage_szz_f;"
+},
+{
+"mem": "damage_sxx_parser",
+"file": "MMWSpalling.H",
+"line": 8478,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser damage_sxx_parser, damage_syy_parser, damage_szz_parser;"
+}
+],
+"damage.prescribed_stress.yy_expr": [
+{
+"mem": "damage_syy_f",
+"file": "MMWSpalling.H",
+"line": 5185,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "auto syy_f = damage_syy_f;"
+},
+{
+"mem": "damage_syy_f",
+"file": "MMWSpalling.H",
+"line": 8480,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> damage_sxx_f, damage_syy_f, damage_szz_f;"
+},
+{
+"mem": "damage_syy_parser",
+"file": "MMWSpalling.H",
+"line": 8478,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser damage_sxx_parser, damage_syy_parser, damage_szz_parser;"
+}
+],
+"damage.prescribed_stress.zz_expr": [
+{
+"mem": "damage_szz_f",
+"file": "MMWSpalling.H",
+"line": 5186,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "auto szz_f = damage_szz_f;"
+},
+{
+"mem": "damage_szz_f",
+"file": "MMWSpalling.H",
+"line": 8480,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> damage_sxx_f, damage_syy_f, damage_szz_f;"
+},
+{
+"mem": "damage_szz_parser",
+"file": "MMWSpalling.H",
+"line": 8478,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser damage_sxx_parser, damage_syy_parser, damage_szz_parser;"
+}
+],
+"damage.prescribed_stress.xy_expr": [
+{
+"mem": "damage_sxy_f",
+"file": "MMWSpalling.H",
+"line": 5187,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "auto sxy_f = damage_sxy_f;"
+},
+{
+"mem": "damage_sxy_f",
+"file": "MMWSpalling.H",
+"line": 8481,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> damage_sxy_f, damage_syz_f, damage_szx_f;"
+},
+{
+"mem": "damage_sxy_parser",
+"file": "MMWSpalling.H",
+"line": 8479,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser damage_sxy_parser, damage_syz_parser, damage_szx_parser;"
+}
+],
+"damage.prescribed_stress.yz_expr": [
+{
+"mem": "damage_syz_f",
+"file": "MMWSpalling.H",
+"line": 5188,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "auto syz_f = damage_syz_f;"
+},
+{
+"mem": "damage_syz_f",
+"file": "MMWSpalling.H",
+"line": 8481,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> damage_sxy_f, damage_syz_f, damage_szx_f;"
+},
+{
+"mem": "damage_syz_parser",
+"file": "MMWSpalling.H",
+"line": 8479,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser damage_sxy_parser, damage_syz_parser, damage_szx_parser;"
+}
+],
+"damage.prescribed_stress.zx_expr": [
+{
+"mem": "damage_szx_f",
+"file": "MMWSpalling.H",
+"line": 5189,
+"func": "UpdateDamageAfterMechanics",
+"tag": "read",
+"text": "auto szx_f = damage_szx_f;"
+},
+{
+"mem": "damage_szx_f",
+"file": "MMWSpalling.H",
+"line": 8481,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> damage_sxy_f, damage_syz_f, damage_szx_f;"
+},
+{
+"mem": "damage_szx_parser",
+"file": "MMWSpalling.H",
+"line": 8479,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser damage_sxy_parser, damage_syz_parser, damage_szx_parser;"
+}
+],
+"cohesive.enabled": [
+{
+"mem": "cohesive_enabled",
+"file": "MMWSpalling.H",
+"line": 5328,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "if (!cohesive_enabled) return;"
+},
+{
+"mem": "cohesive_enabled",
+"file": "MMWSpalling.H",
+"line": 5393,
+"func": "ResetCohesiveDiagnostics",
+"tag": "read",
+"text": "if (!cohesive_enabled) return;"
+},
+{
+"mem": "cohesive_enabled",
+"file": "MMWSpalling.H",
+"line": 7360,
+"func": "InitializeMicrostructure",
+"tag": "read",
+"text": "if (cohesive_enabled)"
+},
+{
+"mem": "cohesive_enabled",
+"file": "MMWSpalling.H",
+"line": 8490,
+"func": null,
+"tag": "decl",
+"text": "bool cohesive_enabled = false;"
+}
+],
+"cohesive.K_n": [
+{
+"mem": "cohesive_K_n",
+"file": "MMWSpalling.H",
+"line": 5336,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar K_n       = cohesive_K_n;"
+},
+{
+"mem": "cohesive_K_n",
+"file": "MMWSpalling.H",
+"line": 8491,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar cohesive_K_n       = 0.0;"
+}
+],
+"cohesive.delta_c": [
+{
+"mem": "cohesive_delta_c",
+"file": "MMWSpalling.H",
+"line": 5337,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar delta_c   = cohesive_delta_c;"
+},
+{
+"mem": "cohesive_delta_c",
+"file": "MMWSpalling.H",
+"line": 8492,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar cohesive_delta_c   = 0.0;"
+}
+],
+"cohesive.delta_max": [
+{
+"mem": "cohesive_delta_max",
+"file": "MMWSpalling.H",
+"line": 5338,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar delta_max = cohesive_delta_max;"
+},
+{
+"mem": "cohesive_delta_max",
+"file": "MMWSpalling.H",
+"line": 8493,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar cohesive_delta_max = 0.0;"
+}
+],
+"cohesive.G_c": [
+{
+"mem": "cohesive_delta_max",
+"file": "MMWSpalling.H",
+"line": 5338,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar delta_max = cohesive_delta_max;"
+},
+{
+"mem": "cohesive_delta_max",
+"file": "MMWSpalling.H",
+"line": 8493,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar cohesive_delta_max = 0.0;"
+}
+],
+"cohesive.f_t": [
+{
+"mem": "cohesive_delta_c",
+"file": "MMWSpalling.H",
+"line": 5337,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar delta_c   = cohesive_delta_c;"
+},
+{
+"mem": "cohesive_delta_c",
+"file": "MMWSpalling.H",
+"line": 8492,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar cohesive_delta_c   = 0.0;"
+},
+{
+"mem": "cohesive_delta_max",
+"file": "MMWSpalling.H",
+"line": 5338,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar delta_max = cohesive_delta_max;"
+},
+{
+"mem": "cohesive_delta_max",
+"file": "MMWSpalling.H",
+"line": 8493,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar cohesive_delta_max = 0.0;"
+}
+],
+"cohesive.prescribed_delta.enabled": [
+{
+"mem": "cohesive_prescribed_enabled",
+"file": "MMWSpalling.H",
+"line": 5339,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "const bool prescribed = cohesive_prescribed_enabled;"
+},
+{
+"mem": "cohesive_prescribed_enabled",
+"file": "MMWSpalling.H",
+"line": 8494,
+"func": null,
+"tag": "decl",
+"text": "bool cohesive_prescribed_enabled = false;"
+}
+],
+"cohesive.prescribed_delta.expr": [
+{
+"mem": "cohesive_delta_f",
+"file": "MMWSpalling.H",
+"line": 5340,
+"func": "UpdateCohesiveAfterMechanics",
+"tag": "read",
+"text": "auto delta_f = cohesive_delta_f;"
+},
+{
+"mem": "cohesive_delta_f",
+"file": "MMWSpalling.H",
+"line": 8496,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> cohesive_delta_f;"
+},
+{
+"mem": "cohesive_delta_parser",
+"file": "MMWSpalling.H",
+"line": 8495,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser cohesive_delta_parser;"
+}
+],
+"spall.enabled": [
+{
+"mem": "spall_enabled",
+"file": "MMWSpalling.H",
+"line": 6870,
+"func": "InitPhi",
+"tag": "read",
+"text": "if (spall_enabled)"
+},
+{
+"mem": "spall_enabled",
+"file": "MMWSpalling.H",
+"line": 8507,
+"func": null,
+"tag": "decl",
+"text": "bool spall_enabled = false;"
+},
+{
+"mem": "spall_enabled",
+"file": "MMWSpalling.H",
+"line": 8686,
+"func": null,
+"tag": "decl",
+"text": "bool removal_enabled() const { return spall_enabled || vapor_enabled; }"
+},
+{
+"mem": "spall_enabled",
+"file": "Removal.H",
+"line": 290,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool spall_on = spall_enabled;"
+}
+],
+"spall.stress_source": [
+{
+"mem": "sp_local_thermoelastic",
+"file": "MMWSpalling.H",
+"line": 6016,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const bool        use_local_TE = sp_local_thermoelastic && !use_presc_s;"
+},
+{
+"mem": "sp_local_thermoelastic",
+"file": "MMWSpalling.H",
+"line": 8583,
+"func": null,
+"tag": "decl",
+"text": "bool sp_local_thermoelastic = false;"
+},
+{
+"mem": "sp_local_thermoelastic",
+"file": "Removal.H",
+"line": 732,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "(sp_weibull_presc_T_face || sp_local_thermoelastic);"
+}
+],
+"spall.stress_law": [
+{
+"mem": "sp_stress_law_grimsel",
+"file": "MMWSpalling.H",
+"line": 6614,
+"func": "RockLaw",
+"tag": "read",
+"text": "return (sp_stress_law_grimsel && !phases.empty())"
+},
+{
+"mem": "sp_stress_law_grimsel",
+"file": "MMWSpalling.H",
+"line": 8592,
+"func": null,
+"tag": "decl",
+"text": "bool sp_stress_law_grimsel = false;"
+}
+],
+"spall.surface_normal": [
+{
+"mem": "spall_surface_normal",
+"file": "MMWSpalling.H",
+"line": 6086,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "if (spall_surface_normal)"
+},
+{
+"mem": "spall_surface_normal",
+"file": "MMWSpalling.H",
+"line": 8598,
+"func": null,
+"tag": "decl",
+"text": "bool spall_surface_normal = false;"
+},
+{
+"mem": "spall_surface_normal",
+"file": "Removal.H",
+"line": 554,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (spall_surface_normal && sp_weibull_spall)"
+}
+],
+"spall.melt_aware": [
+{
+"mem": "melt_aware",
+"file": "MMWSpalling.H",
+"line": 8604,
+"func": null,
+"tag": "decl",
+"text": "bool        melt_aware       = false;"
+},
+{
+"mem": "melt_aware",
+"file": "Removal.H",
+"line": 1027,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (melt_aware && sp_weibull_spall)"
+},
+{
+"mem": "melt_aware",
+"file": "Removal.H",
+"line": 1373,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "(LL_col_p && melt_aware)"
+},
+{
+"mem": "melt_aware",
+"file": "Removal.H",
+"line": 1473,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (melt_aware)"
+}
+],
+"melt.lambda_crit": [
+{
+"mem": "melt_lambda_crit",
+"file": "MMWSpalling.H",
+"line": 8605,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar melt_lambda_crit = 0.4;"
+},
+{
+"mem": "melt_lambda_crit",
+"file": "MMWSpalling.H",
+"line": 8614,
+"func": "MeltSkeleton",
+"tag": "read",
+"text": "Set::Scalar f = 1.0 - LL / melt_lambda_crit;"
+}
+],
+"spall.clusters_csv": [
+{
+"mem": "sp_emit_clusters_csv",
+"file": "MMWSpalling.H",
+"line": 6535,
+"func": "UpdateSpClusters",
+"tag": "read",
+"text": "if (SurfaceOwner(lev) && cluster_count > 0 && sp_emit_clusters_csv &&"
+},
+{
+"mem": "sp_emit_clusters_csv",
+"file": "MMWSpalling.H",
+"line": 8903,
+"func": null,
+"tag": "decl",
+"text": "bool sp_emit_clusters_csv = false;"
+}
+],
+"spall.h_col_events_csv": [
+{
+"mem": "sp_emit_h_col_events_csv",
+"file": "MMWSpalling.H",
+"line": 8904,
+"func": null,
+"tag": "decl",
+"text": "bool sp_emit_h_col_events_csv = false;"
+},
+{
+"mem": "sp_emit_h_col_events_csv",
+"file": "Removal.H",
+"line": 1851,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (sp_weibull_spall && SurfaceOwner(lev) && sp_emit_h_col_events_csv)"
+}
+],
+"spall.removal_events_csv": [
+{
+"mem": "sp_emit_removal_events_csv",
+"file": "MMWSpalling.H",
+"line": 8920,
+"func": null,
+"tag": "decl",
+"text": "bool sp_emit_removal_events_csv = false;"
+},
+{
+"mem": "sp_emit_removal_events_csv",
+"file": "Removal.H",
+"line": 772,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "(sp_emit_removal_events_csv || pin_on);"
+},
+{
+"mem": "sp_emit_removal_events_csv",
+"file": "Removal.H",
+"line": 2447,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (rev_on && sp_emit_removal_events_csv)"
+},
+{
+"mem": "sp_emit_removal_events_csv",
+"file": "FaceRemoval.H",
+"line": 864,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "if (sp_emit_removal_events_csv && amrex::ParallelDescriptor::IOProcessor())"
+},
+{
+"mem": "sp_emit_removal_events_csv",
+"file": "FaceRemoval.H",
+"line": 914,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "if (sp_emit_removal_events_csv) sp_removal_events_csv_header_written = true;"
+}
+],
+"spall.surface_T": [
+{
+"mem": "sp_surface_T_mode",
+"file": "MMWSpalling.H",
+"line": 8965,
+"func": null,
+"tag": "decl",
+"text": "SurfaceTMode sp_surface_T_mode = SurfaceTMode::CellAverage;"
+},
+{
+"mem": "sp_surface_T_recon",
+"file": "MMWSpalling.H",
+"line": 2868,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "if (!sp_surface_T_recon || !SurfaceOwner(lev)) return;"
+},
+{
+"mem": "sp_surface_T_recon",
+"file": "MMWSpalling.H",
+"line": 6096,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const bool recon_on = sp_surface_T_recon && use_local_TE &&"
+},
+{
+"mem": "sp_surface_T_recon",
+"file": "MMWSpalling.H",
+"line": 8968,
+"func": null,
+"tag": "decl",
+"text": "bool sp_surface_T_recon = false;"
+},
+{
+"mem": "sp_surface_T_recon",
+"file": "Removal.H",
+"line": 807,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool recon_on = sp_surface_T_recon && sp_weibull_use_T_face &&"
+},
+{
+"mem": "sp_surface_T_apply",
+"file": "MMWSpalling.H",
+"line": 6161,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "rec_ok = sp_surface_T_apply;"
+},
+{
+"mem": "sp_surface_T_apply",
+"file": "MMWSpalling.H",
+"line": 8971,
+"func": null,
+"tag": "decl",
+"text": "bool sp_surface_T_apply = false;"
+},
+{
+"mem": "sp_surface_T_apply",
+"file": "Removal.H",
+"line": 984,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool remap_on = recon_on && sp_surface_T_apply &&"
+},
+{
+"mem": "sp_surface_T_apply",
+"file": "Removal.H",
+"line": 1321,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "rec_ok = sp_surface_T_apply;"
+},
+{
+"mem": "sp_surface_T_apply",
+"file": "Removal.H",
+"line": 2038,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "h_c = (sp_removal_energy_flake && sp_surface_T_apply &&"
+}
+],
+"spall.flake_c_f": [
+{
+"mem": "sp_flake_c_f",
+"file": "MMWSpalling.H",
+"line": 2978,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "cap, sp_flake_c_f,"
+},
+{
+"mem": "sp_flake_c_f",
+"file": "MMWSpalling.H",
+"line": 3019,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "sp_flake_c_f, spall_h_spall_max,"
+},
+{
+"mem": "sp_flake_c_f",
+"file": "MMWSpalling.H",
+"line": 8760,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar sp_flake_c_f = 0.4;"
+},
+{
+"mem": "sp_flake_c_f",
+"file": "FaceRemoval.H",
+"line": 240,
+"func": "FrAssignTs",
+"tag": "read",
+"text": "Ts = ReconFromX(g[3 * n], T0r, dx, x, cap, sp_flake_c_f,"
+},
+{
+"mem": "sp_flake_c_f",
+"file": "FaceRemoval.H",
+"line": 504,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "o.rec = ReconFromX(Tc, T0r, dx, x, cap, sp_flake_c_f,"
+},
+{
+"mem": "sp_flake_c_f",
+"file": "FaceRemoval.H",
+"line": 534,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "Set::Scalar hf = sp_flake_c_f * ell_q;"
+},
+{
+"mem": "sp_flake_c_f",
+"file": "FaceRemoval.H",
+"line": 620,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "? L.mu * sp_flake_c_f * ell"
+}
+],
+"spall.flake_h_max": [
+{
+"mem": "sp_flake_h_max",
+"file": "MMWSpalling.H",
+"line": 2980,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "sp_flake_h_max).T_surf;"
+},
+{
+"mem": "sp_flake_h_max",
+"file": "MMWSpalling.H",
+"line": 3020,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "sp_flake_h_max,"
+},
+{
+"mem": "sp_flake_h_max",
+"file": "MMWSpalling.H",
+"line": 8763,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar sp_flake_h_max = 0.0;"
+},
+{
+"mem": "sp_flake_h_max",
+"file": "FaceRemoval.H",
+"line": 241,
+"func": "FrAssignTs",
+"tag": "read",
+"text": "spall_h_spall_max / c.mu, sp_flake_h_max / c.mu).T_surf;"
+},
+{
+"mem": "sp_flake_h_max",
+"file": "FaceRemoval.H",
+"line": 368,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "const Set::Scalar hcap = (sp_flake_h_max > 0.0)"
+},
+{
+"mem": "sp_flake_h_max",
+"file": "FaceRemoval.H",
+"line": 369,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "? std::min(sp_flake_h_max, spall_h_spall_max) : spall_h_spall_max;"
+},
+{
+"mem": "sp_flake_h_max",
+"file": "FaceRemoval.H",
+"line": 505,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "spall_h_spall_max / L.mu, sp_flake_h_max / L.mu);"
+},
+{
+"mem": "sp_flake_h_max",
+"file": "FaceRemoval.H",
+"line": 536,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "const Set::Scalar h_bnd = sp_flake_h_max / L.mu;"
+}
+],
+"spall.flake_length": [
+{
+"mem": "sp_flake_len_flux",
+"file": "MMWSpalling.H",
+"line": 2975,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "if (sp_flake_len_flux)"
+},
+{
+"mem": "sp_flake_len_flux",
+"file": "MMWSpalling.H",
+"line": 8776,
+"func": null,
+"tag": "decl",
+"text": "bool sp_flake_len_flux     = false;"
+},
+{
+"mem": "sp_flake_len_flux",
+"file": "Removal.H",
+"line": 2488,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "<< ((sp_flake_len_flux || sp_flake_frac_weibull)"
+},
+{
+"mem": "sp_flake_len_flux",
+"file": "Removal.H",
+"line": 2540,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (sp_flake_len_flux || sp_flake_frac_weibull)"
+}
+],
+"spall.flake_fraction": [
+{
+"mem": "sp_flake_frac_weibull",
+"file": "MMWSpalling.H",
+"line": 3016,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "const Set::Scalar frac_over = sp_flake_frac_weibull"
+},
+{
+"mem": "sp_flake_frac_weibull",
+"file": "MMWSpalling.H",
+"line": 8777,
+"func": null,
+"tag": "decl",
+"text": "bool sp_flake_frac_weibull = false;"
+},
+{
+"mem": "sp_flake_frac_weibull",
+"file": "Removal.H",
+"line": 2488,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "<< ((sp_flake_len_flux || sp_flake_frac_weibull)"
+},
+{
+"mem": "sp_flake_frac_weibull",
+"file": "Removal.H",
+"line": 2540,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (sp_flake_len_flux || sp_flake_frac_weibull)"
+}
+],
+"spall.removal_energy": [
+{
+"mem": "sp_removal_energy_flake",
+"file": "MMWSpalling.H",
+"line": 8976,
+"func": null,
+"tag": "decl",
+"text": "bool sp_removal_energy_flake = false;"
+},
+{
+"mem": "sp_removal_energy_flake",
+"file": "Removal.H",
+"line": 985,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "sp_removal_energy_flake;"
+},
+{
+"mem": "sp_removal_energy_flake",
+"file": "Removal.H",
+"line": 2038,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "h_c = (sp_removal_energy_flake && sp_surface_T_apply &&"
+},
+{
+"mem": "sp_removal_energy_flake",
+"file": "Removal.H",
+"line": 2343,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const int nv_min = sp_removal_energy_flake ? 0 : 1;"
+},
+{
+"mem": "sp_removal_energy_flake",
+"file": "Removal.H",
+"line": 2382,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": ": (sp_removal_energy_flake ? 1 : 1)),"
+}
+],
+"spall.damage_threshold": [
+{
+"mem": "spall_damage_threshold",
+"file": "MMWSpalling.H",
+"line": 8508,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar spall_damage_threshold = 0.99;"
+},
+{
+"mem": "spall_damage_threshold",
+"file": "Removal.H",
+"line": 291,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar D_th = spall_damage_threshold;"
+}
+],
+"spall.xi_s": [
+{
+"mem": "spall_xi_s",
+"file": "MMWSpalling.H",
+"line": 8509,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar spall_xi_s = 8.0;"
+},
+{
+"mem": "spall_xi_s",
+"file": "Removal.H",
+"line": 292,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar xi_s = spall_xi_s;"
+}
+],
+"spall.C_h": [
+{
+"mem": "spall_C_h",
+"file": "MMWSpalling.H",
+"line": 8510,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar spall_C_h  = 1.0;"
+},
+{
+"mem": "spall_C_h",
+"file": "Removal.H",
+"line": 296,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar C_h  = spall_C_h;"
+}
+],
+"spall.alpha": [
+{
+"mem": "spall_alpha",
+"file": "MMWSpalling.H",
+"line": 8512,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar spall_alpha = 0.0;"
+},
+{
+"mem": "spall_alpha",
+"file": "Removal.H",
+"line": 297,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar alpha_eff   = spall_alpha_override ? spall_alpha   : therm_alpha;"
+},
+{
+"mem": "spall_alpha_override",
+"file": "MMWSpalling.H",
+"line": 8511,
+"func": null,
+"tag": "decl",
+"text": "bool spall_alpha_override = false;"
+},
+{
+"mem": "spall_alpha_override",
+"file": "Removal.H",
+"line": 297,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar alpha_eff   = spall_alpha_override ? spall_alpha   : therm_alpha;"
+}
+],
+"spall.t_spall": [
+{
+"mem": "spall_t_spall",
+"file": "MMWSpalling.H",
+"line": 8514,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar spall_t_spall = 0.0;"
+},
+{
+"mem": "spall_t_spall",
+"file": "Removal.H",
+"line": 298,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar t_spall_eff = spall_t_spall_override ? spall_t_spall : (time + dt);"
+},
+{
+"mem": "spall_t_spall_override",
+"file": "MMWSpalling.H",
+"line": 8513,
+"func": null,
+"tag": "decl",
+"text": "bool spall_t_spall_override = false;"
+},
+{
+"mem": "spall_t_spall_override",
+"file": "Removal.H",
+"line": 298,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar t_spall_eff = spall_t_spall_override ? spall_t_spall : (time + dt);"
+}
+],
+"spall.prescribed_ratio.enabled": [
+{
+"mem": "spall_prescribed_ratio_enabled",
+"file": "MMWSpalling.H",
+"line": 8515,
+"func": null,
+"tag": "decl",
+"text": "bool spall_prescribed_ratio_enabled = false;"
+},
+{
+"mem": "spall_prescribed_ratio_enabled",
+"file": "Removal.H",
+"line": 309,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool spall_prescribed = spall_prescribed_ratio_enabled;"
+}
+],
+"spall.prescribed_ratio.expr": [
+{
+"mem": "spall_ratio_f",
+"file": "MMWSpalling.H",
+"line": 8517,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> spall_ratio_f;"
+},
+{
+"mem": "spall_ratio_f",
+"file": "Removal.H",
+"line": 310,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "auto ratio_f = spall_ratio_f;"
+},
+{
+"mem": "spall_ratio_parser",
+"file": "MMWSpalling.H",
+"line": 8516,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser spall_ratio_parser;"
+}
+],
+"spall.sample": [
+{
+"mem": "spall_sample_mode",
+"file": "MMWSpalling.H",
+"line": 8526,
+"func": null,
+"tag": "decl",
+"text": "SpallSampleMode spall_sample_mode  = SpallSampleMode::TopCell;"
+},
+{
+"mem": "spall_sample_mode",
+"file": "Removal.H",
+"line": 566,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const SpallSampleMode sample_mode = spall_sample_mode;"
+}
+],
+"spall.shallow_depth": [
+{
+"mem": "spall_shallow_depth",
+"file": "MMWSpalling.H",
+"line": 8527,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar     spall_shallow_depth = 0.006;"
+},
+{
+"mem": "spall_shallow_depth",
+"file": "Removal.H",
+"line": 567,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar shallow_d       = spall_shallow_depth;"
+}
+],
+"spall.h_spall_max": [
+{
+"mem": "spall_h_spall_max",
+"file": "MMWSpalling.H",
+"line": 2979,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "spall_h_spall_max,"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "MMWSpalling.H",
+"line": 3019,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "sp_flake_c_f, spall_h_spall_max,"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "MMWSpalling.H",
+"line": 4463,
+"func": "CheckSurfaceCovered",
+"tag": "read",
+"text": "const int n_scan = std::max(1, static_cast<int>(std::floor(spall_h_spall_max / dz)));"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "MMWSpalling.H",
+"line": 8570,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar spall_h_spall_max         = 0.010;"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "Removal.H",
+"line": 664,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar h_spall_max_loc  = spall_h_spall_max;"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "FaceRemoval.H",
+"line": 241,
+"func": "FrAssignTs",
+"tag": "read",
+"text": "spall_h_spall_max / c.mu, sp_flake_h_max / c.mu).T_surf;"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "FaceRemoval.H",
+"line": 369,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "? std::min(sp_flake_h_max, spall_h_spall_max) : spall_h_spall_max;"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "FaceRemoval.H",
+"line": 378,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "static_cast<int>(std::floor(spall_h_spall_max / (mu * dx)))));"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "FaceRemoval.H",
+"line": 505,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "spall_h_spall_max / L.mu, sp_flake_h_max / L.mu);"
+},
+{
+"mem": "spall_h_spall_max",
+"file": "FaceRemoval.H",
+"line": 535,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "const Set::Scalar h_max = spall_h_spall_max / L.mu;"
+}
+],
+"spall.h_spall_n_segments": [
+{
+"mem": "spall_h_spall_n_segments",
+"file": "MMWSpalling.H",
+"line": 8571,
+"func": null,
+"tag": "decl",
+"text": "int         spall_h_spall_n_segments  = 0;"
+},
+{
+"mem": "spall_h_spall_n_segments",
+"file": "Removal.H",
+"line": 666,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "(spall_h_spall_n_segments > 0) ? spall_h_spall_n_segments"
+},
+{
+"mem": "spall_h_spall_n_segments",
+"file": "FaceRemoval.H",
+"line": 473,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "const int n_seg = (spall_h_spall_n_segments > 0) ? spall_h_spall_n_segments"
+}
+],
+"spall.flake_coherence_length": [
+{
+"mem": "spall_flake_coh_len",
+"file": "MMWSpalling.H",
+"line": 8536,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar spall_flake_coh_len = 0.0;"
+},
+{
+"mem": "spall_flake_coh_len",
+"file": "Removal.H",
+"line": 1808,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const int coh_cells = (spall_flake_coh_len > 0.0 && !sn_active)"
+},
+{
+"mem": "spall_flake_coh_len",
+"file": "Removal.H",
+"line": 1809,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "? std::max(1, static_cast<int>(std::lround(spall_flake_coh_len / dz)))"
+}
+],
+"spall.seed_void": [
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6818,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "if (spall_seed_void.size() < 6 || spall_seed_void.size() % 6 != 0)"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6821,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "for (std::size_t sb = 0; sb < spall_seed_void.size(); sb += 6)"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6824,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "amrex::IntVect{AMREX_D_DECL(spall_seed_void[sb + 0],"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6825,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "spall_seed_void[sb + 1],"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6826,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "spall_seed_void[sb + 2])},"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6827,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "amrex::IntVect{AMREX_D_DECL(spall_seed_void[sb + 3],"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6828,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "spall_seed_void[sb + 4],"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 6829,
+"func": "ApplySeedVoid",
+"tag": "read",
+"text": "spall_seed_void[sb + 5])});"
+},
+{
+"mem": "spall_seed_void",
+"file": "MMWSpalling.H",
+"line": 8562,
+"func": null,
+"tag": "decl",
+"text": "std::vector<int> spall_seed_void;"
+}
+],
+"vapor.enabled": [
+{
+"mem": "vapor_enabled",
+"file": "MMWSpalling.H",
+"line": 6876,
+"func": "InitPhi",
+"tag": "read",
+"text": "if (vapor_enabled)"
+},
+{
+"mem": "vapor_enabled",
+"file": "MMWSpalling.H",
+"line": 8651,
+"func": null,
+"tag": "decl",
+"text": "bool vapor_enabled = false;"
+},
+{
+"mem": "vapor_enabled",
+"file": "MMWSpalling.H",
+"line": 8686,
+"func": null,
+"tag": "decl",
+"text": "bool removal_enabled() const { return spall_enabled || vapor_enabled; }"
+},
+{
+"mem": "vapor_enabled",
+"file": "Removal.H",
+"line": 324,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool vapor_on = vapor_enabled;"
+}
+],
+"vapor.A_beam": [
+{
+"mem": "vapor_A_beam",
+"file": "MMWSpalling.H",
+"line": 8653,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar vapor_A_beam = 0.0;"
+},
+{
+"mem": "vapor_A_beam",
+"file": "Removal.H",
+"line": 325,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar A_beam = vapor_A_beam;"
+},
+{
+"mem": "vapor_A_beam_override",
+"file": "MMWSpalling.H",
+"line": 8652,
+"func": null,
+"tag": "decl",
+"text": "bool vapor_A_beam_override = false;"
+}
+],
+"vapor.T0": [
+{
+"mem": "vapor_T0",
+"file": "MMWSpalling.H",
+"line": 8655,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar vapor_T0 = 0.0;"
+},
+{
+"mem": "vapor_T0",
+"file": "Removal.H",
+"line": 326,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar T0_v   = vapor_T0;"
+},
+{
+"mem": "vapor_T0_override",
+"file": "MMWSpalling.H",
+"line": 8654,
+"func": null,
+"tag": "decl",
+"text": "bool vapor_T0_override = false;"
+}
+],
+"vapor.prescribed_rop.enabled": [
+{
+"mem": "vapor_prescribed_rop_enabled",
+"file": "MMWSpalling.H",
+"line": 8656,
+"func": null,
+"tag": "decl",
+"text": "bool vapor_prescribed_rop_enabled = false;"
+},
+{
+"mem": "vapor_prescribed_rop_enabled",
+"file": "Removal.H",
+"line": 339,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool vapor_prescribed = vapor_prescribed_rop_enabled;"
+}
+],
+"vapor.prescribed_rop.expr": [
+{
+"mem": "vapor_rop_f",
+"file": "MMWSpalling.H",
+"line": 8658,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> vapor_rop_f;"
+},
+{
+"mem": "vapor_rop_f",
+"file": "Removal.H",
+"line": 340,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "auto vapor_rop_eval = vapor_rop_f;"
+},
+{
+"mem": "vapor_rop_parser",
+"file": "MMWSpalling.H",
+"line": 8657,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser vapor_rop_parser;"
+}
+],
+"bit.enabled": [
+{
+"mem": "bit_enabled",
+"file": "MMWSpalling.H",
+"line": 8667,
+"func": null,
+"tag": "decl",
+"text": "bool        bit_enabled    = false;"
+},
+{
+"mem": "bit_enabled",
+"file": "Removal.H",
+"line": 1903,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (bit_enabled && time >= bit_start_time)"
+},
+{
+"mem": "bit_enabled",
+"file": "Removal.H",
+"line": 1971,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (bit_enabled)"
+}
+],
+"bit.feed_rate": [
+{
+"mem": "bit_feed_rate",
+"file": "MMWSpalling.H",
+"line": 8668,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar bit_feed_rate  = 0.0;"
+},
+{
+"mem": "bit_feed_rate",
+"file": "Removal.H",
+"line": 1905,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar z_bit  = bit_z0 - bit_feed_rate * (time - bit_start_time);"
+}
+],
+"bit.radius": [
+{
+"mem": "bit_radius",
+"file": "MMWSpalling.H",
+"line": 8669,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar bit_radius     = 0.0;"
+},
+{
+"mem": "bit_radius",
+"file": "Removal.H",
+"line": 1907,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar r2_max = bit_radius * bit_radius;"
+}
+],
+"bit.x0": [
+{
+"mem": "bit_x0",
+"file": "MMWSpalling.H",
+"line": 8670,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar bit_x0         = 0.0;"
+},
+{
+"mem": "bit_x0",
+"file": "Removal.H",
+"line": 1923,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar r2 = (xc - bit_x0) * (xc - bit_x0)"
+}
+],
+"bit.y0": [
+{
+"mem": "bit_y0",
+"file": "MMWSpalling.H",
+"line": 8671,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar bit_y0         = 0.0;"
+},
+{
+"mem": "bit_y0",
+"file": "Removal.H",
+"line": 1924,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "+ (yc - bit_y0) * (yc - bit_y0);"
+}
+],
+"bit.z0": [
+{
+"mem": "bit_z0",
+"file": "MMWSpalling.H",
+"line": 8672,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar bit_z0         = 0.0;"
+},
+{
+"mem": "bit_z0",
+"file": "Removal.H",
+"line": 1905,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar z_bit  = bit_z0 - bit_feed_rate * (time - bit_start_time);"
+}
+],
+"bit.start_time": [
+{
+"mem": "bit_start_time",
+"file": "MMWSpalling.H",
+"line": 8673,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar bit_start_time = 0.0;"
+},
+{
+"mem": "bit_start_time",
+"file": "Removal.H",
+"line": 1903,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (bit_enabled && time >= bit_start_time)"
+},
+{
+"mem": "bit_start_time",
+"file": "Removal.H",
+"line": 1905,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar z_bit  = bit_z0 - bit_feed_rate * (time - bit_start_time);"
+}
+],
+"spallation.model": [
+{
+"mem": "spallation_model",
+"file": "MMWSpalling.H",
+"line": 5994,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "if (spallation_model != SpallationModel::SpWeibull) return;"
+},
+{
+"mem": "spallation_model",
+"file": "MMWSpalling.H",
+"line": 6356,
+"func": "UpdateSpClusters",
+"tag": "read",
+"text": "if (spallation_model != SpallationModel::SpWeibull) return;"
+},
+{
+"mem": "spallation_model",
+"file": "MMWSpalling.H",
+"line": 8693,
+"func": null,
+"tag": "decl",
+"text": "SpallationModel spallation_model = SpallationModel::DamageLaw;"
+},
+{
+"mem": "spallation_model",
+"file": "Removal.H",
+"line": 364,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (spallation_model == SpallationModel::SpWeibull &&"
+},
+{
+"mem": "spallation_model",
+"file": "Removal.H",
+"line": 376,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "spall_on && spallation_model == SpallationModel::SpWeibull;"
+}
+],
+"confining.p": [
+{
+"mem": "confining_p",
+"file": "MMWSpalling.H",
+"line": 8704,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar confining_p = 0.0;"
+},
+{
+"mem": "confining_p",
+"file": "Removal.H",
+"line": 44,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "if (confining_p != 0.0 && c.nu > -1.0 && c.nu < 1.0)"
+},
+{
+"mem": "confining_p",
+"file": "Removal.H",
+"line": 45,
+"func": "ElasticConstants",
+"tag": "read",
+"text": "c.conf = confining_p * c.nu / (1.0 - c.nu);"
+}
+],
+"spall.buckle_span": [
+{
+"mem": "sp_buckle_span",
+"file": "MMWSpalling.H",
+"line": 7711,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar sp_buckle_span = 0.0;"
+},
+{
+"mem": "sp_buckle_span",
+"file": "FaceRemoval.H",
+"line": 346,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "bk_span_out = sp_buckle_span;"
+},
+{
+"mem": "sp_buckle_span",
+"file": "FaceRemoval.H",
+"line": 488,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "const bool bk_on = sp_buckle_span > 0.0;"
+},
+{
+"mem": "sp_buckle_span",
+"file": "FaceRemoval.H",
+"line": 623,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "o.bk = BuckleRatio(scan_g, pNu, pB, o.rec.T_surf, T0_at_d(0), x, sp_buckle_span);"
+}
+],
+"spallation.sp.a0": [
+{
+"mem": "sp_a0",
+"file": "MMWSpalling.H",
+"line": 6042,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar a0_loc      = sp_a0;"
+},
+{
+"mem": "sp_a0",
+"file": "MMWSpalling.H",
+"line": 8697,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar sp_a0 = 0.0;"
+},
+{
+"mem": "sp_a0",
+"file": "Removal.H",
+"line": 1125,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "rev_a_f[idx]   = weibull_enabled ? fa_a(i, j, k_top) : sp_a0;"
+},
+{
+"mem": "sp_a0",
+"file": "Removal.H",
+"line": 1167,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "Set::Scalar a_f = weibull_enabled ? fa_a(i, j, k_top) : sp_a0;"
+},
+{
+"mem": "sp_a0",
+"file": "FaceRemoval.H",
+"line": 452,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "Gc[2 * l] = weibull_enabled ? fa(p[0], p[1], p[2]) : sp_a0;"
+}
+],
+"spallation.sp.n_segments": [
+{
+"mem": "sp_n_segments",
+"file": "MMWSpalling.H",
+"line": 6043,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const int         n_seg       = sp_n_segments;"
+},
+{
+"mem": "sp_n_segments",
+"file": "MMWSpalling.H",
+"line": 8698,
+"func": null,
+"tag": "decl",
+"text": "int         sp_n_segments = 64;"
+},
+{
+"mem": "sp_n_segments",
+"file": "Removal.H",
+"line": 667,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": ": sp_n_segments;"
+},
+{
+"mem": "sp_n_segments",
+"file": "FaceRemoval.H",
+"line": 474,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": ": sp_n_segments;"
+}
+],
+"spallation.sp.stress_relief": [
+{
+"mem": "sp_relief",
+"file": "MMWSpalling.H",
+"line": 6019,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar te_relief = sp_relief;"
+},
+{
+"mem": "sp_relief",
+"file": "MMWSpalling.H",
+"line": 7707,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar sp_relief = 1.0;"
+},
+{
+"mem": "sp_relief",
+"file": "Removal.H",
+"line": 139,
+"func": "ScanSigmaT",
+"tag": "read",
+"text": "* (sp_relief"
+},
+{
+"mem": "sp_relief",
+"file": "Removal.H",
+"line": 143,
+"func": "ScanSigmaT",
+"tag": "read",
+"text": "return f_skel * (sp_relief * phase_E_loc"
+}
+],
+"spallation.sp.kic.law": [
+{
+"mem": "kic_law",
+"file": "MMWSpalling.H",
+"line": 6044,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const KIcLaw      law         = kic_law;"
+},
+{
+"mem": "kic_law",
+"file": "MMWSpalling.H",
+"line": 8716,
+"func": null,
+"tag": "decl",
+"text": "KIcLaw      kic_law         = KIcLaw::NasseriTable;"
+},
+{
+"mem": "kic_law",
+"file": "Removal.H",
+"line": 113,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "if (kic_law == KIcLaw::GrimselTable && kic_g_loc)"
+},
+{
+"mem": "kic_law",
+"file": "Removal.H",
+"line": 116,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "else if (kic_law == KIcLaw::NasseriTable)"
+}
+],
+"spallation.sp.kic.scale": [
+{
+"mem": "kic_scale",
+"file": "MMWSpalling.H",
+"line": 6045,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar kic_scale_  = kic_scale;"
+},
+{
+"mem": "kic_scale",
+"file": "MMWSpalling.H",
+"line": 8717,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar kic_scale       = 1.0;"
+},
+{
+"mem": "kic_scale",
+"file": "Removal.H",
+"line": 114,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "K_Ic_MPa = kic_scale"
+},
+{
+"mem": "kic_scale",
+"file": "Removal.H",
+"line": 119,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "T_at, kic_scale);"
+}
+],
+"spallation.sp.kic.K_Ic0": [
+{
+"mem": "kic_K_Ic0",
+"file": "MMWSpalling.H",
+"line": 6050,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar K_Ic0_      = kic_K_Ic0;"
+},
+{
+"mem": "kic_K_Ic0",
+"file": "MMWSpalling.H",
+"line": 8718,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar kic_K_Ic0       = 0.0;"
+},
+{
+"mem": "kic_K_Ic0",
+"file": "Removal.H",
+"line": 123,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "T_at, kic_K_Ic0,"
+}
+],
+"spallation.sp.kic.T_ref": [
+{
+"mem": "kic_T_ref",
+"file": "MMWSpalling.H",
+"line": 6051,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar T_ref_kic_  = kic_T_ref;"
+},
+{
+"mem": "kic_T_ref",
+"file": "MMWSpalling.H",
+"line": 8719,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar kic_T_ref       = 0.0;"
+},
+{
+"mem": "kic_T_ref",
+"file": "Removal.H",
+"line": 124,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "kic_T_ref, kic_T_melt);"
+},
+{
+"mem": "kic_T_ref",
+"file": "Removal.H",
+"line": 662,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar kic_T_ref_loc    = kic_T_ref;"
+}
+],
+"spallation.sp.kic.T_melt": [
+{
+"mem": "kic_T_melt",
+"file": "MMWSpalling.H",
+"line": 6052,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const Set::Scalar T_melt_     = kic_T_melt;"
+},
+{
+"mem": "kic_T_melt",
+"file": "MMWSpalling.H",
+"line": 8720,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar kic_T_melt      = 0.0;"
+},
+{
+"mem": "kic_T_melt",
+"file": "Removal.H",
+"line": 124,
+"func": "ScanKIcPa",
+"tag": "read",
+"text": "kic_T_ref, kic_T_melt);"
+},
+{
+"mem": "kic_T_melt",
+"file": "Removal.H",
+"line": 663,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const Set::Scalar kic_T_melt_loc   = kic_T_melt;"
+}
+],
+"spallation.sp.prescribed_stress.enabled": [
+{
+"mem": "sp_prescribed_sigma_enabled",
+"file": "MMWSpalling.H",
+"line": 6006,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const bool        use_presc_s = sp_prescribed_sigma_enabled;"
+},
+{
+"mem": "sp_prescribed_sigma_enabled",
+"file": "MMWSpalling.H",
+"line": 8727,
+"func": null,
+"tag": "decl",
+"text": "bool sp_prescribed_sigma_enabled = false;"
+}
+],
+"spallation.sp.prescribed_stress.xx_expr": [
+{
+"mem": "sp_prescribed_sigma_f",
+"file": "MMWSpalling.H",
+"line": 6008,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "auto              presc_s_f   = sp_prescribed_sigma_f;"
+},
+{
+"mem": "sp_prescribed_sigma_f",
+"file": "MMWSpalling.H",
+"line": 8729,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> sp_prescribed_sigma_f;"
+},
+{
+"mem": "sp_prescribed_sigma_parser",
+"file": "MMWSpalling.H",
+"line": 8728,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser            sp_prescribed_sigma_parser;"
+}
+],
+"spallation.sp.prescribed_T_surface.enabled": [
+{
+"mem": "sp_prescribed_T_surface_enabled",
+"file": "MMWSpalling.H",
+"line": 6007,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const bool        use_presc_T = sp_prescribed_T_surface_enabled;"
+},
+{
+"mem": "sp_prescribed_T_surface_enabled",
+"file": "MMWSpalling.H",
+"line": 8736,
+"func": null,
+"tag": "decl",
+"text": "bool sp_prescribed_T_surface_enabled = false;"
+}
+],
+"spallation.sp.prescribed_T_surface.expr": [
+{
+"mem": "sp_prescribed_T_surface_f",
+"file": "MMWSpalling.H",
+"line": 6009,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "auto              presc_T_f   = sp_prescribed_T_surface_f;"
+},
+{
+"mem": "sp_prescribed_T_surface_f",
+"file": "MMWSpalling.H",
+"line": 8738,
+"func": null,
+"tag": "decl",
+"text": "amrex::ParserExecutor<1> sp_prescribed_T_surface_f;"
+},
+{
+"mem": "sp_prescribed_T_surface_parser",
+"file": "MMWSpalling.H",
+"line": 8737,
+"func": null,
+"tag": "decl",
+"text": "amrex::Parser            sp_prescribed_T_surface_parser;"
+}
+],
+"weibull.enabled": [
+{
+"mem": "weibull_enabled",
+"file": "MMWSpalling.H",
+"line": 6010,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "const bool        use_weibull = weibull_enabled;"
+},
+{
+"mem": "weibull_enabled",
+"file": "MMWSpalling.H",
+"line": 6357,
+"func": "UpdateSpClusters",
+"tag": "read",
+"text": "if (!weibull_enabled) return;"
+},
+{
+"mem": "weibull_enabled",
+"file": "MMWSpalling.H",
+"line": 7416,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "if (!weibull_enabled) return;"
+},
+{
+"mem": "weibull_enabled",
+"file": "MMWSpalling.H",
+"line": 8869,
+"func": null,
+"tag": "decl",
+"text": "bool        weibull_enabled = false;"
+},
+{
+"mem": "weibull_enabled",
+"file": "Removal.H",
+"line": 1098,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (weibull_enabled)"
+},
+{
+"mem": "weibull_enabled",
+"file": "Removal.H",
+"line": 1125,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "rev_a_f[idx]   = weibull_enabled ? fa_a(i, j, k_top) : sp_a0;"
+},
+{
+"mem": "weibull_enabled",
+"file": "Removal.H",
+"line": 1162,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool detach_true = weibull_enabled"
+},
+{
+"mem": "weibull_enabled",
+"file": "Removal.H",
+"line": 1167,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "Set::Scalar a_f = weibull_enabled ? fa_a(i, j, k_top) : sp_a0;"
+},
+{
+"mem": "weibull_enabled",
+"file": "FaceRemoval.H",
+"line": 419,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "if (weibull_enabled) fa = (*flaw_a_mf[lev]).const_array(mfi);"
+},
+{
+"mem": "weibull_enabled",
+"file": "FaceRemoval.H",
+"line": 452,
+"func": "RecedeAlongLines",
+"tag": "read",
+"text": "Gc[2 * l] = weibull_enabled ? fa(p[0], p[1], p[2]) : sp_a0;"
+}
+],
+"weibull.m": [
+{
+"mem": "weibull_m",
+"file": "MMWSpalling.H",
+"line": 3017,
+"func": "BuildSurfaceTColumns",
+"tag": "read",
+"text": "? (W_CONE_MEDIAN / weibull_m) : 0.0;"
+},
+{
+"mem": "weibull_m",
+"file": "MMWSpalling.H",
+"line": 7420,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "const Set::Scalar inv_m = 1.0 / weibull_m;"
+},
+{
+"mem": "weibull_m",
+"file": "MMWSpalling.H",
+"line": 7758,
+"func": "WeibullSizeFactor",
+"tag": "read",
+"text": "return std::pow(V / weibull_V_ref, 1.0 / weibull_m);"
+},
+{
+"mem": "weibull_m",
+"file": "MMWSpalling.H",
+"line": 8872,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar weibull_m       = 15.0;"
+}
+],
+"weibull.a0_gb": [
+{
+"mem": "weibull_a0_gb",
+"file": "MMWSpalling.H",
+"line": 7418,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "const Set::Scalar a0_gb = weibull_a0_gb;"
+},
+{
+"mem": "weibull_a0_gb",
+"file": "MMWSpalling.H",
+"line": 8870,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar weibull_a0_gb   = 0.0;"
+}
+],
+"weibull.a0_ig": [
+{
+"mem": "weibull_a0_ig",
+"file": "MMWSpalling.H",
+"line": 7419,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "const Set::Scalar a0_ig = weibull_a0_ig;"
+},
+{
+"mem": "weibull_a0_ig",
+"file": "MMWSpalling.H",
+"line": 8871,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar weibull_a0_ig   = 0.0;"
+}
+],
+"weibull.V0": [
+{
+"mem": "weibull_V0",
+"file": "MMWSpalling.H",
+"line": 7451,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": ": std::pow(V_cell / weibull_V0, inv_m);"
+},
+{
+"mem": "weibull_V0",
+"file": "MMWSpalling.H",
+"line": 8877,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar weibull_V0      = 1.0e-9;"
+}
+],
+"weibull.size_volume": [
+{
+"mem": "sp_size_flux",
+"file": "MMWSpalling.H",
+"line": 6286,
+"func": "UpdateSpAfterMechanics",
+"tag": "read",
+"text": "if (sp_size_flux)"
+},
+{
+"mem": "sp_size_flux",
+"file": "MMWSpalling.H",
+"line": 7450,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "sp_size_flux ? Set::Scalar(1.0)"
+},
+{
+"mem": "sp_size_flux",
+"file": "MMWSpalling.H",
+"line": 7738,
+"func": null,
+"tag": "decl",
+"text": "bool sp_size_flux = false;"
+},
+{
+"mem": "sp_size_flux",
+"file": "MMWSpalling.H",
+"line": 7754,
+"func": "WeibullSizeFactor",
+"tag": "read",
+"text": "if (!sp_size_flux) return 1.0;"
+},
+{
+"mem": "sp_size_flux",
+"file": "Removal.H",
+"line": 1197,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (sp_size_flux)"
+}
+],
+"weibull.V_ref": [
+{
+"mem": "weibull_V_ref",
+"file": "MMWSpalling.H",
+"line": 7748,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar weibull_V_ref = -1.0;"
+},
+{
+"mem": "weibull_V_ref",
+"file": "MMWSpalling.H",
+"line": 7757,
+"func": "WeibullSizeFactor",
+"tag": "read",
+"text": "if (!(V > 0.0) || !(weibull_V_ref > 0.0)) return 1.0;"
+},
+{
+"mem": "weibull_V_ref",
+"file": "MMWSpalling.H",
+"line": 7758,
+"func": "WeibullSizeFactor",
+"tag": "read",
+"text": "return std::pow(V / weibull_V_ref, 1.0 / weibull_m);"
+}
+],
+"weibull.seed": [
+{
+"mem": "weibull_seed",
+"file": "MMWSpalling.H",
+"line": 7422,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "static_cast<std::uint64_t>(static_cast<std::uint32_t>(weibull_seed));"
+},
+{
+"mem": "weibull_seed",
+"file": "MMWSpalling.H",
+"line": 8878,
+"func": null,
+"tag": "decl",
+"text": "int         weibull_seed    = 0;"
+}
+],
+"weibull.detach_mode": [
+{
+"mem": "weibull_detach_mode",
+"file": "MMWSpalling.H",
+"line": 6465,
+"func": "UpdateSpClusters",
+"tag": "read",
+"text": "if (weibull_detach_mode == DetachMode::ConnectedCluster &&"
+},
+{
+"mem": "weibull_detach_mode",
+"file": "MMWSpalling.H",
+"line": 7458,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "if (weibull_detach_mode == DetachMode::ConnectedCluster &&"
+},
+{
+"mem": "weibull_detach_mode",
+"file": "MMWSpalling.H",
+"line": 8889,
+"func": null,
+"tag": "decl",
+"text": "DetachMode  weibull_detach_mode = DetachMode::PerFace;"
+}
+],
+"weibull.A_crit": [
+{
+"mem": "weibull_A_crit",
+"file": "MMWSpalling.H",
+"line": 6466,
+"func": "UpdateSpClusters",
+"tag": "read",
+"text": "weibull_A_crit > 0.0)"
+},
+{
+"mem": "weibull_A_crit",
+"file": "MMWSpalling.H",
+"line": 6473,
+"func": "UpdateSpClusters",
+"tag": "read",
+"text": "if (area >= weibull_A_crit) keep[c] = ++new_dense;"
+},
+{
+"mem": "weibull_A_crit",
+"file": "MMWSpalling.H",
+"line": 7459,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "weibull_A_crit > 0.0 && !weibull_A_crit_warned)"
+},
+{
+"mem": "weibull_A_crit",
+"file": "MMWSpalling.H",
+"line": 7462,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "if (weibull_A_crit < A_cell)"
+},
+{
+"mem": "weibull_A_crit",
+"file": "MMWSpalling.H",
+"line": 7463,
+"func": "InitializeFlaws",
+"tag": "read",
+"text": "Util::Warning(INFO, \"\", weibull_A_crit,"
+},
+{
+"mem": "weibull_A_crit",
+"file": "MMWSpalling.H",
+"line": 8890,
+"func": null,
+"tag": "decl",
+"text": "Set::Scalar weibull_A_crit      = 0.0;"
+}
+],
+"surface_patch.enabled": [
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 668,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 701,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 710,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 719,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 745,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 831,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 839,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.use_expr)"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 849,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy)"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 862,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.feet)"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 870,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 878,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy)"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 892,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.feet &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 1235,
+"func": "UpdateModel",
+"tag": "read",
+"text": "const bool        sp_on  = surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 1546,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const bool        sp_on    = surface_patch.enabled;"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 1870,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const bool        sp_on    = surface_patch.enabled && owner;"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 4082,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const bool        sp_on    = surface_patch.enabled;"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 9119,
+"func": "SurfaceGasTempCap",
+"tag": "read",
+"text": "if (!surface_patch.enabled) return 0.0;"
+},
+{
+"mem": "enabled",
+"file": "Removal.H",
+"line": 431,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool mech_on = surface_patch.enabled && surface_patch.feet &&"
+},
+{
+"mem": "enabled",
+"file": "Removal.H",
+"line": 728,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "Removal.H",
+"line": 769,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool pin_on = sp_weibull_spall && SurfaceOwner(lev) && surface_patch.enabled &&"
+},
+{
+"mem": "enabled",
+"file": "MMWSpalling.H",
+"line": 7800,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool enabled = false;"
+}
+],
+"surface_patch.face_list": [
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 949,
+"func": "Parse",
+"tag": "parse",
+"text": "if (!value.surface_patch.face_list)"
+},
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 972,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.face_list)"
+},
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 1883,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const bool fl_on = surface_patch.face_list && sp_on && void_aware"
+},
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 2228,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "if (surface_patch.face_list)"
+},
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 2235,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "if (surface_patch.face_list) FaceListTg(lev);"
+},
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 2506,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool fl_on_m = surface_patch.face_list && fl_ready;"
+},
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 4111,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const bool        fl_on_l = surface_patch.face_list && sp_on && void_aware"
+},
+{
+"mem": "face_list",
+"file": "Removal.H",
+"line": 543,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "if (surface_patch.face_list)"
+},
+{
+"mem": "face_list",
+"file": "MMWSpalling.H",
+"line": 7809,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool face_list = false;"
+}
+],
+"surface_patch.face_heat": [
+{
+"mem": "face_heat_path",
+"file": "MMWSpalling.H",
+"line": 980,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.face_heat_path)"
+},
+{
+"mem": "face_heat_path",
+"file": "MMWSpalling.H",
+"line": 1099,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.face_heat_path)"
+},
+{
+"mem": "face_heat_path",
+"file": "MMWSpalling.H",
+"line": 2246,
+"func": "FaceListTg",
+"tag": "read",
+"text": "if (!surface_patch.face_heat_path)"
+},
+{
+"mem": "face_heat_path",
+"file": "MMWSpalling.H",
+"line": 2639,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool path = surface_patch.face_heat_path && fl_on_m;"
+},
+{
+"mem": "face_heat_path",
+"file": "MMWSpalling.H",
+"line": 3858,
+"func": "FaceListHeat",
+"tag": "read",
+"text": "if (surface_patch.face_heat_path)"
+},
+{
+"mem": "face_heat_path",
+"file": "MMWSpalling.H",
+"line": 7813,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool face_heat_path = false;"
+}
+],
+"surface_patch.barrier_expr": [
+{
+"mem": "barrier_f",
+"file": "MMWSpalling.H",
+"line": 3421,
+"func": "FaceListPath",
+"tag": "read",
+"text": "if (surface_patch.barrier_f(x, y, z, std::sqrt(dxp * dxp + dyp * dyp)) > 0.0)"
+},
+{
+"mem": "barrier_f",
+"file": "MMWSpalling.H",
+"line": 7816,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::ParserExecutor<4> barrier_f;"
+},
+{
+"mem": "barrier_parser",
+"file": "MMWSpalling.H",
+"line": 7815,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::Parser            barrier_parser;"
+},
+{
+"mem": "has_barrier",
+"file": "MMWSpalling.H",
+"line": 3411,
+"func": "FaceListPath",
+"tag": "read",
+"text": "if (surface_patch.has_barrier)"
+},
+{
+"mem": "has_barrier",
+"file": "MMWSpalling.H",
+"line": 7814,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool has_barrier = false;"
+}
+],
+"surface_patch.type": [],
+"surface_patch.mode": [
+{
+"mem": "mode",
+"file": "MMWSpalling.H",
+"line": 669,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature)"
+},
+{
+"mem": "mode",
+"file": "MMWSpalling.H",
+"line": 994,
+"func": "Parse",
+"tag": "parse",
+"text": "if (!(sp.mode == SurfacePatch::Mode::ConvectiveFlame && sp.use_expr))"
+},
+{
+"mem": "mode",
+"file": "MMWSpalling.H",
+"line": 1236,
+"func": "UpdateModel",
+"tag": "read",
+"text": "surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature;"
+},
+{
+"mem": "mode",
+"file": "MMWSpalling.H",
+"line": 1547,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const bool        sp_presc = surface_patch.mode =="
+},
+{
+"mem": "mode",
+"file": "MMWSpalling.H",
+"line": 1871,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const bool        sp_presc = surface_patch.mode =="
+},
+{
+"mem": "mode",
+"file": "MMWSpalling.H",
+"line": 4083,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const bool        sp_presc = surface_patch.mode =="
+},
+{
+"mem": "mode",
+"file": "Removal.H",
+"line": 729,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature;"
+},
+{
+"mem": "mode",
+"file": "MMWSpalling.H",
+"line": 7801,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Mode mode = Mode::PrescribedTemperature;"
+}
+],
+"surface_patch.robin_form": [
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 702,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.robin_form == SurfacePatch::RobinForm::Face &&"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 711,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.robin_form == SurfacePatch::RobinForm::Face &&"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 720,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.robin_form == SurfacePatch::RobinForm::Pinned)"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 746,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.robin_form == SurfacePatch::RobinForm::Surface)"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 832,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.robin_form == SurfacePatch::RobinForm::Pinned)"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 990,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.robin_form != SurfacePatch::RobinForm::Surface)"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 998,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.robin_form != SurfacePatch::RobinForm::Surface)"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 1892,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const bool        sp_pinned = sp_on && surface_patch.robin_form =="
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 1894,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const bool        sp_face  = surface_patch.robin_form =="
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 2481,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool pinned = surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 2482,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool face   = surface_patch.robin_form == SurfacePatch::RobinForm::Face || pinned;"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 3071,
+"func": "SurfaceRobinT",
+"tag": "read",
+"text": "if (surface_patch.robin_form != SurfacePatch::RobinForm::Surface)"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 3130,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "const bool pinned = surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 3131,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "const bool face   = surface_patch.robin_form == SurfacePatch::RobinForm::Face || pinned;"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 3912,
+"func": "FaceListDiagnostics",
+"tag": "read",
+"text": "const bool face_top = surface_patch.robin_form == SurfacePatch::RobinForm::Face;"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 4085,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const bool        sp_pinned = sp_on && surface_patch.robin_form =="
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 4087,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const bool        sp_face  = surface_patch.robin_form =="
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 4235,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "if (surface_patch.robin_form == SurfacePatch::RobinForm::Surface)"
+},
+{
+"mem": "robin_form",
+"file": "Removal.H",
+"line": 770,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;"
+},
+{
+"mem": "robin_form",
+"file": "MMWSpalling.H",
+"line": 7802,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "RobinForm robin_form = RobinForm::Cell;"
+}
+],
+"surface_patch.pinned_idle_cycles": [
+{
+"mem": "pinned_idle_cycles",
+"file": "MMWSpalling.H",
+"line": 770,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.pinned_idle_cycles != 2.0)"
+},
+{
+"mem": "pinned_idle_cycles",
+"file": "MMWSpalling.H",
+"line": 772,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.pinned_idle_cycles,"
+},
+{
+"mem": "pinned_idle_cycles",
+"file": "MMWSpalling.H",
+"line": 3111,
+"func": "PinRule",
+"tag": "read",
+"text": "if (time - pin_t[c] >= surface_patch.pinned_idle_cycles * t_cell)"
+},
+{
+"mem": "pinned_idle_cycles",
+"file": "MMWSpalling.H",
+"line": 7803,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar pinned_idle_cycles = 2.0;"
+}
+],
+"surface_patch.pad_shield_open": [
+{
+"mem": "pad_shield_open",
+"file": "MMWSpalling.H",
+"line": 986,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.pad_shield_open >= 0.0) ph_abort(\"\");"
+},
+{
+"mem": "pad_shield_open",
+"file": "MMWSpalling.H",
+"line": 2116,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar pad_open = surface_patch.pad_shield_open;"
+},
+{
+"mem": "pad_shield_open",
+"file": "MMWSpalling.H",
+"line": 3686,
+"func": "FaceHr",
+"tag": "read",
+"text": "const Set::Scalar pad_open = surface_patch.pad_shield_open;"
+},
+{
+"mem": "pad_shield_open",
+"file": "MMWSpalling.H",
+"line": 7820,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar pad_shield_open = -1.0;"
+}
+],
+"surface_patch.face": [],
+"surface_patch.x0": [
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 1237,
+"func": "UpdateModel",
+"tag": "read",
+"text": "const Set::Scalar sp_x0c = surface_patch.x0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 1550,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sp_x0    = surface_patch.x0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 1874,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar sp_x0    = surface_patch.x0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 2134,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 2325,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - sp.x0, dyp = y - sp.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 2536,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 2653,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 3149,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 3376,
+"func": "FaceListPath",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 3420,
+"func": "FaceListPath",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 3611,
+"func": "FillFractionGhosts",
+"tag": "read",
+"text": "const bool mir_lo[3] = {std::abs(surface_patch.x0 - PLO[0]) <= tol,"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 3613,
+"func": "FillFractionGhosts",
+"tag": "read",
+"text": "const bool mir_hi[3] = {std::abs(surface_patch.x0 - PHI[0]) <= tol,"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 3665,
+"func": "FaceH",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 3738,
+"func": "BuildFaceList",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 4159,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 4273,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "- surface_patch.x0;"
+},
+{
+"mem": "x0",
+"file": "MMWSpalling.H",
+"line": 7821,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar x0 = 0.0, y0 = 0.0, radius = 0.0;"
+}
+],
+"surface_patch.y0": [
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 1238,
+"func": "UpdateModel",
+"tag": "read",
+"text": "const Set::Scalar sp_y0c = surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 1551,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sp_y0    = surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 1875,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar sp_y0    = surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 2134,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 2325,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - sp.x0, dyp = y - sp.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 2536,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 2653,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 3149,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 3376,
+"func": "FaceListPath",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 3420,
+"func": "FaceListPath",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 3612,
+"func": "FillFractionGhosts",
+"tag": "read",
+"text": "std::abs(surface_patch.y0 - PLO[1]) <= tol, false};"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 3614,
+"func": "FillFractionGhosts",
+"tag": "read",
+"text": "std::abs(surface_patch.y0 - PHI[1]) <= tol, false};"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 3665,
+"func": "FaceH",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 3738,
+"func": "BuildFaceList",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 4159,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 4276,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "- surface_patch.y0;"
+},
+{
+"mem": "y0",
+"file": "MMWSpalling.H",
+"line": 7821,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar x0 = 0.0, y0 = 0.0, radius = 0.0;"
+}
+],
+"surface_patch.radius": [
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 1239,
+"func": "UpdateModel",
+"tag": "read",
+"text": "const Set::Scalar sp_r2c = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 1552,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sp_r2    = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 1876,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "const Set::Scalar sp_r2    = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 2119,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 2480,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 3129,
+"func": "PatchDiagnostics",
+"tag": "read",
+"text": "const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 3359,
+"func": "FaceListPath",
+"tag": "read",
+"text": "const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 3710,
+"func": "BuildFaceList",
+"tag": "read",
+"text": "const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 4089,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const Set::Scalar sp_r2    = surface_patch.radius * surface_patch.radius;"
+},
+{
+"mem": "radius",
+"file": "MMWSpalling.H",
+"line": 7821,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar x0 = 0.0, y0 = 0.0, radius = 0.0;"
+}
+],
+"surface_patch.T_expr": [
+{
+"mem": "T_f",
+"file": "Removal.H",
+"line": 685,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "auto sp_T_face_loc          = surface_patch.T_f;"
+},
+{
+"mem": "T_f",
+"file": "MMWSpalling.H",
+"line": 7826,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::ParserExecutor<1> T_f;"
+},
+{
+"mem": "T_f",
+"file": "MMWSpalling.H",
+"line": 7873,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar T_at(Set::Scalar t) const { return T_f(t); }"
+},
+{
+"mem": "T_parser",
+"file": "MMWSpalling.H",
+"line": 7825,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::Parser            T_parser;"
+}
+],
+"surface_patch.T_ext": [
+{
+"mem": "T_ext",
+"file": "MMWSpalling.H",
+"line": 7822,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar T_ext   = 0.0;"
+}
+],
+"surface_patch.h_expr": [
+{
+"mem": "h_f",
+"file": "MMWSpalling.H",
+"line": 2157,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "? surface_patch.h_f(x, y, r, s, time)"
+},
+{
+"mem": "h_f",
+"file": "MMWSpalling.H",
+"line": 2195,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar h  = surface_patch.h_f(x, y, r, s, time);"
+},
+{
+"mem": "h_f",
+"file": "MMWSpalling.H",
+"line": 3679,
+"func": "FaceHr",
+"tag": "read",
+"text": "? surface_patch.h_f(x, y, r, s, time) : Set::Scalar(0.0);"
+},
+{
+"mem": "h_f",
+"file": "MMWSpalling.H",
+"line": 3681,
+"func": "FaceHr",
+"tag": "read",
+"text": "h = surface_patch.h_f(x, y, r, s, time);"
+},
+{
+"mem": "h_f",
+"file": "MMWSpalling.H",
+"line": 7831,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::ParserExecutor<5> h_f, Tg_f;"
+},
+{
+"mem": "h_parser",
+"file": "MMWSpalling.H",
+"line": 7830,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::Parser            h_parser, Tg_parser;"
+},
+{
+"mem": "use_expr",
+"file": "MMWSpalling.H",
+"line": 839,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.use_expr)"
+},
+{
+"mem": "use_expr",
+"file": "MMWSpalling.H",
+"line": 994,
+"func": "Parse",
+"tag": "parse",
+"text": "if (!(sp.mode == SurfacePatch::Mode::ConvectiveFlame && sp.use_expr))"
+},
+{
+"mem": "use_expr",
+"file": "MMWSpalling.H",
+"line": 2083,
+"func": "AdvanceMicrostructure",
+"tag": "read",
+"text": "if (owner && (sp_pinned || (sp_on && surface_patch.use_expr)))"
+},
+{
+"mem": "use_expr",
+"file": "MMWSpalling.H",
+"line": 2106,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "if (!surface_patch.use_expr)"
+},
+{
+"mem": "use_expr",
+"file": "MMWSpalling.H",
+"line": 7828,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool use_expr = false;"
+}
+],
+"surface_patch.T_flame_expr": [
+{
+"mem": "Tg_f",
+"file": "MMWSpalling.H",
+"line": 2196,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar Tg = surface_patch.Tg_f(x, y, r, s, time);"
+},
+{
+"mem": "Tg_f",
+"file": "MMWSpalling.H",
+"line": 7831,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::ParserExecutor<5> h_f, Tg_f;"
+},
+{
+"mem": "Tg_parser",
+"file": "MMWSpalling.H",
+"line": 7830,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "amrex::Parser            h_parser, Tg_parser;"
+}
+],
+"surface_patch.jet_closure": [
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 849,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy)"
+},
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 870,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy &&"
+},
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 878,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.jet_enthalpy)"
+},
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 992,
+"func": "Parse",
+"tag": "parse",
+"text": "if (!sp.jet_enthalpy) ph_abort(\"\");"
+},
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 2147,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "if (surface_patch.jet_enthalpy)"
+},
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 2234,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "if (surface_patch.jet_enthalpy) JetEnthalpyMarch(lev, time, k_top_col);"
+},
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 3677,
+"func": "FaceHr",
+"tag": "read",
+"text": "if (surface_patch.jet_enthalpy)"
+},
+{
+"mem": "jet_enthalpy",
+"file": "MMWSpalling.H",
+"line": 7833,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_enthalpy = false;"
+}
+],
+"surface_patch.jet_mdot": [
+{
+"mem": "jet_mdot",
+"file": "MMWSpalling.H",
+"line": 2585,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "? surface_patch.jet_mdot / phi : surface_patch.jet_mdot;"
+},
+{
+"mem": "jet_mdot",
+"file": "MMWSpalling.H",
+"line": 2792,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar P_nozzle = surface_patch.jet_mdot * surface_patch.jet_cp"
+},
+{
+"mem": "jet_mdot",
+"file": "MMWSpalling.H",
+"line": 2806,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "jet_P_recirc = (m_jet - surface_patch.jet_mdot) * surface_patch.jet_cp * (T_mix - T_ent);"
+},
+{
+"mem": "jet_mdot",
+"file": "MMWSpalling.H",
+"line": 7834,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_mdot = 0.0, jet_T_nozzle = 0.0, jet_cp = 0.0;"
+}
+],
+"surface_patch.jet_T_nozzle": [
+{
+"mem": "jet_T_nozzle",
+"file": "MMWSpalling.H",
+"line": 2583,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar T_stag = T_mix + (surface_patch.jet_T_nozzle - T_mix) * phi;"
+},
+{
+"mem": "jet_T_nozzle",
+"file": "MMWSpalling.H",
+"line": 2793,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "* (surface_patch.jet_T_nozzle - T_ent);"
+},
+{
+"mem": "jet_T_nozzle",
+"file": "MMWSpalling.H",
+"line": 9122,
+"func": "SurfaceGasTempCap",
+"tag": "read",
+"text": "if (surface_patch.jet_T_nozzle > cap) cap = surface_patch.jet_T_nozzle;"
+},
+{
+"mem": "jet_T_nozzle",
+"file": "MMWSpalling.H",
+"line": 7834,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_mdot = 0.0, jet_T_nozzle = 0.0, jet_cp = 0.0;"
+}
+],
+"surface_patch.jet_cp": [
+{
+"mem": "jet_cp",
+"file": "MMWSpalling.H",
+"line": 2589,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "Set::Scalar mcp   = m_jet * surface_patch.jet_cp;"
+},
+{
+"mem": "jet_cp",
+"file": "MMWSpalling.H",
+"line": 2759,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "mcp   = m_cur * surface_patch.jet_cp;"
+},
+{
+"mem": "jet_cp",
+"file": "MMWSpalling.H",
+"line": 2792,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar P_nozzle = surface_patch.jet_mdot * surface_patch.jet_cp"
+},
+{
+"mem": "jet_cp",
+"file": "MMWSpalling.H",
+"line": 2806,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "jet_P_recirc = (m_jet - surface_patch.jet_mdot) * surface_patch.jet_cp * (T_mix - T_ent);"
+},
+{
+"mem": "jet_cp",
+"file": "MMWSpalling.H",
+"line": 7834,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_mdot = 0.0, jet_T_nozzle = 0.0, jet_cp = 0.0;"
+}
+],
+"surface_patch.jet_D": [
+{
+"mem": "jet_D",
+"file": "MMWSpalling.H",
+"line": 2578,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": ": surface_patch.jet_D;"
+},
+{
+"mem": "jet_D",
+"file": "MMWSpalling.H",
+"line": 7837,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_D = 0.0, jet_core_length = 5.0;"
+}
+],
+"surface_patch.jet_T_ent": [
+{
+"mem": "jet_T_ent",
+"file": "MMWSpalling.H",
+"line": 2191,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "? surface_patch.jet_T_ent : surface_patch.jet_T_above;"
+},
+{
+"mem": "jet_T_ent",
+"file": "MMWSpalling.H",
+"line": 2557,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar T_ent = surface_patch.jet_T_ent;"
+},
+{
+"mem": "jet_T_ent",
+"file": "MMWSpalling.H",
+"line": 7835,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_T_ent = 293.15, jet_dr = 0.0, jet_profile_interval = 0.0;"
+}
+],
+"surface_patch.jet_core_length": [
+{
+"mem": "jet_core_length",
+"file": "MMWSpalling.H",
+"line": 2582,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "surface_patch.jet_core_length * D_dec / s_c);"
+},
+{
+"mem": "jet_core_length",
+"file": "MMWSpalling.H",
+"line": 7837,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_D = 0.0, jet_core_length = 5.0;"
+}
+],
+"surface_patch.jet_stagnation": [
+{
+"mem": "jet_stag_decay",
+"file": "MMWSpalling.H",
+"line": 2580,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "if (surface_patch.jet_stag_decay && s_c > 0.0)"
+},
+{
+"mem": "jet_stag_decay",
+"file": "MMWSpalling.H",
+"line": 2838,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "(surface_patch.jet_stag_decay && !surface_patch.jet_entrained_mass"
+},
+{
+"mem": "jet_stag_decay",
+"file": "MMWSpalling.H",
+"line": 7838,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_stag_decay = true, jet_entrained_mass = false;"
+}
+],
+"surface_patch.jet_entrained_mass": [
+{
+"mem": "jet_entrained_mass",
+"file": "MMWSpalling.H",
+"line": 2584,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar m_jet  = surface_patch.jet_entrained_mass"
+},
+{
+"mem": "jet_entrained_mass",
+"file": "MMWSpalling.H",
+"line": 2838,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "(surface_patch.jet_stag_decay && !surface_patch.jet_entrained_mass"
+},
+{
+"mem": "jet_entrained_mass",
+"file": "MMWSpalling.H",
+"line": 7838,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_stag_decay = true, jet_entrained_mass = false;"
+}
+],
+"surface_patch.jet_T_ent_mode": [
+{
+"mem": "jet_T_ent_exhaust",
+"file": "MMWSpalling.H",
+"line": 871,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.jet_T_ent_exhaust)"
+},
+{
+"mem": "jet_T_ent_exhaust",
+"file": "MMWSpalling.H",
+"line": 2569,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool exhaust = surface_patch.jet_T_ent_exhaust;"
+},
+{
+"mem": "jet_T_ent_exhaust",
+"file": "MMWSpalling.H",
+"line": 7839,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_T_ent_exhaust = false;"
+},
+{
+"mem": "jet_rec_fixed",
+"file": "MMWSpalling.H",
+"line": 2571,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar T_mix = surface_patch.jet_rec_fixed ? surface_patch.jet_T_rec_fixed"
+},
+{
+"mem": "jet_rec_fixed",
+"file": "MMWSpalling.H",
+"line": 7841,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_rec_fixed = false;"
+}
+],
+"surface_patch.jet_T_rec_fixed": [
+{
+"mem": "jet_T_rec_fixed",
+"file": "MMWSpalling.H",
+"line": 2571,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar T_mix = surface_patch.jet_rec_fixed ? surface_patch.jet_T_rec_fixed"
+},
+{
+"mem": "jet_T_rec_fixed",
+"file": "MMWSpalling.H",
+"line": 7842,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_T_rec_fixed = 0.0;"
+}
+],
+"surface_patch.jet_decay_diameter": [
+{
+"mem": "jet_De_momentum",
+"file": "MMWSpalling.H",
+"line": 881,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.jet_De_momentum)"
+},
+{
+"mem": "jet_De_momentum",
+"file": "MMWSpalling.H",
+"line": 2576,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar D_dec = surface_patch.jet_De_momentum"
+},
+{
+"mem": "jet_De_momentum",
+"file": "MMWSpalling.H",
+"line": 7844,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_De_momentum = false;"
+}
+],
+"surface_patch.jet_De_ref": [
+{
+"mem": "jet_De_ref",
+"file": "MMWSpalling.H",
+"line": 2577,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "? surface_patch.jet_De_ref * std::sqrt(T_mix / T_ent)"
+},
+{
+"mem": "jet_De_ref",
+"file": "MMWSpalling.H",
+"line": 7845,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_De_ref = 0.0;"
+}
+],
+"surface_patch.jet_free_surface": [
+{
+"mem": "jet_free_surface",
+"file": "MMWSpalling.H",
+"line": 883,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.jet_free_surface)"
+},
+{
+"mem": "jet_free_surface",
+"file": "MMWSpalling.H",
+"line": 987,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.jet_free_surface) ph_abort(\"\");"
+},
+{
+"mem": "jet_free_surface",
+"file": "MMWSpalling.H",
+"line": 2517,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "if (surface_patch.jet_free_surface)"
+},
+{
+"mem": "jet_free_surface",
+"file": "MMWSpalling.H",
+"line": 2544,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "if (surface_patch.jet_free_surface && r > surface_patch.foot_r_outer)"
+},
+{
+"mem": "jet_free_surface",
+"file": "MMWSpalling.H",
+"line": 2594,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool fsurf = surface_patch.jet_free_surface;"
+},
+{
+"mem": "jet_free_surface",
+"file": "MMWSpalling.H",
+"line": 7846,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_free_surface = false;"
+}
+],
+"surface_patch.jet_fs_aspect": [
+{
+"mem": "jet_fs_aspect",
+"file": "MMWSpalling.H",
+"line": 2547,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "if (jet_fs_z0[col] - z_face <= surface_patch.jet_fs_aspect * (r - surface_patch.foot_r_outer))"
+},
+{
+"mem": "jet_fs_aspect",
+"file": "MMWSpalling.H",
+"line": 7847,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_fs_aspect = 1.0, jet_fs_exponent = 1.0;"
+}
+],
+"surface_patch.jet_fs_exponent": [
+{
+"mem": "jet_fs_exponent",
+"file": "MMWSpalling.H",
+"line": 2756,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "surface_patch.jet_fs_exponent * Set::Scalar(n_fs) / Set::Scalar(bin.size()));"
+},
+{
+"mem": "jet_fs_exponent",
+"file": "MMWSpalling.H",
+"line": 7847,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_fs_aspect = 1.0, jet_fs_exponent = 1.0;"
+}
+],
+"surface_patch.jet_bin_update": [
+{
+"mem": "jet_bin_exponential",
+"file": "MMWSpalling.H",
+"line": 2592,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool expo  = surface_patch.jet_bin_exponential;"
+},
+{
+"mem": "jet_bin_exponential",
+"file": "MMWSpalling.H",
+"line": 7848,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_bin_exponential = false;"
+}
+],
+"surface_patch.jet_negative_flux": [
+{
+"mem": "jet_neg_count",
+"file": "MMWSpalling.H",
+"line": 889,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.jet_neg_count)"
+},
+{
+"mem": "jet_neg_count",
+"file": "MMWSpalling.H",
+"line": 2593,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const bool count = surface_patch.jet_neg_count;"
+},
+{
+"mem": "jet_neg_count",
+"file": "MMWSpalling.H",
+"line": 7849,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_neg_count = false;"
+}
+],
+"surface_patch.jet_above_h": [
+{
+"mem": "jet_above_h",
+"file": "MMWSpalling.H",
+"line": 989,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.jet_above_h) ph_abort(\"\");"
+},
+{
+"mem": "jet_above_h",
+"file": "MMWSpalling.H",
+"line": 2156,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar hj = (s > 0.0 || surface_patch.jet_above_h)"
+},
+{
+"mem": "jet_above_h",
+"file": "MMWSpalling.H",
+"line": 3678,
+"func": "FaceHr",
+"tag": "read",
+"text": "h = (s > 0.0 || surface_patch.jet_above_h)"
+},
+{
+"mem": "jet_above_h",
+"file": "MMWSpalling.H",
+"line": 7859,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool jet_above_h = false;"
+}
+],
+"surface_patch.jet_T_above": [
+{
+"mem": "jet_T_above",
+"file": "MMWSpalling.H",
+"line": 2190,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "flame_Tg[col] = (s > 0.0 || !(surface_patch.jet_T_above >= 0.0))"
+},
+{
+"mem": "jet_T_above",
+"file": "MMWSpalling.H",
+"line": 2191,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "? surface_patch.jet_T_ent : surface_patch.jet_T_above;"
+},
+{
+"mem": "jet_T_above",
+"file": "MMWSpalling.H",
+"line": 7860,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_T_above = -1.0;"
+}
+],
+"surface_patch.jet_dr": [
+{
+"mem": "jet_dr",
+"file": "MMWSpalling.H",
+"line": 2509,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const Set::Scalar dr = surface_patch.jet_dr > 0.0 ? surface_patch.jet_dr"
+},
+{
+"mem": "jet_dr",
+"file": "MMWSpalling.H",
+"line": 3364,
+"func": "FaceListPath",
+"tag": "read",
+"text": "const Set::Scalar dr = surface_patch.jet_dr > 0.0 ? surface_patch.jet_dr"
+},
+{
+"mem": "jet_dr",
+"file": "MMWSpalling.H",
+"line": 7835,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_T_ent = 293.15, jet_dr = 0.0, jet_profile_interval = 0.0;"
+}
+],
+"surface_patch.jet_profile_interval": [
+{
+"mem": "jet_profile_interval",
+"file": "MMWSpalling.H",
+"line": 2677,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "if (surface_patch.jet_profile_interval > 0.0)"
+},
+{
+"mem": "jet_profile_interval",
+"file": "MMWSpalling.H",
+"line": 2679,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "const long idx = static_cast<long>(std::floor(time / surface_patch.jet_profile_interval));"
+},
+{
+"mem": "jet_profile_interval",
+"file": "MMWSpalling.H",
+"line": 7835,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar jet_T_ent = 293.15, jet_dr = 0.0, jet_profile_interval = 0.0;"
+}
+],
+"surface_patch.side_power_interval": [
+{
+"mem": "side_power_interval",
+"file": "MMWSpalling.H",
+"line": 4108,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "const bool sidecsv = surface_patch.side_power_interval > 0.0;"
+},
+{
+"mem": "side_power_interval",
+"file": "MMWSpalling.H",
+"line": 4250,
+"func": "EnergyLedger",
+"tag": "read",
+"text": "std::floor(time / surface_patch.side_power_interval));"
+},
+{
+"mem": "side_power_interval",
+"file": "MMWSpalling.H",
+"line": 7836,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar side_power_interval = 0.0;"
+}
+],
+"surface_patch.nozzle_descent": [
+{
+"mem": "feet",
+"file": "MMWSpalling.H",
+"line": 862,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.feet)"
+},
+{
+"mem": "feet",
+"file": "MMWSpalling.H",
+"line": 892,
+"func": "Parse",
+"tag": "parse",
+"text": "if (value.surface_patch.enabled && value.surface_patch.feet &&"
+},
+{
+"mem": "feet",
+"file": "MMWSpalling.H",
+"line": 988,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.feet) ph_abort(\"\");"
+},
+{
+"mem": "feet",
+"file": "MMWSpalling.H",
+"line": 1035,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.feet && sp.foot_body_clearance)"
+},
+{
+"mem": "feet",
+"file": "MMWSpalling.H",
+"line": 2122,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar z_n = surface_patch.feet"
+},
+{
+"mem": "feet",
+"file": "Removal.H",
+"line": 431,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "const bool mech_on = surface_patch.enabled && surface_patch.feet &&"
+},
+{
+"mem": "feet",
+"file": "MMWSpalling.H",
+"line": 7863,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool feet = false;"
+}
+],
+"surface_patch.foot_body_clearance": [
+{
+"mem": "foot_body_clearance",
+"file": "MMWSpalling.H",
+"line": 893,
+"func": "Parse",
+"tag": "parse",
+"text": "value.surface_patch.foot_body_clearance)"
+},
+{
+"mem": "foot_body_clearance",
+"file": "MMWSpalling.H",
+"line": 1035,
+"func": "Parse",
+"tag": "parse",
+"text": "if (sp.feet && sp.foot_body_clearance)"
+},
+{
+"mem": "foot_body_clearance",
+"file": "MMWSpalling.H",
+"line": 2316,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const bool clear = sp.foot_body_clearance;"
+},
+{
+"mem": "foot_body_clearance",
+"file": "Removal.H",
+"line": 432,
+"func": "UpdateRemovalAfterCohesive",
+"tag": "read",
+"text": "surface_patch.foot_body_clearance;"
+},
+{
+"mem": "foot_body_clearance",
+"file": "MMWSpalling.H",
+"line": 7869,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "bool foot_body_clearance = false;"
+}
+],
+"surface_patch.h_conv": [
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 1555,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sp_hfl   = surface_patch.h_conv;"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 2108,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "flame_h.assign(ncols, surface_patch.h_conv);"
+},
+{
+"mem": "h_conv",
+"file": "MMWSpalling.H",
+"line": 7823,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar h_conv  = 0.0;"
+}
+],
+"surface_patch.T_flame": [
+{
+"mem": "T_flame",
+"file": "MMWSpalling.H",
+"line": 1556,
+"func": "AdvanceMaterial",
+"tag": "read",
+"text": "const Set::Scalar sp_Tfl   = surface_patch.T_flame;"
+},
+{
+"mem": "T_flame",
+"file": "MMWSpalling.H",
+"line": 2109,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "flame_Tg.assign(ncols, surface_patch.T_flame);"
+},
+{
+"mem": "T_flame",
+"file": "MMWSpalling.H",
+"line": 9121,
+"func": "SurfaceGasTempCap",
+"tag": "read",
+"text": "if (surface_patch.T_flame      > cap) cap = surface_patch.T_flame;"
+},
+{
+"mem": "T_flame",
+"file": "MMWSpalling.H",
+"line": 7824,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar T_flame = 0.0;"
+}
+],
+"surface_patch.nozzle_z0": [
+{
+"mem": "nozzle_z0",
+"file": "MMWSpalling.H",
+"line": 2124,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": ": surface_patch.nozzle_z0 - surface_patch.nozzle_feed * time;"
+},
+{
+"mem": "nozzle_z0",
+"file": "MMWSpalling.H",
+"line": 7829,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar nozzle_z0 = 0.0, nozzle_feed = 0.0, nozzle_collision_radius = 0.0;"
+}
+],
+"surface_patch.nozzle_feed": [
+{
+"mem": "nozzle_feed",
+"file": "MMWSpalling.H",
+"line": 2124,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": ": surface_patch.nozzle_z0 - surface_patch.nozzle_feed * time;"
+},
+{
+"mem": "nozzle_feed",
+"file": "MMWSpalling.H",
+"line": 7829,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar nozzle_z0 = 0.0, nozzle_feed = 0.0, nozzle_collision_radius = 0.0;"
+}
+],
+"surface_patch.foot_r_inner": [
+{
+"mem": "foot_r_inner",
+"file": "MMWSpalling.H",
+"line": 2182,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "if (pad_open >= 0.0 && r >= surface_patch.foot_r_inner"
+},
+{
+"mem": "foot_r_inner",
+"file": "MMWSpalling.H",
+"line": 2220,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "if (pad_open >= 0.0 && r >= surface_patch.foot_r_inner"
+},
+{
+"mem": "foot_r_inner",
+"file": "MMWSpalling.H",
+"line": 2311,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const Set::Scalar ri2 = sp.foot_r_inner * sp.foot_r_inner;"
+},
+{
+"mem": "foot_r_inner",
+"file": "MMWSpalling.H",
+"line": 2333,
+"func": "FeetDescent",
+"tag": "read",
+"text": "Util::Abort(INFO, \"\", sp.foot_r_inner, \"\","
+},
+{
+"mem": "foot_r_inner",
+"file": "MMWSpalling.H",
+"line": 3687,
+"func": "FaceHr",
+"tag": "read",
+"text": "if (pad_open >= 0.0 && r >= surface_patch.foot_r_inner"
+},
+{
+"mem": "foot_r_inner",
+"file": "MMWSpalling.H",
+"line": 7865,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar foot_r_inner = 0.0, foot_r_outer = 0.0, foot_standoff = 0.0;"
+}
+],
+"surface_patch.foot_r_outer": [
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 2183,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "&& r <  surface_patch.foot_r_outer)"
+},
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 2221,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "&& r <  surface_patch.foot_r_outer)"
+},
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 2312,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const Set::Scalar ro2 = sp.foot_r_outer * sp.foot_r_outer;"
+},
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 2334,
+"func": "FeetDescent",
+"tag": "read",
+"text": "sp.foot_r_outer, \"\");"
+},
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 2544,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "if (surface_patch.jet_free_surface && r > surface_patch.foot_r_outer)"
+},
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 2547,
+"func": "JetEnthalpyMarch",
+"tag": "read",
+"text": "if (jet_fs_z0[col] - z_face <= surface_patch.jet_fs_aspect * (r - surface_patch.foot_r_outer))"
+},
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 3688,
+"func": "FaceHr",
+"tag": "read",
+"text": "&& r <  surface_patch.foot_r_outer)"
+},
+{
+"mem": "foot_r_outer",
+"file": "MMWSpalling.H",
+"line": 7865,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar foot_r_inner = 0.0, foot_r_outer = 0.0, foot_standoff = 0.0;"
+}
+],
+"surface_patch.foot_standoff": [
+{
+"mem": "foot_standoff",
+"file": "MMWSpalling.H",
+"line": 2392,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const Set::Scalar z_target = z_foot + sp.foot_standoff;"
+},
+{
+"mem": "foot_standoff",
+"file": "MMWSpalling.H",
+"line": 7865,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar foot_r_inner = 0.0, foot_r_outer = 0.0, foot_standoff = 0.0;"
+}
+],
+"surface_patch.foot_rule": [
+{
+"mem": "foot_rule",
+"file": "MMWSpalling.H",
+"line": 2335,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const bool pads = sp.foot_rule == SurfacePatch::FootRule::Pads;"
+},
+{
+"mem": "foot_rule",
+"file": "MMWSpalling.H",
+"line": 2373,
+"func": "FeetDescent",
+"tag": "read",
+"text": "if (sp.foot_rule == SurfacePatch::FootRule::Max)"
+},
+{
+"mem": "foot_rule",
+"file": "MMWSpalling.H",
+"line": 2375,
+"func": "FeetDescent",
+"tag": "read",
+"text": "else if (sp.foot_rule == SurfacePatch::FootRule::Mean)"
+},
+{
+"mem": "foot_rule",
+"file": "MMWSpalling.H",
+"line": 7864,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "FootRule foot_rule = FootRule::Pads;"
+}
+],
+"surface_patch.foot_npads": [
+{
+"mem": "foot_npads",
+"file": "MMWSpalling.H",
+"line": 2336,
+"func": "FeetDescent",
+"tag": "read",
+"text": "const int npads = pads ? sp.foot_npads : 1;"
+},
+{
+"mem": "foot_npads",
+"file": "MMWSpalling.H",
+"line": 7866,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "int foot_npads = 3;"
+}
+],
+"surface_patch.foot_pad_quantile": [
+{
+"mem": "foot_pad_quantile",
+"file": "MMWSpalling.H",
+"line": 2363,
+"func": "FeetDescent",
+"tag": "read",
+"text": "long ik = static_cast<long>(std::ceil(sp.foot_pad_quantile * Set::Scalar(vk.size()))) - 1;"
+},
+{
+"mem": "foot_pad_quantile",
+"file": "MMWSpalling.H",
+"line": 2382,
+"func": "FeetDescent",
+"tag": "read",
+"text": "long idx = static_cast<long>(std::ceil(sp.foot_pad_quantile * Set::Scalar(v.size()))) - 1;"
+},
+{
+"mem": "foot_pad_quantile",
+"file": "MMWSpalling.H",
+"line": 7867,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar foot_pad_quantile = 0.9;"
+}
+],
+"surface_patch.nozzle_feed_max": [
+{
+"mem": "nozzle_feed_max",
+"file": "MMWSpalling.H",
+"line": 2401,
+"func": "FeetDescent",
+"tag": "read",
+"text": "nozzle_z = std::min(nozzle_z, std::max(z_target, nozzle_z - sp.nozzle_feed_max * dt));"
+},
+{
+"mem": "nozzle_feed_max",
+"file": "MMWSpalling.H",
+"line": 7868,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar nozzle_feed_max = std::numeric_limits<Set::Scalar>::infinity();"
+}
+],
+"surface_patch.nozzle_collision_radius": [
+{
+"mem": "nozzle_collision_radius",
+"file": "MMWSpalling.H",
+"line": 2120,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "const Set::Scalar rc2   = surface_patch.nozzle_collision_radius *"
+},
+{
+"mem": "nozzle_collision_radius",
+"file": "MMWSpalling.H",
+"line": 2121,
+"func": "BuildFlameColumns",
+"tag": "read",
+"text": "surface_patch.nozzle_collision_radius;"
+},
+{
+"mem": "nozzle_collision_radius",
+"file": "MMWSpalling.H",
+"line": 7829,
+"func": "SurfacePatch(struct)",
+"tag": "decl",
+"text": "Set::Scalar nozzle_z0 = 0.0, nozzle_feed = 0.0, nozzle_collision_radius = 0.0;"
+}
+]
+}

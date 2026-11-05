@@ -1,0 +1,18 @@
+a2 -- check_shared on CAL (a 1-step run, legs/SMOKE) and on HOS_R (input_lab re-pointed)
+====================================================================================================
+  check_shared tests/MMWSpalling/validation/kant/grimsel_calibration/input  argv tests/MMWSpalling/validation/kant/grimsel_calibration/legs/SMOKE/argv.sh
+    incl  PASS  the deck includes both shared files (2 FILE lines)
+    (i)   PASS  no undeclared override of a shared key (0 declared)
+    (ii)  PASS  metadata resolves all 64 shared keys to the file's value
+    (iii) PASS  phase0.T_ref 293.15 == hc.ic.constant.value 293.15
+    (iv)  PASS  weibull.V0 1e-09 == V_cell 1e-09 (rel 0.0e+00)
+  check_shared PASS
+  check_shared tests/MMWSpalling/validation/hoeser/input_lab  argv tests/MMWSpalling/validation/kant/grimsel_calibration/legs/HOS_R/argv.sh
+    incl  PASS  the deck includes both shared files (2 FILE lines)
+    (i)   PASS  no undeclared override of a shared key (0 declared)
+    (ii)  PASS  metadata resolves all 64 shared keys to the file's value
+    (iii) PASS  phase0.T_ref 293.15 == hc.ic.constant.value 293.15
+    (iv)  PASS  weibull.V0 1e-09 == V_cell 1e-09 (rel 0.0e+00)
+  check_shared PASS
+  control: SMOKE's argv + an undeclared weibull.m=20 -> (i) FAILS, as it must
+a2 PASS (gate)

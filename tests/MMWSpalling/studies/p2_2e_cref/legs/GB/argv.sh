@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/gradient_blind/input spallation.sp.constraint_depth=0.002 spall.removal_events_csv=1 amr.thermo.int=1 amr.thermo.plot_int=1 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_2e_cref/legs/GB/run

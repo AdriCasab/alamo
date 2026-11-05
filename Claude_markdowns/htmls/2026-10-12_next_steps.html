@@ -1,0 +1,252 @@
+<title>After the Exponent Map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#f4f5f3; --surface:#ffffff; --surface-2:#eceeeb;
+    --ink:#1c2227; --ink-soft:#4b5661; --granite:#737f8a;
+    --rule:#d3d8d8; --rule-soft:#e4e8e7;
+    --petrol:#0f6470; --petrol-wash:#e0eef0;
+    --amber:#9a5b0a; --amber-wash:#f6ecd9;
+    --red:#9b2f22; --red-wash:#f8e7e4;
+    --hot:#c2410c; --cold:#2563a8; --rock:#d9d4c7; --rock-2:#bfb8a8; --gas:#f3c6a2;
+    --code-bg:#eef0ee;
+    --serif:"Newsreader", Georgia, "Times New Roman", serif;
+    --sans:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono:"IBM Plex Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper:#111619; --surface:#181f23; --surface-2:#1f272c;
+      --ink:#e6ebeb; --ink-soft:#a7b2b8; --granite:#8c979e;
+      --rule:#2c363c; --rule-soft:#222b30;
+      --petrol:#6cc3cc; --petrol-wash:#13272a;
+      --amber:#dfa74a; --amber-wash:#2a2114;
+      --red:#e38a7d; --red-wash:#2c1a17;
+      --hot:#f08a4b; --cold:#6ea8e8; --rock:#3a4046; --rock-2:#4d555c; --gas:#6b4a2e;
+      --code-bg:#1e262b;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper:#111619; --surface:#181f23; --surface-2:#1f272c;
+    --ink:#e6ebeb; --ink-soft:#a7b2b8; --granite:#8c979e;
+    --rule:#2c363c; --rule-soft:#222b30;
+    --petrol:#6cc3cc; --petrol-wash:#13272a;
+    --amber:#dfa74a; --amber-wash:#2a2114;
+    --red:#e38a7d; --red-wash:#2c1a17;
+    --hot:#f08a4b; --cold:#6ea8e8; --rock:#3a4046; --rock-2:#4d555c; --gas:#6b4a2e;
+    --code-bg:#1e262b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17.5px;line-height:1.55;padding-inline:16px;padding-block:0 64px}
+  .wrap{max-width:76ch;margin:0 auto}
+  header.masthead{padding-block:40px 24px;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--petrol);font-weight:600}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(30px,5vw,44px);line-height:1.1;margin:10px 0 12px;text-wrap:balance}
+  .dek{font-size:19px;color:var(--ink-soft);margin:0 0 18px;max-width:60ch}
+  .meta{font-family:var(--sans);font-size:13px;color:var(--granite);display:flex;flex-wrap:wrap;gap:6px 18px}
+  nav.toc{margin-block:22px 10px;padding:16px 18px;background:var(--surface);border:1px solid var(--rule-soft);border-radius:6px}
+  nav.toc .eyebrow{color:var(--granite)}
+  nav.toc ol{margin:8px 0 0;padding-left:1.4em;columns:2;column-gap:28px;font-family:var(--sans);font-size:14px;line-height:1.5}
+  nav.toc li{break-inside:avoid;margin:2px 0}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule)}
+  nav.toc a:hover{color:var(--petrol);border-color:var(--petrol)}
+  @media (max-width:560px){nav.toc ol{columns:1}}
+  h2{font-family:var(--serif);font-weight:600;font-size:28px;line-height:1.2;margin:56px 0 10px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+  h2 .num{font-family:var(--sans);font-weight:500;font-size:13px;letter-spacing:.1em;color:var(--petrol);display:block;margin-bottom:6px}
+  h3{font-family:var(--sans);font-weight:600;font-size:16px;margin:30px 0 8px;color:var(--ink)}
+  p{margin:0 0 14px}
+  p.lead{font-size:19px;color:var(--ink-soft)}
+  ul,ol{margin:0 0 14px;padding-left:1.4em}
+  li{margin:4px 0}
+  li::marker{color:var(--granite)}
+  code,kbd{font-family:var(--mono);font-size:.84em;background:var(--code-bg);padding:1px 5px;border-radius:3px;color:var(--ink)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.5;background:var(--code-bg);border:1px solid var(--rule-soft);border-radius:6px;padding:12px 14px;overflow-x:auto;margin:0 0 16px}
+  .eq{margin:6px 0 16px;padding:10px 14px;background:var(--surface);border-left:3px solid var(--petrol);border-radius:0 6px 6px 0;overflow-x:auto}
+  .eq .lab{font-family:var(--sans);font-size:12px;color:var(--granite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+  .vars{font-family:var(--sans);font-size:14.5px;line-height:1.5;margin:-6px 0 16px;padding:0;list-style:none;border-top:1px dashed var(--rule-soft)}
+  .vars li{display:grid;grid-template-columns:minmax(5.5em,auto) 1fr;gap:12px;padding:6px 0;border-bottom:1px dashed var(--rule-soft);margin:0}
+  .vars .sym{font-family:var(--mono);font-size:13.5px;color:var(--petrol);white-space:nowrap}
+  .box{margin:18px 0;padding:14px 18px;border-radius:6px;border:1px solid var(--rule-soft);background:var(--surface)}
+  .box .tag{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+  .box.note .tag{color:var(--petrol)} .box.note{background:var(--petrol-wash);border-color:transparent}
+  .box.primer .tag{color:var(--petrol)} .box.primer{background:var(--surface);border-color:var(--rule)}
+  .box.retired .tag{color:var(--amber)} .box.retired{background:var(--amber-wash);border-color:transparent}
+  .box.open .tag{color:var(--red)} .box.open{background:var(--red-wash);border-color:transparent}
+  .box p:last-child{margin-bottom:0}
+  .tbl{overflow-x:auto;margin:0 0 18px}
+  table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:14px;line-height:1.4}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+  th{font-weight:600;color:var(--ink-soft);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--rule)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.w{min-width:16em}
+  tbody tr:last-child td{border-bottom:none}
+  .worked{font-family:var(--sans);font-size:14.5px;background:var(--surface-2);border-radius:6px;padding:12px 16px;margin:0 0 18px}
+  .worked .tag{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--granite);margin-bottom:6px}
+  .worked p{margin:0 0 6px}
+  .pipeline{counter-reset:step;list-style:none;padding:0;margin:0 0 18px}
+  .pipeline li{counter-increment:step;display:grid;grid-template-columns:2.4em 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule-soft);margin:0}
+  .pipeline li::before{content:counter(step);font-family:var(--sans);font-weight:600;color:var(--petrol);font-size:14px;padding-top:3px}
+  .pipeline b{font-family:var(--sans);font-weight:600;font-size:15px;display:block}
+  .pipeline span{display:block;font-size:16px;color:var(--ink-soft)}
+  .small{font-size:14px;color:var(--ink-soft);font-family:var(--sans)}
+  figure{margin:22px 0 24px;padding:14px 14px 10px;background:var(--surface);border:1px solid var(--rule-soft);border-radius:6px}
+  svg.fig{display:block;width:100%;height:auto;max-width:100%}
+  figcaption mjx-container svg{width:auto;height:auto}
+  figcaption{font-family:var(--sans);font-size:13.5px;color:var(--ink-soft);margin-top:10px;line-height:1.45}
+  figcaption b{color:var(--ink)}
+  .fig-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:640px){.fig-grid{grid-template-columns:1fr}}
+  /* svg styling through tokens */
+  svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:11px}
+  svg .lbl{font-size:11.5px;fill:var(--ink)}
+  svg .ttl{font-size:12px;font-weight:600;fill:var(--ink)}
+  svg .ax{stroke:var(--rule);stroke-width:1;fill:none}
+  svg .grid{stroke:var(--rule-soft);stroke-width:1;fill:none}
+  svg .l1{stroke:var(--petrol);stroke-width:2;fill:none}
+  svg .l2{stroke:var(--hot);stroke-width:2;fill:none}
+  svg .l3{stroke:var(--cold);stroke-width:2;fill:none}
+  svg .l4{stroke:var(--amber);stroke-width:2;fill:none}
+  svg .dash{stroke-dasharray:5 4}
+  svg .rock{fill:var(--rock);stroke:var(--granite);stroke-width:1}
+  svg .rock2{fill:var(--rock-2);stroke:var(--granite);stroke-width:1}
+  svg .hotf{fill:var(--hot);opacity:.85}
+  svg .gasf{fill:var(--gas)}
+  svg .ink{stroke:var(--ink);stroke-width:1.4;fill:none}
+  svg .inkf{fill:var(--ink)}
+  svg .hotl{stroke:var(--hot);stroke-width:1.8;fill:none}
+  svg .coldl{stroke:var(--cold);stroke-width:1.8;fill:none}
+  svg .pet{stroke:var(--petrol);stroke-width:1.8;fill:none}
+  svg .petf{fill:var(--petrol)}
+  svg .thin{stroke:var(--granite);stroke-width:1;fill:none}
+  svg .cell{fill:none;stroke:var(--granite);stroke-width:1}
+  svg .bar1{fill:var(--petrol);opacity:.35}
+  svg .bar2{fill:var(--hot);opacity:.35}
+  mjx-container{overflow-x:auto;overflow-y:hidden}
+  a{color:var(--petrol)}
+  footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--rule);font-family:var(--sans);font-size:13px;color:var(--granite)}
+  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<script>
+  window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" async></script>
+
+<div class="wrap">
+<header class="masthead">
+  <div class="eyebrow">ALAMO · MMWSpalling integrator · what comes next</div>
+  <h1>After the exponent map: what was found, what it proposes, and what to do</h1>
+  <p class="dek">A companion to the project description. It explains, in the same language, the three things learned from re-reading the flux-exponent study on 12 October, the argument they add up to, and the ordered list of work that follows from it. Read the project description's Sections 6 and 10 first if the words <em>heated depth</em>, <em>flaw</em> and <em>size term</em> are new.</p>
+  <div class="meta">
+    <span>Status as of 12 October 2026</span>
+    <span>Built from the study files under <code>studies/p2_2d_kic/</code>, the source, and the implementer's own retraction note</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <div class="eyebrow">Contents</div>
+  <ol>
+    <li><a href="#s1">Where things stand</a></li>
+    <li><a href="#s2">What the study was meant to measure</a></li>
+    <li><a href="#s3">Three findings, in plain terms</a></li>
+    <li><a href="#s4">What the result is proposing</a></li>
+    <li><a href="#s5">The work, in order</a></li>
+    <li><a href="#s6">What not to do</a></li>
+    <li><a href="#s7">How to tell it worked</a></li>
+  </ol>
+</nav>
+
+<h2 id="s1"><span class="num">Section 1</span>Where things stand</h2>
+<p class="lead">The last step, P2-2d, had two jobs. One is finished and safe. The other produced numbers that could not be trusted, and this week we found out exactly why.</p>
+<p>The first job was the <em>level</em>: run the Kant experiment with the Grimsel property laws switched on, the toughness evaluated at the rock's actual temperature, and the relief factor set by its definition, and see where the model fires. It fires at 843.8 K. Kant measured 843 ± 30 K. The flaw size that makes the model agree exactly is 7.73 µm against the 8 µm held value. Those runs used the deterministic 8 µm flaw with no random draw and no size term, so nothing found since touches them. The level result is banked.</p>
+<p>The second job was the <em>flux exponent</em>: how the onset temperature rises when the heat flux is increased. Kant measured a slope of 0.23 to 0.31 on a log-log plot of temperature rise against flux. The model's only route to any flux dependence is the size term of Section 10.3 of the project description: a hotter, faster-heated skin is thinner, so it contains a smaller volume of rock, so the largest flaw it is likely to contain is smaller, so the rock is effectively stronger. The study ran 62 legs across two toughness tables, two expansion treatments, five Weibull moduli and three fluxes, and every slope came out between 0.003 and 0.06. The review rejected it because the diagnostic column that should have shown the size term acting was zero on every onset row. That rejection was right in outcome and wrong in reason, which is where this week's work starts.</p>
+
+<h2 id="s2"><span class="num">Section 2</span>What the study was meant to measure</h2>
+<p>Three quantities chain together, and it helps to name them before reading the findings.</p>
+<ul class="vars">
+  <li><span class="sym">ℓ_q</span><span>the <em>heated depth</em>, from the flux: \(\ell_q = \lambda\,(T_s - T_0)/q\). Thinner at high flux. It is the length the project description's Section 6 calls the flux length.</span></li>
+  <li><span class="sym">a</span><span>the <em>effective flaw</em>: the drawn flaw \(a_f\) multiplied by the size term \((\ell_q^3 / V_{\mathrm{ref}})^{1/m}\). A smaller heated volume shrinks it.</span></li>
+  <li><span class="sym">T_onset</span><span>the surface temperature at the first firing, where the driving stress intensity \(1.989\,R\,\sigma(T)\sqrt{a}\) first reaches the toughness \(K_{Ic}(T)\).</span></li>
+</ul>
+<p>The exponent the study measures is the product of three slopes, each of which can be read off the runs separately:</p>
+<div class="eq"><div class="lab">The exponent, decomposed</div>
+\[ n \;=\; \frac{d\ln(T_{\mathrm{onset}}-T_0)}{d\ln q} \;=\; \underbrace{\frac{d\ln \ell_q}{d\ln q}}_{\text{how fast the skin thins}} \times \underbrace{\frac{3}{m}}_{\text{volume to flaw}} \times \underbrace{\frac{d\ln(T_{\mathrm{onset}}-T_0)}{d\ln a}}_{\text{how far the onset moves per unit of flaw}} \]
+</div>
+<p>The first factor is a property of the heat transfer, the second is the Weibull modulus, and the third is set entirely by how steeply the ratio \(\sigma(T)/K_{Ic}(T)\) climbs with temperature near the onset. Keep this product in mind: it is the whole argument of Section 4.</p>
+
+<h2 id="s3"><span class="num">Section 3</span>Three findings, in plain terms</h2>
+
+<h3>3.1 The diagnostic column was a reporting defect, not an inert lever</h3>
+<p>The results file carries a column for the heated depth used at each firing. It read zero on every onset row, and both the review and the implementer's first diagnosis took that as the size term not acting. Re-reading the rows showed something a physical mechanism cannot do: the column was non-zero only for the quarter of the domain that one of the four processors owns. The vector feeding that column is filled on each processor for its own cells, then written to the file by the first processor alone. Its six sibling columns are summed across processors first; this one, added later, was left out of that step. One missing line. The quantity the criterion actually multiplies by is a different vector, built from inputs that are summed across processors, and it was correct on every processor at every step.</p>
+<div class="box note"><div class="tag">What this changes</div><p>The lever was never inert. The review's first ground is withdrawn; its other three grounds stand (Section 5, Step 5). The implementer's proposal to make the heated depth "computable on a flat surface" is unnecessary: it already is.</p></div>
+
+<h3>3.2 A firing is decided twice, with two different flaws</h3>
+<p>This is the finding that matters. With the diagnostic out of the way, the size term could be checked directly against the onsets. An offline copy of the criterion, built from the same property tables, reproduces the firing ratio logged on every one of the 23 legs to three decimal places when the expected size term is applied. So the term acted, with exactly the expected magnitude: a factor 0.85 on the flaw at the highest flux, 1.16 at the lowest, for a modulus of 8.</p>
+<p>But the lowest-flux legs did not fire when the ratio reached 1.00. They fired at 1.04 to 1.18, and at every one of them the onset temperature is exactly where the <em>unscaled</em> flaw reaches threshold. The reason is in Section 10.4 of the project description. A column fires only when two conditions are both met: the criterion's cluster gate, which uses the size-scaled flaw, and the flake-thickness scan, which must find a depth at which the crack would run. That scan computes its own stress intensity, and it uses the drawn flaw with no size term. A firing therefore needs the threshold met with both flaws, which means the effective flaw is the <em>smaller</em> of the two. The size term can delay an onset at high flux, where it shrinks the flaw. It can never bring an onset forward at low flux, where it enlarges the flaw, because the scan still waits for the unscaled one.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Flux (h, W/m²K)</th><th>Expected size term, m = 8</th><th>Firing ratio on the first row</th><th>Flaw implied by the onset</th></tr></thead>
+  <tbody>
+    <tr><td>300</td><td>1.16</td><td>1.08</td><td>the unscaled draw, to 0.2 %</td></tr>
+    <tr><td>500</td><td>0.97</td><td>1.00</td><td>scaled, as intended</td></tr>
+    <tr><td>800</td><td>0.85</td><td>1.01</td><td>scaled: 0.844 against 0.845 expected</td></tr>
+  </tbody>
+</table></div>
+<p>The reference volume was anchored at the middle flux, so the low-flux legs were pinned to the no-size-term level, the middle legs were neutral, and only the high-flux legs responded. That is why, in every family of runs, the slope between 300 and 500 is two to six times flatter than the slope between 500 and 800, and why the three-point slopes came out at about half of what the lever delivers.</p>
+<div class="box open"><div class="tag">Why this is a bug, not a nuisance</div><p>Under the flux-volume setting the model decides whether a column fails using one flaw and how thick the flake is using another. That is wrong in any configuration, whether or not anyone is measuring an exponent. It is the review's second ground, "the two firing sites must use one flaw", with its consequence now measured.</p></div>
+
+<h3>3.3 The size route has a ceiling, and it comes from the tables' steepness</h3>
+<p>The pair of fluxes that the gate did not touch, 500 to 800, gives a clean measurement. At a modulus of 8 the slope is 0.072. Read against the decomposition of Section 2: the heated depth fell as flux to the power 0.80 (not 1, because the surface temperature rises too); the flaw therefore changed by 3/8 of that, 0.30; and the onset moved 17.6 K for that change, which is 0.24 per unit of log flaw. The product is 0.072. The three factors are each measured, and they multiply to the run.</p>
+<p>The third factor is the ceiling. The onset moves only 0.24 % per 1 % of flaw because, between 530 and 560 °C, the stress rises quickly with temperature (the expansion coefficient has already jumped above 300 °C) while the toughness falls quickly. A steep ratio means a small change in the flaw is compensated by a tiny change in temperature. This is inside the measured data, not above the 600 °C clamp, so no amount of high-temperature measurement changes it. With the gate fixed, the exponent the size route can deliver is about \(0.8 \times 0.24 \times 3/m \approx 0.6/m\): 0.07 at m = 8, 0.14 at m = 4, 0.19 at m = 3. Kant's 0.23 to 0.31 would need m near 2, which no rock has.</p>
+<div class="box retired"><div class="tag">Set aside</div><p>The capped-expansion family cannot be quoted at all. Those legs ran with the relief factor of the full-expansion pairing, 0.531, instead of their own, so they fired at 1032 to 1098 K, deep on the clamp where stiffness, toughness and expansion are all held flat. The "74× gap" the implementer computed for them compares a formula at one relief factor with runs at another.</p></div>
+
+<h2 id="s4"><span class="num">Section 4</span>What the result is proposing</h2>
+<p class="lead">Put the three findings together and they make one argument, which is the proposal.</p>
+<p>First, the model's dependence of onset on flux is real and behaves as designed: the skin thins with flux, the flaw shrinks with the skin, the onset rises. Second, the measured slopes understate it by about half because of the two-flaw defect, which is a line to fix, not a mystery. Third, and this is the part that changes direction: even with the defect fixed, flaw statistics cannot reach Kant's exponent. The route is bounded at 0.6/m by the steepness of the property curves where the rock fires, and the modulus would have to be unphysically low to get there.</p>
+<p>So the flux dependence Kant saw must come from a threshold that responds to the heated depth <em>directly</em>, not through the volume of rock it contains. That is what the compressive-layer criterion planned as P2-2e offers, and it is the third of Dey and Kranz's 1985 assumptions. But the implementer raised the right warning: not every version of that criterion has the right sign.</p>
+<div class="box primer"><div class="tag">The sign question, worked</div>
+<p>Classical plate buckling says a layer of thickness \(h\) over a delaminated length \(L\) buckles at a stress proportional to \(E\,(h/L)^2\). If \(h\) is the heated depth, higher flux means a thinner layer, which buckles <em>more</em> easily, so the onset would fall with flux. Wrong sign. If \(L\) scales with the heated depth too, the ratio is constant and the exponent is zero.</p>
+<p>The energy-release version is different. The strain energy stored in the compressed layer per unit area is proportional to \(\sigma^2 h / E\). The layer detaches when that reaches the toughness, so the critical stress goes as \(K_{Ic}/\sqrt{h}\): a thinner layer needs a <em>higher</em> stress. Right sign. With \(h\) a fixed fraction of the heated depth, this is the present edge-crack criterion with the 8 µm flaw replaced by a fraction of \(\ell_q\). Its exponent is the first factor (0.8) times the third (0.24) with no 3/m in between: about 0.19 with the Grimsel tables, about 0.4 with constant properties. Within reach of Kant.</p>
+<p>Two consequences follow and must be stated before anything is coded. A crack length of a fraction of a millimetre instead of 8 µm raises the driving stress intensity by an order of magnitude, so the level has to be re-anchored, through the thickness fraction or the relief factor, and the 7.73 µm headline stops meaning anything under this criterion. And the magnitude leans on the 0.24 table sensitivity, so the choice of property law moves the predicted exponent by a factor of two; the sign check should report both.</p>
+</div>
+
+<h2 id="s5"><span class="num">Section 5</span>The work, in order</h2>
+<p>Each step is small. The order matters because the later ones score what the earlier ones change.</p>
+<ol class="pipeline">
+  <li><div><b>Sum the diagnostic column across processors.</b><span>One line in the reduce block of <code>Removal.H</code>. After it, the assertion the review asked for, that the heated depth is positive on the first firing row of every leg, passes as it stands. No physics changes; the results file becomes honest.</span></div></li>
+  <li><div><b>Give both firing decisions one flaw.</b><span>At the flake-thickness scan, multiply the drawn flaw by the same size term the criterion uses, with the column's own heated depth. This is the correctness fix of Section 3.2. The frozen-tree gate must stay at zero differences on every run that does not set the flux-volume key, because the term is exactly 1 there.</span></div></li>
+  <li><div><b>Re-run the legs the gate pinned, and the capped family with its own pairing.</b><span>Fixing the scan does not alter a file on disk; the low-flux legs fired late and their onsets are wrong as stored. Every leg whose size term was above one needs re-running: all legs at h = 300, plus the capped legs at h = 500. These are Kant runs on a 24³ grid, minutes each. The capped family additionally needs its relief factor set by its own pairing. Choose the coherent one, capped expansion with capped stiffness at R = 0.465, or state why the incoherent pairing is wanted; the two differ by 22 K in onset.</span></div></li>
+  <li><div><b>Score the map as three-point slopes.</b><span>Only after Step 3. The high-flux pair already shows what to expect: 0.072 at m = 8, 0.042 at m = 20 with the Grimsel tables. Report each slope beside the decomposition of Section 2, so a mismatch can be located in one of the three factors rather than argued about.</span></div></li>
+  <li><div><b>Fill the two provenance gaps and close P2-2d as the level step.</b><span>The 7.73 µm implied flaw has no script in the repository that prints it, which the standing rules forbid for any quoted number; write the reducer. The <code>cell</code> control ran with the random draw switched off, so it never tested what it was for; run it with the draw on. Then archive the step with the level result and the corrected exponent reading.</span></div></li>
+  <li><div><b>P2-2e, first gate: the sign and magnitude, on paper.</b><span>Before a line of code: derive the flux exponent the energy-release criterion predicts, with the heated-depth slope of 0.8 and the table sensitivity of 0.24 taken from the runs, and with constant properties as the second case. Stop if the sign is not positive or the magnitude is not of order 0.2 to 0.3. State the re-anchoring of the level that the criterion forces.</span></div></li>
+  <li><div><b>P2-2e, implementation, only if the gate passes.</b><span>Replace the relief factor with the compressive-layer criterion, re-anchor the level on Kant, then measure the exponent on the same three-flux ladder. This is where the model earns a flux dependence instead of inheriting one from statistics.</span></div></li>
+</ol>
+
+<h2 id="s6"><span class="num">Section 6</span>What not to do</h2>
+<ul>
+  <li><b>No high-temperature measurement campaign.</b> The implementer withdrew this and was right to. The ceiling of Section 3.3 sits at 530 to 560 °C, inside the measured property data. Measuring above 600 °C would not move it.</li>
+  <li><b>No re-run of the whole map.</b> The legs whose size term was below one are correct as stored. Only the pinned legs and the capped family are void.</li>
+  <li><b>No scoring before Step 3.</b> Three-point slopes fitted to the current files would be scoring a defect that is already understood.</li>
+  <li><b>No quoting of capped-expansion numbers</b> from the current runs, for the reason in Section 3.3.</li>
+  <li><b>Nothing parked is unparked.</b> The 1 mm mesh control, the four Meier legs with the frozen-floor fraction, the 8× mismatch in the reference volume between the two decks, and the missing primary texts stay where they are until called for.</li>
+</ul>
+
+<h2 id="s7"><span class="num">Section 7</span>How to tell it worked</h2>
+<p>Each step has a number that says whether it did its job.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Step</th><th>Check</th><th>Expected</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>heated depth on the first firing row, every leg</td><td>positive; about 2.4 mm at h = 500 on the Kant anchor</td></tr>
+    <tr><td>2</td><td>frozen-tree gate on all runs without the flux-volume key</td><td>0 of 2639 files differ</td></tr>
+    <tr><td>2</td><td>firing ratio on the first row of a low-flux leg</td><td>1.00, no longer 1.08 to 1.18</td></tr>
+    <tr><td>3–4</td><td>slope 300→500 against slope 500→800, same family</td><td>comparable, no longer 2 to 6× apart</td></tr>
+    <tr><td>4</td><td>three-point slope, Grimsel tables, m = 8</td><td>about 0.07; m = 20 about 0.04</td></tr>
+    <tr><td>5</td><td>reducer output for the implied flaw</td><td>7.73 µm from the archived files</td></tr>
+    <tr><td>6</td><td>predicted P2-2e exponent, both property cases</td><td>positive; Grimsel about 0.19, constant about 0.4</td></tr>
+  </tbody>
+</table></div>
+<p>If Step 4 lands near 0.07 the argument of Section 4 is confirmed end to end, and the move to a depth-dependent criterion is evidence-led rather than a guess. If it lands well above that, one of the three factors in the decomposition is not what the runs say it is, and that factor is the next thing to look at before P2-2e.</p>
+
+<footer>Companion to the project description. Findings traced in <code>Claude_markdowns/2026-10-12.md</code> §1–§3. No source code was changed in producing this report.</footer>
+</div>

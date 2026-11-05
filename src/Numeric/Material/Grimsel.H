@@ -83,7 +83,7 @@ public:
     static constexpr Set::Scalar T3_KIc[NT3] =
         {  1.00,  1.00,  0.90,  0.82,  0.78,  0.77,  0.75,  0.65,  0.60,  0.60 };
 
-    Grimsel() { BuildStrainTable(); }
+    Grimsel() { BuildTables(); }
 
     Grimsel(IO::ParmParse &pp, std::string a_prefix)
     {
@@ -113,7 +113,7 @@ public:
         // microcracks instead of loading the flake.
         pp.query_default("alpha_cap_theta", v.alpha_cap_theta, -1.0);
         pp.query_default("T_ref", v.T_ref, 293.15);
-        v.BuildStrainTable();
+        v.BuildTables();
     }
 
     // ---- the Material interface -----------------------------------------
@@ -153,9 +153,21 @@ public:
         return 1.0e-6 * Interp(th, T3_alpha);
     }
 
-    Set::Scalar E_of(Set::Scalar T) const          // Pa, Table 3
+    // Pa, Table 3, read from the DENSE UNIFORM table (P2-2b deliverable 4).
+    //
+    // ⚠⚠ WHY THIS ONE NEEDS NO ANALYTIC REMAINDER AND `strain_of` DOES.
+    // `strain_of` interpolates a CUMULATIVE INTEGRAL of a piecewise-linear
+    // alpha, which is piecewise QUADRATIC, so linear interpolation between
+    // nodes is wrong at second order (it read 4.5e-9 off a dense quadrature).
+    // `E/E_0` is itself piecewise LINEAR in theta, and every one of Table 3's
+    // kinks (20/100/200/300/400/450/500/550/600/650 degC) is an integer that
+    // lands exactly on this 1 K grid -- so no cell straddles a kink and linear
+    // interpolation reproduces `Interp` to round-off at EVERY theta, not just
+    // at the nodes. ⇒ the dense table is a speed change, not an accuracy one,
+    // which is what lets `(b2)` hold at 1e-12.
+    Set::Scalar E_of(Set::Scalar T) const
     {
-        return E_0 * Interp(T - 273.15, T3_EoE0);
+        return E_0 * DenseAt(T - 273.15, EoE0_tab);
     }
 
     Set::Scalar mu_of(Set::Scalar T) const         // Pa
@@ -175,8 +187,17 @@ public:
     // uniform 1 K grid from 20 to 1000 degC, linearly interpolated between
     // nodes. ⚠ 1 K spacing makes the table agree with a dense offline
     // quadrature to better than 1e-12 -- gate (b6) asks for 1e-10.
-    void BuildStrainTable()
+    // ⚠ Called from the constructor AND from the end of `Parse`: both
+    // `alpha_cap_theta` (which reshapes the strain table) and `E0` are parsed
+    // AFTER default construction, so a table built only once would silently
+    // ignore them. `(c7)` is exactly the `alpha_cap_theta` sensitivity, so a
+    // stale strain table would make that row measure nothing.
+    void BuildTables()
     {
+        // the stiffness ratio on the same uniform grid as the strain
+        for (int i = 0; i < NSTR; ++i)
+            EoE0_tab[i] = Interp(STR_TH0 + Set::Scalar(i) * STR_DTH, T3_EoE0);
+
         strain_tab[0] = 0.0;
         for (int i = 1; i < NSTR; ++i)
         {
@@ -234,6 +255,20 @@ private:
     static constexpr Set::Scalar STR_TH0 = 20.0;
     static constexpr Set::Scalar STR_DTH = 1.0;
     Set::Scalar strain_tab[NSTR] = {0.0};
+    Set::Scalar EoE0_tab[NSTR]   = {0.0};
+
+    // Linear read of a dense uniform table on the strain grid, clamped at both
+    // ends exactly as `Interp` clamps (below 20 degC -> the first node; above
+    // 1000 -> the last, and Table 3 is already flat above 650).
+    static Set::Scalar DenseAt(Set::Scalar th, const Set::Scalar *tab)
+    {
+        if (th <= STR_TH0) return tab[0];
+        const Set::Scalar x = (th - STR_TH0) / STR_DTH;
+        int i = static_cast<int>(x);
+        if (i >= NSTR - 1) return tab[NSTR - 1];
+        if (i < 0) i = 0;
+        return tab[i] + (x - Set::Scalar(i)) * (tab[i + 1] - tab[i]);
+    }
 
     Set::Scalar AlphaAtTheta(Set::Scalar th) const
     {

@@ -1,116 +1,165 @@
 <!-- INDEX:BEGIN  regenerate: python3 docs/project/tools/archive_index.py -->
 # Archive index
 
-98 completed-step records + 5 roadmap snapshots. Line numbers are exact as of the last
+118 completed-step records + 10 roadmap snapshots. Line numbers are exact as of the last
 regeneration and are verified by the generator; re-run it after any append.
-(131 sub-headings inside records -- Goal, Guardrails, Commands, takeaways,
+(154 sub-headings inside records -- Goal, Guardrails, Commands, takeaways,
 review findings -- are deliberately not indexed; find them inside their record.)
 
-- L147: Step 1 - Skeleton Integrator And Build Registration
-- L159: Step 2 - Enthalpy Heat Formulation
-- L173: Step 3 - MMW Beam Source
-- L184: Step 4 - Surface Losses
-- L195: Step 4b - Zhang/Oglesby Granite Heating Validation
-- L220: Step 5 - Voronoi Microstructure With Mineral Phases
-- L265: Step 6 - Heterogeneous And Damage-Modified Conductivity
-- L309: Step 6b - H/T Consistency For Heterogeneous Microstructure
-- L349: Step 6c - Grain Topology Correction
-- L392: Step 6d - Hu Prescribed-Surface-Temperature Conduction
-- L448: Step 7 - Heterogeneous Thermoelastic Mechanics
-- L506: Step 7b - Hu Thermoelastic Stress Validation, Single-Level
-- L581: Step 7c - Early AMR Correctness For Microstructure Regrid
-- L630: Step 7d - Hu Thermoelastic Stress Validation With AMR
-- L699: Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution
-- L770: Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution
-- L844: Step 9 - Grain-Boundary Cohesive-Zone Unit Test
-- L898: Step 10 - Surface Advancement And Spall Detachment
-- L963: Step 11 - Vaporisation Removal And Unified RoP
-- L1031: Step 11b - Hu LRST And Onset-Spallation With DP Damage
-- L1106: Step 12 - Spallation-Model Toggle + Sp Onset Criterion
-- L1287: Step 14 - Hu Flame-Jet End-to-End Validation (damage_law)
-- L1368: Step 14b - Damage-Law Spall Sampling Knob
-- L1442: Step 15a - Convective Robin Surface-Patch BC
-- L1531: Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling
-- L1646: Step 15b - Kant Onset Validation (sp_kant_onset)
-- L1735: Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring)
-- L1859: Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b)
-- L1961: Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh)
-- L2068: Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope
-- L2108: Step 16d - T-derived σ_xx with prescribed-T face BC (option (a))
-- L2218: Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half)
-- L2341: Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact)
-- L2496: Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5)
-- L2601: Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate)
-- L2669: Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed)
-- L2722: P1 — Melt-aware spallation (completed, review-accepted)
-- L2789: P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15)
-- L2812: E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted)
-- L3243: S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted)
-- L3810: A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (comp...
-- L4373: C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted)
-- L4962: D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, ...
-- L5601: D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (complete...
-- L6341: D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted)
-- L7286: D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted)
-- L8251: D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh che...
-- L8925: D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed)
-- L9566: D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-a...
-- L10062: D2e — retroactive review (2026-09-19; attaches to the D2e entry above)
-- L10167: D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-acce...
-- L10480: D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet)
-- L10517: D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED)
-- L10597: D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same...
-- L10649: D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet)
-- L10717: D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier ...
-- L10810: D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered ...
-- L10885: D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported a...
-- L10963: D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accept...
-- L11180: D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by ...
-- L11338: D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise r...
-- L11449: D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by a...
-- L11560: D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, revi...
-- L11658: D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberat...
-- L11745: D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted)
-- L11890: D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23)
-- L12012: D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23)
-- L12096: D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23)
-- L12169: D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES)
-- L12352: D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES)
-- L12454: D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by d...
-- L12551: D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — pla...
-- L12635: D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, revi...
-- L12771: D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24)
-- L12860: D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code)
-- L12924: D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code)
-- L12993: D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held)
-- L13054: D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted)
-- L13220: P4 REFUTED, in the informative direction
-- L13420: P3a REFUTED — the planner's crater-wall assumption
-- L13585: P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF
-- L13618: P7 CONFIRMED — `PD` jammed, and it was pre-registered
-- L14012: P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accep...
-- L14142: P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01
-- L14286: P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid ...
-- L14401: P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the...
-- L14489: P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both sh...
-- L14575: ROADMAP `## Current Status` as it stood on 2026-10-02, before the collapse
-- L15612: ROADMAP `Active step:` region — the 14 COMPLETED blocks that had accumulated there, 2026-10-02
-- L15875: P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate ...
-- L16108: P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mec...
-- L16407: P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-...
-- L16624: ROADMAP `Next milestones` block as it stood before P1g-1 — collapsed 2026-10-03
-- L17122: ROADMAP `Known Stale/Important Notes` as it stood before P1g-1 — compressed 2026-10-03
-- L17919: P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEE...
-- L18190: P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real...
-- L18448: P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics f...
-- L18509: P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the...
-- L18590: P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the th...
-- L18657: P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06)
-- L18802: P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limit...
-- L18900: ROADMAP notes released 2026-10-07 — superseded by P2-1 and P2-2
-- L18954: P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, r...
+- L196: Step 1 - Skeleton Integrator And Build Registration
+- L208: Step 2 - Enthalpy Heat Formulation
+- L222: Step 3 - MMW Beam Source
+- L233: Step 4 - Surface Losses
+- L244: Step 4b - Zhang/Oglesby Granite Heating Validation
+- L269: Step 5 - Voronoi Microstructure With Mineral Phases
+- L314: Step 6 - Heterogeneous And Damage-Modified Conductivity
+- L358: Step 6b - H/T Consistency For Heterogeneous Microstructure
+- L398: Step 6c - Grain Topology Correction
+- L441: Step 6d - Hu Prescribed-Surface-Temperature Conduction
+- L497: Step 7 - Heterogeneous Thermoelastic Mechanics
+- L555: Step 7b - Hu Thermoelastic Stress Validation, Single-Level
+- L630: Step 7c - Early AMR Correctness For Microstructure Regrid
+- L679: Step 7d - Hu Thermoelastic Stress Validation With AMR
+- L748: Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution
+- L819: Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution
+- L893: Step 9 - Grain-Boundary Cohesive-Zone Unit Test
+- L947: Step 10 - Surface Advancement And Spall Detachment
+- L1012: Step 11 - Vaporisation Removal And Unified RoP
+- L1080: Step 11b - Hu LRST And Onset-Spallation With DP Damage
+- L1155: Step 12 - Spallation-Model Toggle + Sp Onset Criterion
+- L1336: Step 14 - Hu Flame-Jet End-to-End Validation (damage_law)
+- L1417: Step 14b - Damage-Law Spall Sampling Knob
+- L1491: Step 15a - Convective Robin Surface-Patch BC
+- L1580: Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling
+- L1695: Step 15b - Kant Onset Validation (sp_kant_onset)
+- L1784: Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring)
+- L1908: Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b)
+- L2010: Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh)
+- L2117: Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope
+- L2157: Step 16d - T-derived σ_xx with prescribed-T face BC (option (a))
+- L2267: Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half)
+- L2390: Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact)
+- L2545: Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5)
+- L2650: Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate)
+- L2718: Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed)
+- L2771: P1 — Melt-aware spallation (completed, review-accepted)
+- L2838: P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15)
+- L2861: E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted)
+- L3292: S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted)
+- L3859: A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (comp...
+- L4422: C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted)
+- L5011: D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, ...
+- L5650: D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (complete...
+- L6390: D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted)
+- L7335: D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted)
+- L8300: D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh che...
+- L8974: D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed)
+- L9615: D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-a...
+- L10111: D2e — retroactive review (2026-09-19; attaches to the D2e entry above)
+- L10216: D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-acce...
+- L10529: D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet)
+- L10566: D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED)
+- L10646: D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same...
+- L10698: D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet)
+- L10766: D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier ...
+- L10859: D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered ...
+- L10934: D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported a...
+- L11012: D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accept...
+- L11229: D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by ...
+- L11387: D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise r...
+- L11498: D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by a...
+- L11609: D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, revi...
+- L11707: D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberat...
+- L11794: D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted)
+- L11939: D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23)
+- L12061: D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23)
+- L12145: D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23)
+- L12218: D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES)
+- L12401: D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES)
+- L12503: D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by d...
+- L12600: D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — pla...
+- L12684: D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, revi...
+- L12820: D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24)
+- L12909: D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code)
+- L12973: D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code)
+- L13042: D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held)
+- L13103: D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted)
+- L13269: P4 REFUTED, in the informative direction
+- L13469: P3a REFUTED — the planner's crater-wall assumption
+- L13634: P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF
+- L13667: P7 CONFIRMED — `PD` jammed, and it was pre-registered
+- L14061: P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accep...
+- L14191: P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01
+- L14335: P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid ...
+- L14450: P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the...
+- L14538: P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both sh...
+- L14624: ROADMAP `## Current Status` as it stood on 2026-10-02, before the collapse
+- L15661: ROADMAP `Active step:` region — the 14 COMPLETED blocks that had accumulated there, 2026-10-02
+- L15924: P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate ...
+- L16157: P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mec...
+- L16456: P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-...
+- L16673: ROADMAP `Next milestones` block as it stood before P1g-1 — collapsed 2026-10-03
+- L17171: ROADMAP `Known Stale/Important Notes` as it stood before P1g-1 — compressed 2026-10-03
+- L17968: P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEE...
+- L18239: P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real...
+- L18497: P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics f...
+- L18558: P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the...
+- L18639: P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the th...
+- L18706: P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06)
+- L18851: P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limit...
+- L18949: ROADMAP notes released 2026-10-07 — superseded by P2-1 and P2-2
+- L19003: P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, r...
+- L19107: P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complet...
+- L19170: P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not valid...
+- L19275: P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the ro...
+- L19641: ROADMAP notes released 2026-10-13 — superseded by P2-2f (feet descent) and P2-3
+- L19663: P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by rev...
+- L20076: P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archi...
+- L20482: P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found...
+- L20982: P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; ...
+- L21585: P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at t...
+- L21987: P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maxi...
+- L22382: P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (20...
+- L22833: P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built...
+- L23220: P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (...
+- L23758: ROADMAP notes released 2026-10-28 — superseded by P2-10 (the code they describe is deleted) and the new pla...
+- L23783: P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-...
+- L24196: ROADMAP notes released 2026-10-28 (b) — plan of record superseded at P2-11 planning
+- L24205: P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by ...
+- L24468: P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the b...
+- L24861: P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at ...
+- L24885: ROADMAP notes released 2026-10-30 — the 2026-10-28 plan of record, superseded by the 2026-10-30 plan
+- L24892: P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the produ...
+- L25290: ROADMAP notes released 2026-11-02 — the property-table clamp bullet (replaced by standing rule 18)
+- L25306: P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port...
+- L25800: P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both ...
+- L26286: P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, bu...
 
 <!-- INDEX:END -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -19054,3 +19103,7611 @@ which is a strong independent anchor — but it is **re-run on the shipping bina
 deliverable 0**, before any property key is switched on, and this entry is amended with the outcome.
 ⚠ Nothing downstream depends on `(c1)` numerically; it is a neutrality witness, so the risk is to
 the claim's provenance rather than to any number carried forward.
+
+## P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complete, `(c2)` failed as a gate, ord 4 NEVER RUN and deferred)
+
+**What landed and is kept.** All source changes: the Grimsel property law wired to its consumers;
+strain and stiffness as dense uniform-grid tables evaluated at the local temperature (no spatial
+interpolation of strain); all seven hard-coded `rho`/`c_p` sites converted to one style under the
+user's zero-exception rule; the single writer covering every phase under every law; the per-cell
+cache registered **unplotted**. Binary `50f5f76851118314b8526838`.
+
+**Rows that PASSED and do not re-run unless source moves them:** `(a0)` Kant dT 463.31/465.80 on the
+shipping binary · `(a1)` **0** offenders under the predicate · `(b1)` **0 of 2639** · `(b2)`
+**6.3e-15** off-node · `(b3)` **2.503e-15** on the rung scored · `(b4)` **14 -> 0** · `(b5)`
+cost-neutral · `(b6)` exact · `(b7)` bit-exact · `(c3)` implied flaw **19.91 um** (inside 5-20).
+`(c1)`: **K0 575.26 -> K1 648.06 -> K2 522.30 K** ⇒ ⚠ the thermal set **raises** onset by 73 K and
+the mechanical set **drops** it by 126 K — they oppose, which no prediction had said.
+
+**⚠⚠ `(c2)` FAILED, AND THE PLANNER'S BAND WAS WRONG.** Fitted `R` = **0.3021** (`alpha` as given) and
+**0.4779** (capped at 300 degC), scored against a **single** band of 0.41-0.69 ⇒ read as *one in, one
+out*, the inconclusive case `(c7)` warned of. **But the band is a function of `sigma`, and `sigma`
+depends on `alpha`** — the planner wrote it as a fixed property of the rock. Re-derived per treatment
+at the 850 K fit target (planner, 2026-10-08):
+
+| `alpha` treatment | `sigma` | fitted `R` | its OWN band | result |
+|---|---|---|---|---|
+| as given | 316.8 MPa | 0.3021 | 0.417-0.650 | **28 % below** |
+| capped 300 degC | 209.1 MPa | 0.4779 | 0.631-0.985 | **24 % below** |
+
+⇒ **both fits sit ~25 % below their own band, under both treatments.** The `alpha` uncertainty
+**cancels**, so `(c7)` inverts: the band **does** have power and the answer is the same either way.
+**Physical reading:** matching Kant's measured onset requires the stress pulled **below the rock's
+crushing strength** ⇒ the model is still too eager to spall and `R` is absorbing ~25 % of something
+that is **not relief**.
+
+**⇒ ord 4 (the four Meier legs) was NOT launched**, correctly, by the run-order rule. The price
+measurements would likely have been insulated (`R` pins the onset at 850 K under either `alpha`), but
+the result would have been delivered by a relief factor doing an unnamed job — calibration wearing
+explanation's clothes.
+
+### Implementation takeaways
+
+- ⚠⚠ **A COMPARISON THAT CAN FIND NOTHING MUST BE SHOWN CAPABLE OF FINDING SOMETHING.** `(b1)`'s
+  scoring used a `join` invalid on BSD: it **errored, printed nothing, and awk counted zero
+  differences from an empty stream**. **Both earlier "0 of 2639" results were vacuous.** Re-scored by
+  sorted diff **with a detect-a-difference control** (`base_d2r0c` 1726, `d2aa` 52) it is genuinely 0.
+  ⇒ every identity score carries a positive control, or it is not a score.
+- ⚠⚠ **THE PLANNER'S BAND WAS A FUNCTION OF THE UNCERTAINTY IT WAS MEANT TO ADJUDICATE.** `R`'s band
+  is `UCS/sigma` and `sigma = E(T_s)*INT(alpha)/(1-nu)` ⇒ it moves with `alpha` **and** with the fit
+  target. Scoring two `alpha` treatments against one band compares a moving number to a pinned one.
+  ⇒ **a band derived from a model quantity is re-derived under every treatment it is used to judge.**
+- ⚠⚠ **THE KANT LEDGER HAS A PRE-EXISTING ~0.97 DEFICIT ON ALL RUNGS, INCLUDING THE BASELINE.** The
+  deck sets `spall.removal_energy = cell` while the Meier leg that closes to 5e-3 sets `= flake`; the
+  ledger's flake term **under-books a whole-cell removal** and the deficit grows per firing. The same
+  leg in flake mode reads **1.055e-02**, **92x** better. ⚠ The key was correctly **not** changed — it
+  decides how much enthalpy leaves per firing, so it would move the onset and corrupt `(c1)`.
+  ⇒ **a 0.97 deficit masks a conduction/inversion mismatch of any size**, so `(b3)`'s green reading on
+  Kant is weaker evidence than it appears. Real gap in the Kant configuration's accounting.
+- ⚠ **`(c2)`'s own fitter produced a physically impossible bracket.** `R` is constrained to `(0,1]`,
+  so `R = 1.5` aborts; the fitter read the abort as *"did not fire"* and reported a bracket
+  contradicting `K2`'s `R = 1` result. ⇒ a fitter must distinguish **"aborted"** from **"did not
+  fire"**, or it will bracket outside the admissible range.
+- ⚠ **Four gate-waiters polled forever**: `pgrep -f guarded_post_all` **matches the waiter's own
+  command line**. Stopped with `TaskStop`, not `pkill`. ⇒ match a PID or a sentinel, never a name the
+  waiter also carries.
+
+## P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not validated, and four misattributed targets retired (2026-10-12, rev 6, ACCEPTED)
+
+**Verdict: accepted** (reviewer, 10-12, independent re-derivation, no run or build repeated). Rev 5
+was **rejected** 10-10; its ground 1 was later **withdrawn**. Revs 1-5 and the correction rounds are
+in `Claude_markdowns/2026-10-09.md` §1-7 and `2026-10-12.md`.
+
+### What the step established
+
+**THE LEVEL, and the framing matters.** `R` computed from its definition `UCS/sigma`,
+`kic_scale = 1`, toughness from `Grimsel::K_Ic_of` (Grimsel/Central Aare at temperature): the Kant
+rung fires at **843.757 K**, a rise of **550.6 K**.
+⚠⚠ **SCORE IT AGAINST THE BINDING BAND, NOT THE MEASURED ONE.**
+`validation/kant/kant-2017-central-aare-validation-reference.md` is explicit: item 1 is the
+**binding target**, Kant's *closed-form predicted* onset rise **390-560 degC** (mean ~475); item 2,
+the measured spalling temperature **553-694 degC**, says *"Do not score against this; it is the
+experimental upper anchor only."*
+⇒ **550.6 K sits inside the binding band at 94.5 % of its span — the top edge, not the middle.**
+⚠ The implementer's own archive line quoted *"29 K under Kant's 873 K surface mean"*; that **873 K
+is the Kant & von Rohr 2016 figure, on GOTTHARD and BETHEL granite** — cross-rock, and not a target.
+⚠⚠ **AND THE CLAIM IS NOT "NO FITTED PARAMETER".** The packet's own guardrail forbids it: the
+**8 um flaw is a held calibration value, not a measurement**, and `R` is evaluated at the
+target-derived **850 K**. The parameter-free content is narrower and should be quoted as such: **the
+toughness closure at the 850 K target, 1.7 %**, with the implied flaw **7.73 um** (table at target) /
+**7.95 um** (at the firing temperature) against the held **8.00**.
+
+**TWO SOURCE DEFECTS FIXED.**
+1. **`rc_ellq` was never rank-reduced.** Declared `Removal.H:1137`, filled owner-only `:1610`,
+   written from the IO rank's local copy `:3651`, and **absent from the six-vector reduce block at
+   `:2202-2207`**. ⇒ the CSV's `ell_q` was positive **iff `col_j <= 11` AND `k_top <= 11`** — rank
+   0's box — on **100.00 %** of rows across four legs. Both a reviewer and the planner read that as
+   an inert lever and the planner invented a *"needs recession first"* mechanism **not in the
+   source**. The lever was always live: `surf_ellq_col` is built in `BuildSurfaceTColumns` **after**
+   `ReduceRealSum` of `Ttop`/`T1`/`Ktop` (`MMWSpalling.H:3685-3687`). ⇒ **standing rule 16**.
+2. **A firing was decided TWICE with TWO different flaws.** Removal needs both `detach_true`
+   (`Removal.H:1486`, flaw size-scaled) **and** `h_col > 0` from the thickness scan (`:2001`), whose
+   flaw was read **raw** at `:1490`. ⇒ the effective flaw was the **smaller** of the two, so the size
+   term could **delay** a firing at high flux but never **advance** one at low flux. Low-flux
+   first-row ratios read **1.04-1.08** against **1.00** at the anchor. After the fix: `Sp_top`
+   **1.003-1.006** at every flux, and the `(c2)` segment split **2-6x -> 1.10**.
+
+**THE EXPONENT — CHARACTERISED, NOT VALIDATED.** Grimsel ladder, after both fixes:
+**+0.0705** at m = 8, **+0.0378** at m = 20, each with its three measured factors.
+⚠⚠ **`(a1)` PROVED THERE IS NO TARGET.** No measured onset-vs-flux series exists for this rock on
+disk, and the resolvability bound is **+/-0.084** (5-6 % on `T` across a 1.92x flux range) — larger
+than the whole effect. ⇒ every exponent row is an **internal consistency test**.
+
+**THE DISCRIMINATOR `(c4)`.** Constant properties give **+0.1532** at m = 8 and **+0.2426** at
+m = 4 — a **2.17x lift from swapping only the property law**, and the lift decomposes almost
+entirely into the sensitivity (**0.538** vs **0.228**), i.e. the steepness of `sigma/K_Ic` where the
+rock fires. ⇒ the `~0.6/m` ceiling is the **property tables**, not the Weibull route.
+⚠ **USER DECISION (10-12): Grimsel at-temperature properties only; the constant-property ladder is
+the measurement that located the ceiling, NOT a candidate.** It also costs a **fitted**
+`K_Ic0 = 0.951`, meaningful only to `UCS = 169 +/- 37` (+/-21.9 %), where the at-temperature route
+fits nothing.
+
+### Four misattributed targets, retired — the step's most transferable result
+
+1. **`0.229/0.306`** was cited as *"Kant MEASURED"* for five revisions. It is **Wilkinson's**, on
+   **Barre/Westerly**, **already the output of a Weibull fit** (m = 6.8/10.1), and its citation
+   `[258]` resolves **past the end** of a 151-line file.
+2. **`theta_s,sens`** — the planner then refitted Kant Table 4 to **+0.565/+0.339** in the very
+   session that caught the first. That column is the surface temperature of the **heat-flux sensor
+   plate that replaced the rock** during burner calibration. Void.
+3. **The 873/823 K comparands** are Kant & von Rohr **2016**, on Gotthard/Bethel — **cross-rock**.
+   The level's own source is Kant **2017**, Central Aare, the same massif as the property tables.
+   ⚠ The planner claimed *"we have been calibrating the level against a different rock"* after
+   reading **one of two** Kant files on disk. False, and withdrawn.
+4. **The measured 553-694 degC band** was quoted by the planner as a validation the model "lands
+   inside", which the reference file explicitly forbids.
+⇒ **standing rule 17**.
+
+### Carried forward
+
+- ⚠⚠ **THE IDENTITY SCORER'S JOIN DOUBLE-COUNTS.** The positive control's 1726/1726/52 are each
+  **exactly 2x** the reviewer's independent 863/863/26. `(b1)`'s gate is unaffected (zero doubled is
+  zero) and the control still proves a non-empty stream — but **a 2x scorer would have reported
+  P2-2a's 26 strip files as 52.** Fix the join; have the gate print the pin it compared against.
+- ⚠ **No `E`-cap key exists**, so the **coherent** capped pairing (capped `alpha` with capped `E`,
+  `R = 0.4648`) is **inexpressible**. Only the incoherent pairing can be run, and it was the source
+  of all the spurious agreement in revs 1-4.
+- ⚠ `V_ref` and `|dln l_q/dln q|` are **per-ladder**: the anchor was measured under the per-cell
+  `lambda` ~2.0, so on the deck scalar 1.5 the middle-rung factor reads **~0.90**, not 1.
+- ⚠ `ell_q` and the per-cell conductivity are **inert without `spall.flake_length = flux`**.
+- ⚠ `size_volume = flux` stays **default-off** for the honest reason: **unvalidated, per-ladder
+  anchor, no target.** Not because it "degrades agreement" — it is anchored at the middle flux and
+  reproduces the level identically there, and Kant 2017 has only one flux point.
+- ⚠ **Kant 2017 varied CONFINING PRESSURE (`p` in {0, 27, 48} MPa), not flux.** Its
+  `h_fl`-independence item is a **closed-form cross-check** (its own item 3 says so), so a fixed-flaw
+  model reproducing a fixed-flaw formula is a **tautology, not a validation**, and the 0.5 % spread
+  it yields is a meaninglessly tight tolerance on a quantity the formula sets to exactly zero.
+- ⚠ `witness/REFERENCE.md` still declares `d2z1` the reference, two weeks and one authorised re-pin
+  later.
+- ⚠ Nits: `MMWSpalling.H:7389` and `Removal.H:811` still say *"READ n of 2"* where there are three.
+
+### P2-2e, stated correctly
+
+⚠⚠ **Its case was NEVER the exponent, and must not be archived as "dissolved".** It is the criterion
+**form**: a compressive failure fed into an **opening-mode** formula, with `R` standing in for the
+mismatch. ⚠ But the motivation **is weaker than it was**: the *"`R` absorbs ~25 % of something that
+is not relief"* argument is **solved** — by the at-temperature toughness table, not by a new
+criterion — so `R` now sits at its definitional value with the level closing to 1.7 %. ⇒ P2-2e
+should be argued on form, and its first gate should ask **whether a compressive criterion keeps the
+level parameter-free**: a sub-millimetre crack instead of 8 um raises `K_I` by ~8x, and whatever
+absorbs that may stop being a definition.
+
+## P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the rock half, the residual is DELIVERY (2026-10-12, rev 2, ACCEPTED; archived 2026-10-13)
+
+**Verdict: accepted** (reviewer, 10-12: all eight gating rows reproduced on independent reductions,
+18 diff rows, 0 bug / 3 risk / 3 nit). Rev 1 (same day) was **rejected** on two gates that proved to
+be instrument faults — the wrong thermo column for the ledger (`ledger_err` instead of
+`ledger_err_solid`) and the pad-carrier count read as a frozen-floor fraction — plus a ×4
+quarter-domain slip in the price. Rev 1 is `ctrl8_rev1/`; the advisor's re-reading is
+`Claude_markdowns/2026-10-12.md` §13-14; the energy partition that follows from this leg is
+`2026-10-13.md` §1. Study: `tests/MMWSpalling/studies/p2_2c_meier/` (directory name kept from the
+retired P2-2c label).
+
+### What the step established
+
+- **The Grimsel properties transfer from the Kant cube to a drilling floor unrefitted.** Median
+  reconstructed firing T **852.61 K** at m = 13 (regime-1 `T_surf` > 0, n = 142,564) against the Kant
+  deck's 843.757 K; **856.78 K** at m = 8. ⚠ 22.6 % (m13) / 34.2 % (m8) of firings sit above the
+  **873.15 K** table ceiling (23.7 % of removed volume at m13); carried as a scored diagnostic.
+- **The price closed the rock half as pre-registered:** 0.930 → **1.270 GJ/m³** (×1.37, inside the
+  archive's 1.33–1.54 "rock too cheap"); charged volume floor 0.57812 L + wall 0.01054 L from
+  `n_voided`, pad clearing (0.02618 L) **excluded**. The pre-registered 1.21 ± 0.05 assumed every
+  flake at 845 K; the floor fires hotter and right-skewed (volume-weighted mean 860 K), and the
+  ledger's debit is ~4 % below the enthalpy of the reconstructed flake temperatures (a 2 mm cell
+  average cannot carry the skin) — the price is provisional at 2 mm like every rate.
+- **The residual is delivery, three ways at once:** 6.0 kW leaves as flakes vs Meier's 3.5
+  (1.7×); volume **1.85×** (2.3547 L vs 1.270 in 500 s); rate **3.470 m/h** vs 1.5 (provisional,
+  1 mm parked); bore **79.3 mm** flat from 125 to 400 mm = 2·`foot_r_outer`, the tool stance,
+  **−5.1 mm** vs Meier — not a prediction. Standoff pinned by the feet at a median **85 mm**.
+- **One real defect, one site:** `Removal.H:148-220` voided pad-cleared cells with no enthalpy
+  credit. Booking it (`foot_mech_E`, credited only to `ledger_err_solid`) took the solid ledger
+  from **3.603e-02 to 1.340e-03** with the 84 MB event log **byte-identical** pre/post (MD5) —
+  bookkeeping only, proven by reproduction. The frozen floor on the proper definition: **0.95 %**
+  (m13), **0.32 %** (m8). Both gates pass.
+
+### Claude completion notes
+
+**Files changed.**
+
+*`src/` — one site, as the packet scoped it:*
+- `src/Integrator/MMWSpalling/Removal.H` — the pad-clearance block accumulates
+  `E_mech_local += Hc(i,j,k)*dx*dy*dz` per flip, reduces once beside the existing `mech_flip`
+  reduction, and books it to `foot_mech_E`.
+- `src/Integrator/MMWSpalling.H` — `foot_mech_E` member (`:8906`); registered (`:870`) **inside the
+  block already gated on** `surface_patch.foot_body_clearance`; credited in `ledger_err_solid`
+  (`:4844`).
+
+*tests and harnesses:*
+- `tests/MMWSpalling/unit/pad_clear_ledger/test` — NEW, the `(a1)` fixture: 4 legs, 7 rows.
+- `studies/p2_2d_kic/score_p2_2d.py` — local `manifest_diff` **deleted**, `compare()` imported from
+  `manifest_cmp`. `SCORE_p2_2d.txt` regenerated; superseded copy kept as
+  `SCORE_p2_2d.txt.rev1_broken_scorer`.
+- `studies/p2_2c_meier/reduce_price.py` — NEW; owns every reduction.
+- `studies/p2_2c_meier/bore_profile.py` — NEW; `(c6)` from the void mask.
+- `studies/p2_2c_meier/run_ctrl8.py` — `b1`–`c4` rewired, `LAT_FACTOR` deleted, `reduce <tag>` added.
+- `studies/p2_2_props/fabcmp.py` — **additive** `read_fabs_boxed()`; `read_fabs` untouched because
+  `unit/pin_clock` depends on its byte-returning shape.
+- `ctrl8/` archived to `ctrl8_rev1/` before re-running (rule 9); `GATE_a3.txt`'s citation repointed.
+
+### Criteria
+
+| # | test | measured | verdict | output |
+|---|---|---|---|---|
+| a1 | pad-clearance fixture, `ledger_err_solid` <= 5e-3 | **7.7571e-05**; the same rows without the credit read **8.6589e-03** | **PASS** | `unit/pad_clear_ledger/` |
+| a2 | scorer no longer double-counts | **863 / 863 / 26**, control finds 26; headline still 0 of 2639 | **PASS** | `p2_2d_kic/SCORE_p2_2d.txt` |
+| a3 | floor `n_voided` vs `h_applied` | **2.143e-04 = 0.021 %** (m13); 1.676e-04 (m8) | **PASS** | `GATE_a3.txt`, both `CTRL8_*` |
+| a4 | tree gate, rebuilt binary | **0 changed paths of 2639**, control 26. Declared diff set **EMPTY**, written first, matched | **PASS** | `GATE_a4.txt`, `GATE_a4_DECLARED.txt`, `TREE_p2_2f_rev2.log` |
+| b1 | 60 s: feet hold, `v` recorded | **v = 1.806 m/h**, rc 0, 21,141 firings | **PASS** | `CTRL8_short60.txt` |
+| b2 | `t_stop` margin >= 60 mm | **309 mm** projected at `t_stop` = 500 s | **PASS** | `CTRL8_short60.txt` |
+| b3 | m=13 **frozen** floor < 10 % | **0.95 %** — 3 of 316 cols, active radius **39.9 mm** | **PASS** | `CTRL8_m13.txt` |
+| b4 | m=13 **`ledger_err_solid`** <= 5e-3 | **1.340e-03** (from 3.603e-02 pre-fix); `foot_mech_E` = 3.3168e+04 J | **PASS** | `CTRL8_m13.txt` |
+| c1 | price, pad clearing excluded | **1.270 GJ/m³** (floor 0.57812 L + wall 0.01054 L; `E_flake` 7.4763e+05 J) | **MISS** — 0.8 % over the 1.26 ceiling | `CTRL8_m13.txt` |
+| c2 | median `T_surf` + clamp fraction | **852.61 K** with **22.59 %** above 873.15 K | **PASS** | `CTRL8_m13.txt` |
+| c3 | volume vs 1.270 L, standoff | **2.3547 L** (x4); standoff median **0.0853 m** | bare report, no bar | `CTRL8_m13.txt` |
+| c4 | rate 150–350 s | **3.470 m/h** (bar 1.2–1.8) | **MISS**, provisional | `CTRL8_m13.txt` |
+| c5 | m=8: `b3`, `b4`, `c1`–`c4` repeated | `b3` **0.32 %** PASS; `b4` **1.286e-03** PASS; `c1` **1.281** MISS; `c2` **856.78 K** **MISS** with clamp **34.20 %**; `c4` **3.410 m/h** MISS | **PASS on both gates, c2 FAILS at m=8** | `CTRL8_m8.txt`, `BORE_m8.txt` |
+| c6 | bore Ø(z) vs Fig 8.8, 150–450 mm | m13 mean **-5.1 mm**, worst -7.5; m8 mean **-5.5 mm**, worst -10.0; sector spread ~1.2 mm | report, not a prediction | `BORE_m13.txt`, `BORE_m8.txt` |
+| d1 | verdict | below | **verdict** | these notes |
+
+#### (d1) Verdict
+
+**The numerics closed, and they closed without buying the gate with physics.** `b4` went
+3.603e-02 -> **1.340e-03** and the **88.5 MB event log is byte-identical pre- and post-fix** (same
+MD5, `cmp -l` reports 0 differing bytes). The packet's "bookkeeping-only" claim is therefore
+*proven by reproduction* on a toolchain that is not byte-reproducible, not asserted. `b3`'s rev-1
+failure was an instrument fault exactly as the planner found: on the correct definition the floor
+is **0.95 %** frozen, not 13.6 %.
+
+**The rock half: one row transfers, and only at m = 13.** `c2` = **852.61 K** against 845 +/- 10,
+carried from Kant's 843.757 K with nothing refitted — the result the step exists for. Two
+qualifications that bound it, both measured here:
+- **22.59 % of firings sit above 873.15 K**, where both Grimsel tables are flat by construction.
+  The transfer is demonstrated on a population a fifth of which is outside the laws' validity.
+- **At m = 8 the median rises to 856.78 K and MISSES the bar**, with the clamp fraction reaching
+  **34.20 %**. So `c2`'s pass is *modulus-specific*; the firing temperature is not insensitive to m
+  inside 8–13, and the table ceiling is what it is sensitive through.
+
+**Is the residual consistent with delivered power alone (P2-3)? Yes, and the arithmetic is
+self-consistent across three independent variables.** The price is nearly right while the volume is
+not: **1.270 GJ/m³ vs the 1.21 band centre is +5 %**, against a charged volume of **2.3547 L vs
+Meier's 1.270 L = 1.85x**. A specific energy that is right to 5 % while the volume is 1.85x high
+puts the whole discrepancy in the **energy delivered to removal**, not in the rock's response to
+it — which is the P2-3 residual as pre-registered, and sits in the archive's 1.48–1.70x bracket.
+The cross-check: a narrower hole converts a given volume into more depth, and
+**1.85 x (85/79)^2 = 2.14** against the measured rate ratio **3.470 / 1.5 = 2.31**. Volume, bore and
+rate therefore agree on one excess rather than describing three separate errors.
+
+⚠ **`c1` misses by 0.8 % and that is a numerator question before it is physics.** `ledger_E_flake`
+is cumulative over four `+=` terms and `foot_mech_E` is a deliberate fifth that is **not** in it.
+⚠ **`c4` is provisional**: 1 mm is parked (rule 12), so no absolute 2 mm rate is quotable.
+
+
+### Implementation takeaways
+
+1. ⚠⚠ **DELIVERABLE 1'S WORDING WOULD HAVE BROKEN A PASSING TEST, AND THE CODE SAYS SO.** The packet
+   says cleared cells "must have their enthalpy **removed from the field** and booked". Removing it
+   is wrong: void H is frozen and still counted by the ledger's TOTAL sum, so `jet_d2c` case **CLD**
+   — the only leg in the whole tree that fires pad clearance — asserts `|ledger_err| <= 1e-10` and
+   measures **4.348e-15** *with clearance firing on 620 steps*. Zeroing H would destroy enthalpy
+   that row is counting. The fix is **booking only**, mirroring the three existing sinks
+   (`Removal.H:2790`, `:2877`, `:2931`), which also book `H*Vcell` without writing `H`. The new
+   fixture's row (e) reproduces CLD's 4.3481e-15 independently, so this is witnessed, not argued.
+
+2. ⚠⚠ **PAD ENERGY IS ITS OWN COUNTER, NOT `ledger_E_flake`, AND THE PRICE IS WHY.** The denominator
+   excludes pad volume, so folding pad energy into the numerator would scale one side of the ratio
+   only — the *same* defect as rev 1's quarter-domain `x4`, in the other variable. `foot_mech_E` is
+   credited to `ledger_err_solid` but kept out of `ledger_E_flake`, which makes the exclusion true
+   by construction rather than by a subtraction someone must remember.
+
+3. ⚠⚠ **A REGIME-4-ONLY FIXTURE CANNOT BE BUILT, and this is structural.** `MMWSpalling.H:8073`
+   initialises phi to a **flat** top surface and there is no IC for a stepped one, so no column
+   stands proud of its pad at t = 0. A column only stands proud once its neighbours recede, and they
+   recede by heat-driven spallation ⇒ **pad clearance is parasitic on regime 1 by construction.**
+   (a1) therefore isolates the **term**, not the regime: row (d) recomputes the pre-fix value from
+   the logged columns (`pre = post - foot_mech_E/|E_src|`, both cumulative state columns, so it is a
+   per-row identity and not a sum — SR 7(i)) and shows it **breaching the packet's own bar**.
+
+4. ⚠⚠ **THE ZERO-COUNT TRAP HAS A FIFTH FORM: ZEROS INSIDE THE SAMPLE.** Rev 1's `c2` median of
+   **851.64 K is withdrawn.** All 3,272 regime-4 rows and 1,858 of 1,865 regime-6 rows carry
+   `T_surf` **exactly 0** — `Removal.H`'s own comment says pad rows have "other fields 0", and
+   regime 6 reports its face temperature in `T_face_lat`. Averaging those 5,130 zeros in moved the
+   median to 851.64; the population (regime 1, `T_surf` > 0) gives **852.61 K**, the reviewer's
+   census. Both clear the bar, so no verdict moved — but a statistic was being taken over rows where
+   the quantity does not exist. **State the population in the output**, which `reduce_price.firing_T`
+   now does, and score the clamp fraction on the *same* population or the pair is uninterpretable.
+
+5. ⚠ **`nozzle_z` IS UNSET ON THE t = 0 THERMO ROW AND LOGS AS 0.0.** Reading the descent from row 0
+   gave a drop of 0.000 -> 0.520 m and **v = -31.2 m/h** — a negative rate from a column that had
+   not been written yet. Skipping t = 0 gives rev 1's 1.806 m/h exactly. This is the same shape as
+   the per-step-column trap but a different mechanism: not "a per-step value read as a total", but
+   **a state column read before it exists**. Any new reduction over a `thermo` state column should
+   drop t = 0 explicitly.
+
+6. ⚠ **`b2`'S 309 mm IS A PROJECTION AT CONSTANT RATE, AND THE RATE ACCELERATES.** Rev 1 projected
+   251 mm of depth and its leg actually reached **489 mm**, leaving **71 mm** — over the 60 mm bar,
+   but **4x tighter** than the projection states. The gate as specified is still the right pre-run
+   check; it just must not be read as the realised margin. `bore_profile.py` reports the realised
+   floor.
+
+7. **`beam_void_closure` RETURNS rc=1 IN THE GATE, AND IT IS PRE-EXISTING.** Row `T3` ("phi_top in
+   both half-cells": 2400 samples in `[0, dz/2)`, **0** in `[dz/2, dz)`) fails **identically** in the
+   `p2_2b_final`, `p2_2d` and `p2_2d_rev6` sweeps, all three review-accepted, and its 169 hashed
+   files are byte-identical to the rev6 pin. It reads as a **stale assertion from before D2z-1 made
+   removal whole-cell unconditional**, which puts `phi_top` in the lower half-cell by construction.
+   Not touched — out of scope — but it means `post_all.sh` cannot be read as "rc 0 everywhere", and
+   a future implementer will hit it again.
+
+8. ⚠ **`fabcmp.read_fabs` DOES NOT RETURN BOX BOUNDS**, so no spatial reduction can use it. I added
+   `read_fabs_boxed()` rather than changing it, because `unit/pin_clock` depends on the existing
+   function returning raw `bytes` — decoding to floats there would weaken a byte-identity bar.
+
+9. **`c6` IS DELIBERATELY SELF-CONTAINED BECAUSE OF THE LZ TRAP (SR 5).** The existing
+   `d2c_steady`/`d2b_feet_rop` analyzer pair reaches Ø(z) via `run.lz` from a `.done` file only
+   those harnesses write, and that family has a history of a module-level `LZ = 0.4`. **This deck is
+   0.6 m** (`prob_lo -0.1`, `prob_hi 0.5`). `bore_profile.py` parses geometry from `feet_argv.txt` —
+   the same file the legs launch from — so it cannot drift from what ran. It also keeps the
+   **working-floor cut set from the floor position, not from the residual**: the deepest in-band
+   depth sits in the taper and is the largest contributor to the mean, and excluding it would
+   *improve* the reported error, so it is kept in.
+
+10. ⚠ **PACKET SLIPS, NON-BLOCKING, FOR THE PLANNER.** (i) The Commands block still points at
+    `tree_sweep_0922/guarded_post_all.sh`; the file is at `tree_sweep_0922/**witness/**
+    guarded_post_all.sh` — the same slip as rev 1. (ii) `## Sources` cites `:4587` for
+    "`ledger_err_solid` is dimensionless"; that line is in the side-power block, the division is at
+    **`:4835`**. (iii) `a4`'s row predicts "the fix **will** change feet legs" — it does not, for
+    four reasons written down before the sweep in `GATE_a4_DECLARED.txt`; the gate hashes no leg
+    that runs the changed path.
+
+11. **Keys. No new input key was added.** `foot_mech_E` is a thermo **column**, gated on the
+    existing `surface_patch.foot_body_clearance`. Deck keys for the fixture:
+    `spall.surface_T=reconstructed` + `spall.removal_energy=flake` are **both** required for the
+    `ledger_err_solid` column to exist at all (`MMWSpalling.H:785`) — a leg missing either gates
+    `b4` into "not computed", not into a pass. ⚠ `surface_patch.h_expr` must carry its **embedded
+    double quotes** through `argv`: ParmParse re-tokenises the value on whitespace, so
+    `max(0.01875, r)` unquoted is a syntax error (`ParmParse.H:978`) and the leg aborts rc 6.
+
+12. ⚠⚠ **I WALKED INTO THE SELF-MATCHING WAIT LOOP, THE ONE THE STANDING RULES NAME.** Every
+    `until ! pgrep -f 'run_ctrl8.py m13' ...; do sleep; done` **matches its own shell**, whose
+    command line contains that string, so the loop can never exit: each one ran to its timeout and
+    was backgrounded, and eight orphaned wait shells were still alive at the end of the phase (no
+    simulation among them). They had to be cleared with `TaskStop`, since `pkill -f` is forbidden
+    and would in any case have matched the same pattern. **Wait on a PID or a sentinel file** —
+    `until [ -f <tag>/.done ]`, or capture the launch PID and test `kill -0`. The rule is in
+    `ROADMAP.md` and I still wrote the loop the broken way four times; it is not enough to know it,
+    the harness has to make it impossible.
+
+13. **Cost, measured.** m = 13 took 3525 s but **contended** (I ran two unit tests alongside it);
+    m = 8 took **2306 s uncontended = 4.61 wall-s per simulated s**. Rev 1's uncontended 3.77 is
+    still the best planning figure. The reduction is seconds; `bore_profile.py` is ~1 min per leg.
+
+
+
+### Review findings
+
+Reviewer phase, independent re-derivation. Provenance: `Removal.H` 17:03:56, `MMWSpalling.H`
+17:04:14, binary `4c091bb5…` 17:04:42 — correct ordering, and `find src -newer bin/` is empty.
+
+⚠ **I reran one test**: `unit/pad_clear_ledger` is **new** and the notes cite the directory with no
+saved log, so `(a1)` was unbacked as cited. It is seconds-scale and cannot be in the 2639 manifest.
+Nothing else was re-run and no leg relaunched. My own reductions: eight manifest diffs, both legs'
+`thermo.dat` by column name, a full census of both 84 MB event logs, and an MD5 of the pre/post-fix
+log pair.
+
+⚠⚠ **A CORRECTION TO MY OWN PREVIOUS REVIEW, FIRST, BECAUSE THE PACKET IS RIGHT AND I WAS WRONG.**
+I reported rev 1's `b4` as *"a proportional −8 % floor-path leak"* and proposed splitting it
+**4.6 % / 3.6 %** between `ledger_E_flake` and elsewhere. That split is **withdrawn**. I verified the
+packet's claim on two **independently review-accepted** legs: `CTRL5` reads `ledger_err` max
+**3.5554e-01**, final **−1.7258e-01** while `ledger_err_solid` closes to **7.7847e-04**; `CTRL4_FIXED`
+reads **−1.5360e-01** and **7.7847e-04**. `MMWSpalling.H:4139-4142`'s own comment confirms why —
+`E_H = sum_all H*V (void cells included; their H is frozen)` against `E_src` with **no `E_flake`
+credit** — so `ledger_err` **cannot** be small on a flake leg and the gap between the two rows is the
+flake credit the total row omits **by design**. The planner's bar named the wrong column; rev 1
+answered it faithfully; and my reading of the gap as a second leak was an artefact of the same wrong
+column. ⚠ The *defect* rev 1 was pointing at is nonetheless real — on the right row it goes
+**3.6034e-02 → 1.3401e-03** — so the bar was wrong **and** there was something to find.
+
+#### Criteria — the packet's table, with my value and its source
+
+⚠ The packet's final column ("what a failure of this row means") is unchanged and is not repeated.
+
+| # | bar | kind | **value I derived** | **read from** | verdict |
+|---|---|---|---|---|---|
+| a1 | fixture `ledger_err_solid` ≤ 5e-3 | **gate** | **PASS on my own rerun**, 7 rows green: (c) max **7.7571e-05**; (d) the same rows without the credit **8.6589e-03 = 1.73× the bar**, so the fixture is genuinely **RED** without the fix; (e) **booking-only witnessed** — the no-flake leg `PT` reads \|`ledger_err`\| **4.3481e-15** with clearance firing on 620 steps; (f) **rank-independence measured**, 1 rank 105.286 vs 3 ranks 105.286 | my rerun of `unit/pad_clear_ledger/test` | **PASS** |
+| a2 | 863/863/26, control finds 26 | **gate** | **the named site is genuinely fixed, not duplicated**: the local `manifest_diff` is **deleted** and `compare()` is **imported** from `manifest_cmp` (`score_p2_2d.py:37`), with the broken version preserved as `SCORE_p2_2d.txt.rev1_broken_scorer`. Regenerated headline **0 changed paths of 2639**, controls **863 / 863 / 26** — matching my own counts exactly. ✅ **My carried finding is closed** | `score_p2_2d.py:13-48`; `SCORE_p2_2d.txt`; my eight manifest diffs | **PASS** |
+| a3 | agree < 0.1 % | **gate** | **I did the arithmetic**: `n_voided` route 72,265 × 8e-9 = **0.578120 L**; `h_applied` route Σh = 144.4990 m × (2 mm)² = **0.577996 L**; relative difference **2.14e-04 = 0.021 %** against a 0.1 % bar. m8 1.676e-04 | my census of `ctrl8/m13/run_removal_events.csv` | **PASS** |
+| a4 | 0 of 2639 outside a **pre-declared** diff set | **gate** | **`p2_2f_rev2.md5` is a real new sweep** and my own diff gives **0 changed paths of 2639** against `p2_2b_final`, `p2_2d` **and** `p2_2d_rev6`, with controls 26 (`d2aa`) and 863 (`d2t`). ✅ And the declared set was **written first and is EMPTY**, which **contradicts the packet's own prediction** ("the fix *will* change feet legs") with the reason checked against the harness: `witness/hash.sh` hashes no leg that runs the changed path, and `jet_d2c` CLD/CLD3 — the only pad-clearance legs anywhere — are not in its list | my diff of `witness/p2_2f_rev2.md5`; `GATE_a4_DECLARED.txt` | **PASS** |
+| b1 | ROP > 0; rc 0 | **gate** | **v = 1.806 m/h** reproduces as arithmetic (0.55 → 0.52 over 60 s), rc 0, 21,141 firings | `CTRL8_short60.txt` | **PASS** |
+| b2 | margin ≥ 60 mm | **gate** | `t_stop = min(500, 1620/1.806) = 500 s`; projected margin **309 mm**. ⚠ The notes are right that this is a **projection at constant rate** and the rate accelerates — rev 1 projected 251 mm and realised 489 mm depth, leaving **71 mm**, over the bar but **4× tighter** | `CTRL8_short60.txt`; takeaway 6 | **PASS** |
+| b3 | frozen < 10 %, radius and count stated | **gate** | **I implemented the packet's own definition independently**: active radius **0.0399 m** ✓, population **316** ✓, frozen **0 of 316 = 0.00 %** against the artefact's 3 = 0.95 % — a 3-column difference that is a tie-handling detail on the 30 s cut (`t_max` 499.98 vs `t_stop` 500.0). Both are an order of magnitude inside the bar | my last-fired census of both event logs | **PASS** |
+| b4 | **`ledger_err_solid`** ≤ 5e-3 | **gate** | **1.3401e-03** at t = 30.4 s (m13) and **1.2858e-03** (m8), against the pre-fix **3.6034e-02** on the *same archived leg* — a **26.9×** improvement to 3.7× inside the bar. `foot_mech_E` final **3.3168e+04 J**. ⚠ `ledger_err` is unchanged at **1.6655e-01 / −8.2302e-02**, exactly as the row predicts | my reduction of `ctrl8/{m13,m8}` and `ctrl8_rev1/m13` `thermo.dat` | **PASS** |
+| c1 | 1.21 ± 0.05 GJ/m³ | report | **1.270 GJ/m³** — I reproduced every input: floor 142,564 ev / 72,265 cells = **0.57812 L**, wall 1,865 ev / 1,318 cells = **0.01054 L**, charged **0.58866 L**, `E_flake` **7.47633e+05 J** ⇒ 1.2701e9 J/m³. **MISS by 0.8 %** over the 1.26 ceiling. ⚠⚠ **And I can name the term** — see the risk | my census; m13 `thermo.dat` | **MISS, cause identified** |
+| c2 | 845 ± 10 **with** the clamp fraction | report | **852.61 K exactly my own figure**, over the stated population (regime 1, `T_surf` > 0, n = **142,564**), clamp fraction **32,209 = 22.59 %** ✓, p75 870.46 / p90 888.25 / p99 959.57 / max 1150.41 — all reproduce. **m8: 856.78 K** with clamp **34.20 %**, **outside** 835–855 ⇒ `c2` **MISSES at m = 8** | my census of both event logs | **PASS at m13, MISS at m8** |
+| c3 | bare report | report | **2.3547 L** = 0.58866 × 4 ✓, standoff median **0.0853 m**. ✅ And the ×4 asymmetry against `c1` is **correct and explained**: `c1` is a ratio of two quarter-domain quantities where the factor cancels, `c3` is an absolute volume where it does not | m13 artefact; my arithmetic | bare report |
+| c4 | 1.2–1.8 m/h | report | **3.480 m/h** by my endpoint read of `nozzle_z` 0.44667 → 0.25333 over 150–350 s, against the reported 3.470 (a fit, not endpoints); m8 **3.408** vs 3.410. MISS, labelled provisional | my reduction of both `thermo.dat` | **MISS, provisional** |
+| c5 | m=8 repeated | report | both gates reproduce at m = 8 — `b3` 0.00 % (mine) / 0.32 %, `b4` **1.2858e-03** — and `c1` **1.281**, `c2` **856.78 K MISS**, clamp **34.20 %**, `c4` **3.408** | my reductions | report |
+| c6 | reported, not a prediction | report | m13 mean **−5.1 mm**, worst −7.5; m8 mean **−5.5**, worst −10.0; sector spread ~1.2 mm. ⚠ Not independently re-derived — I accepted `bore_profile.py`'s mask reduction, and credit its two design choices (geometry parsed from `feet_argv.txt` to dodge the LZ trap; the worst in-band point **kept** because excluding it would *improve* the reported error) | `BORE_m13.txt`, `BORE_m8.txt` | report |
+| d1 | verdict | **verdict** | written, and its cross-check is sound — see below | `ACTIVE_STEP.md` | **verdict** |
+
+#### Diff review
+
+| # | hunk / change | class | finding | tag |
+|---|---|---|---|---|
+| 1 | `Removal.H:236` — `E_mech_local += Hc(i,j,k) * DX[0]*DX[1]*dz` per flip | **8 accounting** | the fix, and it is minimal and correct. The pad block is the one removal path that booked nothing; every other sink books `H*Vcell` | **ok** |
+| 2 | `Removal.H:245-246` — `ReduceRealSum(E_mech_local)` beside the existing `ReduceIntSum(mech_flip)`, then `foot_mech_E +=` | **2 consistency** | **the convention is right and it is the trap that has fired repeatedly here**: `E_mech_local` accumulates inside the per-box `MFIter`, so it is per-rank over **distinct cells** and must be reduced — the comment says exactly that. ✅ And `(a1)` row (f) **measures** it: 1 rank 105.286 vs 3 ranks 105.286 | **ok** |
+| 3 | ⚠⚠ `H` is **not** written — `Hc` is a `const_array` | **9 removed checks / 11** | **the implementer refused deliverable 1's wording and was right to.** The packet says cleared cells must have enthalpy *"removed from the field"*; doing so would destroy enthalpy the TOTAL row still counts (void `H` is frozen and summed), breaking `jet_d2c` case **CLD**'s live `\|ledger_err\| <= 1e-10`. `(a1)` row (e) reproduces CLD's **4.3481e-15** independently ⇒ witnessed, not argued. Refusing a packet instruction with a witness is the right move | **ok** |
+| 4 | the `rem(i,j,k) <= 0.5` guard before crediting | **6 boundaries / 8** | prevents re-crediting an already-void cell on a later step, and each cell belongs to exactly one validbox, so no double-count across ranks. I checked both | **ok** |
+| 5 | `MMWSpalling.H:4844` — `−ledger_E_flake − foot_mech_E` in `ledger_err_solid` | **8 accounting** | the credit lands on the row that can carry it. ⚠ `foot_mech_E` is deliberately **not** in `ledger_E_flake`, which makes the price's pad exclusion **true by construction** rather than by a subtraction someone must remember — the same class of error as rev 1's quarter-domain ×4, avoided in the other variable | **ok** |
+| 6 | `MMWSpalling.H:870` — registered inside the existing `foot_body_clearance` block | **7 keys and fields** | **no new input key**; a thermo column gated on a key that already exists, with a consumer in `reduce_price.py`. ⇒ legs without feet gain no column, which is why `(a4)` is 0 of 2639 | **ok** |
+| 7 | ⚠⚠ `ledger_E_flake`'s **four** `+=` terms vs a floor+wall denominator | **8 accounting / 4 scope vs data source** | **I located the `c1` miss.** `feet_argv.txt` carries `spall.lateral_thermal=1`, so the **thermal shift** (`Removal.H:3445`) is a term in the numerator — energy that left the solid **without removing a cell**, so it has **no volume in the denominator**. Sampled `lat_shift_E` totals **1.2199e+03 J** and `amr.thermo.plot_int = 6`, so the true relocation is ≈ **6 × 1.22 kJ ≈ 7.3 kJ ≈ 0.98 %** of `E_flake`. Removing it gives ≈ **1.258 GJ/m³**, **inside the band**. ⚠ The 6× is an estimate (P2-2d derived 6.0226 from an event log, per leg), so the claim is *"the shift term is the right size to account for the entire miss"*, not a corrected price | **risk — named, and the headline** |
+| 8 | ⚠ `c2`'s modulus sensitivity | **12 self-limited quantities** | the step's headline result is **modulus-specific**: 852.61 K at m = 13 **passes**, 856.78 K at m = 8 **misses**, and the clamp fraction rises **22.59 % → 34.20 %**. ⇒ the firing temperature is not insensitive to `m` inside granite's own range, and **the table ceiling is what it is sensitive through**. The verdict says this plainly, which is the right handling — but it bounds "the properties transfer" to one modulus | **risk — named** |
+| 9 | ⚠ `ledger_err` is now permanently unusable as a gate on feet legs | 2 consistency | `foot_mech_E` is credited only to `ledger_err_solid`, correctly (the total row has no flake credit either). ⇒ the total row stays at ~−0.17 on every flake leg and must never be barred again. Worth a standing note so the rev-1 bar is not rewritten by a future planner | **risk — named** |
+| 10 | `(a1)` is a **term** fixture, not a regime-4-only one | **10 RED on the pre-fix binary** | ⚠⚠ **a regime-4-only fixture cannot be built**, and the reason is structural: `MMWSpalling.H:8073` initialises `phi` to a **flat** top with no stepped IC, so no column stands proud at t = 0 and pad clearance is **parasitic on regime 1 by construction**. Row (d) therefore isolates the **term** via a per-row identity on cumulative state columns (`pre = post − foot_mech_E/|E_src|`) — not a sum, so SR 7(i) is honoured — and shows it breaching the bar | **ok** |
+| 11 | ✅ the **byte-identity** proof of "bookkeeping only" | **13 / 10** | **I verified it**: the pre- and post-fix 84 MB event logs have the **same MD5** (`f7c9dbcf12013f46a0048346501559cd`). ⇒ the removal trajectory is bit-for-bit unchanged while the ledger closed 26.9×, which **proves by reproduction** on a non-byte-reproducible toolchain that no physics moved. The strongest single piece of evidence in the packet | **ok** |
+| 12 | `score_p2_2d.py` — local function **deleted**, `compare()` imported | **1 duplication** | ✅ **my carried finding closed properly**: one implementation, the broken one preserved under an explicit `.rev1_broken_scorer` name rather than left live. This is the end state the packet demanded | **ok** |
+| 13 | `fabcmp.read_fabs_boxed()` added **additively** | **1 duplication** | a second function rather than a change, with the reason stated: `unit/pin_clock` depends on `read_fabs` returning raw `bytes`, and decoding there would **weaken a byte-identity bar**. Correct call | **ok** |
+| 14 | `bore_profile.py` self-contained | **5 hard-coded / standing rule 5** | ⚠ avoids the **LZ trap** deliberately — the existing analyzer pair reaches Ø(z) via `run.lz` from a `.done` file and that family has a history of a module-level `LZ = 0.4`, while **this deck is 0.6 m**. Geometry is parsed from `feet_argv.txt`, the same file the legs launch from, so it cannot drift from what ran | **ok** |
+| 15 | ⚠ `beam_void_closure` returns rc = 1 in the gate | **9 removed checks** | established **pre-existing**: row `T3` fails **identically** in the `p2_2b_final`, `p2_2d` and `p2_2d_rev6` sweeps, all three review-accepted, and its 169 hashed files are byte-identical to the rev6 pin. Reads as a **stale assertion from before D2z-1 made removal whole-cell unconditional**. Not touched — out of scope — but it means `post_all.sh` cannot be read as "rc 0 everywhere" | **nit** |
+| 16 | ⚠ self-reported process failure | 3 guardrails | the `until ! pgrep -f 'run_ctrl8.py m13'` wait loop **matches its own shell** and can never exit; eight orphaned wait shells survived the phase. ✅ **`pkill -f` was not used** — `TaskStop` was, as the guardrail requires. The conclusion is the right one: *"wait on a PID or a sentinel file… it is not enough to know it, the harness has to make it impossible"* | **nit** |
+| 17 | ⚠ packet slips, self-reported | 11 comments | (i) the Commands block points at `tree_sweep_0922/guarded_post_all.sh`; it is at `tree_sweep_0922/witness/…` — the **same slip as rev 1**; (ii) `## Sources` cites `:4587` for "`ledger_err_solid` is dimensionless" when the division is at **`:4835`**; (iii) `a4`'s row predicted the fix *would* change feet legs and it does not | **nit** |
+| 18 | guardrails | 3 | **one `src/` site** as scoped; nothing committed; **nothing re-pinned**; `ctrl8/` archived to `ctrl8_rev1/` **before** re-running (rule 9); cell mode only — I confirmed no `size_volume`, `flake_length` or `V_ref` in `feet_argv.txt`; `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE` untouched | **ok** |
+
+**Tally: 18 rows — 0 bug, 3 risk, 3 nit, 12 ok.**
+
+#### Unquotables
+
+Checked against `ROADMAP.md`'s `## Standing rules` **and** `## Known Stale/Important Notes`.
+✅ **`lat_bank_hf × 6.0226` is correctly NOT used** — the packet states 6.0226 is a sampling factor
+derived from **P1g-2c's own event log** and does not transfer, and the price is rebuilt from
+`n_voided` instead. ✅ **SR 7 honoured**: `(a1)` row (d) is a per-row identity on cumulative state
+columns, not a sum, and `foot_mech_vol`'s cumulative nature is respected. ✅ `c4` is labelled
+**provisional** under the parked 1 mm rule. ✅ `c3` is left bare with the cross-mode reason. ✅ No
+constant-property archive number is reached for. ✅ **Deliverable 6 is honoured** — the artefact
+prints `not computed` for `c3` rather than a verdict, and the rev-1 `CTRL8_m13.txt` that printed a
+retracted "MISS c1" has been **re-reduced**, which closes my previous must-fix. ⚠ The one quantity I
+would not quote from this step is the price's **numerator** — see risk 7.
+
+#### Verdict: accepted
+
+**All eight gating rows reproduce on my own reductions and no diff-review row is a `bug`.** This is a
+strong revision: it adopted all four of the previous review's findings, found a real one-site source
+defect the previous two reviews had mis-attributed, and proved the fix changed nothing but the books.
+
+**What I checked, and how**
+
+- **The `b4` reversal, against two accepted legs.** `CTRL5` and `CTRL4_FIXED` both read `ledger_err`
+  ≈ −0.15 to −0.17 with `ledger_err_solid` at **7.78e-04** — so the total row is structurally large
+  on any flake leg and was never the right gate. **My own previous finding is corrected above.**
+- **The fix, line by line**: per-flip accumulation, the per-box ⇒ reduce convention (measured
+  rank-independent in `(a1)` row (f)), the `rem <= 0.5` re-credit guard, and — the part that matters
+  most — **`H` is never written**, which is why `jet_d2c` CLD's `1e-10` assertion survives.
+- **The bookkeeping-only claim, by MD5**: the pre- and post-fix 84 MB event logs are **identical**.
+- **`(a1)` by rerunning it**, because its cited output was not in the repository.
+- **Every measured row from the raw files**: `b4` 1.3401e-03 from 3.6034e-02; `b3` on the packet's own
+  definition; `c1`'s three volumes and the price arithmetic; `c2`'s median and clamp fraction on the
+  stated population for **both** legs; `a3`'s two routes; and `a4` by my own eight-way manifest diff.
+
+**The finding most worth the planner's attention**
+
+**`c1`'s 0.8 % miss is the thermal-shift term, and it is the right size to account for all of it.**
+`feet_argv.txt` carries `spall.lateral_thermal=1`, so `ledger_E_flake` includes the shift — energy
+that left the solid **without removing a cell**, and therefore with **no volume in the denominator**.
+Sampled `lat_shift_E` is 1.2199e+03 J at `plot_int = 6`, so the relocation is ≈ **7.3 kJ ≈ 0.98 %**
+of the numerator; removing it gives ≈ **1.258 GJ/m³, inside the band**. ⚠ The 6× is an estimate, so
+this names the term rather than correcting the price — but it converts *"a numerator question"* into
+a specific, checkable one, and the next packet should derive the factor from this leg's own event log
+and decide whether the shift belongs in a price at all.
+
+**What stands**
+
+- **`c2` transfers — at m = 13.** 852.61 K against 845 ± 10, carried from Kant's 843.757 K with
+  nothing refitted, on the right column and the right population.
+- **The verdict's cross-check is sound and I checked the arithmetic**: a price right to ~5 % against
+  a volume **1.85×** high puts the discrepancy in delivered power, and
+  **1.85 × (85/79)² = 2.14** against the measured rate ratio **3.470/1.5 = 2.31**. Volume, bore and
+  rate agree on **one** excess rather than three separate errors — that is a real consistency result
+  and it is what licenses P2-3.
+- **Two packet instructions were refused with witnesses rather than followed**: deliverable 1's
+  "remove enthalpy from the field" (would have broken a passing test) and `a4`'s prediction that the
+  fix would change feet legs (it does not, for reasons written down **before** the sweep).
+
+**Named risks** (rows 7, 8, 9): the shift term in the price numerator; `c2`'s modulus specificity,
+with the clamp fraction reaching **34.20 %** at m = 8 where both property tables are flat; and
+`ledger_err` being permanently unbarrable on feet legs — worth a standing note so the rev-1 bar is
+not rewritten.
+
+**Nits** (rows 15, 16, 17): `beam_void_closure`'s pre-existing rc = 1 from a stale `phi_top`
+assertion, which means `post_all.sh` is not "rc 0 everywhere"; the self-matching wait loop; and three
+packet citation slips, one of them repeated from rev 1.
+
+
+### Carried forward (advisor, 2026-10-13)
+
+- ⚠⚠ **`ledger_err` (total) is never a gate on a flake leg** — it omits the flake credit by design and
+  reads −0.17 on the accepted CTRL5; the gate is `ledger_err_solid`.
+- ⚠ **`foot_carry_cols` counts columns carrying the pads**, max 162 = 100 %; it is not a frozen
+  fraction. Frozen = fired then silent for 30 s inside the active radius.
+- ⚠ The price's numerator has **five** sinks (`ledger_E_flake` four terms + `foot_mech_E` kept
+  separate); the lateral thermal shift (~1 % of `E_flake`) has no volume in the denominator.
+- ⚠ `beam_void_closure` returns rc = 1 in the tree sweep: a stale T3 assertion pre-dating D2z-1,
+  identical in three accepted sweeps; `post_all.sh` is not "rc 0 everywhere".
+- ⚠ Build-by-subtraction from a shell command line hid three parsing bugs (quoted `h_expr`,
+  multi-value keys, a leading-minus value); the 60 s smoke leg caught them — a ledger must assert
+  the carried argv round-trips. `nozzle_z` is unset on the t = 0 thermo row.
+- Energy partition of this leg (`2026-10-13.md` §1): only 25 % of the jet enthalpy reaches rock,
+  75 % leaves the floor at 1,504 K ⇒ delivery is coefficient-limited; pads take 34 % of delivered
+  power; the march re-entrains its own uncooled exhaust. ⇒ **P2-3**: floor coefficient to Kant's
+  measured h, wall on, gas marched up the bore.
+
+## ROADMAP notes released 2026-10-13 — superseded by P2-2f (feet descent) and P2-3
+
+Released verbatim from `## Known Stale/Important Notes` and `Next milestones` when P2-3 was installed:
+
+- ⚠⚠ **THE LIVE MEIER ERROR, CORRECTED 2026-10-05 — "+55–65 % volume" IS STALE** and predates the
+  D2v funnel fix. Current: **+10–12 mm width at every depth** (Ø 92–100 vs Meier's 84–96) and
+  **2× rate** (≈3.2 vs 1.5 m/h); volume per metre **6.3 vs 6.84 L/m, within ~10 %**. ⇒ the rate is
+  the larger error and it is **gas-side** (the floor is cap-free); the width is cap-governed and is
+  not a prediction. `2026-10-05.md` §2.
+
+- **P2-3 — the floor: conductivity's consequences and total delivered power.** ⚠⚠ **No longer masked — MEASURED under feet
+  by P2-2f (2026-10-13): delivery excess ~1.7-1.9x at a standoff pinned to 85 mm**, inside the
+  archive's 1.48-1.70x. Previously: D2ac measured **1.98-2.23x** the
+  required floor flux at Meier's ~100 mm standoff against only **1.37-1.47x** at our realised
+  179-224 mm; P2-2's `(d5)` turns that into a number. ⚠ Measured, **not** what the archive says: the
+  floor is **flat 0.48-0.60 MW/m2** to 35 mm, **0.78-0.88** at 38-46, **2.40** at 48; recession
+  **2.4-2.7 m/h** to 40 then **3.5** at 40-50 — **not a cone**. The rim's high flux-per-footprint is
+  an **area** effect (~33 mm exposed wall per rim column under `area_law = wetted`), not a
+  coefficient one. ⚠ D2ad binds: halving the level moved the axis **-5 %**, the bore edge **-89 %**,
+  three legs aborted — **a level cut is not a translation**; and its "volume already right,
+  redistribute at constant power" **must not be carried forward** (today's volume is **2.27x**).
+
+## P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by review on the `b3` gate — a physics negative with the mechanism measured; must-fixes carried into P2-4; archived 2026-10-13)
+
+**Verdict: rejected** (reviewer, 10-13: a1–a5, b1, b2, b4 reproduce on independent reductions; `b3`
+fails both halves on the reviewer's own void-mask bore — NC − W1 = **4.8 mm** against ≥ 10, W1
+**118.1 mm** against ≤ 106; 20 diff rows, 0 bug / 3 risk / 4 nit). Three must-fixes, and where each
+went: **(1)** the next sink is the water-cooled shield ⇒ **P2-4**; **(2)** the bore is a cone that
+CROSSES Meier, report the taper not the band mean ⇒ recorded below and scored by P2-4 c5; **(3)** no
+leg bounded the wall coefficient ⇒ conditional milestone P2-6 (an above-plane-gated scale key).
+Study `tests/MMWSpalling/studies/p2_3_wall/` (legs W1, W074, NC at 60 s and 500 s; `RESULTS.txt`,
+`SCALE.txt`, `GATE_a4*.txt`). Advisor's independent reads: `Claude_markdowns/2026-10-13.md` §12
+(the timeline of the mouth), §13 (the energy), §14–15 (the P2-4 sizing). Archived by the advisor via
+/plan at the user's instruction (2026-10-13).
+
+### What the step established
+
+- **The mechanism is built and witnessed.** `WallEnthalpyMarch` inside `JetEnthalpyMarch`, one
+  resolver `SideFaceTgas(col,k)` at four per-face readers with the `Removal.H` criterion counted
+  separately (the fifth site derives gas properties and has no face); budget identity extended to
+  three sinks and closing to `%g` noise on the live legs; fixture 7/7 with the (e2) non-inertness row
+  that caught the empty-slot bug; tree gate 0/2639; `ledger_err_solid` 1.15e-3; the **0.23 mm**
+  finding (bore 39.77 vs typed 40.0) cured by `side_face_h_datum = bore`; the lateral criterion's gas
+  temperature resolved per face. Keys `jet_wall_march`, `side_face_h_datum`, `side_face_h_scale`, all
+  default to shipped behaviour.
+- **The scale is Kant's, from one literal:** 0.7425 = Table 4 interpolated at the leg's own 85.3 mm
+  standoff over the map's value there (1,326.5); literal 1449 → 1075.9; pad-ring 0.369 MW/m²; the pads
+  descended (1.08 m/h, stall 1.8 s) — the D2ad starvation did not recur.
+- **`b3`'s two halves are the finding.** NC (uniform 1,504 K) widens to 122.4 (+26.4 over Meier),
+  so wall heating is not inert; W1 widens to 117.8 too, so the march is worth 4.6–4.8 mm. The gas
+  sheds 53 K (W1) / 71 K (W074): `jet_P_wall` 325 W quarter, `wall_L_fit` 2.3–3.3 m. The rock wall is
+  a near-equilibrium surface (time-mean face T ~1,000–1,300 K inferred from the march's own debit;
+  regime-6 firings fire at 848–852 K).
+- **Timeline of the mouth (§12).** Nothing is above-plane until the nozzle plane reaches the rim at
+  ≈148 s (the nozzle starts 44 mm above the rock); the three legs' event logs are identical through
+  100 s and within 1 mm at 148 s (Ø_eq 107.5 vs the P2-2f control's 101 at the same age — ≈6 mm from
+  the slower descent under the free-surface plateau). After 148 s the lip grows 0.085 mm/s at wall ×1
+  and stops at ×0.743 — a threshold, not a calibration. The 60 s legs were three copies of one run.
+- **Energy (§13): the delivered power was redistributed, not closed.** `ledger_P_robin` 1,870 →
+  **2,520 W** quarter (+35 %; 7.5 → 10.1 kW full); flake power 5.9 → 6.1 kW; stored ×2.6. Inner floor
+  (r < 40 mm) −41 % = ×0.743 × a pit lead opening 35 → 57 mm; the freed enthalpy was RE-ENTRAINED
+  (`jet_T_ent_mode = exhaust`: entrained mass 2.07 → 3.23 g/s, cap +17 %) and absorbed by the wall
+  (~950 W) and the outer floor the wide bore created (~650 W). ⇒ the in-band rate (1.63 m/h) is a
+  redistribution; the reviewer's "the coefficient closed the rate" and this reading are the two
+  branches P2-4's S0 decides. **The floor alone lands Meier's rate and floor volume (1.34 L vs 1.27).**
+  Price 1.27 → 1.42, unsplit between floor and wall flakes (no per-regime `E_flake`; P2-4 adds one).
+- **The taper (must-fix 2).** W1 104.5 mm at 140 mm depth → 62.2 at 280 mm = **0.302 mm/mm**
+  (reviewer); band points +15.0 / +1.3 / −13.1, mean +1.1 — a cancellation. W074 0.166. ⚠ The lower
+  half of that taper is the working-floor pit (deepest void 299 mm, pit lead 57 mm); above ~150 mm
+  depth the W1 bore is a 107–118 mm cylinder.
+- **Rate.** W1 1.633 / W074 1.933 / NC 1.609 m/h (150–350 s); noisy ±0.5 per 50 s window, not
+  trending (control steady 3.4). W074's +18 % is the below-plane flank scale through the recirculation
+  (`jet_P_face` 1,743 → 1,527, floor-exit gas 1,531 → 1,577 K, `jet_P_wall` 325 → 328 W unchanged) —
+  **W074 was not a wall-only variant** (must-fix 3).
+- **The criterion did not move:** firing T 851.5 K on all three legs (852.6 in P2-2f); clamp
+  21.7–22.2 % by volume (fell from 23.7 %). P6 confirmed.
+- **A zero-compute diagnostic for the parked cap step:** `flake_h_max` binds on **100 %** of regime-6
+  wall firings (earned 2.4–4.0 mm clamped to 1.5; `ell_lat` 6–10 mm) and on **90–97 %** of pad-ring
+  (28–40 mm) firings in both the control and W1, **0 %** at r < 20 mm. Recorded; no action.
+
+### Carried forward (planner, 2026-10-13)
+
+- ⚠⚠ **Under `jet_T_ent_mode = exhaust` a floor-coefficient change is not a delivered-power
+  change** — the recirculation re-feeds the floor (×0.743 cut `jet_P_face` 7 %). Read the budget.
+- ⚠⚠ **An annulus sink's leverage scales with IMMERSION.** A 500 s run has 52 mm (window mean) /
+  165 mm (end) of bore above the plane, and `wall_z_fill` is 55–90 mm, so most of that wall is
+  wall-jet region. A sink needs ≥ 800 s — and 800 s is the longest stop that keeps ≥ 60 mm of rock
+  under both rate branches (usable depth 500 mm; 1,000 s bottoms out under the geometric branch).
+- ⚠ The c1 bars (L 0.25–0.55 m, mouth 850–1,150 K) modelled the rock wall as a cold sink — wrong in
+  kind; L_fit on a hot wall is not a flow property. The march's m·c_p is the floor jet's (6.1 W/K
+  effective) where the annulus net flow is the fresh ṁ (4.73 W/K).
+- ⚠ `a5`, `b3`, `c1` cannot be evaluated on a 60 s leg (no above-plane faces exist before the plane
+  crosses the rim); schedule above-plane rows after the crossing, with the control budgeted.
+- ⚠ `jet_T_exhaust` keeps the floor-exit meaning; the mouth is `wall_T_mouth`; `jet_T_rec_next`
+  keeps the floor-exit value (entrainment parked) — a sink above the skirt does not touch the floor.
+- ⚠ Charged volume excludes pad clearing (2.148 L) vs the mask (2.200): a volume bar must say which.
+- ⚠ `side_face_h_scale` reaches every face with a wall corner; a wall-only variant needs an
+  above-plane-gated key (P2-6, conditional).
+- The pre-crossing lip (≈6 mm over the control) is the free-surface plateau × a slower descent — its
+  own step, not an annulus sink's.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-13)
+
+Active step:
+- **P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore**
+  (`ACTIVE_STEP.md`; installed 2026-10-13 from the advisor's draft at the user's instruction).
+  Feet descent, Grimsel laws, `R = 0.531294`, cell mode, m = 13 — the P2-2f configuration plus:
+  floor map **× 0.743** (literal 1449 → 1076, so the map reads Kant & von Rohr 2016 Table 4's
+  985 W/m²K at the leg's own 85 mm standoff, where the map itself read 1,326; ring plateau kept); **`side_face_factor_above` 0 → 1** with the derived wall law
+  (variant `side_face_h_scale` 0.743); a **`WallEnthalpyMarch`** taking the floor march's exit gas up
+  the above-plane faces in height bins, cooling it bin by bin, behind ONE resolver
+  `SideFaceTgas(col,k)` at the scalar's **five** readers (criterion `Removal.H:605` included);
+  budget identity face + wall + exhaust = cap. ⚠ Two traps gated: the wall law's radius gate
+  (`side_face_h_r_min` 0.040) sits OUTSIDE the bore wall (r ≈ 39.7 mm); the scaled map puts the pad
+  ring near Kant's threshold class (~0.37 MW/m²) — the 60 s leg's "pads descend" is the gate, and on
+  failure the finding is the map SHAPE (P2-4), never a reverted scale. Three 60 s legs (W1, W074,
+  NC = march OFF ⇒ must balloon like D2v's M2), then two 500 s legs. Pre-registered: rate ~2.6 m/h,
+  bore 82–87 on W1, cooling length 0.25–0.55 m, mouth gas 850–1,150 K, price 1.20–1.30, firing T
+  845 ± 10. Parked (user 10-13): entrainment, cuttings sink, body-cooling loss, 1 mm, constant
+  properties. Basis: `Claude_markdowns/2026-10-13.md` §1–§7.
+
+### Claude completion notes
+
+**Files changed.**
+
+*`src/` (both files; three keys, all default to shipped behaviour):*
+- `MMWSpalling.H` — `jet_wall_march`, `side_face_h_datum`, `side_face_h_scale` declared, parsed and
+  each given an inert-key abort; `WallEnthalpyMarch` inside `JetEnthalpyMarch` after the floor bins;
+  `SideFaceTgas(col, k)` resolver; `ColumnWallCorner` takes its truncation radius as a parameter and
+  its call moved after the bore measurement; the slot gather is two-valued (`march_col` 1 below /
+  2 above) and hoisted to function scope; `h_hist` scoped to the law's own reach; budget identity
+  extended to three sinks. New columns `jet_P_wall`, `wall_T_mouth`, `wall_bins`, `wall_L_fit`
+  (gated on the march) and `wall_datum_r`, `side_h_used_n_above` (gated on the derived law), all
+  appended last.
+- `MMWSpalling/Removal.H` — the lateral criterion's gas temperature resolved **per face inside its
+  `k` loop**, where it had been hoisted once per column.
+
+*tests, harnesses, artefacts:*
+- `unit/wall_march/test` — NEW, the (a2) fixture: 4 legs, 7 rows.
+- `unit/lateral_flux_lock/test` — the five-reader clause, with a text negative control; the
+  `SideFaceH` role count and the cap-site count raised 4→5 and 2→3 **as declared extensions**.
+- `studies/p2_3_wall/` — NEW: `derive_scale.py`+`SCALE.txt`, `run_p2_3.py`, `wall_profile.py`,
+  `reduce_p2_3.py`, `GATE_a4_DECLARED.txt`, `GATE_a4.txt`, `TREE_p2_3.log`, `SHORT60.txt`,
+  `FULL500.txt`, `RESULTS.txt`.
+- `studies/p2_2c_meier/bore_profile.py` — a `leg_root` parameter only, so P2-3 reuses the one Ø(z)
+  estimator rather than copying it.
+
+### Criteria
+
+| # | test | measured | verdict | output |
+|---|---|---|---|---|
+| a1 | scale from Table 4; `h_expr` round-trips | **0.742499**; peak 1449.0 → **1075.9**; **1 token of 350** differs; pad-ring **0.3690 MW/m²** | **PASS** | `SCALE.txt` |
+| a2 | fixture (a)–(e) | identity to print precision over 7,499 steps (binary's own 1e-9 abort never fired); monotone, **40.87 K** cooling; `jet_P_wall` exactly 0 under factor_above=0; 1-rank == 4-rank; columns absent with the key off; wall takes **2.6 % less** with the march on | **PASS** 7/7 | `unit/wall_march/` |
+| a3 | five readers → one resolver | 1 declaration, 4 per-face calls incl. **1 in `Removal.H`**; 11 `SurfaceCellFlux` sites, 0 heated with the bare scalar; control RED | **PASS** | `unit/lateral_flux_lock/` |
+| a4 | tree gate, declared set EMPTY | **0 changed paths of 2639**, control 26 | **PASS** | `GATE_a4.txt`, `GATE_a4_DECLARED.txt` |
+| a5 | above-plane faces reached | **4929** (W1), 6527 (W074), 5092 (NC); `wall_datum_r` 0.0420 = `wall_r_bore` 0.0440 − dx | **PASS** ⚠ on the **500 s** legs — see takeaway 2 | `RESULTS.txt` |
+| b1 | 60 s pads descend | **v = 1.083 m/h**, `foot_stall_time` **1.808 s**, rc 0 ×3 | **PASS** | `SHORT60.txt` |
+| b2 | 60 s ledger | **1.153e-03** | **PASS** | `SHORT60.txt` |
+| b3 | NC − W1 ≥ 10 mm; W1 ≤ 106 | **NC − W1 = 4.6 mm**; **W1 = 117.8 mm** | **FAIL both halves** | `RESULTS.txt` |
+| b4 | `t_stop` margin ≥ 60 mm | **410 mm** projected at t_stop = 500 s | **PASS** | `SHORT60.txt` |
+| c1 | L_fit, mouth T, `jet_P_wall` | W1 **2.28 m / 1494.8 K / 325.5 W**; W074 2.92 m / 1538.6 K / 328.1 W | **MISS** all three, both legs | `RESULTS.txt` |
+| c2 | bore 150–450 mm, sector spread | W1 mean **+1.7 mm**, **85.3 at 200 mm vs Meier 85**; mouth **117.8** (spread 10.6); W074 mean +1.9, mouth **104.5** (spread 4.5) | **MISS** on mouth and spread; mid-bore excellent | `RESULTS.txt` |
+| c3 | rate 150–350 s | W1 **1.633 m/h**, W074 1.933, NC 1.609 | **MISS** vs the 2.3–2.9 prediction — **W1 is INSIDE Meier's 1.2–1.8, which the packet pre-registered as a FINDING** | `RESULTS.txt` |
+| c4 | volume ×4 | W1 **2.148 L**, W074 **1.828 L**, NC 2.209 L | W074 **PASS**, W1/NC MISS (bar 1.7–2.1) | `RESULTS.txt` |
+| c5 | 500 s ledger | **1.153e-03** on all three | **PASS** | `RESULTS.txt` |
+| c6 | firing T + clamp by VOLUME | **851.54 / 851.73 / 851.54 K**; clamp **22.15 % / 21.71 %** by volume | **PASS** both halves, all legs — **P6 confirmed** | `RESULTS.txt` |
+| c7 | price | W1 **1.423**, W074 **1.369**, NC 1.431 GJ/m³ | **MISS** (bar 1.20–1.30) | `RESULTS.txt` |
+| c8 | pad-ring flux r 28–40 mm | **0.4538 / 0.4013 / 0.3690 / 0.3252 MW/m²** at 28/32/35/40 mm (h 693.9/613.6/564.3/497.3, T_g 1504 K, T_s 850 K) | **report** — below Kant's 0.45–0.60 class, yet b1 passed, so not binding | `SCALE.txt` |
+| d1 | verdict | below | **verdict** | these notes |
+
+#### (d1) Verdict
+
+**The coefficient closed the rate, and that is the result.** Scaling the floor map to Kant's own
+measured value — one literal, no fit — took the rate from P2-2f's **3.47 m/h to 1.633**, inside
+Meier's 1.2–1.8 band, and *below* the packet's own 2.3–2.9 prediction. The packet pre-registered
+that outcome as "a FINDING (delivery closed more than the coefficient alone predicts), not a pass".
+The mid-bore landed with it: **85.3 mm at 200 mm depth against Meier's 85**. And `c6` did not move
+(851.5 K on all three legs, vs 852.6 in P2-2f), so none of this came from disturbing the criterion.
+
+**The wall march works and is not enough, and `b3` is how we know which.** Both halves fail, and the
+two failures say different things that together are the finding: NC widens to **122.4 mm** (+26.4
+over Meier), so the wall heating is **not inert** and uniform hot gas really is a mouth-widening
+mechanism; but W1 widens to **117.8 mm** too, so the march's whole contribution is **4.6 mm, about
+17 %** of the excess. The reason is measured, not inferred: the gas sheds only **53 K**, because the
+bore wall has soaked to **~1118 K** and the gas-to-wall ΔT has collapsed. For the mouth to stop
+firing at all, the gas would have to reach ~1130 K — a **~410 K** drop, needing **~2.4 kW** at the
+measured `m·c_p ≈ 6.1 W/K`. The rock cannot supply that at any coefficient; it is near equilibrium.
+
+**Where the residual now points.** Not at the march's extraction law, which is computing a small
+number because the number is small. The one sink with a ΔT that cannot decay is the **67 mm
+water-cooled shield** standing in an 85–95 mm bore — a ~9 mm annulus with ~1200 K of driving ΔT
+against the rock's ~400 K, and it is one of the three levers this packet parked. Order-of-magnitude:
+2.4 kW over ~0.016 m² (quarter, ~300 mm immersion) needs h ≈ 130 W/m²K, well inside what the duct
+branch of the P2-1 law already produces. ⚠ That is a feasibility check on an assumed immersion and
+water-side temperature, not a prediction.
+⚠ **A competing explanation is not excluded.** The mouth is cut in the first ~150 s with the nozzle
+near the surface, and standing rule 2 flags the shallow diameter as the pause-underream region
+precisely because it is not comparable. Part of the +22 mm may be a start-of-hole transient rather
+than a steady gas-temperature effect.
+
+**What is not quotable.** `c7` (1.37–1.43 vs 1.20–1.30) and W1's `c4` (2.148 L) are both high, and
+both trace to the wall path now carrying **38 % of all charged volume** (0.202 of 0.537 L) against
+1.8 % in P2-2f. The excess is localised: the bore is +22 mm at the mouth and +0.3 mm at 200 mm, and
+the equivalent mean diameter (~103 mm against Meier's ~86) accounts for the volume ratio
+arithmetically — 1.69× volume at 1.09× rate implies ~1.55× cross-section. So the geometry absorbs
+the excess, and W1's in-band rate is **partly** right for a geometric reason. It should not be
+quoted as a validated rate until the collar closes.
+
+### Implementation takeaways
+
+1. ⚠⚠ **TWO LEDGER ROWS DID NOT RESOLVE, AND BOTH WERE REPORTED BEFORE ANY CODE WAS WRITTEN.**
+   (i) **`a5`'s witness did not exist.** `h_hist` — the only source of `side_h_used_n` — is filled
+   with no above/below-plane split, and reads **8968** on the P2-2f m13 control whose
+   `side_P_face_above` is exactly **0**. The bar "> 0" was therefore already met by the control:
+   vacuous. A new above-plane counter `side_h_used_n_above` was added.
+   (ii) **Deliverable 4's one knob did two jobs.** `side_face_h_r_min` is not only the kernel's
+   gate; `ColumnWallCorner` uses it as the wall law's **height-datum inner truncation**, so lowering
+   it to 0.036 would have shifted `z`, hence `WallJetH`, across the **whole** band — and P2-1
+   recorded the datum moving the answer 1.04–1.74×, confounding exactly what this step measures.
+
+2. ⚠⚠ **THE DATUM IS NOW THE MEASURED BORE, AND THAT WAS THE USER'S CALL (2026-10-13), NOT A
+   WHITELIST.** `side_face_h_datum = bore` truncates at the per-step measured `wall_r_bore` less one
+   cell. Three consequences worth keeping: the datum **follows the hole** as it widens; it introduces
+   **no new tuning number** (the quantity was already computed and already logged); and once it no
+   longer reads the key, **lowering the kernel gate to 0.036 became safe**, so deliverable 4's two
+   alternatives turned out to be complementary rather than a choice. The gap it closed was
+   **0.23 mm** — bore 39.77 mm against a typed 40.0 — about a tenth of a cell, and it was why the
+   derived law had never touched the surface this step exists to heat.
+
+3. ⚠⚠ **`a5`, `b3` AND `c1` ARE NOT EVALUABLE AT 60 s, AND THE PACKET SCHEDULES ALL THREE THERE.**
+   Above-plane faces require the nozzle to be **below** the rim. The feet hold it 85 mm above the
+   floor, so at 60 s (hole 53 mm deep) it sits at z = 0.532 against a rock top of 0.500:
+   `side_cols_above = 0`. The wall law is independently off, because `r_bore` 0.0345 < the
+   `WJ_R_SHIELD + 2dx` = **0.0375** annulus threshold. All three 60 s legs came out **identical** —
+   which is itself the clean witness that the wall keys act only above the plane. ⇒ **the wall
+   mechanism cannot be gated on a 60 s leg at all**; it needs the hole deeper than the standoff,
+   ~280 s at the measured rate. `b3` was scored after the 500 s legs, and `NC` was therefore run at
+   500 s (a third long leg the packet did not budget) because otherwise `b3` has no control.
+
+4. ⚠⚠ **`side_face_h_scale` CANNOT ISOLATE THE WALL, SO W074 IS NOT THE EXPERIMENT IT LOOKS LIKE.**
+   Deliverable 5 says it multiplies the derived law "at the resolver, nowhere else" — true of the
+   code path, false of the physics: the law reaches **below-plane** faces too (the floor cone flanks
+   at r ≥ the datum). Measured, W074 vs W1: `jet_P_face` **1743 → 1527 W**, floor-exit gas
+   **1531 → 1577 K**, `jet_T_stag` **1732 → 1757 K**, and `jet_P_wall` **325 → 328 W, i.e.
+   UNCHANGED** — the 26 % lower coefficient is cancelled almost exactly by the hotter gas it now
+   sits in. So W074 varied the **floor flanks**, the rate rose (1.633 → 1.933 m/h) through the
+   `jet_T_ent_mode = exhaust` recirculation feedback, and **nothing in it bounds the wall
+   coefficient**. ⚠ An earlier reading of mine — that energy freed from the wall went to the floor —
+   is **withdrawn**: the floor march runs first, so the wall cannot take from it, and the budget
+   shows the wall power did not move. A wall-only scale needs the factor gated on above-plane faces,
+   which is a different key.
+
+5. ⚠⚠ **REUSING THE MARCH'S SLOTS SILENTLY RETURNED AN EMPTY SET.** The first wall march read the
+   floor march's gathered side slots, which looked ideal — one enumeration, one wetted-area law (this
+   file already has four side-area call sites). But the gather skipped above-plane columns outright,
+   so `jet_P_wall` sat at **exactly 0** while `side_P_face_above` read 22.4 W: the faces plainly
+   existed and were being heated. The fixture's (e2) row caught it as ON == OFF to four decimals.
+   ⇒ **a reuse that quietly returns nothing is worse than a second enumeration, because it looks
+   like a physical result.** Fixed by tagging the gather 1/2 and pinning every floor-side consumer to
+   `== 1` — a truth test there would have double-charged every bore-wall face to `jet_P_face` as well
+   and broken the budget identity.
+
+6. ⚠ **`jet_T_exhaust` WAS NOT REDEFINED, CONTRARY TO DELIVERABLE 2, AND THAT IS DELIBERATE.** The
+   packet says it becomes the mouth temperature. It must not: `side_T_eff` **is** `jet_T_exhaust`
+   under `side_face_T = live`, and it is both the state the wall law derives its gas properties at
+   (site 5 of 5) and the resolver's fallback for **below**-plane faces. Redefining it would derive
+   the law at mouth conditions and hand every floor-flank face the cold mouth gas — changing the
+   floor side heating D2w measured as a rate doubler. The mouth went to a new `wall_T_mouth`.
+   ⚠ **`jet_T_mouth` was NOT reused either**: that column already exists under `jet_free_surface`
+   with D2c's dilution meaning, and one name with two meanings depending on which key is on is not
+   a column.
+
+7. ⚠ **SITE 5 OF 5 HAS NO FACE.** Deliverable 3 says replace the scalar at all five read sites with
+   `SideFaceTgas(col, k)`. Four are per-face; the fifth derives the law's gas **properties**, one law
+   per step with no column and no height, so there is nothing to call it with. It is correct
+   unchanged *because* `jet_T_exhaust` kept its floor-exit meaning (takeaway 6), and the lock
+   asserts that reasoning rather than a call it cannot make.
+
+8. ⚠ **THE 1e-9 IDENTITY CANNOT BE TAKEN FROM `thermo.dat`, AND DEMANDING IT WAS MY BUG.** The file
+   is `%g`, six significant digits, so with `jet_P_cap` ~2.6e3 W the four columns carry ~3e-2 W of
+   pure formatting error — **4.4e3 ×** a 1e-9 relative tolerance, which is exactly what the fixture
+   first reported on a binary whose own internal assertion had passed 4,999 times. The 1e-9 claim is
+   carried by the **binary's abort**; rc = 0 is that witness. Standing rule 7(iv), third instance.
+
+9. ⚠ **THE LOCK CAUGHT MY OWN EXTENSION TWICE** — a fifth `SideFaceH` role and a third cap site —
+   and both were raised deliberately with the new role named, not whitelisted. That is the lock
+   working: the wall march *must* resolve the coefficient and the cap through the same sites as the
+   kernel, or the budget identity breaks. ⚠ I also had to rename a local from `side_hmax_m` to
+   `side_hmax`, because the lock whitelists the right-hand sides a cap assignment may take and a
+   private spelling reads as an unvetted fourth.
+
+10. **`c6` BY VOLUME IS A DIFFERENT NUMBER FROM `c6` BY COUNT.** The packet asks for the fraction of
+    removed **volume** above the 873.15 K ceiling; P2-2f reported **firings**. Weighting each firing's
+    `T_surf` by its `n_voided` gives **22.15 %** (W074) where the count gives a different figure.
+    Both are in `reduce_p2_3.clamp_by_volume`, which prints the pair so they cannot be confused.
+
+11. **Keys added, all default to shipped behaviour and all abort if named without their feature:**
+    `surface_patch.jet_wall_march` (0; needs `jet_closure = enthalpy`),
+    `surface_patch.side_face_h_datum` = `typed`|`bore` (`typed`; needs `side_face_h_law = derived`),
+    `surface_patch.side_face_h_scale` (1.0; needs the derived law). The legs also carry
+    `side_face_h_r_min=0.036` and `side_face_factor_above=1.0` in the argv, not as defaults.
+
+12. **Cost, measured uncontended:** 3.80 wall-s per simulated s ⇒ **31.7 min** per 500 s leg, 3.3 min
+    per 60 s leg. Three long legs ran serially in 95 min. ⚠ The reductions are not free:
+    `bore_profile.py` decodes 169 FAB files per leg, ~1 min each.
+
+
+### Review findings
+
+Reviewer phase, independent re-derivation. Provenance: `Removal.H` 12:11:14, `MMWSpalling.H`
+12:32:45, binary `49c60942…` 12:33:05 — correct ordering, `find src -newer bin/` empty.
+
+⚠ **I reran two fixtures**, both new this packet and both cheap, because their cited outputs are
+directories rather than logs: `unit/lateral_flux_lock` (seconds) and `unit/wall_march` (reduces
+existing leg output). Neither is in the 2639 manifest. **No simulation was relaunched.** My own
+reductions: five manifest diffs, void-mask bore profiles for all three 500 s legs, their
+`thermo.dat` by column name, and full event-log censuses.
+
+#### Criteria — the packet's table, with my value and its source
+
+⚠ The packet's final column ("what a failure of this row means") is unchanged and is not repeated.
+
+| # | bar | kind | **value I derived** | **read from** | verdict |
+|---|---|---|---|---|---|
+| a1 | 0.743 ± 0.01; one literal; pad flux stated | **gate** | **I re-derived it from Table 4 itself**: h = 766/1009/873 at 50/80/110 mm, linear at the m13 median standoff 85.3 mm gives **984.97** (packet 985.0), and 984.97/1326.5 = **0.742535** against the reported 0.742499 — both inside ±0.01. `1449 × scale = 1075.93` vs the written **1075.9**. One token of 350 changed; pad-ring **0.3690 MW/m²**. ⚠ The file's own **±17 %** plate uncertainty is present, and the packet states the physical band 0.62–0.87 rather than claiming precision | my interpolation of `kant_…_plan.txt:66-80`; `SCALE.txt` | **PASS** |
+| a2 | (a)–(e) | **gate** | **PASS 7/7 on my own rerun**, and the fixture is better than its bar: (a) worst relative residual **4.91e-06** against a 1e-05 bar **set by `%g`'s six digits, with the 1e-9 claim carried by the binary's own abort**; (b) **0 increasing pairs** over 20 snapshots **plus (b2)** asserting it *does* cool (40.87 K) so (b) cannot pass flat; (c) `jet_P_wall` **exactly 0** under `factor_above = 0` with mouth == floor exit on every row; (d) **0 tokens differ** between 1 and 4 ranks; (e) four columns **absent** with the key off (51 vs 55); **(e2)** the march is **not inert** (22.3698 → 21.7837 W, ratio 0.9738); (f) `ledger_err_solid` max **8.7626e-05** | my rerun of `unit/wall_march/test` | **PASS** |
+| a3 | five readers → one resolver, RED pre-change, each site named | **gate** | **PASS on my own rerun**: `SideFaceTgas` **1 declaration, 4 call sites**, with the `Removal.H` criterion **named and counted separately** — the site P2-0 missed. **11 `SurfaceCellFlux` sites inspected, 0 heated with the bare scalar.** ✅ And the **negative control is demonstrated, not asserted**: with the resolver reverted the clauses read 0 call sites. ⚠ Four of five, not five — the fifth derives the law's gas *properties* with no column or height; takeaway 7 explains it and the lock asserts the reasoning | my rerun of `unit/lateral_flux_lock/test` | **PASS**, bar met as 4 + 1 justified |
+| a4 | 0 of 2639, declared set EMPTY | **gate** | **`p2_3.md5` is a real new sweep** and my own diff gives **0 changed paths of 2639** against `p2_2f_rev2`, `p2_2d_rev6` **and** `p2_2b_final`, controls **26** (`d2aa`) / **863** (`d2t`). The declared set was written **first** and is **EMPTY**, with all five source changes shown keyed-off or inert against live source | my diff of `witness/p2_3.md5`; `GATE_a4_DECLARED.txt` | **PASS** |
+| a5 | above-plane `side_h_used_n` > 0; r-gate recorded | **gate** | **4929** (W1), **6527** (W074), **5092** (NC) on the new `side_h_used_n_above` counter; `wall_datum_r` **0.042027** = measured `wall_r_bore` 0.044027 − dx. ⚠⚠ Scored on the **500 s** legs, not the 60 s leg the bar names — because above-plane faces **do not exist at 60 s** (takeaway 3). Honestly flagged. ✅ And the counter had to be **built**: the band-wide `side_h_used_n` reads 8968 on the P2-2f control whose above-plane power is exactly 0, so the bar was already vacuous | my reduction of all three `thermo.dat` | **PASS**, on later legs with the reason stated |
+| b1 | v > 0.8 m/h; stall < 10 s; rc 0 | **gate** | **v = 1.083 m/h**, `foot_stall_time` **1.808 s**, rc 0 on all three 60 s legs | `SHORT60.txt` | **PASS** |
+| b2 | `ledger_err_solid` ≤ 5e-3 | **gate** | **1.1530e-03** — identical on all three legs, 4.3× inside the bar | my reduction of all three `thermo.dat` | **PASS** |
+| **b3** | NC − W1 ≥ 10 mm; W1 ≤ 106 mm | **gate** | ⚠⚠ **FAILS both halves, and it fails on my own independent void-mask reduction too**: at 10 mm depth NC **122.9** vs W1 **118.1** ⇒ **NC − W1 = 4.8 mm** (reported 4.6) against a bar of ≥ 10, and **W1 = 118.1 mm** (reported 117.8) against ≤ 106. ✅ The structure of the finding holds: **NC does widen** (+26.9 over Meier's 96), so wall heating is **not inert**; but **W1 widens too** (+22.1), so the march's whole contribution is **4.8 mm ≈ 18 %** of the excess | my area-equivalent bore from `legs/*/run/31250cell` | **GATE FAIL** |
+| b4 | margin ≥ 60 mm | **gate** | **410 mm** projected at `t_stop` = 500 s. ⚠ A projection at constant rate, as P2-2f takeaway 6 established; the realised floor is 299 mm, so the realised margin is far larger than the bar | `SHORT60.txt`; my mask | **PASS** |
+| c1 | L 0.25–0.55 m; mouth 850–1150 K; P_wall 0.8–2.5 kW | report | **all three MISS, and I reproduce each**: window-mean `jet_P_wall` **325.5 W** (W1) / 328.1 (W074); `wall_T_mouth` **1494.8 K** / 1538.6; `wall_L_fit` **3.2763 m** / 4.6898. ✅ And the **budget identity closes on my own sum**: face 1743.2 + wall 325.5 + exhaust 10524.9 = **12593.5 = cap**, residual **3e-4 W** on 1.26e4 (≈1e-7 relative, i.e. `%g` noise); NC's wall term is **exactly 0.0** | my window means over all three `thermo.dat` | **MISS ×3** |
+| c2 | W1 82–87 mm; mouth ≤ 106; spread ≤ 2 mm | report | mouth **118.1 mm** and sector spread 10.6 ⇒ **MISS**. ⚠⚠ **And the mid-bore claim needs qualifying — see risk 1**: my mask gives W1 **101.0 / 86.3 / 71.9 mm** at 150 / 200 / 250 mm, i.e. **+15.0 / +1.3 / −13.1** against Meier, mean **+1.10** | my mask profiles | **MISS**, and see risk 1 |
+| c3 | 2.3–2.9 m/h predicted | report | **1.632** (W1) / **1.932** (W074) / **1.608** (NC) m/h from `nozzle_z` over 150–350 s, skipping t = 0. **MISS** the prediction, and **W1 is inside Meier's 1.2–1.8** — which the packet pre-registered as *"a FINDING… not a pass"*, and the notes honour that | my reduction of all three `thermo.dat` | **MISS**, finding |
+| c4 | 1.7–2.1 L | report | charged ×4: W1 **2.148**, W074 **1.828**, NC 2.209 (theirs). My **mask total** ×4 is 2.1999 / 1.8867 / 2.2599 — the gap is pad clearing (0.0129 L quarter), which their charged volume excludes and my mask includes. ⚠ The bar does not say which. Either way W074 passes, W1/NC miss | my mask and event-log censuses | W074 PASS, W1/NC MISS |
+| c5 | ≤ 5e-3 | report | **1.1530e-03** on all three | my reductions | **PASS** |
+| c6 | 845 ± 10 K; clamp 12–25 % by volume | report | **851.54 / 851.73 / 851.54 K** — exactly as reported — over regime-1 `T_surf` > 0 (n ≈ 75k), with clamp **by volume 21.76 / 22.15 / 21.71 %** and by count 21.16 / 21.48 / 21.06 %. ✅ **Inside both bars on all three legs, and the clamp fraction FELL** from P2-2f's 23.7 % as P6 predicted ⇒ the delivery change did **not** move the criterion | my censuses of all three event logs | **PASS** |
+| c7 | 1.20–1.30 GJ/m³ | report | **1.423** (W1) / **1.369** (W074) / **1.431** (NC) — I rebuilt each from its own inputs: W1 `E_flake` **7.64445e+05 J** over charged **0.53706 L** (floor 0.33528 + wall 0.20178). **MISS**, and the wall path now carries **37.6 %** of charged volume against 1.8 % in P2-2f | my censuses + `thermo.dat` | **MISS** |
+| c8 | reported in stated units | report | **0.4538 / 0.4013 / 0.3690 / 0.3252 MW/m²** at r = 28/32/35/40 mm with h and T stated — below Kant's 0.45–0.60 class at r ≥ 32 mm, yet `b1` passed, so not binding | `SCALE.txt` | report |
+| d1 | verdict | **verdict** | written, and it is unusually careful — it names a competing explanation (standing rule 2's pause-underream region) for part of the +22 mm, and refuses to quote W1's in-band rate as validated | `ACTIVE_STEP.md` | **verdict** |
+
+#### Diff review
+
+| # | hunk / change | class | finding | tag |
+|---|---|---|---|---|
+| 1 | `WallEnthalpyMarch` inside `JetEnthalpyMarch`, after the floor bins | **1 duplication** | mirrors the floor march's structure deliberately; the budget identity is **extended to three sinks** rather than duplicated, and I verified it closes to `%g` noise on all three legs with NC's wall term **exactly 0** | **ok** |
+| 2 | ⚠⚠ the slot gather tagged **1 below / 2 above**, every floor-side consumer pinned to `== 1` | **4 scope predicate vs data source** | **the step's sharpest self-caught defect.** Reusing the floor march's slots *looked* ideal — one enumeration, one wetted-area law — but the gather **skipped above-plane columns outright**, so `jet_P_wall` sat at **exactly 0** while `side_P_face_above` read 22.4 W: the faces existed and were being heated. Fixture row (e2) caught it as ON == OFF. ⚠ And a truth test instead of `== 1` would have **double-charged** every bore-wall face to `jet_P_face` and broken the identity. ⇒ *"a reuse that quietly returns nothing is worse than a second enumeration, because it looks like a physical result"* | **ok** |
+| 3 | `SideFaceTgas(col, k)` resolver, 4 per-face call sites | **2 consistency** | one declaration, and the lock asserts **every call passes a non-constant height** — *"a fixed k would silently restore the single scalar"*. That clause is the right shape for this family, and the `Removal.H` criterion is counted separately because it is the site P2-0 missed | **ok** |
+| 4 | ⚠ `jet_T_exhaust` **not** redefined, contrary to deliverable 2 | **9 removed checks / 11** | **the instruction was refused with a reason, and the reason is right**: `side_T_eff` *is* `jet_T_exhaust` under `side_face_T = live`, and it is both the state the wall law derives its gas properties at **and** the resolver's fallback for **below**-plane faces. Redefining it would hand every floor-flank face the cold mouth gas, changing the side heating D2w measured as a rate doubler. The mouth went to a new `wall_T_mouth`; `jet_T_mouth` was **not** reused because that name already carries D2c's dilution meaning | **ok** |
+| 5 | the lateral criterion's gas temperature resolved **per face inside its `k` loop** | **2 consistency** | it had been hoisted once per column — the exact shape of the criterion/kernel family. Fixed at the one site that matters | **ok** |
+| 6 | `side_face_h_datum = typed｜bore`, truncating at measured `wall_r_bore − dx` | **5 hard-coded / 12** | ⚠⚠ **this is why the law had never touched the surface the step exists to heat**: the gap was **0.23 mm** — bore 39.77 mm against a typed 40.0, about a tenth of a cell. The datum now **follows the hole**, introduces **no new tuning number** (the quantity was already computed and logged), and once it stopped reading the key, lowering the kernel gate to 0.036 became safe ⇒ deliverable 4's two alternatives were **complementary, not a choice** | **ok** |
+| 7 | ⚠ `side_face_h_r_min`'s double duty, caught **before** coding | **4 scope vs data source** | it is not only the kernel's gate — `ColumnWallCorner` uses it as the wall law's **height-datum inner truncation**, so lowering it would have shifted `z`, hence `WallJetH`, across the **whole** band, and P2-1 recorded the datum moving the answer **1.04–1.74×**. ⇒ deliverable 4 as written would have confounded exactly what this step measures. Reported before any code | **ok** |
+| 8 | three new keys, each with an inert-key abort | **7 keys have readers** | `jet_wall_march` (0; needs `jet_closure = enthalpy`), `side_face_h_datum` (`typed`; needs the derived law), `side_face_h_scale` (1.0; needs the derived law) — **all default to shipped behaviour**, which is why `(a4)` is 0 of 2639, and each **aborts if named without its feature** rather than sitting inert. Fixture row (e) witnesses the column set | **ok** |
+| 9 | ⚠⚠ `(a5)`'s witness **did not exist** and was built | **4 / 12 self-limited** | the band-wide `side_h_used_n` reads **8968** on the P2-2f control whose `side_P_face_above` is **exactly 0** ⇒ the bar "> 0" was **already met by the control**. A new above-plane counter was added. ⚠ That is a vacuous gate caught by the implementer, not by the planner | **ok** |
+| 10 | ⚠⚠ `a5`, `b3`, `c1` are **not evaluable at 60 s** and the packet schedules all three there | **4 scope vs data source** | above-plane faces need the nozzle **below** the rim; the feet hold it 85 mm up, so at 60 s (hole 53 mm) `side_cols_above = 0`, and the wall law is independently off because `r_bore` 0.0345 < the `WJ_R_SHIELD + 2dx` = 0.0375 threshold. **All three 60 s legs came out identical** — itself a clean witness that the wall keys act only above the plane. ⇒ `b3` needed a **third 500 s leg the packet did not budget** | **risk — named (planner)** |
+| 11 | ⚠⚠ `side_face_h_scale` **cannot isolate the wall** | **4 scope vs data source** | true of the code path, false of the physics: the law also reaches **below-plane** floor-cone flanks. Measured W074 vs W1: `jet_P_face` **1743 → 1527 W**, floor-exit gas 1531 → 1577 K, and `jet_P_wall` **325 → 328 W, UNCHANGED** — the 26 % lower coefficient cancelled by the hotter gas it now sits in. ⇒ **W074 varied the floor flanks**, its rate rose through the recirculation feedback, and **nothing in this packet bounds the wall coefficient**. ⚠ An earlier reading of the implementer's own was withdrawn with the budget as the witness | **risk — named** |
+| 12 | ⚠⚠ the bore is a **cone that crosses** Meier, not a profile that matches | **12 self-limited / 6** | **my own measurement, and it qualifies the headline.** W1 runs **104.5 mm at 140 mm depth → 62.2 at 280 mm**, a taper of **0.302 mm per mm** against Meier's essentially flat ~86 mm. The three scoreable band points are **+15.0 / +1.3 / −13.1 mm**, mean **+1.10** — a **cancellation**, the same pattern as P1b's roundness 1.095. ⇒ *"85.3 mm at 200 mm against Meier's 85"* is the **single crossing point** of a steep cone and a flat line, not an agreement of profiles. W074 is better (taper 0.166) but still conical | **risk — named, the headline qualification** |
+| 13 | ⚠ the `c2` band has only **three** scoreable depths | **6 bars below precision** | the legs reached 299 mm and the packet's own 25 mm exclusion removes 300 mm and below, leaving 150/200/250. A mean over three points spanning **±15 mm** is not a robust statistic, and the bar (82–87 mm) is narrower than the spread between adjacent scoreable depths | **nit** |
+| 14 | ⚠ the 1e-9 identity cannot come from `thermo.dat` | **6 / standing rule 7(iv)** | `%g`'s six digits put ~3e-2 W of pure formatting error on a 2.6e3 W cap — **4.4e3 ×** a 1e-9 relative tolerance. The fixture reports the **printed**-precision residual and carries the 1e-9 claim on the binary's abort, which rc = 0 witnesses. **Third instance of this class**; the implementer names it as their own bug | **ok** |
+| 15 | ⚠ the lock caught the implementer's **own** extensions twice | **9 removed checks** | a fifth `SideFaceH` role and a third cap site, both raised **deliberately with the new role named**, not whitelisted — and a local renamed from `side_hmax_m` to `side_hmax` because the lock vets the right-hand sides a cap assignment may take. That is the lock working on the author | **ok** |
+| 16 | ⚠ `c6` by **volume** differs from `c6` by **count** | 12 | the packet asks for volume; P2-2f reported firings. `reduce_p2_3.clamp_by_volume` prints **both** so they cannot be confused — I reproduce 21.76 % by volume and 21.16 % by count on W1 | **ok** |
+| 17 | ⚠ `(c4)`'s bar is ambiguous about pad clearing | 3 units | their charged ×4 is 2.148 L (pad **excluded**); my mask ×4 is 2.1999 L (pad **included**), and the 0.0129 L quarter difference is exactly the pad. Both miss the 1.7–2.1 bar, but the bar should say which total it means | **nit** |
+| 18 | ⚠ `(a3)`'s bar says **five** readers routed; **four** are | 11 | the fifth derives the law's gas *properties* once per step with no column and no height, so there is nothing to call the resolver with — correct unchanged **because** `jet_T_exhaust` kept its floor-exit meaning. Flagged in takeaway 7, and the lock asserts the reasoning | **nit** |
+| 19 | ⚠ `bore_profile.py` extended by **parameter**, not copied | **1 duplication** | a `leg_root` argument so P2-3 reuses the one Ø(z) estimator. Correct call given this file family's four side-area call sites | **ok** |
+| 20 | guardrails | 3 | floor-first/wall-second honoured (P1 read from NC's floor rows); the scale is **Kant's, not a fit**; entrainment, cuttings, body loss, 1 mm and constant properties all **parked**; `jet_T_rec_next` keeps the floor-exit value; cell mode only; both-path charged volume; **no quarter-domain factor on a ratio**; `ledger_err` **not** barred on any flake leg; nothing re-pinned; `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE` untouched | **ok** |
+
+**Tally: 20 rows — 0 bug, 3 risk, 4 nit, 13 ok.**
+
+#### Unquotables
+
+Checked against `ROADMAP.md`'s `## Standing rules` **and** `## Known Stale/Important Notes`.
+✅ **SR 2 is honoured and actively used**: the 100 mm row is printed and marked *"PAUSE UNDERREAM,
+never scored"*, and the verdict cites the same rule as a **competing explanation** for part of the
+mouth excess rather than claiming the gas-temperature effect alone. ✅ **SR 7** honoured — per-step
+columns are means over the window, *"never sums"*, stated in the output header. ✅ `c3` is labelled
+provisional under the parked 1 mm rule. ✅ **Rule 17** is addressed head-on: Kant's plate
+*temperature* was retired as a target, but its *coefficient* is a property of the flow, supported by
+a cited confined-flame-jet study showing `h` unchanged over target temperatures 170–530 °C. ✅ The
+±17 % plate uncertainty is carried, and `a1`'s ±0.01 is explicitly *"an arithmetic check, not a
+precision claim"*. ✅ W1's in-band rate is **explicitly not quoted as validated**.
+
+#### Verdict: rejected
+
+**`b3` is a gate and it fails both halves — confirmed on my own void-mask reduction** (NC − W1 =
+**4.8 mm** against ≥ 10; W1 = **118.1 mm** against ≤ 106). Every other gate reproduces. The failure
+is a **genuine physics negative, correctly attributed with the mechanism measured**, and the
+implementer's handling was right: the control was run (at 500 s, since the row is not evaluable at
+60 s), the result was reported both ways, and the in-band rate was not claimed.
+
+**must-fix**
+
+1. **`b3` fails, and the two halves say different things that together are the finding.** NC widens
+   to **122.9 mm** at 10 mm depth (+26.9 over Meier), so uniform hot gas **is** a mouth-widening
+   mechanism and the wall heating is not inert. But W1 widens to **118.1 mm** too, so the march's
+   whole contribution is **4.8 mm ≈ 18 %** of the excess. The reason is measured: the gas sheds only
+   **53 K** because the bore wall has soaked to ~1118 K and the gas-to-wall ΔT has collapsed. For the
+   mouth to stop firing the gas would need a **~410 K** drop ≈ **2.4 kW** at `m·c_p ≈ 6.1 W/K`, which
+   the rock cannot supply at any coefficient. ⇒ the next sink is a ΔT that cannot decay — the
+   **water-cooled shield**, one of the three parked levers.
+2. **The headline mid-bore claim needs qualifying before it is archived.** My taper measurement:
+   W1 runs **104.5 mm at 140 mm → 62.2 mm at 280 mm**, **0.302 mm per mm**, against Meier's flat ~86.
+   The three scoreable points are **+15.0 / +1.3 / −13.1 mm** — so *"85.3 at 200 mm against Meier's
+   85"* is where a steep cone **crosses** a flat line, and the band mean **+1.1 mm** is a
+   **cancellation**. Report the taper, not the mean.
+3. **No leg in this packet bounds the wall coefficient.** `side_face_h_scale` also reaches
+   below-plane floor flanks, and the measured budget shows `jet_P_wall` **unchanged** (325 → 328 W)
+   between W1 and W074 while `jet_P_face` moved 1743 → 1527 W. A wall-only scale needs the factor
+   gated on above-plane faces — a different key.
+
+**What stands, and is strong**
+
+- **The coefficient closed the rate, from one literal and no fit.** 3.47 → **1.632 m/h**, inside
+  Meier's 1.2–1.8, and I re-derived the scale from Table 4 itself (**0.742535** against the written
+  0.742499). The packet pre-registered an in-band result as *a finding, not a pass*, and the notes
+  honour that.
+- **`c6` did not move: 851.54 K on all three legs** against 852.6 in P2-2f, with the clamp fraction
+  **falling** 23.7 % → 21.8 % by volume. ⇒ none of the delivery change came from disturbing the
+  criterion. **P6 confirmed**, and I verified it on all three legs independently.
+- **The fixture is the best-built in this programme so far.** (b2) exists so (b) cannot pass flat;
+  (e2) exists so the march cannot pass inert — and **(e2) is what caught the empty-slot bug**; (d)
+  measures rank-independence; (a) reports the residual at the precision the file actually has and
+  leaves the 1e-9 claim to the binary's abort.
+- **Two packet instructions were refused with reasons that check out**: redefining `jet_T_exhaust`
+  (would have handed every floor-flank face the cold mouth gas) and lowering `side_face_h_r_min`
+  alone (it is also the wall law's height datum, which P2-1 measured as a 1.04–1.74× lever).
+- **The `0.23 mm` finding** — bore 39.77 mm against a typed 40.0, a tenth of a cell — is why the
+  derived law had never touched the surface this step exists to heat.
+
+**Named risks** (rows 10, 11, 12): the packet scheduling three rows at 60 s where they cannot be
+evaluated; W074 not isolating the wall; and the conical bore crossing Meier rather than matching it.
+**Nits** (rows 13, 17, 18): a three-point `c2` band narrower than its own spread; `c4`'s pad-inclusion
+ambiguity; and `a3`'s "five readers" met as four plus one justified exception.
+
+## P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archived 2026-10-14 with two advisor corrections carried)
+
+**Verdict: accepted** (reviewer, 10-13 20:55: all nine gating rows reproduce; 20 diff rows, 0 bug /
+3 risk / 1 nit / 16 ok; the taper headline corrected to ~19 %, not tenfold — B1L's parallel sides are a
+saturated ~115 mm cylinder). Study `tests/MMWSpalling/studies/p2_4_body/` (S0 500 s, B1L 800 s, NB 160 s,
+the killed first B1L). Advisor's independent read: `Claude_markdowns/2026-10-13.md` §17; the sources
+read the next day that bear on it: `2026-10-14.md` §1–§4.
+
+### What the step established
+
+- **S0 (floor ×0.743, wall OFF) is the result:** 2.124 m/h (Meier 1.2–1.8) ⇒ P2-3's in-band 1.63 was
+  geometric — the wall's lateral removal strips pad carriers (23.6 vs 26.7 columns; pit lead +7 mm)
+  with the inner-floor power within 3 %. S0's hole is within +7 / −6 mm of Meier at every depth above
+  the pit (103 / 92 / 85 / 83 / 81 / 80 / 79 mm at 10 / 25 / 50 / 75 / 125 / 150 / 175–250); volume
+  1.65 L / 500 s (×4) vs 1.27. **S0 is the reference Meier state.**
+- **The body sink is built, witnessed and ~3× too weak:** mouth gas −87 K at 500 s, 1,430 K at 800 s;
+  `body_h_used` 142 → 47 W/m²K as the bore widens (gap 25 mm at r 58) while immersion grows 0.01 →
+  0.37 m, so power stays ~1 kW quarter; in 500–800 s the WALL takes 2.5 kW quarter and `ledger_P_robin`
+  reaches 4.85 kW quarter ≈ 19 kW full ≈ 50 % of HHV. The model sits in a self-consistent wide-bore /
+  weak-sink / hot-wall state the body cannot leave, because its immersion is zero when the wall
+  begins to spall. Mechanism rows: NB byte-identical to W1 (33,006 rows); a1 on the Meier deck with a
+  non-vacuity row; the two-clock b1; `-np 5` 29 % faster; two latent P2-3 parse defects fixed; the
+  price split by regime (floor 1.564 / wall 1.316 GJ/m³).
+
+### Two corrections carried (advisor, `2026-10-13.md` §17; not in the review)
+
+- ⚠⚠ **c9's "cap share 0.0 %" is a reduction artefact.** `reduce_p2_4.py:386` compared against
+  `0.015` (`h_spall_max`, 15 mm) where the cap is `flake_h_max = 0.0015`, and `:170` reads `h_f` ("0")
+  before `h_f_lat` on regime-6 rows. Re-measured with the right cap on S0, W1 and B1L: regime 6
+  **95–100 % capped** in every band (earned 2.2–4.8 mm clamped to 1.5), regime 1 **95–100 % at
+  r ≥ 28 mm** (the pad ring), 0–0.4 % at r < 20. The review's "retires a parked lever" and "the residual
+  points at ambient entrainment" do not stand; the wall and the ring spall in the cap-clamped mode.
+- ⚠⚠ **c4's growth bar was empty and its level bar was the advisor's error.** The event-based Ø_eq
+  assigned regime-6 rows by column top (fire depth unlogged), over-reading W1's mouth (134.7 vs the
+  mask's 117.4) and its slope (0.085 vs 0.013 mm/s). On the mask W1's lip ALSO plateaued at ~400 s
+  (117.2); B1L's at 114.75. The body's lip effect is the level difference, 2.6 mm = 28 % of the wall's
+  excess over S0 (the implementer's own ordering). The plateau is the gap-dependent self-limit.
+
+### Carried forward (planner, 2026-10-14)
+
+- ⚠⚠ **The floor level under P2-3/P2-4 rested on Kant & von Rohr 2016 Table 4, a 3–10 kW threshold
+  burner** ("where at least a single spall could be detected") — a category error (advisor). Höser
+  2016/2018 measured the drilling flame: 7.4 MW/m² / 7.1 kW/m²K on the axis at L = 8. No Meier floor
+  number from P2-3/P2-4 is calibrated; P2-5 re-derives the floor from her measurement.
+- ⚠⚠ **Onset vs steady-state (Wilkinson 1993):** the onset temperature is flat with flux (0.2–7.4
+  MW/m², five rocks); only the steady-state surface mean rises. The criterion is right to be
+  flux-independent; the exponent P2-2d chased belongs to the time-mean floor T.
+- ⚠⚠ **A measured minimum flux for spallation** (Kant 2016: h 500–700 W/m²K ≈ 0.3–0.5 MW/m²);
+  physically the stress referenced to the constraining rock, not the initial temperature — P2-2e; a
+  flux proxy h·(T_gas − 850 K) ≥ q_min separates the Meier wall (0.11–0.17) from the ring (0.9–1.0).
+- The cold body, the march and the derived law stay built and default-off; revisit after P2-5b.
+- `-np 5` on the 60³×5 grid; the `NB`-style same-binary key-off control on every physics leg.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-14)
+
+Active step:
+- **P2-4 — the cold body in the annulus: a second sink in the wall march** (`ACTIVE_STEP.md`;
+  installed 2026-10-13 by the advisor via /plan at the user's instruction — the revision that answers
+  P2-3's rejection). P2-3's `b3` failed as a physics negative: the march cools the gas 53 K because
+  the rock wall is a near-equilibrium surface; the one cold surface in Meier's hole is the Ø 67
+  water-cooled mantle (`WJ_R_SHIELD` = 0.0335, already in the wall law). Adds, per march bin,
+  `P_body = h_duct · 2π r_body f_sector dz · (T_in − 320 K)`, one-sided; keys default off (`jet_body`,
+  `jet_body_T`, `jet_body_h_scale`, `jet_wall_mdot = jet|fresh`); identity to four sinks; columns
+  appended last; per-regime flake energy and the cap-share-by-radius diagnostic carried. ⚠ Sized
+  honestly: `wall_h_duct` 83 W/m²K and 52 mm of immersion in the 150–350 s window ⇒ 36–45 K; 165 mm
+  at 500 s ⇒ 106–134 K; so the leg runs **800 s** (the longest with ≥ 60 mm of rock under both rate
+  branches; 1,000 s bottoms out) ⇒ 190–270 K at the mouth. Legs, serial: `S0` (floor scale alone,
+  wall off — the control P2-3 never ran; decides whether the in-band rate is real or geometric), then
+  `B1L` (body on, 800 s; its first 500 s are the gated mechanism leg, scored from the live logs at
+  the 500 s mark and killed on failure); `W1L` NOT run (user), `B1F` optional. Pre-registered: wall
+  share 42 → 20–30 %, lip growth ≤ half of W1's 0.085 mm/s after ~600 s, bore still above Meier
+  above the plane; rate unchanged (pad-ring limited) OR rising toward 2.0–2.3 (geometric) — under the
+  second, a rate leaving Meier's band while the bore closes IS the finding and the wall is not turned
+  back on. Parked: cuttings, ambient entrainment, 1 mm, the cap rule, the free-surface plateau.
+  Basis: `Claude_markdowns/2026-10-13.md` §12–15.
+
+### ROADMAP milestone released verbatim 2026-10-14 (superseded by P2-5 / P2-5b)
+
+- **P2-5 — the floor taper's four radii** (was "P2-4" until the body sink took that label 2026-10-13). ⚠ Provenance clean: 40 mm is `foot_r_outer` (Oe80 skirt,
+  VT5 drawings), 60 mm the measured mouth ring, 56/76 are 40+16 where **16 mm is one numerical
+  choice used twice**. ⚠⚠ **CORRECTED 2026-10-13, three errors retired:** the old bullet's **118.0**
+  was **pre-D2v** (post-D2v `M1` cut **91.69 mm at 50 mm**, and the floor claim is recorded there as
+  **refuted, favourably** — `ARCHIVE_DONE.md` L12625, *not* "unread"); and "at 1 mm the floor drops
+  to 88-92" misread `2026-09-23.md:306`, where **88 = 2·(40 + W/2) with the taper WIDTH halved to
+  8 mm** — a **deck parameter, not the mesh**, which cannot move radii that are literal constants in
+  a parsed `h_expr` string. ⇒ **the lever is the taper width, testable at 2 mm.** ⚠ P2-2f overtook
+  it: under feet the bore is **5 mm NARROWER** than Meier at 150-450 mm.
+
+### Claude completion notes
+
+**Files changed.**
+
+*`src/`:*
+- `MMWSpalling.H` — four keys (`jet_body`, `jet_body_T`, `jet_body_h_scale`, `jet_wall_mdot`) with
+  inert-key aborts; the body debit inside the existing bin loop with **both sinks clamped jointly**
+  against the `T_ent` floor and split in proportion; `mcp_wall`; the closure
+  `jet_T_exhaust = T_gas + (P_wall + P_body)/mcp_wall` with `jet_P_retained` under `fresh`; the
+  budget identity extended to five terms; seven columns appended after `side_h_used_n_above`;
+  `P_body_k` in the profile CSV.
+  **Two latent P2-3 parse defects fixed** — see takeaways 1 and 2.
+- `MMWSpalling/Removal.H` — `ledger_E_flake_wall += E_lat_local` beside the existing total, so the
+  price can be split by regime (owed since P2-3). A share, not a second sink: deliberately **not**
+  credited in `ledger_err_solid`.
+
+*tests, harnesses, artefacts:*
+- `studies/p2_4_body/gate_a1.py` + `GATE_a1.txt` — NEW, the body gate **on the Meier deck**.
+- `unit/wall_march/test` — the P2-4 legs removed, with the reason recorded in the file.
+- `unit/lateral_flux_lock/test` — the P2-4 clause (one duct read, no typed fallback, role and cap
+  counts unchanged) with a text negative control.
+- `studies/p2_4_body/run_p2_4.py` (incl. the live `--gate-at` scorer and the `NB` discriminator),
+  `reduce_p2_4.py`, `GATE_a3_DECLARED.txt`, `GATE_a3.txt`, `TREE_p2_4.log`, `RUN_S0.txt`,
+  `RUN_B1L.txt`, `RUN_NB.txt`, `MARK_B1L.txt`, `RESULTS.txt`.
+- `legs/B1L_killed500/` — the run the false `b1` killed, archived (rule 9) because `MARK_B1L.txt`
+  cites it.
+
+### Criteria
+
+| # | test | measured | verdict | output |
+|---|---|---|---|---|
+| a1 | fixture (f)–(k) | **10/10.** Per-bin area identity worst **1.878e-04**, sector **0.2500**; hot body **exactly 0 while the law is ready**; 4 vs 5 ranks identical on 12,499 rows; `body_noLaw_n` **0** | **PASS** ⚠ moved to the Meier deck — takeaway 3 | `GATE_a1.txt` |
+| a2 | lock | one `jet_body_h_scale × wall_h_duct` site; `body_h` one assignment, alternatives duct-or-zero; `SideFaceH` roles **5 (unchanged)**, cap sites **3 (unchanged)**; control RED | **PASS** | `unit/lateral_flux_lock/` |
+| a3 | tree gate | **0 changed paths of 2639**, control 26; declared set EMPTY | **PASS** | `GATE_a3.txt`, `GATE_a3_DECLARED.txt` |
+| a4 | `S0` valid | rc 0, ledger **1.153e-03**, stall 2.14 s; **rate 2.125 m/h** | **PASS** | `RUN_S0.txt` |
+| b1 | `B1L` pre-crossing identity | **30,747 rows, md5 53cde66e0a3e, identical to W1** | **PASS** ⚠ after re-scoring on one clock — takeaway 4 | `MARK_B1L.txt` |
+| b2 | body reach | `body_h_used` > 0 on **3652 of 3652** steps with bins (100 %); `body_noLaw_n` 0 | **PASS** | `MARK_B1L.txt` |
+| b3 | ledger at 500 s | **1.1530e-03** | **PASS** | `MARK_B1L.txt` |
+| b4 | pads descend | v **1.621 m/h**, stall **9.424 s** | **PASS** | `MARK_B1L.txt` |
+| b5 | depth guard | 301.0 mm + 1.857 m/h × 300 s = **455.7 mm** ≤ 500 | **PASS** | `MARK_B1L.txt` |
+| c1 | mouth gas at the mark vs W1 | **87.3 K** lower (1390.1 vs 1477.4) | **MISS** (bar 100–130) | `MARK_B1L.txt` |
+| c2 | mouth gas at 800 s | **1430.5 K** | **MISS** (bar 1190–1270) | `RESULTS.txt` |
+| c3 | body power / water rise | 500 s **910.3 W** quarter = 3.64 kW, water **19.6 K**; 800 s **1021.9 W** = 4.09 kW, **22.0 K** | **MISS** both (bars 650–850 / 1150–1650 W) | `RESULTS.txt` |
+| c4 | top-layer Ø_eq | **growth 0.0000 mm/s** over 500–800 s (flat at 114.75 from t ≈ 400 s) vs W1's 0.085; level **114.75 mm** at 500 s | **growth PASS; level MISS** ⚠ the level bar's provenance does not reproduce — takeaway 6 | `RESULTS.txt` |
+| c5 | bore Ø(z) + taper | **taper 25–150 mm = +0.029 mm/mm** (W1 +0.302, W074 +0.166, Meier −0.027); whole section −0.102. Profile 114.6–119.0 mm from 10 to 250 mm, 7 in-band depths | **PASS on the taper prediction** ("below W1's 0.30"); Ø still far above Meier | `RESULTS.txt` |
+| c6 | wall share of volume | **44.6 %** whole-run (floor 0.51588 L + wall 0.41450 L) | **MISS** (bar 20–30 %) | `RESULTS.txt` |
+| c7 | rate | `S0` **2.125**; `B1L` **1.621** (150–350) → **1.769 m/h** (500–800) | **P5 branch B** | `RESULTS.txt` |
+| c8 | firing T + clamp by volume | **851.70 K**; clamp **22.15 %** by volume | **PASS** both — P7 holds | `RESULTS.txt` |
+| c9 | price per regime | floor **1.564**, wall **1.316 GJ/m³**; cap share **0.0 %** in every radius band and regime | **report** | `RESULTS.txt` |
+| d1 | verdict | below | **verdict** | these notes |
+
+#### (d1) Verdict
+
+**The cold body is real, correct and too weak — and the step that matters most is the control.**
+
+**S0 settles P5 on branch B, and it reinterprets P2-3.** With the Kant floor scale and the wall
+**off**, the rate is **2.125 m/h** — outside Meier's 1.2–1.8. P2-3's in-band 1.633 was therefore
+substantially **geometric**: the wall's sideways removal slows the descent. `B1L` confirms the
+mechanism from the other side, rising 1.621 → **1.769 m/h** over 500–800 s as the body suppresses
+wall removal. Per the packet's own guardrail this is the finding and **nothing was re-tuned to
+recover the rate**.
+
+**What the body does deliver is SHAPE.** The taper over 25–150 mm goes **+0.302 (W1) → +0.029
+mm/mm**, against Meier's −0.027 — a tenfold improvement, and the upper bore is now nearly
+parallel-sided where W1 flared. `c4` is the same result in the other statistic: **Ø_eq freezes at
+114.75 mm from t ≈ 400 s and does not move for the next 400 s**, where W1 was still climbing. The
+mouth's *growth* is closed. ⚠ Attribution caveat: `B1L` ran 800 s against W1's 500, so time is a
+partial confound; the three-way ordering at 500 s (S0 108.17 < B1L 114.75 < W1 117.37) is the
+cleaner comparison and puts the body at **28.5 %** of the wall's mouth excess.
+
+**What it does not deliver is MAGNITUDE, and the reason is measured.** `body_h_used` **halves**,
+83.5 → 51.7 W/m²K, because the duct coefficient falls as the gap widens — so the body's power is
+nearly flat (910 → 1022 W) where the prediction wanted it to double, `body_L` grows 2.07 → 3.53 m,
+and the mouth reaches only **1430 K** against the 1190–1270 bar. The sink cannot supply the ~410 K
+drop that would stop the mouth firing: it gets weaker exactly as the immersion that would help it
+grows. ⚠ `c3`'s water rise is **19.6–22.0 K**, well under the 60 K plausibility ceiling, so the
+coefficient is not the question — the **geometry of the annulus** is.
+
+**And the wall still takes 44.6 % of the volume** (c6, bar 20–30 %), unchanged from W1's 42 %. With
+the taper fixed and the share unmoved, the body changed **where** the wall removes, not **how much**.
+That is the residual, and it points at the two levers this packet parked for it: the **cap rule**
+(`c9`: the cap share is **0.0 %** in every band, so the flake cap is NOT what limits this wall) and
+**ambient entrainment at the mouth** — the one remaining sink whose driving ΔT does not decay with
+the gap, unlike the body's.
+
+⚠ **Not quotable:** the bore is 114–119 mm against Meier's 85–92 at every in-band depth, so no
+diameter here is a validation result; `c9`'s per-regime prices (floor 1.564, wall 1.316 GJ/m³) are
+first-of-kind and have no bar.
+
+### Implementation takeaways
+
+1. ⚠⚠ **P2-3's INERT-KEY ABORT WAS DEAD CODE, READING TWO UNPARSED VALUES.** `jet_wall_march` was
+   queried **below** the check that reads it, and `jet_enthalpy` is parsed at `:10511`, far below the
+   whole side_face block — the D2ab note at `:10021` records that exact hazard and P2-3 walked into
+   it anyway. So naming `jet_wall_march = 1` without `jet_closure = enthalpy` did **not** abort, it
+   went silently inert: the fifth instance of that class here. Moving the query up exposed the second
+   half (every march leg then aborted), so the jet-dependent abort is now **re-homed to
+   `CheckPadRing`**, the post-parse both-exits home D2ab and P2-1 already use. ⚠ Any future cross-key
+   abort in `SurfacePatch::Parse` that reads `jet_*` belongs there, not in Parse.
+
+2. ⚠⚠ **`pp.contains(k)` AFTER `pp.query_default(k, …)` IS ALWAYS TRUE** — ALAMO's ParmParse
+   registers the key when it is queried with a default. My "named without its feature" guards for
+   `jet_body_T` / `jet_body_h_scale` therefore fired on every leg that never mentioned them, aborting
+   all four P2-3 fixture legs with rc 6. Sample the flags **before** the queries, exactly as the
+   existing `h_given` for `side_face_h` does.
+
+3. ⚠⚠ **`a1` AS SPECIFIED CANNOT BE SATISFIED ON ANY UNIT-SCALE BOX, AND THE FAILURE MODE IS A FAKE
+   PASS.** The body's coefficient is the law's duct scalar with no typed fallback, so `wall_law_ready`
+   must hold — which needs a bore wider than `WJ_R_SHIELD + 2dx` (**> 75 mm across**) *and* a domain
+   deep enough for the bore measurement's own band, which drops 100 mm below the mouth and 20 mm
+   above the floor. On the 48 mm × 80 mm fixture box a 75 mm hole does not fit and the band is empty,
+   so **`wall_r_bore` is identically 0**: probed there, `wall_law_on` 0, `body_h_used` 0,
+   `body_noLaw_n` **4998 of 4998**. Row (g) — "a hot body draws exactly zero" — would have reported a
+   PASS on a zero caused by the law never switching on. ⇒ the gate moved to the Meier deck
+   (`gate_a1.py`, 200 s, where the law readies at ~187 s). ⚠ **Any future body/wall-law fixture needs
+   the full deck; the unit box is structurally incapable.**
+   ⚠ Row (f) was also **re-specified**: the packet fits a decay length against `body_L`, which needs
+   the rock faces off — but with `factor_above = 0` the bore does not reach 75 mm by 200 s and the row
+   goes vacuous again. Since the profile CSV logs `P_k` and `P_body_k` separately, the area is checked
+   **per bin** against the logged h, the logged inlet T and the geometric area instead. A dropped
+   sector fraction still shows as exactly 4×, which is what the fitted length was a proxy for.
+
+4. ⚠⚠ **`b1` FAILED ON TWO CLOCKS, NOT ON A LEAK — AND THE DISCRIMINATOR IS THE PART WORTH KEEPING.**
+   `thermo` stamps a step's END, the event log its START (standing rule 7(iii), cited in this
+   packet's own guardrails). The first `wall_bins > 0` thermo row is at 149.472 s while that same
+   step's event rows carry 149.424, so a window of `event_time < 149.472` swept in the rows of the
+   first bin-bearing step — the step where the body first legitimately acts. Scored that way b1 failed
+   by **2 rows of 30,784** and the live gate killed the run.
+   The diagnosis needed a control, because "the body leaked" and "the binary recompiled" demand
+   opposite responses. `NB` (same binary, `jet_body=0`, 160 s) is **byte-identical to W1**
+   (md5 f81b3f5f, 30,784 rows) ⇒ **the recompile changed nothing and every P2-4 source edit is
+   provably inert with the key off**, which is a stronger statement than a3 alone makes. And
+   `B1L == NB` strictly before 149.424 (30,761 rows each) ⇒ the body is inert until the exact step
+   the first bin appears. ⇒ bound such a window by the **previous thermo row's** time, which is
+   before the step on either clock.
+   ⚠ Keep `NB`: it is the only artefact that separates a source change from a toolchain change.
+
+5. ⚠ **THE LIVE `--gate-at` SCORER EARNED ITS KEEP AND HAS ONE TRAP.** It caught the failing gate at
+   minute 32 of a 51-minute leg and terminated by PID (`pkill -f` is forbidden and would match the
+   harness's own command line). ⚠ But it reads a **partially flushed** event log: the killed run
+   scored `deepest = 303.0 mm` where the completed run reads **301.0** from the same step. Use the
+   live reading for a go/no-go, never as a reported number.
+
+6. ⚠⚠ **`c4`'s LEVEL BAR DOES NOT REPRODUCE; ITS GROWTH BAR DOES.** The 128–132 mm bar was set
+   against a W1 figure of **134.7 mm at 500 s**. With the definition the packet states — mean voided
+   area per level over the 0–10 mm layer, ×4, Ø = 2√(A/π) — W1 measures **117.37 mm**, and that
+   agrees with W1's own sector-mean mouth (117.8), which cross-validates the estimator. I could not
+   find a reading of the stated definition that yields 134.7 (summing the five levels instead of
+   averaging gives √5 × = 256 mm). ⇒ the **growth** half is sound (a difference inside one
+   estimator, independent of the level) and the **level** half should be re-derived before it is
+   used as a bar again.
+   ⚠ The first version of this reduction sampled three plotfiles (first/middle/last) and printed the
+   same value twice — which *hid the plateau that is the result*. There are 17; read them all.
+
+7. **The body's own measured behaviour, which no bar captures.** `body_h_used` **halves** across the
+   run (83.5 → 51.7 W/m²K) because the duct coefficient falls as the annulus gap widens, while
+   `body_z_imm` grows 0.068 → 0.297 m. The two nearly cancel: power 910 → 1022 W, `body_L`
+   2.07 → 3.53 m. ⇒ **this sink weakens exactly as the immersion that should strengthen it grows**,
+   which is why no value of `jet_body_T` or `jet_body_h_scale` reaches the mouth bar — P6's "T_body
+   carries no magnitude" is right for the wrong reason: the *geometry* carries it.
+
+8. ⚠ **BOTH SINKS MUST BE CLAMPED TOGETHER.** The rock faces and the body are clamped jointly
+   against the `T_ent` floor and then split in proportion to what each asked for. Clamping them
+   separately lets the pair overdraw the stream and breaks `face + wall + body + exhaust == cap`.
+   The fixture's (f) row only sees this on bins that actually clamp, so it reports them separately
+   rather than tolerating them silently.
+
+9. ⚠ **`jet_T_exhaust` STILL MEANS FLOOR EXIT**, now recovered through both wall-section sinks. Under
+   `fresh` the identity gains a fifth term: the entrained share never climbs the bore, so
+   `jet_P_retained = (mcp − mcp_fresh)(T_floor_exit − T_ent)` and
+   `face + wall + body + exhaust_mouth + retained == cap`. Measured `jet_P_retained` max **4646 W**,
+   so the term is large and the row is not two zeros matching.
+
+10. ⚠ **COLUMN POSITION AND COLUMN GATING ARE SEPARATE CHOICES, AND I CONFLATED THEM.** The packet
+    says append after `side_h_used_n_above`; doing so literally put the body's columns **inside** the
+    derived-law `if`, silently making them conditional on `side_face_h_law = derived` too — the
+    fixture then showed `jet_P_body` with zero rows and four rows failed on a missing column rather
+    than on physics. They are now positioned there but gated on `jet_body` alone.
+
+11. **Keys added:** `surface_patch.jet_body` (0), `jet_body_T` (320.0 K), `jet_body_h_scale` (1.0),
+    `jet_wall_mdot` = `jet`|`fresh` (`jet`). Each aborts if named without its feature, and
+    `jet_body_h_scale <= 0` aborts (a silent 0 is how a sink goes inert without saying so).
+
+12. **Cost, measured.** 3.8–4.1 wall-s per simulated s at 4 ranks ⇒ 32 min per 500 s leg, 54 min per
+    800 s leg. ⚠ **`-np 5` is 29 % faster** (491 s vs 690 s on the a1 legs) because the grid is five
+    60³ boxes on four ranks — the packet's own note, now measured. The a1 gate cost 44 min, and
+    `reduce_p2_4.py` ~4 min per leg (17 plotfiles × FAB decode).
+
+
+### Review findings
+
+Reviewer phase, independent re-derivation. Provenance: `Removal.H` 17:03:53, `MMWSpalling.H`
+17:14:33, binary `5dc0a53f…` 17:14:54 — correct ordering, `find src -newer bin/` empty.
+
+**No test was re-run and no leg relaunched** — every cited artefact for this packet is in the
+repository. My own reductions: five manifest diffs, md5 comparisons of the `NB`/`W1`/`B1L` event
+logs, void-mask bore profiles and top-layer area statistics for S0 / B1L / W1 at matched plotfiles,
+all three legs' `thermo.dat` by column name, and full event-log censuses.
+
+#### Criteria — the packet's table, with my value and its source
+
+⚠ The packet's final column ("what a failure of this row means") is unchanged and is not repeated.
+
+| # | bar | kind | **value I derived** | **read from** | verdict |
+|---|---|---|---|---|---|
+| a1 | fixture (f)–(k) | **gate** | 10/10 reported, on the **Meier deck** rather than the fixture box. ⚠ I checked the reason rather than the result and it is structural and correct: the body's coefficient is the law's duct scalar with **no typed fallback**, so `wall_law_ready` needs a bore wider than `WJ_R_SHIELD + 2dx` (**> 75 mm**) *and* a domain deep enough for the bore band — neither fits a 48 × 80 mm box, where `wall_r_bore` is identically 0 and `body_noLaw_n` reads **4998 of 4998**. ⇒ row (g) *"a hot body draws exactly zero"* would have returned a **fake PASS on a zero caused by the law never switching on**. Moving the venue is the right call, and row (f) was re-specified to a per-bin area check for the same reason | `GATE_a1.txt`; takeaway 3 | **PASS**, venue moved with cause |
+| a2 | duct scalar read once; counts unchanged; control RED | **gate** | one `jet_body_h_scale × wall_h_duct` site; `SideFaceH` roles **5 (unchanged)** and cap sites **3 (unchanged)** — i.e. the body did **not** add a sixth role, which is the point; control RED | `unit/lateral_flux_lock/` | **PASS** |
+| a3 | 0 of 2639, control 26 | **gate** | **`p2_4.md5` is a real new sweep** and my own diff gives **0 changed paths of 2639** against `p2_3`, `p2_2f_rev2` **and** `p2_2b_final`, controls **26** (`d2aa`) / **863** (`d2t`), declared set EMPTY | my diff of `witness/p2_4.md5` | **PASS** |
+| a4 | S0 valid, rate reported | **gate** | rc 0; `ledger_err_solid` max **1.1530e-03**; stall max **8.432 s**; rate 150–350 s **2.124 m/h** (reported 2.125) | my reduction of `legs/S0/run/thermo.dat` | **PASS** |
+| b1 | event log byte-identical to W1 through the first above-plane step | **gate** | **PASS, and I reproduced it on the safe bound the takeaway prescribes.** The first `wall_bins > 0` thermo row is **149.472 s**, the previous row **149.376 s**; bounding by the previous row gives **30,748 rows identical** between NB and B1L, same md5 `a0d60d41ff36`. ✅ **And the `NB` control is the strongest artefact here**: NB's **33,006 rows are byte-identical to W1's first 33,006** (md5 `60b1a8793e9d`) ⇒ the recompile changed nothing and **every P2-4 source edit is provably inert with the key off on a physics leg**, which `a3` alone cannot say | my md5 comparisons; `MARK_B1L.txt` | **PASS**, after a justified re-score |
+| b2 | `body_h_used` > 0 on ≥ 95 % of binned steps | **gate** | **3652 of 3652 = 100 %**; `body_noLaw_n` **0** | `MARK_B1L.txt` | **PASS** |
+| b3 | ≤ 5e-3 at 500 s | **gate** | **1.1530e-03** at the 500 s mark; ⚠ my **whole-run** max is **1.2728e-03**, still 3.9× inside the bar | my reduction of `legs/B1L/run/thermo.dat` | **PASS** |
+| b4 | v > 0.8 m/h; stall < 10 s | **gate** | v **1.620 m/h** (reported 1.621); stall max **9.424 s**. ⚠ That is **94 % of the bar** — passing, but tight enough to be worth naming | my reduction | **PASS**, tight |
+| b5 | projected and realised deepest ≤ 500 mm | **gate** | 301.0 + 1.857 × 300 = **455.7 mm** projected; realised deepest at 800 s is **451 mm** from my own mask ⇒ the projection was good to 5 mm and the guard held | my mask of `50000cell`; `MARK_B1L.txt` | **PASS** |
+| c1 | 100–130 K below W1 | report | **1390.1 K** at the 500 s mark against W1's 1477.4 ⇒ **87.3 K** — **MISS** on the low side | my reduction of both `thermo.dat` | **MISS** |
+| c2 | 1190–1270 K at 800 s | report | **1430.5 K** — MISS, and ⚠ **it moves the wrong way**: the mouth gas is *hotter* at 800 s (1430.5) than at 500 s (1390.1), despite immersion growing 0.010 → 0.372 m | my reduction | **MISS** |
+| c3 | 650–850 W at 500 s; 1150–1650 at 800 s | report | my instantaneous reads are **864.1 W** at 500 s and **1103.6 W** at 800 s against the reported window figures 910.3 / 1021.9 — both readings **miss on the same side at each end**, and the conclusion (power nearly flat where the prediction wanted it to double) holds either way. Water rise 19.6–22.0 K, well under the 60 K plausibility ceiling | my reduction; `RESULTS.txt` | **MISS ×2** |
+| c4 | level 128–132 mm; growth ≤ 0.042 mm/s | report | **growth: 0.0000 mm/s — I reproduce it exactly.** My top-layer Ø_eq for B1L is **114.75 mm at 500 s and 114.75 mm at 800 s**, identical to two decimals over 400 s, where W1 was still climbing. ✅ And the three-way 500 s ordering reproduces **exactly**: S0 **108.17** < B1L **114.75** < W1 **117.37**, putting the body at **28.5 %** of the wall's mouth excess. ⚠⚠ The **level** bar does not reproduce and the implementer is right that it cannot: W1 measures **117.37** on the stated definition, not 134.7 — and my own P2-3 sector-mean mouth was **118.1**, which cross-validates 117.37 and refutes 134.7 | my own top-layer area statistic on all three legs | **growth PASS, level bar unreproducible** |
+| c5 | taper below W1's, Ø above Meier everywhere | report | ⚠⚠ **the taper improvement is real but ~19 %, not tenfold — see risk 1.** Like-for-like at **500 s over 25–150 mm**: S0 **+0.096**, **B1L +0.107**, W1 **+0.132** mm/mm. The reported "+0.302 → +0.029" compares W1 over **140–280 mm at 500 s** against B1L over **25–150 mm at 800 s**. And Ø is above Meier at every in-band depth on both wall legs, as stated | my mask profiles at matched plotfiles | **MISS as claimed; improvement right-sized** |
+| c6 | 20–30 % | report | **44.6 %** (floor 0.51588 + wall 0.41450 = 0.93038 L) — exactly as reported, **MISS**. ⚠ But **S0's wall share is 12.1 %** on my census, so a below-plane baseline is structural and the **above-plane** contribution is ~**32 points**, not 44.6 | my censuses of both event logs | **MISS**, baseline named |
+| c7 | two pre-registered branches | report | S0 **2.124**; B1L **1.620 → 1.768 m/h** — all three reproduce to 1e-3. **Branch B** | my reduction of both `thermo.dat` | report |
+| c8 | 845 ± 10 K; 12–25 % | report | **851.70 K** and clamp **22.15 %** by volume on B1L (S0: 851.48 / 21.80 %) — exactly as reported, both inside both bars on both legs ⇒ **the step did not move the criterion** | my censuses | **PASS** |
+| c9 | reported, no bar | report | floor 1.564 / wall 1.316 GJ/m³; cap share **0.0 %** in every radius band and regime ⇒ **the flake cap is not what limits this wall**, which is a real negative for a parked lever | `RESULTS.txt` | report |
+| d1 | verdict | **verdict** | written, and its central reinterpretation is sound — see below | `ACTIVE_STEP.md` | **verdict** |
+
+#### Diff review
+
+| # | hunk / change | class | finding | tag |
+|---|---|---|---|---|
+| 1 | the body as a second one-sided debit per bin, inside the existing wall march | **1 duplication** | **none** — it extends the march rather than adding a second enumeration, which is the lesson P2-3 paid for. The budget identity gains a term rather than a parallel accounting | **ok** |
+| 2 | ⚠ **both sinks clamped TOGETHER** against the `T_ent` floor, then split in proportion to what each asked for | **8 accounting** | clamping them separately would let the pair **overdraw the stream** and break `face + wall + body + exhaust == cap`. The fixture reports clamping bins separately rather than tolerating them silently. Correct and non-obvious | **ok** |
+| 3 | ⚠ `jet_T_exhaust` **still** means floor exit; under `fresh` the identity gains a **fifth** term | **8 accounting / 11** | `jet_P_retained = (mcp − mcp_fresh)(T_floor_exit − T_ent)`, measured max **4646 W** — so the term is large and the identity row is **not two zeros matching**. The P2-3 decision not to redefine `jet_T_exhaust` is carried forward intact | **ok** |
+| 4 | ⚠⚠ **P2-3's inert-key abort was dead code** | **7 keys have readers** | `jet_wall_march` was queried **below** the check that read it, and `jet_enthalpy` is parsed far below the whole side-face block — so naming `jet_wall_march = 1` without `jet_closure = enthalpy` **did not abort, it went silently inert**. ⚠⚠ **Fifth instance of that class**, and the D2ab note at `:10021` records the exact hazard. Re-homed to `CheckPadRing`, the post-parse both-exits home D2ab and P2-1 already use. ⇒ a cross-key abort in `SurfacePatch::Parse` that reads `jet_*` belongs there | **ok** |
+| 5 | ⚠⚠ `pp.contains(k)` **after** `pp.query_default(k, …)` is **always true** | **7 keys have readers** | ALAMO registers the key when it is queried with a default, so the "named without its feature" guards fired on **every** leg that never mentioned them, aborting all four fixture legs rc 6. Fixed by sampling the flags **before** the queries, as the existing `h_given` does. A trap worth a standing note | **ok** |
+| 6 | ⚠⚠ `a1` cannot be satisfied on any unit-scale box, **and the failure mode is a fake pass** | **4 scope vs data source / 10** | the body's coefficient is the law's duct scalar with no typed fallback ⇒ `wall_law_ready` needs > 75 mm across *and* a deep domain; on the fixture box `wall_r_bore` is identically 0 and `body_noLaw_n` reads **4998 of 4998**, so row (g) would have passed on a zero caused by the law never switching on. ⇒ **any future body/wall-law fixture needs the full deck** | **ok** |
+| 7 | ⚠⚠ `b1`'s two clocks | **6 boundaries / standing rule 7(iii)** | `thermo` stamps a step's **END**, the event log its **START**: first binned thermo row 149.472 s, its own event rows 149.424 s, so a `< 149.472` window swept in the first legitimate step and the row failed by **2 of 30,784**. ⇒ bound such a window by the **previous thermo row**. I reproduced the fix: **30,748 rows identical** at the 149.376 s bound | **ok** |
+| 8 | ✅ the **`NB`** control | **10 RED on the pre-fix binary (inverted)** | **the single most valuable artefact in the packet.** NB (same binary, `jet_body=0`) is **byte-identical to W1 over its full 33,006 rows** on my own md5 ⇒ it separates *"the body leaked"* from *"the binary recompiled"*, which demand opposite responses, and proves every P2-4 edit inert with the key off **on a physics leg**. Keep it | **ok** |
+| 9 | ⚠⚠ the `c5` taper headline mixes **windows and times** | **12 thresholds from a different population** | the reported "+0.302 → +0.029, a tenfold improvement" takes W1's taper over **140–280 mm at 500 s** (my own previous-review figure) and compares it with B1L over **25–150 mm at 800 s**. My like-for-like at **500 s / 25–150 mm**: W1 **+0.132**, B1L **+0.107** ⇒ a **19 %** improvement. ⚠ And B1L's flat **−0.027** at 800 s is a **saturated ~115 mm cylinder** — every depth from 10 to 250 mm has reached the same over-wide diameter — not profile control | **risk — named, the headline qualification** |
+| 10 | ⚠ `c6`'s 44.6 % has a structural baseline | **4 scope vs data source** | my census gives **S0 (wall off) = 12.1 %** wall share, because the below-plane floor-cone flanks are always on. ⇒ the **above-plane** contribution is ~**32 points**, and the 20–30 % bar does not say which it means. The "share unchanged from W1's 42 %" conclusion survives either way | **risk — named** |
+| 11 | ⚠ `b4`'s stall margin | **6 bars** | **9.424 s against a < 10 s bar** — 94 % of it. Passing, but one leg's jitter from failing a gate | **risk — named** |
+| 12 | ⚠⚠ `c4`'s level bar is unreproducible and the implementer said so | **5 unbacked / 12** | the 128–132 mm bar was set against a W1 figure of **134.7 mm**; on the stated definition W1 measures **117.37**, which I reproduce — and my own P2-3 sector-mean mouth of **118.1** cross-validates it. The implementer searched for a reading that yields 134.7 and reports that summing the five levels instead of averaging gives 256 mm. ⇒ the **growth** half is sound (a difference inside one estimator) and the **level** half must be re-derived | **ok** (correctly reported) |
+| 13 | ⚠ the first version of the `c4` reduction sampled three plotfiles | **12 self-limited** | *"printed the same value twice — which hid the plateau that is the result. There are 17; read them all."* Self-caught, and the plateau is the step's one clean positive | **ok** |
+| 14 | ⚠ the live `--gate-at` scorer | 13 | earned its keep — caught the failing gate at minute 32 of a 51-minute leg and **terminated by PID**, since `pkill -f` is forbidden *and* would match the harness's own command line. ⚠ One trap stated: it reads a **partially flushed** event log (scored 303.0 mm where the completed run reads 301.0) ⇒ go/no-go only, never a reported number | **ok** |
+| 15 | ⚠ column **position** vs column **gating** | **7 keys have readers** | appending after `side_h_used_n_above` literally put the body's columns **inside** the derived-law `if`, making them conditional on `side_face_h_law = derived` too; the fixture then failed four rows on a **missing column** rather than on physics. Now positioned there but gated on `jet_body` alone | **ok** |
+| 16 | four new keys, each aborting if named without its feature; `jet_body_h_scale <= 0` aborts | **7 / 13 guards** | `jet_body` (0), `jet_body_T` (320 K), `jet_body_h_scale` (1.0), `jet_wall_mdot` = `jet`｜`fresh` (`jet`) — all default to shipped behaviour, which is what `a3`'s 0 of 2639 confirms. ⚠ The `<= 0` abort is the right instinct: *"a silent 0 is how a sink goes inert without saying so"* | **ok** |
+| 17 | the body's measured behaviour, which no bar captures | **12 self-limited quantities** | ✅ **the step's real physics finding, and I reproduce it**: `body_h_used` falls **142.3 → 47.3 W/m²K** while `body_z_imm` grows **0.010 → 0.372 m**, so power is nearly flat (864 → 1104 W) and `body_L` grows 1.12 → 3.88 m. ⇒ **this sink weakens exactly as the immersion that should strengthen it grows**, because the duct coefficient falls as the annulus gap widens. That is why no value of `jet_body_T` or `jet_body_h_scale` reaches the mouth bar — **the geometry carries the magnitude, not the temperature** | **ok** |
+| 18 | ⚠ `c9`'s cap share | 12 | **0.0 % in every radius band and every regime** ⇒ **the flake cap is NOT what limits this wall**, which retires one of the two parked levers the verdict points at. A first-of-kind diagnostic with no bar, correctly labelled | **ok** |
+| 19 | ⚠ cost, and the rank finding | 13 | 3.8–4.1 wall-s per simulated s; **`-np 5` is 29 % faster** (491 vs 690 s) because the grid is five 60³ boxes on four ranks — the packet's own note, now measured. Worth carrying into every future leg budget | **nit** |
+| 20 | guardrails | 3 | **nothing re-tuned to recover the rate** when S0 came out at 2.124 — the packet's own guardrail, honoured; entrainment, the cap rule, cuttings, ambient air and 1 mm all **parked**; `jet_T_rec_next` keeps the floor-exit value; nothing re-pinned; `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE` untouched | **ok** |
+
+**Tally: 20 rows — 0 bug, 3 risk, 1 nit, 16 ok.**
+
+#### Unquotables
+
+Checked against `ROADMAP.md`'s `## Standing rules` **and** `## Known Stale/Important Notes`.
+✅ **Nothing was re-tuned when S0 refuted P2-3's in-band rate** — the packet's own guardrail, and the
+verdict states the reinterpretation rather than defending the earlier number. ✅ **SR 7(iii)** is
+cited in the packet's guardrails *and* is what `b1`'s re-score turned on. ✅ **Must-fix 2 from my
+P2-3 review is honoured**: `c5` reports the **taper**, never a band mean. ✅ **Must-fix 3 is
+correctly deferred**, not quietly dropped: no P2-3 leg bounded the wall coefficient and a wall-only
+variant is named as conditional milestone P2-6 needing an above-plane-gated key. ✅ The bore is
+explicitly **not quotable** (114–119 mm against Meier's 85–92), and `c9`'s per-regime prices are
+labelled first-of-kind with no bar. ✅ `pkill -f` was not used; termination was by PID.
+
+#### Verdict: accepted
+
+**All nine gating rows reproduce on my own reductions and no diff-review row is a `bug`.** Two gates
+needed a justified deviation — `a1`'s venue and `b1`'s clock — and I checked both arguments rather
+than the results; each is sound and each is reported rather than absorbed.
+
+**What I checked, and how**
+
+- **`b1` and the `NB` control, by md5.** NB is byte-identical to W1 over its full **33,006 rows**,
+  and B1L matches NB over **30,748 rows** at the safe clock bound (the previous thermo row, 149.376 s)
+  — so the body is inert until the exact step the first bin appears, and the recompile changed
+  nothing. ⚠ `NB` is the only artefact in this programme that separates a source change from a
+  toolchain change on a physics leg; it should be kept and the pattern reused.
+- **`c4`'s growth, independently**: my top-layer Ø_eq for B1L is **114.75 mm at both 500 s and
+  800 s** — flat to two decimals over 400 s — and the three-way 500 s ordering reproduces exactly
+  (S0 108.17 < B1L 114.75 < W1 117.37), putting the body at **28.5 %** of the wall's mouth excess.
+- **`c5`'s taper, at matched time and window** — which is where I part company with the headline.
+- **Every measured row from the raw files**: both ledgers, both rates and the 500–800 s branch, the
+  body's `h_used`/`z_imm`/`L`/power trajectory, `c6`'s two volumes, `c8` on both legs, and `a3` by my
+  own five-way manifest diff.
+
+**The finding most worth the planner's attention**
+
+**The taper improvement is real but about 19 %, not tenfold.** At matched time and window
+(500 s, 25–150 mm) I measure W1 **+0.132** and B1L **+0.107** mm/mm, with S0 at **+0.096**. The
+reported "+0.302 → +0.029" compares W1's **140–280 mm** taper — my own figure from the P2-3 review —
+against B1L's **25–150 mm** taper at **800 s**. ⚠ And B1L's flat **−0.027** at 800 s is a
+**saturated ~115 mm cylinder**: every depth from 10 to 250 mm has reached the same over-wide
+diameter, which is why the profile is parallel. ⇒ *"the upper bore is now nearly parallel-sided
+where W1 flared"* is true, but it is parallel **at 115 mm against Meier's 85**, by saturation rather
+than by profile control. The step's clean positive is `c4`'s **growth plateau**, which does not
+depend on the taper window at all.
+
+**What stands**
+
+- **S0 is the control that reinterprets P2-3, and it is the most valuable leg here.** Wall off, Kant
+  floor scale: **2.124 m/h**, outside Meier's 1.2–1.8 ⇒ P2-3's in-band 1.633 was substantially
+  **geometric**, the wall's sideways removal slowing the descent. B1L confirms it from the other
+  side, rising 1.620 → **1.768 m/h** as the body suppresses wall removal. **Nothing was re-tuned.**
+- **The body's weakness is measured, not inferred**: `body_h_used` **142.3 → 47.3 W/m²K** against
+  `body_z_imm` **0.010 → 0.372 m** ⇒ the sink gets weaker exactly as the immersion that would help it
+  grows, so the geometry carries the magnitude and no temperature or scale key can reach the bar.
+- **`c8` did not move** — 851.70 K and 22.15 % clamp, on both legs, inside both bars.
+- **`c9` retires a parked lever**: the cap share is **0.0 %** in every band, so the flake cap is not
+  what limits this wall. The residual points at ambient entrainment at the mouth.
+- **Five defects were caught and reported before they became results**: P2-3's dead inert-key abort
+  (fifth instance of that class), `pp.contains` after `query_default`, the fixture box's structural
+  inability to ready the wall law, the two-clock window, and column position vs gating.
+
+**Named risks** (rows 9, 10, 11): the taper window mismatch; `c6`'s 44.6 % carrying a structural
+12.1 % below-plane baseline, so the above-plane share is ~32 points; and `b4`'s stall at 94 % of its
+bar. **Nit** (row 19): `-np 5` is 29 % faster than `-np 4` on this grid and future budgets should
+use it.
+
+## P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found offline at zero compute; revised as rev 2 the same day)
+
+**Verdict: rejected** (reviewer, 10-14: `a1` fails structurally and every number reproduces; 17 diff rows,
+1 bug / 2 risk / 2 nit / 12 ok; no `src/` change, no leg launched, the binary P2-4's `5dc0a53f…`). The only
+run is the 2 s closure probe `studies/p2_5_hoeser/legs/SMOKE0` (flat h = 1000; reads `jet_T_stag` /
+`jet_s_c` / `jet_D_e` only). Advisor's read and the rev 2 design: `Claude_markdowns/2026-10-14.md` §6–§7.
+
+### What the attempt established
+
+- ⚠⚠ **`jet_core_length` multiplies the DECAY diameter D_e, not D** (`MMWSpalling.H:10625`, "units of
+  D_e"): 8.0 × 3.745 mm = 30 mm = 3.79 D. Under `fixed` entrainment the closure's own 1/s decay put the
+  axis gas at 1,038.76 K at L 8 (φ 0.4741) and BELOW her 873 K sensor beyond L ≈ 10.9, so the packet's fit
+  `h(s)·(T_stag − 873) = q(s)` had a negative bracket at 3 of its 4 points. Computable in one line at
+  planning time; the planner's (advisor's) error.
+- ⚠⚠ **Her h is sensor-referenced (T_f = T_nozzle); the model's closure is T_stag-referenced.** A Robin
+  calibration against a measured flux owes the level AND the slope: calibrating the flux alone bought the
+  level and sold the slope 6.29×, and made the melt row vacuous (standing rule 15 at the input end).
+- The three pre-registered shapes integrated to 10.34 / 4.76 / 3.19 kW over the Ø 40 opening at 850 K
+  against 0.55–0.68 kW of flakes — no admissible member; the integral belongs in the planning pass.
+- The lid constant `s < 0.0652` was mesh-dependent and on a floating-point tie at 2 mm (rev 2: s0 + dz/2);
+  the lid cannot be zero (`BuildFlameColumns` aborts on h ≤ 0; floor 0.001, score against it); the 2 mm
+  twin's `n_cell 25` vs `blocking_factor 2` aborts (set 1 on that leg); the AMReX parser's logical
+  operator is `and`, not `&&` (`ext/amrex/Src/Base/Parser/amrex_parser.l:68`; found at rev 2).
+- ⚠⚠ **Programme finding:** the Meier floor's ~1,760 K gas came from the `exhaust` mode (T_mix 1,504 K ⇒
+  D_e 8.05 mm, core 8.6 D, floor 1,504 K), not from the closure's decay; in `fixed` mode the same deck
+  reads 720–831 K at 85–107 mm. The closure's axial decay has never been validated; P2-5 rev 2 brackets it.
+- Kept for rev 2: the deck `validation/hoeser/input_lab`, the harness (token-aware last-wins rebuild of
+  W1's argv with three declared drop groups, derived rank count, `--probe`), the derivation script's
+  structure, and the measured SMOKE0 witnesses (mask not biting at `radius = 0.08`, bins to 68 mm;
+  `wall_law_on` 0 as a measured zero; ledger 1.1e-15; `jet_P_cap` 6,684.6 W quarter; `jet_D_e` 0.003745).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-14)
+
+Active step:
+- **P2-5 — the Höser lab leg: the floor criterion at a MEASURED flux, with no body in the hole**
+  (`ACTIVE_STEP.md`; installed 2026-10-14 by the advisor via /plan at the user's instruction). Höser
+  2016/2018 (on disk, `validation/hoeser/`) drilled Grimsel cylinders under a Ø 40 × 35 mm flange with
+  the 7.9 mm / 38 kW flame at 63.2 mm, measured **7.4 MW/m² on the axis** in the same channel, and
+  removed **26 cm³/min at zero load** (30 s). Deck: quarter 50 × 50 × 100 mm at **1 mm** (user's call;
+  `weibull.V0` 1e-9; 2 mm twin), prescribed fixed nozzle, `jet_T_ent_mode = fixed`, the flange as a
+  no-flux lid in `h_expr`, no feet/body/march/load. Map derived offline: level set so the model's axis
+  flux at her sensor temperature equals 7.4 MW/m², standoff exponent fitted to her L 10–14 series, three
+  pre-registered radial shapes (A = the Meier map's form, B = stagnation + r^−1.2 wall jet, C = r^−2).
+  Legs LA / LB / LB2 (2 mm) / LB120, minutes each. Pre-registered: LA removes ≥ 5× her 13 cm³ or melts
+  (the Meier map's SHAPE is the error, not its level); LB within ×2; firing T 845 ± 10 K at 6× Meier's
+  flux; the time-mean surface T above the firing T (Wilkinson's quantity). Guardrails: no `src/`
+  change; nothing tuned to the volume. Basis: `2026-10-14.md` §1–§4.
+
+### The rev 1 file verbatim (packet, completion notes, review findings; headings demoted)
+
+## Active Step: P2-5 — the Höser lab leg: the floor criterion at a MEASURED flux, with no body in the hole
+
+Status: **rejected by review** — was: **BLOCKED at `a1`** (the packet's first gate in run order) -- see the completion
+notes at the end of this file. Originally: ready for implementation (planned 2026-10-14; P2-4 archived as ACCEPTED — `ARCHIVE_DONE.md` *"P2-4"* — with two advisor corrections carried into that record)
+
+### Context
+
+Every Meier floor number so far was an inference: a correlation shape, a peak literal, and — in P2-3 —
+a scale to Kant & Rudolf von Rohr 2016 Table 4, which the paper itself (now on disk) describes as a
+3–10 kW laboratory burner run "where at least a single spall could be detected". That scale was a
+category error (advisor, 2026-10-14; the runs stand, their floor-level premise does not). Höser 2016
+(ETH 23896) and Höser & Rudolf von Rohr 2018 measured the **drilling** flame — the 7.9 mm nozzle at
+38 kW, essentially Meier's — with a water-cooled calorimeter inside the same Ø 40 × 35 mm steel channel
+her drilling flange forms: **7.4 MW/m² on the axis at L = 8** (sensor at 600 °C), falling to 3.8 at
+L = 14. She then drilled Grimsel cylinders in that flange for 30 s and measured **26 cm³/min removed at
+zero axial load**, plus removal vs flux, vs load and vs time, and the onset temperature by IR
+(430–600 °C, no flux trend). This is the one configuration in which the heat arriving at the rock is a
+measurement: no burner body in the hole, no feet, no exhaust recirculation, no annulus.
+
+The step asks one question in three parts, each of which the Meier case could not separate: (1) does
+the criterion remove the right amount of rock per unit of measured heat, at a flux six times Meier's
+(Wilkinson/Kant/Höser all measure the ONSET temperature flat with flux, so the firing temperature
+should hold); (2) what radial shape of the heated spot is consistent with her volume AND with her
+cavity undercutting the Ø 40 opening to 50–64 mm (the current Meier map's plateau would deliver ~9 kW
+into a 12.6 cm² opening against 0.6 kW of flakes — the first leg is a controlled failure that shows the
+map's SHAPE, not its level, is what the Meier campaign has been fighting); (3) the 30 s transient
+(pit, standoff opening, heated-layer storage) which every Meier window discarded. Outcome: a calibrated
+floor profile for this nozzle and power, to be transferred to Meier in P2-5b, and a small fine deck the
+beam case can reuse by swapping the heat source.
+
+⚠ Mesh: **1 mm** on this deck, by the user's decision of 2026-10-14 (the 7.9 mm jet is four cells across
+at 2 mm); Meier stays at 2 mm (rule 12). ⚠ Carried: `weibull.V0` is V_cell at 2 mm only (Known notes)
+⇒ 1e-9 at 1 mm, 8e-9 on the 2 mm twin. ⚠ Her "0 MPa" leg has the flange ON, untorqued (without it the
+cylinder splits in 10 s): the lid is part of the geometry; no axial load. ⚠ The derived wall law needs
+a bore > 75 mm across to be "ready" (P2-4 takeaway 3) and this cavity is 40–60 mm: side faces fall
+back to the typed 169.3 W/m²K — stated, reported, not tuned. Parked: entrainment modes, cuttings, body
+loss, the cap rule / stress reference (P2-2e), the flux cut-off (P2-5c), the load series.
+
+### Sources
+
+- **Drilling leg:** `tests/MMWSpalling/validation/hoeser/hoeser_2018_uniaxial_load_notes.md` and
+  `hoeser_2016_thesis_notes.md` §4 (PDFs `franck_material/UniaxialLoading.pdf`, `hoser.pdf`): Grimsel
+  granodiorite (Chuenzentennlen — the same quarry as Kant 2017's "Central Aare"), Ø 100 × 150 mm;
+  nozzle **7.9 mm**, **38 kW**, λ 1.1, p_ch 3.25 bar, **T_nozzle 1,866 K**, axial distance
+  **63.2 mm** (L = 8), onset < 0.5 s; flange 20 mm + disc 15 mm with a **Ø 40 mm** opening ⇒ a
+  Ø 40 × 35 mm steel channel above the rock; removal **26 / 52 / 54 / 64 / 66 cm³/min at 0 / 17.5 /
+  28.9 / 37.4 / 47 MPa** (30 s, 3 repeats, 5 % std) ⇒ **13.0 cm³ in 30 s at 0 MPa**; 47 MPa time
+  series 64 / 66 / 81 / 90 cm³/min at 15 / 30 / 60 / 90 s; 47 MPa sections (Fig. 9) depth ≈ 20 / 30 /
+  45 / 60 / 80 mm and top width ≈ 44 / 50 / 56 / 60 / 64 mm at 15 / 30 / 60 / 90 / 120 s. Digitised:
+  `hoeser_2016_drilling_series.csv`.
+- **Flux:** `hoeser_2016_heat_transfer.csv` (PSI calorimeter, confined, D1, Ø 9 mm sensing disc):
+  38 kW: **9.1 / 7.4 / 6.1 / 5.4 / 4.3 / 3.8 MW/m²** at L = 5 / 8 / 10 / 11 / 13 / 14 (sensor surface
+  ~600 °C, i.e. 873 K; h 9.0 / 7.1 / 5.7 / 5.0 / 3.7 / 3.2 kW/m²K with T_f = T_nozzle). Journal version
+  `franck_material/HeatTransferStudy.pdf` (Table 2, Fig. 11). **No radial profile exists**; her stress
+  model assumed h uniform over the opening (an assumption the energy bound refutes).
+- **Onset:** Höser IR 430–600 °C on Grimsel at 4.3–7.4 MW/m² (thesis §4.2); Kant 2016 550–630 °C at
+  0.45–0.87 (`kant_2016_minimal_bc_notes.md`); Wilkinson 1993 global onset 400–600 °C at 0.2–2.7
+  (`wilkinson_tester_1993_notes.md`, `wilkinson_1993_tables.csv`) — the steady-state surface MEAN is
+  what rises with flux (Barre 500 → 930 °C), not the onset. The model's firing T on Meier: 851.5 K.
+- **Energy bound (advisor, `2026-10-14.md` §2):** 26 cm³/min at 1.27–1.56 GJ/m³ = 0.55–0.68 kW of
+  flakes; at 7.4 MW/m² with ~80 % to flakes that is a spot of 0.9–1.1 cm² ≈ **1.4–1.5 D**; a uniform
+  7 MW/m² over the Ø 40 opening would be 9 kW into rock that cannot conduct it away.
+- **Code:** closure `MMWSpalling.H:3102–3104`, `:3449–3456` (`D_dec = jet_De_ref·√(T_mix/T_ent)`,
+  `phi = min(1, jet_core_length·D_dec/s_c)`, `T_stag = T_mix + (T_nozzle − T_mix)·phi`; ⚠ at L = 8 with
+  `jet_T_ent_mode = fixed` the axis gas is NOT T_nozzle — the derive script reads the model's own
+  `jet_T_stag` and calibrates the FLUX, not h); `h_expr` variables `{x, y, r, s, t}` (`:10752`), s =
+  nozzle-to-face standoff; the hard patch mask `r ≤ surface_patch.radius` at `:1398`, `:1714`, `:2108`,
+  `:2579` (set `radius` ≥ the domain; the lid lives in `h_expr`); prescribed-nozzle keys and the forced
+  feet-key drops: `studies/d2ac_feed/run_d2ac.py:61–77, 118–128` (`nozzle_descent=prescribed`,
+  `nozzle_z0`, `nozzle_feed`, `nozzle_collision_radius`); the Grimsel/spall configuration = P2-2f's, as
+  carried in `studies/p2_3_wall/legs/W1/argv.sh` (minus feet, map, march, body keys).
+- **Mesh/dt:** `ARCHIVE_DONE.md` *"D2d"* (dt ladder: 8 ms at 1 mm passes); Known notes (V0 at 2 mm).
+
+### Goal
+
+1. **Deck + harness.** `tests/MMWSpalling/validation/hoeser/input_lab` (a copy of the Meier deck's
+   physics with the lab geometry) and `tests/MMWSpalling/studies/p2_5_hoeser/run_p2_5.py` building the
+   argv the P2-3 way (base = W1's Grimsel/spall keys; the feet block, `h_expr`, `jet_wall_march`,
+   `jet_body`, `side_face_*_above`, `foot_*` DROPPED and the drops listed). Lab keys, literal:
+   `geometry.prob_lo=0.0 0.0 0.0 geometry.prob_hi=0.05 0.05 0.10 amr.n_cell=50 50 100 amr.max_grid_size=25
+   timestep=0.008 stop_time=30 surface_patch.face=zhi surface_patch.x0=0.0 surface_patch.y0=0.0
+   surface_patch.radius=0.08 surface_patch.nozzle_descent=prescribed surface_patch.nozzle_z0=0.1632
+   surface_patch.nozzle_feed=0.0 surface_patch.nozzle_collision_radius=0.004 surface_patch.jet_closure=enthalpy
+   surface_patch.jet_stagnation=decay surface_patch.jet_entrained_mass=1 surface_patch.jet_T_ent_mode=fixed
+   surface_patch.jet_T_ent=293.15 surface_patch.jet_mdot=3.4e-3 surface_patch.jet_cp=1250.0
+   surface_patch.jet_D=0.0079 surface_patch.jet_T_nozzle=1866.0 surface_patch.jet_core_length=8.0
+   surface_patch.jet_decay_diameter=momentum surface_patch.jet_De_ref=0.003745 surface_patch.jet_bin_update=exponential
+   surface_patch.jet_negative_flux=count surface_patch.jet_profile_interval=1.0 weibull.V0=1.0e-9
+   confining.p=0.0 amr.plot_int=625 amr.thermo.plot_int=6 amr.thermo.int=1 energy_ledger.enabled=1
+   spall.removal_events_csv=1`. (`jet_mdot` = the quarter's share of 13.6 g/s: CH₄ 0.684 g/s at 55.5 MJ/kg,
+   air × 17.2 × 1.1; `jet_De_ref` = 0.0079 × the Meier deck's De_ref/D ratio 0.474.) The quarter of the
+   Ø 100 cylinder is a 50 × 50 mm square prism: the curved side is ≥ 30 mm from the heated zone and the
+   30 s thermal reach is ~6 mm — stated. The 2 mm twin: `amr.n_cell=25 25 50 amr.max_grid_size=25
+   timestep=0.016 weibull.V0=8.0e-9 amr.plot_int=313`.
+2. **OFFLINE — the map, derived** (`derive_lab_map.py` → `MAP.txt`). From a 2 s SMOKE run's thermo
+   (`jet_T_stag`, `jet_s_c`, `jet_D_e`) and `hoeser_2016_heat_transfer.csv`: (i) the axis level h0 such
+   that **h0·(T_stag(63.2 mm) − 873 K) = 7.4 MW/m²** — the model's flux at her sensor temperature equals
+   her measured flux, whatever the closure's T_stag convention; (ii) a standoff law h(s) = h0·(0.0632/s)^n
+   for s > 0.0632 with n fitted (least squares, one parameter) so that h(s)·(T_stag(s) − 873) reproduces
+   her 6.1 / 5.4 / 4.3 / 3.8 MW/m² at s = 79 / 87 / 103 / 111 mm, residuals printed (T_stag(s) from the
+   smoke run's closure at those standoffs, i.e. evaluate the closure formula with the run's D_e); (iii)
+   the **lid**: `if(r>0.020 && s<0.0652, 0.001, …)` — zero flux on the original surface beyond the
+   opening, the undercut heated once it exists; (iv) three pre-registered radial shapes, lengths in D:
+   **A** = the Meier map's own form with its lengths scaled by 7.9/7.5 (plateau to 2.5 D = 19.75 mm, the
+   same blend radii × 7.9/7.5), **B** = h0·min(1, (0.75 D/r)^1.2), **C** = h0·min(1, (0.75 D/r)^2.0).
+   Printed for each: h(r) and q(r) at T_face = 850 K for s = 63.2 mm, the integrated power over the Ø 40
+   opening at 850 K (vs the 0.55–0.68 kW flake bound), and the four-point standoff check. Parse-back of
+   every string. ⚠ No number in the map is adjusted to the removed volume.
+3. **SMOKE** (2 s, 2 mm, shape B, seconds): rc 0 (the 1e-9 budget abort is the witness), ledger,
+   `jet_T_stag` and `jet_s_c` reported, φ printed; **the lid**: `run_jet_profile.csv` bins beyond r =
+   20 mm read `P_bin = 0` at t = 1 s; **the hard mask not biting**: `patch_P_robin` > 0 and the r =
+   19 mm bin non-zero; no `nozzle_collision` abort over 2 s.
+4. **Legs, serial** (1 mm unless stated; ~1–4 min each): `LA` shape A 30 s; `LB` shape B 30 s;
+   `LB2` shape B at 2 mm 30 s; `LB120` shape B 120 s; `LC` shape C 30 s **only if** LB's volume exceeds
+   2× her 13.0 cm³. All at `confining.p = 0`.
+5. **Reductions** `reduce_p2_5.py` (reusing `reduce_price.py`'s event census and `bore_profile.py`'s
+   FAB reader with the lab geometry): removed volume vs time ×4 from the event log (all regimes) AND from
+   the mask at each plotfile (the two must agree within one cell layer); cavity depth on the axis and
+   width at the original surface and 5 mm below it, **per azimuth sector** (isotropy witness), from the
+   mask; undercut width under the lid; firing T (regime-1 `T_surf` median, p10/p90); max `T_surf` with a
+   **melt flag** at > 1,400 K; clamp fraction by volume; the **time-mean exposed-surface temperature
+   within r < 10 mm** at 10 / 20 / 30 s from the plotfile `Temp` of surface cells (Wilkinson's
+   steady-state quantity); 1 vs 2 mm; ledger. Per-step columns averaged, never summed (SR 7).
+6. Verdict.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a1 | 1 | map derivation (`MAP.txt`) | axis flux at 873 K = **7.4 ± 0.1 MW/m²**; standoff residuals ≤ 15 % at L 10–14; lid exact; three shapes parse back; integrated power printed per shape | **gate** | the level is not her measurement, or the closure's T_stag was double-counted |
+| a2 | 2 | smoke (3.) | rc 0; `ledger_err_solid` ≤ 5e-3; bins beyond 20 mm read 0; r = 19 mm bin > 0; no collision abort | **gate** | the lid or the hard mask is wrong — every leg below heats the wrong area |
+| b1 | 3 | `LA`, `LB` run clean | rc 0; `ledger_err_solid` ≤ 5e-3; event-log and mask volumes agree within one cell layer | **gate** | the deck is broken, or the two volume estimators disagree (then neither is the measurement) |
+| c1 | 4 | `LA` volume at 30 s (×4) | prediction: **≥ 65 cm³** (≥ 5× her 13.0) **or** the melt flag | **report** — the controlled failure | inside ×2 of 13 ⇒ the Meier map's shape was not the problem and P2-5b's premise falls |
+| c2 | 4 | `LB` volume at 30 s (×4) | **6.5–26 cm³** (within ×2 of 13.0 ± 5 %) | **report** — headline | above ⇒ run `LC`; both above ⇒ the criterion over-removes at a measured flux (then the criterion, not the map, is the question); below 6.5 ⇒ the wall-jet decay is too steep or the lid too cold |
+| c3 | 4 | `LB` cavity at 30 s, per sector | depth **10–25 mm** on the axis; width at the surface **20–45 mm**; sector spread ≤ 3 mm | **report** (shape, from the 47 MPa sections scaled by 26/66) | spread > 3 mm ⇒ a grid-direction artefact at 1 mm before any physics |
+| c4 | 4 | firing T, `LB` | **845 ± 10 K** (Höser 703–873 K; Meier 851.5) | **report** | a shift > 10 K at 6× Meier's flux is the flux dependence the onset data say is absent |
+| c5 | 4 | max `T_surf`, `LA` and `LB` | `LB` < 1,400 K; `LA` reported | **report** | `LB` above ⇒ the level or the shape would melt the axis; `LA` above is the predicted failure |
+| c6 | 5 | `LB` vs `LB2` volume | within **15 %** | **report** | outside ⇒ the result is mesh-set; quote neither as the step's number |
+| c7 | 5 | `LB120` rate 15 / 30 / 60 / 90 / 120 s | reported beside her 47 MPa 64 / 66 / 81 / 90; prediction: rising, by ≤ 1.5× from 15 to 90 s | **report** | falling ⇒ the standoff law over-decays |
+| c8 | 5 | time-mean surface T at r < 10 mm, 10–30 s | reported beside the firing T; prediction: **above** it by 50–150 K | **report** (the Wilkinson row) | below the firing T ⇒ the model has no overheating of flakes before ejection — a criterion-design datum for P2-2e |
+| c9 | 5 | undercut width under the lid, `LB` 30 s / `LB120` 120 s | reported beside her 44–64 mm at 47 MPa | **report** | none ⇒ the wall jet under the lid is below the model's firing flux — bears on P2-5c |
+| d1 | 6 | verdict | — | **verdict** | states which shape her volume and undercut admit, whether the criterion holds at 7 MW/m², and what P2-5b transfers to Meier |
+
+### Pre-registered predictions
+
+- **P1 — the plateau fails by a decade.** Shape A at her level puts ~7 MW/m² over the whole opening:
+  LA removes ≥ 65 cm³ in 30 s or trips the melt flag. This is the finding that the Meier map's shape,
+  not its level, is wrong.
+- **P2 — the stagnation + wall-jet shape lands within ×2.** LB 6.5–26 cm³; a pit 12–20 mm wide and
+  10–20 mm deep, widening under the lid late. Shape C (narrower) only if B overshoots.
+- **P3 — the criterion holds at 6× Meier's flux:** firing T 845 ± 10 K; clamp fraction reported.
+- **P4 — mesh:** LB vs LB2 within 15 % on volume (the flaw draw is per cell; V0 scaled).
+- **P5 — the transient:** removal rate rises from 15 to 90 s as the cavity exposes more surface,
+  then is limited by the standoff decay; the undercut appears after ~30 s.
+- **P6 — the Wilkinson row:** the time-mean exposed-surface temperature sits 50–150 K above the firing
+  temperature (hot flakes waiting to leave); if it does not, the model lacks the overheating that makes
+  the steady-state surface mean rise with flux.
+
+### What would make this inert — witness each
+
+- **The hard patch mask** (`radius`) inside the opening — a2's r = 19 mm bin.
+- **The lid not applied** (s-condition off by the recession of the first cells) — a2's bins beyond
+  20 mm at t = 1 s, AND `LB120`'s undercut must be able to appear (c9).
+- **φ clamped or T_stag far from the calibration** — a1 reads the run's own `jet_T_stag`; print φ.
+- **`nozzle_collision_radius` abort** on a cell within 4 mm of the axis reaching s ≤ 0 — impossible at
+  63 mm standoff; rc 0 witnesses.
+- **V0 at 1 mm** — a1's parse-back lists `weibull.V0` per leg; the 2 mm twin carries 8e-9.
+- **The derived wall law never ready** at a 40–60 mm cavity ⇒ typed 169.3 on side faces: report
+  `wall_law_on` = 0 and `side_h_used_n` = 0 on every leg; it is stated, not a defect.
+- **Exhaust re-entrainment** — `jet_T_ent_mode = fixed` here by design (ventilated box, confined jet);
+  the mode is listed in the argv and the T_ent floor is reported.
+
+### Guardrails
+
+- **No `src/` change.** This step is a deck, a harness and reductions. If the deck cannot be expressed
+  with existing keys, stop and report; that is a separate packet.
+- **No tuning to the volume.** The level is her measurement; the standoff exponent is fitted to her
+  flux series (an input), never to removal; the shapes are the three pre-registered forms.
+- **1 mm on this deck only** (user, 2026-10-14); Meier stays at 2 mm (rule 12); `weibull.V0` scaled.
+- `jet_T_ent_mode = fixed` on every leg; no exhaust mode, no body, no march, no feet, no load.
+- Per-step thermo columns are means (SR 7); volumes ×4 (SR 3); every number quoted carries its file.
+- Parked: cap rule / stress reference (P2-2e), flux cut-off (P2-5c), the load series, cuttings.
+- Every launch under `caffeinate -dis`; plotfiles every 5 s; sentinel `.done`; `pkill -f` forbidden.
+
+### Commands
+
+```bash
+## ord 1 — smoke (2 s, 2 mm) then the map
+caffeinate -dis /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_5_hoeser/run_p2_5.py SMOKE
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_5_hoeser/derive_lab_map.py > tests/MMWSpalling/studies/p2_5_hoeser/MAP.txt
+## ord 2 — a2 on the smoke output
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_5_hoeser/reduce_p2_5.py SMOKE
+## ord 3–5 — legs (1 mm; ~1–4 min each; -np 5 if the grid is 5 boxes, else 4)
+caffeinate -dis /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_5_hoeser/run_p2_5.py LA LB LB2 LB120
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_5_hoeser/reduce_p2_5.py LA LB LB2 LB120
+## optional, only on c2 overshoot
+caffeinate -dis /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_5_hoeser/run_p2_5.py LC
+```
+
+
+### Claude completion notes
+
+**Status: BLOCKED at `a1`, the packet's first gate in run order.** Deliverable 2's
+standoff fit has **no solution of the stated form**, measured against the binary's own
+closure output. Per the run-order rule no long leg was launched. No `src/` change was
+made and none is needed; the binary is P2-4's shipping binary, unchanged
+(`find src -newer bin/mmwspalling-3d-g++` empty, sha `5dc0a53fb874c632c8311f3d`).
+
+#### Files changed
+
+| file | what |
+|---|---|
+| `tests/MMWSpalling/validation/hoeser/input_lab` | NEW. The Meier deck's physics with the lab geometry (quarter 50x50x100 mm, nozzle at z = 0.1632, `confining.p = 0`, `beam.P0 = 0`, `bit.enabled = 0`, patch off in-file). 189 lines. |
+| `tests/MMWSpalling/studies/p2_5_hoeser/run_p2_5.py` | NEW. Builds every leg from W1's argv (token-aware, **last-wins**) minus three declared drop groups, + the lab `COMMON` block + the leg block. Writes `argv.sh` and `DROPPED.txt` per leg (SR 8). `--probe` / `--argv` modes. |
+| `tests/MMWSpalling/studies/p2_5_hoeser/derive_lab_map.py` | NEW. Deliverable 2 (i)-(iv) offline, reading `jet_T_stag` / `jet_s_c` / `jet_D_e` from the run rather than recomputing them. |
+| `tests/MMWSpalling/studies/p2_5_hoeser/MAP.txt` | NEW. The derivation's output, i.e. the gate's evidence. |
+| `tests/MMWSpalling/studies/p2_5_hoeser/GATE_a1.txt` | NEW. The a1 scoring record, with every witness SMOKE0 does settle. |
+| `tests/MMWSpalling/studies/p2_5_hoeser/legs/SMOKE0/` | The 2 s / 2 mm closure-reading run (rc 0, 22 thermo rows). |
+
+#### Criteria
+
+| # | test | measured | verdict | output |
+|---|---|---|---|---|
+| a1 | map derivation | **(i) PASS** h0 = 44,683.3 W/m2K, h0*(1038.76-873.15) = **7.4000 MW/m2**. **(ii) FAIL -- unsatisfiable**: T_stag at s = 79/87/103/111 mm is 889.64/835.41/751.99/**719.21 K**, so the bracket (T_stag-873.15) is **negative at 3 of the 4 fit points**; at L = 10 it is 16.49 K and demands h = **369,956 W/m2K = 8.28x h0**, i.e. h rising with standoff. (iii) form resolves, constant does not (below). (iv) printed: A **10.34 kW**, B **4.76 kW**, C **3.19 kW** over the Ø40 opening at 850 K vs **0.55-0.68 kW** of flakes = 15.9x / 7.3x / 4.9x | **FAIL (gate)** | `MAP.txt`, `GATE_a1.txt` |
+| a2 | smoke | **PARTIAL, from SMOKE0.** rc 0; `ledger_err_solid` max **1.13e-15**; hard mask does **not** bite (profile bins reach r_lo = **68.0 mm**, the 18-20 mm bin carries 15 columns / 29.95 W, `patch_P_robin` 1518.5 W); no collision abort; phi **0.4741** unclamped. **The lid half is not scoreable** -- it lives in the map that (ii) gates | gated out | `legs/SMOKE0/`, `GATE_a1.txt` |
+| b1 | `LA`, `LB` clean | NOT RUN -- a1 is a gate and failed | gated out | - |
+| c1 | `LA` volume | NOT RUN -- gated out. ⚠ (iv) bears on it at design time: shape A delivers **15.9x** the flake bound | gated out | `MAP.txt` |
+| c2 | `LB` volume (headline) | NOT RUN -- gated out. ⚠ (iv): **all three** pre-registered shapes over-deliver by >= **4.9x** at 850 K, so the x2 bar had no admissible shape in the set | gated out | `MAP.txt` |
+| c3 | `LB` cavity per sector | NOT RUN -- gated out | gated out | - |
+| c4 | firing T, `LB` | NOT RUN -- gated out | gated out | - |
+| c5 | max `T_surf` | NOT RUN -- gated out. ⚠ **unreachable by construction**: `jet_T_stag` = **1038.76 K**, so the face cannot reach the 1,400 K melt flag; c5 would pass on SR 15 | gated out | `GATE_a1.txt` |
+| c6 | `LB` vs `LB2` | NOT RUN -- gated out. ⚠ the twin also needed a fix to run at all (below) | gated out | - |
+| c7 | `LB120` rate series | NOT RUN -- gated out | gated out | - |
+| c8 | time-mean surface T | NOT RUN -- gated out | gated out | - |
+| c9 | undercut width | NOT RUN -- gated out | gated out | - |
+| d1 | verdict | below | **verdict** | - |
+
+#### (d1) Verdict
+
+**The packet's premise stands; its calibration route does not. The closure already
+spends the standoff decay on the gas, so Hoeser's flux series cannot be read as a
+coefficient law on top of it.**
+
+`phi = min(1, jet_core_length*D_e/s)` falls as 1/s beyond a potential core of
+`8 * 0.003745 = 30.0 mm = 3.79 D`. Her sensor at L = 8 is already at 2.1 core lengths,
+which is the mismatch the packet anticipated and handled by calibrating the flux. What it
+did not carry is that the **same decay drives T_stag through her 873.15 K sensor
+temperature at L ~ 10.9** -- inside the exact L = 10-14 window the standoff fit uses. Past
+that crossing the model's gas is colder than her calorimeter face, the flux reverses sign,
+and a one-parameter `h(s)` cannot reach a positive 3.8-5.4 MW/m2 at any exponent.
+
+Two further facts make this a level question and not a shape question, and both were
+available before any leg ran: the axis calibration needs **h0 = 44.7 kW/m2K against her
+measured 7.1**, because the model's gas carries only 166 K of head above her sensor where
+her flame carries 993 K -- a Robin slope **6.29x too steep**, which also caps the face at
+1038.76 K and makes `c5` vacuous. And integrating the three pre-registered shapes at the
+firing temperature gives **15.9x / 7.3x / 4.9x** the flake bound, so even the narrowest
+pre-registered shape over-delivers by a factor of five. `c1`'s controlled failure would
+very likely have reproduced; `c2`'s headline had no admissible member of its own
+pre-registered set.
+
+**What P2-5b would transfer to Meier is therefore not yet derivable from this deck.** The
+single decision the next packet owes is whether the potential-core length is a free
+parameter of this closure. `jet_core_length > 10.89` makes the fit solvable, puts the axis
+at T_stag = 1308 K and h0 = 17,011 W/m2K, and retires the c5 vacuity -- but it is 5.2 D of
+core against the 3.79 D the Meier De_ref/D ratio carries into this nozzle, and asserting it
+is a closure change, which this packet's first guardrail forbids. The alternative is to
+calibrate against her **sensor-referenced h** directly (`T_f = T_nozzle`, the convention her
+own table states) and accept that the model's T_stag is not her flame temperature -- which
+changes what a1 measures, not merely its tolerance.
+
+### Implementation takeaways
+
+1. **⚠⚠ A CALIBRATION BRACKET CAN BE CLOSED BY THE MODEL'S OWN DECAY, AND THE SIGN IS THE
+   TELL.** The fit was specified as `h(s)*(T_stag(s) - T_sens) = q_meas(s)`. Three of four
+   target standoffs put `T_stag` *below* `T_sens`, so the required coefficient is negative;
+   the fourth needs h to rise 8.28x. **Before writing a fit, evaluate the bracket at every
+   target point.** This is the same family as SR 15 but at the *input* end: not "the
+   mechanism bounds the discriminator" but "the mechanism has already consumed the degree
+   of freedom the fit wants to spend."
+2. **⚠⚠ CALIBRATING THE FLUX INSTEAD OF THE COEFFICIENT BUYS THE LEVEL AND SELLS THE
+   SLOPE.** `h0*(T_stag - T_sens) = q_meas` fixes one point exactly, but `dq/dT_face = -h0`
+   then carries the full 6.29x error, so the flux collapses toward zero as the face
+   approaches `T_stag` and the face can never exceed it. Any Robin calibration against a
+   measured flux owes **both** numbers -- the level and the slope -- and P2-1 already
+   taught the mirror of this ("an energy bar for a ROBIN coefficient must carry the
+   surface-T feedback").
+3. **`jet_core_length` multiplies the DECAY diameter, not the nozzle diameter.** `8.0` with
+   `jet_De_ref = 0.474 D` is a core of **3.79 D**, not 8 D. Any packet quoting a core length
+   in nozzle diameters (as the flame-jet literature does, and as "L = 8" does) must convert.
+   This is the one number that decides whether the Hoeser leg is calibratable at all.
+4. **Deliverables 2 and 3 were circular, and they separate for a reason worth keeping.**
+   The map derives from a smoke that already runs the map. They decouple because `T_stag`
+   depends on geometry alone (`phi` reads `s_c` and `D_e`, never `h`), so `SMOKE0` carries a
+   deliberately flat `h = 1000` and is used for nothing but reading the closure. Declared
+   in `run_p2_5.py`'s docstring, not hidden -- a flat-h leg in a legs/ directory is exactly
+   the sort of thing a later reader would mistake for a result.
+5. **⚠ The 2 mm twin would not start.** `amr.n_cell=25 25 50` is not divisible by the Meier
+   deck's `amr.blocking_factor = 2` and AMReX aborts at init (rc 6, measured on the first
+   attempt). The twin must keep the 1 mm leg's 50x50x100 mm box or `c6` compares two
+   geometries, so `blocking_factor` moves to 1 on that leg instead -- at `max_level = 0`
+   with no regrid it only constrains the decomposition, and decomposition-independence of
+   this closure is already measured (P2-4 (a1) row (h)).
+6. **⚠ The lid's threshold was mesh-dependent and sat on a floating-point tie.** `s < 0.0652`
+   is `s0 + 2.0 mm`: two cells of recession at 1 mm, and at 2 mm exactly
+   `0.1632 - 0.098`. `c6` would have compared a 2-cell threshold against a coin flip. The
+   mesh-aware `s0 + dz/2` lifts the lid after one cell at both meshes. Not emitted (the gate
+   fired first) but printed in `MAP.txt` for the next packet.
+7. **⚠ The lid cannot be a zero.** `BuildFlameColumns` aborts on a non-positive in-patch h,
+   which is why the lid floors at `0.001` -- so a2's "bins beyond 20 mm read `P_bin = 0`"
+   must be scored against that floor's own ~1e-4 W per bin, never against zero. Same shape
+   as the `%g` trap (SR 7 iv): the bar has to be written against what the code can print.
+8. **W1's argv needs last-wins and a token-aware drop, and the drop list splits three ways.**
+   Rebuilt as `base(W1 minus DROP) + COMMON + leg`, with the drops recorded per leg in
+   `DROPPED.txt`: **FEET** (forced by the code -- `nozzle_descent = prescribed` aborts on
+   `foot_body_clearance` at `:10735` and `jet_free_surface` at `:10733`), **SCOPE** (the
+   packet's -- map, march, body, above-plane wall term, pad-ring diagnostic), and
+   **OVERRIDDEN** (the lab block). The `side_face_h_law = derived <sha>` + `side_face_h` +
+   `side_face_T` triple is deliberately **kept**: without it `wall_law_on` and
+   `side_h_used_n` are never registered and the packet's own "the wall law is never ready"
+   row would have been an absent column rather than a measured zero. They read 0.
+9. **`-np 5` is a P2-4 fact about the 60^3 Meier deck, not a rule.** Here the box count is
+   16 at 1 mm and 2 at 2 mm, so the harness derives the rank count from `amr.n_cell` and
+   `max_grid_size` rather than carrying the literal.
+10. **The three pre-registered shapes were all too hot, and that was computable at design
+    time.** Integrated over her Ø 40 opening at the firing temperature: **15.9x / 7.3x /
+    4.9x** the 0.55-0.68 kW flake bound. A pre-registered set whose *narrowest* member
+    overshoots by 4.9x cannot contain the answer; the integral costs seconds and belongs in
+    the planning pass, beside the energy bound the packet already carried.
+
+### Review findings
+
+Reviewer phase, independent re-derivation. **No `src/` change this packet and none was needed**:
+the binary is P2-4's shipping `5dc0a53f…`, `find src -newer bin/` is empty, and the mtimes are
+unchanged from 10-13. **No test was re-run and no leg launched** — the only run is the step's own 2 s
+`SMOKE0`. My own work: I rebuilt `(a1)`'s entire arithmetic chain from the binary's own closure
+output and from the `phi` form, and checked the flake bound's provenance.
+
+#### Criteria — the packet's table, with my value and its source
+
+⚠ The packet's final column ("what a failure of this row means") is unchanged and is not repeated.
+
+| # | bar | kind | **value I derived** | **read from** | verdict |
+|---|---|---|---|---|---|
+| **a1** | axis flux 7.4 ± 0.1 MW/m²; standoff residuals ≤ 15 % at L 10–14; lid exact; three shapes parse; power per shape | **gate** | ⚠⚠ **(i) reproduces exactly and (ii) is UNSATISFIABLE — I derived the whole chain myself.** From SMOKE0's own `jet_T_stag` = **1038.76 K** and `jet_D_e` = **0.003745 m**: bracket 1038.76 − 873.15 = **165.61 K** ⇒ h0 = 7.4e6/165.61 = **44,683.3 W/m²K**, exactly as reported. Recovering `T_flame` from `phi = 8·D_e/s` at the smoke's s (phi **0.4741**, matching the logged value to 4 d.p.) gives T_f = **1866.0 K**, and then **T_stag = 889.64 / 834.79 / 750.65 / 717.68 K** at s = 79/87/103/111 mm ⇒ the bracket is **+16.49 K** at one point and **−38 / −123 / −155 K** at the other three. ⇒ **a fit of the stated form needs a NEGATIVE coefficient at three of four target standoffs**, and the one positive point demands h = 369,956 = **8.28× h0**. (iv) reproduces: A **10.34** / B **4.76** / C **3.19 kW** against a **0.55–0.68 kW** flake bound — and I checked that bound's provenance: 26 cm³/min × 1.27–1.56 GJ/m³ = **550–676 W** ✓ | my arithmetic on `legs/SMOKE0/run/thermo.dat`; `MAP.txt:56-60`; `GATE_a1.txt` | **FAIL (gate), structurally** |
+| a2 | rc 0; ledger ≤ 5e-3; bins beyond 20 mm read 0; r = 19 mm bin > 0; no collision abort | **gate** | **PARTIAL, and correctly declared so.** From SMOKE0: rc 0; `ledger_err_solid` max **1.129e-15** (reported 1.13e-15); the **hard mask does not bite** — profile bins reach r_lo **68.0 mm** against a domain corner at 70.7, and the 18–20 mm bin carries 15 columns / 29.95 W; `phi` **0.4741, unclamped**; no collision abort over 2 s at `nozzle_collision_radius = 0.004`. ⚠ The **lid half is not scoreable** because it lives in the map that (ii) gates — stated, not quietly skipped | my reduction of SMOKE0's `thermo.dat`; `GATE_a1.txt:48-52` | **gated out, partial witnesses recorded** |
+| b1 | rc 0; ledger ≤ 5e-3; two volume estimators agree | **gate** | **NOT RUN** — `a1` is the first gate in run order and failed. ✅ Correct: no long leg was launched | — | gated out |
+| c1 | ≥ 65 cm³ or the melt flag | report | **NOT RUN.** ⚠ But (iv) bears on it at design time: shape A delivers **15.9×** the flake bound, so the controlled failure would very likely have reproduced | `MAP.txt` | gated out |
+| c2 | 6.5–26 cm³ | report — headline | **NOT RUN.** ⚠⚠ And the design-time finding is sharper than the row: **all three** pre-registered shapes over-deliver by **≥ 4.9×**, so the ×2 bar **had no admissible member of its own pre-registered set** | `MAP.txt:56-60` | gated out |
+| c3 | depth 10–25 mm; width 20–45 mm; spread ≤ 3 mm | report | **NOT RUN** | — | gated out |
+| c4 | 845 ± 10 K | report | **NOT RUN** | — | gated out |
+| c5 | `LB` < 1,400 K | report | **NOT RUN.** ⚠⚠ And it is **vacuous by construction**: `jet_T_stag` = **1038.76 K** caps the face, so the 1,400 K melt flag is unreachable at any coefficient — `c5` would have passed on **SR 15**. Caught before the leg, which is where that class has to be caught | my read of SMOKE0's `jet_T_stag` | gated out, **vacuity caught** |
+| c6 | within 15 % | report | **NOT RUN.** ⚠ And the twin **would not have started**: `amr.n_cell = 25 25 50` is not divisible by the Meier deck's `blocking_factor = 2` and AMReX aborts at init (rc 6, measured) | takeaway 5 | gated out |
+| c7 | rising, ≤ 1.5× from 15 to 90 s | report | **NOT RUN** | — | gated out |
+| c8 | 50–150 K above the firing T | report | **NOT RUN** | — | gated out |
+| c9 | reported beside 44–64 mm | report | **NOT RUN** | — | gated out |
+| d1 | verdict | **verdict** | written, and it states the one decision the next packet owes rather than proposing a fix: **is the potential-core length a free parameter of this closure?** | `ACTIVE_STEP.md` | **verdict** |
+
+#### Diff review
+
+No `src/` change. The step's code is a new input deck, a leg harness and an offline derivation.
+
+| # | hunk / change | class | finding | tag |
+|---|---|---|---|---|
+| 1 | ⚠⚠ `(a1)`(ii)'s bar is **unsatisfiable by construction** | **12 thresholds from a different population** | the fit is `h(s)·(T_stag(s) − T_sens) = q_meas(s)`, but **Höser's `h` is sensor-referenced** (`T_f = T_nozzle`, the convention her own table states) while the model's closure is **`T_stag`-referenced** — and the closure has already spent the standoff decay on the gas, so `T_stag` crosses her 873.15 K sensor temperature at **L ≈ 10.9**, inside the exact L = 10–14 window the fit uses. ⇒ past the crossing the model's gas is **colder than her calorimeter face**, the flux reverses sign, and **no exponent of a one-parameter `h(s)` reaches a positive 3.8–5.4 MW/m²**. I reproduced every number. This is a planner-side defect in a gating row, found offline at zero compute | **bug on a gating row** |
+| 2 | ⚠⚠ `jet_core_length` multiplies the **decay** diameter, not the nozzle diameter | **3 units** | `8.0` with `jet_De_ref = 0.474 D` is a core of **8 × 0.003745 = 29.96 mm = 3.79 D**, not 8 D — I confirmed both the millimetres and the ratio. ⇒ any packet quoting a core length in nozzle diameters (as the flame-jet literature and "L = 8" do) **must convert**, and this is the single number that decides whether the Höser leg is calibratable at all | **ok** (found and named) |
+| 3 | ⚠⚠ **evaluate the bracket at every target point before writing a fit** | **6 boundaries / 12** | takeaway 1, and it is the generalisable lesson: three of four target standoffs put `T_stag` **below** `T_sens`, so the required coefficient is negative. ⚠ The implementer places it correctly as *"the same family as SR 15 but at the INPUT end — the mechanism has already consumed the degree of freedom the fit wants to spend"* | **ok** |
+| 4 | ⚠⚠ calibrating the **flux** buys the level and sells the **slope** | **2 consistency** | `h0·(T_stag − T_sens) = q_meas` fixes one point exactly, but `dq/dT_face = −h0` then carries the full **6.29×** error (44,683 against her 7.1 kW/m²K — I verified the ratio equals the inverse bracket ratio 1042/165.61), so the flux collapses as the face approaches `T_stag` and **the face can never exceed it**. ⇒ a Robin calibration against a measured flux owes **both** numbers. ✅ The mirror of P2-1's own lesson, and the implementer cites it | **ok** |
+| 5 | the derivation reads `jet_T_stag` / `jet_s_c` / `jet_D_e` **from the run**, not recomputed | **5 hard-coded quantities the run logs** | exactly right, and it is why `(a1)` could be decided at all: the gate is scored against the **binary's own closure**, so the unsatisfiability is a property of the shipped code rather than of a re-derivation. I re-read the same three columns and got the same answers | **ok** |
+| 6 | ⚠ deliverables 2 and 3 are **circular**, and the decoupling is declared | **4 scope vs data source** | the map derives from a smoke that runs the map. They separate because **`T_stag` depends on geometry alone** (`phi` reads `s_c` and `D_e`, never `h`), so `SMOKE0` carries a deliberately flat `h = 1000` and is used for nothing but reading the closure. ⚠ Declared in the harness docstring — *"a flat-h leg in a legs/ directory is exactly the sort of thing a later reader would mistake for a result"* | **risk — named** |
+| 7 | ⚠ the pre-registered shape set has **no admissible member** | **12 self-limited / thresholds** | integrated over her Ø 40 opening at the firing temperature: **15.9× / 7.3× / 4.9×** the flake bound, so `c2`'s ×2 bar could not have been met by **any** of A, B or C. ⚠ The implementer's own conclusion is the right one: *"the integral costs seconds and belongs in the planning pass"* | **ok** (caught at design time) |
+| 8 | ⚠ `c5` is vacuous by construction | **12 / standing rule 15** | `jet_T_stag` = 1038.76 K caps the face, so a 1,400 K melt flag is unreachable at any coefficient. Caught **before** the leg — the only place that class can be caught usefully | **ok** |
+| 9 | ⚠ the lid's threshold was **mesh-dependent and on a floating-point tie** | **6 floating-point equality** | `s < 0.0652` is `s0 + 2.0 mm`: two cells at 1 mm and, at 2 mm, **exactly** `0.1632 − 0.098`. ⇒ `c6` would have compared a 2-cell threshold against a coin flip. The mesh-aware `s0 + dz/2` lifts the lid after one cell at both meshes. Not emitted (the gate fired first) but printed in `MAP.txt` for the next packet | **ok** |
+| 10 | ⚠ **the lid cannot be a zero** | **6 bars below what the code can print** | `BuildFlameColumns` aborts on a non-positive in-patch `h`, so the lid floors at **0.001** ⇒ `a2`'s *"bins beyond 20 mm read 0"* must be scored against that floor's own ~1e-4 W per bin, **never against zero**. Same shape as the `%g` trap (SR 7 iv) — *"the bar has to be written against what the code can print"* | **ok** |
+| 11 | the harness rebuilds W1's argv **token-aware, last-wins**, minus three **declared** drop groups | **9 removed checks / 2** | **FEET** (forced by the code — `nozzle_descent = prescribed` aborts on `foot_body_clearance` at `:10735` and `jet_free_surface` at `:10733`), **SCOPE** (the packet's), **OVERRIDDEN** (the lab block), each recorded per leg in `DROPPED.txt` (SR 8), and `run_p2_5.py:199` asserts no dropped key survived. ⇒ every deletion is listed with its reason, which is what the class asks | **ok** |
+| 12 | ⚠ the `side_face_h_law = derived` + `side_face_h` + `side_face_T` triple **deliberately kept** | **7 keys and fields have readers** | without it `wall_law_on` and `side_h_used_n` are **never registered**, and the packet's own "the wall law is never ready" row would have been an **absent column rather than a measured zero**. They read 0. That is the right anti-vacuity instinct, and it is the inverse of the trap P2-4 row 15 hit | **ok** |
+| 13 | ⚠ `-np 5` correctly **not** carried as a literal | **12 thresholds from a different population** | it is a P2-4 fact about the 60³ Meier deck; here the box count is 16 at 1 mm and 2 at 2 mm, so the harness **derives** the rank count from `amr.n_cell` and `max_grid_size`. Exactly the right handling of a number I flagged as a planning figure last review | **ok** |
+| 14 | ⚠ the alternative the verdict names is a **closure change** | **9 removed checks** | `jet_core_length > 10.89` makes the fit solvable (I get **10.93**, and confirm it gives T_stag **1312 K**, h0 **16,869** and **5.18 D** of core against the reported 1308 / 17,011 / 5.2 D) — but it is **5.2 D against the 3.79 D** the Meier `De_ref/D` ratio carries into this nozzle, and the packet's **first guardrail forbids a closure change**. ⇒ the next packet faces a real fork and the verdict states it as a fork rather than taking it | **risk — named** |
+| 15 | ⚠ `a2`'s `patch_P_robin` witness | 5 | `GATE_a1.txt` quotes **1518.5 W at the first step**; my read of the **last** row gives **1034.35 W**. Both are fine as "the patch is heating something", but the artefact should say which step it means | **nit** |
+| 16 | ⚠ the T_stag values at 87/103/111 mm | 6 | mine are **834.79 / 750.65 / 717.68** against the reported 835.41 / 751.99 / 719.21 — within **1.5 K**, from recovering `T_flame` through `phi` rather than reading it. The s = 79 mm point and the +16.49 K bracket agree **exactly**, and the sign conclusion is unaffected at any of these | **nit** |
+| 17 | guardrails | 3 | **no closure change** (the first guardrail), **no long leg launched** (the run-order rule), no `src/` edit, nothing committed, nothing re-pinned; `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE` untouched. The 1 mm mesh is confined to this deck and Meier stays at 2 mm (rule 12) | **ok** |
+
+**Tally: 17 rows — 1 bug, 2 risk, 2 nit, 12 ok.**
+
+#### Unquotables
+
+Checked against `ROADMAP.md`'s `## Standing rules` **and** `## Known Stale/Important Notes`.
+✅ **No Höser number is claimed as reproduced** — the step reports that her flux series cannot be read
+as a coefficient law on top of this closure, which is a statement about the model, not about her
+measurement. ✅ **P2-3's Kant Table 4 scale is correctly recorded as a category error** (a 3–10 kW
+laboratory burner *"where at least a single spall could be detected"*), with the runs standing and
+their floor-level premise not — that is the right way to retire a premise without retracting data.
+✅ **Rule 12** honoured: 1 mm is confined to this deck and Meier stays at 2 mm. ✅ `weibull.V0`'s
+mesh dependence is carried explicitly (1e-9 at 1 mm, 8e-9 on the 2 mm twin). ✅ The typed 169.3 W/m²K
+fallback for side faces is **stated, reported, not tuned**, with P2-4 takeaway 3 cited as the reason
+the derived law cannot be ready in a 40–60 mm cavity.
+
+#### Verdict: rejected
+
+**`a1` is the first gate in run order and it fails — structurally, and I reproduced every number of
+it from the binary's own closure.** The step then did exactly what the loop asks: it stopped, launched
+no long leg, changed no source, and wrote down why.
+
+**must-fix**
+
+1. **`(a1)`(ii) has no solution of the stated form, and the reason is a reference-frame mismatch.**
+   Höser's `h` is **sensor-referenced** (`T_f = T_nozzle`); the model's closure is **`T_stag`-referenced**,
+   and that closure has already spent the standoff decay on the gas. `T_stag` crosses her 873.15 K
+   sensor temperature at **L ≈ 10.9**, inside the L = 10–14 fit window, so the bracket is
+   **+16.49 K at s = 79 mm and −38 / −123 / −155 K at 87 / 103 / 111 mm**. ⇒ the fit demands a
+   **negative coefficient at three of four points**, and the one positive point demands **8.28× h0**.
+   The planner must choose the reference frame before the tolerance.
+2. **The pre-registered shape set contains no admissible member.** A / B / C integrate to
+   **15.9× / 7.3× / 4.9×** the 0.55–0.68 kW flake bound at the firing temperature, so `c2`'s ×2 bar
+   was unreachable by construction. The integral costs seconds and belongs in the planning pass —
+   and I verified the bound's own provenance (26 cm³/min × 1.27–1.56 GJ/m³ = 550–676 W).
+3. **`c5` was vacuous** before any leg: `jet_T_stag` = 1038.76 K caps the face below the 1,400 K melt
+   flag, so the row would have passed on SR 15.
+
+**What stands, and is the right kind of work**
+
+- **The blocking was found offline, at zero compute, against the binary's own output.** `SMOKE0` is a
+  2 s run whose only job is to read `jet_T_stag` / `jet_s_c` / `jet_D_e`, and the decoupling that makes
+  it legitimate is stated: **`T_stag` depends on geometry alone**, so a deliberately flat `h = 1000`
+  cannot contaminate it.
+- **The `jet_core_length` unit finding is the load-bearing one.** `8.0 × D_e` with
+  `jet_De_ref = 0.474 D` is **3.79 D**, not 8 D — so the literature's "L = 8" and the key's `8.0` are
+  not the same quantity, and this is the single number that decides whether the leg is calibratable.
+  I confirmed both the 29.96 mm and the 3.79 D.
+- **Three traps were caught before they could become results**: the lid's mesh-dependent threshold
+  sitting on an exact floating-point tie at 2 mm; the lid's inability to be zero (so `a2`'s bar must
+  be written against a 0.001 floor, not against zero); and the 2 mm twin's `blocking_factor` abort,
+  with a fix that keeps **one** geometry so `c6` would compare meshes rather than boxes.
+- **Two generalisable lessons, both stated at the right altitude**: *evaluate the bracket at every
+  target point before writing a fit* — the input-end analogue of SR 15 — and *a Robin calibration
+  against a measured flux owes both the level and the slope*, which is the mirror of P2-1's own
+  finding and is cited as such.
+- **The verdict states a fork rather than taking it.** Making `jet_core_length > 10.89` solvable
+  (I get 10.93 ⇒ T_stag 1312 K, h0 16,869, **5.18 D**) is a **closure change**, which this packet's
+  first guardrail forbids; the alternative — calibrating against her sensor-referenced `h` — *"changes
+  what `a1` measures, not merely its tolerance"*. Naming that as the single decision the next packet
+  owes is the correct handoff.
+
+**Named risks** (rows 6, 14): `SMOKE0`'s flat `h = 1000` sitting in a `legs/` directory, declared in
+the docstring but still a trap for a later reader — consider renaming it out of `legs/`; and the
+core-length fork being a closure change that one guardrail forbids and the other route avoids only by
+redefining the gate. **Nits** (rows 15, 16): `patch_P_robin`'s witness not saying which step it reads;
+and my T_stag recovery differing from the artefact's by ≤ 1.5 K at three of four points, with the
+sign conclusion unaffected.
+
+## P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; archived 2026-10-19)
+
+**Verdict: accepted** (reviewer 10-14: all three gates re-derived independently; 18 diff rows, 2 bug on report
+material / 4 risk / 3 nit / 9 ok). Study `tests/MMWSpalling/studies/p2_5_hoeser/` (9 legs + probe), filled
+table `RESULTS.txt`. Advisor's read: `Claude_markdowns/2026-10-14.md` §15.
+
+### What the step established
+- **Volume per unit measured heat is right.** G05 (σ = 0.5 D, h0 = her 7,100 W/m²K on a Ø 9 mm disc mean,
+  φ = 1 at 63.2 mm) **14.156 cm³ = 1.09×** her 13.0; plateau A **7.74×** (the Meier map's shape fails, P1);
+  ladder monotone (2.06×/3.44×); 1 vs 2 mm **1.50 %**; L13/L8 **0.497** vs her 0.46; price 1.19–1.29 GJ/m³
+  unfitted; firing T **856–864 K** at 6× Meier's flux (onset flux-independent, +11 K; 845 ± 10 bar missed).
+- ⚠⚠ **Shape wrong:** a 19 mm × 90 mm pencil vs her ~50 × 30 mm cavity; no undercut in 120 s. The typed
+  169.3 W/m²K side-face fallback supplies **59–79 %** of the energy (G05: floor map 33.2 %) ⇒ c2 did not test
+  the floor map alone; σ ≈ 0.48 D is an extrapolation 0.02 D below the ladder and not a transferable number.
+- ⚠⚠ **c12 inverted:** the exposed surface sits **83–135 K BELOW** the firing T — the model has no steady-state
+  overheating (Wilkinson). This is the datum behind P2-2e (the constraint depth).
+- c9: the K20/K30 split moves volume 27.9 % (gas cools from 1.49 s vs 9.65 s) ⇒ the closure's axial decay
+  matters; P5 refuted.
+
+### Carry-forwards (reviewer must-carry; parked with the Höser delivery work, NOT in P2-2e)
+- DR-3: `RATE_SERIES.txt` mixes incremental and cumulative rates — like-for-like 0.292, not 0.076 ("13×" is 3.4×).
+- DR-4: `PARSER_DEFECT.txt` headline pair mis-transcribed (conclusion stands on three other pairs).
+- DR-6: c4 periphery share is near-vacuous (cavity radius = r_0.5); re-score as radius/r_0.5.
+- DR-7: the thermostat slope against `ledger_E_src` is 1.741 — fails 0.6–1.0.
+- DR-8: a 200 mm block (P2-2e uses it) AND a side-face treatment before the lab floor map is scored again.
+- DR-5: φ reads `jet_s_c`, not `patch_min_standoff`.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-19)
+
+Active step:
+- **P2-5 (rev 2) — the Höser lab leg: the floor criterion at a MEASURED flux, with no body in the hole**
+  (`ACTIVE_STEP.md`; rev 1 REJECTED at `a1` 2026-10-14 with no leg run — four planner defects, all offline:
+  `ARCHIVE_DONE.md` *"P2-5 rev 1"*; rev 2 installed the same day by the advisor via /plan). Her flux is
+  7.4 MW/m² / 7.1 kW/m²K on the axis at L 8 (sensor-referenced, T_f 1,866 K); 26 cm³/min at 0 MPa.
+  Rev 2: `jet_core_length` set so φ = 1 at 63.2 mm (T_stag = her T_f) and BRACKETED 30 / 20 (× D_e; the
+  gas/coefficient split of the standoff decay is unmeasured; exponents 1.32 / 0.43 fit her series ≤ 7 %);
+  level = her h0 7,100 on a Ø 9 mm disc mean; shapes = a Gaussian σ ladder 0.5 / 0.75 / 1.0 D (0.96 /
+  1.83 / 2.94 kW at 850 K vs 0.55–0.68 kW of flakes) + the Meier plateau A (9.06 kW, the controlled
+  failure); lid s0 + dz/2; parser `and`; twin `blocking_factor 1`; 1 mm (user). Nine legs, minutes each,
+  serial. Pre-registered: A ≥ 65 cm³ or melts; G05 within ×2 of 13 cm³; firing T 845 ± 10 K; periphery
+  share (q < 0.5 MW/m²) ≤ 10 % on G05 — the P2-5c datum; L 13/L 8 ratio 0.45–0.60 (her 0.46). Guardrails:
+  no `src/` change; nothing tuned to the volume; the admitted σ is interpolated on the ladder. Basis:
+  `2026-10-14.md` §6–§7.
+
+### ROADMAP milestones released verbatim 2026-10-19 (superseded by `docs/project/DIRECTION_2026-10-14_single_skin_failure_law.md`)
+
+- **P2-2e — THE COMPRESSIVE FAILURE CRITERION.** Buckling and peeling of a compressed layer
+  (Rauenzahn; Evans & Hutchinson), which the relief factor stands in for. ⚠⚠ **That condition is MET** — P2-2d put `R`
+  at its definitional `UCS/sigma` with the level closing to **1.7 %**, so the residual argument is
+  **spent**: argue P2-2e on **FORM**, and gate it first on whether a compressive criterion keeps the
+  level parameter-free.
+  ⚠ `differential` is **gone**, so this builds from the literature. A temperature-dependent `R`
+  belongs here (microcracking grows above 300 degC).
+- **P2-5b — Meier's floor re-levelled** to Höser's stagnation flux with the shape P2-5 admits; the
+  pads sit at 3.5–5 D in the wall-jet region, so expect the pit lead to open rather than the rate to
+  jump (Meier p. 223 foresaw the central pit). Supersedes the taper milestone (archived 2026-10-14).
+- **P2-2e / P2-5c — the stress reference below the surface, with the minimum-flux cut-off as its
+  proxy.** Kant 2016 measured no spall below h ≈ 500–700 W/m²K (0.3–0.5 MW/m²) although the surface
+  passes the spall T; the cause is the stress differential to the constraining rock, which the model
+  references to the INITIAL T. Proxy gate h·(T_gas − 850 K) ≥ q_min: Meier wall 0.11–0.17, ring
+  0.9–1.0 ⇒ any q_min in 0.2–0.8 separates them. ⚠ The cap-share "0 %" in P2-4's c9 was a reduction
+  bug: 95–100 % of wall AND ring firings are cap-clamped (`2026-10-13.md` §17).
+- **P2-6 (conditional) — a wall-only coefficient variant.** P2-3's W074 scaled every face with a
+  wall corner (below-plane flanks included) and `jet_P_wall` did not move; a wall bound needs the
+  scale gated on above-plane faces (P2-3 review must-fix 3). Only if P2-4 leaves the wall as the lever.
+- **Sources ON DISK 2026-10-14** (`franck_material/`, notes + CSVs in `validation/hoeser/`): Höser
+  2016 thesis, Höser 2018 (load), Höser & von Rohr 2018 (heat transfer), Kant 2016 (minimal BC), Kant
+  2017 JGR, Kant SGW 2017, Wilkinson & Tester 1993, Rauenzahn & Tester 1989. ⚠ Still absent: Rossi
+  2020 (field test), Shen 2018, Brkic WGC 2015; Meier's thesis PDF sits OUTSIDE the repo
+  (`~/Downloads/ThierryMeier_PhD.pdf`) — copy it in. The Grimsel reference stands in for Rossi.
+
+### The P2-5 rev 2 file verbatim (packet, completion notes, review findings; headings demoted)
+
+## Active Step: P2-5 — the Höser lab leg: the floor criterion at a MEASURED flux, with no body in the hole (rev 2)
+
+Status: **accepted by review** (2026-10-14; all three gates re-derived independently) — was: **completed** (rev 2 implemented 2026-10-14; all three gates PASS, 6 of 13 report
+rows PASS, and the misses are the finding -- see the completion notes at the end).
+Originally: ready for implementation (rev 2, planned 2026-10-14 by the advisor via /plan at the user's
+instruction; rev 1 was REJECTED by review at `a1` with no leg launched — `ARCHIVE_DONE.md` *"P2-5 rev 1"*.
+The deck, harness and derivation rev 1 built are kept and amended, not rewritten.)
+
+### Context
+
+Every Meier floor number so far was an inference; P2-3's scale to Kant 2016 Table 4 was a category
+error (a 3–10 kW threshold burner). Höser 2016/2018 measured the **drilling** flame — the 7.9 mm nozzle
+at 38 kW, essentially Meier's — with a water-cooled calorimeter inside the same Ø 40 × 35 mm steel
+channel her drilling flange forms, then drilled Grimsel cylinders in that flange for 30 s: **26 cm³/min
+at zero axial load**. The step asks whether the criterion removes the right amount of rock per unit of
+measured heat at six times Meier's flux, what radial shape of the heated spot her volume admits, and
+what the 30 s transient looks like — with no body in the hole, no feet, no recirculation, no annulus.
+
+**Rev 1 stopped at the first gate, correctly, on four planner defects** (all mine, all computable
+offline): (1) `jet_core_length = 8` multiplies the DECAY diameter D_e = 3.745 mm, so the core was 3.8 D
+and the closure's own 1/s decay drove the axis gas to 1,039 K at L 8 and **below her sensor face**
+beyond L 11 — her flux series could not be fitted as a coefficient law on top of a gas the closure had
+already cooled; (2) the three pre-registered shapes integrated to 4.9–15.9× the flake bound; (3) the
+lid constant was mesh-dependent and on a floating-point tie; (4) the 2 mm twin's cell count was not
+divisible by the deck's blocking factor. ⚠⚠ **Programme finding** (log §6): the Meier floor's
+~1,760 K gas never came from the jet closure's decay — under `exhaust` mode T_mix = 1,504 K inflates D_e
+to 8.05 mm (core 8.6 D) and floors the gas at 1,504 K; the same deck in `fixed` mode reads 720–831 K at
+85–107 mm. The closure's axial decay has never been validated. This step is the first place it is.
+
+**The rev 2 decision — the reference frame.** Her `h` is **sensor-referenced**: `q = h·(T_f − T_s)` with
+T_f = 1,866 K (her nozzle-exit temperature) and T_s her sensing face; she showed h independent of T_s
+(180–550 °C) for L ≥ 9. The model's Robin form is `q = h·(T_stag − T_face)`. Rev 2 makes the two frames
+coincide at the calibration point by choosing `jet_core_length` so that φ = 1 at s0 = 63.2 mm
+(T_stag = T_nozzle = her T_f), and **brackets the unmeasured split of the standoff decay between the gas
+and the coefficient** with two pre-registered values: **K30** (φ = 1 to s = 112.4 mm: all decay in h,
+h(s) = her table, exponent 1.32) and **K20** (φ = 1 to 74.9 mm, T_stag 1,866 → 1,358 K at L 14, h nearly
+flat, exponent 0.43). Both reproduce her flux at her sensor temperature at every L within 7 %; they
+differ in the Robin slope and in the far field. K30 is the default because the closure carries ONE
+T_stag (from the deepest bin's standoff) for every column, which is exact only when T_stag is uniform.
+`jet_core_length` is a deck key on this study's legs, not a `src/` change; Meier's 8.0 is untouched.
+
+⚠ Mesh **1 mm** here (user, 2026-10-14); Meier stays at 2 mm (rule 12). ⚠ `weibull.V0` is V_cell at 2 mm
+only ⇒ 1e-9 at 1 mm, 8e-9 on the twin. ⚠ Her "0 MPa" leg has the flange ON, untorqued: the lid is
+geometry, no axial load. ⚠ The derived wall law needs a bore > 75 mm to be "ready"; side faces fall
+back to the typed 169.3 W/m²K — stated, reported, not tuned. ⚠ Her cavity SHAPE is measured only at
+47 MPa; at 0 MPa only the volume exists. Parked: entrainment modes, cuttings, body loss, the cap rule /
+stress reference (P2-2e), the flux cut-off (P2-5c — row `c4` is its datum, not its test), the load series.
+
+### Sources
+
+- **Drilling:** `tests/MMWSpalling/validation/hoeser/hoeser_2018_uniaxial_load_notes.md`,
+  `hoeser_2016_thesis_notes.md` §4, `hoeser_2016_drilling_series.csv` (PDFs `franck_material/
+  UniaxialLoading.pdf`, `hoser.pdf`): Grimsel granodiorite Ø 100 × 150 mm; nozzle **7.9 mm**, **38 kW**,
+  λ 1.1, **T_nozzle 1,866 K**, axial distance **63.2 mm** (L = 8); flange 20 mm + disc 15 mm, **Ø 40 mm**
+  opening; removal **26 cm³/min at 0 MPa** (30 s, 3 repeats, 5 %) ⇒ **13.0 cm³ in 30 s**; 47 MPa:
+  66 cm³/min, time series 64/66/81/90 at 15/30/60/90 s, standoff series **46/35/23/21 cm³/min at
+  L 8/10/11/13** (ratio L 13/L 8 = **0.46**; her flux ratio 0.58), sections at 30 s ≈ 30 mm deep ×
+  50 mm wide, undercut to 44–64 mm.
+- **Flux:** `hoeser_2016_heat_transfer.csv` (header states the convention: `h = q_sen/(T_f − T_surf)`,
+  T_f the nozzle-exit temperature): 38 kW confined, **q = 9.1/7.4/6.1/5.4/4.3/3.8 MW/m², h = 9.0/7.1/
+  5.7/5.0/3.7/3.2 kW/m²K at L = 5/8/10/11/13/14** ⇒ her sensing face T_sens = 1,866 − q/h = **855/824/
+  796/786/704/678 K**. Sensing element **Ø 9 mm** (journal Fig. 3; notes line 155); h independent of the
+  target temperature for L ≥ 9 (thesis p. 89–90). **No radial profile exists.**
+- **Onset:** Höser IR 430–600 °C at 4.3–7.4 MW/m²; Kant 2016 550–630 °C at 0.45–0.87 and **no spall
+  below h ≈ 500–700 W/m²K (0.3–0.5 MW/m²)** (`kant_2016_minimal_bc_notes.md`); Wilkinson 1993 onset flat
+  with flux, steady-state surface mean rising (`wilkinson_tester_1993_notes.md`). Model firing T on
+  Meier: 851.5 K.
+- **Energy bound** (`2026-10-14.md` §2, §6): 26 cm³/min × 1.27–1.56 GJ/m³ = **0.55–0.68 kW** of flakes.
+- **Code:** closure `MMWSpalling.H:3441–3458` — under `jet_T_ent_mode = fixed`, T_mix = T_ent, `D_dec =
+  jet_De_ref`, `phi = min(1, jet_core_length·D_dec/s_c)`, `T_stag = T_ent + (T_nozzle − T_ent)·phi`,
+  `m = jet_mdot/phi` ⇒ `jet_P_cap = jet_mdot·c_p·(T_nozzle − T_ent)` = **6,685 W quarter, invariant in φ**;
+  `:10625` states `jet_core_length` is "in units of D_e"; `h_expr` variables `{x, y, r, s, t}` (`:10752`),
+  s the column's own nozzle-to-face standoff; parser logical operator is **`and`**, not `&&`
+  (`ext/amrex/Src/Base/Parser/amrex_parser.l:68`); `exp`, `pow`, `min`, `max`, `if` available (`:39, :70,
+  :74–77`). Rev 1 files: `studies/p2_5_hoeser/{run_p2_5.py, derive_lab_map.py, legs/SMOKE0}` and
+  `validation/hoeser/input_lab` (`amr.blocking_factor = 2`, `max_level = 0`).
+- **Measured in rev 1** (`legs/SMOKE0/run/thermo.dat`): `jet_D_e` = 0.003745 m under `fixed`; the hard
+  mask does not bite (bins to r_lo 68 mm at `radius = 0.08`); `wall_law_on` = 0, `side_h_used_n` = 0;
+  `ledger_err_solid` 1.1e-15; `patch_min_standoff` 0.0632 constant.
+- **Mesh/dt:** `ARCHIVE_DONE.md` *"D2d"* (8 ms at 1 mm, 16 ms at 2 mm pass). ⚠ `studies/p2_2c_meier/
+  reduce_price.py:51` hard-codes `V_CELL = 8e-9` (2 mm): never import it for a 1 mm leg.
+
+### The calibration, pre-computed (planner's numbers; `derive_lab_map.py` must reproduce them)
+
+| quantity | K30 | K20 |
+|---|---|---|
+| `jet_core_length` (× D_e 3.745 mm) | 30 = 112.4 mm = 14.2 D | 20 = 74.9 mm = 9.5 D |
+| T_stag at L 8/10/11/13/14 [K] | 1,866 at all five | 1,866/1,784/1,649/1,440/1,358 |
+| h0 at s0 (her 7.1 kW/m²K, both) | 7,100 W/m²K | 7,100 W/m²K |
+| exponent n in h = h0·(s0/s)^n, fitted L 10–14 | **1.319** | **0.429** |
+| flux residual at L 10/11/13/14 | −7.2/−6.7/+1.2/+6.1 % | +4.6/−1.0/−1.3/−0.1 % |
+| axis q at T_face 850 K, L 8 → L 13 | 7.21 → 3.80 MW/m² | 7.21 → 3.40 MW/m² |
+| T_stag starts to fall when `patch_min_standoff` > | 0.1124 m (pit 49 mm) | 0.0749 m (pit 12 mm) |
+
+Fit: h_req(L) = q(L)/(T_stag(L; K) − T_sens(L)); n = Σ x·y / Σ x² with x = ln(s0/s), y = ln(h_req/7,100).
+
+| shape (lengths in D = 7.9 mm) | f_disc (mean/peak over r ≤ 4.5 mm) | h0_shape = 7,100/f_disc | q0 at 850 K | P over Ø 40 at 850 K | vs 0.55–0.68 kW | r where q(850 K) < 0.5 MW/m² |
+|---|---|---|---|---|---|---|
+| **A** plateau to r = 20 mm (the Meier map's form inside the opening) | 1.000 | 7,100 | 7.21 | **9.06 kW** | 13.9× | none |
+| **G10** σ = 1.0 D | 0.923 | 7,691 | 7.81 | **2.94 kW** | 4.5× | 18.5 mm |
+| **G075** σ = 0.75 D | 0.869 | 8,173 | 8.30 | **1.83 kW** | 2.8× | 14.0 mm |
+| **G05** σ = 0.5 D | 0.736 | 9,651 | 9.81 | **0.96 kW** | 1.5× | 9.6 mm |
+| G035 σ = 0.35 D (conditional) | 0.554 | 12,810 | 13.02 | 0.63 kW | 1.0× | 7.1 mm |
+
+Gaussian: h(r, s) = h0_shape·exp(−r²/2σ²)·(s0/s)^n; f_disc = (2σ²/R²)(1 − e^{−R²/2σ²}), R = 4.5 mm;
+P = h0_shape·(1,866 − 850)·2πσ²(1 − e^{−(20 mm)²/2σ²}). Thermostat volume at 30 s = P × 0.75 / 1.4 GJ/m³ ×
+30 s: A 146, G10 47, G075 29, G05 15, G035 10 cm³ — before the standoff decay the pit's own depth imposes.
+Design-time heat-up to 850 K under a Robin face at 1,866 K (k 2.5 W/mK, κ 1.1e-6 m²/s, semi-infinite):
+h = 198 W/m²K reaches it in 30 s, the typed side-face 169.3 in **41 s**; the 30 s footprint radius is
+therefore r(h = 198) ≈ 11 / 16 / 20 mm for G05 / G075 / G10, and A fills the opening at once.
+
+### Goal
+
+1. **Harness** (`run_p2_5.py`, amended): `surface_patch.jet_core_length` and `surface_patch.nozzle_z0`
+   move from `COMMON` to the leg block; `h_expr` is read per LEG from `MAP.txt` (`H_EXPR_<LEG>=`, since
+   the lid constant and the standoff law differ by mesh and by L); the flat-h closure probe moves to
+   `studies/p2_5_hoeser/probe/SMOKE0` (it is not a result and must not sit in `legs/`); the drop groups,
+   `DROPPED.txt`, `--probe`, `--argv` and the box-count rank rule are kept. Legs, literal (all carry
+   `COMMON` minus the two moved keys; 1 mm = `MESH1`, 2 mm = `MESH2` with `amr.blocking_factor=1`):
+   | leg | mesh | `stop_time` | `jet_core_length` | `nozzle_z0` | shape |
+   |---|---|---|---|---|---|
+   | `SMOKE` | 2 mm | 2.0 | 30.0 | 0.1632 | G05 |
+   | `A` | 1 mm | 30.0 | 30.0 | 0.1632 | A |
+   | `G05` | 1 mm | 30.0 | 30.0 | 0.1632 | G05 |
+   | `G075` | 1 mm | 30.0 | 30.0 | 0.1632 | G075 |
+   | `G10` | 1 mm | 30.0 | 30.0 | 0.1632 | G10 |
+   | `G05K20` | 1 mm | 30.0 | **20.0** | 0.1632 | G05 |
+   | `G05M2` | 2 mm | 30.0 | 30.0 | 0.1632 | G05 |
+   | `G05T120` | 1 mm | 120.0 | 30.0 | 0.1632 | G05 |
+   | `G05L13` | 1 mm | 30.0 | 30.0 | **0.2027** | G05 |
+   | `G035` (only on the `c2` rule) | 1 mm | 30.0 | 30.0 | 0.1632 | G035 |
+2. **OFFLINE — the map, derived** (`derive_lab_map.py` rev 2 → `MAP.txt`), nothing read from a run but
+   `jet_D_e` from `probe/SMOKE0`: (i) the T_stag(L) table for K = 20 and 30 from the closure formula;
+   (ii) h0 = 7,100 and the fitted n per K with the flux residual at each of L 10/11/13/14 (T_sens(L) from
+   her q/h); (iii) the lid constant per leg, **s_lid = (nozzle_z0 − 0.10) + dz/2** (0.06370 / 0.06420 at
+   L 8 for 1 / 2 mm; 0.10320 at L 13); (iv) per shape: f_disc, h0_shape, q0 at 850 K, P over Ø 40 at
+   850 K, the ratio to 0.55–0.68 kW, r_0.5; (v) one string per leg,
+   `if((r>0.020) and (s<S_LID), 0.001, H0S*exp(-(r*r)/(2.0*SIG*SIG))*pow(0.0632/max(s,0.0632),N))`
+   (A: `H0S*pow(…)` with no r factor), constants substituted as decimals; plus the **branch witness**:
+   the derivation's own mirror of each string evaluated at (r = 0.021, s = s_lid − dz/2) must return
+   the lid 0.001 and at (r = 0.021, s = s_lid + dz) must return the shape branch (= h_shape(0.021)·
+   (s0/s)^n, which is far below 0.001 for the narrow shapes — the test is WHICH branch, not the size);
+   (vi) **parse-back**: `run_p2_5.py --probe` on every leg in the table — rc 0 and no unused key other
+   than `alamo.program`. ⚠ No number in the map is adjusted to the removed volume.
+3. **SMOKE** (2 s, 2 mm, G05, K30): rc 0; ledger; `jet_T_stag`; the lid and the mask witnessed on the
+   profile sample nearest t = 1 s (the sampler writes 1.008 s at dt 16 ms).
+4. **Legs, serial**, in the table's order (≈ 1–4 min per 30 s leg at 1 mm by the Meier per-cell cost;
+   calibrate on `A`'s wall time; 4 ranks at 1 mm, 2 at 2 mm).
+5. **Reductions** `reduce_p2_5.py` (reuse `reduce_price.py`'s event census and `bore_profile.py`'s FAB
+   reader; **V_cell = dx·dy·dz parsed from the leg's own `argv.sh`, printed**): removed volume vs time ×4
+   from the event log (all regimes, Σ n_voided·V_cell) AND from the void mask at each plotfile; delivered
+   energy ∫`patch_P_robin` dt ×4 and `ledger_E_flake` ×4 (the flake share); cavity depth on the axis,
+   width at the original surface and 5 mm below it **per azimuth sector** from the mask; undercut width
+   under the lid; firing T (regime-1 `T_surf` median, p10/p90); max `T_surf` per leg with a **melt flag**
+   at > 1,400 K; clamp fraction by volume; the **periphery share** (regime-1 removed volume at column
+   radius r = dx·√((i+½)² + (j+½)²) > r_0.5 of the leg's shape, over all regime-1 volume); the
+   time-mean exposed-surface temperature within r < 10 mm at 10/20/30 s from the plotfile `Temp` of
+   surface cells; `jet_T_stag` vs time with the first step it leaves 1,866 K and `patch_min_standoff`
+   then; max `jet_P_face`/`jet_P_cap`; the thermostat line (V at 30 s vs the shape's P from `MAP.txt`,
+   log-log slope over `G05/G075/G10/A`); rates at 15/30/60/90/120 s on `G05T120`; `G05L13`/`G05` ratio.
+   Per-step columns are means, never sums (SR 7).
+6. Verdict.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a1 | 1 | the map (`MAP.txt`) and the probes | T_stag tables reproduce the pre-computed ones; h0 = 7,100; n_K30 and n_K20 fitted with **every** flux residual at L 10–14 ≤ 15 % (planner: worst 7.2 / 4.6 %); s_lid per leg as listed; per-shape P within 2 % of the table; the branch witness takes the lid below s_lid and the shape above it on every leg; every leg's `--probe` rc 0 with no unused key but `alamo.program` | **gate** | the bracket is wrong again or a string does not parse — nothing below is interpretable |
+| a2 | 2 | `SMOKE` | rc 0; `ledger_err_solid` ≤ 5e-3; `jet_T_stag` = 1,866.0 ± 0.5 K on every row (φ clamped at 1); at the profile sample nearest 1 s every bin with r_lo ≥ 0.020 m reads `P_bin` ≤ 1e-3 W (the 0.001 floor's own share is ~1e-4 W per bin) and bins exist to r_lo ≥ 0.068 m; no collision abort | **gate** | the lid or the hard mask is wrong — every leg heats the wrong area |
+| b1 | 3 | `A`, `G05`, `G075`, `G10`, `G05K20` run clean | rc 0; `ledger_err_solid` ≤ 5e-3; event-log and mask volumes at 30 s within 5 %; max `jet_P_face`/`jet_P_cap` < 0.9 | **gate** (protects the twin, the 120 s and the L 13 legs) | the deck is broken, the estimators disagree (then neither is the measurement), or the cap binds |
+| c1 | 4 | `A` volume at 30 s (×4) | **≥ 65 cm³** or the melt flag (thermostat 146 before the depth decay) | **report** — the controlled failure | inside ×2 of 13 ⇒ the Meier map's shape was not the problem; P2-5b's premise falls |
+| c2 | 4 | `G05` volume at 30 s (×4) | **6.5–26 cm³** (thermostat 15; 9–15 after the depth decay) | **report** — headline | above 26 ⇒ run `G035`; `G035` also above ⇒ the criterion over-removes at a measured flux and the shape is not the lever; below 6.5 ⇒ the standoff law or the lid starve the pit |
+| c3 | 4 | thermostat linearity: log-log slope of V(30 s) vs the shape's P over `G05/G075/G10/A`, with the measured flake share E_flake/E_delivered per leg | slope **0.6–1.0**; flake share 0.6–0.85 | **report** | slope > 1.0 ⇒ wide shapes recruit periphery rock beyond their power; < 0.6 ⇒ removal saturates (depth decay, conduction or the lid) |
+| c4 | 4 | periphery share per leg (regime-1 volume at r > r_0.5 / all regime-1) | prediction: `G05` ≤ 10 %, rising with σ; `A` has no periphery by construction | **report** — the P2-5c datum | > 25 % on `G05` ⇒ the model removes rock below Kant's measured minimum flux; the cut-off / stress reference is live |
+| c5 | 4 | `G05` cavity at 30 s, per sector (mask) | axis depth **15–40 mm**; width at the original surface **20–35 mm**; sector spread ≤ 3 mm | **report** (her 0 MPa shape is unmeasured) | spread > 3 mm ⇒ a grid-direction artefact at 1 mm before any physics |
+| c6 | 4 | firing T, `G05` (regime-1 `T_surf` median) | **845 ± 10 K** (Höser 703–873; Meier 851.5) | **report** | a shift > 10 K at 6× Meier's flux is the flux dependence the onset data say is absent |
+| c7 | 4 | max `T_surf`, every leg | `G05` < 1,400 K; `A` reported (reachable: T_stag 1,866 K) | **report** | `G05` above ⇒ the level or the shape melts the axis; `A` above is the predicted failure |
+| c8 | 5 | `G05` vs `G05M2` (2 mm) volume | within **15 %** | **report** | outside ⇒ mesh-set; quote neither |
+| c9 | 5 | `G05` vs `G05K20` volume and axis depth | within **15 %** | **report** — the bracket | outside ⇒ the gas/coefficient split matters at 30 s and P2-5b must carry both |
+| c10 | 5 | `G05L13` / `G05` volume ratio | reported beside her 47 MPa **0.46** and the flux ratio 0.58; prediction **0.45–0.60** (K30 law 0.53 at 850 K) | **report** | below 0.45 ⇒ the standoff exponent is too steep; above 0.60 ⇒ too flat |
+| c11 | 5 | `G05T120` rate at 15/30/60/90/120 s | reported beside her 47 MPa 64/66/81/90; prediction: rising by ≤ 1.5× from 15 to 90 s; `jet_T_stag` first leaves 1,866 K only after the pit passes 49 mm | **report** | falling ⇒ the standoff law over-decays |
+| c12 | 5 | time-mean exposed-surface T at r < 10 mm, 10–30 s, `G05` | **above** the firing T by 50–150 K | **report** (the Wilkinson row) | below ⇒ no overheating of flakes before ejection — a criterion-design datum for P2-2e |
+| c13 | 5 | undercut width under the lid, `G05` 30 s / `G05T120` 120 s | reported beside her 44–64 mm at 47 MPa; prediction: **none before ~40 s** (typed side-face 169.3 W/m²K reaches 850 K in ~41 s), ≤ 5 mm by 120 s | **report** | more ⇒ the lateral path is faster than the estimate; none at 120 s ⇒ the shoulder's heating is below the firing flux — bears on P2-5c |
+| d1 | 6 | verdict | — | **verdict** | states which σ her volume admits (interpolated on the pre-registered ladder, never fitted), whether the criterion holds at 7 MW/m², what the periphery share says about the cut-off, and what P2-5b transfers to Meier under each bracket |
+
+### Pre-registered predictions
+
+- **P1 — the plateau fails by a decade.** `A` puts 7.2 MW/m² over the whole opening: ≥ 65 cm³ in 30 s or
+  the melt flag. The Meier map's SHAPE, not its level, is what the campaign has been fighting.
+- **P2 — the ladder is monotone and G05 lands.** `G05` 9–18 cm³ (within ×2 of 13); `G075` ×2–3;
+  `G10` ×3–4.5. The σ her volume admits is ≈ 0.5 D — narrower than the free-jet literature's half-width
+  (~1 D) would put it; if so, that gap is the finding P2-5c and the price question inherit.
+- **P3 — the criterion holds at 6× Meier's flux:** 845 ± 10 K.
+- **P4 — mesh:** 1 vs 2 mm within 15 % (flaw draw per cell; V0 scaled).
+- **P5 — the bracket is second-order at 30 s:** K20 within 15 % of K30 (both reproduce her flux at an
+  ~800 K face; they part for hot faces and deep pits).
+- **P6 — the standoff:** `G05L13`/`G05` 0.45–0.60.
+- **P7 — the transient:** rate rises ≤ 1.5× from 15 to 90 s; no undercut before ~40 s, ≤ 5 mm by 120 s.
+- **P8 — the Wilkinson row:** the time-mean exposed-surface T sits 50–150 K above the firing T.
+- **P9 — the periphery:** `G05` ≤ 10 % of its volume from r > 9.6 mm, rising with σ; > 25 % on `G05`
+  says the flux-independent criterion fires where Kant measured no spall.
+
+### What would make this inert — witness each
+
+- **The hard patch mask** inside the opening — `a2`'s bins to r_lo ≥ 0.068 m (rev 1 measured 68 mm).
+- **The lid not applied, or never lifting** — `a2`'s bins ≥ 20 mm at ≤ 1e-3 W (applied), AND
+  `MAP.txt`'s branch witness per leg (lifts once a column recedes; the undercut CAN appear).
+- **φ not clamped / the wrong core length** — `a2`'s `jet_T_stag` = 1,866.0; on `G05K20` the reduction
+  prints the step `jet_T_stag` first falls and `patch_min_standoff` then (must be > 0.0749 m).
+- **The cap binding** — `b1`'s max `jet_P_face`/`jet_P_cap` < 0.9 (`A` quarter at 850 K is 2,266 W of 6,685).
+- **`nozzle_collision_radius` abort** — impossible at ≥ 63 mm standoff; rc 0 witnesses.
+- **V0 or V_cell at the wrong mesh** — each `argv.sh` lists `weibull.V0` (1e-9 / 8e-9); `reduce_p2_5.py`
+  prints the dx, dz and V_cell it parsed from that argv.
+- **The derived wall law never ready** at a 20–40 mm cavity ⇒ typed 169.3 on side faces: `wall_law_on`
+  = 0 and `side_h_used_n` = 0 reported on every leg (the `side_face_h_law = derived` triple is KEPT so
+  these are measured zeros, not absent columns).
+- **Exhaust re-entrainment** — `jet_T_ent_mode = fixed` in every argv; `jet_T_ent` 293.15 reported.
+- **A wrong parser operator** — `--probe` on every leg (rev 1's `&&` would not have parsed).
+
+### Guardrails
+
+- **No `src/` change.** `jet_core_length` 30 / 20 are deck keys on this study's legs; `input_lab` and
+  every Meier deck keep their values; the two values are pre-registered, not fitted.
+- **No tuning to the volume.** h0 is her 7,100 W/m²K; the exponents are fitted to her flux series (an
+  input); the σ ladder is pre-registered; `G035` runs only on the `c2` rule; the admitted σ is
+  interpolated on the ladder, never fitted.
+- **1 mm on this deck only** (user, 2026-10-14); Meier stays at 2 mm (rule 12); `weibull.V0` scaled.
+- `jet_T_ent_mode = fixed` on every leg; no exhaust mode, no body, no march, no feet, no load.
+- Per-step thermo columns are means (SR 7); volumes ×4 (SR 3); every number quoted carries its file.
+- The flat-h closure probe lives in `probe/`, is quoted for `jet_D_e` only, and never as a result.
+- Every launch under `caffeinate -dis`; plotfiles every 5 s; sentinel `.done`; `pkill -f` forbidden.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_5_hoeser
+## ord 1 — the map (offline; D_e from probe/SMOKE0) and the parse probes of every leg
+$PY $S/derive_lab_map.py > $S/MAP.txt
+$PY $S/run_p2_5.py --probe SMOKE A G05 G075 G10 G05K20 G05M2 G05T120 G05L13 G035
+## ord 2 — the smoke and a2
+caffeinate -dis $PY $S/run_p2_5.py SMOKE && $PY $S/reduce_p2_5.py SMOKE
+## ord 3–4 — the 30 s legs (serial), then their reductions
+caffeinate -dis $PY $S/run_p2_5.py A G05 G075 G10 G05K20
+$PY $S/reduce_p2_5.py A G05 G075 G10 G05K20
+## ord 5 — the twin, the transient, the standoff leg
+caffeinate -dis $PY $S/run_p2_5.py G05M2 G05T120 G05L13
+$PY $S/reduce_p2_5.py G05M2 G05T120 G05L13
+## only on a c2 overshoot
+caffeinate -dis $PY $S/run_p2_5.py G035 && $PY $S/reduce_p2_5.py G035
+```
+
+
+### Claude completion notes
+
+**All three gates PASS. `c2`, the headline, lands at 1.09× her volume.** No `src/` change;
+the binary is P2-4's shipping binary unchanged (`find src -newer bin/mmwspalling-3d-g++`
+empty, sha `5dc0a53fb874c632c8311f3d`), so the full tree gate was not re-run — it is a
+property of that binary and P2-4 already gated it, and "attribution" is not a
+discriminating reason. `lateral_flux_lock` re-run: PASS.
+
+#### Files changed
+
+| file | what |
+|---|---|
+| `validation/hoeser/input_lab` | rev 1's deck, unchanged (189 lines). |
+| `studies/p2_5_hoeser/p2_5_legs.py` | **NEW.** The ONE leg table, imported by the harness and the derivation, plus `s_lid`/`s_leg`. Two copies would be free to drift. |
+| `studies/p2_5_hoeser/run_p2_5.py` | amended: `jet_core_length`/`nozzle_z0` moved to the leg block; `h_expr` read per **leg**; legs built from the shared table; probe moved to `probe/`; `--probe` now redirects `plot_file` as well as its log. |
+| `studies/p2_5_hoeser/derive_lab_map.py` | rewritten for rev 2: T_stag tables, both fits, the shape ladder, per-leg strings, the branch witness, and a string-vs-table cross-check. |
+| `studies/p2_5_hoeser/check_map_parse.py` | **NEW** — a1(vii), the end-to-end parser check (see takeaway 1). |
+| `studies/p2_5_hoeser/PARSER_DEFECT.txt` | **NEW** — the measured evidence for takeaway 2, including the Meier-map audit that clears it. |
+| `studies/p2_5_hoeser/GATE_a1.txt` | rev 1's gate record, **restored**: `ARCHIVE_DONE.md` cites it seven times (incl. `GATE_a1.txt:48-52`) and I deleted it in error during clean-up. Rule 9. Its `legs/SMOKE0` path is now `probe/SMOKE0`, noted in-file. |
+| `studies/p2_5_hoeser/reduce_p2_5.py` | **NEW.** Deliverable 5. `V_cell` parsed from each leg's own `argv.sh` and printed. |
+| `studies/p2_5_hoeser/rate_series.py` | **NEW.** `c10`/`c11` from the event log. |
+| `MAP.txt` `PROBE.txt` `GATE_a2.txt` `THERMOSTAT.txt` `RATE_SERIES.txt` `DEPTH_GUARD.txt` `REDUCE_b1.txt` `REDUCE_ord5.txt` `RESULTS.txt` | the evidence. |
+| `legs/{SMOKE,A,G05,G075,G10,G05K20,G05M2,G05T120,G05L13}/`, `probe/SMOKE0/` | 9 legs + the probe, each with `argv.sh` and `DROPPED.txt`. |
+
+#### Criteria
+
+The filled table is **`tests/MMWSpalling/studies/p2_5_hoeser/RESULTS.txt`** (117 lines),
+one row per criterion with its measured value and file. Summary:
+
+| # | measured | verdict |
+|---|---|---|
+| a1 | every pre-computed number reproduced independently: n = 1.318531 / 0.428830 vs 1.319 / 0.429; worst flux residual 7.19 % / 4.56 %; per-shape P within 2 %; 10/10 `--probe` rc 0, `alamo.program` the only unused key | **PASS** (gate) |
+| a2 | `jet_T_stag` 1,866.0000 every row; `ledger_err_solid` 2.32e-3; lid bins ≤ 2.597e-04 W; bins to r_lo 68.0 mm | **PASS** (gate) |
+| b1 | 5 legs rc 0; ledger ≤ 2.3e-3; event-log vs mask volume **0.00 %**; max `jet_P_face`/`jet_P_cap` 0.2898 | **PASS** (gate) |
+| c1 | `A` **100.592 cm³ = 7.74×** (bar ≥ 65) | **PASS** |
+| c2 | `G05` **14.156 cm³ = 1.09×** (bar 6.5–26); 12.796 excluding everything past 80 mm | **PASS** |
+| c3 | slope **0.8637**, R² 0.977 (bar 0.6–1.0) **PASS**; flake share 41.3/53.8/62.9/94.1 % (bar 60–85) **MISS** on 3 of 4 | **SPLIT** |
+| c4 | `G05` periphery **0.0 %** (bar ≤ 10) | **PASS** |
+| c5 | depth **90.00 mm** (bar 15–40) MISS; width **18.83 mm** (bar 20–35) MISS; sector spread 2.13 mm PASS | **MISS** |
+| c6 | **862.18 K** (bar 845 ± 10); 11 K above Meier's 851.5 at 6× its flux | **MISS** |
+| c7 | `G05` max `T_surf` **1,072.76 K** < 1,400; no melt flag on any leg | **PASS** |
+| c8 | 14.156 vs 14.368 cm³ = **1.50 %** (bar 15 %) | **PASS** |
+| c9 | 14.156 vs 10.200 cm³ = **27.9 %** (bar 15 %); depth 4.4 % | **MISS** |
+| c10 | **0.4968** (prediction 0.45–0.60; her 0.46, flux 0.58) | **PASS** |
+| c11 | 42.11 → 2.75 cm³/min, ratio **0.076** (predicted rise ≤ 1.5×) | **MISS** |
+| c12 | 727.39 / 753.49 / 778.90 K vs firing 862.18 — **83–135 K BELOW** (bar: 50–150 above) | **MISS** |
+| c13 | no undercut at 30 s nor at 120 s | **PASS** |
+
+#### (d1) Verdict
+
+**The criterion removes close to the right amount of rock per unit of measured heat, and
+the σ her volume admits is ≈ 0.48 D — but it puts that rock in the wrong place, and the
+shape error is what every remaining miss is made of.**
+
+**Which σ.** Interpolated on the pre-registered ladder and never fitted: 14.156 cm³ at
+0.50 D against 29.144 at 0.75 D gives 59.9 cm³ per D, so her 13.0 cm³ sits at **σ ≈ 0.48 D**.
+That is narrower than the free-jet literature's ~1 D half-width by a factor two, and `G10`
+(σ = 1 D) over-removes **3.74×**. P2 holds in full, including its monotone ladder (2.06× and
+3.44× against the predicted ×2–3 and ×3–4.5). The gap between 0.48 D and 1 D is the finding
+P2-5c and the price question inherit.
+
+**The criterion transfers; the cavity does not.** Firing T is 856–864 K on every leg
+against Meier's 851.5 at one sixth the flux — an 11 K shift, which is the flux independence
+Wilkinson, Kant and Höser all measure, even though it misses a 845 ± 10 bar. The price lands
+at **1.188–1.292 GJ/m³** on all eight legs, unfitted, inside the band the energy bound used.
+Against that, `G05` bores a **19 mm hole 90 mm deep** where hers at 30 s is 30 mm deep and
+50 mm wide. The volume agreement is two different trajectories crossing at 30 s, not a
+shape match, and `c11` is the same fact in time: the pencil bore opens its own standoff
+(s = 63 → 153 mm multiplies h by 0.31) so the rate collapses 13× where hers rises.
+
+**What `c11` does NOT say.** Its stated failure meaning — "the standoff law over-decays" —
+does not follow. `c10` measures the exponent directly and it is **right** (0.4968 against
+her 0.46), and `G05T120` reads 99 mm of a 100 mm block from 60 s on, so after ~45 s that leg
+has run out of rock. Two independent reasons the inference is unavailable; the row is a
+measurement of the deck's depth, not of the law.
+
+**Two rows are genuine data for the parked packets.** `c4`'s periphery share is **0.0 %** —
+at this flux the model does not remove rock below Kant's measured minimum, so **P2-5c's
+cut-off is not the live lever here**, and `c13` agrees: no undercut in 120 s because the
+shoulder never reaches the firing flux. And `c12` inverts: the exposed surface sits **83–135 K
+BELOW** the firing temperature instead of above it, so **the model has no overheating of
+flakes before ejection**. That is the criterion-design datum P2-2e asked for, and it says
+the steady-state surface mean cannot rise with flux by this route.
+
+**What P2-5b transfers to Meier, and what it must carry.** The level and the exponent:
+h0 = 7,100 W/m²K at her sensor convention with φ = 1 at the calibration standoff, and
+n = 1.3185 (K30) or 0.4288 (K20). **It must carry both brackets, not the default.** `c9` is a
+miss by 27.9 % and the mechanism is measured: K20's gas starts cooling at **1.488 s** (pit
+8 mm) where K30 holds 1,866 K to **9.648 s**, so the split decides when the gas cools and
+that is 28 % of volume at 30 s. P5 is refuted. And it must carry the shape question openly:
+on Meier the pads sit at 3.5–5 D, in the wall-jet region, where a σ ≈ 0.48 D core would
+deliver almost nothing — so re-levelling the Meier floor to this calibration is not a
+substitution of constants.
+
+**One thing this step does NOT license.** The energy accounting says the **typed 169.3 W/m²K
+side-face fallback supplies 59–78 %** of the input on every Gaussian leg (`G05`: 33.2 % from
+the floor map). The packet called that fallback "stated, reported, not tuned"; it is not
+inert, it dominates, and no conclusion here about the floor map's *shape* is a conclusion
+about the model's energy delivery.
+
+### Implementation takeaways
+
+1. ⚠⚠ **A WITNESS THAT EVALUATES MY OWN MIRROR ON BOTH SIDES CANNOT CATCH THE PARSER.**
+   a1's branch witness compared the derivation's arithmetic to the derivation's arithmetic
+   and passed while the shipped map delivered **0.26 W against a design 240 W**. Only the
+   smoke's *power* reading caught it. `check_map_parse.py` (a1 vii) closes the gap the way
+   it has to be closed: each leg's shipped string and an **independently constructed
+   equivalent** are both pushed through the binary and their printed `patch_P_robin` must
+   match. **Any packet that computes a quantity offline and also ships it as an expression
+   owes a row that compares the two through the code.**
+2. ⚠⚠ **AN UPSTREAM EXPRESSION-PARSER DEFECT: `max`/`min` IN A DIVISOR IS ARGUMENT-ORDER
+   SENSITIVE.** With a `max`/`min` call in a divisor, **variable-first is mis-evaluated** —
+   the call acts as a MULTIPLIER — while **constant-first is exact**. Calibration-free
+   proof, since the two are the same number mathematically: `0.09/max(0.09,s)` → 381.871 W,
+   `0.09/max(s,0.09)` → 2.236 W, one step apart on the same deck. `1.0/max(s,0.0632)`
+   returns 0.0632 (the reciprocal of the answer), `1.0/(2.0*max(s,0.0632))` returns
+   `(1.0/2.0)*max(...)`, and `(1.0)/max(s,0.0632)` returns the numerator alone — three
+   different wrong answers, which is a mis-parse and not any coherent arithmetic. `pow`,
+   `exp`, `sqrt` and `abs` all divide correctly, as does division by a parenthesised
+   constant. **✅ THE MEIER h MAP IS SOUND — audited, all 23 of its `max`/`min` calls are
+   constant-first** (`max(0.015,·)`, `max(0.01875,·)`, `max(0.04,·)`, `max(0.06,·)`,
+   `max(0.09,·)`, `min(0.056,·)`, `min(0.076,·)`, `min(0.09,·)`), so nothing in P2-2f /
+   P2-3 / P2-4 needs retracting. **Rule for every future `h_expr`: constant first, always,
+   and prefer `pow(x,-n)` to dividing by a call.** `ext/` is do-not-touch, so this is a
+   convention and a check, not a fix. Evidence: `PARSER_DEFECT.txt`.
+3. ⚠⚠ **`patch_P_robin` IS THE FLOOR MAP'S SHARE, NOT THE DELIVERED ENERGY.** Scoring the
+   flake fraction against `∫patch_P_robin dt` gave an impossible **124.6 %**. The three
+   quantities read 3.54 / 11.01 / **10.69 kJ** per quarter on `G05`: the patch expression's
+   own Robin power, `jet_P_face` (which the march charges the side term into), and
+   `ledger_E_src`, the ledger's **cumulative** and authoritative input. Use `ledger_E_src`,
+   read at its final value and never summed (SR 7 i). The 3.1× gap is itself the result in
+   takeaway 2 of the verdict.
+4. ⚠ **THE DECK IS TOO SHALLOW FOR THIS FLUX, AND THE RIGHT RESPONSE IS A BOUND NOT A
+   CAVEAT.** The cavity reaches 84–90 mm of the 100 mm block on every 30 s leg and 99 mm by
+   60 s on the 120 s leg, within reach of the adiabatic base. `DEPTH_GUARD.txt` measures how
+   much volume accrues after 80 mm — **4.4–9.6 %** — so `c2` survives at 12.796 cm³ with all
+   of it discarded. A 200 mm block would retire this; the 1 mm mesh makes that 2× the cells.
+5. ⚠ **`jet_core_length` MULTIPLIES D_e, AND THAT IS WHAT MAKES φ = 1 BUYABLE.** `:10625`
+   says "units of D_e". K30 is 30 × 3.745 mm = 112.4 mm = **14.2 D**, K20 is 9.5 D. Rev 1
+   failed because 8.0 is 3.8 D. Note `jet_P_cap = jet_mdot·c_p·(T_nozzle − T_ent)` is
+   **invariant in φ** (m = mdot/φ cancels), so raising the core length costs no enthalpy
+   budget — it only moves when the gas starts cooling, which `c9` then measures as 28 % of
+   volume.
+6. ⚠ **THE STRINGS CARRY NO WHITESPACE, AND `)and(` IS WHY THAT IS POSSIBLE.** ParmParse
+   re-tokenises a value on whitespace and a `std::string` query keeps the first token, so
+   `... and ...` would truncate the expression. `and` is a lexer keyword
+   (`amrex_parser.l:68`) declared *before* the SYMBOL rule, so it wins flex's longest-match
+   tie and `)and(` lexes correctly. Rev 1's `&&` would not have parsed at all.
+7. ⚠ **`--probe` TAKES ONE REAL STEP, WHICH IS WHY IT PROVES MORE THAN A PARSE.**
+   `stop_time=1e-9` still runs STEP 1, so `BuildFlameColumns` evaluates h on every column
+   and the binary's abort on a non-positive or non-finite in-patch h is exercised. rc 0 on
+   all 10 legs therefore proves the map is **positive everywhere**, not merely syntactic.
+   ⚠ It also needed fixing: the first rev redirected the probe's log but not its
+   `plot_file`, so one-step output landed inside the real leg directories.
+8. ⚠ **THE LID CANNOT BE A LITERAL ZERO** (floor 0.001, ~1e-4 W per bin) and its threshold
+   is **mesh-aware**, `s0 + dz/2`: 0.06370 / 0.06420 / 0.10320. rev 1's `s0 + 2 mm` was two
+   cells at 1 mm and an exact floating-point tie at 2 mm.
+9. ⚠ **A UNIT CONVERSION AT TWO SITES IS A BUG WAITING.** `SHAPES` holds σ in units of D;
+   the table half converted to metres and the string builder did not, so every emitted h0
+   read 7,100 instead of its shape's value and the Gaussian was 160× too wide. The two
+   disagreeing *aloud* (9,651 in the table, 7,100 in the string) is the only reason it was
+   caught, so `sigma_m()`/`h0_of()` are now the single conversion and `MAP.txt` carries a
+   string-vs-table cross-check row.
+10. ⚠ **DO NOT IMPORT `reduce_price.py` FOR A 1 mm LEG** — its `V_CELL = 8e-9` is a
+    module-level 2 mm constant (its line 51), the LZ trap in another costume. Its census
+    *logic* is mirrored instead (everything from `n_voided`), and `V_cell` is parsed from
+    each leg's own `argv.sh` and printed on every reduction. `fabcmp.read_fabs_boxed`
+    returns `{"comp": [per-component float lists]}`, not a flat `"data"` array.
+11. ⚠ **PICK A PLOTFILE BY TIME, NOT BY A FRACTION OF THE LIST.** The Wilkinson row's
+    first rev took fractions 1/3, 2/3, 1 and printed them as "10/20/30 s" — correct on a
+    30 s leg, but 40/80/120 s on `G05T120`. `amr.plot_int` is in **steps**.
+12. ⚠ **W1's argv needs last-wins, a token-aware drop, and three named drop groups**
+    (`DROPPED.txt` per leg): FEET (forced — `nozzle_descent = prescribed` aborts on
+    `foot_body_clearance` at `:10735` and `jet_free_surface` at `:10733`), SCOPE, and
+    OVERRIDDEN. The `side_face_h_law = derived <sha>` + `side_face_h` + `side_face_T`
+    triple is deliberately **kept** so `wall_law_on` and `side_h_used_n` exist as measured
+    zeros rather than absent columns; both read 0 on every leg, as the packet predicted.
+13. **Costs, for the next planner:** 30 s at 1 mm is **~61 s on 4 ranks**; 120 s is 239 s;
+    30 s at 2 mm is 7 s. The whole campaign is under 12 minutes of compute, so the σ ladder
+    could be denser and a 200 mm block is affordable.
+14. ⚠ **I DELETED A FILE A MANIFEST CITES, AND CAUGHT IT ONLY BY CHECKING.** Clearing
+    "rev-1 leftovers" removed `GATE_a1.txt`, which `ARCHIVE_DONE.md` cites **seven times**,
+    including the reviewer's line-level `GATE_a1.txt:48-52`. Restored verbatim with a header
+    saying what it is and that rev 2's `legs/SMOKE0` is now `probe/SMOKE0`. Standing rule 9
+    says never `rm` what a manifest cites — and the trap is that "superseded by a later
+    revision" *feels* like a licence to delete. It is not: the earlier revision has its own
+    archived record and its own citations. **Grep `ARCHIVE_DONE.md` before removing anything
+    from a study directory.**
+15. ⚠ **A PRE-FIX RUN IS EVIDENCE WHEN A TAKEAWAY CITES ITS NUMBER.** The 0.26 W reading
+    that exposed the parser defect lived in a smoke leg I archived and then deleted, and in
+    scratchpad bisect runs that do not survive the session — while the verdict and two
+    takeaways quote it. Rule 8 wants the file *and* the reducing code in the repository, so
+    the measurements are now written out in `PARSER_DEFECT.txt` with the exact expressions,
+    the constant controls that pin the scale, and the reproduction recipe.
+
+### Review findings
+
+Re-derived independently, not read from the artefacts: the **entire a1 calibration** from
+`## Sources` alone (closure formula + her q/h table) with no reference to
+`derive_lab_map.py`; **b1's `ledger_err_solid` clause, which `REDUCE_b1.txt` never prints
+for any b1 leg**; every volume by my own `n_voided` census with `V_cell` parsed per leg;
+depth, width, firing T, periphery and the energy split from the event logs and `thermo.dat`.
+Binary confirmed unmoved: sha256 `5dc0a53fb874c632c8311f3d` = P2-4's, `Compilation_Time
+17:14:33` on 10-13, no `src/` file newer than `bin/` ⇒ **guardrail 1 holds**.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a1 | T_stag tables, h0 7100, n per K, resid ≤ 15 %, s_lid, P ± 2 %, branch witness, probe rc 0 | PASS | **n = 1.318531 / 0.428830**; resid −7.19/−6.69/+1.17/+6.09 and +4.56/−1.04/−1.26/−0.08 %; T_stag K20 1784.37/1648.81/1440.24/1358.31; f_disc 1.000/.9231/.8687/.7357/.5543; P 9.06/2.94/1.83/0.96/0.63 kW; r_0.5 18.52/14.05/9.64/7.06; every s_lid, lid ON at t=0 and lifting after **exactly one cell** at both meshes, no tie; 2σ² constants match the shipped strings; 10/10 probe rc 0 | own derivation vs `MAP.txt`, `PROBE.txt` | **PASS (gate)** |
+| a2 | rc 0; ledger ≤ 5e-3; T_stag 1866 ± 0.5; lid bins ≤ 1e-3 W; bins ≥ 68 mm | PASS | `jet_T_stag` 1866.0000 on all 20 rows; **max \|ledger_err_solid\| 2.320e-03**; lid bins max 2.597e-04 W; r_lo 68.0 mm | `legs/SMOKE/run/thermo.dat` c34/c39, `GATE_a2.txt` | **PASS (gate)** |
+| b1 | 5 legs rc 0; ledger ≤ 5e-3; event-log vs mask ≤ 5 %; cap < 0.9 | PASS | rc 0 ×5; **ledger 3.358e-3 / 2.541e-3 / 2.061e-3 / 1.903e-3 / 2.537e-3 (A/G05/G075/G10/G05K20) — my reduction, unprinted in the artefact**; volumes agree 0.00 % and the mask route is genuinely independent (`removed` component via `fabcmp.read_fabs_boxed`); cap max 0.2898 | each leg's `thermo.dat`; `reduce_p2_5.py:109-182` | **PASS (gate)** |
+| c1 | A ≥ 65 cm³ or melt | 100.592 | **100.592 cm³ = 7.74×** (25,148 cells × 1e-9 ×4) | `legs/A/run_removal_events.csv` | PASS — P1 confirmed |
+| c2 | G05 6.5–26 cm³ | 14.156 | **14.156 cm³ = 1.09×** her 13.0 | `legs/G05/run_removal_events.csv` | PASS — see ⚠⚠ below |
+| c3 | slope 0.6–1.0; flake share 0.6–0.85 | 0.8637 PASS / share MISS 3 of 4 | slope **0.8635** (R² .976) vs nominal P; **1.7406** (R² **.982**) vs delivered `ledger_E_src`; shares .413/.538/.629/.941 | `THERMOSTAT.txt`; my log-log fit | SPLIT — **x-axis flips it** |
+| c4 | G05 ≤ 10 % | 0.0 % | **0.0 / 0.2 / 0.0 %** — but cavity radius 9.42/14.25/18.24 vs r_0.5 9.64/14.05/18.52 mm (≤0.5 mm) | event logs + `MAP.txt` | PASS, **near-vacuous (SR 15)** |
+| c5 | depth 15–40; width 20–35; spread ≤ 3 | MISS | depth **84/90/86/84 mm**; G05 width 18.83, spread 2.13 | mask + my column census | **MISS, both ways** |
+| c6 | 845 ± 10 K | 862.18 MISS | **862.87 / 862.19 / 860.20 / 859.78 K** | regime-1 `T_surf` medians | MISS — P3 refuted, +11 K |
+| c7 | G05 < 1400 K | 1072.76 | **1024.77 / 1072.76 / 981.89 / 986.44 K**, no melt flag | event logs | PASS — **no longer vacuous** (K30 lifts T_stag to 1866 K) |
+| c8 | within 15 % | 1.50 % | 14.156 vs **14.368** cm³ = **1.50 %**; `weibull.V0` 1e-9/8e-9 correct | `legs/G05M2/argv.sh` | PASS — P4 confirmed |
+| c9 | within 15 % | 27.9 % MISS | 14.156 vs **10.200** = **27.9 %**; depth 90 vs 86 | `legs/G05K20/*` | MISS — P5 refuted |
+| c10 | 0.45–0.60 | 0.4968 | **0.497** (7.032 / 14.156); G05L13 stops at **59 mm** ⇒ the only leg clear of the base | `legs/G05L13/*` | **PASS — cleanest row** |
+| c11 | rise ≤ 1.5× | 0.076 MISS | cumulative 42.11/28.31/16.83/**12.29**/9.90 ⇒ 15→90 s = **0.292**, not 0.076; deepest **pinned at 99 mm from 60 s** | `legs/G05T120/run_removal_events.csv` | MISS — **estimator mixed, see DR-3** |
+| c12 | 50–150 K above | 83–135 below | **83.3 / 108.7 / 134.8 K BELOW** on G05; A 261 K below | `REDUCE_b1.txt` + firing medians | MISS — P8 refuted |
+| c13 | none < 40 s, ≤ 5 mm at 120 s | none | max column radius **10.12 mm over 120 s**, never past r_0.5, lid at 20 mm, her radius 22–32 mm | `legs/G05T120/*` | PASS on the bar, fails its own reading |
+| d1 | verdict | delivered | states the shape error as the headline, declines c11's inference, refutes P5/P8, and declares the side-face dominance unlicensed | notes §(d1) | **delivered** |
+
+#### Diff review
+
+| # | hunk / call | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | `p2_5_legs.py` — one shared leg table + `s_lid`/`s_leg` | 1 duplication | the right fix: rev-1 defect (3) was a lid constant free to drift from its mesh. No second copy exists | **ok** |
+| DR-2 | `derive_lab_map.py:74-96` mirrors the closure `MMWSpalling.H:3451-3456` | 1, 2 | a necessary offline mirror; locked end-to-end by `check_map_parse.py` pushing each string through the binary. I re-derived both to six digits | **ok** |
+| DR-3 | `RATE_SERIES.txt` rate column vs her 64/66/81/90 | 2 consistency | **the model's column is INCREMENTAL ΔV/Δt (14.51 = (14.156−10.528)/15×60) and hers is CUMULATIVE**, printed side by side; the 15 s point coincides so only the far end diverges. Like-for-like 0.292, not 0.076, and the verdict's "collapses 13×" is 3.4×. Verdict of the row (MISS) unchanged | **bug** (report row ⇒ not must-fix) |
+| DR-4 | `PARSER_DEFECT.txt` headline pair | 5 hard-coded / evidence | `0.09/max(0.09,s)` at s = 0.0632 **is h = 1.0**, whose own control in the same file is **3.93097 W**, not the 381.871 W quoted (= the h = 100 control exactly). The string tested must have carried a ×100 prefactor. The 171× ratio and the conclusion stand on three other pairs that ARE self-consistent with the controls | **bug** (artefact, non-gating) |
+| DR-5 | the inert-witness / `MAP.txt` threshold / `reduce_p2_5.py` print naming `patch_min_standoff` | 4 scope vs source | φ is computed from **`jet_s_c`** (`MMWSpalling.H:3690`, mean standoff of the axis bin), not `patch_min_standoff` (`:2686`, min over live columns). At the step T_stag falls, min = 0.1122/0.0712 — **below** the 0.11235/0.0749 thresholds, so the witness reads FAIL as written; `jet_s_c` = 0.11320/0.07520 confirms it **exactly**. Physics right, column wrong | **risk** |
+| DR-6 | `c4` periphery share | 12 self-limited discriminator | the cavity radius lands within 0.5 mm of r_0.5 on all three Gaussians, so the share reads ≈0 whatever the cut-off does — SR 15. The verdict's "P2-5c's cut-off is not the live lever here" is not supported by this statistic; the informative one is radius/r_0.5 = 0.98/1.01/0.98 | **risk** |
+| DR-7 | `THERMOSTAT.txt` x-axis = nominal P(Ø40) | 2, 5 | takeaway 3 establishes `patch_P_robin` is not the delivered energy, then the slope is scored against a bare-h design integral anyway. Against `ledger_E_src` the slope is **1.741 at a HIGHER R² (.982)** ⇒ outside 0.6–1.0 and the opposite reading ("wide shapes recruit beyond their power") | **risk** |
+| DR-8 | the energy split | 8 accounting | on G05 the calibrated floor map supplies **33.2 %** and the typed 169.3 W/m²K side-face fallback **67.6 %**, rising monotonically 0 → **79.2 %** with depth (my integral of c36/c47). Independently confirms the verdict's own 59–78 % ⇒ "the floor criterion at a MEASURED flux" is not what c2 tested | **risk** (stated by the implementer) |
+| DR-9 | `derive_lab_map.py:156-173` constant-first rule + assertions | 3, 6 | the `max(CONST,var)` convention is enforced by an assert that greps the emitted string for `max(s`/`max(r`/... — a real lock, not a comment | **ok** |
+| DR-10 | `h_expr` lid `s<0.0637` | 6 float equality | no tie: s = 0.0632 at t = 0, 0.0642 after one cell, at both meshes. Rev-1 defect (3) cured | **ok** |
+| DR-11 | `pow(0.0632/max(0.0632,s),n)` | 13 guards | `max` guards the division and the power against s < s0; no new unguarded division or log in the diff | **ok** |
+| DR-12 | `jet_core_length` / `nozzle_z0` moved to the leg block | 7 keys have readers | both appear per leg in the live argv and drive T_stag as measured (K20 falls at 1.488 s, K30 at 9.648 s) ⇒ not inert | **ok** |
+| DR-13 | `side_face_h_law=derived` triple kept | 7 | `wall_law_on` = 0 and `side_h_used_n` = 0 on every leg: measured zeros, columns present, exactly as the packet asked | **ok** |
+| DR-14 | `reduce_p2_5.py` V_cell parsed per leg and printed | 5 | the `reduce_price.V_CELL = 8e-9` trap avoided and witnessed; I re-parsed each `argv.sh` and agree (1e-9 / 8e-9) | **ok** |
+| DR-15 | mask volume = Σ per-column contiguous void × dx² (`:154-182`) | 2 | measures **recession depth**, not total void, so the 0.00 % agreement cannot witness buried void — which is what c13's undercut row is about. Harmless here (no undercut anywhere) | **nit** |
+| DR-16 | σ ≈ 0.48 D | 12 thresholds | **an extrapolation 0.02 D BELOW the lowest Gaussian actually run** (G05 = 0.50 D), on the 0.50–0.75 slope; the guardrail says interpolated on the ladder. G035 would have bracketed it from below but is gated to fire only on a c2 overshoot, which did not happen | **nit** |
+| DR-17 | `run_p2_5.py` docstring `:26-31` | 11 false comments | still describes rev 1's legs (`SMOKE/LA/LB/LB2/LB120/LC`, "shape B"), none of which exist after the table moved to `p2_5_legs.py` | **nit** |
+| DR-18 | `check_map_parse.py` as a1(vii) | 10 RED on the pre-fix | genuinely RED on the pre-fix string: the variable-first map delivered 0.26 W against a design 240 W, and a1's branch witness passed it. This is the lock that defect earned | **ok** |
+
+**Verdict: accepted.** All three gating rows reproduce under independent derivation, and no
+diff-review row is tagged `bug` against a gating row or a standing rule. The two `bug` rows
+(DR-3, DR-4) are a mixed estimator and a mis-transcribed exhibit on **report**-row material;
+neither changes a row's verdict.
+
+**Carry forward (the planner must not let these propagate):**
+1. **DR-3** — fix `RATE_SERIES.txt`'s rate column to cumulative before anything quotes a
+   13× collapse; like-for-like it is 3.4×, and **her own series rises ×1.41, inside the
+   prediction**, so the comparison is load-bearing.
+2. **DR-6** — c4 cannot clear P2-5c's cut-off; re-score it as radius/r_0.5, or on a leg whose
+   cavity is forced wider than its own 0.5 MW/m² contour.
+3. **DR-7** — the thermostat slope must be re-run against `ledger_E_src`; it fails the bar there.
+4. **DR-4** — one line in the most-cited exhibit in the step.
+5. **DR-8 + takeaway 4** — the next deck needs the 200 mm block (takeaway 13 prices it at
+   ~2× cells, under 12 min total) **and** a side-face treatment, or the floor map is being
+   scored through a coefficient it does not control.
+
+**Checked and clean:** no `src/`, `ext/`, `bin/`, `obj/`, `build/`, `configure` or
+`LICENSE` change; `lateral_flux_lock` re-run PASS; the tree gate correctly not re-run
+(binary unmoved); SR 3 (×4 on both sides of every ratio), SR 4 (`k_top` pre-removal), SR 7
+(no per-step counter summed; `ledger_E_src` read at its final value), SR 8 (`PARSER_DEFECT.txt`
+puts the parser numbers and the recipe in the repo), SR 9 (`GATE_a1.txt` restored after an
+`ARCHIVE_DONE.md`-cited deletion — takeaway 14), SR 10 (9 azimuth sectors), SR 15 (c7 no
+longer vacuous). SR 12's 1 mm is user-waived for this deck only. **No unquotable number is
+quoted:** the Meier comparisons are the review-accepted CTRL legs, and `PARSER_DEFECT.txt`
+clears P2-2f / P2-3 / P2-4 by auditing all 23 `max`/`min` calls rather than by assertion.
+
+⚠ `ACTIVE_STEP.md` is now past the 500-line budget with all three phases appended — archive
+promptly at the next `/plan`.
+
+## P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at the pads (2026-10-24, COMPLETED, NOT reviewed; archived 2026-10-24)
+
+**Verdict: completed, negative; no `/verify` pass** (archived at the user's instruction when P2-7 was planned).
+Implementer: every gate passes (a1–a4, b1–b3, c6); the law fails its purpose at the calibrated depth (c1, c3, c5,
+c9, c10 miss; c8/c9/c11 pass vacuously on a stalled run). Binary `9f5aa6de7cf36f52855cf625`; study
+`tests/MMWSpalling/studies/p2_2e_cref/` (222 legs); source diff `P2_2E_SOURCE.diff`. ⚠ The reviewer's
+independent re-derivation is owed before the key is used again. Advisor's read: `Claude_markdowns/hoeser_meier_issues.md`
+(F2, K2, X3) and this record.
+
+### What the step established
+- **d_ref = 2.0 mm**, interval [1.5, 2.0] on the Gotthard ladder (the Grimsel and `robin_form=surface` ladders give
+  the identical interval); the rule extended the ladder down to 1.0 mm and both endpoints are interior.
+  Pre-registered 7–10 mm. The binary with the offline model's constant properties lands 7.5 mm (offline 8.5) ⇒
+  the read is right; the factor of four is the temperature dependence of E, α and K_Ic acting on the full K_I
+  scan (`CONST_DIAG.txt`).
+- **Kant's minimum flux is reproduced inside his band.** Surface flux at firing on the selection ladder: SOD 130
+  at 2.0 mm fires at 928.27 K ⇒ q = 747 × (1523.15 − 928.27) = 0.44 MW/m²; SOD 150 first fires at 2.5 mm,
+  948.51 K ⇒ 0.27 MW/m²; Kant 2016 measured 0.3–0.5. h150 never fires; the volumetric beam column (1/α 10 mm)
+  never fires (69.5 % negative brackets — the interior-peak sign).
+- **c1's +47–63 K is not a miss against data.** V50/80/110 fire at 634/617/630 °C; Kant 2017 (same quarry)
+  measured 553–694 °C, and the banked 570.6 °C sits at its low edge; Höser's IR onset 430–600 °C favours the
+  old level. The ±15 K bar tested the model against its own previous level.
+- **Meier SD stalls as a PAD-RING JAM** (advisor's reduction of `legs/SD/run_removal_events.csv`, 2026-10-24):
+  last regime-1 firing by radius — r 28–40 mm (the pads) **36.1 s**, 20–28 mm 50.6 s, 0–20 mm 259.7 s; S0 fires
+  in every band to 500 s. The burner never descends (`nozzle_z` 0.5500 throughout). The fourth physics change to
+  jam at the pads (D2o-0, D2aa PD, P1, P2-2e).
+- **Höser −59.9 % is all off-axis**, on the σ = 0.5 D Gaussian whose edge flux is far below any literature jet
+  profile (`hoeser_meier_issues.md` S1).
+- c3: 1 vs 0.5 mm agree to 0.38 %; the 2 mm leg reads +25 K because d_ref is one cell there. Meier runs at 2 mm
+  (SR 12), so SD's reference was under-resolved in the suppressing direction (+25 K vs SD's +178 K; not the cause).
+
+### Carry-forwards
+- The constraint-depth form is NOT refuted by a test with a measured heat input: its Meier failure is at the pads
+  (K1/K2 in the issues file) and its Höser failure on the fitted Gaussian. P2-7's leg HGd re-tests it on Höser
+  with a literature profile. Do not retire the key on this record.
+- Standing rule 1's flaw refit was skipped because the reference was cold at onset at 6.5 mm; at 2.0 mm it is not
+  (c1). Any reuse at 2 mm owes that decision.
+- P1's frozen census is blind to a floor that freezes all at once; read the rate before any shape row.
+- Whole-run vs windowed S0 references: S0 is 16.91 % wall share and 849.9 K in the 150–350 s window.
+- The lateral stress uses the SLOPE length `ell`, not `ell_use`; the comment above `a_f` mis-names it.
+- `/verify` owed.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-24)
+
+Active step:
+- **P2-2e — the constraint depth: the stress referenced to the rock behind the face** (`ACTIVE_STEP.md`;
+  installed 2026-10-19 by the advisor via /plan; step A of `docs/project/DIRECTION_2026-10-14_single_skin_failure_law.md`).
+  New key `spallation.sp.constraint_depth` (default 0 = today): σ at depth z referenced to T(z + d_ref) from a
+  gathered column (vertical faces) or the flux-length exponential (lateral faces). d_ref is a ROCK PROPERTY,
+  chosen ONCE in the binary on Kant 2016's tabulated bracket (SOD 130 spalls, 150 does not) by a pre-registered
+  midpoint rule with interior-endpoint guards, on GOTTHARD thermal properties (Kant's rock; offline 8.5 mm,
+  property spread ~4.5–9 mm — landing in the band is not evidence) and never adjusted. Checks: level at SOD 50/80/110 ±15 K;
+  h150 never fires; mesh ≤ 1 %; gradient slab 0; beam columns (1/α 0.5 mm unchanged, 10 mm suppressed); Höser
+  7 MW/m² unchanged; Meier S0 twin: wall share ≤ 4 % (S0 12.1), floor fires 860–910 K, frozen-column census not
+  worse. Guardrails: R, flaw, K_Ic, flake cap untouched; no softening/α(T)/delivery change.
+
+### The P2-2e file verbatim (packet, completion notes, takeaways; headings demoted, code fences untouched)
+
+## Active Step: P2-2e — the constraint depth: the stress referenced to the rock behind the face
+
+Status: **completed** (implemented 2026-10-24; every gate passes; the verdict is a NEGATIVE finding
+about the law -- d_ref calibrates to 2.0 mm and the Meier burner stalls; see the completion notes).
+Originally: ready for implementation (rev 3, 2026-10-19: step-zero findings folded in — a3 made non-vacuous, L2/L4/L5 resolved, a production-heat-form ladder added as a report; rev 2: revised on the user's review feedback — calibration properties, ladder endpoints, gate order; planned 2026-10-19 by the advisor via /plan at the user's instruction;
+step A of `docs/project/DIRECTION_2026-10-14_single_skin_failure_law.md`. P2-5 rev 2 archived ACCEPTED —
+`ARCHIVE_DONE.md` *"P2-5 rev 2"*.)
+
+### Context
+
+The criterion references the thermal stress to the stored INITIAL temperature (P2-2a), so a face that has
+soaked slowly to ~850 K fires exactly like a flash-heated one. Real rock does not: Kant 2016 measured a
+**minimum flux** (no spall below h ≈ 500–700 W/m²K, 0.3–0.5 MW/m², with the surface past the spall T),
+Wilkinson 1993 a steady-state surface mean that RISES with flux while the onset stays flat, and P2-5 (c12)
+found the model's exposed surface 83–135 K BELOW its firing T — no overheating at all. The physical cause
+is the skin's strain mismatch with the CONSTRAINING rock behind it, which is not at the initial
+temperature once heat has soaked in. This step references the stress to the temperature a fixed material
+length `d_ref` behind the face. Limits: thin skin → today's criterion (the banked level stands); soaked face
+→ drive ∝ conducted flux ⇒ a minimum flux `q_min ≈ k·ΔT_c/d_ref` (steady) emerges; uniform slab → 0;
+interior-peaked (beam) profile → negative drive. It is the form the beam work needs (the direction
+document §1–§2); the Meier wall and the P2-5 overheating row are its first tests, not its purpose.
+
+**What changes is the failure DRIVE, not the stress** (advisor review, 2026-10-19, log §17). In a half-space
+with T = T(z) linear elasticity gives a surface stress set by T_s − T_far whatever the gradient, so today's
+stress is elastically right and no stress calculation, however exact, yields a minimum flux. A flake leaves
+when a surface-parallel crack opens and the layer above it buckles; that is driven by the MISMATCH between
+the layer and the rock below it over the crack's width (if the rock under the crack is equally compressed,
+opening it releases nothing). `T(z) − T(z + d_ref)` is that drive, with d_ref ≈ the lateral size of the
+largest flake (a-priori: aspect ratio ~10 × the 1.5 mm cap ≈ 7.5 mm). Every quantity the sites call "sigma"
+under d > 0 is this drive; the name is kept in the code and documented at each site. ⚠ The form is
+**phenomenological, calibrated once**: the energy-only alternative (Hutchinson–Suo misfit G ≥ G_c) was
+checked offline and **predicts the opposite trend** (row a1(d)); the buckling thinness condition the point
+read encodes is what supplies the minimum. The full elastic solve (`spall.stress_source = stress_mf`) is the
+later route for 3-D wall/curvature effects and does not supply a minimum flux; out of scope.
+
+`d_ref` is a **rock property**, set ONCE in this step on Kant 2016's spall/no-spall standoffs and never
+adjusted afterwards (user, 2026-10-14). Why not the earlier forms (flake-scaled depth = P1, scale-free;
+column minimum = P2-2a rev 6, non-local; isotropic averages, softer): the direction document §4.
+
+⚠ Carried: relief `R = 0.531294` is IN USE on every production leg and is NOT touched (the strength side —
+`R`, flaw 8 µm, `K_Ic` — is one level knob; standing rules). ⚠ Meier stays at 2 mm (rule 12); Höser at 1 mm.
+⚠ One physics change in this packet: softening (step B), α(T) (C) and the Höser side-face delivery are out.
+
+### Sources
+
+- **Kant & Rudolf von Rohr 2016** (`validation/hoeser/kant_2016_minimal_bc_notes.md`; Table 1 and 4 also in
+  `validation/kant/kant_von_rohr_validation_test_for_mmwspalling_plan.txt:66–85`): Gotthard spalled at SOD
+  50–130 mm and **not at 140–160**. Table 4 (h_fl [W/m²K], T_f [K]): **SOD 50 (766, 1723.15), 80 (1009,
+  1683.15), 110 (873, 1633.15), 130 (747, 1523.15), 150 (633, 1373.15)**. Only tabulated standoffs are used
+  (no interpolation): the bracket is **SOD 130 spalls / SOD 150 does not**.
+- **Banked level:** P2-2d, `sp_kant_onset_meiercfg/input_model` at 1 mm, h 500, T_f 1673.15, grimsel law,
+  `stress_relief = 0.531294`, deterministic 8 µm flaw ⇒ **843.757 K** (`ARCHIVE_DONE.md` *"P2-2d"*); harness
+  `studies/p2_2d_kic/run_prediction.py:37–50` (`COMMON` + leg `P_grimsel`).
+- **Offline pre-registration** (exact Robin half-space erfc solution, constant properties, ΔT_c =
+  843.76 − 293.15; reproduced independently by the user's review 2026-10-19). ⚠⚠ **d_ref ≈ k·ΔT_c/q_min, so the
+  answer is set by the CONDUCTIVITY of the calibration**, and Kant's blocks are GOTTHARD granite (Kant 2016
+  Table 2: λ 3.27 W/mK, ρ 2,594, c_p 792, κ 1.6e-6, E 54 GPa — `kant_2016_minimal_bc_notes.md:16`), not Grimsel
+  (`Grimsel.H:20`: λ(θ) = 2000/(θ + 563), 3.40 → 1.80 W/mK from 25 to 550 °C; κ 1.67e-6 → 5.9e-7). Separating
+  interval (SOD 130 first fires … SOD 150 last does not), 0.5 mm ladder:
+
+  | properties | interval | midpoint |
+  |---|---|---|
+  | λ 2.50, κ 1.10e-6 (rev 1's offline) | 5.5 – 7.5 mm | 6.5 |
+  | **Gotthard** λ 3.27, κ 1.60e-6 | **7.0 – 10.0 mm** | **8.5** |
+  | Grimsel at 25 °C λ 3.40, κ 1.67e-6 | 7.0 – 10.5 mm | 8.75 |
+  | Grimsel at 550 °C λ 1.80, κ 5.9e-7 | 4.0 – 5.5 mm | 4.75 |
+
+  ⚠ **What this spread is, and is not.** d_ref is ONE fixed number for Grimsel in every run (it never varies with
+  temperature, case or flux; the conductivity changing with temperature changes the FIELD the rule reads, not
+  d_ref). The spread is the uncertainty in MEASURING that number from Kant's experiment if the wrong rock's
+  conductivity is assumed — which is why the calibration uses Kant's rock (Gotthard). Carrying Gotthard's d_ref
+  to Grimsel assumes the flake size transfers between two granites (an assumption, stated; Bethel needs more).
+  ⇒ the property choice alone moves the calibrated value over **~4.5–9 mm**. Landing inside that band is NOT evidence the law
+  is right; the discriminating rows are h150, the beam pair, Höser invariance and Meier (c2, c4, c5, c8–c11).
+  ⚠ The key is a MODE SWITCH, not a continuous parameter: d = 0 is today's absolute criterion (special-cased);
+  any d > 0 is the differential, which → 0 as d → 0 (offline: nothing fires at any standoff for d ≤ 2 mm;
+  SOD 80 needs d ≥ 3 mm, SOD 130 d ≥ 5.5). Small d is NOT "nearly today".
+- **Code (the stress sites — every subtraction of a stress reference):**
+  - Removal.H depth scan, `:1967–1995`: `T0_z = T0_at_didx(floor(z_v/dz))`, law and verbatim branches;
+    the gathered column `T_col_prof` / `T0_col_prof` (`:1248–1326`), depth `Dmax_col = floor(h_spall_max/dz)`.
+  - Removal.H lateral criterion, `:893–905`: `sigma_lat(xi)` = `relief·LawSigma(lat_g, T0 + jump, T0)`, jump
+    = `dT_s·e^{−xi/ell}`, with `ell = ell_use` = the flux length `kc·(T_face − T0)/q_net` (`:840–856`) or its
+    counted fallbacks (`lat_len_fb_h0`, `lat_len_fb_q0`).
+  - MMWSpalling.H Sp_field site (`UpdateSpAfterMechanics`, `:7552`), `sigma_at_depth` `:7845–7905`: top-half-cell
+    branch `T0_at(i,j,k)` and the deeper/lateral branch `T0_at(i_d,j_d,k_d)` — **box-local, clamped at the box**
+    (`:7880–7886`); lateral faces (`nx_in/ny_in ≠ 0`, `:7725–7752`) use the cell average.
+  - NOT stress references (excluded, P2-2a takeaway): `Removal.H:619`'s `T0` as the exponential-fit asymptote,
+    `:1722`, `:3368` (sensible-heat datum).
+- **Controls on disk:** Meier `studies/p2_4_body/legs/S0/` (argv, 500 s; rate 2.125 m/h, wall share 12.14 %,
+  Ø_eq 108.2 at 10 mm, firing T 851.5 K — `p2_4_body/RESULTS.txt:224`); Höser `studies/p2_5_hoeser/legs/G05/`
+  (argv; 30 s, 14.156 cm³, firing T 862.2 K) with `p2_5_legs.py` / `MAP.txt`.
+- Literature for the form: `validation/hoeser/literature_minimum_flux_notes.md`.
+
+### Goal
+
+1. **OFFLINE (ord 1).** (a) `studies/p2_2e_cref/offline_ladder.py` reproduces the four-property table above
+   (erfc script; constant properties per row); (b) the **frozen-column census on S0** from its event log,
+   with P1's definition (`ARCHIVE_DONE.md` *"P1"*: columns at r < 40 mm whose last regime-1 firing precedes
+   t − 100 s while ≥ 50 % of their 8 neighbours fired in the last 100 s), at t = 200/350/500 s; (c) the
+   reachability ledger below, resolved against the code, including row L5; (d) the **energy-only
+   cross-check** `studies/p2_2e_cref/delam_crosscheck.py` (advisor's, on disk) re-run and recorded as a
+   NEGATIVE: with G_c calibrated to SOD 80 at 843.76 K (130 J/m²), every flake width W 3–30 mm fires SOD 150
+   (no spall measured) and the onset FALLS with flux (W 6 mm: SOD 80/110/130/150 = 868/837/797/758 K) —
+   thick soaked layers release more energy. Printed to `OFFLINE.txt` so no later step reverts to it.
+2. **The key.** `spallation.sp.constraint_depth` [m], default **0.0 = today, byte-identical**. Finite, ≥ 0;
+   > 0 requires the T-derived criterion path (`sp_weibull_use_T_face`) and aborts otherwise (named message).
+   Logged: `cref_d` (the parsed value) and per-step counters `cref_n_vert`, `cref_n_lat`, `cref_n_clamp`
+   (reads that hit the column bottom / domain floor), `cref_n_neg` (samples with a negative bracket).
+3. **The reference.** At every site, under `d > 0`, the stress at depth z below the face is
+   `LawSigma(g, T(z), T_ref(z))` (and the verbatim scalar branch with `T(z) − T_ref(z)`), where:
+   - **vertical faces (both firing sites):** `T_ref(z) = T(z + d)` read from a **gathered** column (never a
+     box-local read), linearly interpolated between cell centres, the column buffer extended to
+     `floor((h_spall_max + d)/dz) + 1` cells and clamped at the domain floor (counted). The Sp_field site and
+     the depth scan read the SAME gathered values (the two-firing-site invariant, P0/P2-2a).
+   - **lateral faces (the lateral criterion, and the Sp_field site's lateral branch if L5 shows it gates
+     firing):** `T_ref(xi) = T0 + dT_s·e^{−(xi + d)/ell}` on the site's own exponential, with `ell` the flux
+     length (the fallbacks stay counted). ⚠ Declared asymmetry: vertical reads the field, lateral reads the
+     profile model; witnessed by row c7.
+   - a negative bracket is NOT clamped: it gives negative stress and no firing (the interior-peak case).
+4. **Calibration deck (ord 3).** `studies/p2_2e_cref/run_cref.py`: the P2-2d Kant configuration (`run_prediction.py`
+   `COMMON` + `P_grimsel`) on a deep column, `geometry.prob_hi=0.004 0.004 0.150 amr.n_cell=4 4 150
+   amr.max_grid_size=25 stop_time=200` (1 mm); `surface_patch.h_conv`/`T_flame` per leg.
+   - **Calibration rock = Kant's.** The ladder legs carry Gotthard's THERMAL properties on the same law
+     shape: `microstructure.phase0.grimsel.lambda.a=1923.5` (λ(25 °C) = 3.27; same θ0 = 563) and
+     `microstructure.phase0.grimsel.rho=2594` (c_p law unchanged: 768 vs his 792, 3 %). The STRENGTH side
+     (E, β, ν, K_Ic, R, flaw) stays Grimsel's, so the level is the banked one. d_ref is a length (the flake's
+     lateral size) and transfers between the rocks; the conductivity of each rock enters through the field.
+   - Legs (seconds each): `K0_h500` (key 0, Grimsel properties, h 500, T_f 1673.15 — the level witness);
+     `C<d>_<SOD>` for SOD ∈ {130, 150} and d ∈ {3.0, 3.5, …, 12.0} mm (Gotthard thermal); the SAME ladder with
+     Grimsel thermal properties as `G<d>_<SOD>` — **reported, never selected from**; and the Gotthard ladder
+     again with `surface_patch.robin_form=surface` (the production heat-input form; COMMON inherits `cell`,
+     the form the banked level was measured in) as `S<d>_<SOD>` — **reported, never selected from**: if its
+     interval differs from the selected one by more than one rung, the verdict says so before quoting any
+     Meier row (the depth is set by heat soaking in, which the form could move).
+   - **Selection rule (pre-registered, deterministic), on the Gotthard ladder:** d_lo = the smallest d at which
+     SOD 130 fires; d_hi = the largest d at which SOD 150 does not; **both must be INTERIOR**: SOD 130 must NOT
+     fire at the bottom rung and SOD 150 MUST fire at the top rung; if either fails, extend the ladder by
+     2 mm in that direction (repeat to 20 mm / down to 1 mm) before selecting. **d_ref =
+     round_half_up_0.5mm((d_lo + d_hi)/2)**. Written to `D_REF.txt` with both endpoints, the rung counts, and
+     the Grimsel-ladder interval beside it; every later leg reads it from there.
+5. **Check legs at the chosen d_ref (ord 4, seconds–minutes):** `V<SOD>` for SOD 50/80/110 (level);
+   `V_h500`, `V_h150` (the old anchors); `M80_{2,1,0.5}` SOD 80 at 2/1/0.5 mm (`n_cell 2 2 50`, `4 4 100`,
+   `8 8 200`; dt 0.0125 on all); `GB` = `tests/MMWSpalling/unit/gradient_blind` with the key; beam columns
+   `B2000`, `B100` = `studies/s1_surface_resolution/input` at 1 mm, `beam.P0` for **5 MW/m²** (via `run_sweep.py` `overrides()` with q = 5e6),
+   `beam.alpha_expr` and `microstructure.phase0.alpha_attenuation` = 2000 / 100, **with the P2-2d criterion
+   keys** (grimsel law, relief, `spall.surface_T=reconstructed`, a0 8e-6, weibull off), stop 30 s, key 0 and
+   key d_ref (four legs).
+6. **Production legs (ord 5–6).** `H0`/`HD`: P2-5's G05 on a **200 mm** block (`geometry.prob_hi=0.05 0.05 0.20
+   amr.n_cell=50 50 200 surface_patch.nozzle_z0=0.2632`, same `h_expr`), key 0 and d_ref, 30 s. `SD`: S0's argv + the key, 500 s, `-np 5`.
+   (`S0s`, S0's argv at `stop_time=60` key 0, runs at ord 2 — row c6.)
+7. **Lock.** Extend `unit/lateral_flux_lock` (or a sibling) so every site in the ledger is asserted to read
+   the constraint reference under `d > 0`; RED on the pre-change source.
+8. **Reductions** `reduce_cref.py`; verdict.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | pair / site | key diff | reader | guard deciding whether it EXECUTES |
+|---|---|---|---|---|
+| L1 | depth scan | `constraint_depth` | Removal.H `:1967` (`T0_at_didx` → `T_ref`) | `sp_weibull_use_T_face` AND the column has a solid run (`solid_run_col`) — check the extended buffer respects it |
+| L2 | Sp_field top face | same | MMWSpalling.H `:7859`/`:7897` | `use_local_TE` (`:7576`) — RESOLVED at step zero: set by the DECKS (`input_drilling`, `input_lab`), not the argv |
+| L3 | lateral criterion | same | Removal.H `:900` | `spall.lateral_drive=1` (W1/S0 argv) |
+| L4 | gather order | — | where the gathered reference is built | RESOLVED: the Sp_field site runs at `Removal.H:1609`, before the gathers (`:1617`, function-local) ⇒ hoist the gather above `:1609` into a member so both sites read the same values in the same step |
+| L5 | **which site gates regime-6 (lateral) firings** | — | Sp_field lateral branch vs Removal lateral criterion | RESOLVED: regime 6 is gated by the Removal lateral criterion (`lat_kfire`). The Sp_field site removes rock only via `PerCellRemoval` (`MMWSpalling.H:8511`, behind `spall.per_cell_removal`, OFF on every production leg) — the key still reaches it (deliverable 3), witnessed by a3(ii)–(iii) |
+| L6 | Kant column deck | `n_cell`, h, T_f | `input_model` + `COMMON` | the column must use `robin_form` as P2-2d's anchor did (same keys) — `K0_h500` is the witness |
+| L7 | beam columns | P2-2d criterion keys on `s1` | `s1/input` | a parse probe: rc 0, no unused key; the criterion actually evaluated (`Sp_field` non-zero) |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a1 | 1 | offline ladder + S0 census + ledger + energy cross-check | table reproduced to ±2 K / same fire/no-fire; census printed at 200/350/500 s; L1–L7 resolved; (d) reproduces the energy-only negative (SOD 150 fires at every W; onset falls with flux) | **gate** | the pre-registration or the ledger is wrong — re-plan before any run |
+| a2 | 2 | key at default: tree gate (2639 files) + `lateral_flux_lock` | **0 differing**; lock PASS | **gate** | the key leaks at 0 — every comparison below is void |
+| a3 | 2 | decomposition: a column at d = 8.5 mm (SOD 130, Gotthard keys) and a 5 s Höser G05 leg at d = 8.5 mm at `-np 1/2/4` and two `max_grid_size` | (i) event logs byte-identical; (ii) the `Sp_field` plotfile component identical; (iii) one decomposition pair with `spall.per_cell_removal=1`, event logs identical — (i) alone is vacuous for the Sp_field site, which writes no event row with per-cell removal off | **gate** | a box-local read survived (the Sp_field site is box-local today) |
+| a4 | 2 | the new lock (deliverable 7) | RED pre-change, GREEN post-change | **gate** | a site does not read the reference |
+| c6 | 2 | `S0s` (new binary, key 0, 60 s) vs S0's first 60 s | `run_removal_events.csv` and `thermo.dat` byte-identical | **gate** (protects every Meier row) | the new binary moved S0 at key 0 ⇒ do NOT compare `SD` with the old S0: run a fresh 500 s key-0 baseline `S0n` (+~25 min) and score c8–c11 against it |
+| b1 | 3 | `K0_h500` on the column deck (Grimsel properties) | onset **843.76 ± 2 K** | **gate** | the column deck is not the anchor's configuration — the calibration would be on a different model |
+| b2 | 3 | calibration ladder, Gotthard thermal (deliverable 4) | an INTERIOR separating interval exists (both endpoint conditions met, ladder extended if needed); d_ref by the rule. Expected 7–10 mm (offline Gotthard 8.5); ⚠ landing in the band is not evidence | **gate** (protects every leg below) | no interval ⇒ a fixed-depth drive cannot reproduce Kant's minimum at this level — the finding, stop; interval only at a truncated end ⇒ the ladder, not Kant, set d_ref |
+| b3 | 4 | `GB` with the key | **0 firings** | **gate** | the reference does not cancel a uniform state |
+| c1 | 4 | `V50/V80/V110` | each within **±15 K of 843.76** | **report — consistency, NOT evidence**: at SOD 80 the onset is at ~1.5 s with ~1.3 mm penetration, so T(z + d_ref) is still ≈ 293.2 K and the drive equals today's by construction | outside ⇒ an implementation error (the reference is read too shallow or in cells), not physics |
+| c2 | 4 | `V_h500`, `V_h150` (Grimsel properties, d_ref) | **h150 never fires in 200 s** (the discriminator); h500 fires at ≥ 843.76 K, value reported (offline at 8.5 mm: 845–913 K across the property range — not a bar) | **report** | h150 fires ⇒ no minimum flux at 0.12 MW/m² — the law fails its purpose |
+| c3 | 4 | `M80_{2,1,0.5}` | onset spread ≤ **1 %** of the rise | **report** | d is being read in cells, not metres |
+| c4 | 4 | beam columns | `B2000`: key-on onset within **15 K** of key-off. `B100`: key-on onset ≥ **300 K** above key-off, or no firing before T_surf 1,400 K | **report** — first beam prediction | B2000 moved ⇒ the reference bites a surface-absorbed beam it should not; B100 unmoved ⇒ the reference does not see volumetric heating |
+| c5 | 5 | `H0` vs `HD` (Höser, 7 MW/m²) | volume within **10 %**; firing T within **10 K** | **report** — high-flux invariance | outside ⇒ the key bites the thin-skin regime it must leave alone |
+| c7 | 6 | lateral witness on `SD` | at 20 sampled fired lateral faces, the profile model's T_ref vs the plotfile `Temp` read `d_ref` behind the face: median ratio of (T_face − T_ref) **0.7–1.3** | **report** | outside ⇒ the declared lateral asymmetry is not a good stand-in; the wall conclusion is provisional |
+| c8 | 6 | `SD` wall share (regime-6 charged volume / charged) 150–350 s | **≤ 4 %** (S0 12.1 %) | **report** — headline | ≥ S0 ⇒ the reference does not reach the soaked wall (check `cref_n_lat`) |
+| c9 | 6 | `SD` rate 150–350 s; Ø_eq at 10 mm (mask) | rate **1.6–2.1 m/h** (S0 2.125; Meier 1.2–1.8); Ø_eq ≤ S0's 108.2 | **report** | rate unchanged with the wall share gone ⇒ the floor is untouched (expected); rate < 1.2 ⇒ the floor stalls |
+| c10 | 6 | `SD` regime-1 firing T median, r < 20 mm, 150–350 s | **860–910 K** (S0 851.5; continuous drilling at ℓ = κ/v) | **report** — Wilkinson's rise | unchanged ⇒ the floor is in the thin-skin limit; > 950 ⇒ the drive collapses on the floor |
+| c11 | 6 | `SD` frozen-column census vs S0's (a1) | **≤ S0 + 5 points** at every time | **report** — the P1 instability check | worse ⇒ the roughness instability that killed P1 is back; the verdict must say so before any other row |
+| c12 | 6 | counters `cref_n_clamp`, `cref_n_neg` on every leg; `ledger_err_solid` | clamp < 1 % of reads; ledger ≤ 5e-3 | **report** | clamps ⇒ a deck too shallow for d_ref |
+| d1 | 7 | verdict | — | **verdict** | states d_ref and its interval, the level and minimum-flux outcome, the beam sign, the Meier wall/rate/instability, and whether step B (softening) is next |
+
+### Pre-registered predictions
+
+- **P1** an interior separating interval exists on the Gotthard ladder; d_ref ≈ 7–10 mm (offline 8.5). On the
+  Grimsel ladder ≈ 7–10.5 at room-temperature properties — reported, not selected.
+- **P2** at Kant's fast standoffs the level is unchanged by construction (c1 is a consistency check); the old
+  h500 anchor rises (it sits AT Kant's minimum); h150 never fires.
+- **P3** meshes agree; the reference is a length.
+- **P4** beam: surface-absorbed (1/α = 0.5 mm) unchanged; volumetric (10 mm) strongly suppressed.
+- **P5** Höser at 7 MW/m² unchanged — the thin-skin regime.
+- **P6** Meier: the wall stops (≤ 4 %), the mouth does not widen, the floor fires hotter (860–910 K), the
+  rate drops modestly; the frozen-column census does not worsen.
+
+### What would make this inert — witness each
+
+- The key never parsed or not reaching a site — `cref_d` logged; a4's lock; `cref_n_vert`/`cref_n_lat` > 0.
+- The extended column clamped at the box, not the domain — a3 decomposition identity; `cref_n_clamp`.
+- The lateral profile's flux length falling back to the two-cell length — the existing fallback counters
+  reported on `SD`.
+- A calibration on a different model from the anchor — b1.
+- A d_ref set by the ladder's truncation — b2's interior-endpoint conditions.
+- A calibration on the wrong rock's conductivity — the Gotthard keys printed in every `C*` argv.
+- The beam legs not evaluating the criterion — L7's probe; `Sp_field` non-zero.
+
+### Guardrails
+
+- **`d_ref` is a rock property: chosen ONCE by the b2 rule and never adjusted** — not to S0, Höser, the beam
+  or any later step. A disagreement is a finding about the law.
+- **Metres, never cells**; read by interpolation; no box-local read of the reference.
+- The stress formula is NOT changed; only the reference of the drive. No switch to `stress_mf`.
+- Default 0 ⇒ byte-identical (a2). `R`, the flaw, `K_Ic` and `flake_h_max` untouched.
+- No softening, no α(T), no change to heat delivery (the Höser side-face fallback stays, stated).
+- SR 3 (×4), SR 7 (means), SR 8 (argv + `DROPPED.txt`), SR 12 (Meier 2 mm), `caffeinate -dis`, sentinel `.done`.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_2e_cref
+$PY $S/offline_ladder.py > $S/OFFLINE.txt                     # ord 1 (+ S0 census, ledger)
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+# ord 2: tree gate (key default) + locks + decomposition + S0s identity (c6); ord 3: the calibration ladder
+caffeinate -dis $PY $S/run_cref.py S0s && $PY $S/reduce_cref.py S0S
+caffeinate -dis $PY $S/run_cref.py K0_h500 LADDER GLADDER SLADDER && $PY $S/reduce_cref.py CAL > $S/D_REF.txt
+# ord 4: checks at d_ref (seconds-minutes)
+caffeinate -dis $PY $S/run_cref.py CHECKS && $PY $S/reduce_cref.py CHECKS
+# ord 5: Höser pair; ord 6: the Meier twin (~25 min, -np 5; S0n first only if c6 failed)
+caffeinate -dis $PY $S/run_cref.py H0 HD SD && $PY $S/reduce_cref.py PROD
+```
+
+
+### Claude completion notes
+
+**Every gate passes; the law fails its purpose.** The rule calibrates **d_ref = 2.0 mm** (pre-registered
+7–10), and at that depth the key suppresses the thin-skin regime it must leave alone: the onset shifts
++47–63 K at Kant's fast standoffs, Höser at 7 MW/m² loses 60 % of its volume, and **the Meier burner stalls**
+(no descent in 500 s). A constant-property ladder in the same binary returns 7.5 mm (offline 8.5), so the
+read is right and the factor four is the rock laws' temperature dependence — not the implementation, and
+not the mesh. Binary `9f5aa6de7cf36f52855cf625`; source diff in `studies/p2_2e_cref/P2_2E_SOURCE.diff`.
+
+#### Files changed
+
+| file | what |
+|---|---|
+| `src/Integrator/MMWSpalling.H` | key `spallation.sp.constraint_depth` (parsed before the sp_weibull return; abort unless the T-face path); 5 thermo witnesses registered last, only under d > 0; `BuildConstraintRefColumns` (gathered band, called just before `UpdateSpAfterMechanics`); `CrefTAtDepth` (metres, interpolated, clamps counted); Sp_field site via one resolver `Tref_at` (top face: gathered column; lateral face: profile model on its own two-cell slope). 10 hunks. |
+| `src/Integrator/MMWSpalling/Removal.H` | depth scan's `T0_z` → `CrefTAtDepth` under d > 0; lateral criterion's reference `T0 + dT_s e^{-(xi+d)/ell_use}` on law and verbatim paths; witnesses reduced once below the scan. 4 hunks. |
+| `tests/MMWSpalling/unit/constraint_ref_lock/test` | **NEW**, deliverable 7: 11 clauses, 7 mutation controls (each must turn a GREEN clause red), `--pre` mode. |
+| `tests/MMWSpalling/unit/lateral_flux_lock/test` | P2-2a (b4) clause restated through the resolver (it caught this edit); not weakened. |
+| `tests/MMWSpalling/studies/p2_2e_cref/` | `offline_ladder.py`, `s0_census.py`, `run_cref.py`, `reduce_cref.py`, `score_a3.py`, `const_compare.py`; `OFFLINE.txt`, `LEDGER.txt`, `GATE_a2/a3/a4/c6.txt`, `D_REF.txt`, `CHECKS.txt`, `CONST_DIAG.txt`, `PROD.txt`, `P2_2E_SOURCE.diff`; 222 legs under `legs/`. |
+
+#### Criteria
+
+| # | measured | verdict | file |
+|---|---|---|---|
+| a1 | four-property table reproduced exactly (Gotthard 7.0–10.0); S0 census 6/9/7 of 316; L1–L7 resolved (L2, L4, L5 corrected/extended); energy-only negative reproduced (G_c 130.0, SOD 150 fires at every W) | **PASS** | `OFFLINE.txt`, `LEDGER.txt` |
+| a2 | 0 of 2639 changed vs `p2_4` (controls 26 / 863 reproduce); `lateral_flux_lock` PASS | **PASS** | `GATE_a2.txt` |
+| a3 | (i) event logs and (ii) `Sp_field` identical over np 1/2/4 × mgs 8/25/50 on both decks; (iii) `per_cell_removal` pair identical, but per-cell removal **never fired** on this deck — caveat | **PASS** (bar) | `GATE_a3.txt` |
+| a4 | 11/11 GREEN post, 7/7 mutations discriminate, 11/11 RED on the reconstructed pre-change source | **PASS** | `GATE_a4.txt` |
+| c6 | 13,687 event rows and 626 thermo lines byte-identical to S0's first 60 s | **PASS** | `GATE_c6.txt` |
+| b1 | `K0_h500` onset **843.757 K** | **PASS** | `D_REF.txt` |
+| b2 | 3.0–12.0 all fired → extended to 1.0 by the rule; interval **[1.5, 2.0]**, interior; **d_ref = 2.0 mm**; G and S ladders identical | **PASS** | `D_REF.txt` |
+| b3 | `GB` 0 firings, reference read 2,064×/step | **PASS** | `CHECKS.txt` |
+| c1 | V50/80/110 **906.96 / 890.43 / 903.00 K** (+47 to +63) | MISS | `CHECKS.txt` |
+| c2 | **h150 never fires**; h500 fires at 960.03 K | PASS | `CHECKS.txt` |
+| c3 | 915.8 / 890.4 / 888.1 K at 2/1/0.5 mm = 4.58 %; 1 vs 0.5 mm 0.38 % | MISS | `CHECKS.txt` |
+| c4 | B2000 +23.7 K (bar 15); **B100 no firing**, 69.5 % negative brackets | MISS / PASS | `CHECKS.txt` |
+| c5 | volume **−59.9 %** (14.268 → 5.720 cm³), firing T +27.2 K | MISS | `PROD.txt` |
+| c7 | 0 lateral firings on SD — unscoreable | n/a | `PROD.txt` |
+| c8 | SD **0.00 %** (11 charged cells); like-for-like S0 **16.91 %** in 150–350 s (12.14 % is S0's whole run) | PASS — **vacuous** | `PROD.txt` |
+| c9 | rate **0.000 m/h** (S0 2.125); Ø_eq 61.6 mm | MISS / vacuous | `PROD.txt` |
+| c10 | **1027.5 K** (n 18); like-for-like S0 849.9 K | MISS | `PROD.txt` |
+| c11 | SD 0.78 / 0 / 0 % vs S0 1.90 / 2.85 / 2.22 % | PASS — **vacuous** | `PROD.txt` |
+| c12 | production clamps 0 %; SD negatives 30.0 %; ledger 8.2e-4 / 2.7e-3 / 2.8e-3 | PASS | `PROD.txt` |
+
+#### (d1) Verdict
+
+**d_ref = 2.0 mm, interval [1.5, 2.0] mm, chosen once by the pre-registered rule after its own downward
+extension; and at that depth the constraint-depth drive cannot drill Meier.** The minimum-flux half works
+(h150 never fires; a volumetric beam is suppressed by negative brackets — the interior-peak sign). The
+thin-skin half fails: the level rises 47–63 K at Kant's fast standoffs, Höser at 7 MW/m² loses 60 % of its
+volume (all off-axis, so the already-too-narrow pit narrows), and on Meier the floor fires for ~100 s while
+the rock is a cold skin, then soaks and stops; the burner never descends.
+
+**Why.** One depth must do two jobs. To stop SOD 150 it must be short, and in the real rock it has to be very
+short because SOD 150's face heats faster and fires hotter than the constant-property estimate assumed
+(same binary, constant properties: 7.5 mm; real laws: 2.0 mm). But a 2 mm reference sits inside the warm
+layer of almost any heating slower than a sub-millimetre skin — Kant's onsets (1–1.5 mm penetration),
+Höser's off-axis columns, and Meier's floor (ℓ = κ/v ≈ 2 mm at 1.5 m/h). **Not the mesh**: the calibration
+and Höser ran at 1 mm, where 1 and 0.5 mm agree to 0.4 %; the 2 mm under-resolution is real (+25 K) but an
+order of magnitude below SD's +178 K.
+
+**Step B (softening) is not next on this evidence.** The failure is in the reference form against the
+temperature-dependent laws, which softening does not touch. One cheap ladder splits the cause first:
+T-dependent conduction with constant strength (and the converse) — it decides whether a fix belongs in
+the reference (e.g. a depth tied to the heated layer, not a constant) or on the strength side.
+
+### Implementation takeaways
+
+1. ⚠⚠ **A CALIBRATION THAT LANDS FAR FROM ITS PRE-REGISTRATION OWES A RUN WITH THE PRE-REGISTRATION'S
+   ASSUMPTIONS.** The one bug that fakes a small d_ref is a reference read too DEEP (bigger drive) — a
+   metre-scale error the mesh test cannot see. `const_compare.py` runs the binary with the offline model's
+   constant properties: 7.5 mm vs 8.5. That separates "the law" from "the code" in two minutes.
+2. ⚠⚠ **A METRIC THAT PASSES ON A STALLED LEG IS NOT A PASS.** c8 (0 % wall share), c9 (small Ø_eq) and c11
+   (no frozen columns) all "passed" on SD because nothing was removed. P1's frozen definition needs firing
+   neighbours, so it is **blind to a floor that froze everywhere at once**. Read the rate before any shape row.
+3. ⚠⚠ **THE PACKET'S S0 REFERENCES WERE WHOLE-RUN; ITS BARS ARE WINDOWED.** `reduce_p2_4.one()` reports wall
+   share over 0–500 s and firing T over all radii. In c8's window S0 is **16.91 %**, not 12.14; in c10's,
+   **849.9 K**, not 851.5. Recompute both sides in the bar's own window with the same code.
+4. ⚠ **The lateral stress uses the SLOPE length, not the flux length.** `sigma_lat`'s jump reads `ell`
+   (`Removal.H:803`); `ell_use` feeds only `h_f`, and the comment above `a_f` mis-names it. The reference
+   uses `ell_use` as specified; on every leg here (`flake_length=twocell`) the two are equal — so the
+   packet's fallback-counter witness is zero by construction on SD.
+5. ⚠ **The gather must precede the FIRST firing site.** `UpdateSpAfterMechanics` (`MMWSpalling.H:1609`) runs
+   before `UpdateRemovalAfterCohesive`, whose gathers are function-local — hence the hoisted builder. Only
+   `UpdateSpClusters` runs between them, touching neither temperature nor the void mask.
+6. ⚠ **The Sp_field lateral branch has no profile of its own** (isothermal at the cell average across the
+   flake), so its reference uses the branch's own two-cell slope. It is reached only under
+   `per_cell_removal`, which never fires on the Höser deck; mgs 8 puts seams through the pit walls so the
+   one-cell horizontal read is still decomposition-tested (142 lateral cells identical).
+7. ⚠ **A mutation control proves nothing if its clause was already red.** The first lock draft had C3/C4
+   failing on correct source (pattern gaps too narrow), and their controls "went red" for free. The lock now
+   requires each target clause GREEN before mutation.
+8. ⚠ **Pre-change source is recoverable from the repo:** `git archive HEAD` + a pre-change leg's
+   `run/diff.patch` (P2-5's G05). The scratchpad copy was wiped between sessions; the reconstruction was
+   verified by diffing to exactly the P2-2e hunks.
+9. ⚠ **Clamps and the ledger on firing columns are deck artefacts, measured.** Clamps are zero to onset on
+   every leg and start when a column drills through (V80 voided 149 of 150 mm). `ledger_err_solid` ≈ 0.98
+   on firing Kant/s1 columns at **key 0 too** (no `removal_energy=flake`), ~1e-15 before onset.
+10. **Names:** the constant stress law is `spall.stress_law=scalar`; the linear toughness law refuses
+    `T_melt = 0` (use 1e12 for constant `K_Ic`); `gradient_blind`'s deck sets no `amr.thermo.*`, so a
+    keyed leg must; S0 ran on **4** ranks, so the c6 twin must too.
+11. **Costs:** a 200 s Kant column at 1 mm is ~8 s on one rank; the 222 legs took under an hour of
+    compute, SD 19 min at np 5.
+
+## P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maximum (2026-10-24, ACCEPTED by review 2026-10-25; archived 2026-10-26)
+
+**Verdict: accepted** (both gates re-derived independently by the reviewer; four report-row misses are the step's
+content). No `src/` change; binary `9f5aa6de7cf36f52855cf625`; study `tests/MMWSpalling/studies/p2_7_hoeser_heat/`.
+
+### What the step established
+- **Her data alone (a1/a1′):** at a face ≤ 870 K her rock could absorb ≤ 1.40–1.58 kW over 30 s at 0 MPa against
+  7.88 (Goldstein) – 8.94 (uniform) kW from her calorimeter over Ø40 ⇒ **4.99–6.45×**; closure needs a face of
+  1,406–1,487 K. At 47 MPa **2.49–2.85×**, below the 0 MPa ratio. The reviewer notes the conduction term uses the
+  constant k 3.22 (Grimsel λ(T) ≈ 2.3 at 850 K would RAISE the ratio), so a1 is a lower bound on the gap (DR-2).
+- **The model (c1/c3):** HA 100.580 cm³ (7.80× her 12.9), absorbs 126.82 kJ = 2.68–3.05× her maximum, 94.3 % as
+  flakes; HG (Goldstein) 96.824 cm³, 126.30 kJ. Volume follows ABSORBED energy to 3.3 %, not delivered (DR-4).
+- **Shape (c4):** flat floor — rim/axis depth at r 17.5 mm HA 0.929, HG 0.886 vs her 0.61.
+- **c2 MISS:** the Goldstein floor deficit (−9 %) is bought back by riser faces (22.7 vs 12.9 kJ): risers inherit the
+  column's full map heat (G8 in the issues file).
+- **c5 MISS, confounded (DR-5):** constraint depth 2 mm gives HGd/HG 0.733 while HGd absorbs 24 % MORE; not a
+  fixed-input comparison.
+- **c7 MISS as written (DR-6):** P2-5's c12 estimator reads the top cell CENTRE, 214–227 K below the reconstructed
+  face; `T_surf_field` reads 787–825 K, inside her IR band. The verdict is robust either way.
+
+### Carry-forwards (reviewer's five, plus the advisor's work after acceptance)
+1. **DR-4 (recurrence):** a linearity row must name which power is on the x-axis — absorbed, not nominal.
+2. **DR-5:** HGd is not a fixed-input comparison; quote c5 only with the delivery caveat.
+3. **DR-6:** score face temperature on `T_surf_field`; the P2-5 c12 centre estimator is retired.
+4. **DR-3:** one Ø9 normalisation (her 7,000 or the map's 7,100) for bound and map.
+5. ✅ A on 100 mm and HA on 150 mm agree to 0.01 %: block depth is not a lever on Höser.
+6. **Advisor, after acceptance (2026-10-26; daily log `Claude_markdowns/2026-10-26.md`), all outside /plan at the
+   user's request:** the uptake-vs-conversion split is only bounded (uptake ≥ 2.7–3.0×, cost per cm³ ≤ 2.6–2.9×);
+   **what-if** `studies/whatif_uptake/` — at ~10 % of her heat the model gives her volume, the flux law (1.31–1.65 vs
+   1.44–1.83), a minimum flux, the bowl (0.643 vs 0.61) and a rising rate; **literature**
+   `validation/hoeser/literature_uptake_gap_notes.md`; **heat budget** `studies/heat_budget/` — fast drilling
+   closes, slow drilling (Höser 0 MPa, Meier) does not. **User decision:** heat uptake stays an OPEN PROBLEM on the
+   roadmap; each test's uptake level is a stated input from its own measured removal; next = computed geometry.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-26)
+
+Active step:
+- **P2-7 — Höser at measured heat: how much heat does a spalling face take in?** (`ACTIVE_STEP.md`; installed
+  2026-10-24 via /plan; Höser only, no `src/` change). P2-2e completed NEGATIVE and was archived without
+  `/verify` (`ARCHIVE_DONE.md` *"P2-2e"*: d_ref 2.0 mm reproduces Kant's minimum flux; Meier jams at the pads,
+  36 s). Offline first: Höser's own data bound her rock's 30 s uptake at ≤ 1.4–1.6 kW (face ≤ 870 K, her IR)
+  against 7.9–8.9 kW from her calorimeter's h over Ø40 ⇒ 5–6.5× (47 MPa 2.5–2.8×). Legs (30 s, 1 mm, her
+  Ø100 × 150 mm length): A0 identity gate; HA uniform (her 2018 model), HG Goldstein shape, both at her
+  measured 7.1 kW/m²K disc mean; HGd = HG + constraint depth 2 mm. Decides the next direction: uptake at a
+  spalling face vs profile/cavity vs conversion. Basis: `Claude_markdowns/hoeser_meier_issues.md`.
+
+### The P2-7 file verbatim (packet, completion notes, takeaways, review findings; headings demoted, code fences untouched)
+
+## Active Step: P2-7 — Höser at measured heat: how much heat does a spalling face take in?
+
+Status: **accepted by review** (2026-10-25; both gates re-derived independently) — was: completed (implemented 2026-10-24 via /implement; no `src/` change, binary `9f5aa6de7cf36f52855cf625` unchanged; ready for /verify).
+
+### Context
+
+Every test with a measured heat input passes the failure law (Kant onset; Kant's minimum flux in P2-2e). Every
+test whose delivery was fitted or prescribed fails on shape (`Claude_markdowns/hoeser_meier_issues.md` §0,
+X1–X5). On Höser, P2-5 matched her 0 MPa volume (G05, 1.09×) only with a Gaussian spot σ = 0.5 D, which delivers
+0.96 kW over the Ø40 opening and is ~5e-5 of its axis value at r = 17.5 mm. Every literature impinging-jet
+profile keeps ~0.8 there. G05 cut a 19 × 90 mm pencil. The uniform plateau A (her own 2018 model's assumption)
+cut a **flat-bottomed Ø40 cylinder 84 mm deep, 7.74× her volume**, and took in **127.0 kJ in 30 s, 94 % of it
+leaving as flakes** (`p2_5_hoeser/legs/A`, re-measured 2026-10-24).
+
+Her own data bound what her rock could have absorbed. At a face ≤ 870 K (her IR: onset 430–600 °C, and the
+surface drops ~100 °C after each spall), flakes plus the most that conduction and radiation can carry in 30 s
+is ≤ 1.4–1.6 kW at 0 MPa. Her calorimeter's h implies 7.9–8.9 kW over Ø40, a gap of 5–6.5× before any model is
+involved. This step measures that gap once, cleanly, on her real sample length, with literature profiles at her
+measured axis value and nothing fitted to her volume or shape. It decides whether the model's over-removal is
+explained by heat uptake (the model takes in what the calorimeter delivers; her rock cannot), which would make
+the next physics the uptake of a spalling face. The alternatives are the profile, the face temperature, the
+failure law, or how absorbed heat is converted to removed rock.
+
+Carried: P2-2d criterion keys unchanged (relief 0.531294, flaw 8 µm, Grimsel laws); constraint depth off except
+on leg HGd; Meier untouched (a regression, `docs/project/DIRECTION_2026-10-14_single_skin_failure_law.md`).
+
+### Sources (every number below opened 2026-10-24)
+
+- **Höser 2016 thesis**, `franck_material/hoser.pdf` (printed page = PDF page − 21):
+  - Stagnation h, PSI calorimeter, confined (ring Ø40 × 35 mm), 38 kW, D1 = 7.9 mm, λ 1.1:
+    **L 8 → 7.0 ± 0.8 kW/m²K**, L 14 → 3.0 (Fig. 4.26, p. 93). h = q/(T_f − T_surf) with T_f the nozzle T
+    (Eq. 4.16). h is independent of sensor surface T (180–550 °C) for L > 9 and is taken as "valid also for …
+    the rock" (p. 89). Flux uncertainty < 20 % above 4 MW/m² (p. 82).
+  - The radial profile was fitted (Gaussian k·e^{−r²/a²} on the sensing disc and guard, Eq. 4.18–4.20), but
+    **k and a are not reported** (pp. 79–80, 90). Sensing disc Ø9 mm (`p2_5_hoeser/MAP.txt` R_disc 4.5 mm).
+  - **0 MPa, 30 s: 25.8 ± 2.4 cm³/min ⇒ 12.9 ± 1.2 cm³** (Fig. 5.12, p. 119; 47 MPa: 65.7). 30 s is the
+    longest 0 MPa run without breakage (p. 117).
+  - **47 MPa, 30 s cavity: a bowl ~47 mm wide × 30 mm deep** (Fig. 5.10, p. 117, digitised: half-width
+    23.4 / 22.0 / 19.4 / 16.5 / 12.0 / 9.5 mm at depth 5 / 10 / 15 / 20 / 25 / 28 mm; 33.0 cm³ = 65.7 × 0.5 ✓;
+    surface 4.0e-3 m²; depth at r = 17.5 mm is 18.3 mm = **0.61** of the axis). "Thermal spallation occurred
+    at the whole rock surface exposed to the flame jet" (p. 117). **No 0 MPa section exists.**
+  - IR onset 430–600 °C (unconfined, 5 s, one frame before the first spall); after each spall the surface drops
+    ~100 °C, so it reaches no steady state (pp. 65–68).
+  - Removal-vs-flux, 47 MPa: firing-rate series 17 → 46 cm³/min over 4.3 → 7.4 MW/m² (n_q = 1.83); standoff
+    series 46 → 21 over 7.4 → 4.3 (n_q = 1.44) (`validation/hoeser/hoeser_2016_drilling_series.csv`).
+- **Höser et al. 2018, IJRMMS 106:311**, `franck_material/UniaxialLoading.pdf`: 38 kW, λ 1.1, T_nozzle
+  **1,866 K** measured, nozzle–rock **63.2 mm** in all runs; samples **Ø100 × 150 mm** Grimsel granodiorite,
+  ρ 2706, c_p 1025, k 3.22, E 47.3 GPa, ν 0.33, α 8.5e-6 (§3.1). Her model heats 0 < r < 0.02 m uniformly at
+  h = 7 kW/m²K (§4). "0 MPa" = flange weight only, ~9 kPa (§5.1).
+- **Goldstein, Behbahani & Heppelmann 1986, IJHMT 29:1227:** Nu/Re^0.76 = (24 − |L/D − 7.75|)/(533 + 44
+  (r/D)^1.285). Shape at fixed L: g(r) = 533/(533 + 44 (r/D)^1.285) ⇒ 0.899 / 0.842 / 0.813 / 0.786 at
+  r = 10 / 15 / 17.5 / 20 mm (D 7.9), which reproduces log 10-14 §20.3 to ≤ 2 %. Disc mean over Ø9 = 0.976294
+  ⇒ **H0G = 7100/0.976294 = 7272.3958**. ⚠ Cold-air jets, Re 61k–124k, L/D 6–12; her Re is not checked. Used
+  as a literature SHAPE, not fitted.
+- **P2-5 deck**, `tests/MMWSpalling/studies/p2_5_hoeser/`: `legs/A/argv.sh` (the base of every leg below);
+  `MAP.txt` (h0 7,100 on the Ø9 disc mean; standoff exponent 1.3185305455 under `jet_core_length=30`; lid
+  `if((r>0.02)and(s<0.0637),0.001,…)`); `RESULTS.txt` (A 100.592 cm³, price 1.1879 GJ/m³; G05 time-mean face
+  727–779 K at r < 10 mm); `reduce_p2_5.py` (the c12 face-T estimator and the depth guard to mirror).
+- **P2-2e:** `studies/p2_2e_cref/D_REF.txt` (`D_REF_M=0.0020`); `legs/H0`, `legs/HD` (the deeper-block
+  pattern: three keys differ from G05).
+- **Code:** `surface_patch.side_face_h_r_min` splits side faces at `MMWSpalling.H:2397-2415` (r < r_min: the
+  owning column's map h and gas T; r ≥ r_min: the explicit (h, T) pair), and scopes the lateral criterion at
+  `Removal.H:673` (r ≥ r_min only). Under the lid (r > 20 mm, s < s_lid) a column's map h is 0.001, and its
+  risers inherit it.
+
+### Goal
+
+1. **`studies/p2_7_hoeser_heat/energy_bound.py` → `BOUND.txt` (offline, ord 1).** Inputs exactly as in Sources;
+   T0 293.15 K, t 30 s, ε 0.8.
+   (a) Her absorbable energy over 30 s, for T_face = 850 / 1,000 / 1,200 / 1,400 K, at 0 MPa (V 12.9 cm³,
+       A_c 2.0–2.5e-3 m²) and 47 MPa (V 33.0 cm³, A_c 4.0e-3 m²):
+       E_max = V·ρ·c_p·(T_face − T0) + 2k(T_face − T0)·√(t/(πκ))·A_c + εσ(T_face⁴ − T0⁴)·A_c·t, with κ = k/(ρc_p).
+       Each term is an upper bound: flakes leaving at the face T, and a stationary face held at T_face from t = 0.
+       Repeat the flake term with the `Grimsel.H` c_p law (ρ 2650) and report both.
+   (b) Calorimeter-implied delivery over the Ø40 opening for the uniform and Goldstein shapes, each normalised
+       to a Ø9 disc mean of 7,000 W/m²K, at T_f 1,866 K and the same T_face.
+   (c) The ratio (b)/(a), and the T_face at which it reaches 1, for each shape and load.
+   (d) Her implied edge flux ratio at r = 17.5 mm: 0.61^(1/n_q) for n_q = 1.44 and 1.83, against Goldstein's
+       g(17.5 mm) and the Gaussian σ = 0.5 D's e^{−r²/2σ²}. First-order: the bowl's depth ratio is read as a
+       removal-rate ratio at the original radius.
+2. **`run_p2_7.py`** (mirror `p2_5_hoeser/run_p2_5.py`, including `--probe`). Legs are A's argv
+   (`p2_5_hoeser/legs/A/argv.sh`) with ONLY these keys replaced (plus `plot_file`):
+   - **`A0`** — none (A byte-for-byte, 100 mm block).
+   - **`HA`** — `geometry.prob_hi=0.05 0.05 0.15` · `amr.n_cell=50 50 150` · `surface_patch.nozzle_z0=0.2132`;
+     `h_expr` unchanged: `if((r>0.02)and(s<0.0637),0.001,7100*pow(0.0632/max(0.0632,s),1.3185305455))`
+   - **`HG`** — HA's three block keys +
+     `surface_patch.h_expr=if((r>0.02)and(s<0.0637),0.001,7272.3958*533/(533+44*pow(r/0.0079,1.285))*pow(0.0632/max(0.0632,s),1.3185305455))`
+   - **`HGd`** — HG + `spallation.sp.constraint_depth=0.002`
+   Each leg writes `argv.sh` + `DROPPED.txt` (SR 8). Every other key stays A's, including
+   `side_face_h_r_min=0.036`, `jet_core_length=30`, `weibull.V0=1.0e-9`, `timestep=0.008`, `stop_time=30.0`.
+3. **`reduce_p2_7.py` → `RESULTS.txt`.** Per leg:
+   - volume (×4);
+   - absorbed energy = the cumulative `ledger_E_src` at 30 s (×4) and flake energy `ledger_E_flake` (×4) —
+     READ the final value; never sum `ledger_P_robin` (`amr.thermo.plot_int=6`, SR 7);
+   - flake share and price;
+   - the depth-vs-radius profile at 30 s in 2.5 mm rings (max and median over columns; post-removal top =
+     `k_top − n_voided`, SR 4), and the depth ratio at r = 17.5 mm over the axis;
+   - median regime-1 firing T, and the time-mean exposed face T at r < 10 mm (P2-5 c12's estimator);
+   - deepest point, `ledger_err_solid` max, and the Ø at 10 mm depth by 30° sector (isotropy witness);
+   - on HGd, `cref_d` and `cref_n_vert` (P2-2e witnesses).
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | item | where | what decides it |
+|---|---|---|---|
+| L1 | lid branch on a 150 mm block | `h_expr`; s is measured from the nozzle | nozzle_z0 − rock top = 0.0632 on every leg ⇒ s_lid 0.0637 unchanged; `--probe` rc 0 |
+| L2 | HG string parses as written | AMReX parser | `and` (not `&&`); the only `max` is constant-first in a divisor (exact); a3's parse-back |
+| L3 | constraint depth reaches the criterion on HGd | P2-2e sites (depth scan, Sp_field, lateral) | requires the T-face path: A's argv sets `spall.surface_T=reconstructed`; `cref_d` = 0.002 and `cref_n_vert` > 0 in HGd's thermo |
+| L4 | cavity cannot widen past r = 20 mm | lid h 0.001 on columns at r > 20 and their risers; `Removal.H:673` scope at r_min 0.036 | Stated, not fixed. Her 47 MPa bowl reaches r 23.4 mm at 5 mm depth ⇒ the excluded annulus 20–23.4 mm × ~10 mm ≈ 4.6 cm³ of 33 (≤ 15 %). Do NOT change r_min: it switches every wall to the typed 169.3 pair (`2026-10-14.md` §20.2) |
+| L5 | block depth | HA's floor | A reached 84 mm of 100 in 30 s; c6 bounds HA on 150 mm |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a1 | 1 | `BOUND.txt` (a)–(c), 0 MPa | ratio ≥ 3 for both shapes at T_face ≤ 870 K; closure T_face ≥ 1,300 K | **report** — the headline, from her data alone | < 3 ⇒ her data show no large uptake gap; the over-removal is the model's own (profile, criterion or conversion), and uptake physics is not the next direction |
+| a1′ | 1 | `BOUND.txt` (a)–(c), 47 MPa | ratio below the 0 MPa ratio | **report** | equal to 0 MPa ⇒ uptake is a property of the flame alone; smaller (as predicted) ⇒ the rock's own spalling sets how much heat it takes in (adhered or partly detached spalls), so blowing-type corrections go the wrong way |
+| a2 | 1 | `BOUND.txt` (d) | implied edge flux ratio 0.55–0.85, and ≥ 1e3 × the Gaussian's 5.5e-5 | **report** | outside ⇒ her bowl is not a literature profile with her own removal exponent; the profile is a second open problem |
+| a3 | 1 | `--probe` on A0/HA/HG/HGd; HG parse-back (shipped string vs an independently built equivalent, same `patch_P_robin` at step 1) | rc 0, `alamo.program` the only unused key; identical | **gate** | a string does not parse as written — no leg below means anything |
+| b1 | 2 | `A0` vs `p2_5_hoeser/legs/A` | `run_removal_events.csv` and `thermo.dat` byte-identical | **gate** | the binary moved Höser since P2-5 — every comparison with A is void; re-baseline before ord 3 |
+| c1 | 3 | HA volume (×4) | 90–130 cm³ (7–10× her 12.9) | **report** | < 90 ⇒ A's 100 mm floor was speeding it; > 130 ⇒ on 150 mm the floor runs on |
+| c2 | 3 | HG / HA volume | 0.80–0.95 | **report** | outside ⇒ volume is not proportional to delivered power across literature shapes (thermostat linearity broken) |
+| c3 | 3 | absorbed energy over 30 s, HA and HG, vs a1's 0 MPa E_max at 850 K | model / her-max ≥ 2; flake share ≥ 0.9 | **report** — the model takes in what the calorimeter delivers | < 2 ⇒ the model's uptake is close to what her rock could take, so the over-removal is conversion (flake share / price), not uptake |
+| c4 | 3 | depth ratio at r = 17.5 mm, HA and HG, vs her 47 MPa bowl 0.61 | HA ≥ 0.9; HG ≥ 0.8 | **report** | HG ≤ 0.7 ⇒ the model already rounds the bowl with a literature profile, and a2's argument is not needed |
+| c5 | 3 | HGd / HG volume | 0.90–1.05 | **report** — attribution of P2-2e c5 | < 0.90 ⇒ the constraint depth bites the thin-skin regime under realistic heat; P2-2e's Höser loss was not the Gaussian's alone |
+| c6 | 3 | deepest point at 30 s, all legs | ≤ 140 mm of 150 | **report** | deeper ⇒ the block bottomed and the volume is a lower bound; rerun on 200 mm |
+| c7 | 3 | median firing T; time-mean face T at r < 10 mm | firing 850–870 K; face 700–870 K | **report** | face > 870 K ⇒ the model's face runs hotter than her IR range, so c3 must be compared at the model's own T_face |
+| c8 | 3 | `ledger_err_solid` max; Ø at 10 mm by sector | ≤ 5e-3; spread ≤ 3 mm | **report** | ledger ⇒ a bookkeeping fault; spread ⇒ a grid artefact |
+| d1 | 4 | verdict | — | **verdict** | States a1/a1′ ratios and closure T, the model's uptake (c3), the shape (c4) and the constraint-depth attribution (c5). Names the next direction: uptake at a spalling face (a1 ≥ 3 and c3 ≥ 2), the profile or cavity (a2 or c4 fail), or conversion (c3 < 2) |
+
+### Pre-registered predictions
+
+- **P1 (a1):** 850 K, 0 MPa: absorbable 1.4–1.6 kW; delivered 7.9 (Goldstein) – 8.9 (uniform) kW ⇒ **5.0–6.5×**;
+  closure T_face 1,400–1,450 K.
+- **P1′ (a1′):** 850 K, 47 MPa: absorbable ~3.2 kW ⇒ **2.5–2.8×**, below the 0 MPa ratio.
+- **P2 (a2):** 0.71–0.76 (Goldstein 0.81; Gaussian 5.5e-5).
+- **P3 (c1/c3/c4):** HA ~100–120 cm³, a flat Ø40 cylinder, ~125–140 kJ absorbed (≈ 3× her max), flake share ≥ 0.9.
+- **P4 (c2):** HG 0.85–0.92 × HA.
+- **P5 (c5):** HGd within 5 % of HG — at 5–7 MW/m² the face is in the thin-skin limit.
+- **P6 (c7):** time-mean face 700–850 K, inside her IR band — so the face temperature does not explain the gap.
+
+### What would make this inert — witness each
+
+- A string that parses to something else — a3's parse-back.
+- A binary that moved — b1.
+- The block bottoming — c6.
+- The constraint depth not reaching HGd — `cref_d`, `cref_n_vert` (L3).
+- A gap that is really the lid's — L4 bounds it at ≤ 15 % of her volume.
+
+### Guardrails
+
+- No `src/` change; binary `9f5aa6de7cf36f52855cf625` (`find src -newer bin/mmwspalling-3d-g++` empty).
+- Nothing fitted to her volume or shape. H0G is a normalisation to her measured disc value, fixed above
+  before any leg runs. The constraint depth is P2-2e's 2.0 mm, read from `D_REF.txt`, never adjusted.
+- No Meier leg and no Meier number in this step.
+- Quarter domain: ×4 on volume AND on energy (SR 3). `caffeinate -dis`, sentinel `.done`, legs serial,
+  `-np 4`.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_7_hoeser_heat
+$PY $S/energy_bound.py > $S/BOUND.txt                                    # ord 1: a1, a1', a2
+caffeinate -dis $PY $S/run_p2_7.py --probe A0 HA HG HGd                  # ord 1: a3
+caffeinate -dis $PY $S/run_p2_7.py A0 && $PY $S/reduce_p2_7.py GATE      # ord 2: b1 (~1 min)
+caffeinate -dis $PY $S/run_p2_7.py HA HG HGd && $PY $S/reduce_p2_7.py > $S/RESULTS.txt   # ord 3-4 (~2 min each)
+```
+
+### Claude completion notes
+
+**Files** (all new, `tests/MMWSpalling/studies/p2_7_hoeser_heat/`): `energy_bound.py` → `BOUND.txt`; `run_p2_7.py`
+(legs = A's `argv.sh` token for token, keys replaced in place; `--probe`/`--smoke`/`--parseback`/`--argv`; asserts
+its own `caffeinate -dis -w`); `reduce_p2_7.py` (`GATE` → `GATE_b1.txt`; default → `RESULTS.txt`); `parse_bracket.py`
++ `GATE_a3.txt` (a3 record, with `probe_run.log`, `parse_run.log`); `diag_energy.py` → `DIAG.txt` (diagnostic, no
+new leg); `smoke_run.log`, `RUN_A0.log`, `RUN_ord3.log`; `legs/{A0,HA,HG,HGd}/` each with `argv.sh`, `DROPPED.txt`,
+`.done`; `probe/`, `smoke/` (2 s), `parse/` (0.05 s). **No `src/` change**: `find src -newer bin/…` empty, sha256
+`9f5aa6de7cf36f52855cf625`. No Meier leg. No tree gate (no new binary; b1 is this packet's identity check).
+
+| # | measured | result | output |
+|---|---|---|---|
+| a1 | 0 MPa @850 K: ratio **4.99–6.45** (A_c 2.0–2.5e-3, both flake laws, both shapes); min @870 K 4.71; closure T_face **1,406–1,487 K** | **PASS** (P1 ✓; closure 0–37 K above P1's 1,400–1,450) | `BOUND.txt` |
+| a1′ | 47 MPa @850 K **2.49–2.85**, closure 1,178–1,231 K; below 0 MPa | **PASS** (P1′ ✓) | `BOUND.txt` |
+| a2 | implied edge flux ratio **0.710** (n_q 1.444) – **0.763** (n_q 1.834); Goldstein 0.813; Gaussian 5.47e-5 (13,000–14,000× below) | **PASS** (P2 ✓) | `BOUND.txt` |
+| a3 | probe rc 0 on 4/4, `alamo.program` the only unused key; HG shipped = equivalent **2487.17 W** (printed token); HG/HA step-1 0.90714 inside the 0.881–0.937 non-linearity bracket | **PASS** (gate) | `GATE_a3.txt` |
+| b1 | A0 vs P2-5 A: event CSV md5 `fd66b93e…` and thermo.dat `31a07516…`, both **byte-identical** | **PASS** (gate) | `GATE_b1.txt` |
+| c1 | HA **100.580 cm³** = 7.80× her 12.9 (A on 100 mm: 100.592) | **PASS** | `RESULTS.txt` |
+| c2 | HG/HA volume **0.9627** (absorbed-energy ratio 0.9959) | **MISS** (bar 0.80–0.95; P4 ✗) | `RESULTS.txt`, `DIAG.txt` |
+| c3 | absorbed HA **126.82** / HG **126.30 kJ** vs her E_max(850 K) 41.54–47.39 ⇒ **2.68–3.05× / 2.67–3.04×**; flake share **94.3 / 91.9 %** | **PASS** (P3 ✓) | `RESULTS.txt` |
+| c4 | depth ratio at r = 17.5 mm: HA **0.929**, HG **0.886** (her 0.609) | **PASS** (both bars) | `RESULTS.txt` |
+| c5 | HGd/HG volume **0.7332** (70.988 / 96.824) | **MISS** (bar 0.90–1.05; P5 ✗) | `RESULTS.txt` |
+| c6 | deepest 84 / 84 / 81 mm of 150 (HA/HG/HGd) | **PASS** | `RESULTS.txt` |
+| c7 | firing T median 863.13 / 862.00 / **885.25 K**; named face estimator (top-cell CENTRE, r < 10 mm, 6 plotfiles) **563.6 / 573.2 / 608.4 K**; reconstructed face (`T_surf_field`) 790.2 / 787.4 / 824.9 K | **MISS** as scored (face < 700 on all; HGd firing > 870). Reconstructed face inside 700–870 on all (P6 ✓ on that reading) | `RESULTS.txt` |
+| c8 | `ledger_err_solid` max 3.34e-3 / 3.11e-3 / 3.13e-3; Ø at 10 mm by 30° sector 39.92/39.82/39.92 (HGd …/39.82), spread **0.10 mm** | **PASS** | `RESULTS.txt` |
+| L3 | HGd `cref_d` 0.002, `cref_n_vert` > 0 (sampled 2.17e8), clamp 0; 34.5 % of sampled vertical reads negative | **reached** | `RESULTS.txt` |
+| d1 | see below | **verdict** | — |
+
+**(d1) Verdict.** Her own data show a large uptake gap. At a face ≤ 870 K her rock could have absorbed at most
+**1.4–1.6 kW** for 30 s at 0 MPa, against **7.9–8.9 kW** from her calorimeter's h over Ø40. That is a ratio of
+**4.7–6.5**, and it only closes at a face of **1,406–1,487 K**, ~550 K above her IR onset. At 47 MPa the ratio is
+**2.5–2.8**, below the 0 MPa value, as predicted.
+
+The model takes in **2.7–3.0×** that maximum (3.0–3.4× at its own reconstructed face T), with ≥ 92 % leaving as
+flakes. So the over-removal is uptake, not conversion. The face temperature does not explain it: the reconstructed
+face is 787–825 K, inside her IR band. On shape, HG keeps a flat floor (0.89 against her 0.61) although a
+literature profile with her own exponent explains her bowl (a2), so the model's local removal exponent is too
+weak to round it.
+
+Two misses qualify this:
+- **c2:** HG's floor deficit is refilled by its stepped rim's riser faces (side share 10 → 18 %), so uptake
+  follows exposed area × h, not the floor map.
+- **c5:** the constraint depth bites under realistic heat. It removes −27 % volume, and P2-2e's Höser loss was
+  not the Gaussian's alone.
+
+By the packet's rule (a1 ≥ 3 and c3 ≥ 2, with a2/c4 not failing): **the next direction is heat uptake at a
+spalling face.**
+
+### Implementation takeaways
+
+1. **The P2-5 c12 "face" estimator reads the top cell's CENTRE, not the face.** On a 1 mm receding floor it sits
+   **214–227 K below** the reconstructed face (`T_surf_field`, `MMWSpalling.H:7921`, the value the criterion
+   fires on). c7's 700–870 K band was set for a face, so c7 is scored as written (MISS) with both readings
+   printed. A future packet should name `T_surf_field` (top solid cell, positive entries only). The ~1–3
+   fallback cells per plotfile are counted.
+2. **c2's mechanism (`DIAG.txt`):**
+   - floor map: HG 104.3 kJ vs HA 114.6 kJ (0.910);
+   - riser faces: 22.7 vs 12.9 kJ;
+   - total: 127.0 vs 127.5 kJ.
+
+   Risers at r < `side_face_h_r_min` inherit their column's map h (`MMWSpalling.H:2374-2381`), so a sloped
+   floor buys back wetted area. Volume per absorbed joule differs by only 3.3 % (flake share 91.9 vs 94.3 %), so
+   the thermostat is linear in **absorbed** energy. What breaks the proportionality is the delivered-vs-absorbed
+   step.
+3. **HGd absorbs MORE than HG (156.4 vs 126.3 kJ) and removes less.** Flake share falls 92 → 58 %, firing T
+   rises +23 K, and the rim stays shallow (31 mm median at 17.5–20 mm vs 73). That keeps the rim's standoff
+   short (h ∝ s^−1.32), and 40.8 % of uptake goes through side faces. ⚠ HGd's depth ratio **0.50–0.52** is the
+   only bowl-like profile in the set (her 0.61). It is a **by-product of the constraint depth, not a profile
+   result**, and must not be read as one.
+4. **The model's absorbed 127 kJ is only 47–54 % of (b)'s fixed-face delivery (236–268 kJ).** The floor recedes
+   84 mm, the standoff opens 63 → 147 mm, and floor-map power falls 3.9× (1,938 → 497 W per quadrant); the
+   removal rate falls 320 → 109 cm³/min. Her rock barely receded, so at her geometry the delivered side of
+   a1's ratio stays near (b). The model's 2.7–3.0× is a lower bound on what it would take in at her depth.
+5. **Block depth is not a lever here.** A on 100 mm and HA on 150 mm agree to 0.01 % in volume (100.592 / 100.580)
+   and both reach 84 mm. The tiny difference is consistent with the box decomposition change (16 → 24 boxes),
+   not the base.
+6. **The parse-back has a common-mode hole, and it is closed here by a bracket, not a second string.** Both
+   constructions could share a fault. The HG/HA step-1 ratio 0.907 must sit between Σh (0.881) and a half-cell
+   Robin (0.937, k′ = λ_Grimsel(293 K)/(dz/2) = 6,861 W/m²K) (`parse_bracket.py`). A dropped radial factor
+   would read ≥ 1.024.
+7. **Line drift in the packet's code pointers**:
+   - the side-face split is at `MMWSpalling.H:2380` (the cited :2397-2415 is the 7a/7b comment block below it);
+   - `Removal.H:673` is exact.
+
+   L4 also depends on a gate the packet did not name: `SideFaceH` would override the inherited lid h with the
+   derived wall law once `wall_law_ready`. That needs r_bore > `WJ_R_SHIELD` + 2dx = 35.5 mm (`MMWSpalling.H:5957`). It
+   never arms on a Ø40 cavity (`wall_law_on` 0 on all 625 rows of A), so the lid holds.
+8. **`energy_bound.py` reproduces every number the packet quotes.** Goldstein g at 4 radii, disc mean 0.976294,
+   H0G 7272.3958, bowl 33.21 cm³ / 4.016e-3 m² / 18.28 mm, n_q 1.4444 / 1.8337, and P1's 1.40–1.58 kW all match.
+   Two declared choices:
+   - the bowl is extended to the surface at the first digitised half-width (a vertical lip);
+   - n_q is the endpoint ratio, as the packet's numbers imply. A 4-point log-log fit gives 1.53 / 1.73, which
+     would move a2 to 0.72–0.75.
+9. **The Grimsel c_p flake variant is used analytic and unclamped** (`Grimsel.H::H_of`). It moves E_max by
+   < 1 % at 850 K and by ≤ 3.4 % at 1,400 K, and changes no verdict.
+10. **The `cref_n_*` sums are samples** (per-step counters printed every 6 steps). Only the > 0 witness and the
+    negative-read RATIO (34.5 %, the same sampling on both sides) are quoted.
+11. **Disk:** the study directory is 5.3 GB (plotfiles, event logs). Both are git-ignored (`.gitignore:87/98/101`).
+    The b1 provenance is the two md5s in `GATE_b1.txt`; `probe/`, `smoke/` and `parse/` (2.4 GB) are working
+    material and can be deleted. Nothing cites them except `GATE_a3.txt`'s printed tokens, which are copied
+    into that file.
+
+### Review findings
+
+Re-derived independently, from `## Sources` and the legs' own output, with no reference to
+`energy_bound.py` or `reduce_p2_7.py`: the **whole offline bound** (a1/a1′/a2) in my own
+script; **b1 by my own byte comparison**; **a3's common-mode bracket** recomputed from the
+316 in-opening column centres; every leg volume from an `n_voided` census with `V_cell`
+parsed per leg; energy from each `thermo.dat`'s final cumulative row. Guardrail confirmed:
+`find src -newer bin/` empty, sha256 `9f5aa6de7cf36f52855cf625`, no Meier leg.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a1 | ratio ≥ 3 both shapes at T_face ≤ 870 K; closure ≥ 1,300 K | 4.99–6.45; closure 1,406–1,487 | E_max(850 K) **41.89–47.39 kJ** ⇒ absorbable **1.40–1.58 kW**; delivered **Goldstein 7.88 / uniform 8.94 kW**; **ratio 4.99–6.40**; closure **1,413–1,487 K** (their 6.45/1,406 are the Grimsel-c_p flake variant, which I did not run) | own erfc/bound script vs `BOUND.txt` | **PASS** |
+| a1′ | ratio below the 0 MPa ratio | 2.49–2.85 | **2.49–2.82** at 850 K; closure **1,186–1,231 K**; strictly below 4.99–6.40 | same | **PASS** |
+| a2 | 0.55–0.85 and ≥ 1e3× the Gaussian | 0.710–0.763 | depth at r 17.5 mm **18.28 mm of 30 = 0.6092**; n_q **1.4444 / 1.8337**; implied **0.7095 / 0.7632**; Goldstein **0.8134**; Gaussian **5.467e−05** ⇒ **12,987–13,960×** | own digitised-bowl interpolation | **PASS** |
+| a3 | rc 0, `alamo.program` only; shipped == equivalent | 4/4; 2487.17 W | **Σh ratio 0.88147, half-cell Robin 0.93711** reproduced to 5 d.p. on **316** columns; measured **0.90714 strictly inside**; dropped-radial signature **1.0243** | own bracket vs `GATE_a3.txt`, `parse_bracket.py` | **PASS (gate)** |
+| b1 | byte-identical to P2-5's A | identical | `cmp` clean: **91,388** event lines, md5 `fd66b93e…`; **626** thermo lines, md5 `31a07516…` | my own `cmp`/`md5` | **PASS (gate)** |
+| c1 | 90–130 cm³ | 100.580 | **100.580 cm³ = 7.80×** her 12.9 (A0 100.592) | `legs/HA` census | PASS |
+| c2 | 0.80–0.95 | 0.9627 MISS | **0.9627**; absorbed ratio **0.9959** | own census | MISS — **wrong variable, see DR-4** |
+| c3 | ≥ 2; flake ≥ 0.9 | 2.68–3.05 | E_src **126.82 / 126.30 kJ** (×4) ⇒ **2.68–3.03 / 2.67–3.02**; flake **94.3 / 91.9 %** | `thermo.dat` final row | PASS |
+| c4 | HA ≥ 0.9; HG ≥ 0.8 | 0.929 / 0.886 | median-over-ring **HA 0.929, HG 0.886** (max-over-ring 0.940 / 0.905); HGd **0.522** | own ring reduction | PASS |
+| c5 | 0.90–1.05 | 0.7332 MISS | **0.7332**; and HGd **absorbs 1.2385×** HG (156.42 vs 126.30 kJ), flake share **58.1 %** | own census | MISS — **confounded, see DR-5** |
+| c6 | ≤ 140 mm of 150 | 84/84/81 | **84.0 / 84.0 / 81.0 mm** | own per-column `n_voided` | PASS |
+| c7 | firing 850–870; face 700–870 | MISS as written | firing **863.13 / 862.00 / 885.25 K**; the named top-cell-centre estimator **563.6/573.2/608.4**, `T_surf_field` **790.2/787.4/824.9** | `RESULTS.txt`, both printed | MISS as written — **robust either way, DR-6** |
+| c8 | ≤ 5e-3; spread ≤ 3 mm | 3.34/3.11/3.13e-3 | **3.36 / 3.33 / 3.11 / 3.13e-03** (A0/HA/HG/HGd); sector spread 0.10 mm | own max over `ledger_err_solid` | PASS |
+| L3 | key reaches HGd | reached | `cref_d` 0.002, `cref_n_vert` > 0, clamp 0 | HGd `thermo.dat` | reached |
+| d1 | verdict | delivered | states a1/a1′, uptake, shape and the c5 attribution; names the next direction by the packet's own rule | notes §d1 | **delivered** |
+
+#### Diff review
+
+No `src/` change this packet (verified), so the diff is the five new scripts and the leg argv construction.
+
+| # | hunk / call | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | `energy_bound.py` E_max terms | 3, 13 | units check out; κ = k/(ρc_p) = 1.1609e−6 reproduced; √(t/πκ) = 2868.0; no unguarded division | **ok** |
+| DR-2 | … the conduction term's `k` | 12 | uses the **2018 constant k = 3.22** while the model runs Grimsel λ(T) = 2000/(θ+563) ≈ 2.3 at 850 K. Since conduction is the LARGEST term (20.6–25.7 of 41.9–47.4 kJ), the warm-rock value would shrink E_max and **raise** the ratio ⇒ a1's 4.99–6.40 is a **lower bound** on the gap. Conservative, and worth saying in the archive | **ok** |
+| DR-3 | the Ø9 disc normalisation | 2, 5 | (b) normalises delivery to a disc mean of **7,000** W/m²K (her Fig 4.26) while the HG leg's map uses **7,100** (P2-5 `MAP.txt`, H0G = 7100/0.976294 = 7272.3958 — I reproduced both). a1 is internally her-data-only so it is unaffected; takeaway 4's 47–54 % mixes the two by 1.4 %. Name one normalisation | **nit** |
+| DR-4 | `c2`'s bar | 2, 12 | **the bar is on the wrong independent variable.** It tests volume ∝ *delivered* power; the measurement shows volume ∝ **absorbed** power to 3.3 % (`DIAG.txt`: floor 104.3 vs 114.6 kJ, risers 22.7 vs 12.9, totals 127.0 vs 127.5). So c2's failure meaning — "thermostat linearity broken" — is false as written: linearity holds on the absorbed variable. ⚠⚠ **This is the second packet in a row whose thermostat row was barred against a nominal rather than a delivered power** (P2-5's slope flipped 0.86 → 1.74 on the same substitution) | **risk** |
+| DR-5 | `c5`'s bar | 2, 12 | the volume ratio is **confounded by delivery**: HGd absorbs **24 % more** than HG (156.42 vs 126.30 kJ) and removes 27 % less, with flake share collapsing 92 → 58 %. The key changed the cavity, which changed the standoff (h ∝ s^−1.32), which changed the input — so HGd/HG at fixed nominal map is not a clean "does the key bite" test. Takeaway 3 states every piece of this and warns the 0.50–0.52 depth ratio is a by-product; the verdict's c5 bullet states the attribution without the caveat | **risk** |
+| DR-6 | `c7`'s estimator | 2, 11 | the bar says "face"; the named P2-5 c12 estimator reads the top cell **centre**, 214–227 K low on a 1 mm receding floor. Scored MISS as written with both readings printed (takeaway 1) — correct handling. ✅ And the verdict is **robust to the choice**: a colder face *raises* delivered power (7000·(1866−600) > 7000·(1866−850)) and lowers absorbable, so the gap only widens. Re-bar on `T_surf_field` | **risk** (bar, not code) |
+| DR-7 | `parse_bracket.py` common-mode bracket | 10 | ✅ the P2-5 parser-defect lesson closed properly: two constructions could share a fault, so the pair is bracketed by physics instead. I reproduced **0.88147** and **0.93711** exactly; 0.90714 is strictly interior and a dropped radial factor reads ≥ 1.0243. The equivalent string contains **no `/` at all** | **ok** |
+| DR-8 | `run_p2_7.py --probe` | 7, 10 | one real step, so the binary's abort on a non-positive in-patch h makes rc 0 a **positivity** witness; `plot_file` re-pointed (`:105-106`), closing P2-5 takeaway 7's bug where probe output landed in the real leg dirs | **ok** |
+| DR-9 | `reduce_p2_7.py` geometry | 5 | `V_cell`, dx, dz, dt parsed from **each leg's own `argv.sh`** (`:53-64`) and the LZ/`V_CELL` trap named in the header. I re-parsed independently and agree | **ok** |
+| DR-10 | … energy reads | 8, SR 7 | `ledger_E_src`/`ledger_E_flake` read at their **final** cumulative value (`:237-238`), never summed; `ledger_err_solid` taken relative. Matches my own reduction to the digit | **ok** |
+| DR-11 | … depth from the event log | SR 4 | post-removal top = `k_top - n_voided` (`:256`), with a mask-vs-event-log volume cross-check (`:248`) — two independent estimators, not one twice | **ok** |
+| DR-12 | leg construction | 7 | legs are A's argv token-for-token with only the named keys replaced; `--argv` + `DROPPED.txt` per leg (SR 8); the probe prints exactly which keys were replaced/added, and HGd is the only one with an *added* key | **ok** |
+| DR-13 | `a2`'s n_q | 12 | n_q is carried from her **47 MPa** series and applied to her **47 MPa** bowl — self-consistent, and the absence of a 0 MPa section is declared. Takeaway 8 also reports the alternative 4-point log-log fit (1.53/1.73 → a2 0.72–0.75), still inside the bar, so the estimator choice flips nothing | **ok** |
+| DR-14 | the bowl's surface lip | 5 | the digitised bowl is extended to the surface at the first half-width (a vertical lip) — declared in takeaway 8; it sets A_c = 4.016e−3 m² and V = 33.21 cm³, both of which I reproduced | **nit** |
+| DR-15 | packet line pointers | 11 | takeaway 7 corrects `MMWSpalling.H:2397-2415` → `:2380` and confirms `Removal.H:673`; it also names a gate the packet missed (`SideFaceH` would override the lid h once `wall_law_ready`, needing r_bore > 35.5 mm, never armed on a Ø40 cavity — `wall_law_on` 0 on all 625 rows of A) | **nit** |
+| DR-16 | `legs/` disk footprint | — | 5.3 GB, git-ignored; takeaway 11 proposes deleting `probe/`, `smoke/`, `parse/` (2.4 GB) with provenance preserved as printed tokens in `GATE_a3.txt`. Safe under SR 9 **as stated**; have the planner do it explicitly rather than leave it as advice | **nit** |
+
+**Verdict: accepted.** Both gating rows (a3, b1) reproduce under independent derivation, and no
+diff-review row is tagged `bug` against a gating row or a standing rule. The four report-row
+misses are the step's content, and the notes state every one of them with its mechanism.
+
+**Carry forward:**
+1. **DR-4 is a recurrence, and that is the point.** Two packets running, a thermostat row has
+   been barred against a *nominal* power when the measurement obeys the *absorbed* one. Make
+   "which power is on the x-axis" an explicit field of any linearity row.
+2. **DR-5** — c5's attribution needs the delivery caveat in the archive sentence, not only in
+   takeaway 3. HGd is not a fixed-input comparison.
+3. **DR-6** — re-bar c7 on `T_surf_field` and retire the P2-5 c12 centre estimator by name.
+4. **DR-3** — pick one Ø9 normalisation (7,000 or 7,100) for the bound and the map.
+5. ✅ **A previous review concern is now answered:** my P2-5 finding that every Höser leg
+   bottomed out near the adiabatic base is retired for this configuration — A on 100 mm and
+   HA on 150 mm agree to **0.01 %** in volume (100.592 / 100.580) and both stop at 84 mm, so
+   66 mm of clearance changes nothing (takeaway 5). G05's 90-of-100 is still formally untested,
+   but the margin argument now has evidence behind it.
+
+**Checked and clean:** no `src/`, `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE`
+change; no new binary and therefore no tree gate owed (b1 is the right instrument instead);
+no Meier leg and no Meier number. SR 3 (×4 on volume **and** energy), SR 4, SR 7 (final
+cumulative values, never a summed per-step power), SR 8 (`argv.sh` + `DROPPED.txt` per leg),
+SR 9 all honoured. P2-2e's `d_ref` is read from `D_REF.txt` at 2.0 mm and never adjusted.
+**No unquotable number is quoted:** nothing from the P2-5 Gaussian legs is used as a result,
+HGd's bowl-like 0.50–0.52 profile is explicitly barred from being read as a profile finding,
+and the Goldstein correlation is flagged as cold-air Re 61k–124k with her Re unchecked.
+
+## P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (2026-10-26, rev 3, ACCEPTED by review 2026-10-26 — d2's negative PROVISIONAL; archived 2026-10-26)
+
+**Status:** ACCEPTED by review (all nine gates re-derived independently; findings verbatim below); c3 unscoreable
+(L0f aborted at 27.3 s); d2 **shape does NOT agree** with Höser 47 MPa, labelled PROVISIONAL by the review. Binary 2 `f4c27b2739e78d87a89dc2e4` ships the default-off key
+`surface_patch.face_list`; binary 1 `757aec90…` deleted group A. Study `tests/MMWSpalling/studies/p2_8_face_list/`.
+
+### What the step established
+- **Engineering goal met.** Group A (`side_face_factor`, `_r_min`, `_area_exact`, `_closure`, `_h_max`, `_h_scale`)
+  deleted with 0 of 2639 tree changes; the key is identity at 0 (a3); the list finds every face in six directions
+  (a4); energy exact (identities ~2e-14, `ledger_err_solid` ≤ 3.0e-4); isotropic (sector spread ≤ 1 mm at 30 s).
+- **The key widens the hole under the flange** (c1/d3): max Ø 48.5 vs 39.7 mm at 30 s; P47 106.5 vs P47off 39.9 mm at
+  120 s. 2 mm vs 1 mm within 12.8 % volume, 0.6 mm Ø (b3).
+- **Shape wrong at the matched level** (S* = 0.1314, P3's 0.16–0.24 missed): too wide and too shallow, diverging —
+  max Ø +33.5 mm, axis −29 % at 120 s; depth/diameter growth 0.71 vs her 1.79; mouth opens to 79.3 mm at 105 s.
+  P1's bowl clause missed (r17.5/axis 0.700, above K0's 0.643).
+- **Cause (advisor reading, 2026-10-26 log §8):** (i) the heat rule is position-only, so a thin slot under the flange
+  the jet cannot sweep gets the highest heat; (ii) the transitional rule (column-top cell breaks only vertically, keeps
+  the P0b form only on +z) leaves one-cell ROOFS (plates: 2.9 → 36.4 % of faces by 120 s); (iii) at a
+  volume-matched level the slot's heat starves the floor.
+- **c3 abort** (`Removal.H:3231`): a roof cell fired vertically with a 3-cell flake through a laterally voided cell
+  (column (29,34), r 22.7 mm); the remap assumes a contiguous solid column. Mesh-sensitive (99 vs 10 roof firings).
+
+### Carry-forwards
+1. P2-9 must (a) give every face one breaking rule along its own direction, retiring the transitional rule and the
+   roofs; (b) remove the vertical path's solid-column assumption (the c3 abort), unblocking the 0.5 mm check.
+2. The heat rule's EXPOSURE (does the jet reach this face) is not addressed by P2-9; rerun 47 MPa after P2-9 to
+   separate roofs from heat.
+3. b2's ≤ 1 % fallback bar was a planner error (plates have an undefined normal; w = 1 correct); rescoped in rev 3.
+4. Group B (9 settings) unread under the key ⇒ deletable in P2-10. Meier S0's `side_face_h_scale=1.0` token now
+   aborts — drop it (review DR-4). `unit/lateral_drive` fails one check on every binary since 9f5aa6de (pre-existing).
+5. **Review carry-forwards:** DR-12/13 — d2 is PROVISIONAL ("the face list *with the transitional rule* does not
+   match"); the roof abort is 11× more frequent at 0.5 mm (9 vs 99 firings at r > 20 mm), a latent abort on every
+   finer leg. DR-2 — the 2639 sweep does not cover the side-face/lateral/face-list unit tests; their evidence is the
+   `bin1`-vs-`baseline` logs. DR-15 — the 30 s volume is matched by construction; 60/90 s over-shoot +19 / +31 %.
+   DR-17 — `weibull.V0` = 1e-9 on every mesh here, the opposite of P2-5's ×8; state the convention.
+⚠ Archive note (planner, 2026-10-27): the review was appended to `ACTIVE_STEP.md` at 17:52:06, between the planner's
+read (17:51) and this archive copy (17:53); the copy below contains it, but this summary first mislabelled the step
+"NOT reviewed". Corrected the same session.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-26)
+
+Active step:
+- **P2-8 — The surface face list: one heat rule and one area rule for every exposed face; six dead settings deleted**
+  (`ACTIVE_STEP.md`; rev 2 installed 2026-10-26 via /plan after the user rejected rev 1 as a band-aid; Höser only).
+  P2-7 archived ACCEPTED (`ARCHIVE_DONE.md` *"P2-7"*). Deletes group A (`side_face_factor`, `_r_min`, `_area_exact`,
+  `_closure`, `_h_max`, `_h_scale`) with a declared tree diff; new key `surface_patch.face_list` builds every solid/void
+  face (6 directions), heats each at its own position, weights it so a staircase sums to the smooth area. Tests: 2/1/0.5 mm,
+  then Höser 47 MPa growth (Fig. 5.10) with the level S* from her 30 s volume (load not modelled). Lid `s<0.0633`.
+  **Rev 3 (2026-10-26):** blocked at b2 by one-cell flange PLATES (normal undefined, w = 1 correct) — bar re-scoped to
+  non-plate faces; resume by re-scoring L0, then mesh and 47 MPa legs. First L0: Ø48.5 vs 39.7 mm, energy exact.
+
+### The P2-8 file verbatim (packet, completion notes, takeaways; headings demoted, code fences untouched)
+
+## Active Step: P2-8 — The surface face list: one heat rule and one area rule for every exposed face; six dead settings deleted
+
+Status: **accepted by review** (2026-10-26; all nine gates re-derived independently) — was: completed — rev 3 (2026-10-26). Gates a1–a5, b1–b3, d1 PASS; c3 unscoreable (L0f aborted at 27.3 s in vertical removal, `Removal.H:3231`); d2 shape does NOT agree with Höser 47 MPa (too wide, too shallow). Binary `f4c27b2739e78d87a89dc2e4`, unchanged since rev 2.
+
+### Context
+
+The model cannot compute a hole's width: hand-set numbers place the wall (`Claude_markdowns/hoeser_meier_issues.md`
+§3.9, G1–G8), and the side-face code has grown to **16 settings and ~300 references**, most of them corrections to the
+column-by-column surface (unheated steps → too much step area → which steps are floor or wall) or Meier's geometry built
+into general code. This step replaces that with ONE description of the surface, used by every consumer:
+**a face list** (every solid face touching void, all six directions), **one heat rule** (a face's heat depends on
+where the face is) and **one area rule** (a staircase sums to the area of the smooth surface it stands for). It also
+**deletes six settings no live deck uses**. Default off; tested on Höser, where the cavity must bulge under the flange
+from Ø40 to ~Ø73 over 120 s (Fig. 5.10, 47 MPa). Heat uptake is an OPEN PROBLEM (`ROADMAP.md`): the uptake level is a
+stated input set from her measured 30 s volume; widths, depths and later volumes are predictions.
+⚠ Her 47 MPa load is not modelled; the level stands in for it (a miss may be the load, not the geometry).
+⚠ P2-7 review carry-forwards (`ARCHIVE_DONE.md` *"P2-7"*): a linearity row names its power axis (DR-4); face
+temperature is read from `T_surf_field` (DR-6).
+**Rev 3 (2026-10-26).** The first L0 run widened the hole under the flange (Ø48.5 vs 39.7 mm, energy exact, isotropic)
+but stopped at b2: 7.79 % of faces fell back to w = 1, ALL of them one-cell PLATES — the flange-covered surface layer,
+which cannot break (lidded +z face; the transitional rule keeps column-top cells out of the lateral criterion), left as a
+roof over the undercut (`studies/p2_8_face_list/FALLBACK.txt`: 116 cells, r 19–24 mm, k 146–149). A plate has gas on
+both sides, so its normal is undefined and w = 1 (both faces real) is the CORRECT area. The ≤ 1 % bar was a planner
+error. The roof itself is an artefact of the transitional rule (it holds the mouth near Ø41 against her ~Ø46) and is
+retired with it in P2-9; here it is censused (b2, d4), not fixed. P1's shape clause (r17.5/axis below 0.643) is already
+refuted by the diagnostic c1 (0.700); the prediction stands as registered and is scored as a miss.
+**Plan of record** (the user's, 2026-10-26): P2-8 face list + heat + area + deletions → P2-9 one breaking rule along each
+face's direction (retires the vertical/sideways split and this step's one transitional rule) → P2-10 Meier on the face
+list, face list default ON, delete the 9 group-B settings and the old side-face paths → the MMW case.
+
+### Sources (opened 2026-10-26)
+
+- **Höser 2016** `franck_material/hoser.pdf` p. 117, Fig. 5.10 (47 MPa, 38 kW, L 8), re-read from the page image (log
+  `Claude_markdowns/2026-10-26.md` §6): axis depth **18 / 31 / 48 / 61 / 77 mm**, max Ø **40 / 47 / 56 / 64 / 73 mm**
+  (±2 mm read) at **15 / 30 / 60 / 90 / 120 s**; mouth ≈ Ø46; "dL/dt = 1.8 dD/dt". Volumes (`validation/hoeser/
+  hoeser_2016_drilling_series.csv`, rows `time`): **16.0 / 33.0 / 81.0 / 135.0 cm³** at 15 / 30 / 60 / 90 s.
+- **Base leg** `tests/MMWSpalling/studies/whatif_uptake/legs/s100/argv.sh` (P2-7 HG; h_expr constant `727.239580`;
+  150 mm block, 1 mm, dt 0.008). Outputs: `run_removal_events.csv` md5 `58cb6ab598461b0af7e6fb5cbb60bec8`,
+  `run/thermo.dat` md5 `9fc066b02910cee89b03d7a0c557b0c1`; 13.048 cm³ (×4).
+- **The settings audit** (log §7): live decks = Höser `p2_7_hoeser_heat/legs/HG`, Meier `p2_4_body/legs/S0`.
+  - **Group A — delete now** (default in every live deck; used only by unit tests): `side_face_factor` (1.0;
+    `side_face_area`, `side_face_flux`, `side_face_step_height`, `wall_march`), `side_face_r_min` (0; `side_face_area`),
+    `side_face_area_exact` (0, with `RiserWeight` `MMWSpalling.H:4540`; `side_face_area`, `side_face_step_height`),
+    `side_face_closure` (`follow`; `cell` appears only in an abort test: `lateral_drive`, `lateral_flux_lock`),
+    `side_face_h_max` (80; acts only under `spall.per_cell_removal=1`, set by no deck or input; `lateral_drive`,
+    `lateral_flux_lock`), `side_face_h_scale` (1.0; a tuning multiplier on the derived law; no test).
+  - **Group B — not read under the face list; deleted in P2-10**: `side_face_h`, `side_face_T`, `side_face_h_r_min`,
+    `side_face_h_law`, `side_face_h_datum` (+ `WJ_R_SHIELD`), `side_face_factor_above`, `side_face_area_law`,
+    `side_face_step_height`, `side_face_staircase`. **Keep**: `side_power_interval` (output), `side_face_flux`.
+- **Code** (as read 2026-10-26; step zero re-resolves): column-top face in the kernel `MMWSpalling.H:~2305–2325`
+  (`SurfaceCellFlux(in_patch, sp_face, surf_c, fh[col], fTg[col], …, SurfaceRobinT(col))`); side faces at five sites:
+  KERNEL :2361–2420 (+ step-height block ~:2437), MARCH slot builder :3290–3378, MARCH side term :3524–3580, LEDGER
+  :4878–4935, LATERAL criterion `Removal.H:587–760` (exposure from `k_top` differences `rn[]`; column-level h/T incl.
+  the `q_net_l` line). `BuildFlameColumns` :2561 (`flame_s[c] = z_n − z_top`; `flame_h[c] = h_f(x,y,r,s,t)`).
+  `StaircaseFactor` :9739 is today's 2-D, riser-height version of the area rule below. `k_top` = highest solid cell
+  (:7589); overhangs persist. Tree gate `tests/MMWSpalling/studies/tree_sweep_0922/witness/guarded_post_all_par.sh`,
+  reference `p2_2e.md5`, controls `d2aa` (26) / `d2t` (863).
+
+### Goal
+
+1. **Delete group A** (first binary). Remove each parse, member, branch and helper (`RiserWeight`, `SideTForm::CellAvg`,
+   the `side_hmax` cap at every site, `side_r_min2`, `side_f`, `side_face_h_scale`'s multiply); behaviour is each key's
+   default. Remove or re-pin the unit-test legs that set a non-default value, listing every changed manifest path in
+   `GATE_a2_DECLARED.txt` BEFORE the sweep. Add the six to `lateral_flux_lock`'s retired-key block (a run per key that
+   must abort, `stop_time=0`; standing rule 1: only a run proves a key is gone).
+2. **Key `surface_patch.face_list`** (int, default 0; second binary). With it on:
+   - **F1 the list.** Each step, after the column tops: every face between a SOLID cell and a VOID cell in ±x, ±y, ±z,
+     inside the patch, per cell from `removed_mf` (domain boundaries are not faces). Each entry: cell, direction,
+     face-centre position, column c, area weight w. Built ONCE per step and read by every consumer below.
+   - **F2 heat.** For every face: h = `h_f(x_f, y_f, r_f, s_f, t)` at the FACE CENTRE (s_f = z_n − z_f), × the pad-shield
+     factor where `BuildFlameColumns` applies it, 0 where s_f ≤ 0 unless `jet_above_h`; T_gas = `flame_Tg[c]`. For the
+     column-top +z face this reproduces today's `flame_h[c]` exactly (s_f = `flame_s[c]`). Group B is not read
+     (one log line names any group-B key the deck sets; no abort, so a control differs by this key only).
+   - **F3 area.** w = 1 / (|n̂x| + |n̂y| + |n̂z|), n̂ the unit outward normal from the central-difference gradient of the
+     solid indicator over the cell's 3×3×3 neighbourhood (`Numeric` stencils; `removed_mf` ghosts). Zero gradient ⇒
+     w = 1, counted. A flat floor gives w = 1 exactly; a 45° staircase gives 1/√2 per face, summing to the plane's area.
+   - **F4 thermal form.** The column-top +z face keeps today's surface-form path (`SurfaceRobinT`, P0b), × w. Every other
+     face uses the face-Newton form (today's 7a), × w. ⚠ The ONE transitional rule of this step, retired by P2-9.
+   - **F5 consumers.** Kernel, ledger and march read F1–F4 (the march bills each face to its column's radial bin). The
+     lateral criterion takes exposure from the list (an axis is open where the face exists) and h/T from F2, incl.
+     `q_net_l`; it evaluates lateral faces of cells BELOW their column top (the vertical criterion owns the column-top
+     cell — the same transitional rule as F4).
+   - Key off: every site runs its current code.
+3. **Diagnostics** (key on only): thermo per direction class — top (+z of the column top), up (other +z), side (±x/±y),
+   down (−z) — `fl_n_<class>` (faces) and `fl_P_<class>` (W, kernel); `fl_P_march` (W billed); `fl_w_fallback` (faces
+   with w = 1 by fallback); `fl_lat_top` (lateral firings on column-top cells, must be 0). Plotfile `fl_w` (Σ w over the
+   cell's faces) and `fl_h` (the cell's largest face h).
+4. **Tests.** Extend `unit/lateral_flux_lock` (one list builder, one heat resolver, one weight function, each declared
+   once and called at all five sites under the key; retired keys). New `unit/face_list` (input + test, cavities built
+   with `spall.seed_void`, checks in a4).
+5. **Study** `tests/MMWSpalling/studies/p2_8_face_list/`: `lid_check.py` (a1), `run_p2_8.py` (base argv token for token,
+   keys replaced in place, `argv.sh` + `DROPPED.txt` per leg, `--probe`, asserts `caffeinate -dis`), `reduce_p2_8.py` →
+   `RESULTS.txt` (per leg and plotfile: volume ×4 from the event log AND the void mask; axis depth; r17.5/axis depth
+   ratio; max Ø over depth; Ø by 30° sector at 5/10/30/50 mm; mouth Ø; lateral share of volume; overhang count = void
+   cells with solid directly above; direction census; ledger and identity rows), `TARGETS.txt`.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | item | where | what decides it |
+|---|---|---|---|
+| L1 | the lid under face-centre evaluation | h_expr `if((r>0.02)and(s<T),0.001,…)`: original-surface +z faces have s = 0.0632; the shallowest side-face centre is 0.0632 + dz/2 | base `T = 0.0637` TIES at 1 mm and lids side faces at 0.5 mm ⇒ every leg uses **`s<0.0633`** (a1); inert with the key off (b1) |
+| L2 | group A truly dead in live decks | HG, S0 argv | none sets a non-default value (audit); a2's declared set lists only unit-test paths |
+| L3 | the list sees undercuts | per-cell `removed_mf`, not `k_top` differences | `fl_n_side` grows past the first column; max Ø > 42 mm (c1); `fl_n_up`/`fl_n_down` > 0 once an overhang forms (d4) |
+| L4 | one source for all consumers | F1–F3 called by kernel, ledger, march, criterion | lock (a3); power identity per row (b2) |
+| L5 | the floor unchanged where it should be | flat floor: w = 1, F2 = `flame_h[c]` | L0's step-1 `patch_P_robin` equals K0's printed value (b2) |
+| L6 | criterion reach | `lateral_drive/removal/subcell/thermal=1`, `robin_form=surface` in the base | lateral share > 0 (c1) |
+| L7 | nothing above the plane on Höser | nozzle 63.2 mm above the rock | `flame_s > 0` everywhere; F2's s_f ≤ 0 branch unreached |
+
+### Legs (base = `whatif_uptake/legs/s100/argv.sh`; ONLY these keys replaced, plus `plot_file`)
+
+Every leg's `surface_patch.h_expr` = `if((r>0.02)and(s<0.0633),0.001,C*533/(533+44*pow(r/0.0079,1.285))*pow(0.0632/max(0.0632,s),1.3185305455))`
+— the base's string with the lid edit (L1) and its constant replaced by C.
+
+| leg | C (= S × 7272.3958) | other keys | stop / plot_int |
+|---|---|---|---|
+| K0 | 727.239580 | — | 30 / 3750 |
+| L0 | 727.239580 | `surface_patch.face_list=1` | 30 / 3750 |
+| L0c | 727.239580 | L0 + `amr.n_cell=25 25 75` | 30 / 1875 |
+| L0f | 727.239580 | L0 + `amr.n_cell=100 100 300` `timestep=0.004` `amr.max_grid_size=50` | 30 / 7500 |
+| C15 / C20 / C25 | 1090.859370 / 1454.479160 / 1818.098950 | L0's key | 30 / 3750 |
+| P47 | C* = S* × 7272.3958 | L0's key | 120 / 1875 |
+| P47off | C* | — | 120 / 1875 |
+
+**S\* rule (d1):** interpolate log V(30 s, ×4) vs log S between the bracketing pair of C15/C20/C25 to V = 33.0 cm³; round
+to 4 decimals. Outside ⇒ add ONE point (S 0.10 or 0.30) and repeat; still outside ⇒ stop, report.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a1 | 1 | `lid_check.py` at dz 2 / 1 / 0.5 mm: original-surface +z face vs the shallowest side-face centre against 0.0633 | +z face lidded; side face not; margin ≥ 0.1 mm every mesh | **gate** | the lid shades faces the step exists to heat |
+| a2 | 2 | binary 1 (deletions): tree gate vs `p2_2e.md5`; retired-key runs; lock | changed paths ⊆ `GATE_a2_DECLARED.txt` and nothing else; controls 26 / 863; all six retired keys abort; lock PASS | **gate** | a "dead" setting was live somewhere, or the deletion changed behaviour |
+| a3 | 2 | binary 2 (face list, key default): tree gate vs a2's manifest; extended lock | 0 changed of 2639; lock PASS | **gate** | the key leaks at 0 |
+| a4 | 2 | `unit/face_list`: (i) every face found in all six directions on a seeded cavity with an overhang, counts = the analytic census; (ii) h = h_f(face centre), rel ≤ 1e-12; (iii) w = 1 exactly on a flat floor, Σ w·dx² within 2 % of the plane's area on interior faces of a seeded 45° staircase; (iv) key off byte-identical | all | **gate** | F1–F3 are not what the packet specifies |
+| a5 | 2 | `--probe` all legs | rc 0; `alamo.program` the only unused key | **gate** | a leg does not run what it names |
+| b1 | 3 | K0 vs `whatif_uptake/legs/s100` | event CSV and thermo md5 as in Sources | **gate** | the lid edit or a deletion moved Höser with the key off — every comparison is void |
+| b2 | 3 | L0 witnesses (RE-SCORED from the existing run): step-1 `patch_P_robin` = K0's (printed token); power identity `jet_P_face` vs kernel per row ≤ 1e-9 relative; `ledger_err_solid` max ≤ 5e-3; `fl_lat_top` = 0 every row; fallback faces EXCLUDING plates ≤ 1 % of faces (a PLATE = a fallback cell whose ±z neighbours are both non-solid); plates reported as count, faces, share, r and k range | all | **gate** | the floor moved where it must not, energy is not conserved, the transitional rule leaks, or the normal fails on a real surface (not a plate) |
+| b3 | 4 | L0c (2 mm) vs L0 (1 mm): volume; max Ø | within 15 %; within 4 mm | **gate** (protects L0f and the 47 MPa legs) | the staircase cascade (∝ 1/dx, D2j-0b) is back |
+| c1 | 4 | L0 vs K0 at 30 s: max Ø; volume ratio; lateral share; axis depth ratio; r17.5/axis ratio | report with magnitudes | **report** | see P1 |
+| c2 | 4 | L0 Ø by 30° sector at 5 and 10 mm | spread ≤ 3 mm | **report** | a grid-diagonal artefact |
+| c3 | 5 | L0f (0.5 mm) vs L0 | volume ≤ 5 %; max Ø ≤ 2 mm; axis depth ≤ 1.5 mm | **report** | not converged at 1 mm; P47 is a 1 mm result |
+| d1 | 6 | S* by the rule | interior (≤ 1 extension) | **gate** | the level cannot be matched — stop before the 120 s legs |
+| d2 | 7 | P47 vs Höser at 15 / 30 / 60 / 90 / 120 s: volume (15/60/90), axis depth, max Ø, mouth Ø | the table; see P4 | **report** | see P4 |
+| d3 | 7 | P47off max Ø at every plotfile | ≤ 41 mm | **report** | widening without the key ⇒ attribution void |
+| d4 | 7 | P47 at 120 s: ledger; identity; sector spread at 30 / 50 mm; overhang count; direction census; PLATE census at every plotfile (cells, faces, share, r/k range) and non-plate fallback share; `lat_shift_refuse`, `lat_orphan_n` | ledger ≤ 5e-3; identity ≤ 1e-9; spread ≤ 3 mm | **report** | bookkeeping or isotropy fails at scale |
+| e1 | 8 | verdict | — | **verdict** | Whether one surface description widens the hole under the flange (c1, d3), converges (b3, c3) and matches the 47 MPa growth (d2, incl. depth/diameter growth vs her 1.8); which group-B settings P2-10 can delete; what P2-9 must change |
+
+### Pre-registered predictions
+
+- **P1 (c1):** max Ø 42–50 mm (K0 ≤ 41); volume L0/K0 0.95–1.50; lateral share 8–35 %; axis depth ratio 0.90–1.10;
+  r17.5/axis BELOW K0's 0.643 (0.50–0.64), because F3 removes the riser over-count that flattened the floor (G8).
+- **P2 (c3):** inside the c3 bars.
+- **P3 (d1):** S* 0.16–0.24.
+- **P4 (d2):** V60/V30 1.8–2.6 (hers 2.45); V90/V30 2.5–4.3 (hers 4.09); axis depth at 120 s 55–85 mm (hers 77); max Ø at
+  120 s 55–80 mm (hers 73); depth growth / diameter growth over 15→120 s 1.2–3.0 (hers 1.8); mouth stays Ø40 (the
+  flange-covered +z faces are lidded and the vertical criterion owns those cells). "Shape agrees" = max Ø within ±6 mm
+  at 60/90/120 s AND axis depth within ±15 % at every time.
+- **P5 (d3):** P47off ≤ 41 mm throughout; P47 − P47off ≥ 10 mm at 120 s.
+
+### What would make this inert — witness each
+
+- The lid shading side faces — a1, `fl_h` on the first undercut cells.
+- Exposure still column-based anywhere — L3: max Ø stuck at 41–42 with `fl_n_side` flat.
+- A consumer reading its own h/T/area — the lock (a3), the identity (b2).
+- F4's transitional rule starving the rim (column-top cells never fire laterally) — reported in c1/d2; P2-9 removes it.
+
+### Guardrails
+
+- `face_list` default 0; at 0 the only behaviour change of this step is group A's deletion, confined to its declared set.
+- Group B stays in the code, read but unused under the key; it is deleted in P2-10, not here. No Meier leg; no change
+  above the nozzle plane, to the pad shield, the wall march or any Meier deck.
+- Nothing tuned except S*, by the d1 rule, on her 30 s volume.
+- Frozen studies older than P2-4 that set a group-A key can no longer be re-run on the new binary; their results stay
+  quotable from their recorded binaries (standing rule 9).
+- ×4 on volume and energy (SR 3); event-log `k_top` is pre-removal (SR 4); never sum per-step thermo (SR 7);
+  `caffeinate -dis`, `-np 4`, legs serial, `.done` sentinels.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_8_face_list
+B="EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8"
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness
+$PY $S/lid_check.py                                                     # ord 1: a1
+eval $B && bash $W/guarded_post_all_par.sh p2_8_del                     # ord 2: a2 (deletions; ~5 min)
+eval $B && bash $W/guarded_post_all_par.sh p2_8                         # ord 2: a3 (face list, key 0)
+$PY tests/MMWSpalling/unit/lateral_flux_lock/test && $PY tests/MMWSpalling/unit/face_list/test   # a2-a4
+caffeinate -dis $PY $S/run_p2_8.py --probe ALL                          # a5
+$PY $S/reduce_p2_8.py GATE                                         # ord 3: b1, b2 RE-SCORED (legs K0/L0 exist)
+caffeinate -dis $PY $S/run_p2_8.py L0c && $PY $S/reduce_p2_8.py MESH   # ord 4: b3, c1, c2
+caffeinate -dis $PY $S/run_p2_8.py L0f                                  # ord 5: c3 (~20 min)
+caffeinate -dis $PY $S/run_p2_8.py C15 C20 C25 && $PY $S/reduce_p2_8.py SSTAR   # ord 6: d1
+caffeinate -dis $PY $S/run_p2_8.py P47 P47off && $PY $S/reduce_p2_8.py > $S/RESULTS.txt   # ord 7-8
+```
+
+### Claude completion notes
+
+**Files.** `src/Integrator/MMWSpalling.H` and `src/Integrator/MMWSpalling/Removal.H` (pre-change copies in
+`studies/p2_8_face_list/src_pre/`).
+- **Binary 1** (`757aec90…`): group A deleted.
+- **Binary 2** (`f4c27b27…`, ships): `surface_patch.face_list`. It adds `FaceEntry`, `BuildFaceList` (F1+F3),
+  `FaceListHeat`/`FaceH` (F2), `FaceWeight` (F3), `FaceListFlux` (F4) and `FaceListDiagnostics`.
+- **Key-on edits** at the kernel, the march (`q_col`, with no slot gather), the ledger, the criterion, the
+  `BuildFlameColumns` call order and the wall-law state.
+- **Thermo:** `fl_*` columns plus two DOUBLE identity residuals, `fl_id_march`/`fl_id_ledger`, added because %g
+  cannot resolve 1e-9. Plotfile: `fl_w`, `fl_h`. All registered last and only under the key.
+
+**Tests.**
+- New: `unit/face_list/` (`make_input.py`, `input`, `test`).
+- Edited: `unit/lateral_flux_lock` (cap/closure clauses restated as deleted; P2-8 face-list clauses; six
+  retired-key aborts plus a live control); `unit/side_face_flux`, `unit/side_face_area` (retired to ON plus
+  retired-key aborts), `unit/side_face_step_height`, `unit/lateral_drive`.
+
+**Study** `studies/p2_8_face_list/`: `lid_check.py`, `run_p2_8.py`, `reduce_p2_8.py`, `fallback_census.py`,
+`TARGETS.txt`, `GATE_a1/a2/a2_DECLARED/a3/b.txt` (`GATE_b_rev2.txt` = the rev 2 FAIL, archived), `MESH.txt`,
+`FALLBACK.txt`, `SSTAR.txt` (+ `SSTAR_ord6_unbracketed.txt`), `C3_PARTIAL.txt` + `c3_partial.py`, `RESULTS.txt`,
+`RUN_ord3/4/5_7/7.log`, `baseline/`, `bin1/`, `bin2/` (unit logs), `probe/`,
+`legs/{K0,L0,L0c,L0f (aborted),C15,C20,C25,P47,P47off}`.
+- **Rev 3 harness change (declared):** `reduce_p2_8.py` SSTAR reads the rule's S 0.10 extension point from `legs/L0`.
+  S 0.10 × H0G = `BASE_C`, so C10 is L0 (asserted token for token on the argv, same binary); it was not rerun.
+
+| # | measured | result | output |
+|---|---|---|---|
+| a1 | +z face lidded with margin 0.100 mm at 2/1/0.5 mm; shallowest side face heated with margin 0.900/0.400/0.150 mm; the base `s<0.0637` ties at 1 mm and lids at 0.5 mm | **PASS** | `GATE_a1.txt` |
+| a2 | 0 of 2639 changed (declared set: none); controls 26 / 863; six retired keys ABORT naming the key; lock rc 0 | **PASS** | `GATE_a2.txt` |
+| a3 | binary 2 key-off: 0 of 2639 changed vs a2 and vs `p2_2e`; controls 26 / 863; extended lock rc 0 | **PASS** | `GATE_a3.txt` |
+| a4 | census 144/11/88/11 = analytic, six directions; Σw per cell exact (232 cells); h at face centre rel 1.7e-16; flat w ≡ 1; 45° Σw·dx² = plane (rel 0); key 0 ≡ unset | **PASS** | `bin2/face_list.log` |
+| a5 | 9/9 probes rc 0, only `alamo.program` unused (P47/off with S 0.20 as stand-in) | **PASS** | `probe_run.log` |
+| b1 | K0 event CSV `58cb6ab5…` and thermo `9fc066b0…`, = packet = s100 | **PASS** | `GATE_b.txt` |
+| b2 | (RE-SCORED, rev 3) step-1 `patch_P_robin` 291.116 = 291.116; identities 1.95e-14 / 1.95e-14; `ledger_err_solid` 1.24e-4; `fl_lat_top` 0 on 624 rows; `fl_h_top_mismatch` 0; plates 116 cells / 276 faces (7.91 % of 3,488), r 19.1–24.4 mm, k 146–149; **non-plate fallback 0 (0.000 %)** | **PASS** | `GATE_b.txt` |
+| b3 | L0c / L0 volume 21.120 / 18.728 cm³ = 12.8 % apart; max Ø 49.1 vs 48.5 mm (0.6) | **PASS** | `MESH.txt` |
+| c1 | max Ø **48.5** vs K0 39.7 mm; V L0/K0 **1.435**; lateral share 18.8 %; axis ratio 1.071; r17.5/axis 0.700 vs K0 0.643 | report (P1: 4 of 5 in range; r17.5/axis MISSED, above K0 not below) | `MESH.txt` |
+| c2 | L0 sector spread 0.84 mm at 5 mm, 1.02 at 10 mm | PASS (report) | `MESH.txt` |
+| c3 | **unscoreable**: L0f aborted rc 6 at t = 27.296 s (`Removal.H:3231`, spall removal voided 2 of 3 cells at column (29,34)); no 30 s plotfile. Diagnostic only: event-log volume L0f/L0 −1 = +5.7 / +3.4 / +1.5 / **+1.0 %** at 15/20/25/27 s (L0c/L0 +11.8 % at 27 s); Ø and axis depth not available | not scored (P2 untested) | `C3_PARTIAL.txt`, `legs/L0f/run.log` |
+| d1 | C15/C20/C25 V(30 s) 43.468 / 73.304 / 104.812 cm³ all above 33.0 ⇒ one extension, S 0.10 (= L0) 18.728; bracket C10–C15; **S\* = 0.1314** (C\* 955.592808) | **PASS** (P3 0.16–0.24 MISSED) | `SSTAR.txt` |
+| d2 | V model/hers 11.84/16.0, 33.21/33.0, 96.62/81.0, 176.84/135.0 at 15/30/60/90 s; axis −38.9 / −35.5 / −27.1 / −24.6 / −28.6 % at 15/30/60/90/120 s; max Ø Δ +4.9 / +9.4 / +19.6 / +27.0 / **+33.5 mm** (106.5 vs 73 at 120 s); mouth 39.9 to 90 s, **79.3 at 105–120 s**; V60/V30 2.91 (hers 2.45), V90/V30 5.32 (4.09); depth/diameter growth 15→120 s **0.71** (hers 1.79) | **SHAPE DOES NOT AGREE** (P4: only axis at 120 s, 55 mm, inside its range, at the edge) | `RESULTS.txt` |
+| d3 | P47off max Ø 39.9 mm at all 8 plotfiles; P47 − P47off at 120 s 66.6 mm | PASS (P5 both met) | `RESULTS.txt` |
+| d4 | `ledger_err_solid` 3.04e-4; identities 1.88e-14 / 2.41e-14; sector spread 0.10 mm at 30 mm, 0.81 at 50 mm; overhangs 1,824; census top 2500 / up 1824 / side 3693 / down 1824; plates 45 → 1,749 cells (2.9 → **36.4 %** of faces), r 17.3–54.4 mm, k 105–149; non-plate fallback 0 at every plotfile; `lat_shift_refuse` sampled max 12, sum 8,332; `lat_orphan` sampled max 2, sum 46 | PASS on all three bars | `RESULTS.txt` |
+| e1 | see below | verdict | — |
+
+**e1 verdict.**
+- **Widens the hole under the flange: YES, and the key owns it.** +8.8 mm max Ø at 30 s (c1). With the key off the
+  hole stays at 39.9 mm for all 120 s; with it on, 106.5 mm (d3).
+- **Converges: at 2 mm vs 1 mm, yes (b3). At 0.5 mm, not scored.** L0f aborted at 27.3 s (c3). Up to then its volume
+  tracked L0 to within 1.0 %, and the gap shrank over time. That is a diagnostic, not the row.
+- **Matches the 47 MPa growth: NO.** At the matched 30 s volume (33.21 vs 33.0), the hole is too wide and too shallow
+  and diverges with time. By 120 s, max Ø is +33.5 mm and the axis is −29 %. Depth grows 0.71× as fast as diameter;
+  hers grows 1.79×. The lateral share rises from 35 % at 30 s to 75 % at 120 s.
+- **Group B for P2-10:** all nine settings are unread under the key on every key-on leg. The parse message names the
+  8 that the base deck sets; `side_face_factor_above` is not set there. Removing them changes nothing the key
+  computes. Making the key the default is a separate question, and d2 says not yet.
+- **What P2-9 must change:**
+  1. **Vertical removal through a roof over a void.** The flake depth scan and the remap assume a solid column below
+     the top cell. L0f aborted when a roof cell's 3-cell flake crossed a laterally voided cell.
+  2. **The one-cell roofs themselves** (36 % of faces by 120 s, out to r 54 mm). This is the transitional rule's
+     product. When those roofs break, the mouth opens (79.3 mm at 105 s), against P4.
+  3. **The sideways/downward balance.** The undercut runs ahead of the floor.
+
+### Implementation takeaways
+
+1. **b2's fallback bar cannot hold under this packet's own rules.** The lid (+z of the original surface), the
+   transitional rule (the criterion skips the column-top cell) and the central-difference normal together make
+   every undercut leave a **one-cell roof**. Its indicator gradient is zero by construction: gas above, void
+   below, solid on both sides.
+   - On L0 at 30 s, **all** 116 zero-gradient cells are such plates (`FALLBACK.txt`, independent rebuild):
+     r 19–24 mm, k 146–149, 276 faces.
+   - The count grows with the bulge, so P47 would be far over 1 %.
+   - w = 1 is the right area for a plate: both faces are real.
+
+   ⇒ **/plan decides**: drop or rescope the bar (exclude plates), give plates a rule of their own, or have P2-9
+   remove the roof by letting the top cell break along its −z face. Nothing was tuned to pass it.
+   **Rev 3 rescoped it (plates excluded).** Non-plate fallback is 0 on L0 and at every P47 plotfile, so the
+   diagnosis held at scale.
+2. **Face-list semantics fixed here, not in the packet:**
+   - the domain's +z boundary is open gas (the original surface is a face); the other domain boundaries are not
+     faces;
+   - out-of-domain indicator ghosts: above the top = 0, elsewhere the nearest in-domain cell (a mirror at the
+     symmetry planes);
+   - w is per CELL, applied to each of its faces;
+   - the criterion's normal is F3's horizontal part. A cell with only lateral faces and a vertical normal falls
+     back to the open-face count (`fl_lat_nfb`, 0 on L0).
+3. **The list is built in `AdvanceMicrostructure` before `BuildFlameColumns`, and h is filled inside it before
+   the march.** The criterion runs BEFORE the kernel within `Advance`, so it reads the previous step's list on an
+   unchanged mask. It is skipped on step 1, when no list exists yet.
+4. **Group B under the key is truly unread**:
+   - the old kernel and ledger side blocks, `StepConductance`, `UpdateColumnPhase` and `UpdateWallLawState`
+     (state cleared);
+   - `WallStepDiagnostic`, the march's slot gather and the criterion's `side_face_h`/`SideFaceH`/`r_min` scope
+     are all off;
+   - one log line names the group-B keys the deck set (8 on the base);
+   - the key aborts with `jet_wall_march`, a non-surface Robin form, no `h_expr`, or `follow_mask` off.
+5. **Pre-existing failure, not this step's:** `unit/lateral_drive` fails one check ("gap MONOTONE DECREASING
+   with ell/dz") identically on the pre-change binary `9f5aa6de`, binary 1 and binary 2 (`baseline/`, `bin1/`,
+   `bin2/`).
+6. **Meier's live deck S0 sets `surface_patch.side_face_h_scale=1.0`** (the default), and that token now ABORTS at
+   parse. Drop the token before any P2-10 rerun; behaviour is unchanged. The packet's guardrail named only decks
+   "older than P2-4".
+7. **L0c needs `amr.blocking_factor=1`** (25 is not a multiple of 2; it is declared in `run_p2_8.py` and the
+   leg's `DROPPED.txt`). `weibull.V0` is correctly left at 1e-9 on every mesh: it is the calibration volume, so
+   the per-cell flaw scales mesh-objectively. P2-5's ×8 was the opposite choice.
+8. **c1 already contradicts P1's shape claim.** L0's r17.5/axis is 0.700, ABOVE K0's 0.643. The undercut adds
+   lateral volume at the rim (18.8 %) but does not deepen the bowl's flanks. Report only; the gate stopped the
+   step.
+9. **L0f's abort is a face-list ↔ vertical-removal interaction, not a phi tie.** The abort message blames a phi tie
+   (`Removal.H:145-148`); the event log says otherwise. Column (29,34), r ≈ 22.7 mm under the flange:
+   - at t = 27.004 s, a regime-6 lateral firing voided k = 298 below k_top 299, leaving a one-cell roof;
+   - at 27.296 s, the roof fired vertically with a 3-cell flake. One crossed cell was already void, so the count
+     check (`inc_nvoid != nvoid_pred`) saw 2 for 3.
+
+   The remap's index shift assumes the same contiguous solid column. At 0.5 mm, roofs fire vertically far more often
+   (99 regime-1 firings at r > 20 mm on L0f vs 10 on L0), so the abort is mesh-sensitive. P47 at 1 mm ran 120 s
+   without it. Not fixed: it needs a src change, so a new binary and a re-gate; P2-9 territory.
+10. **Late near-surface anisotropy.** On P47, the Ø sector spread at 5 and 10 mm depth is ≤ 1.9 mm through 90 s, then
+    5.7–7.0 mm at 105–120 s, the same time the mouth opens. d4 scores spread at 30 and 50 mm at 120 s: 0.10 and 0.81 mm.
+    Earlier the 30 mm level stays ≤ 1.6 mm, but the 50 mm level read 3.91 mm at 105 s, when the floor had just
+    reached it. This is a roof-breaking effect, so it belongs with P2-9's item 2.
+11. **S\* below P3.** At 30 s, the key's extra side heat (V L0/K0 1.435 at the same S) is spent at a lower level.
+    The d1 rule absorbed it as written. P47 reproduces the target, 33.21 vs 33.0 cm³.
+12. `lat_shift_refuse` (sampled sum 8,332) is reported as the packet asks; I did not diagnose it. These are per-step
+    counters sampled every 6 steps, so the sums are not totals (SR 7).
+
+### Review findings
+
+Re-derived independently: **both tree manifests** diffed with my own comparator; the
+**group-A audit** by grepping every `input*` under `tests/`; **b1** by my own `md5`/`cmp`;
+**d1's S\*** from the three ladder volumes; **every leg volume** from an `n_voided` census
+with `V_cell` parsed per leg; the identity, ledger and fallback witnesses from each
+`thermo.dat`; **a1's lid margins** from the h_expr threshold; and the abort's mesh
+sensitivity by counting firings at r > 20 mm on L0 vs L0f.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a1 | +z lidded, side not, margin ≥ 0.1 mm | PASS | +z face s = 0.06320 lidded at **every** mesh, margin **0.100 mm**; shallowest side face **0.900 / 0.400 / 0.150 mm** clear at 2/1/0.5 mm. The base 0.0637 **does** tie at 1 mm and lid at 0.5 mm — L1's defect is real | own arithmetic vs `GATE_a1.txt` | **PASS (gate)** |
+| a2 | changed ⊆ declared; controls 26/863; six keys abort; lock | PASS | **0 of 2639** vs `p2_2e` (my own diff), controls **26 / 863**; all **six** keys ABORT at their former defaults, each naming the key (`bin2/lateral_flux_lock.log:242-253`); the only mentions of a group-A key in any `input*` are **comments** (`unit/side_face_area/input:9-10`) ⇒ no deck set one | own manifest diff + grep | **PASS (gate)**, see DR-2 |
+| a3 | 0 of 2639 key-off; lock | PASS | **0 of 2639** vs both `p2_2e` **and** binary 1; controls 26/863. K0 and P47off carry **no `fl_*` column at all** | own diff; `legs/*/run/thermo.dat` | **PASS (gate)** |
+| a4 | census, h rel ≤ 1e-12, w exact, key off identical | PASS | `FaceWeight` matches F3 exactly: flat floor L1 = 1 ⇒ w = 1; 45° L1 = √2 ⇒ w = 1/√2. For a unit normal L1 ∈ [1,√3] ⇒ **w ∈ [0.577, 1] bounded by construction** | `MMWSpalling.H:4633-4641` | **PASS (gate)** |
+| a5 | 9/9 rc 0 | PASS | 9 legs present with `argv.sh` + `DROPPED.txt`; probe log rc 0, `alamo.program` only | `probe_run.log` | **PASS (gate)** |
+| b1 | md5s as in Sources | PASS | **`58cb6ab598461b0af7e6fb5cbb60bec8`** and **`9fc066b02910cee89b03d7a0c557b0c1`** — my own md5, and `cmp` clean vs `s100`; V 13.048 cm³ | own `md5`/`cmp` | **PASS (gate)** |
+| b2 | step-1 P equal; identity ≤ 1e-9; ledger ≤ 5e-3; `fl_lat_top` 0; non-plate fallback ≤ 1 % | PASS (re-scored) | identities **1.95e−14 / 1.95e−14**; `ledger_err_solid` **1.24e−4**; fallback max **272 faces**, all plates; non-plate **0** | own max over `thermo.dat` | **PASS (gate)**, see DR-10 |
+| b3 | volume ≤ 15 %; max Ø ≤ 4 mm | 12.8 % / 0.6 mm | L0c **21.120** vs L0 **18.728** cm³ = **12.78 %**; max fired radius 24.70 vs 24.42 mm | own census | **PASS (gate)**, see DR-14 |
+| c1 | report | Ø 48.5 vs 39.7; V 1.435 | max fired radius **24.42 mm** (Ø 48.8) vs K0 **19.96** (Ø 39.9 — exactly the lid at r = 20 mm); V ratio **18.728/13.048 = 1.435**; lateral share **18.8 %** | own census | report — 4 of 5 in P1 |
+| c2 | spread ≤ 3 mm | 0.84 / 1.02 | not re-derived (needs the mask); artefact internally consistent with d4's 0.10/0.81 | `MESH.txt` | report |
+| c3 | volume ≤ 5 %; Ø ≤ 2 mm; depth ≤ 1.5 mm | unscoreable | L0f aborted; **regime-1 firings at r > 20 mm to 27.3 s: 9 (L0) vs 99 (L0f)** — the abort pathway is **11×** more frequent at 0.5 mm | own event-log census | **not scored**, see DR-13 |
+| d1 | interior, ≤ 1 extension | S\* 0.1314 | C15/C20/C25 **43.468 / 73.304 / 104.812**; bracket C10–C15, log-log slope **2.0766**, **S\* = 0.131363 → 0.1314**, C\* = **955.592808** | own arithmetic | **PASS (gate)** |
+| d2 | the table | SHAPE DOES NOT AGREE | P47 **265.348 cm³** at 120 s; max fired radius **54.37 mm** (Ø 108.7 vs their mask 106.5) | own census | **MISS**, and **provisional** — DR-11/12/13 |
+| d3 | ≤ 41 mm | 39.9 at all 8 | P47off max fired radius **19.96 mm = Ø 39.9**, lateral share **0.0 %** — the lid holds exactly | own census | PASS |
+| d4 | ledger ≤ 5e-3; identity ≤ 1e-9; spread ≤ 3 mm | PASS | ledger **3.04e−4**; identities **1.88e−14 / 2.41e−14**; `fl_w_fallback` max **3582 faces** | own max | PASS |
+| e1 | verdict | delivered | states the widening, the convergence gap, the shape miss, group B and three P2-9 items | notes §e1 | **delivered** |
+
+#### Diff review
+
+| # | hunk / call | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | group A deleted (6 parses, members, branches, `RiserWeight`, `SideTForm::CellAvg`, the caps) | 9 | every removal is witnessed by a **run** that aborts naming the key — SR 1's "only a run proves a key is gone", satisfied six times | **ok** |
+| DR-2 | a2's instrument | 2, 4 | ⚠⚠ **the 2639 sweep is blind to the deletions.** It covers `s1_surface_resolution/output_smoke`, eight unit tests (`beam_void_closure, jet_enthalpy, robin_face, robin_feet, robin_jet, robin_pinned, scalar_flaw, spall_event`) and `validation/meier/sp_meier_pilot` — **none** of `side_face_area/flux/step_height`, `lateral_drive`, `wall_march`, `lateral_flux_lock`. So "0 of 2639" cannot witness a group-A key being live. ✅ The implementer supplied exactly the missing evidence: `bin1/` vs `baseline/` on all six, rc 0 on four, and `lateral_drive`'s single FAIL **byte-identical in text** on the pre-change binary, binary 1 and binary 2. Fix a2's wording in the archive | **risk** |
+| DR-3 | the group-A audit | 7 | ✅ sound: I grepped every `input*` under `tests/`; the only mentions are **comments**. Behaviour is each key's default everywhere | **ok** |
+| DR-4 | `p2_4_body/legs/S0/argv.sh` | 9 | ⚠⚠ **the live Meier deck sets `side_face_h_scale=1.0` and that token now ABORTS** (verified). The guardrail scoped this to decks "older than P2-4"; S0 **is** P2-4 and is P2-10's control. Behaviour unchanged (default value), but the token must be dropped before any rerun — takeaway 6 | **risk** |
+| DR-5 | `FaceWeight` (`:4633-4641`) | 13 | the division is guarded (`!(gn > 0.0)` ⇒ w = 1, `fb = 1`) and, better, **bounded by construction**: a unit normal has L1 ∈ [1,√3] so w ∈ [0.577, 1]. No blow-up is reachable | **ok** |
+| DR-6 | F3 vs its spec | 3 | flat floor w = 1 exactly; 45° w = 1/√2 summing to the plane. Reproduced from the code, not the test | **ok** |
+| DR-7 | `fl_*` registration (`:1284-1326`) | 7 | inside `if (face_list)`, registered last — and I confirmed from `thermo.dat` that K0 and P47off carry **no `fl_*` column at all**, which is why a3 reads 0/2639 | **ok** |
+| DR-8 | `fl_id_march` / `fl_id_ledger` as DOUBLE columns | 6 | ✅ added **because `%g` cannot resolve a 1e−9 bar** — SR 7(iv) applied unprompted. Measured 1.9e−14–1.4e−13, five orders inside | **ok** |
+| DR-9 | the five key-on aborts + the group-B message | 7 | mode, `robin_form`, `h_expr`, `follow_mask`, `jet_wall_march` abort; group B gets a **message, not an abort**, so a control can differ by a group-B key alone — exactly F2's spec | **ok** |
+| DR-10 | b2's fallback bar, rescoped at rev 3 | **9 relaxed check** | the relaxation **is listed and authorised** (the rev-3 Context paragraph) and the reasoning is sound: a plate has gas above and void below, so its indicator gradient is zero by construction and w = 1 is the **correct** area for two real faces. The rescoped bar is not vacuous — non-plate fallback is **0** on L0 and at every P47 plotfile. Class 9 satisfied | **ok** |
+| DR-11 | the plates themselves | 12 | ⚠⚠ but the quantity the original bar proxied for — *is the surface physical?* — is now unmeasured. Plates are an artefact of F4's transitional rule and carry a **growing share of the heat**: my `fl_w_fallback` read goes **272 (L0) → 756 → 1196 → 1604 (C25) → 3582 (P47)**, i.e. with the cavity, reaching **36.4 % of faces** at 120 s. The energy identities only prove kernel = march = ledger, never that the surface is real | **risk** |
+| DR-12 | `d2`'s negative | 12 | ⚠⚠ **confounded, and should be provisional.** The max-Ø error grows **+4.9 → +33.5 mm** over 15 → 120 s, on the same timescale and in the same direction as the plate share, and the step itself declares the transitional rule temporary and retired in P2-9. d2 is not yet a verdict on the face list | **risk** |
+| DR-13 | `c3` / P47's resolution | 12, 13 | ⚠⚠ **P47 completed because 1 mm is under-resolved.** I counted regime-1 firings at r > 20 mm to t = 27.3 s: **9 on L0 vs 99 on L0f** — 11×. L0f aborted in exactly that pathway (`Removal.H:3231`). So c3 is unscoreable *because of a bug in the mechanism d2 depends on*, and **d2's Ø and depth have no convergence backing**: b3 covers only 2 vs 1 mm, and only volume and Ø, never depth | **risk** |
+| DR-14 | the mesh trend | 13 | ⚠ **non-monotone in volume**: 21.120 (2 mm) → 18.728 (1 mm) → +1.0 % at 27 s (0.5 mm). Consistent with converging from a coarse overshoot, but b3's 12.78 % sits close to its 15 % bar | **nit** |
+| DR-15 | `d2`'s framing | 2 | ⚠ the 30 s match is **by construction** (S\* was tuned to it by the d1 rule), so the 60/90 s volumes are the predictions — and they over-shoot by **+19 %** (96.62/81.0) and **+31 %** (176.84/135.0). The **volume** growth law misses independently of the shape; e1 leads with shape only | **nit** |
+| DR-16 | C10 ≡ L0 reuse (rev-3 harness change) | 5 | ✅ exact and declared: 0.10 × 7272.3958 = **727.23958** = L0's C, same binary, same `stop_time`. A legitimately saved run | **ok** |
+| DR-17 | `weibull.V0` = 1e−9 on every mesh | 3, 12 | ⚠ the **opposite convention to P2-5's ×8**, with a stated reason (V0 is the calibration volume, so the per-cell flaw scales mesh-objectively). It changes what b3 and c3 measure. Record which convention is canonical | **nit** |
+| DR-18 | `unit/lateral_drive`'s FAIL | 9 | not newly failing — the FAIL line is **byte-identical in text** on `baseline/`, `bin1/` and `bin2/`. Verified | **ok** |
+| DR-19 | L0c's `blocking_factor=1` | 7 | 25 is not a multiple of 2; declared in `run_p2_8.py` and the leg's `DROPPED.txt` — the same trap P2-5's 2 mm twin hit | **ok** |
+
+**Verdict: accepted.** All nine gating rows (a1–a5, b1–b3, d1) reproduce under independent
+derivation, and no diff-review row is tagged `bug` against a gating row or a standing rule.
+The one relaxed check (b2) is declared, authorised by rev 3, correctly reasoned, and its
+rescoped form still measures something and reads zero.
+
+**Carry forward:**
+1. **DR-12 + DR-13 together: label d2 provisional.** Its negative is confounded by the one
+   rule the step declares temporary, and it has no convergence backing for Ø or depth. The
+   sentence "the face list does not match her 47 MPa growth" is not yet earned; "the face
+   list *with the transitional rule* does not" is.
+2. **DR-13 is P2-9's first job** and it is more urgent than e1 implies: the roof/vertical-removal
+   interaction is **mesh-sensitive**, so it is a latent abort on every finer leg, not a curiosity.
+3. **DR-4** — drop `side_face_h_scale=1.0` from S0's argv **before** P2-10 starts, or its control aborts.
+4. **DR-2** — correct a2's wording so no future reader treats the 2639 sweep as covering the
+   deleted keys; the evidence is the `bin1`-vs-`baseline` comparison.
+5. **DR-17** — state the canonical `weibull.V0` mesh convention, since this step and P2-5 chose opposite ones.
+
+**Checked and clean:** no `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE` change;
+two binaries, both tree-gated at 0/2639 with live 26/863 controls; no Meier leg and no Meier
+number. SR 1 (a run per retired key), SR 3 (×4), SR 4, SR 7 (per-step counters reported as
+samples, not totals — takeaway 12) and SR 9 (frozen studies stay quotable from their recorded
+binaries) all honoured. **No unquotable number is quoted:** L0f's aborted leg is used only as a
+labelled diagnostic and never scored, P1's refuted shape clause is reported as a miss rather
+than re-registered, and the 47 MPa load is repeatedly flagged as unmodelled.
+
+## P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built, a2 i–v PASS, no long leg; archived 2026-10-27)
+
+**Status:** blocked at gating row a2 (vi); not reviewed. Binary `59d9f53a31d9e0e0920f331f` (code left in the tree;
+rev 2 edits it). New `src/Integrator/MMWSpalling/FaceRemoval.H`; the scan, reconstruction and remap are now ONE copy
+each in `Removal.H`, shared by both paths. Study `tests/MMWSpalling/studies/p2_9_face_removal/`.
+
+### What rev 1 established
+- **The line rule's bookkeeping holds:** one gather/scan/remap shared with the column path; sheets fire with run 1;
+  0 firings when cold; event logs byte-identical over 1/4 ranks and two box sizes (1,264 wall/roof firings); one
+  firing per cell; per-line energy identity ≤ 4.6e-16.
+- **a2 (vi) FAIL:** P2-8's ±1-cell normal makes the area rule exact only at 0° and 45° (+8.6 / +5.2 / +7.2 / +10.0 %
+  at 20 / 35 / 60 / 35°-az45; −0.8 % at (1,1,1)). Every face-list run over-heats intermediate slopes by 5–10 %.
+- **A pre-existing bug (since P0b rev 5):** `Util::RealFillBoundary` is a bare `FillBoundary()` (`Util.H:341`, not even
+  periodic), so the firing step's kernel reads pre-remap ghost temperatures at every domain side until the next
+  step's `FillPatch` (`Integrator.cpp:1204`); ≈ 0.5 K per firing on an edge row, ≈ 1 K at the axis corner.
+
+### Advisor review after the block (2026-10-27; daily log §3–§5; offline evidence `studies/p2_9_face_removal/offline/`)
+1. Fallback flake = one cell (`ReconFromX` returns `h_f = dz` when flat, `MMWSpalling.H:12296`) — mesh-dependent.
+2. `FrFillTempGhosts` is a hand-written Neumann fill with a Neumann-only guard; the BC is `private` in
+   `HeatConduction` (`:276`). Fix through the solver's own `FillPatch`, both paths.
+3. ν and the confining offset exist in THREE copies (`Removal.H:667/1444`, `MMWSpalling.H:8216–8223`, `FaceRemoval.H`).
+4. The `through` rule removes only `c_f ℓ`; sheets break whole only because of item 1's one-cell default.
+5. `mmwspalling.cc.d` dates from 2026-09-16 and is regenerated only when the `.cc` changes: `Grimsel.H` (2026-10-08)
+   and `FaceRemoval.H` are missing — header-only edits silently relink a stale object.
+6. Overlapping line shifts are operator splitting (a corner recedes two ways): measure, not a defect.
+7. Cells whose normal leans along no exposed face are counted as sheets; count them separately.
+8. ⚠ The planner's first area fix (one area per cell, dx²/μ) was WRONG on curves (+4.1 % sphere, +4.6 % bore); the
+   fix is P2-8's per-face rule with a normal from the solid fraction smoothed over 5×5×5 (σ 1 cell).
+9. ⚠ The planner's second worry (line recession over-removes on curves) was WRONG as a rate claim: per-firing volume
+   excess cancels in steady state (heat in = flake enthalpy out), so the rate error is the area error alone.
+**User decisions (2026-10-27):** σ = 1 with a 4 % tilt bar; `Makefile` dependency fix approved; all items into rev 2.
+
+### The P2-9 rev 1 file verbatim (packet, completion notes, takeaways; headings demoted, code fences untouched)
+
+## Active Step: P2-9 — One breaking rule for every surface cell, read and receded along one line into the rock
+
+Status: blocked at gating row a2 (vi) (2026-10-27): P2-8's area rule F3 is exact only at 0 and 45 deg -- Sum w dx^2 is +5 to +10 % over the plane at 20 / 35 / 60 deg and the rotated 35 deg. Line rule implemented and a2 (i)-(v) PASS; no long leg run after the gate. Binary `59d9f53a31d9e0e0920f331f`.
+
+### Context
+
+P2-8 (accepted by review 2026-10-26; `ARCHIVE_DONE.md` *"P2-8"*) gave the model one list of exposed faces, one heat
+rule and one area rule. Rock still breaks by TWO rules: the column top breaks downward (P0b reconstruction, depth scan,
+column remap; regime 1) and cells below it break sideways (P1f exponential fit, face-Newton surface temperature, one
+firing per column per step, a per-COLUMN bank; regime 6). P2-8's transitional rule left one-cell ROOFS under the flange
+(2.9 → 36.4 % of faces by 120 s) and crashed the 0.5 mm leg (a roof's 3-cell flake crossed a cell already voided
+sideways, `Removal.H:3200–3245`).
+**The rule this step builds.** Every surface cell is judged and receded along ONE straight line into the rock: the axis
+of its exposed face most aligned with the surface normal. Along any straight line the tilt cancels — the profile is
+exponential with length ℓ/μ (μ = n̂·e of the line), the two-cell reconstruction recovers it exactly, the flake along the
+line is h_n/μ, and receding the line by that moves the surface by h_n along its normal. ⇒ the line is read with
+today's code and **no rescaling**; only lengths that are physically NORMAL distances (`flake_h_max`, the scan window
+`h_spall_max`) are converted to line length by ÷ μ. ⚠⚠ Rescaling the spacing as well would be a no-op if paired with
+the recession and a **1/μ² error (2× at 45°) if not** — the trap recorded 2026-09-21 (`Claude_markdowns/2026-09-21b.md` §1 and
+its withdrawal at :187–193).
+One line per cell removes double recession (a stair cell's top and riser both receding), shallow-line reads and any
+tie-break between faces. A floor is the case n̂ = +z, μ = 1: today's vertical path. Under `surface_patch.face_list = 1`
+only; key off is untouched.
+⚠ Not addressed: the heat rule's EXPOSURE (a slot the jet cannot sweep still gets full heat); d2 separates the roofs'
+share of P2-8's shape error from the heat rule's. Hand-set numbers left in the decks: the flange lid in `h_expr`
+(`r>0.02`, `s<0.0633`) and `flake_h_max` 1.5 mm.
+⚠ P2-8 review carry-forwards: d2 is PROVISIONAL — confounded by roofs (DR-12), no convergence backing (DR-13; b2/c3
+here); the 2639 sweep misses the side-face/lateral/face-list unit tests (DR-2; a1 adds them); 60/90 s volumes are
+predictions, 30 s is matched (DR-15; d3); `weibull.V0` stays 1e-9 on every mesh, P2-8's convention (DR-17).
+⚠ Heat uptake is an OPEN PROBLEM (`ROADMAP.md`); S is a stated input from her 30 s volume.
+⚠ Plan of record (user, 2026-10-26): P2-9 → P2-10 (Meier on the face list, key default ON, delete group B and every
+path this step bypasses) → MMW. Retire, don't stack; no band-aids.
+
+### Sources (opened 2026-10-27; step zero re-resolves every line)
+
+- **Höser 2016** Fig. 5.10 (47 MPa), as in P2-8: axis depth **18 / 31 / 48 / 61 / 77 mm**, max Ø **40 / 47 / 56 / 64 /
+  73 mm** at **15 / 30 / 60 / 90 / 120 s**; mouth ≈ Ø46; "dL/dt = 1.8 dD/dt"; volumes **16.0 / 33.0 / 81.0 / 135.0 cm³**
+  at 15 / 30 / 60 / 90 s (`validation/hoeser/hoeser_2016_drilling_series.csv`).
+- **P2-8 legs on disk** (binary `f4c27b2739e78d87a89dc2e4`), `tests/MMWSpalling/studies/p2_8_face_list/legs/`:
+  L0 (S 0.10, 30 s): V 18.728 cm³, max Ø 48.5, mouth 39.9, r17.5/axis 0.700, plates 116 cells / 276 faces;
+  P47 (C\* 955.592808, 120 s): max Ø 106.5, axis 55 mm, mouth 79.3 at 105 s, plates 36.4 % of faces at 120 s;
+  S\* = 0.1314 (`SSTAR.txt`). L0f aborted at 27.3 s (`C3_PARTIAL.txt`).
+- **Code** (`src/Integrator/MMWSpalling.H` = M, `src/Integrator/MMWSpalling/Removal.H` = R):
+  - Surface T: `ReconstructSurfaceT` M:12259 is static and direction-free (T_top, T_1, T0, dz, cap, c_f, h_f_max);
+    `BuildSurfaceTColumns` M:4205 (first call in `Advance`, M:~1646) holds `surf_x_hold[c]` per COLUMN across steps;
+    `SharedSurfaceRecon` M:4385; `SurfaceRobinT(c)` M:4408 feeds the kernel M:2373/2469, march M:3552/3633, ledger
+    M:4498/4925, diagnostics M:5252/5365.
+  - Face list: `FaceEntry` M:4602, `FaceWeight` M:4633, `FaceH` M:~4644, `FaceListFlux` (face Newton, F4) M:4668,
+    `BuildFaceList` M:4681 (called M:2176), `FaceListHeat` M:4863 (called M:2763).
+  - Vertical: PASS 1b column gather R:1332–1395 (`ColumnSolidRunBelowTop`, `Dmax_col = h_spall_max/dz`); remap scheme
+    R:1443–1496 (`new[d] = (1−b)·old[d+m] + b·old[d+m+1]`, `b = (1−e^{−r/ℓ})/(1−e^{−dz/ℓ})`, exactly conservative);
+    depth-scan K_I R:~1860–2100 (lerp T_surf→cell centres, K_Ic(T) in MPa·√m → `MPa_sqrtm_to_Pa_sqrtm`, relief,
+    `sp_conf_offset`); winner loop R:2602–2732 (precedence vertical > support 5 > lateral 6; `h_c = rc_h_f`); remap
+    build R:2791+; PASS 3 R:2902; void-count abort R:3200–3245.
+  - Lateral: criterion R:456–~1140 (transitional skip `if (k == kT) continue;` R:719; T_face from `SurfaceCellFlux`'s
+    Newton; ℓ from two cells; K_I R:999, score R:1026); per-COLUMN bank `lat_accum_col` R:2752–2790; thermal shift
+    R:3301–3730; `InvertHtoT` hook `if (remap_any || lat_shift_any)` R:3942.
+  - Keys: `spall.flake_c_f` M:7547, `flake_h_max` M:7554, `lateral_*` M:7573–7597, `removal_energy` M:7686,
+    `h_spall_max` M:7798, `spallation.sp.constraint_depth` M:12322, `spallation.sp.a0` M:12358, `weibull.enabled` M:12456.
+- **Fixtures:** `surface_patch.jet_closure` takes `none` | `enthalpy` (M:11094); under `none` the gas temperature is
+  `T_flame`/`T_flame_expr`, so a uniform T_gas is one key. `spall.seed_void` takes any number of 6-int boxes
+  (M:7855), so a tilted staircase is one box per column strip. `face_list` requires `convective_flame` + `h_expr`,
+  `robin_form=surface`, microstructure, `follow_mask` (M:1284–1302).
+- **Höser base** `tests/MMWSpalling/studies/p2_8_face_list/legs/L0/argv.sh`: `robin_form=surface`,
+  `spall.surface_T=reconstructed`, `removal_energy=flake`, `flake_c_f=0.4`, `flake_h_max=0.0015`, `lateral_*=1`,
+  Grimsel laws, relief 0.531294, `weibull.m=13`, `a0_ig=8.0e-6`, no constraint depth, `surface_normal=0`, beam off.
+
+### Goal
+
+Everything applies only under `surface_patch.face_list = 1`. No new key.
+
+1. **R0 — the line.** A surface cell is a solid cell with ≥ 1 face in the list. Its line runs into the rock opposite
+   its exposed face e\* with the largest n̂·e (n̂ = F3's normal, `FaceWeight`); μ = n̂·e\*. Ties: lowest direction index
+   (on a plane the tied lines are both exact). A SHEET (F3 zero gradient, n̂ undefined) evaluates a line behind EACH
+   exposed face and uses the largest score, μ = 1; counted. The normal is used for nothing else in R0–R3.
+2. **R1 — one surface temperature per surface cell**, computed ONCE per step at the point `BuildSurfaceTColumns` runs
+   today (P0b: one surface temperature per step for criterion, BC and removal):
+   T_s = `ReconFromX`/`ReconstructSurfaceT`(T(c), T(c−e\*), T0, dx, cap, c_f, h_spall_max/μ, flake_h_max/μ) — cell
+   size dx, NOT rescaled. Fallback when there is no solid cell behind or no inward decay: the face heat balance on e\*
+   (the existing `FaceListFlux` Newton face temperature) — always defined, NO history (the per-column x-hold is not
+   used under the key; it decided 0.05 % / 0.03 % of floor firings on P2-8 K0 / P47). Counted per class.
+   Within the step, when removal moves a line's face to the next cell along the line, the value moves with it; a
+   cell first exposed this step gets its own at the list rebuild. Every exposed face of the cell uses this T_s with
+   its F3 weight w in the kernel, ledger and march: risers are part of the surface, not surfaces of their own. ⇒
+   F4's Newton BC branch is not called under the key.
+3. **R2 — one criterion.** Today's depth scan (lerp from T_s, K_Ic(T) in MPa·√m → Pa·√m, relief, confining offset,
+   the cell's flaw a_f in metres, unconverted) along the line. Profile gather: T, T0 and H of c and the cells behind
+   it along the line, up to `Dmax = floor(h_spall_max/(μ·dx))`, **stopping at the first non-solid cell or the domain
+   edge** (`run`). Owner-written, `ReduceRealSum`-collapsed (PASS 1b pattern). Score = K_I/K_Ic. One line per cell ⇒
+   at most one firing per cell per step by construction. Under the key neither the lateral criterion (R:456–~1140)
+   nor the per-column vertical criterion runs.
+4. **R3 — one removal function**, `RecedeAlongLine(cell, line, h)`, blind to what produced h (spalling now;
+   vaporisation in the MMW step). Spalling's h = min(rec.h_f, run·dx) (`fr_clip` when the run binds). State: a
+   per-cell SOLID FRACTION f ∈ (0, 1] (new field). f −= h/dx along the line: a cell reaching f ≤ ε voids and the
+   remainder passes to the next cell along the line. Heat: P0b's remap along the line over `run` cells (exactly
+   conservative; the energy leaving through the face is `ledger_E_flake`, booked as today); every line's change is
+   a per-cell ΔH from the step's OLD field, summed, then one write (P1g-2c), then the existing `InvertHtoT` hook.
+   `phi_mf` is written from f so every phi reader sees today's value on a floor.
+5. **Guards under the key** (abort naming P2-10 or MMW): regimes 2–5 (vapour, bit, pad clearing, support),
+   `spall.melt_aware`, `spallation.sp.constraint_depth > 0` (a normal length; ÷ μ when it returns), `spall.surface_normal
+   = 1`, prescribed-T face, `spall.stress_source` not temperature-derived, `amr.max_level > 0`. One log line names the
+   `spall.lateral_*` and group-B keys the deck sets (unread; no abort — a control differs by this key only).
+6. **Outputs.** Event row per firing: `regime = 1`, appended `dir` (line, 0–5), `mu`, `k`, `run`, `h_line`,
+   `h_n = mu·h_line`, `f_after`, `n_voided`, `score`, `ts_fb`; `k_top` keeps its meaning (SR 4). Thermo per line class
+   (`floor` +z, `wall` ±x/±y, `roof` −z): `fr_n_<c>` firings, `fr_v_<c>` cells voided, `fr_fb_<c>` fallback T_s,
+   `fr_smax_<c>` max score over NON-fired cells; plus `fr_clip`, `fr_cap` (flake cap binds), `fr_sheet`, `fr_multi`
+   (must be 0), `fr_overlap` (cells changed by > 1 line), `fr_id_remap` (DOUBLE, |ΣΔH + E_flake| / E_flake per step).
+   Plotfile `fr_score` (every surface cell, fired or not), `fr_f`, `fr_mu`.
+7. **Tests.** New `tests/MMWSpalling/unit/face_removal/` (`make_input.py` generating every fixture below, `test`).
+   Extend `unit/lateral_flux_lock`: one gather, one criterion, one `RecedeAlongLine`, each declared once and called
+   for every surface cell under the key; R:719's transitional skip unreachable under the key.
+8. **Study** `tests/MMWSpalling/studies/p2_9_face_removal/`: `run_p2_9.py` (argv copied token for token from the named
+   P2-8 leg, keys replaced in place, `argv.sh` + `DROPPED.txt` per leg, `--probe`, asserts `caffeinate -dis`),
+   `reduce_p2_9.py` → `RESULTS.txt` (P2-8's reductions plus plate/sheet census, mouth Ø at the original surface per
+   plotfile, counts by line class, first time any face reaches r = 50 mm).
+9. **The P2-10 deletion list**, from the code as built, into `RESULTS.txt`: the lateral criterion, regime 6,
+   `lat_accum_col` and the lateral shift block, the four `spall.lateral_*` keys, the per-column vertical criterion
+   and remap, `BuildSurfaceTColumns` and its x-hold, F4's Newton BC branch, R:719.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | item | where | what decides it |
+|---|---|---|---|
+| L1 | the line path EXECUTES under the key | the dispatch in `UpdateRemovalAfterCohesive` | `fr_n_wall`, `fr_n_roof` > 0 on M0; regime-6 rows 0; old vertical/lateral counters 0 (b1) |
+| L2 | a floor is today's floor | +z line: same `ReconFromX`, same scan, same remap, μ = 1 exactly (F3 gives w = 1 on a flat floor) | a2 (i), a3 |
+| L3 | no rescaling anywhere but the two normal lengths | `ReconFromX` gets dx; only `h_spall_max`, `flake_h_max` ÷ μ | a4 (a 1/μ² slip reads 2× at 45°) |
+| L4 | one line per cell | R0 | `fr_multi` = 0 (a2, b1, a4) |
+| L5 | the gather crosses box seams | owner-write + `ReduceRealSum`, run on the FULL line | a2 (iv); `fr_clip` share (c1) |
+| L6 | the roof can break | sheet rule, run = 1 | sheets fall (c1, d2) |
+| L7 | the lid holds | original-surface +z faces at r > 20 mm, h = 0.001 | b1 negative case |
+
+### Legs
+
+**Fixtures** (`unit/face_removal`, Höser deck + the s100 base keys as in `unit/face_list/make_input.py`, then):
+`weibull.enabled=0`, `spallation.sp.a0=8.0e-6`, `surface_patch.jet_closure=none`, a constant `T_flame` (1866.0) and
+a constant `h_expr` (700.0), 24 × 24 × 64 cells at 1 mm, insulated sides, 20 s; the nozzle plane above the block.
+Asserted at step 1 and the last step: `flame_h` and `flame_Tg` identical on every column.
+- **T00** flat floor, key 0 and key 1, at dx 2 / 1 / 0.5 mm (`timestep` 0.008 / 0.008 / 0.004).
+- **Tilt legs**, key 1, 1 mm (and 2 mm for c4): a planar staircase seeded by `spall.seed_void` (one box per column
+  strip; void above the plane through the block centre), tilt from +z of **20°, 35°, 45°, 60°** in the x–z plane,
+  **TR** 35° at azimuth 45°, **TD** the (1,1,1) diagonal (54.7°, a three-way tie).
+- Rate: the surface's normal position = mean over INTERIOR columns (≥ 4 cells from every side, along the plane's
+  true dominant axis) of (solid count + f) × dx × μ_true; least squares over 5–20 s.
+Höser legs: argv = P2-8's `legs/L0/argv.sh` token for token (S 0.10, `face_list=1`, lid `s<0.0633`), replacing ONLY
+`plot_file` and the keys listed; binary = this step's.
+
+| leg | from | keys replaced | stop / plot_int |
+|---|---|---|---|
+| M0 | L0 | — | 30 / 3750 |
+| M0c | L0c | as L0c: `amr.n_cell=25 25 75` `amr.blocking_factor=1` | 30 / 1875 |
+| M0f | L0f | as L0f: `amr.n_cell=100 100 300` `timestep=0.004` `amr.max_grid_size=50` | 30 / 7500 |
+| C15n | C15 | h_expr constant `1090.859370` | 30 / 3750 |
+| P47r | P47 | h_expr constant `955.592808` (P2-8's C\*) | 120 / 1875 |
+| P47n | P47 | h_expr constant C\*new = S\*new × 7272.3958 — ONLY if \|S\*new − 0.1314\| > 0.0039 | 120 / 1875 |
+
+**S\*new rule (d1):** log-log interpolate V(30 s, ×4) between M0 (S 0.10) and C15n (S 0.15) to 33.0 cm³; 4 decimals.
+Outside ⇒ ONE added point (S 0.07 or 0.20); still outside ⇒ stop and report.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a1 | 1 | key off: tree gate vs `p2_8.md5`; controls; extended lock; the unit tests the sweep misses (DR-2: `side_face_area/flux/step_height`, `lateral_drive`, `wall_march`, `face_list`) vs P2-8's `bin2/` logs | 0 changed of 2639; controls 26 / 863; lock PASS; unit logs identical in text (the pre-existing `lateral_drive` FAIL unchanged) | **gate** | the key leaks at 0 |
+| a2 | 1 | `unit/face_removal` offline/short: (i) on a +z line the reconstruction, scan and remap are the SAME functions as the column path and return bit-identical values on identical inputs; (ii) a seeded one-cell sheet over a void: run = 1, h ≤ dx; (iii) h = 0.001 everywhere for 5 s ⇒ 0 firings; (iv) `-np 1` vs `-np 4` and `max_grid_size` 8 vs 16 on a seeded cavity ⇒ event logs byte-identical; (v) `fr_multi` 0 and `fr_id_remap` ≤ 1e-12 every row; (vi) `unit/face_list` PASS, and Σ w·dx² over each tilt fixture's initial interior faces within 2 % of the plane's area at every tilt (P2-8 tested only 0° and 45°) | all | **gate** | R0–R3 are not what the packet specifies, the gather depends on the decomposition (SR 16), or the area rule fails at a tilt it was never tested at |
+| a3 | 2 | T00 key 0 vs key 1 at each dx | rate ≤ 0.1 % apart; median firing T_s ≤ 0.5 K; total `ledger_E_flake` ≤ 0.1 %; key-1 fallback uses after the first firing reported | **gate** | the general rule moved the calibrated floor — every Kant/Höser calibration and P0b's mesh-independence are void under the key |
+| a4 | 2 | tilt legs at 1 mm vs T00 key 1: normal recession rate; `fr_multi`; share of non-sheet firings with μ ≥ 0.57 | each within 2 %; 0; ≥ 99 % | **gate** (protects every Höser leg) | the line rule is grid-orientation dependent: a 2× reading at 45° is the 1/μ² trap, ~1.4× is double recession |
+| a5 | 2 | `--probe` all Höser legs | rc 0; `alamo.program` the only unused key; the unread-keys log line present | **gate** | a leg does not run what it names |
+| b1 | 3 | M0 witnesses: `ledger_err_solid` max; `fl_id_march`, `fl_id_ledger`; `fr_multi`; `fr_id_remap`; regime-6 rows; firings on cells whose only face is a lidded original-surface +z face | ≤ 5e-3; ≤ 1e-9; 0; ≤ 1e-12; 0; 0 | **gate** | energy not conserved, a cell fired twice, the old paths still run, or a cold face fired |
+| b2 | 4 | M0c and M0f reach 30 s | rc 0 | **gate** (protects the 120 s legs) | the general rule still breaks on a fine mesh |
+| c1 | 4 | M0 vs L0 at 30 s: plates/sheets (cells, faces, share); mouth Ø; max Ø; V ratio; firings and voids by line class; r17.5/axis; `fl_P_side` ratio; `fr_clip`, `fr_cap`, `fr_fb_<c>`, `fr_overlap` shares | report with magnitudes | **report** | see P1 |
+| c2 | 4 | M0 Ø by 30° sector at 5 and 10 mm | spread ≤ 3 mm | **report** | a grid-diagonal artefact |
+| c3 | 4 | M0c and M0f vs M0: volume; max Ø; axis depth | 2 vs 1 mm: ≤ 15 %, ≤ 4 mm; 0.5 vs 1 mm: ≤ 5 %, ≤ 2 mm, ≤ 1.5 mm | **report** | not converged; P47 is a 1 mm result |
+| c4 | 2 | T00 key-1 rate spread over 2 / 1 / 0.5 mm; tilt legs at 2 mm vs T00 2 mm | ≤ 2 %; each within 4 % | **report** | the line rule converges more slowly than the floor |
+| d1 | 5 | S\*new by the rule | interior (≤ 1 added point) | **gate** | the level cannot be matched — stop before P47n |
+| d2 | 6 | P47r vs P2-8 P47 (same C\*): sheet share, mouth Ø, max Ø, axis depth, V at every plotfile | report | **report** | see P3 |
+| d3 | 7 | P47n (P47r if skipped) vs Höser at 15 / 30 / 60 / 90 / 120 s; V60/V30, V90/V30 (hers 2.45, 4.09) | "shape agrees" = max Ø within ±6 mm at 60/90/120 s AND axis depth within ±15 % at every time | **report** | see P4 |
+| d4 | 7 | P47r and P47n at 120 s: ledger; identities; `fr_multi`; sector spread at 30 / 50 mm; first r = 50 mm contact time | ≤ 5e-3; ≤ 1e-9; 0; ≤ 3 mm | **report** | bookkeeping or isotropy fails at scale |
+| e1 | 8 | verdict | — | **verdict** | Is the line rule the floor's rule (a3) and orientation-free (a4); does it remove roofs and the crash (c1, b2); do roofs or the heat rule own P2-8's over-width (d2); how far is the shape from Höser (d3); what P2-10 deletes (Goal 9) |
+
+### Pre-registered predictions
+
+- **P0 (a4):** every tilt within 2 %. The residual comes from the cell average smoothing ACROSS the line, which the
+  one-line reconstruction ignores: ≈ u²/6 of the temperature rise, u = sinθ·dx/(2ℓ) — at ℓ 1.3 mm, 1 mm cells,
+  0.6 % at 30° and 1.2 % at 45°; it falls as dx².
+- **P1 (c1):** sheets at 30 s ≤ 10 cells (L0 116 plates); mouth Ø 41–50 mm (L0 39.9); max Ø 48–58 mm; V M0/L0
+  1.00–1.30; `fl_P_side` M0/L0 0.7–1.1 (risers now take the cell's surface T, hotter than the Newton face).
+- **P2 (c3):** inside the bars; the crash cause is gone (b2).
+- **P3 (d1, d2):** S\*new 0.10–0.13. At C\* sheets ≤ 5 % of faces at every plotfile (P2-8 36.4 % at 120 s), the mouth
+  ≥ 50 mm by 60 s (P2-8 39.9 until 90 s), max Ø at 120 s ≥ 100 mm: **the roofs are NOT the cause of the over-width;
+  the position-only heat rule is.**
+- **P4 (d3):** shape does not agree — max Ø at 120 s > 79 mm; depth/diameter growth 15→120 s < 1.2 (hers 1.8);
+  V60/V30 ≥ 2.6, V90/V30 ≥ 4.3 (P2-8 2.91, 5.32). A pass refutes P3's attribution and removes the case for the
+  exposure step.
+- **Refuting evidence on disk:** none for the line rule. The 2026-09-21 cancellation argument
+  (`Claude_markdowns/2026-09-21b.md`:187–193; Step 20 `surface_normal` measured inert under the pinned closure, D2b)
+  supports P0.
+
+### What would make this inert — witness each
+
+- The old paths still run under the key — L1 (b1).
+- A gather that stops at a box seam, clipping every line — a2 (iv); `fr_clip` by class (c1).
+- Risers or walls reading the fallback T_s everywhere — `fr_fb_<c>` (c1).
+- Firing judged on a firing-conditioned variable — `fr_smax_<c>` and `fr_score` include the NON-fired cells.
+- The tilt fixture not tilted (seed boxes wrong) — a2 (vi) reads the initial face census and Σ w·dx².
+
+### Guardrails
+
+- `face_list` default 0; the key-off code path is not edited beyond the dispatch (a1). Group B and `spall.lateral_*`
+  stay in the code, unread under the key; deleted in P2-10.
+- No rescaling of the line's cell size, ℓ or h; ÷ μ applies to `h_spall_max` and `flake_h_max` only.
+- No Meier leg; no change above the nozzle plane, to the pad shield, the wall march or any Meier deck; F2 and F3
+  unchanged.
+- Nothing tuned except S\*new, by the d1 rule, on her 30 s volume.
+- ×4 on volume and energy (SR 3); event-log `k_top` is pre-removal (SR 4); never sum per-step thermo (SR 7);
+  `caffeinate -dis`, `-np 4`, legs serial, `.done` sentinels; argv + binary hash per leg (SR 8).
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_9_face_removal
+U=tests/MMWSpalling/unit/face_removal
+B="EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8"
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness
+eval $B && bash $W/guarded_post_all_par.sh p2_9                                   # ord 1: a1 (vs p2_8.md5)
+$PY tests/MMWSpalling/unit/lateral_flux_lock/test && $PY tests/MMWSpalling/unit/face_list/test   # ord 1: a1, a2 (vi)
+$PY $U/make_input.py && $PY $U/test --offline                                     # ord 1: a2
+caffeinate -dis $PY $U/test --floor && caffeinate -dis $PY $U/test --tilt          # ord 2: a3, a4, c4
+caffeinate -dis $PY $S/run_p2_9.py --probe ALL                                    # ord 2: a5
+caffeinate -dis $PY $S/run_p2_9.py M0 && $PY $S/reduce_p2_9.py GATE                # ord 3: b1
+caffeinate -dis $PY $S/run_p2_9.py M0c M0f && $PY $S/reduce_p2_9.py MESH           # ord 4: b2, c1-c3
+caffeinate -dis $PY $S/run_p2_9.py C15n && $PY $S/reduce_p2_9.py SSTAR             # ord 5: d1
+caffeinate -dis $PY $S/run_p2_9.py P47r                                            # ord 6: d2
+caffeinate -dis $PY $S/run_p2_9.py P47n; $PY $S/reduce_p2_9.py > $S/RESULTS.txt    # ord 7-8 (P47n only if d1 says)
+```
+
+### Claude completion notes
+
+**Files.**
+- `src/Integrator/MMWSpalling/FaceRemoval.H` (NEW class-body fragment, included after `Removal.H`): R0-R3:
+  `FrCells`, `FrFaceFlux`, `FrAssignTs`, `RecedeAlongLine`, `RecedeAlongLines`, `FrFillTempGhosts`.
+- `src/Integrator/MMWSpalling/Removal.H`:
+  - the scan's pieces and the remap moved into ONE copy each (`ScanTAtZv`, `ScanKIcPa`, `ScanSigmaT`,
+    `DepthScanH`, `RemapProfile`), called by the column path expression for expression;
+  - the dispatch after PASS 1.
+- `src/Integrator/MMWSpalling.H`:
+  - `FaceEntry` gains `Ts`/`tsfb`/`qline`;
+  - the kernel, ledger, march and `FaceListDiagnostics` call `FrFaceFlux` for every listed face;
+  - `FrAssignTs` sits in `BuildFlameColumns` before the march;
+  - the guards and the `fr_*` thermo/plotfile registration sit in the face-list block;
+  - the `spall.lateral_*` keys are captured before their parse.
+  - Pre-change copies: `studies/p2_9_face_removal/src_pre/`.
+- **Tests:**
+  - NEW `unit/face_removal/` (`make_input.py`, `input`, `test`);
+  - `unit/lateral_flux_lock/test`: three clauses restated, P2-9 block added (pre-change copy in `src_pre/`).
+- **Study** `studies/p2_9_face_removal/`:
+  - `ghost_repro.py` → `GHOST_REPRO.txt`;
+  - `unit_parity.py` → `UNIT_PARITY.txt`;
+  - `A2_OFFLINE.txt` (the a2 log);
+  - `bin/` (this binary's unit logs);
+  - `refactor/` (the refactor's interim logs).
+- **Not written:** `run_p2_9.py` / `reduce_p2_9.py` / `RESULTS.txt` (every Höser leg comes after the gate).
+
+| # | measured | result | output |
+|---|---|---|---|
+| a1 | tree sweep NOT run (a2 gates, and /plan's F3 decision will change the binary; a second full gate needs a reason). Lock rc 0 after restating 3 clauses (K_Ic sites 4 -> 3, `FaceListFlux` calls 4 -> 0, the ledger reads `FrFaceFlux`) + the P2-9 block. Unit parity vs P2-8 bin2: side_face_flux / side_face_area / side_face_step_height / wall_march / face_list IDENTICAL (text, line numbers masked); lateral_drive every verdict line identical incl. its pre-existing FAIL, its source census of SurfaceCellFlux sites 12 -> 11 (the diagnostics' top-face call is FrFaceFlux) | partial | `UNIT_PARITY.txt`, `bin/` |
+| a2 | (i) the six shared functions are each declared once and called by both paths; one gather, one `DepthScanH`, one `RecedeAlongLine` in `RecedeAlongLines`. (ii) 104 sheet firings, all run = 1, h_line max 1.000e-3 m = dx. (iii) 0 firings at h = 0.001. (iv) 2,102-row event logs byte-identical at -np 1 / -np 4 and max_grid_size 8 / 16, 1,264 of them wall/roof. (v) fr_multi 0, fr_id_remap <= 4.6e-16 on every row of 14 legs. **(vi) Sum w dx^2 vs plane over the initial interior faces: +8.57 % (20 deg), +5.24 % (35), +0.00 % (45), +7.23 % (60), +10.02 % (35 deg az 45), -0.76 % ((1,1,1))** | **FAIL (gate)** at (vi); (i)-(v) PASS | `A2_OFFLINE.txt` |
+| a3, a4, a5 | not run -- after gating row a2 | -- | -- |
+| b1, b2 | not run -- after gating row a2 | -- | -- |
+| c1-c4 | not run -- after gating row a2 | -- | -- |
+| d1-d4 | not run -- after gating row a2 | -- | -- |
+| e1 | withheld. The line rule is built and its own bookkeeping holds (a2 i-v). Whether it is the floor's rule (a3) and orientation-free (a4) is unmeasured, and a4 cannot be scored until F3 is exact off 45 deg | verdict withheld | -- |
+
+### Implementation takeaways
+
+1. **a2 (vi): F3 is exact at 0 and 45 deg only.**
+   - The normal is a central difference over +-1 cell, so every step edge reads as a 45 deg corner (one cell,
+     two faces at 1/sqrt2 each: sqrt2) while every tread cell reads flat (w = 1).
+   - At 20 deg the seeded staircase alternates 3- and 2-column treads: Sum w = 3.414 vs 3 x 1.0642 = 3.193
+     (+6.9 %), and 2.414 vs 2.128 (+13 %); the leg's mean is +8.6 %. At 45 deg each column is one corner cell
+     (sqrt2, exact); at (1,1,1) it is -0.8 %.
+   - Every intermediate-slope wall gets 5-10 % too much heated area.
+   - /plan decides. Options, none tried:
+     - a normal from a wider stencil or a plane fit;
+     - the area of a surface cell as its LINE's dx^2/mu (the line rule already carries mu);
+     - a stated tolerance.
+   - P2-8's unit/face_list tested 0 and 45 deg only, which is why this surfaced here.
+2. ⚠⚠ **A pre-existing defect, all paths: the firing step's kernel reads STALE temperature ghosts.**
+   - `Util::RealFillBoundary` is a bare `FillBoundary()`: box to box only, neither the periodic copy nor the
+     physical BC. The integrator refills those at the START of the next step.
+   - So the conduction kernel of every firing step reads the PRE-remap T across each domain side.
+   - `ghost_repro.py`: a uniform floor, one firing, x/y periodic, one box. Key 0 (the column path, unchanged)
+     leaves row/column 0 at 0.49 K and the corner at 0.98 K off the interior; key 1 leaves every column
+     identical.
+   - Non-periodic, every side is hit; the magnitude is k (T_pre - T_post)/dx^2 x dt per side, which matched the
+     measured per-face excess exactly.
+   - On Höser the domain sides are the two symmetry planes holding the AXIS: every P0b-remap run since rev5 has
+     had this at every firing step there.
+   - The line path refills by zero gradient (`FrFillTempGhosts`) and the key requires Neumann-0 temperature
+     sides. The column path is untouched (its fix moves the tree); /plan decides whether P2-10 carries it or a
+     re-pin does.
+   - ⚠ It contaminates a3's KEY-0 CONTROL. Once seeded at the edges, the non-uniform firing spreads inward. So a3
+     as written compares the line rule with a defective floor; /plan should restate a3 (e.g. the control with the
+     ghost fix, or the comparison before the first edge-seeded divergence).
+3. **Design choices the packet left open:**
+   - **Void timing.** A cell voids at f <= 1e-9. The column path voids at phi < 0, i.e. f < 1/2. The thermal frame
+     is unaffected: the top solid cell takes new[0] either way, so the floor's T history is the same; only the
+     geometry flips half a cell later. phi is moved only for +z lines (the column shift, as PASS 3); no reader
+     consults phi under the key (the mask follows `removed`).
+   - **A sheet could never fire through `h_col > 0`.** With run = 1 the window holds one cell, the walk passes at
+     s = 0 and no bisection exists. Added (counted `fr_through`): a line whose run ends inside the window and
+     whose walk never failed fires -- the crack reaches the void behind it. It fires sheets and only lines that
+     reach a void.
+   - **h is clipped to the solid ALONG the line, Sum f dx** (packet: run dx; equal when f = 1), counted `fr_clip`.
+   - **E_drop.** A cell can end void while another line booked a shift on it. Its old enthalpy leaves the solid set
+     whatever was booked, so Sum(booked dH) + H_old goes to `ledger_E_flake` (`fr_E_drop` reports it).
+     `fr_id_remap` is the PER-LINE identity (telescoped vs per-cell, so it checks the index shift), not the field.
+   - **One T_s per step.** A reconstructed T_s is computed at the removal and carried to the BC, moving to the face's
+     new cell on a void. A fallback (flat) cell carries only its flag: its T_s is the face Newton on e* evaluated
+     inside `FrFaceFlux` at each consumer's own inputs. The kernel, ledger, diagnostics and march therefore evaluate
+     the identical number (the jet march's Tg is not known before the march). Sheets: each face its own Newton.
+   - **Guards beyond the packet's list** (each would be silently dropped otherwise):
+     - sp_weibull spallation;
+     - `spall.surface_T = reconstructed` and `removal_energy = flake`;
+     - `flake_length = flux` / `flake_fraction = weibull` / `size_volume = flux`;
+     - `per_cell_removal`, `flake_coherence_length > 0`, `connected_cluster` with `A_crit > 0`;
+     - non-Neumann-0 temperature sides.
+   - **Event row:** a `sheet` column appended after `ts_fb`; `Sp_top` is written 0 (the line path reads no
+     Sp_field).
+4. **The fixture (`make_input.py`) drops keys from the Höser base, declared in its docstring:**
+   - `surface_patch.jet_*` and `side_face_*`, which abort under `jet_closure = none` or `side_face_T = live`;
+   - `side_power_interval`, which is unused without `side_face_flux`;
+   - `spall.lateral_*`, which require the staircase key.
+   - T_gas is `T_flame_expr = 1866.0`, because h_expr and T_flame_expr must be given together.
+5. ⚠ **Build gotcha:** `FaceRemoval.H` is missing from `obj/obj-3d-g++/mmwspalling.cc.d`. An edit to it ALONE
+   relinks an unrecompiled object, and `make` still exits 0 (it cost one stale run here). `touch
+   src/Integrator/MMWSpalling.H` with every edit to it.
+6. **Pre-existing failures, not this step's:**
+   - `unit/surface_T_recon` (3): its header assertion predates P1's `q_ratio`;
+   - `unit/lateral_drive`: the ell/dz-monotone check, as on P2-8's binaries.
+7. **The P2-10 deletion list, from the code as built** (deliverable 9; there is no RESULTS.txt because no study
+   ran). Under the key these are unreachable:
+   - `Removal.H`'s lateral criterion (`lat_on` block) and its transitional skip;
+   - regime 6;
+   - `lat_accum_col` and the lateral thermal shift block;
+   - the four `spall.lateral_*` keys;
+   - the per-column vertical scan / winner loop / PASS 3 remap, which survive as the column path's callers of
+     the shared pieces;
+   - `BuildSurfaceTColumns` and `surf_x_hold` (diagnostics only under the key);
+   - `FaceListFlux` (0 calls);
+   - `SurfaceRobinT`'s physics consumers;
+   - group B.
+
+
+## P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (2026-10-27, rev 2.1, ACCEPTED by review 2026-10-27 — a5 a recorded FINDING; archived 2026-10-28)
+
+**Status:** ACCEPTED by review (ten of eleven gating rows re-derived independently; a5 does not reproduce and was
+reclassified as a finding on the user's authorisation in rev 2.1 — its Criteria label corrected to `finding` at
+archive, review DR-9). Binaries: 0 `26bccb44…` (Makefile), A `e7e691f7…` (edge fill + elastic helper), B
+`7d77e34793e867aebc881daf` (the line rule fixed). Study `tests/MMWSpalling/studies/p2_9_face_removal/`.
+
+### What the step established
+- **The line rule is the floor's rule** (a4: key 0 vs key 1 rel −1e−5) and its bookkeeping is exact on every Höser
+  leg (`ledger_err_solid` ~1e−14, identities ≤ 3e−14, `fr_multi` 0).
+- **Roofs and the 0.5 mm crash are gone:** sheets / misaligned / plates 0 at every plotfile of every leg (P2-8: 36.4 %
+  of faces at 120 s); M0f (0.5 mm) completes 30 s with 23,327 firings where P2-8's L0f aborted at 27.3 s.
+- **The edge-cell bug was small on Höser:** K0g vs P2-8 K0 +0.06 % volume, 0 mm shape (b0).
+- **P3 confirmed — the roofs did NOT cause P2-8's over-width:** with them gone the hole is WIDER at the same heat
+  (P47r max Ø 111.5 vs 106.5 mm at 120 s; the mouth opens from 30 s instead of 105 s). The position-only heat rule owns it.
+- **P4 confirmed — the shape does not agree with Höser 47 MPa** at the re-matched level (S\*new 0.1431, V(f) 30 s
+  32.99 vs 33.0 cm³): max Ø +3.6 / +8.2 / +21.1 / +32.5 / +42.3 mm and axis −39 / −36 / −29 / −25 / −29 % at
+  15 / 30 / 60 / 90 / 120 s; depth/diameter growth 0.61 (hers 1.8); V60/V30 3.09 (2.45), V90/V30 6.07 (4.09).
+- **a5 FINDING — slopes recede slow; at 45° it is structural.** Phase-immune deficit vs T00 at the same mesh, 1 → 0.5
+  mm: TL20 −1.44 → +1.17, TL35 −4.36 → −2.79, TR −4.94 → −0.63, **TL45 −6.68 → −6.92 %** (a5b). The planner's P0
+  ("rate error = area error") is refuted: at 45° the area error is 0.00 %. The deficit lives in the per-firing
+  recession, not the firing count (DR-14). Planner reading at archive (P2-9 event logs, interior columns, 5–20 s):
+  at 45° the line axis flips between x and z on **22 %** of consecutive firings in a column (dir z 82–86 %); 20° and
+  35° flip 0 %; 60° flips 5 % with 20–28 % of its lines on z at logged μ 0.84–0.88 vs true 0.50.
+- **Cost:** 1.45× P2-8's step time (removal 27 % of a step).
+- **Misses (reports):** c3 0.5 vs 1 mm just outside (V(f) 5.4 % vs 5, max Ø 2.6 vs 2 mm; V(voids) 8.4 %); d4 sector
+  spread 3.8–4.8 mm at 30/50 mm (bar 3; the 50 mm cut sits at or near the bottom of a 51–55 mm hole); c1's P1 missed
+  low (V 0.82, max Ø 45.8; `fl_P_side` M0/L0 0.770).
+
+### Carry-forwards (review)
+1. DR-13/14 — diagnose the 45° residue PER FIRING, not by rate; TR's firing frequency masks a per-firing deficit twice its size.
+2. DR-21 — the flat floor itself drifts 10.4 % over 2 / 1 / 0.5 mm on both keys: no cross-mesh claim is cleaner than that.
+3. DR-11 — TD's −3.26 % rests on 34 of 256 lines (−10.49 % unfiltered): a 64 mm block cannot hold 54.7° for 20 s.
+4. DR-3 — `RefillTempGhosts` calls `bc->FillBoundary`, not `FillPatch`: equivalent at `max_level = 0` only; name it
+   before any AMR leg.
+5. DR-15/16 — one volume estimator: d1 and c3 scored V(f), P2-8 scored V(voids) (S\* 0.1431 on V(f), 0.1461 on voids).
+6. DR-19 — d4's depth-isotropy spread undiagnosed.
+7. Deletion list for P2-10 in `RESULTS.txt` (group B, the lateral path, the column scan's dead callers, `FaceListFlux`).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-28)
+
+Active step:
+- **P2-9 rev 2 — one breaking rule per surface cell: fix the normal, the edge temperatures and the fallbacks, then
+  run Höser** (`ACTIVE_STEP.md`; 2026-10-27). Rev 1 (line rule built, bookkeeping PASS) blocked at P2-8's area rule
+  (exact only at 0°/45°) — archived `ARCHIVE_DONE.md` *"P2-9 rev 1"*. Rev 2: self-updating `Makefile` deps; edge cells
+  refilled through the solver's own BC on BOTH paths (a pre-existing bug since P0b rev 5; declared tree change); one
+  elastic-constant helper; normal from the solid fraction smoothed σ = 1 cell (±2); fallback flake from the face heat
+  balance; `through` removes the slab. Gates: floor = today within 0.1 %; tilts within 4 %; curved fixtures reported.
+  Then the rev 1 Höser legs (+ K0g, the edge fix's size). Evidence: `studies/p2_9_face_removal/offline/`.
+  **Rev 2.1:** a5 FAILED as a finding (20–45° slopes ~2–8 % slow at 1 mm, thinner flakes on staircase lines); the
+  user authorised the Höser legs; a5b (tilts at 0.5 mm) decides resolution vs structural (fix in P2-10).
+
+### The P2-9 rev 2 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-9 rev 2 — One breaking rule for every surface cell: fix the normal, the edge temperatures and the fallbacks, then run Höser
+
+Status: **accepted by review** (2026-10-27) — ten of eleven gating rows re-derived independently; **a5 does not reproduce and the Criteria table still labels it `gate`** (rev 2.1 reclassified it in prose on the user's authorisation — DR-9). Was: completed (rev 2.1, 2026-10-27): ord 5-10 and a5b run on binary B `7d77e34793e867aebc881daf`; b1, b2, d1 PASS; a5 stands as the recorded FINDING (a5b: it shrinks at 0.5 mm except at 45 deg); d3 shape does not agree.
+
+### Context
+
+Rev 1 built the line rule (`src/Integrator/MMWSpalling/FaceRemoval.H`, binary `59d9f53a31d9e0e0920f331f`, code in the
+tree): every surface cell is judged and receded along ONE line into the rock (the exposed face most aligned with the
+normal), read with the floor's own reconstruction/scan/remap and no rescaling (along a straight line the tilt cancels;
+only `h_spall_max` and `flake_h_max` ÷ μ). Its bookkeeping passed (a2 i–v). It stopped on P2-8's area rule, which is
+exact only at 0°/45° (+5–10 % at intermediate tilts), and found that the firing step's kernel reads stale edge
+temperatures on BOTH paths. A review of the rev 1 code found four more defects. **Rev 2 = those fixes, then the rev 1
+plan unchanged.** Every fix is general (no new key, no tuned number); the per-item reasons and the offline evidence
+are in the archive record and `tests/MMWSpalling/studies/p2_9_face_removal/offline/README.md`.
+⚠ Carry-forwards: P2-8's d2 is PROVISIONAL (roofs, no convergence backing); the 2639 sweep misses the side-face /
+lateral / face-list unit tests (P2-8 DR-2); 60/90 s volumes are predictions (DR-15); `weibull.V0` 1e-9 on every mesh
+(DR-17). Heat uptake is an OPEN PROBLEM; S is a stated input from her 30 s volume. Not addressed: the heat rule's
+EXPOSURE; hand-set numbers left in the decks: the flange lid in `h_expr` and `flake_h_max` 1.5 mm.
+**Rev 2.1 (planner, 2026-10-27; the user authorised resuming past the failed a5).** a5 is a FINDING, not a halt:
+z-line slopes of 20–45° recede ~1.5–8 % slower than the floor at 1 mm. A phase-immune check (firing-to-firing per
+column, planner) agrees with the gate within ~3 points (TL20 −1.4, TL35 −4.4, TL45 −6.7, TR −4.9 %); single 5 s
+windows swing ±15 %. Logged cause so far: same firing frequency and surface T (≤ 1 K), thinner flakes — the line's
+two-cell decay length is ~12 % short of ℓ_n/cos θ at 45° — probably because P2-8's per-face rule gives a step-edge
+cell two faces' heat and steepens its two-cell profile. The planner's P0 ("rate error = area error") is REFUTED.
+The smoothed normal leans to z at step tops (median μ 0.82 vs true 0.71 at 45°); this affects only the ÷ μ caps and
+the logged `h_n`, not the rate here. The bias cannot create or hide d2's attribution (one rule both legs), so the
+Höser legs run; their verdicts state it. Bars that were planner errors, not findings: a1b's declared set (no sweep
+leg runs a key-off remap), a3 (viii) (a steady-heated slab never fires through), c4's 2 % floor bar (ℓ ≈ 1.6–1.9 mm,
+so 2 mm is under-resolved; 1 → 0.5 mm is 1.7 %, the same on both keys), a6's rate (÷ the INITIAL area of a cavity
+that grows ~1.5× in radius; its spreads are the usable part).
+⚠ Plan of record (user 2026-10-26): P2-9 → P2-10 (Meier on the face list, key default ON, delete group B and every
+path this step bypasses) → MMW. Retire, don't stack; no band-aids.
+
+### Sources (opened 2026-10-27; step zero re-resolves every line)
+
+- **Rev 1 code** (F = `FaceRemoval.H`, R = `Removal.H`, M = `MMWSpalling.H`): `FrCells` F:93 (misaligned ⇒ sheet,
+  F:121); `FrFaceFlux` F:135; `FrAssignTs` F:159; `RecedeAlongLine` F:263; `FrFillTempGhosts` F:305 (called F:852) and
+  its Neumann-only guard M:1353–1361; `RecedeAlongLines` F:340 — fallback branch `ReconFromX(Tc, T0r, dx, 0.0, …)`
+  F:516, `through` F:578, `if (!(h > 0.0)) h = dx;` F:626, its own ν / confining offset F:484–485.
+  Shared pieces: `ScanKIcPa` R:66, `ScanSigmaT` R:91, `DepthScanH` R:118, `RemapProfile` R:195. Other ν / offset
+  copies: R:660–667, R:1440–1444, M:8216–8223. `ReconFromX` flat ⇒ `h_f = dz` M:12296. F3's normal: the solid
+  indicator with ONE ghost, `Numeric::Gradient` (M:~4865), `FaceWeight` M:4633 (w = 1/|n|₁, zero gradient ⇒ w = 1).
+- **Edge cells:** `Util::RealFillBoundary` = `a_mf.FillBoundary()` only (`src/Util/Util.H:341`, no periodicity, no
+  physical BC). The integrator refills every evolving field at the next step's start:
+  `FillPatch(lev, time, *cell.fab_array[n], *(*cell.fab_array[n])[lev], *cell.physbc_array[n], 0)`
+  (`src/Integrator/Integrator.cpp:1204`; signature `Integrator.H:365`). The temperature BC is
+  `BC::BC<Set::Scalar>* bc` — **private** in `src/Integrator/HeatConduction.H:276` (registered with `temp_mf` :102).
+- **Build:** `Makefile:155–169` writes `%.cc.d`/`%.cpp.d` with `-MT $(@:.cc.d=.cc.o)`, so a `.d` is rebuilt only when
+  its `.cc` changes; `obj/obj-3d-g++/mmwspalling.cc.d` is dated 2026-09-16 and lists neither `Grimsel.H` (added
+  2026-10-08) nor `FaceRemoval.H`.
+- **Offline evidence** (`studies/p2_9_face_removal/offline/`, scripts + outputs): normal from the solid fraction
+  smoothed by a Gaussian **σ = 1 cell truncated at ±2 cells**, P2-8's per-face w = 1/|n|₁ unchanged — area error on
+  binary staircases: planes −1.8 to +0.1 %, spheres −1.2 to −0.2 %, cylinder bore −2.8 %, sharp cube −5.0 % (P2-8
+  today: +3 to +12 %). Per tilt (`a4_predictions.txt`): −1.14 / −0.13 / +0.39 / 0.00 / −1.64 / 0.00 % at 20° / 30°
+  (≡ 60°) / 35° / 45° / 35°-az45 / (1,1,1). The steady recession-rate error equals the area error (heat in = flake
+  enthalpy out). The planner's offline staircases differ from the rev 1 fixtures by up to ~1.7 points (P2-8 normal:
+  +8.0 vs +8.6 % at 20°, +11.7 vs +10.0 % at 35°-az45).
+- **Höser 2016** Fig. 5.10 (47 MPa): axis depth **18 / 31 / 48 / 61 / 77 mm**, max Ø **40 / 47 / 56 / 64 / 73 mm** at
+  **15 / 30 / 60 / 90 / 120 s**; mouth ≈ Ø46; "dL/dt = 1.8 dD/dt"; volumes **16.0 / 33.0 / 81.0 / 135.0 cm³** at
+  15 / 30 / 60 / 90 s (`validation/hoeser/hoeser_2016_drilling_series.csv`).
+- **P2-8 legs** (binary `f4c27b2739e78d87a89dc2e4`, `studies/p2_8_face_list/legs/`): K0 (key off, S 0.10, 30 s)
+  V 13.048 cm³; L0 (S 0.10) V 18.728 cm³, max Ø 48.5, mouth 39.9, r17.5/axis 0.700, plates 116 cells / 276 faces;
+  P47 (C\* 955.592808, 120 s) max Ø 106.5, axis 55 mm, mouth 79.3 at 105 s, plates 36.4 % of faces at 120 s;
+  S\* = 0.1314 (`SSTAR.txt`); L0f aborted at 27.3 s (`C3_PARTIAL.txt`).
+- **Fixtures:** `surface_patch.jet_closure` = `none` | `enthalpy` (M:11094); under `none` the gas temperature is
+  `T_flame_expr` (given with `h_expr`). `spall.seed_void` takes any number of 6-int boxes (M:7855). `face_list`
+  requires `convective_flame` + `h_expr`, `robin_form=surface`, microstructure, `follow_mask` (M:1284–1302). Rev 1's
+  generator `unit/face_removal/make_input.py` documents the keys it drops from the Höser base.
+- **Höser base** `studies/p2_8_face_list/legs/L0/argv.sh`: `robin_form=surface`, `spall.surface_T=reconstructed`,
+  `removal_energy=flake`, `flake_c_f=0.4`, `flake_h_max=0.0015`, `lateral_*=1`, Grimsel laws, relief 0.531294,
+  `weibull.m=13`, `a0_ig=8.0e-6`, no constraint depth, `surface_normal=0`, beam off.
+
+### Goal
+
+Three binaries, in order. Items 1–3 change key-off code; items 4–8 apply only under `surface_patch.face_list = 1`.
+
+**Binary 0 — the build.**
+1. **Dependencies that follow headers.** In both `Makefile` rules (:161, :169) make the dependency file a target of its
+   own list: `-MT "$@ $(@:.cc.d=.cc.o)"` (and the `.cpp` form). Regenerate every `obj/obj-3d-g++/*.d` once, clean
+   rebuild. No other `Makefile` change.
+
+**Binary A — key-off fixes (declared tree change).**
+2. **Edge cells through the solver's own BC.** `HeatConduction::bc` `private` → `protected` (that member only). After
+   every removal write that changes `H`/`T` — the column path's tail (where `RealFillBoundary` is called after
+   `InvertHtoT`) and the line path's — call `FillPatch(lev, time, temp_mf, *temp_mf[lev], *bc, 0)`, the call
+   `Integrator.cpp:1204` makes. Delete `FrFillTempGhosts` and the Neumann-only guard (M:1353–1361). Step zero lists
+   every other field the removal writes that carries ghosts and is read before the next step's `FillPatch`
+   (`removed_mf`, the solid fraction, `H_mf`, …) and refills each through its own registered BC, or states why it is
+   not read.
+3. **One copy of the elastic constants.** One member function returns E, β, ν (= E/2μ − 1) and the confining offset
+   (`confining_p·ν/(1−ν)`, 0 outside −1 < ν < 1 or when `confining.p` is 0) and replaces all four copies (R:660–667,
+   R:1440–1444, M:8216–8223, F:484–485). Behaviour identical.
+
+**Binary B — the line rule fixed.**
+4. **The normal (F3).** n̂ = −∇F/|∇F|, F = the solid FRACTION (`fr_f`; void 0, above the domain top 0, symmetry planes
+   mirrored, other sides nearest in-domain) smoothed by a normalised Gaussian, **σ = 1 cell, truncated at ±2 cells**
+   (5×5×5), ∇ by central differences of the smoothed field ⇒ the fraction field carries **3 ghost cells**. P2-8's area
+   rule w = 1/|n|₁ per exposed face, its zero-gradient fallback and R0's line choice are unchanged and now read this
+   normal. One function computes it; kernel, ledger, march, R0 and the diagnostics call it.
+5. **The fallback flake.** A line with no reconstruction (no solid cell behind, or no inward decay) takes its flake
+   from the face heat balance on e\*: ℓ_q = k_c (T_s − T0)/q_net, with T_s the face-Newton temperature on e\*,
+   q_net = h(T_g − T_s) − losses on e\*, k_c the cell's conductivity (damage factor included);
+   h_line = c_f·ℓ_q, capped by `flake_h_max`/μ and `h_spall_max`/μ as `ReconFromX` caps. If q_net ≤ 0 or
+   T_s ≤ T0 there is no heated skin: the cell does not recede this step (`fr_noskin_<c>`). Under the key nothing
+   defaults to one cell: delete F:626's `h = dx` and do not consume `ReconFromX`'s flat `h_f = dz`.
+6. **Through means through.** A `through` firing (the crack reaches the void behind, F:578) removes the whole solid
+   along the line, h = Σ f·dx over `run` (≤ `h_spall_max`/μ by construction). Lands with item 5 (sheets broke whole
+   only through the one-cell default).
+7. **Counters.** `fr_misaligned` (normal leans along no exposed face; still evaluated as a sheet) separate from
+   `fr_sheet` (zero gradient); `fr_noskin_<c>`; per-step wall time of the removal and of the whole step in thermo.
+8. **Tests.** Extend `unit/face_removal` (a3 rows) and `unit/lateral_flux_lock` (one normal function; one elastic
+   helper; no `FrFillTempGhosts`; `FillPatch` after both removal writes). Extend `make_input.py` with the curved
+   fixtures. `run_p2_9.py` / `reduce_p2_9.py` / `RESULTS.txt` as rev 1 Goal 8, plus the K0g leg; the P2-10 deletion
+   list (rev 1 takeaway 7) into `RESULTS.txt`.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | item | where | what decides it |
+|---|---|---|---|
+| L1 | the build sees header edits | `Makefile` -MT, `mmwspalling.cc.d` | a0 |
+| L2 | the BC fill runs on BOTH paths | column-path tail and `RecedeAlongLines` tail | a3 (ix) both keys; a1b non-empty declared diff |
+| L3 | the new normal reaches every consumer | one function, called by kernel / ledger / march / R0 / diagnostics | lock; a3 (vi) |
+| L4 | the fallback flake is reachable | lines with x ≤ 0: run 1 (sheets) or no inward decay | a3 (vii); `fr_fb_<c>` > 0 on M0 |
+| L5 | `through` removes the slab | F:578 branch | a3 (viii) |
+| L6 | a floor is today's floor | +z line, μ = 1 exactly (the smoothed normal of a flat floor is +z) | a4 |
+| L7 | the lid holds | original-surface +z faces at r > 20 mm, h = 0.001 | b1 negative case |
+
+### Legs
+
+**Fixtures** (`unit/face_removal`): the rev 1 base — Höser deck + s100 keys, `weibull.enabled=0`,
+`spallation.sp.a0=8.0e-6`, `surface_patch.jet_closure=none`, `T_flame_expr=1866.0`, `h_expr=700.0`, insulated sides,
+20 s, nozzle plane above the block; asserted at step 1 and the last step: `flame_h`, `flame_Tg` identical on every
+column. **T00** (flat, key 0 and key 1, dx 2 / 1 / 0.5 mm, `timestep` 0.008 / 0.008 / 0.004) and the rev 1 tilt legs
+(key 1, 1 mm: 20°, 35°, 45°, 60° in x–z, TR 35° at az 45°, TD (1,1,1); 24 × 24 × 64 cells). Rate = the surface's
+normal position (mean over INTERIOR columns ≥ 4 cells from every side, along the plane's true dominant axis, of
+(solid count + f)·dx·μ_true), least squares over 5–20 s. **New curved legs** (key 1, full domain, no symmetry plane):
+**SPH** a closed spherical cavity R 24 mm centred in a 64 mm cube; **BORE** a cylinder R 12 mm, 24 mm deep, flat floor,
+open to the top, in a 48 × 48 × 48 mm block; each at 1 mm and 2 mm. Rate = removed volume / initial analytic area,
+per unit time (5–20 s); isotropy: normal recession per angular bin (SPH, bins of the largest |component| of r̂) and
+per 30° azimuth sector at mid-depth (BORE).
+**Höser legs:** argv = P2-8's `legs/L0/argv.sh` (or the named leg) token for token, replacing ONLY `plot_file` and
+the keys listed; binary B.
+
+| leg | from | keys replaced | stop / plot_int |
+|---|---|---|---|
+| K0g | K0 | — (key off: the edge-cell fix alone) | 30 / 3750 |
+| M0 | L0 | — | 30 / 3750 |
+| M0c | L0c | as L0c: `amr.n_cell=25 25 75` `amr.blocking_factor=1` | 30 / 1875 |
+| M0f | L0f | as L0f: `amr.n_cell=100 100 300` `timestep=0.004` `amr.max_grid_size=50` | 30 / 7500 |
+| C15n | C15 | h_expr constant `1090.859370` | 30 / 3750 |
+| P47r | P47 | h_expr constant `955.592808` (P2-8's C\*) | 120 / 1875 |
+| P47n | P47 | h_expr constant C\*new = S\*new × 7272.3958 — ONLY if \|S\*new − 0.1314\| > 0.0039 | 120 / 1875 |
+
+**S\*new rule (d1):** log-log interpolate V(30 s, ×4) between M0 (S 0.10) and C15n (S 0.15) to 33.0 cm³; 4 decimals.
+Outside ⇒ ONE added point (S 0.07 or 0.20); still outside ⇒ stop and report.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | binary 0: `mmwspalling.cc.d` lists `FaceRemoval.H` and `Grimsel.H`; touching ONLY `FaceRemoval.H` then `make` recompiles `mmwspalling.cc` | both | **gate** | header edits can still ship stale objects — no later hash can be trusted |
+| a1 | 1 | binary 0 (rev 1 source, key off) tree sweep vs `p2_8.md5`; controls | 0 changed of 2639; 26 / 863 | **gate** | a stale build or rev 1's refactor moved key-off behaviour (rev 1 never ran this) |
+| a1b | 2 | binary A vs binary 0's manifest; `GATE_a1b_DECLARED.txt` written BEFORE the sweep = legs whose key-off path writes a remap or a lateral shift and fires at least once | changed ⊆ declared; ≥ 1 changed; controls 26 / 863 | **gate** | the edge fix reached something it should not, or nothing at all |
+| a2 | 3 | binary B key off vs binary A manifest; extended lock; the DR-2 unit tests vs binary A's logs | 0 changed; lock PASS; logs identical in text (pre-existing `lateral_drive` and `surface_T_recon` FAILs unchanged) | **gate** | the key leaks at 0 |
+| a3 | 3 | `unit/face_removal`: rev 1's (i)–(v) on binary B; (vi) area Σ w·dx² vs analytic on the initial interior faces of every tilt fixture and of SPH; (vii) a fixture line with no inward decay and q_net > 0 recedes c_f·k_c(T_s−T0)/q_net (rel ≤ 1e-12 vs the logged inputs), and one with q_net ≤ 0 does not recede (`fr_noskin` > 0); (viii) a seeded 3-cell slab over a void heated to fire `through` voids all 3 cells in one firing; (ix) rev 1's `ghost_repro.py` fixture: edge offset 0.000 K at key 0 AND key 1; (x) `fr_misaligned` and `fr_sheet` are separate columns | all; (vi) \|err\| ≤ 4 % | **gate** | a fix is not what the packet specifies |
+| a4 | 4 | T00 key 0 vs key 1 at each dx (both binary B) | rate ≤ 0.1 % apart; median firing T_s ≤ 0.5 K; total `ledger_E_flake` ≤ 0.1 % | **gate** | the line rule moved the calibrated floor |
+| a5 | 4 | tilt legs at 1 mm vs T00 key 1: normal recession rate; `fr_multi`; non-sheet firings with μ ≥ 0.57 | each within 4 %; 0; ≥ 99 % | **finding** (planned as a gate protecting every Höser leg; reclassified in rev 2.1 on the user's authorisation, label corrected at archive per review DR-9) | the line rule is grid-orientation dependent beyond the area rule's own error |
+| a6 | 4 | SPH and BORE at 1 and 2 mm: rate vs T00 key 1; per-bin / per-sector recession spread | report with magnitudes | **report** | see P0 |
+| a5b | 5 | TL20, TL35, TL45, TR at 0.5 mm vs T00 key 1 at 0.5 mm, and the same at 1 mm, with a PHASE-IMMUNE rate: per interior line, normal recession (h_line × the plane's true cos of the line's axis) between its first and last firing in 5–20 s ÷ that time, averaged over lines | report the deficit at both meshes | **report** | shrinks ⇒ a resolution effect, stated; does not shrink ⇒ structural, diagnosed and fixed in P2-10 (heat into step-edge vs tread cells, from the field) |
+| a7 | 4 | `--probe` all Höser legs | rc 0; `alamo.program` the only unused key; the unread-keys log line present | **gate** | a leg does not run what it names |
+| b0 | 5 | K0g vs P2-8 K0: V, axis depth, max Ø, `ledger_err_solid` | report | **report** | the size of the edge-cell bug on every remap result since P0b rev 5 |
+| b1 | 5 | M0 witnesses: `ledger_err_solid` max; `fl_id_march`, `fl_id_ledger`; `fr_multi`; `fr_id_remap`; regime-6 rows; firings on cells whose only face is a lidded original-surface +z face | ≤ 5e-3; ≤ 1e-9; 0; ≤ 1e-12; 0; 0 | **gate** | energy not conserved, a cell fired twice, the old paths still run, or a cold face fired |
+| b2 | 6 | M0c and M0f reach 30 s | rc 0 | **gate** (protects the 120 s legs) | the general rule still breaks on a fine mesh |
+| c1 | 6 | M0 vs L0 at 30 s: sheets (cells, faces, share); mouth Ø; max Ø; V ratio; firings and voids by line class; r17.5/axis; `fl_P_side` ratio; shares of `fr_clip`, `fr_cap`, `fr_fb_<c>`, `fr_noskin_<c>`, `fr_misaligned`, `fr_overlap` (+ `fr_E_drop` / `ledger_E_flake`); step wall time M0 / L0 | report with magnitudes | **report** | see P1 |
+| c2 | 6 | M0 Ø by 30° sector at 5 and 10 mm | spread ≤ 3 mm | **report** | a grid-diagonal artefact |
+| c3 | 6 | M0c and M0f vs M0: volume; max Ø; axis depth | 2 vs 1 mm: ≤ 15 %, ≤ 4 mm; 0.5 vs 1 mm: ≤ 5 %, ≤ 2 mm, ≤ 1.5 mm | **report** | not converged; P47 is a 1 mm result |
+| c4 | 4 | T00 key-1 rate spread over 2 / 1 / 0.5 mm; tilt legs at 2 mm vs T00 2 mm | ≤ 2 %; each within 4 % | **report** | the line rule converges more slowly than the floor |
+| d1 | 7 | S\*new by the rule | interior (≤ 1 added point) | **gate** | the level cannot be matched — stop before P47n |
+| d2 | 8 | P47r vs P2-8 P47 (same C\*): sheet share, mouth Ø, max Ø, axis depth, V at every plotfile | report | **report** | see P3 |
+| d3 | 9 | P47n (P47r if skipped) vs Höser at 15 / 30 / 60 / 90 / 120 s; V60/V30, V90/V30 (hers 2.45, 4.09) | "shape agrees" = max Ø within ±6 mm at 60/90/120 s AND axis depth within ±15 % at every time | **report** | see P4 |
+| d4 | 9 | P47r and P47n at 120 s: ledger; identities; `fr_multi`; sector spread at 30 / 50 mm; first r = 50 mm contact time | ≤ 5e-3; ≤ 1e-9; 0; ≤ 3 mm | **report** | bookkeeping or isotropy fails at scale |
+| e1 | 10 | verdict | — | **verdict** | Is the line rule the floor's rule (a4), orientation-free within the area rule's error (a5, a6); does it remove roofs and the crash (c1, b2); how big was the edge bug (b0); do roofs or the heat rule own P2-8's over-width (d2); how far is the shape from Höser (d3); what P2-10 deletes |
+
+### Pre-registered predictions
+
+- **P0 (a3 vi, a5, a6):** rate error = area error = the offline per-tilt values in Sources (60° ≡ 30°), within the
+  stated fixture spread. SPH −1.0 % at 1 mm (−1.5 % at 2 mm, R 12 cells);
+  BORE −2.8 % (the sharp floor–wall corner is rounded over ±2 cells). Per-bin / per-sector spreads of 10–30 % on the
+  binary staircase are expected (offline `line_vs_face_sphere_by_angle.txt`); they are noise, not a trend, if they
+  shrink at 1 mm vs 2 mm.
+- **P0b (b0):** the edge fix moves K0 by < 2 % in volume and < 1 mm in axis depth (≈ 0.5–1 K per firing at the two
+  symmetry planes only).
+- **P1 (c1):** sheets at 30 s ≤ 10 cells (L0 116 plates); mouth Ø 41–50 mm (L0 39.9); max Ø 48–58 mm; V M0/L0
+  1.00–1.30; `fl_P_side` M0/L0 0.6–1.0 (risers take the cell's surface T, and the new normal removes P2-8's
+  5–10 % area excess on slopes); `fr_noskin` < 1 % of surface cells.
+- **P2 (c3):** inside the bars; the crash cause is gone (b2).
+- **P3 (d1, d2):** S\*new 0.10–0.14. At C\* sheets ≤ 5 % of faces at every plotfile (P2-8 36.4 % at 120 s), the mouth
+  ≥ 50 mm by 60 s (P2-8 39.9 until 90 s), max Ø at 120 s ≥ 95 mm: **the roofs are NOT the cause of the over-width;
+  the position-only heat rule is.**
+- **P4 (d3):** shape does not agree — max Ø at 120 s > 79 mm; depth/diameter growth 15→120 s < 1.2 (hers 1.8);
+  V60/V30 ≥ 2.6, V90/V30 ≥ 4.3 (P2-8 2.91, 5.32). A pass refutes P3's attribution and removes the case for the
+  exposure step.
+- **Refuting evidence on disk:** none for the line rule; rev 1's `A2_OFFLINE.txt` (P2-8 normal) and `GHOST_REPRO.txt`
+  are the "before" of a3 (vi) and (ix).
+
+### What would make this inert — witness each
+
+- The old paths still run under the key — `fr_n_wall`, `fr_n_roof` > 0 and regime-6 rows 0 on M0 (b1).
+- A gather or BC fill that stops at a box seam — a3 (iv) decomposition; a3 (ix).
+- Every wall line on the fallback — `fr_fb_<c>`, `fr_noskin_<c>` (c1).
+- Firing judged on a firing-conditioned variable — `fr_smax_<c>` and `fr_score` include the NON-fired cells.
+- A fixture not built as named — a3 (vi) reads the initial face census and Σ w·dx² against the analytic area.
+
+### Guardrails
+
+- σ = 1 cell, ±2 cells: a fixed stencil, never tuned or set per case; no other new number.
+- Edits outside `src/Integrator/MMWSpalling*`: `HeatConduction::bc` private → protected (that member only) and the two
+  `Makefile` `-MT` lines. Key-off behaviour changes only through item 2 (a1b's declared set).
+- Group B and `spall.lateral_*` stay, unread under the key; deleted in P2-10. No Meier leg; no change above the
+  nozzle plane, to the pad shield, the wall march or any Meier deck; F2 (heat rule) unchanged.
+- Nothing tuned except S\*new, by the d1 rule, on her 30 s volume.
+- ×4 on volume and energy (SR 3); event-log `k_top` is pre-removal (SR 4); never sum per-step thermo (SR 7);
+  `caffeinate -dis`, `-np 4`, legs serial, `.done` sentinels; argv + binary hash per leg (SR 8).
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_9_face_removal
+U=tests/MMWSpalling/unit/face_removal; W=tests/MMWSpalling/studies/tree_sweep_0922/witness
+B="EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8"
+# ord 1: binary 0 (Makefile only) -- a0, then a1
+eval $B && bash $W/guarded_post_all_par.sh p2_9_b0                               # vs p2_8.md5
+# ord 2: binary A (edge fill + elastic helper) -- a1b (declared set first)
+eval $B && bash $W/guarded_post_all_par.sh p2_9_bA                               # vs p2_9_b0.md5
+# ord 3: binary B -- a2, a3
+eval $B && bash $W/guarded_post_all_par.sh p2_9_bB                               # vs p2_9_bA.md5
+$PY tests/MMWSpalling/unit/lateral_flux_lock/test && $PY tests/MMWSpalling/unit/face_list/test
+$PY $U/make_input.py && $PY $U/test --offline
+# ord 4: a4-a7, c4
+caffeinate -dis $PY $U/test --floor && caffeinate -dis $PY $U/test --tilt && caffeinate -dis $PY $U/test --curved
+caffeinate -dis $PY $S/run_p2_9.py --probe ALL
+# ord 5-10
+caffeinate -dis $PY $S/run_p2_9.py K0g M0 && $PY $S/reduce_p2_9.py GATE           # b0, b1
+caffeinate -dis $PY $S/run_p2_9.py M0c M0f && $PY $S/reduce_p2_9.py MESH           # b2, c1-c3
+caffeinate -dis $PY $S/run_p2_9.py C15n && $PY $S/reduce_p2_9.py SSTAR             # d1
+caffeinate -dis $PY $S/run_p2_9.py P47r                                            # d2
+caffeinate -dis $PY $S/run_p2_9.py P47n; $PY $S/reduce_p2_9.py > $S/RESULTS.txt    # d3, d4, e1 (P47n only if d1 says)
+```
+
+### Claude completion notes
+
+**Files.**
+- `Makefile`: the two `-MT` lines now name the `.d` file itself (`-MT "$@ $(@:.cc.d=.cc.o)"`, `.cpp` likewise).
+  `obj/obj-3d-g++` was moved aside to the scratchpad and rebuilt clean, not deleted.
+- `src/Integrator/HeatConduction.H`: `bc` changed from private to protected, that member only.
+- `MMWSpalling/Removal.H`:
+  - `ElasticConstants()` replaces all four elastic-constant copies.
+  - `RefillTempGhosts()` is called after `InvertHtoT` on the column path's tail.
+- `MMWSpalling/FaceRemoval.H`:
+  - `RefillTempGhosts` on the line path's tail; `FrFillTempGhosts` deleted.
+  - The fallback flake from the face heat balance (`fr_noskin_<c>`).
+  - `through` removes the whole run; `fr_misaligned` is separate from `fr_sheet`.
+  - `fr_t_removal` and `fr_t_step` thermo columns.
+  - Event-log columns appended: `through`, `q_net`, `k_c`.
+- `MMWSpalling.H`:
+  - the smoothed normal (`FrSmoothedGradient` / `FrSmoothAt` / `FrGauss`, σ = 1 cell over ±2 cells);
+  - `FillFractionGhosts` and `FrInitFraction`;
+  - the solid fraction now carries 3 ghost cells;
+  - `BuildFaceList` reads the new normal;
+  - the Neumann-only guard is deleted;
+  - the step timer.
+- Rev 1 copies are in `studies/p2_9_face_removal/src_pre/*.rev1`.
+- **Tests:**
+  - `unit/face_removal`: `make_input.py` gains the curved fixtures (SPH, BORE); `test` gains a3 (vi)–(x), `--curved`,
+    and a rewritten rate routine.
+  - `unit/lateral_flux_lock`: the rev 2 clauses added; one clause restated (`ReconFromX` is called once in the line
+    path).
+  - `unit/face_list`: its independent reference now uses the rev 2 normal, and the flat-floor `w == 1` check moved
+    to CAV's flat top (STAIR's flat run is too narrow for a 3-cell stencil).
+- **Study** `studies/p2_9_face_removal/`:
+  - scripts: `gate_a0.sh`, `tree_compare.py`, `run_p2_9.py`, `reduce_p2_9.py` (unused: no Höser leg ran),
+    `tilt_crosscheck.py`;
+  - records: `GATE_a0/a1/a1b/a2.txt`, `GATE_a1b_DECLARED.txt`, `A3_A6_CHECK.txt`, `TILT_CROSSCHECK.txt`,
+    `SLAB3_ATTEMPTS.txt`, `PROBE.txt`;
+  - unit-test logs per binary in `b0/`, `bA/`, `bB/`;
+  - binary hashes: `BINARY_0/A/B.txt`.
+
+| # | measured | result | output |
+|---|---|---|---|
+| a0 | `mmwspalling.cc.d` lists FaceRemoval.H and Grimsel.H; touching ONLY FaceRemoval.H recompiles mmwspalling.cc (object mtime moves, one COMPILING line) | **PASS** | `GATE_a0.txt` |
+| a1 | binary 0 (`26bccb44…`): 0 of 2639 changed vs `p2_8.md5`; controls 26 / 863 | **PASS** | `GATE_a1.txt` |
+| a1b | binary A (`e7e691f7…`) vs binary 0: 0 changed = the declared set, which is EMPTY (no sweep leg runs a key-off remap or lateral shift, so "≥ 1 changed" cannot be met). SUBSTITUTE WITNESS (user's choice), binary 0 → A: `ghost_repro` key 0 edge offset 0.62 → 0.000 K; `lateral_drive` and `wall_march` text moves; controls 26 / 863 | **PASS on the substitute** | `GATE_a1b.txt`, `b0/`, `bA/` |
+| a2 | binary B (`7d77e347…`) vs binary A: 0 of 2639; controls 26 / 863; lock rc 0; DR-2 logs identical in text (pre-existing `lateral_drive` / `surface_T_recon` FAILs unchanged); face_list rc 0 on its rev 2 reference | **PASS** | `GATE_a2.txt`, `bB/` |
+| a3 | (i)–(v) as rev 1 (decomposition byte-identical, 2,320 rows; fr_multi 0; fr_id_remap ≤ 7.4e-16). (vi) Σw vs analytic: 20° −0.18 %, 35° −0.81 %, 45° 0.00 %, 60° −1.47 %, 35° az 45 −2.96 %, (1,1,1) −0.85 %, SPH −1.03 %. (vii) fallback flake = c_f k_c (T_s−T0)/q_net on 287 rows, worst rel 3.3e-16; NOSKIN (gas 250 K): fr_noskin 576, 0 firings. (viii) RESTATED (user's choice): every `through` firing over all legs voids its whole run; the packet's 3-cell slab never fires through under 7 heatings. (ix) edge spread 0.000 K at key 0 and key 1. (x) both columns present | **PASS** ((viii) restated) | `A3_A6_CHECK.txt`, `SLAB3_ATTEMPTS.txt` |
+| a4 | T00 key 1 vs key 0, rate: −0.005 / −0.001 / −0.000 % at 2 / 1 / 0.5 mm; median T_s +0.006 / −0.039 / −0.013 K; ledger_E_flake −0.023 / −0.005 / −0.003 %; key-1 fallback after the first firing: 0 rows | **PASS** | `A3_A6_CHECK.txt` |
+| a5 | 1 mm normal rate vs T00 key 1 (6.1316e-4 m/s): **20° −4.00 %, 35° −5.28 %, 45° −8.01 %, 35° az 45 −5.79 %**, 60° +1.16 %, (1,1,1) −3.26 % (34 lines; the rest reach the block floor); fr_multi 0; μ ≥ 0.57 on 100 % of firings | **FAIL (gate)** | `A3_A6_CHECK.txt`, `TILT_CROSSCHECK.txt` |
+| a6 | SPH 1 / 2 mm rate +38.7 / +22.4 % vs T00 (removed volume ÷ INITIAL area: the cavity grows ~1.5× in radius in 20 s, so this overstates the normal rate); 6-bin spread 4.0 / 7.8 %. BORE +33.9 / +7.2 %; 12-sector spread 5.9 / 1.8 % | report | `A3_A6_CHECK.txt` |
+| a7 | 6 / 6 legs rc 0 at one step; `alamo.program` the only unused key; the unread-keys line on every key-on leg (absent on K0g, key off) | **PASS** | `PROBE.txt` |
+| c4 | T00 key 1 rate 6.681 / 6.132 / 6.027e-4 m/s at 2 / 1 / 0.5 mm: spread 10.4 % (bar 2 %; key 0 the same to 5e-5). Tilts at 2 mm −9 to −15 % | report (OUTSIDE) | `A3_A6_CHECK.txt` |
+| b0–b2, c1–c3, d1–d4 | not run — after gating row a5 | — | — |
+| e1 | The line rule IS the floor's rule (a4 to 5e-5) and its bookkeeping holds, but it is NOT orientation-free beyond the area rule's error: slopes recede 4–8 % slow at 1 mm and 9–15 % at 2 mm, while the area rule is within 3 %. The edge-cell bug is closed on both paths (a1b, a3 ix); its size on Höser (b0) is unmeasured | verdict withheld at a5 | — |
+
+### Implementation takeaways
+
+1. **a5 is real, not the measurement.**
+   - `tilt_crosscheck.py` measures it two independent ways: the volume the event log says the lines removed, and the
+     solid fraction lost from the field, over the same interior columns. They agree to 1e-4.
+   - A tilt fires as often as the floor (−3 % to +5 %), but each firing moves the surface 1–11 % less along the
+     normal (45°: −5 %, 35° az 45: −11 %).
+   - The flake is cut ALONG the line from the two-cell decay length, assumed to be ℓ_n/μ_true. On a staircase the
+     cell average across the line (and the surface cell's own position off the plane) shortens it. P0 predicted
+     ≤ 1.2 % from that smoothing; the measured 5 % at 45° says the staircase term is bigger.
+   - Lines cut sideways (60°, risers along x) are fine (+1 %); lines cut vertically through a staircase (20–45°,
+     mostly `+z` lines at μ ≈ 0.9 because the smoothed normal leans toward z at step tops) are slow.
+   - /plan decides. Options, none tried: ℓ from the smoothed or normal-projected profile; h along the line =
+     c_f ℓ_n / μ_true with ℓ_n from a normal fit; or a stated tolerance.
+2. **a1b's bar can't be met by the sweep, and `FillPatch` is private.**
+   - No sweep leg sets `removal_energy = flake` or a lateral key, so the key-off remap never runs there.
+   - `Integrator::FillPatch` is private, so `RefillTempGhosts` calls `HeatConduction::bc->FillBoundary` instead (the
+     newly protected member). That is FillPatch's own level-0 path (periodic FillBoundary, then the physical BC),
+     proven by a3 (ix) on both keys.
+3. **a3 (viii) as written can't be produced.** Under steady heating a cell fires the step its surface first crosses
+   threshold, when every deeper point is colder, or the far face fires first (`SLAB3_ATTEMPTS.txt`, 7 heatings). So
+   `through` is reached only by run-1 lines (roofs), and those break whole.
+4. **Fixture facts:**
+   - With the smoothed normal a one-cell roof over a void is NOT an F3 sheet: the solid under the void lies inside
+     the ±2-cell stencil. Zero-gradient sheets are now rare; `fr_sheet` and `fr_misaligned` both read ~0 on the
+     unit legs.
+   - The (1,1,1) and 45° tilts run corner columns down to the 64 mm block floor within 20 s, which is why the rate
+     keeps lines ≥ 4 cells off the floor (TD: 34 lines).
+   - a6's rate definition (removed volume ÷ INITIAL area) overstates cavity recession by the area growth.
+5. **The floor itself is mesh-dependent by 10 % (c4), on BOTH keys.** That is pre-existing key-0 behaviour, not
+   this step's. The packet's 2 % bar was for the line rule.
+6. **The edge-cell fix moves every key-off remap leg from now on.** The sweep can't see it; `lateral_drive`,
+   `wall_march` and K0g (b0, not run) do. Any frozen study that re-runs a remap leg on this binary differs from
+   its record by this fix.
+7. **The toolchain is not byte-reproducible:** an unchanged source rebuilt to a different hash (a0). Tree gates
+   still pass, so it is metadata, not code.
+
+### Claude completion notes -- rev 2.1 (ord 5-10, a5b)
+
+**Binary:** unchanged, B `7d77e34793e867aebc881daf`. No source change in rev 2.1.
+
+**New files:**
+- `unit/face_removal/test`: the `--a5b` mode and `phase_rate`.
+- `studies/p2_9_face_removal/`:
+  - scripts: `chain_ord5_10.sh` (the packet's order, with the b1 / b2 / d1 gates enforced);
+  - legs: `legs/{K0g, M0, M0c, M0f, C15n, P47r, P47n}`, probe in `probe/P47n`;
+  - records: `GATE_b.txt`, `MESH.txt`, `SSTAR.txt`, `RESULTS.txt`, `A5B.txt`, `RUN_ord5_10.log`.
+
+| # | measured | result | output |
+|---|---|---|---|
+| a5b | phase-immune deficit vs T00 key 1 at the same mesh, 1 mm → 0.5 mm: TL20 −1.44 → **+1.17 %**; TL35 −4.36 → −2.79 %; **TL45 −6.68 → −6.92 %**; TR (35° az 45) −4.94 → −0.63 %. T00 key 1: 6.159e-4 / 6.048e-4 m/s | report: the deficit SHRINKS at 20 / 35 / 35-az45 (resolution) and does NOT shrink at 45° (structural, for P2-10) | `A5B.txt` |
+| b0 | K0g (binary B, key off) vs P2-8 K0: V 13.048 → 13.056 cm³ (+0.06 %); axis 14.0 → 14.0 mm; max Ø 39.7 → 39.7 mm; ledger_err_solid 3.22e-4 → 3.25e-4 | report (P0b < 2 %, < 1 mm: held) | `GATE_b.txt` |
+| b1 | M0: ledger_err_solid max 2.8e-15; fl_id_march 1.9e-14, fl_id_ledger 1.4e-14; fr_multi 0; fr_id_remap 1.0e-15; regime-6 rows 0; lidded-surface firings 0. Wall firings 645, roof 0, floor 4,273 | **PASS** | `GATE_b.txt` |
+| b2 | M0c and M0f reach 30 s (M0f wall 1,219 s; P2-8's L0f aborted at 27.3 s) | **PASS** | `RUN_ord5_10.log` |
+| c1 | M0 vs L0 at 30 s: V(voids) 18.728 → 15.356 cm³ (0.820), V(f) 16.239; mouth Ø 41.4 → 45.2; max Ø 48.5 → 45.8; axis 15.0 → 14.0 mm; r17.5/axis 0.700 → 0.643; firings / voids floor 4273 / 3262, wall 645 / 577, roof 0 / 0; sheets 0, misaligned 0, P2-8 plates 0 (L0 116 / 276); fl_P_side M0/L0 0.770; fr_clip 0, fr_cap 0, fallback 1.00 % (floor only), noskin 0.96 %, overlap 0, E_drop 0; step wall M0/L0 1.45 (removal 0.0075 of 0.0279 s) | report. P1: sheets, mouth, fl_P_side, noskin IN; max Ø (48–58) and V ratio (1.00–1.30) MISSED, both LOWER | `MESH.txt` |
+| c2 | M0 sector spread 1.71 mm at 5 mm, 0.36 mm at 10 mm | within (≤ 3) | `MESH.txt` |
+| c3 | 2 mm vs 1 mm: V(f) 5.8 %, max Ø 1.2 mm, axis 0.0 mm (within). 0.5 mm vs 1 mm: **V(f) 5.4 % (bar 5), max Ø 2.6 mm (bar 2)**, axis 0.0 mm | report: 2 mm within; 0.5 mm OUTSIDE on volume and max Ø, just | `MESH.txt` |
+| d1 | V(f) 30 s: M0 16.239, C15n 36.227 cm³ → **S\*new = 0.1431** (C\* 1040.679839); \|S\* − 0.1314\| = 0.0117 → P47n run | **PASS** (P3 0.10–0.14: missed by 0.003) | `SSTAR.txt` |
+| d2 | P47r vs P2-8 P47, same C\*: sheets/faces 0 at EVERY plotfile (P2-8: 36.4 % at 120 s); mouth Ø 52.6 at 30 s, 72.7 at 60 s (P2-8 39.9 until 90 s); max Ø at 120 s 111.5 (P2-8 106.5); axis at 120 s 51 (55) mm; V(f) at 120 s 280.9 (P2-8 265.4 voids) | report. **P3 CONFIRMED: no roofs and a wider hole: the roofs do NOT cause the over-width** | `RESULTS.txt` |
+| d3 | P47n vs Höser: max Ø Δ +3.6 / +8.2 / +21.1 / +32.5 / +42.3 mm at 15 / 30 / 60 / 90 / 120 s; axis −38.9 / −35.5 / −29.2 / −25.4 / −28.6 %; V(f) 30 s 32.99 (hers 33.0); V60/V30 3.09 (2.45), V90/V30 6.07 (4.09); depth/diameter growth 15→120 s 0.61 (1.8) | **SHAPE DOES NOT AGREE**. P4 confirmed on every item | `RESULTS.txt` |
+| d4 | P47r / P47n at 120 s: ledger_err_solid 7.5e-15 / 6.5e-15; identities ≤ 2.9e-14; fr_multi 0; first firing at r ≥ 50 mm 99.6 / 90.9 s; sector spread at 30 mm 1.82 / **4.78** mm, at 50 mm **4.26 / 3.80** mm | report: bookkeeping exact; isotropy OUTSIDE 3 mm on 3 of 4 | `RESULTS.txt` |
+| e1 | see takeaways 8–10 | verdict | — |
+
+### Implementation takeaways -- rev 2.1
+
+8. **The e1 answers.**
+   - **The floor's rule (a4):** yes, to 5e-5.
+   - **Orientation-free within the area rule's error:** no, at 45°. On the phase-immune measure the deficit shrinks
+     with mesh at 20°, 35° and 35° az 45, but stays at −6.7 to −6.9 % at 45° from 1 mm to 0.5 mm. That is structural.
+     It is the case where the step-edge cell takes two faces' heat and its two-cell decay along z comes out short
+     (the planner's diagnosis), and P2-10 diagnoses it from the field.
+   - **Roofs and the crash removed:** yes. No roof cells at any plotfile of any leg (c1, d2), no roof firings, and
+     the 0.5 mm leg runs the full 30 s (b2).
+   - **The edge bug's size on Höser:** +0.06 % in volume, 0 mm in shape (b0), small.
+   - **Who owns P2-8's over-width:** the heat rule, not the roofs. With the roofs gone the hole is WIDER at the same
+     level (111.5 vs 106.5 mm at 120 s), and the mouth opens from 30 s instead of 105 s.
+   - **How far from Höser:** +42 mm in diameter and −29 % in depth at 120 s; it grows 0.61× as fast down as across,
+     against her 1.8×.
+   - **What P2-10 deletes:** the list in `RESULTS.txt`.
+9. **Two P1 misses, both on the low side.** At S 0.10, M0 is SMALLER than L0 (V 0.82, max Ø 45.8 vs 48.5). P1
+   expected the new normal plus the risers at the cell's T_s to give MORE. `fl_P_side` fell to 0.77×, so the
+   side-face heat dropped more than P1 thought (P2-8's +5–10 % slope area is gone, and risers at the surface T take
+   less than the face Newton gave). The level is re-matched by d1 (S\* 0.1431 vs P2-8's 0.1314), so P47n is the
+   comparable leg; P47r is the same-heat comparison.
+10. **Convergence is close, not inside (c3).** 0.5 mm vs 1 mm: +5.4 % volume, +2.6 mm max Ø (bars 5 % / 2 mm). The
+    0.5 mm leg is WIDER, consistent with a5b's slope deficit shrinking with mesh (slopes recede faster at 0.5 mm).
+11. **Isotropy at depth:** d4's 30 / 50 mm sector spreads reach 3.8–4.8 mm at 120 s (bar 3). The shallow c2 spreads
+    are 0.4–1.7 mm. Not diagnosed.
+12. **Cost:** 1.45× P2-8's step time (the line gather and scan are 27 % of a step). M0f took 1,219 s for 30 s.
+13. **`ledger_err_solid` on key-on legs is ~1e-14 (M0, P47r, P47n)**, against key-off K0g's 3.3e-4. The line path
+    books the exact telescoped removal energy, while the column path's window-boundary term is approximate. Not a bar;
+    noted so a reviewer does not read 1e-14 as a disabled ledger.
+
+
+### Review findings
+
+Re-derived independently: the **whole three-binary manifest chain** with my own comparator;
+**d1's S\*new** from the two ladder volumes; **every Höser leg's volume and max fired radius**
+from an `n_voided` census with `V_cell` parsed per leg; the **fallback division guard** and the
+**elastic consolidation** read from source; **a5/a5b** cross-read against `TILT_CROSSCHECK.txt`.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | `.d` lists both headers; touching one recompiles | PASS | not re-derived (a build action); ⚠ takeaway 7's "unchanged source → different hash" is the known non-reproducible toolchain | `GATE_a0.txt` | PASS (gate) |
+| a1 | 0 of 2639 vs `p2_8`; 26/863 | PASS | **0 of 2639** vs `p2_8`; controls **26 / 863** — my own diff | own manifest diff | **PASS (gate)** |
+| a1b | changed ⊆ declared; **≥ 1 changed** | PASS on substitute | **0 changed**, declared set EMPTY ⇒ the "≥ 1" half is **unmeetable by this sweep** (consistent with P2-8 DR-2: no swept leg sets `removal_energy=flake`). Substitute verified: `ghost_repro` key-0 edge spread **0.623465 → 0.000000 K**; `lateral_drive` shift ledger 217.708 → 217.707 J | own diff; `GATE_a1b.txt` | **PASS on the substitute** (user's choice) |
+| a2 | 0 changed; lock; DR-2 logs | PASS | **0 of 2639** bB vs bA **and** bB vs `p2_8`; controls 26/863 on all three binaries | own diff | **PASS (gate)** |
+| a3 | (i)–(x) | PASS, (viii) restated | (vi) area errors **−0.18 / −0.81 / 0.00 / −1.47 / −2.96 / −0.85 %**, SPH −1.03 — all inside 4 %; (vii) fallback = c_f·k_c(T_s−T0)/q_net, guard `q_net > 0 && Tf > T0r && k_c > 0` read at `FaceRemoval.H:493-511`, both caps applied, flat `h_f = dz` not read | `A3_A6_CHECK.txt:62-67`; source | **PASS (gate)**, (viii) relaxed — DR-7 |
+| a4 | rate ≤ 0.1 %; T_s ≤ 0.5 K; flake ≤ 0.1 % | PASS | key 0 vs key 1 at 1 mm: **6.131673e−4 vs 6.131584e−4 m/s, rel −1e−5** | `A3_A6_CHECK.txt:93` | **PASS (gate)** |
+| a5 | each tilt within 4 %; `fr_multi` 0; μ ≥ 0.57 on ≥ 99 % | **FAIL (gate)** | **TL20 −4.00, TL35 −5.28, TL45 −8.01, TR −5.79 %** — four of six outside; 60° +1.16, TD −3.26 (**on 34 of 256 lines**; −10.49 % unfiltered). `fr_multi` 0 and μ ≥ 0.57 on 100 % of ~9,500–10,300 firings per leg — both clauses hold | `A3_A6_CHECK.txt:105-120`, `TILT_CROSSCHECK.txt` | **DOES NOT REPRODUCE** — DR-9/10/11 |
+| a6 | report | +38.7/+22.4; +33.9/+7.2 | not re-derived; the rate definition (÷ INITIAL area of a cavity that grows ~1.5×) is declared as overstating | `A3_A6_CHECK.txt` | report |
+| a5b | report the deficit at both meshes | shrinks except 45° | **TL20 −1.44 → +1.17; TL35 −4.36 → −2.79; TL45 −6.68 → −6.92; TR −4.94 → −0.63 %** over 256/1600 lines | `A5B.txt` | report — DR-13 |
+| a7 | 6/6 rc 0 | PASS | 6 legs present; unread-keys line on every key-on leg, absent on K0g | `PROBE.txt` | PASS (gate) |
+| b0 | report | +0.06 %, 0 mm | **K0g 13.056 vs P2-8 K0 13.048 cm³ (+0.06 %)**; max fired radius **19.96 mm** on both (= the lid at r = 20 mm) | own census | report — P0b held |
+| b1 | ledger ≤ 5e-3; id ≤ 1e-9; `fr_multi` 0; `fr_id_remap` ≤ 1e-12; regime-6 0; lidded firings 0 | PASS | ledger **2.828e−15**; ids 1.85e−14 / 1.41e−14; `fr_id_remap` 1.03e−15; **M0's regimes are {1} only** — no regime-6 row exists | `GATE_b.txt`; own census | **PASS (gate)** |
+| b2 | M0c, M0f reach 30 s | PASS | **M0f (0.5 mm) completes 30 s with 23,327 firings**, where P2-8's L0f aborted at 27.3 s — the crash is genuinely gone | own census | **PASS (gate)** |
+| c1 | report | V 0.820, mouth 45.2, max Ø 45.8 | V(voids) **15.356** vs L0 18.728 = **0.820**; max fired radius **22.73 mm** (Ø 45.5 vs their mask 45.8); **sheets 0, misaligned 0, plates 0** | own census | report — two P1 misses, both low |
+| c2 | spread ≤ 3 mm | 1.71 / 0.36 | not re-derived (needs the mask) | `MESH.txt` | report |
+| c3 | 2 vs 1 mm ≤ 15 %/4 mm; 0.5 vs 1 ≤ 5 %/2 mm/1.5 mm | 0.5 mm OUTSIDE, just | V(voids): M0c **15.584** (+1.5 %), M0f **16.643** (+8.4 %) vs M0 15.356 ⇒ on **voids** the 0.5 mm gap is 8.4 %, worse than the V(f) 5.4 % scored | own census | report — DR-16 |
+| c4 | ≤ 2 %; tilts within 4 % | OUTSIDE | 6.681/6.132/6.027e−4 m/s ⇒ **10.4 %**, the same on key 0 ⇒ pre-existing floor behaviour | `A3_A6_CHECK.txt` | report — DR-21 |
+| d1 | interior, ≤ 1 added point | S\*new 0.1431 | V(f) 16.239 / 36.227 ⇒ slope **1.9789**, **S\* = 0.143092 → 0.1431**, C\* = **1040.679839** — exact. On V(voids) (15.356 / 34.796) it would be **0.1461** | own arithmetic | **PASS (gate)** — DR-15 |
+| d2 | report | P3 CONFIRMED | P47r V(voids) **276.916** vs P2-8 P47 265.4 = **+4.3 %** like-for-like; max fired radius **55.68 mm** (Ø 111.4 vs 106.5); **sheets 0 at every plotfile** | own census | report — **P3 confirmed**, DR-18 |
+| d3 | Ø ±6 mm at 60/90/120 s AND axis ±15 % | DOES NOT AGREE | P47n max fired radius **58.14 mm** (Ø 116.3; hers 73) | own census | **MISS**, P4 confirmed |
+| d4 | ledger ≤ 5e-3; id ≤ 1e-9; `fr_multi` 0; spread ≤ 3 mm | 3 of 4 spreads OUTSIDE | bookkeeping exact (7.5e−15 / 6.5e−15); spreads **4.78 / 4.26 / 3.80 mm** | `RESULTS.txt` | report — DR-19 |
+| e1 | verdict | delivered | answers all seven e1 questions | takeaways 8–10 | **delivered** |
+
+#### Diff review
+
+| # | hunk | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | `Makefile` two `-MT` lines | 9 | the dependency bug is real and now fixed; a0 proves it by a touch-and-rebuild. ⚠ takeaway 7 re-confirms the toolchain is not byte-reproducible | **ok** |
+| DR-2 | `HeatConduction::bc` private → protected | 9 | that member only, declared in the guardrails; the narrowest change that works | **ok** |
+| DR-3 | `RefillTempGhosts` calls `bc->FillBoundary`, **not** `FillPatch` | 2 | ⚠ the packet (Goal 2) specified `FillPatch(lev, time, …)`; `Integrator::FillPatch` is private, so a different call ships. Takeaway 2 declares it and argues it is FillPatch's **level-0 path**, witnessed by a3 (ix) at 0.000 K on both keys. True here (every leg is `max_level = 0`), but it omits the interpolate-from-coarse half ⇒ **it is not equivalent on a multi-level run**. Name it before any AMR leg | **risk** |
+| DR-4 | `ElasticConstants()` replaces four copies | 1 | verified: the only surviving inline `ν = E/(2μ) − 1` is **inside the helper** (`Removal.H:39`); R:660, R:1440, M:8216 and F:484 are gone | **ok** |
+| DR-5 | the smoothed normal (σ = 1 cell, ±2, 5³), fraction field → 3 ghosts | 1, 13 | one function read by kernel / ledger / march / R0 / diagnostics; a fixed stencil, never per-case (guardrail). a3 (vi) shows it cuts P2-8's +3…+12 % area error to −2.96…0.00 % | **ok** |
+| DR-6 | the fallback flake | 13 | the division is guarded **before** it happens (`q_net > 0 && Tf > T0r && k_c > 0`, `FaceRemoval.H:495`), else `noskin`; both caps ÷ μ; the flat `h_f = dz` is not consumed — exactly item 5 | **ok** |
+| DR-7 | a3 (viii) restated | **9 relaxed check** | listed with its reason and its evidence (`SLAB3_ATTEMPTS.txt`, 7 heatings: under steady heating the surface fires before any deeper point is hot). Restated to "every `through` firing voids its whole run", which **is** the property item 6 asserts. Class 9 satisfied | **ok** |
+| DR-8 | `fr_misaligned` / `fr_sheet` split; `fr_t_removal`, `fr_t_step` | 7 | both columns present; and the counters earn their keep — both read ~0, which is itself the finding that the smoothed normal retires P2-8's plates | **ok** |
+| DR-9 | **a5's status** | **9** | ⚠⚠ **the Criteria table still reads `gate` for a5** (line 167) while the Context (line 19) reclassifies it as a finding. The reclassification is the user's call and is recorded — but the formal gate list therefore contains a row that does not reproduce. **/plan must change the label**, or the next reader sees a step accepted with a failed gate | **risk** |
+| DR-10 | a5's TL20 | 6 | reads **exactly −0.0400** against a bar of **0.04** and is scored FAIL — a bar sitting on the measurement. Scored the strict way, which is right, but the row is not evidence of anything at that precision | **nit** |
+| DR-11 | a5's TD row | 4, 12 | ⚠⚠ TD's −3.26 % rests on **34 of 256 lines (13 %)**; the unfiltered cross-check reads **−10.49 %**. The filter (lines ≥ 4 cells off the floor) is justified — corner columns bottom out in 20 s — but the honest statement is that **a 64 mm block cannot measure 54.7°**, not that TD passes. The a5 table reports the passing number without that beside it | **risk** |
+| DR-12 | the a5 cross-check | 12 | ✅ strong: EVENTS (event log) and FIELD (solid fraction lost) agree to 4–5 digits on every tilt (only TD differs, 5.4883 vs 5.4759e−4). The deficit is **not** a measurement artefact | **ok** |
+| DR-13 | **P0 refuted** | 12 | ✅ the sharpest possible refutation: at **45° the area error is 0.00 %** while the rate error is **−8.01 %**, and a5b shows that deficit **does not shrink** with mesh (−6.68 → −6.92 %). "Rate error = area error" is false and the 45° residue is structural. Three other tilts do shrink ⇒ resolution. A clean separation | **ok** (a finding) |
+| DR-14 | where the deficit lives | 2 | ⚠ it is in the **per-firing recession**, not the firing count (firings −3.1…+5.4 %; per-firing TL45 −5.0 %, TR −10.6 %). TR's rate deficit (−5.8 %) is **smaller** than its per-firing deficit (−10.6 %) because it fires 5.4 % more often — a partial self-correction that masks the mechanism. P2-10 should diagnose per-firing, not rate | **risk** |
+| DR-15 | d1's volume estimator | 2 | ⚠ d1 uses **V(f)**; P2-8's S\* used **V(voids)**, so 0.1314 → 0.1431 mixes a physics change with an estimator change. I computed it both ways: on V(voids) S\* = **0.1461**, so the estimator is worth ~2 % and the remaining ~7 % is physics (`fl_P_side` 0.77×). Small — but say it rather than leave it open | **nit** |
+| DR-16 | c3's estimator | 2 | ⚠ same issue: V(f) gives 5.4 % for 0.5 vs 1 mm (bar 5), **V(voids) gives 8.4 %** by my census. Both miss; voids misses by more. Score one estimator throughout | **nit** |
+| DR-17 | the P2-8 crash | 10 | ✅ **genuinely fixed and independently confirmed**: M0f completes 30 s with 23,327 firings where L0f aborted at 27.3 s. This was the mechanism my P2-8 review flagged as a latent abort on every finer leg | **ok** |
+| DR-18 | roofs / plates | 12 | ✅ **sheets 0, misaligned 0, plates 0** on M0 (L0: 116 cells / 276 faces) and 0 at **every** P47r plotfile (P2-8: 36.4 % at 120 s), and the hole is **wider** at the same heat (Ø 111.4 vs 106.5). That **retires my own P2-8 DR-11/DR-12 confound**: the roofs did not cause the over-width, the heat rule does. P3 confirmed | **ok** |
+| DR-19 | d4's isotropy | 12 | ⚠ sector spread **4.78 mm at 30 mm** and 4.26 / 3.80 at 50 mm against a 3 mm bar, "not diagnosed" (takeaway 11), while the shallow c2 spreads are 0.4–1.7 mm ⇒ a depth effect, undiagnosed and carried | **risk** |
+| DR-20 | `ledger_err_solid` 1e−14 key-on vs 3.3e−4 key-off | 8 | ✅ takeaway 13 pre-empts exactly the misreading a reviewer would make (1e−14 as a disabled ledger) and explains it — the line path books the exact telescoped energy, the column path's window term is approximate. Magnitudes verified | **ok** |
+| DR-21 | c4's 10.4 % floor | 12, 13 | ⚠⚠ **the floor itself moves 10.4 % over 2/1/0.5 mm, on BOTH keys** — pre-existing, not this step's. But a5, a5b, c3 and c4 are all cross-mesh comparisons resting on that floor, so a 4–8 % tilt deficit is being read against a reference with a 10 % mesh drift of its own. This bounds what any mesh argument in this programme can conclude | **risk** |
+
+**Verdict: accepted**, on the reclassification the user authorised — **and the one thing that
+must change is the label, not the number**. Ten of the eleven gating rows reproduce under
+independent derivation. **a5 does not**, and the Criteria table at line 167 still calls it a
+`gate`; rev 2.1 reclassified it as a finding in the Context prose on the user's explicit
+authorisation. Under the table as written this step would be `rejected`. No diff-review row is
+tagged `bug`, and the three changed clauses (a5, a1b's unmeetable "≥ 1 changed", a3 viii) are
+each listed with their reason and a substitute witness — class 9 satisfied.
+
+**Carry forward:**
+1. **DR-9 — change a5's label in the Criteria table** so the archive does not record an accepted
+   step with a failed gate. The decision is made; the paperwork should match it.
+2. **DR-13 + DR-14 — P2-10's diagnosis should be per-firing, not rate.** The 45° deficit is
+   structural (−6.7 → −6.9 % from 1 to 0.5 mm) with an area error of exactly 0.00 %, and TR
+   shows firing frequency partly masking a per-firing deficit twice its size.
+3. **DR-21 — bound the mesh argument.** The floor drifts 10.4 % across 2/1/0.5 mm on both keys,
+   so no 4–8 % cross-mesh claim in this step is cleaner than its reference.
+4. **DR-11 — retire TD on this fixture** (a 64 mm block cannot hold 54.7° for 20 s) rather than
+   quote −3.26 % from 13 % of its lines.
+5. **DR-3 — `RefillTempGhosts` is not `FillPatch`.** Equivalent at `max_level = 0`, which is every
+   leg here; flag it before any AMR leg.
+6. **DR-15/DR-16 — pick one volume estimator** and score every mesh and level row on it.
+
+**Checked and clean:** no `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE` change; edits
+outside `MMWSpalling*` are exactly the two declared ones; three binaries, each tree-gated at
+0/2639 with live 26/863 controls; no Meier leg and no Meier number. SR 3 (×4), SR 4, SR 7
+(per-step counters as samples), SR 8 (argv + binary hash per leg) and SR 9 (rev 1 copies kept in
+`src_pre/*.rev1`) honoured. **No unquotable number is quoted:** a6's rate is labelled as
+overstating by the cavity's area growth, TD's line count is given, P2-8's d2 is carried as
+PROVISIONAL, and a5 is reported as a FAIL rather than renamed a pass.
+
+## ROADMAP notes released 2026-10-28 — superseded by P2-10 (the code they describe is deleted) and the new plan of record
+
+Released verbatim from `ROADMAP.md` (`Next milestones` and `Known Stale/Important Notes`) when P2-10 was planned.
+
+- **P1g-5 — Leg A, the shape leg.** Roundness by sector plus the Meier Oe(z) profile. ⚠ Today's
+  1.003-1.019 was measured under the 8 um flaw and the 1.5 mm cap. **P1h — overhang collapse
+  (regime 7)**: breaks `n_voided == 1` by design, 100-150 cells/event.
+- ⚠ **promote `lateral_thermal` to default, retire the whole-cell lateral path** — re-pins every anchor.
+- ⚠ **P2-1's four named risks**, carried: the **uncounted fallbacks** to the typed 169.3
+  (`MMWSpalling.H:5012-5022`, p50 171.89 indistinguishable from 169.3 in a 5 W bin); gates set at a
+  **representative bore** not bounding the run's live 37.5-48.7 mm; the scorer's **unauthorised
+  narrowing to three depth bands**; the **march's missing `side_face_h_max` cap**. ⚠ Plus the
+  **8.1 % kernel-vs-march side-power split**, diagnosed and unfixed.
+- ⚠⚠ **THE LATERAL MODE IS SCOPED OUT OF 44 % OF P1's FREEZE POPULATION.**
+  `side_face_h_r_min = 40 mm` splits 7a hole wall (in scope) from **7b floor riser (out of scope**,
+  `MMWSpalling.H:2086`/`:2095`). Measured on P1's archive: **152 of 347** frozen columns are inside
+  it, including the collider at **r = 26.4 mm**. Report the two populations separately, never pooled.
+- ⚠⚠ **`q_ratio` DOES NOT EXIST ON THE WALL.** Zero or non-finite on **1521 of 1584** regime-6
+  events (96.0 %) in `studies/p1f_lateral/output_legB_fix/FH_removal_events.csv`, against 0 of
+  193,322 regime-1. Any wall quantity derived from it is built on 4 % of the population (2026-10-05).
+- ⚠⚠ **NEXT (user plan of record, 2026-10-26):** P2-9 (active) → P2-10 Meier on the face list (hand-drawn map G4 replaced, fed at 1.28 m/h, Ø(z) vs Fig. 8.8),
+  face list default ON, delete group B (9 side-face settings) and the old paths → the MMW case. Rule: retire, don't stack.
+  ⚠ P2-8 deleted `side_face_h_scale`: Meier S0's argv token `side_face_h_scale=1.0` now ABORTS — drop it (no behaviour
+  change). `unit/lateral_drive` fails one check (gap monotone in ell/dz) on 9f5aa6de and both P2-8 binaries: pre-existing.
+
+## P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-28, ACCEPTED by review 2026-10-28 — a1 failed as written, exact on substance; archived 2026-10-28)
+
+**Status:** ACCEPTED by review (eight of nine gating rows reproduce; a1's bar was self-contradictory for the coupling it
+tested, DR-2). Binaries C1 (lateral path, per-cell removal, dead code) and C2 `01c49ab554cdeab0…` (side-face heat,
+wall march + cold body). Study `tests/MMWSpalling/studies/p2_10_retire/`.
+
+### What the step established
+- **Deletion neutral:** tree 0/2639 on C1 and C2 (controls 26/863; C2 vs C1 also 0); the face-list witness set W
+  (face_removal fixtures, unit/face_list, M0T) identical apart from declared always-zero columns; 6 retired-key legs
+  abort naming the key and P2-10; 37 kept unit tests verdict-identical (5 pre-existing FAILs unchanged).
+- **Removed 5,006 lines** (M 3,576, R 1,421, F 9); 6 unit tests deleted (archived in `retired_units/`); deleted names
+  left in `src/` 0.
+- **a1:** the face list read ONE lateral key — `spall.lateral_drive` set the event-log layout (11 always-zero columns);
+  the only coupling, now deleted; every row and plotfile identical on substance.
+- **45° residue NOT the axis flip (P1 not established).** TL40 shrinks (flips ≤ 1 %); TL45 and TL50 (flips 15–29 %)
+  and TL60 (flips 5–7 %) do not shrink on `phase_rate`; on P2-9's position rate TL45 −8.0 → −6.2 % DOES shrink, so the
+  mesh behaviour is METRIC-DEPENDENT (review DR-5). `phase_rate` pools x-lines on x-dominant planes (TL60 +48 %,
+  unquotable). Per-firing recession deficit GROWS with refinement (−5.0 → −12.9 % at 45°) while firings/line rise to
+  compensate (b2 — the diagnostic that matters).
+- **The z-lean is in the field (P2), and grows with time** (+1–6° at 10 s, +7–14° at 20 s; review DR-6: it tracks
+  roughness, not tilt). Planner offline after the step (P2-9/P2-10 fixtures): tilted surfaces ROUGHEN at 0.5 mm — rms
+  deviation from the plane 0.28 → 1.14 cells (45°), 0.49 → 2.29 (60°, peaks 5 cells) over 5–20 s; 45° at 1 mm levels at
+  0.44 cells; the flat floor stays flat. Parked by the user 2026-10-28 as small next to the heat rule (≈ 1–3 mm of Ø).
+
+### Carry-forwards (review)
+1. DR-5 — pick and justify the rate metric before asking whether a slope deficit shrinks; diagnose per firing (b2).
+2. DR-2 — fourth consecutive packet with a mis-specified gate bar: a bar demanding byte-identity or a fixed count from a
+   quantity the step changes must be caught at /plan (show it meetable on existing data first).
+3. DR-1 — a deletion packet's a0 greps kept tests for deleted SYMBOL names, not only key names.
+4. DR-6 — P2 restated at 10 s; the lean grows with roughness.
+5. DR-15 — `WHICH_TESTS.md` still lists six deleted tests.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-28)
+
+Active step:
+- **P2-10 — Retire the old flame wall machinery, and diagnose the 45° slope residue** (`ACTIVE_STEP.md`; 2026-10-28).
+  P2-9 rev 2 archived ACCEPTED (`ARCHIVE_DONE.md` *"P2-9 rev 2"*). Deletes what the face list bypasses: group B +
+  `side_face_flux`, the lateral path (regime 6, banking, shift), per-cell removal, the wall march + cold body, dead
+  code (~4,000 lines). Witnesses: tree 0/2639 on two binaries, the face-list fixtures and M0 byte-identical, every
+  retired key aborts. Then TL40/TL50/TL60 legs test the planner's reading of P2-9's 45° residue (line axis flips
+  x↔z on 22 % of firings), report only — no fix here. Every Meier deck and old flame study argv stops running.
+
+### The P2-10 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-10 — Retire the old flame wall machinery, and diagnose the 45° slope residue
+
+Status: **accepted by review** (2026-10-28) — eight of nine gating rows reproduce; **a1 does not reproduce as written**, and I verified its bar is self-contradictory for the coupling it tests (DR-2). Was: completed (implemented 2026-10-28).
+
+### Context
+
+P2-9 (accepted by review 2026-10-27; `ARCHIVE_DONE.md` *"P2-9 rev 2"*) made the face list + line rule one breaking
+rule for every surface cell. Under `surface_patch.face_list = 1` the old wall add-ons are never read: the side-face
+heat family (group B + `side_face_flux`), the lateral path (criterion, regime 6, banking, thermal shift), per-cell
+removal (which requires `side_face_flux`), and the wall march with its cold body. **This step deletes them** (user,
+2026-10-28: retire, don't stack). **Pure deletion — no physics change:** every kept path must reproduce byte-for-byte.
+The column core stays: the beam/MMW cases, Kant, Hu, Zhang and all 11 tree-gate outputs still run it, and none sets a
+deleted key. The step also measures one finding P2-9 left open, without fixing it: on a 45° slope the deficit does
+not shrink with mesh (a5b: −6.68 → −6.92 %). The planner's reading: there the line axis flips between x and z.
+⚠ Plan of record (user 2026-10-28): P2-10 (this) → P2-11 Meier on the face list (pad-clearance decision, hand-drawn
+map G4 replaced) → the exposure heat rule (Höser's shape, P2-9 d3) → MMW. Every Meier deck and every old flame study
+argv stops being runnable here (declared). Meier is parked until P2-11.
+
+### Sources (opened 2026-10-28; step zero re-resolves every line)
+
+- **Registration guards** (M = `MMWSpalling.H`, R = `MMWSpalling/Removal.H`, F = `MMWSpalling/FaceRemoval.H`): every
+  side/lateral thermo column is registered inside `if (surface_patch.enabled && side_face_flux)` (M:892–~1080) or
+  under a lateral key (M:908–990); `lat_len_fb_h0/q0` sit beside `len_fb_h0/q0` under `sp_flake_len_flux` (M:183–190);
+  `jet_P_wall`, `wall_T_mouth`, `wall_bins`, `wall_L_fit` under `jet_wall_march` (M:864–873);
+  `surf_side_share` + `surf_side_P_{top,buried,rin,rout}` under `robin_form = surface` (M:735–744).
+- **Live under the face list (KEEP):** the ledger books every listed non-top face into `P_robin_side` and `sidecol`
+  (M:5434–5446) ⇒ `surf_side_share` and `run_side_power.csv` (`side_power_interval`, parsed with the jet-closure keys,
+  M:11412) are face-list diagnostics. `surf_side_P_{top,buried,rin,rout}` are written only from the group-B side block
+  (`side_P_topcell +=` at M:5704) and read 0 on every P2-9 face-list leg.
+- **Measured on P2-9's face-list legs** (`studies/p2_9_face_removal/legs/{M0,P47n,M0f}/run/thermo.dat`, 162 columns):
+  of the 74 side/lateral/wall columns, only `surf_side_share` (0.53–0.66), `side_sc_mean` = `side_sc_min` = 1.0
+  (constants) and `side_T_wall` (1,801–1,820 K, a computed-but-unread gas T, M:2730–2734) are non-zero.
+- **The face list does not need `side_face_flux`:** `fl_on = face_list && sp_on && void_aware`, `void_aware =
+  removal_enabled()` (M:2268, :5250, :1863); the march and ledger side blocks are gated `!fl_on_m` / `!fl_on_l`
+  (M:3389, :5312). Only `spall.per_cell_removal` requires `side_face_flux` (M:1224–1233).
+- **Wall-march family keys** (M:11074–11099): `jet_wall_march`, `jet_wall_mdot`, `jet_body`, `jet_body_T`,
+  `jet_body_h_scale`. Lateral keys (M:7743–7745): `spall.lateral_{drive,removal,subcell,thermal}`. Group B
+  (M:10871–10874): `side_face_{h, T, h_r_min, h_law, h_datum, factor_above, area_law, step_height, staircase}`.
+- **Unused keys:** `IO::ParmParse::queryclass` throws on any key left unread inside its scope (`src/IO/ParmParse.H:
+  933–957`). Whether `spall.*` keys sit inside such a scope is step zero's to establish (P2-9 a7 logged unread
+  top-level keys without aborting).
+- **Census (2026-10-28, an Explore pass; step zero re-resolves every range):** R:539–542 dispatches to
+  `RecedeAlongLines` and returns; the lateral path is R:728–1436, regime 6 R:2742–2761, banking R:2861–2912 (+ ~3113,
+  3235–3260), shift R:3383–3806, lateral diagnostics R:3808–3852. Group B in M: parse 10946–11216, members
+  10591–10760, kernel 2203–2250 / 2385–2418 / 2491–2629, column phase 2163–2172 + `UpdateColumnPhase` 2884 +
+  `AssertStepSplit` 2923–2974 + `WallStepDiagnostic` 2975–3154, march 3398–3534 / 3675–3746, wall march 3936–4119,
+  ledger 5302–5350 / 5454–5744 / 5754–5840, helpers `WallMu`…`WallJetH` 6188–6237, `SideFaceH` 6238, `SideFaceTgas`
+  6276, `ColumnWallCorner` 6322, `PatchAzimuthFraction` 6372, `UpdateWallLawState` 6404–6626, `ColPhi`…
+  `StepConductance` 10212–10533. `PerCellRemoval` M:9224–9308 (call M:1780; `pcr_on` M:8364; R:851). Dead today:
+  `FaceListFlux` M:4872 (0 callers), `ReconstructSurfaceT` M:12427 (0 callers), `fl_lat_top`/`fl_lat_nfb` (written
+  only at R:1432–1433, inside the bypassed lateral block), stale comments M:4690–4697, :4739. **Shared helpers that
+  STAY** (both paths call them): `ElasticConstants`, `RefillTempGhosts`, `ScanTAtZv`, `ScanKIcPa`, `ScanSigmaT`,
+  `DepthScanH`, `RemapProfile` (R:31–265); `RawSurfaceX`, `ReconFromX`, `SurfaceGasTempCap`, `SharedSurfaceRecon`,
+  `BuildSurfaceTColumns`, `SurfaceRobinT` (its top-face readers stay).
+- **Tests setting deleted keys:** `unit/{side_face_flux, side_face_area, side_face_step_height, side_staircase,
+  lateral_drive, wall_march}` (whole tests); `unit/face_list/input` lines 98–102, 108–113, 117–118;
+  `unit/lateral_flux_lock/test` (a multi-step source lock; some checks name deleted code, e.g. :207, :311, :399).
+  No `validation/` or `extensions/` input sets any. `unit/face_removal/make_input.py:129–131` already strips group B
+  and `spall.lateral_*` from its fixtures. The 11 tree-gate outputs set none (planner grep of each input and test).
+- **M0's argv** (`studies/p2_9_face_removal/legs/M0/argv.sh`, binary B `7d77e34793e867aebc881daf`) carries the 13
+  tokens to delete listed under Legs.
+- **45° baselines** (P2-9 binary B, `unit/face_removal/output/<leg>/run_removal_events.csv`, columns `col_i` ≥ 4,
+  5–20 s; deficits from a5b, `studies/p2_9_face_removal/A5B.txt`; the rest measured by the planner 2026-10-28):
+
+  | leg | deficit 1 → 0.5 mm | dir z share (1 / 0.5 mm) | flips (1 / 0.5 mm) | logged-μ lean toward the chosen axis |
+  |---|---|---|---|---|
+  | TL20 | −1.44 → +1.17 % | 1.00 / 1.00 | 0.000 / 0.000 | −0.8 / −0.1° |
+  | TL35 | −4.36 → −2.79 % | 1.00 / 1.00 | 0.000 / 0.000 | +5.7 / +7.1° |
+  | TL45 | −6.68 → −6.92 % | 0.86 / 0.82 | 0.218 / 0.219 | z lines +8.5 / +14.8°; x lines +3.3 / +7.5° |
+  | TL60 | +1.16 % (1 mm, a5) | 0.20 (1 mm) | 0.050 (1 mm) | x lines −1.6°; z lines +31.4° (μ 0.88 vs true 0.50) |
+
+  `flips` = among consecutive firings at one (`col_i`, `col_j`), the share whose `dir` differs from the previous one;
+  `dir` 5 = +z, 1 = +x. Lean = acos(n̂_true·e\*) − acos(median logged μ); positive = the normal leans toward e\*.
+  ⚠ The logged μ is firing-conditioned: b4 measures the field.
+
+### Goal
+
+Two binaries, deletion only; then short diagnosis legs. No new key, no new number, no behaviour change.
+
+1. **Step zero — the deletion map.** For every block and helper below: its definition and EVERY caller (grep over M,
+   R and F). Delete a helper only when every caller is deleted; list each kept symbol a deleted block touches. Write
+   `studies/p2_10_retire/DELETION_MAP.txt` before editing.
+2. **References on binary B, before any code** (`studies/p2_10_retire/`):
+   - **M0T**: M0's argv minus the 13 tokens (Legs). a1 compares it with M0 on disk.
+   - **The witness set W:** `unit/face_removal` legs T00_1_k0, T00_1_k1, TL35_1, TL45_1, SPH_1, BORE_1;
+     `unit/face_list` CAV, STAIR, OFF0, CAVU on the trimmed input (item 6); M0T. Hash every output file
+     (`W_bB.md5`) and keep the thermo headers.
+   - Every kept unit test (sets no deleted key): run on binary B, keep its log (`UNIT_bB/`).
+3. **Binary C1 — the lateral path, per-cell removal, dead code** (mostly R):
+   - lateral declarations/aborts, the `lat_on` criterion with its P2-8 F5 remnants, regime 6, banking
+     (`lat_accum_col`), the thermal shift and the lateral diagnostics;
+   - the four `spall.lateral_*` keys: parse, members, thermo registrations (incl. `lat_len_fb_h0/q0`; `len_fb_h0/q0`
+     stay), `fr_lateral_given` and its message;
+   - `spall.per_cell_removal`: `PerCellRemoval`, its call, parse, preconditions, `pcr_on`, R:851;
+   - `FaceListFlux`, `ReconstructSurfaceT`, `fl_lat_top`, `fl_lat_nfb` (members, registrations, writes), stale comments.
+4. **Binary C2 — side-face heat and the wall march** (M):
+   - group B + `side_face_flux`: parse (incl. the else-chain refusing group B without the key), members, thermo
+     registrations, the kernel / march / ledger side blocks, the step conductance in `k_face`, `UpdateColumnPhase`,
+     `AssertStepSplit`, `WallStepDiagnostic`, `UpdateWallLawState`, `side_T_eff`, and every helper left callerless
+     (step zero's list);
+   - `surf_side_P_{top,buried,rin,rout}` (always 0). **KEEP** `surf_side_share`, `side_power_interval` and its CSV,
+     and every `fl_*` column;
+   - the wall-march family (5 keys), its march block and its four thermo columns;
+   - `groupB_given` and its message; in the face-list abort list, owner strings "P2-10" → "P2-11"
+     (`foot_body_clearance`) or "a later step" (all others). Text only.
+5. **Retired keys abort.** Every deleted key, when given, aborts naming the key and P2-10. Use the scope's strict
+   check where it already does this; otherwise (e.g. `spall.*` outside a strict scope) ONE list of retired names,
+   checked once in `Parse`.
+6. **Tests.**
+   - Delete `unit/{side_face_flux, side_face_area, side_face_step_height, side_staircase, lateral_drive, wall_march}`.
+   - `unit/face_list`: delete the input lines that set deleted keys; list every check whose expectation changes, and why.
+   - `unit/lateral_flux_lock`: delete the checks of deleted code (list them); add one check that no deleted symbol or
+     key name survives in `src/` outside the retired-key list.
+   - `unit/face_removal`: add TL40 (40°, az 0) and TL50 (50°, az 0) to `TILTS`, and a `--p2_10` mode for the b rows.
+7. **Diagnosis** (binary C2, after a8): `--p2_10` writes `studies/p2_10_retire/TILT45.txt`, scored by the b rows.
+8. `studies/p2_10_retire/RESULTS.txt`: lines removed per file, every gate's output, the b table, e1.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | item | where | what decides it |
+|---|---|---|---|
+| L1 | no kept configuration sets a deleted key | 11 gate inputs, kept unit tests, `validation/`, `extensions/` | a0; a3, a5, a8 |
+| L2 | the face list reads no deleted key | `fl_on` / `fl_on_m` / `fl_on_l` gates; M0T | a1 |
+| L3 | a deleted helper has no kept caller | `DELETION_MAP.txt` | a0; the compile |
+| L4 | the thermo registration order of kept runs is unchanged | the guards in Sources; F1 (`docs/project/CODE_CENSUS.md`) | a3–a6 |
+| L5 | a retired key cannot run silently | item 5 | a7 |
+| L6 | the diagnosis reads the code's normal | plotfile `fl_w` = 1/\|n\|₁ (`FaceWeight`) | b4w |
+
+### Legs
+
+**M0T** = `studies/p2_9_face_removal/legs/M0/argv.sh` token for token, `plot_file` re-pointed, these 13 tokens
+DELETED and nothing added:
+```
+surface_patch.side_face_flux=1        surface_patch.side_face_step_height=1   surface_patch.side_face_area_law=wetted
+surface_patch.side_face_h=169.3       surface_patch.side_face_T=live          surface_patch.side_face_staircase=1
+spall.lateral_drive=1                 spall.lateral_removal=1                 spall.lateral_subcell=1
+spall.lateral_thermal=1               surface_patch.side_face_h_datum=bore    surface_patch.side_face_h_r_min=0.036
+'surface_patch.side_face_h_law=derived 19675f215d61ef38a6daea372ba8cd1b001fa1a8730b64d616880486844d6e58'
+```
+KEPT: `surface_patch.side_power_interval=10.0`, `surface_patch.face_list=1`. Stop 30 s, plot_int 3750, as M0.
+
+**Retired-key legs (a7)**, each = M0T + ONE token, stop after step 1: `surface_patch.side_face_flux=1`;
+`surface_patch.side_face_h=169.3`; `spall.lateral_drive=1`; `spall.per_cell_removal=1`;
+`surface_patch.jet_wall_march=1`; `surface_patch.jet_body=1`.
+
+**Diagnosis legs** (`unit/face_removal`, P2-9's fixture base unchanged; key 1; 20 s): TL40 and TL50 at 1 and 0.5 mm;
+TL60 at 0.5 mm; T00 key 1 at 0.5 mm (the same binary as the tilts). TL35, TL45 and T00 at 1 mm come from P2-9
+(binary B; a4/a6 cover T00_1_k1, TL35_1 and TL45_1). Interior lines, 5–20 s, a5b's `phase_rate` unchanged.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | `DELETION_MAP.txt`: kept callers of a deleted symbol; deleted keys set by a kept input (gate inputs, kept units, `validation/`, `extensions/`) | 0; 0 | **gate** | something kept still uses a "dead" path — the deletion is not neutral |
+| a1 | 1 | binary B: M0T vs M0 on disk | every output file except `thermo.dat` byte-identical (event log, CSVs, every `Cell_D_*` and `Header`); `thermo.dat` values identical on the common columns; columns only in M0 ⊆ those registered under `side_face_flux` or `spall.lateral_*` | **gate** | the face list READS a deleted key — stop: deleting it changes the new rule (if M0 re-run untrimmed also differs, report non-reproducibility instead) |
+| a2 | 1 | binary B: `W_bB.md5` and `UNIT_bB/` written | present before the first source edit (timestamps) | **gate** | there is no reference — nothing later can be scored |
+| a3 | 2 | C1 tree sweep vs `p2_9_bB.md5`; controls | 0 changed of 2639; 26 / 863 | **gate** | C1 touched the column core |
+| a4 | 2 | C1: W vs `W_bB.md5` | identical, except the thermo columns C1 deletes (declared in `DELETION_MAP.txt`), each identically 0 in the reference | **gate** | C1 moved the face list or a kept fixture |
+| a5 | 3 | C2 tree sweep vs `p2_9_bB.md5`; controls | 0 of 2639; 26 / 863 | **gate** | C2 touched the column core |
+| a6 | 3 | C2: W vs `W_bB.md5` | as a4, with C1's and C2's declared columns | **gate** | C2 moved the face list or a kept fixture |
+| a7 | 3 | the retired-key legs on C2; M0T on C2 | each: rc ≠ 0 and the log names the key and P2-10; M0T: rc 0 | **gate** | a retired key runs silently, or M0T no longer runs |
+| a8 | 3 | every kept unit test on C2 vs `UNIT_bB/` | same rc; identical PASS/FAIL lines (pre-existing FAILs unchanged); `face_list` and `lateral_flux_lock` as their declared lists say | **gate** (protects the b legs' attribution) | a kept test moved |
+| a9 | 3 | lines removed per file; `src/` grep for deleted names | report; 0 outside the retired-key list | **report** | a deleted name survives — list it |
+| b1 | 4 | TL40, TL50 (1, 0.5 mm), TL60 (0.5 mm): phase-immune deficit vs T00 key 1 at the same mesh (state T00's rate) | report | **report** | see P1 |
+| b2 | 4 | the same legs: per-firing normal recession h_line·(n̂_true·e\*) vs T00's; firings per line vs T00's | report | **report** | see P1 (review DR-14: the deficit is per firing) |
+| b3 | 4 | the same legs: `dir` shares; flips; logged-μ lean per direction | report | **report** | see P1, P2 |
+| b4w | 4 | offline: the smoothed normal from plotfile `fr_f` (σ = 1 cell, ±2; the P2-9 offline stencil) gives 1/\|n\|₁ = plotfile `fl_w` | ≤ 1e-9 on ≥ 99 % of listed cells, at 10 and 20 s, on every b leg | **report** | b4 is not quotable: the offline stencil is not the code's |
+| b4 | 4 | the field normal on EVERY surface cell (fired or not) of every b leg and TL45_05: lean toward z (median, IQR); share of cells whose implied axis ≠ the true dominant axis (TL45: the z share) | report | **report** | see P2 |
+| e1 | 5 | verdict | — | **verdict** | Was the deletion neutral (a1–a8); how much was removed (a9); is the non-shrinking deficit the axis flip (P1); is the z-lean in the field (P2); what P2-11 owes the 45° fix |
+
+### Pre-registered predictions
+
+- **P0 (a1–a9):** neutral everywhere; ~4,000 lines removed (R ~1,300; M ~2,300 + wall march ~200; dead code ~200).
+- **P1 (b1–b3), the flip hypothesis:** the deficit fails to shrink from 1 to 0.5 mm (|deficit| falls by < 1/3) on
+  exactly the legs whose flip share is ≥ 10 %. TL40: flips < 1 %, ≥ 99 % z, shrinks like TL35. TL50: flips ≥ 10 %
+  (x dominant by 5°, the z-lean pulls lines to z), does not shrink. TL60 at 0.5 mm (flips 5 % at 1 mm): |deficit|
+  ≤ 2 %. The deficit is per firing (b2), not in the firing count. A deficit that does not shrink with flips < 10 % ⇒
+  the cause is not the tie: P2-11 diagnoses heat into step-edge vs tread cells from the field.
+- **P2 (b4):** the field normal leans toward z by 5–15° on 35–50° staircases, on fired AND unfired cells. A field lean
+  < 2° ⇒ the logged lean is firing-conditioned (score it no further).
+- **Refuting evidence on disk:** TL60 at 1 mm reads +1.16 % with 5 % flips and 20 % of its lines on z ⇒ P1's
+  threshold cannot be ≤ 5 %.
+
+### What would make this inert — witness each
+
+- A deletion that compiles but changes a kept run through a shared helper — a3–a6 (whole files), a8.
+- A thermo column dropped from a kept run — a4/a6 compare headers; the gate cases register none (L4).
+- An old argv that runs silently with its keys ignored — a7.
+- A diagnosis on an offline normal that is not the code's — b4w.
+
+### Guardrails
+
+- Deletion only: no new key, no new number, no change to any kept path's output; no fix for the 45° residue here.
+- Kept, with their face-list aborts (owner text only changes): the column core, `foot_body_clearance` (regime 4),
+  `bit`, `surface_normal`, `melt_aware`, `constraint_depth`, `flake_coherence_length`, `flake_length = flux` and its
+  family, `detach_mode = connected_cluster`.
+- Studies are records: no file under `tests/MMWSpalling/studies/` other than `p2_10_retire/` is edited; their argvs
+  stop running (declared). No Meier leg.
+- No source edit outside `src/Integrator/MMWSpalling*`.
+- `caffeinate -dis`, `-np 4`, legs serial, `.done` sentinels; argv + binary hash per leg (SR 8).
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_10_retire
+U=tests/MMWSpalling/unit/face_removal; W=tests/MMWSpalling/studies/tree_sweep_0922/witness
+B="EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8"
+# ord 1 (binary B, no source edit): a0 map; a1 M0T vs M0; a2 references
+shasum -a 256 bin/mmwspalling-3d-g++    # must start 7d77e34793e867aebc881daf
+caffeinate -dis mpirun --oversubscribe --bind-to none -np 4 bin/mmwspalling-3d-g++ <M0T argv>
+# ord 2: binary C1 -- a3 (vs p2_9_bB.md5), a4
+eval $B && bash $W/guarded_post_all_par.sh p2_10_c1
+# ord 3: binary C2 -- a5, a6, a7, a8, a9
+eval $B && bash $W/guarded_post_all_par.sh p2_10_c2
+$PY tests/MMWSpalling/unit/lateral_flux_lock/test && $PY tests/MMWSpalling/unit/face_list/test
+# ord 4: b1-b4
+caffeinate -dis $PY $U/test --p2_10
+```
+
+### Claude completion notes
+
+**Files changed.** Source (C2 installed; binary-B copies in `studies/p2_10_retire/src_bB/`, edits generated by
+`retire.py c1|c2`, every cut listed in `CUTS_C1.txt` / `CUTS_C2.txt`): `src/Integrator/MMWSpalling.H`,
+`MMWSpalling/Removal.H`, `MMWSpalling/FaceRemoval.H`. Tests: deleted `unit/{side_face_flux, side_face_area,
+side_face_step_height, side_staircase, lateral_drive, wall_march}` (scripts and inputs archived in
+`studies/p2_10_retire/retired_units/`; `wall_march` was never in git); edited `unit/lateral_flux_lock/test` and
+`unit/constraint_ref_lock/test` (both generated by `retire_tests.py` from `studies/p2_10_retire/tests_bB/`; list in
+`TEST_EDITS.txt`), `unit/face_list/{input, make_input.py}` (side_face_* / spall.lateral_* lines removed),
+`unit/face_removal/test` (TL40/TL50, `--p2_10`). New: `studies/p2_10_retire/` (scripts `retire.py`,
+`retire_tests.py`, `run_p2_10.py`, `chain_apply.sh`; records below). Binary C2 sha256 `01c49ab554cdeab0…`.
+
+| # | measured | result | path |
+|---|---|---|---|
+| a0 | kept callers of a deleted symbol 0; deleted keys set by gate inputs 0/24 files, validation+extensions 0/59; kept units 15 hits, all in the old `lateral_flux_lock` (item 6) and a docstring — the one real setting (its live control `side_face_flux=0`) moved to `face_list=0`. **Missed:** `constraint_ref_lock` (found at a8) | PASS (with the miss) | `DELETION_MAP.txt` |
+| a1 | as written: FAIL (the face-list event log appends 11 always-zero lateral columns under `spall.lateral_drive`); on substance: event log 0/4918 rows differ once they are stripped, every plotfile identical, thermo common columns identical except the 2 timers, the 67 M0-only columns all side/lateral | FAIL as written / PASS on substance | `GATE_a1.txt` |
+| a2 | `W_bB.md5`, `UNIT_bB/rc.txt` written before the first source edit | PASS | `GATE_a2.txt` |
+| a3 | C1: 0 of 2639; controls 26 / 863 | PASS | `GATE_tree_c1.txt` |
+| a4 | C1 W identical; dropped `fl_lat_top`, `fl_lat_nfb` (all 0) | PASS | `W_c1_vs_bB.txt` |
+| a5 | C2: 0 of 2639; controls 26 / 863 | PASS | `GATE_tree_c2.txt` |
+| a6 | C2 W identical; dropped + `surf_side_P_{top,buried,rin,rout}` (all 0) | PASS | `W_c2_vs_bB.txt` |
+| a7 | 6 retired-key legs rc 6, log names key + P2-10; M0T rc 0 | PASS | `RETIRED.txt` |
+| a8 | 37 kept units: same rc (5 pre-existing FAILs unchanged), identical verdict lines; `lateral_flux_lock` as declared. First scoring FAILED on `constraint_ref_lock` (source lock naming deleted code); edited like the lateral lock, re-scored | PASS (after the edit) | `UNITS_c2_vs_bB.txt` (`.first.txt` = the failed scoring) |
+| a9 | removed 5,006 lines (M 3,576, R 1,421, F 9); deleted names left in `src/` 0 | report | `A9.txt` |
+| b1 | phase_rate deficit 1 → 0.5 mm: TL35 −4.36 → −2.79 %, TL40 −5.41 → −3.60 %, TL45 −6.68 → −6.92 %; TL50/TL60 **not quotable** (+0.0/+1.9 %, +48/+44 %: x lines pooled by column). Position rate (P2-9 `rate()`): TL35 −5.3 → −3.8, TL40 −5.1 → −3.0, TL45 −8.0 → −6.2, TL50 +2.5 → +6.6, TL60 +1.2 → +3.6 % | report | `TILT45.txt` |
+| b2 | per-firing recession vs T00 1 → 0.5 mm: TL35 −5.3 → −7.6 %, TL40 −5.6 → −10.0 %, TL45 −5.0 → −12.9 %; firings/line +0.0/+0.4/−3.1 → +4.2/+7.7/+7.7 % | report | `TILT45.txt` |
+| b3 | flips TL40 0.000/0.010, TL45 0.259/0.238, TL50 0.285/0.151, TL60 0.053/0.068; z share TL45 0.84/0.81, TL50 0.49/0.45; dir-5 lean TL45 +6.8/+14.0° | report | `TILT45.txt` |
+| b4w | agreement 1.0000 on every b leg and TL45_05, at 10 and 20 s | PASS (b4 quotable) | `TILT45.txt` |
+| b4 | field lean toward z, median at 10 s: +1.2 (TL40 1), +3.9 (TL50 1), +4.5 (TL40 .5), +6.2 (TL50 .5), +3.7 (TL60 .5), +2.2° (TL45 .5); at 20 s +6.6 to +13.6°; unfired ≥ fired on most legs; TL45 .5 off-axis share 0.35 / 0.19 | report | `TILT45.txt` |
+| e1 | neutral YES; 5,006 lines; P1 NOT established; P2 YES (field lean, not firing-conditioned) | verdict | `RESULTS.txt` (end) |
+
+### Implementation takeaways
+
+- **The packet's rate metric fails on steep slopes.** `phase_rate` groups firings by column (i, j). On an x-dominant
+  plane, x lines at different k pool into one "line", so TL60 reads +48 %. P2-9's position rate `rate()`
+  reproduces TL60 1 mm +1.16 % exactly and is the one to use above 45°. A line key along each firing's own axis is
+  worse: lines that flip get split into fragments, so TL45 reads −35 %. Both metrics are in `TILT45.txt`; the
+  packet's is kept unchanged.
+- **The P1 shrink bar sits inside the gap between metrics.** TL35 shrinks on `phase_rate` (0.64) but not on the
+  position rate (0.71). On the position rate, TL50 and TL60 show an excess that grows with refinement, and TL60
+  has < 10 % flips. Flips do not explain the steep side.
+- **The floor itself moves 1.7 % from 1 to 0.5 mm** (T00 6.132e-4 → 6.027e-4 m/s). Every deficit above is
+  measured against a reference that is itself mesh-dependent.
+- **b4 "fired" at 20 s is empty by construction.** "Fired" means a firing in (t, t+1], and the legs stop at 20 s,
+  so read the fired/unfired split at 10 s only.
+- **a1 letter vs substance.** The face list read one lateral key: `spall.lateral_drive` set the layout of
+  FaceRemoval.H's event log. This was the only coupling, and it is deleted.
+- **Compares ignore AMReX `metadata` and `run/diff.patch`.** `run/diff.patch` is the build's
+  GIT_DIFF_PATCH_OUTPUT, so it differs on every leg after any source edit. The first C1 W scoring stopped on it;
+  the legs were re-scored, not re-run (`RESUME=c2` in `chain_apply.sh`).
+- **Moved or retired beyond the packet's list:**
+  - `pad_shield_open`'s parse moved out of the deleted `side_face_flux` block, unchanged;
+  - `step_diag_radius` retired (its only reader was deleted);
+  - `cref_n_lat` kept and now always 0 (the column order is load-bearing);
+  - four toughness locals that only the lateral criterion read were deleted (they would have warned unused);
+  - `ledger_E_flake_wall` / `E_wall` deleted (printed only under `jet_body`);
+  - face-list abort owners: "P2-10" → "P2-11" for `foot_body_clearance`, "a later step" for the rest.
+- **a0 missed a test.** a0 searched kept tests for deleted *key* names, not *symbol* names. Any future deletion
+  packet should also grep `unit/*/test` for deleted function and member names; source locks such as
+  `constraint_ref_lock` live there.
+- **11 kept unit tests are check-only** (their `test` reads output only). a8 runs their `input` first
+  (`CHECK_ONLY` in `run_p2_10.py`); otherwise "every kept unit test" exercises nothing.
+- **`WHICH_TESTS.md` still names the deleted tests.** It is a study file outside `p2_10_retire/`, so it was not
+  edited; the next planner should update it.
+- **TL35 0.5 mm lean reconciliation:** +6.3° here vs the packet table's +7.1°. Every other cell of that table
+  reproduces exactly with the planner's filter.
+
+### Review findings
+
+Re-derived independently: **both deletion manifests** with my own comparator; **a9's line
+count** by `wc -l` on the `src_bB/` snapshots vs the shipped source; **a1's substance** by my own
+column-stripped event-log comparison **and** a recursive `diff` of the final plotfile — on
+binary **C2**, not binary B, which is the stronger statement; **a2's ordering** from file mtimes;
+the surviving resolver clauses read from the lock itself.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | kept callers 0; deleted keys in a kept input 0 | PASS (with a miss) | not re-derived as a map; the **miss is real and is a gap in the bar, not a breach of it** — a0 grepped kept tests for deleted *key* names, and `constraint_ref_lock` names deleted *symbols*. Caught at a8 | `DELETION_MAP.txt`; takeaway | PASS, bar incomplete — DR-1 |
+| a1 | every file but `thermo.dat` byte-identical; thermo common columns identical | FAIL as written / PASS on substance | **M0 44 event columns, M0T 33**; the 11 extra are all lateral (`riser_depth, ell_lat, T_face_lat, K_I_lat, K_Ic_lat, q_lat, sigma_lat, h_f_lat, h_f_unc_lat, lat_accum, lat_nfire`); M0T has **no** column M0 lacks; **0 of 4918 rows differ on the shared columns**; **0 non-zero cells** in the 11; final plotfile `03750cell` **recursively identical**; 67 thermo-only columns all side/lateral | own comparison of `W_c2/M0T` vs `p2_9/legs/M0` | **DOES NOT REPRODUCE as written; substance exact** — DR-2 |
+| a2 | references present before the first source edit | PASS | `W_bB.md5` **09:57:51**, `UNIT_bB/rc.txt` **16:16:26**, `src_bB/` snapshot **09:46:26**, first live edit **16:35:19** ⇒ ordering holds | own `stat` | **PASS (gate)** |
+| a3 | 0 of 2639 vs `p2_9_bB`; 26/863 | PASS | **0 of 2639**; controls **26 / 863** | own manifest diff | **PASS (gate)** |
+| a4 | W identical but C1's declared columns | PASS | covered in substance by my C2 comparison (a1/a6), which is downstream of C1 | `W_c1_vs_bB.txt` | PASS (gate) |
+| a5 | 0 of 2639; 26/863 | PASS | **0 of 2639** vs `p2_9_bB` **and** 0 vs `p2_10_c1`; controls 26/863 on both binaries | own diff | **PASS (gate)** |
+| a6 | as a4 plus C2's columns | PASS | the final 30 s plotfile is **recursively identical** to M0's on binary C2 — my own `diff -rq` | own diff | **PASS (gate)** |
+| a7 | each retired key rc ≠ 0 naming key + P2-10; M0T rc 0 | PASS | all **six** legs **rc = 6** with `ABORT ... was retired in P2-10` naming the key (`MMWSpalling.H:118`); M0T rc 0 | `RETIRED.txt` | **PASS (gate)** |
+| a8 | same rc; identical verdict lines | PASS (after the edit) | `constraint_ref_lock` rc 0 → rc 0, verdict lines identical, 0 output files differing | `UNITS_c2_vs_bB.txt` | **PASS (gate)** — DR-3 |
+| a9 | report; 0 names surviving | 5,006 lines; 0 | **M 12,724 → 9,148 (−3,576); R 4,037 → 2,616 (−1,421); F 858 → 849 (−9) = 5,006** — my own `wc -l`, exact; 0 names surviving | own count vs `A9.txt` | report — **25 % more than P0's ~4,000** |
+| b1 | report | TL45 −6.68 → −6.92 %; TL50/60 not quotable | not re-derived; ⚠⚠ **the mesh behaviour is metric-dependent**: on the position rate TL45 reads **−8.0 → −6.2 %**, i.e. it **does** shrink | `TILT45.txt` | report — **DR-5, corrects my P2-9 finding** |
+| b2 | report | per-firing grows with refinement | the per-firing deficit **grows** (TL45 −5.0 → −12.9 %) while firings/line rises (−3.1 → +7.7 %) ⇒ the rate measure is **self-cancelling**, confirming P2-9 review DR-14 at both meshes | `TILT45.txt` | report — **the key diagnostic** |
+| b3 | report | flips TL45 .259/.238; TL50 .285/.151; TL60 .053/.068 | not re-derived; TL60 has < 10 % flips and its excess **grows** with refinement ⇒ flips do not explain the steep side | `TILT45.txt` | report — **P1 not established** |
+| b4w | ≤ 1e-9 on ≥ 99 % | agreement 1.0000 | not re-derived; the offline stencil **is** the code's normal ⇒ b4 is quotable | `TILT45.txt` | PASS |
+| b4 | report | lean +1.2…+6.2° at 10 s, +6.6…+13.6° at 20 s | ⚠ **the lean GROWS with time**, so it is a function of how rough the surface has become, not a fixed property of the tilt; and TL40 at 1 mm reads **+1.2°**, below P2's own "< 2° ⇒ firing-conditioned" escape | `TILT45.txt` | report — **P2 only partly met**, DR-6 |
+| e1 | verdict | neutral YES; 5,006; P1 NOT established; P2 YES | all four answers reproduce except P2's strength — see DR-6 | `RESULTS.txt` | **delivered** |
+
+#### Diff review
+
+| # | hunk | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | a0's search | 4 | ⚠ a0 grepped kept tests for deleted **key** names, not deleted **symbol** names, so it missed `constraint_ref_lock` — a *source lock* that asserts deleted code exists. Found at a8 and fixed. The takeaway already states the general rule; it belongs in the next deletion packet's a0 bar | **risk** |
+| DR-2 | **a1's bar** | **9** | ⚠⚠ **the bar is self-contradictory for the coupling it tests.** It asks for byte-identity between a leg with the keys and one without, while testing whether a deleted key is read. `spall.lateral_drive` set the event-log **header layout** (`lat_csv = sp_lateral_drive`), so byte-identity is impossible **by construction** once the key is deleted — and the stated failure meaning ("deleting it changes the new rule") is **false here**: I verified 0 of 4918 rows differ on the shared columns, all 11 extra columns are identically zero, and the final plotfile is recursively identical **on binary C2**. Unlike P2-9's a5, no user authorisation is recorded; /plan should record this as a bar defect | **risk** |
+| DR-3 | `constraint_ref_lock` edited to pass a8 | **9** | editing a source lock whose target was deleted is **necessary, not a relaxation of rigour** — a lock cannot assert deleted code. Declared, and `TEST_EDITS.txt` itemises every deleted and restated clause with its reason. Class 9 satisfied | **ok** |
+| DR-4 | ✅ the single-resolver locks survive on the NEW code | 1, 10 | the invariant that cured the original criterion/kernel/march/ledger bug family is **carried forward, not retired with its code**: the lock still holds P2-8's "one list builder, one heat resolver, one weight function" (`BuildFaceList` ×1, `FaceH` only inside `FaceListHeat`, `FaceWeight` only inside `BuildFaceList`, plus the build-before-`BuildFlameColumns` ordering), P2-9's "one normal, one elastic helper, the refill on both paths", `FrFaceFlux` declared once with four callers, and `ScanKIcPa` once. I checked this specifically because the deletion list retires the OLD resolver locks (`SideFaceH`, the four lateral sites, "FOUR stress expressions → THREE") | **ok** |
+| DR-5 | **b1's metric** | 2, 12 | ⚠⚠ **the 45° deficit's mesh behaviour is metric-dependent and this corrects my own P2-9 review.** On `phase_rate` TL45 reads −6.68 → −6.92 % (does not shrink); on P2-9's position `rate()` it reads **−8.0 → −6.2 %** (shrinks by 22 %). P2-9 only reported `phase_rate` at both meshes, so my DR-13 conclusion "the 45° residue is structural" was **metric-dependent and I could not see it**. What survives: a deficit exists at 45° on both metrics; whether it survives refinement is **unresolved**. ✅ The implementer states this plainly ("the P1 shrink bar sits inside the gap between metrics") | **risk** |
+| DR-6 | b4's lean vs P2's bar | 12 | ⚠ P2 asked for 5–15°; the **10 s** medians are +1.2 to +6.2°, and TL40 at 1 mm is **+1.2° — below P2's own "< 2° ⇒ firing-conditioned" escape**. The 5–15° range is reached only at **20 s**, i.e. after the staircase has roughened, so the lean is time-dependent, not a property of the tilt. "P2 YES" is stronger than the data | **risk** |
+| DR-7 | `phase_rate` on x-dominant planes | 12 | ✅ found and declared: it groups firings by column (i, j), so x lines at different k pool into one "line" and TL60 reads **+48 %**. P2-9's position `rate()` reproduces TL60's +1.16 % exactly. Both metrics printed, the packet's kept unchanged — the right handling of a metric that breaks outside its range | **ok** |
+| DR-8 | the retired-key list | 7, 9 | one list checked once in `Parse` (`MMWSpalling.H:118`), and every one of the six legs aborts naming the key **and the step** — SR 1 satisfied six times, as in P2-8 | **ok** |
+| DR-9 | `cref_n_lat` kept and always 0 | 7, 4 | ⚠ kept deliberately because "the column order is load-bearing" (F1 / the 2639 gate). Correct — but it is now an always-zero column with no writer, i.e. exactly the "inert field" class. It should be removed in the same step that next re-pins the manifest | **nit** |
+| DR-10 | `surf_side_P_{top,buried,rin,rout}` deleted; `surf_side_share` kept | 7, 8 | the distinction is right and sourced: the four were written only from the group-B block and read 0 on every face-list leg, while `surf_side_share` is fed by the ledger's `P_robin_side` at M:5434 — a genuine face-list diagnostic. Verified against the Sources' own claim | **ok** |
+| DR-11 | `step_diag_radius` retired beyond the packet's list | 9 | declared in the takeaways with its reason (its only reader was deleted). An unlisted deletion would be a must-fix; this one is listed | **ok** |
+| DR-12 | four toughness locals and `ledger_E_flake_wall` / `E_wall` deleted | 9 | both declared and reasoned (unused-variable warnings; printed only under `jet_body`). ⚠ `E_wall` was a **ledger** term — correct to delete with `jet_body`, but worth confirming no kept accounting row referenced it; a3/a5's 0/2639 and a1's exact ledger columns cover that | **ok** |
+| DR-13 | `pad_shield_open`'s parse moved out of the deleted block | 2 | moved unchanged, declared; `foot_body_clearance`'s abort owner retargeted to P2-11, which is where the plan of record puts it | **ok** |
+| DR-14 | compares ignore `metadata` and `run/diff.patch` | 5 | ✅ correctly excluded and declared: `run/diff.patch` is the build's `GIT_DIFF_PATCH_OUTPUT` and so differs after **any** source edit. The first C1 scoring stopped on it and the legs were **re-scored, not re-run** | **ok** |
+| DR-15 | `WHICH_TESTS.md` still names the deleted tests | 11 | ⚠ a false pointer left in a study file outside `p2_10_retire/`, correctly not edited under the studies-are-records guardrail, and flagged for the next planner. It names the tree gate's test list, so a stale entry there is more than cosmetic | **nit** |
+| DR-16 | the 11 check-only units | 10 | ✅ a8 runs their `input` first (`CHECK_ONLY`), because 11 of the 37 kept tests only read existing output — without that, "every kept unit test" would have exercised nothing. Exactly the class-10 trap, caught unprompted | **ok** |
+| DR-17 | TL35 0.5 mm lean 6.3° vs the packet table's 7.1° | 5 | ⚠ a 0.8° discrepancy in one cell of the planner's table, reported rather than smoothed over, with every other cell reproducing exactly | **nit** |
+
+**Verdict: accepted.** Eight of the nine gating rows reproduce under independent derivation.
+**a1 does not reproduce as written** — but I verified that its bar cannot be satisfied by any
+correct implementation of this deletion (DR-2), that its stated failure meaning is false here,
+and that the substance is exact to the row and the byte. No diff-review row is tagged `bug`, and
+every deletion beyond the packet's list is itemised with its reason.
+
+**Carry forward:**
+1. **DR-5 — correct the record on the 45° residue, including my own P2-9 finding.** The deficit is
+   real on both metrics; its **mesh behaviour is unresolved** because the two rate measures
+   disagree in sign of change. P2-11 should pick the measure first and justify it, then ask
+   whether the deficit shrinks. **b2 is the diagnostic that matters**: per-firing recession
+   *grows* with refinement (−5.0 → −12.9 % at 45°) while firings/line rises to compensate.
+2. **DR-2 — this is the fourth consecutive packet with a mis-specified gate bar** (P2-8 b2's
+   plate fallback, P2-9 a1b's unmeetable "≥ 1 changed", P2-9 a3-viii's unproducible slab, and now
+   a1's impossible byte-identity). Each was caught and handled honestly by the implementer, which
+   is the system working — but a bar that demands byte-identity or a fixed count from a quantity
+   the step itself changes should be caught at `/plan`.
+3. **DR-1 — a deletion packet's a0 must grep kept tests for deleted SYMBOL names**, not just key
+   names; source locks live in `unit/*/test`.
+4. **DR-6 — re-state P2's result at 10 s**, where one leg falls below P2's own 2° escape, and note
+   that the lean grows with surface roughness rather than being set by the tilt.
+5. **DR-15 — update `WHICH_TESTS.md`**; it still lists six deleted tests and it documents the
+   tree gate's own coverage.
+
+**Checked and clean:** no `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE` change; no
+source edit outside `src/Integrator/MMWSpalling*`; no file under `tests/MMWSpalling/studies/`
+other than `p2_10_retire/` edited; no Meier leg; two binaries, each tree-gated at 0/2639 with
+live 26/863 controls, and C2 vs C1 also 0. SR 1 (a run per retired key ×6), SR 3, SR 4, SR 7,
+SR 8 (argv + binary hash per leg) and SR 9 (binary-B source and test copies kept in `src_bB/`,
+`tests_bB/`, retired units archived in `retired_units/`) honoured. **No unquotable number is
+quoted:** TL50/TL60's `phase_rate` values are declared **not quotable** and the reason given,
+b4's 20 s "fired" split is declared empty by construction, and the floor's own 1.7 % mesh drift
+is restated beside every deficit.
+
+## ROADMAP notes released 2026-10-28 (b) — plan of record superseded at P2-11 planning
+
+Released verbatim from `ROADMAP.md` `Next milestones` when P2-11 was planned (the user moved the heat rule ahead of Meier).
+
+- ⚠⚠ **NEXT (user plan of record, 2026-10-28):** P2-10 (active, deletion) → **P2-11 Meier on the face list** (decide:
+  port the pad-clearance rule `foot_body_clearance` to the line rule or retire it; hand-drawn map G4 replaced; fed at
+  1.28 m/h; Ø(z) vs Fig. 8.8; the 45° fix per P2-10's e1) → **the exposure heat rule** (P2-9 d3: Höser +42 mm wide,
+  −29 % deep at 120 s; the position-only map owns it) → the MMW case. Retire, don't stack.
+
+## P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by review 2026-10-29; archived 2026-10-29)
+
+**Status:** ACCEPTED by review (a0, a1, b1 re-derived; e1 GO robust to the 1.3 % volume mismatch: R30 1.0745 at exactly
+matched volume). No source edit; binary P2-10 C2 `01c49ab554cdeab0`. Study `tests/MMWSpalling/studies/p2_11_heat/`.
+
+### What the step established
+- **The correction:** Höser's `h_expr` used Goldstein 1986's AREA-AVERAGE as a local h; the local form
+  g_loc = 533(533 + 0.3575u)/(533+u)², u = 44(r/D)^1.285, gives 0.7159 at 17.5 mm, inside her crater's 0.7095–0.7632
+  (average 0.8134 outside). Keep it in every Höser deck.
+- **Every P1 number landed:** S\*_G1 0.1636 (0.150–0.170); at matched 30 s volume depth ×1.082 (30 s), ×1.083 (60 s);
+  max Ø at 120 s −8.0 mm (107.3 vs 115.3); no lateral firing below 500 W/m²K (min 1,980). e1 = GO.
+- **Small:** closes ~8 of the 42 mm Ø gap; depth vs Höser −31 / −29 / −22 / −19 / −24 % at 15–120 s (P47n −38 … −28 %).
+- **The offline chain:** overstates the realised 15 s heat shift ~10× (2.4× from cell-centre instead of per-face
+  evaluation, ~4.3× shape feedback); acceptable at 60–90 s (realised ×1.21 / ×1.15 inside P1's band).
+- **Planner, after the step (thermo + volumes):** the incremental removal rate rises 50 → 172 cm³/min from 0–15 to
+  60–90 s on G1 (×3.5; P47n ×4.2) against Höser's 64 → 108 (×1.7): too slow early, too fast late — the heat uptake
+  grows with the exposed area much faster than hers. Absorbed power (×4) 1.7 kW at 15 s → 5.0 kW at 90 s.
+
+### Carry-forwards (review)
+1. DR-4 — any X1 prediction states its TIME and uses the code's per-face evaluation; early-time offline predictions
+   are not evidence.
+2. DR-3 — re-run P47n once on the current binary to close the control's binary gap.
+3. DR-2 — fifth consecutive packet with an unmeetable bar: an "only X differs" guardrail must be written against the
+   binary the legs run on (the 13 retired tokens).
+4. DR-7 — state the depth measure's spread per leg (0.96 mm on G1 at 30 s vs 0.50 on P47n).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-29)
+
+Active step:
+- **P2-11 — G1 probe: Höser with Goldstein's profile used as a LOCAL value** (`ACTIVE_STEP.md`; 2026-10-28; input
+  change, no code; 3 legs). P2-10 archived ACCEPTED (`ARCHIVE_DONE.md` *"P2-10"*). Research:
+  `studies/p2_11_research/RESEARCH_NOTE.md` — Höser's map misuses Goldstein's AREA-AVERAGE as a local h. A
+  pre-registered decision row (e1) says whether ONE more step (X1, the surface-path heat rule, draft in the note) is
+  spent; the heat-model check is BOUNDED (user 2026-10-28) and then the programme returns to rock physics / MMW.
+
+### The P2-11 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-11 — G1 probe: Höser with Goldstein's profile used as a LOCAL value (input change, no code)
+
+Status: **accepted by review** (2026-10-29; all three gating rows re-derived independently, a0 including its derivation). Was: completed (implemented 2026-10-28).
+
+### Context
+
+P2-9 left Höser 47 MPa +42 mm too wide and −29 % too shallow at 120 s, already −39 % deep at 15 s; the removal rule
+is not the cause (`ARCHIVE_DONE.md` *"P2-9 rev 2"*, *"P2-10"*). Research (`studies/p2_11_research/RESEARCH_NOTE.md`,
+§5 supersedes §2–§3) found that Höser's `h_expr` uses Goldstein 1986's AREA-AVERAGE correlation as a LOCAL h — a
+broader profile than the one her own 30 s crater implies. **This step fixes only that, in the deck, and measures what
+it does.** It is also a test of the offline prediction chain (R3) that the larger path-rule change (X1, draft in the
+research note) would rely on. ⚠ **Bounded heat-model check (user, 2026-10-28):** Höser's shape is treated as a check
+of the flame heat model, not a target to fit. G1 decides whether ONE more step (X1) is spent on it; after that the
+programme returns to the rock physics and MMW. The heat LEVEL stays a stated input (S from her 30 s volume).
+
+### Sources (opened 2026-10-28)
+
+- **Goldstein, Behbahani & Heppelmann 1986** (IJHMT 29:1227): "a correlation is obtained for the AVERAGE heat
+  transfer" (abstract); Zuckerman & Lior 2006 tabulate it as Nu_avg ∝ 1/(533 + 44 (r/D)^1.285), H/D 6–12. Local value
+  = (1/2r)·d(r²·Nu_avg)/dr ⇒ **g_loc(r) = 533·(533 + 0.3575·u)/(533 + u)², u = 44·(r/D)^1.285** (0.3575 = 1 − 1.285/2);
+  g_loc(0) = 1 (the stagnation value is unchanged).
+- **Her crater** (P2-7 a2, review-accepted, `ARCHIVE_DONE.md` *"P2-7"*): her 30 s bowl implies q(17.5 mm)/q(0) =
+  0.7095–0.7632. Goldstein average 0.8134; g_loc 0.716.
+- **Control P47n** (P2-9, binary B; argv `studies/p2_9_face_removal/legs/P47n/argv.sh`): `h_expr = if((r>0.02)and
+  (s<0.0633),0.001,C*533/(533+44*pow(r/0.0079,1.285))*pow(0.0632/max(0.0632,s),1.3185305455))`, C = S × 7272.3958,
+  S\* 0.1431. Planner, 2026-10-28, from its plotfiles: **axis depth from `fr_f`** (150 − mean solid length of the four
+  innermost lines i, j ∈ {0, 1}, mm) **11.09 / 20.30 / 34.42 / 45.91 / 55.52** at 15 / 30 / 60 / 90 / 120 s (spread
+  across the four lines 0.18 / 0.50 / 0.65 / 1.41 / 0.65 mm); V(f) 11.82 / 32.99 / 101.82 / 200.18 / 317.18 cm³; max Ø
+  (mask, P2-9 d3) 43.6 / 55.2 / 77.1 / 96.5 / 115.3 mm. **Level sensitivity** (same profile, P47r S 0.1314 vs P47n):
+  9 % less heat ⇒ depth −8.0 / −8.8 % at 15 / 30 s — compare only at matched volume.
+- **Binary:** P2-10 C2 `01c49ab554cdeab0…`; its face-list path reproduces binary B byte-for-byte on Höser M0T and the
+  face_removal fixtures (P2-10 a6, review-accepted), so P47n is a valid control.
+- **Höser 2016 Fig. 5.10** (47 MPa): axis depth 18 / 31 / 48 / 61 / 77 mm, max Ø 40 / 47 / 56 / 64 / 73 mm at
+  15 / 30 / 60 / 90 / 120 s; V 16.0 / 33.0 / 81.0 / 135.0 cm³ at 15–90 s.
+- **Parser:** `and`, not `&&`; a variable-first `max`/`min` in a DIVISOR is mis-evaluated (memory
+  `parser-max-divisor-defect`) — the G1 formula's only divisor is `pow(533+…,2)`; the standoff factor keeps P47n's
+  constant-first `max(0.0632,s)`.
+
+### Goal
+
+1. `studies/p2_11_heat/offline/a0_gloc.py` — row a0.
+2. `studies/p2_11_heat/run_p2_11.py` (from P2-9's `run_p2_9.py`: argv token for token from P47n, `plot_file`
+   re-pointed, only `h_expr` replaced, binary hash + argv recorded, `caffeinate`, `.done` sentinels) and
+   `reduce_p2_11.py` (reuse P2-9's `sstar()` and d3 scoring; the `fr_f` axis depth defined in Sources) →
+   `SSTAR.txt`, `RESULTS.txt`.
+3. `WHICH_TESTS.md`: remove the six tests P2-10 deleted (P2-10 review DR-15).
+No source edit.
+
+### Legs
+
+P47n's argv with `surface_patch.h_expr` replaced by (C = S × 7272.3958, written to 6 decimals):
+```
+if((r>0.02)and(s<0.0633),0.001,C*533*(533+0.3575*44*pow(r/0.0079,1.285))/pow(533+44*pow(r/0.0079,1.285),2)*pow(0.0632/max(0.0632,s),1.3185305455))
+```
+| leg | S | stop |
+|---|---|---|
+| G1_S14 | 0.14 | 30 |
+| G1_S20 | 0.20 | 30 |
+| G1 | S\*_G1 (rule below) | 120 |
+
+**S\* rule:** log-log interpolate V(f)(30 s, ×4) between G1_S14 and G1_S20 to 33.0 cm³; 4 decimals. Outside ⇒ ONE
+added point (S 0.10 or 0.28); still outside ⇒ stop and report.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | offline: the disc mean of g_loc over radius R equals the Goldstein average 533/(533 + 44 (R/D)^1.285) at R/D = 0.5, 1, 2, 4, 8, 16, 32; g_loc(17.5 mm) | rel ≤ 1e-6; 0.716 ± 0.001 | **gate** | the local form is mis-derived — the legs test the wrong formula |
+| a1 | 2 | the first plotfile after t = 0 of each leg: `fl_h` vs the Python formula at every listed cell's face position (as `p2_11_research/r3_p47n.py` checks P47n) | ≤ 1e-12 rel on ≥ 99 % of listed cells | **gate** | the parser does not evaluate the deck as written |
+| b1 | 3 | S\*_G1 by the rule | interior (≤ 1 added point) | **gate** (protects the 120 s leg) | G1's level cannot be matched |
+| c1 | 4 | G1 vs P47n vs Höser at 15 / 30 / 60 / 90 / 120 s: `fr_f` axis depth, max Ø, V(f); V60/V30, V90/V30; depth/diameter growth 15→120 s | report with magnitudes | **report** | see P1 |
+| c2 | 4 | G1 vs P47n at each time: share of listed-face conductance (`fl_h`·`fl_w`) within 10 mm of the axis and on floor faces (smoothed n_z > cos 45°) | report | **report** | the mechanism witness: if c1 did not move, did the heat? |
+| c3 | 4 | G1: lateral firings with calorimeter-equivalent h (model h / S\*) < 500 W/m²K, per 15 s window | report | **report** | whether Kant's minimum flux comes into play |
+| e1 | 5 | **the X1 decision**, from c1 at matched 30 s volume: R = depth_G1 / depth_P47n at 30 s and 60 s; ΔØ = max Ø_G1 − max Ø_P47n at 120 s | **GO**: R ∈ [1.04, 1.25] at both times AND ΔØ ≤ −3 mm. **STOP (insensitive)**: R < 1.04 at both AND ΔØ > −3 mm. **STOP (wrong direction)**: R < 0.97 at either OR ΔØ > +3 mm. **Overshoot**: R > 1.25 ⇒ GO, X1's predictions re-derived offline first. Anything else ⇒ report; the user decides | **verdict** | GO ⇒ plan X1 (one step); STOP ⇒ the heat-model check closes here and the programme moves on |
+
+⚠ The thresholds sit above the measure's own spread (≤ 0.65 mm on 20–34 mm, ≤ 3 %) and the mask's 2 mm Ø step.
+
+### Pre-registered predictions
+
+- **P1:** S\*_G1 0.150–0.170 (g_loc puts less heat away from the axis). At matched volume, depth +5 to +15 % at 30 and
+  60 s; max Ø at 120 s 3–10 mm below P47n's 115.3; c2: the share within 10 mm rises ×1.15–1.3 (R3 offline: 0.165 →
+  0.196 at 15 s, 0.038 → 0.048 at 60 s). Still far from Höser: "shape agrees" (max Ø ±6 mm at 60/90/120 s AND depth
+  ±15 % at every time) NO. ⇒ e1 = GO.
+- **P2 (c3):** no lateral firing below 500 W/m²K (P47n: none; walls at 2.8–5.3 kW/m²K calorimeter-equivalent).
+- **Refuting evidence on disk:** none for G1 itself; P2-5's narrow Gaussian (σ = 0.48 D) pencil bore shows the
+  direction narrower ⇒ deeper (confounded by a typed side h).
+
+### Guardrails
+
+- Only `surface_patch.h_expr` differs from P47n's argv; no source change; no X1 code in this step.
+- `caffeinate -dis`, `-np 4`, legs serial, `.done` sentinels; argv + binary hash per leg (SR 8).
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_11_heat
+shasum -a 256 bin/mmwspalling-3d-g++                        # must start 01c49ab554cdeab0
+$PY $S/offline/a0_gloc.py                                     # ord 1: a0
+caffeinate -dis $PY $S/run_p2_11.py G1_S14 G1_S20             # ord 2-3: a1, b1
+$PY $S/reduce_p2_11.py SSTAR
+caffeinate -dis $PY $S/run_p2_11.py G1                        # ord 4-5: c1-c3, e1
+$PY $S/reduce_p2_11.py > $S/RESULTS.txt
+```
+
+### Claude completion notes
+
+**Files changed.** No source edit; binary P2-10 C2 `01c49ab554cdeab0` (unchanged, so no tree gate or unit re-run).
+New in `studies/p2_11_heat/`:
+- scripts: `offline/a0_gloc.py`, `run_p2_11.py`, `reduce_p2_11.py`, `chain_p2_11.sh`;
+- the extra offline check `offline/r3_check.py`;
+- records: `A0.txt`, `A1.txt`, `SSTAR.txt`, `RESULTS.txt`, `R3_CHECK.txt`, `CHAIN.log`, `RUN_ord2.log`, `RUN_ord4.log`;
+- `legs/{G1_S14, G1_S20, G1}`, each with `argv.sh`, `DROPPED.txt` (binary sha256) and `.done`.
+
+Edited `studies/tree_sweep_0922/witness/WHICH_TESTS.md`:
+- the side-face row is removed, with a note naming the six deleted tests;
+- the energy-ledger row named "any side-face test" and now names `robin_face` and `scalar_flaw` (plus the four
+  other kept tests that check `ledger_err`).
+
+| # | measured | result | path |
+|---|---|---|---|
+| a0 | disc mean of g_loc vs g_avg at R/D 0.5–32: rel ≤ 6.7e-16; closed form vs d(r²g_avg)/dr ≤ 2.1e-11; g_loc(17.5 mm) 0.71590 | PASS | `A0.txt` |
+| a1 | G1_S14 / G1_S20 / G1 at 15 s: 100 % of 2572 / 2616 / 2589 listed cells within 1e-12 (max 7.8e-16); control P47n (its own form) 100 % | PASS | `A1.txt` |
+| b1 | V(f)(30 s) 24.922 (S 0.14) / 47.430 cm³ (S 0.20) → S\*_G1 0.163572 → **0.1636**, C\* 1189.763953; 0 added points | PASS | `SSTAR.txt` |
+| c1 | fr_f axis depth G1 / P47n (mm): 12.35/11.09, 21.97/20.30, 37.27/34.42, 49.42/45.91, 58.46/55.52 at 15–120 s (vs Höser −31/−29/−22/−19/−24 %); max Ø 43.7/43.6, 54.7/55.2, 73.5/77.1, 90.5/96.5, 107.3/115.3; V(f) 12.38/11.82, 33.43/32.99, 96.89/101.82, 182.98/200.18, 282.17/317.18 cm³; V60/V30 2.90 vs 3.09 (hers 2.45), V90/V30 5.47 vs 6.07 (4.09); depth/diameter growth 0.73 vs 0.62 (1.8); shape agrees with Höser NO | report | `RESULTS.txt` |
+| c2 | share within 10 mm G1/P47n: 0.168/0.165, 0.090/0.084, 0.046/0.038, 0.030/0.026, 0.026/0.025 (×1.02–1.20); floor share 0.628/0.631 … 0.270/0.425 (×1.00 → 0.64) | report | `RESULTS.txt` |
+| c3 | lateral firings below 500 W/m²K calorimeter-equivalent: 0 in every 15 s window (423–5663 firings per window); min 1980, median 4735 → 2185 W/m²K | report | `RESULTS.txt` |
+| e1 | matched 30 s volume (33.43 vs 32.99 cm³): R30 1.082, R60 1.083, ΔØ(120 s) −8.0 mm | **GO** | `RESULTS.txt` (end) |
+
+### Implementation takeaways
+
+- **The legs drop P47n's 13 retired tokens. This is declared here; the packet said "only `h_expr` differs".**
+  - P47n's argv still sets `side_face_*` and `spall.lateral_*`, and C2 aborts on each.
+  - `run_p2_11.py` drops exactly P2-10's `M0T_DELETE` list and asserts that it did. Each leg's `DROPPED.txt` lists
+    the dropped tokens.
+  - P2-10 a1 (on substance) and a6 showed the face-list path never reads those keys, so P47n stays a valid control.
+  - Otherwise the argv equals P47n's token for token; only `stop_time`, `h_expr` and `plot_file` differ.
+  - G1's unused-key report matches P47n's.
+- **The R3 offline chain overstates the heat shift by about 2× (X1 relies on this chain).** At 15 s, the share
+  within 10 mm reads:
+  - R3's construction: 0.196 (it evaluates the profile at the cell-centre r and the top-face s for every cell);
+  - the same formula on the same shape, evaluated per open face as the code does: 0.178;
+  - the actual run: 0.168.
+  - So any offline prediction for X1 should use the code's per-face evaluation (`reduce_p2_11.py faces()`,
+    `face_pos()`), and it still cannot capture the shape feedback. `R3_CHECK.txt` has all five times.
+  - P1's c2 multiplier (×1.15–1.3) holds only at 60 and 90 s; every other P1 number landed: S\*, depth +5–15 %,
+    ΔØ −3 to −10 mm, shape NO, e1 GO.
+- **The floor's heat share falls as G1's pit narrows:** 0.27 against P47n's 0.43 at 120 s. On a narrower, deeper
+  pit most of the conductance is on walls. Read c2's floor share together with the shape, not as a direct
+  effect of the formula.
+- **Matched volume is matched to 1.3 %.** S\* is rounded to 4 decimals, so G1's 30 s volume is 33.43 cm³ against
+  33.0. By the packet's level sensitivity, that is worth at most about 1 % of depth, well inside R30's margin.
+- **G1's 4-line depth spread is 0.96 mm at 30 s,** above P47n's 0.50 mm and above the packet's stated measure
+  spread (≤ 0.65 mm). R30's margin over the 1.04 bar (4.2 points) still exceeds it.
+- **The axis depth from `fr_f`** (`axis_depth()`) reproduces the planner's P47n numbers exactly: depth, spread, V(f)
+  and max Ø at all five times. The control's reduction is the packet's own.
+- **G1 still far from Höser at 120 s:** depth −24 % and max Ø +34 mm. G1 closes about 8 of the 42 mm Ø gap.
+- **Leg outputs total 1.9 GB.** Each leg directory holds the plotfiles and the event log the numbers above are
+  reduced from (SR 8).
+
+### Review findings
+
+Re-derived independently: **a0's whole derivation** — that the closed form IS the local value of
+Goldstein's average, by finite difference of (1/2r)·d(r²·Nu_avg)/dr at all seven radii, plus the
+disc-mean identity and g_loc(17.5 mm); **b1's S\*** from the two ladder volumes; **e1's decision
+and its robustness to the imperfect volume match**; the **argv token diff** against P47n; the
+h_expr string against every parser rule the programme has established.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | disc mean = g_avg, rel ≤ 1e-6 at R/D 0.5–32; g_loc(17.5 mm) 0.716 ± 0.001 | rel ≤ 6.7e-16; 0.71590 | **the closed form is the true local value**: 0.3575 = 1 − 1.285/2 exactly, and my finite-difference check of (1/2r)·d(r²g_avg)/dr agrees at all seven radii to ≤1.3e−10 (my step size, not the formula). **g_loc(0) = 1.000000000000** exactly. The disc-mean identity holds to ≤4.3e−12 — and it is **analytic by construction** (∫g_loc·r dr = ½r²g_avg), so a0 tests the code, not the mathematics. **g_loc(17.5 mm) = 0.715895** | own derivation vs `A0.txt` | **PASS (gate)** |
+| a1 | `fl_h` vs the formula, ≤ 1e-12 rel on ≥ 99 % | 100 % on all legs | not re-derived (needs the FAB reader); the method is sound — `fl_h` is the max over a cell's **open faces** compared at each **face centre**, with "listed cells with no open face 0" so the population is not silently empty, and the **P47n control on its own form** also reads 100 % | `A1.txt` | PASS (gate) |
+| b1 | interior, ≤ 1 added point | S\* 0.163572 → 0.1636 | V(f) 24.922 / 47.430 ⇒ log-log slope **1.80417**, **S\* = 0.163573 → 0.1636**, C\* = **1189.763953** — and the shipped `h_expr` carries exactly 1189.763953 | own arithmetic; `legs/G1/argv.sh` | **PASS (gate)** |
+| c1 | report | depth G1/P47n 1.08×, Ø −8 mm | not re-reduced (FAB); ✅ the control's numbers **match P2-9's already-accepted d3** (P47n V(f) 30 s 32.99, max Ø 120 s 115.3), so the reducer agrees with an accepted step | `RESULTS.txt`; `ARCHIVE_DONE` P2-9 | report — shape still NO |
+| c2 | report | ×1.02–1.20 within 10 mm | ⚠ the ×1.02 at 15 s is where the offline chain fails — see DR-4. At 60 s (0.046/0.038 = **1.211**) and 90 s (0.030/0.026 = **1.154**) the realised multiplier **is** inside P1's ×1.15–1.3 | own ratios from `RESULTS.txt` | report |
+| c3 | report | 0 below 500 W/m²K | the window table shows 0 in every one of the eight windows, over 423–5,663 firings each, min 1,980 W/m²K | `RESULTS.txt` | report — **P2 confirmed** |
+| e1 | GO: R ∈ [1.04,1.25] at both AND ΔØ ≤ −3 mm | **GO** | **R30 = 1.0823, R60 = 1.0828, ΔØ = −8.0 mm** ⇒ GO. ✅ And I corrected for the imperfect volume match myself: +1.33 % volume ⇒ +0.74 % in S (V ∝ S^1.80) ⇒ **R30 = 1.0745 at exactly matched volume**, still clear of 1.04 by **3.4 points** | own arithmetic | **GO, and robust** |
+
+#### Diff review
+
+No source edit (binary `01c49ab554cdeab0` = P2-10 C2, verified unchanged), so the diff is the deck
+string, three new scripts and the `WHICH_TESTS.md` fix.
+
+| # | item | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | the G1 `h_expr` string | 3, 13 | ✅ safe by **every** parser rule this programme has paid for: `and` not `&&`; no whitespace; the sole `max` is **constant-first** (`max(0.0632,s)`); and the only divisor is a `pow`, which `PARSER_DEFECT.txt` tested as dividing correctly. a1 is the empirical lock on top (max rel 7.8e−16) | **ok** |
+| DR-2 | **the legs drop 13 of P47n's tokens** | **9** | ⚠ the guardrail says "only `surface_patch.h_expr` differs", and it **cannot** be met: P47n's argv sets keys P2-10 retired and C2 aborts on each. Verified exactly — **84 tokens → 71, the 13 missing are precisely P2-10's `M0T_DELETE` list, zero tokens added, and only `h_expr` and `plot_file` differ in value**. Declared in the takeaways and in each `DROPPED.txt`. This is the fifth consecutive packet whose bar could not be met as written | **ok** (declared), bar defect |
+| DR-3 | **the control spans a binary change** | 4, 12 | ⚠⚠ P47n was run on **binary B** with those 13 keys set; G1 runs on **C2** without them, and **P47n was not re-run on C2**. The bridge is P2-10 a1/a6 — which I verified — but a1 was established on **M0** (30 s, S 0.10), not on P47n (120 s, S 0.1431), so "P47n is a valid control" is an extrapolation of a path identity across a different leg and 4× the duration. Structurally sound and cheaply closable: re-run P47n on C2 once | **risk** |
+| DR-4 | **the R3 offline chain** | 12 | ⚠⚠ **the chain X1 would rely on overstates the realised 15 s shift by ~10×, not ~2×.** Shares within 10 mm at 15 s: P47n 0.165; G1's formula on P47n's shape evaluated the code's way 0.178 (shift +0.013); R3's construction 0.196 (shift +0.031); the actual G1 run 0.168 (shift **+0.003**). So **2.4× from the construction** (cell-centre r and top-face s instead of per-face) and a **further ~4.3× from shape feedback** — 10.3× end to end. The notes quantify the first factor and name the second only qualitatively. ✅ Mitigating: at 60 and 90 s the realised multiplier lands inside P1's band, so the chain is unreliable **early** and acceptable later. **X1's offline predictions must say which time they are for** | **risk** |
+| DR-5 | `c2`'s floor share read as a mechanism witness | 12 | ✅ correctly disclaimed: the floor share falls 0.43 → 0.27 at 120 s because G1's pit is **narrower and deeper**, so most conductance is on walls. The takeaway says to read it with the shape, not as a direct effect of the formula — which is right, and is exactly the self-limited-discriminator trap | **ok** |
+| DR-6 | `e1`'s matched-volume premise | 6 | ⚠ "matched 30 s volume" is matched to **1.3 %** because S\* is rounded to 4 decimals. Quantified by the implementer and independently by me: worth ~0.7 % of depth, leaving R30 at 1.0745 against a 1.04 bar. The decision does not turn on it | **nit** |
+| DR-7 | G1's 4-line depth spread | 6, 12 | ⚠ **0.96 mm at 30 s, above the packet's own stated measure spread (≤ 0.65 mm)** and nearly 2× P47n's 0.50 mm. Declared, with the margin argument (R30's 4.2 points over the bar exceeds the 4.4 % spread). It means the depth measure is noisier on the narrower pit than the packet assumed | **nit** |
+| DR-8 | `offline/a0_gloc.py`'s disc-mean check | 10 | ⚠ the identity it checks is **analytic by construction**, so it can only ever fail on a coding error, never on a mis-derivation. It is therefore a code check, not a derivation check — which is fine, but the *derivation* is backed only by the closed form's agreement with `d(r²g_avg)/dr` (also in `A0.txt`, rel ≤ 2.1e−11, and reproduced by me). Worth knowing which clause carries which claim | **nit** |
+| DR-9 | `reduce_p2_11.py` reuses P2-9's `sstar()` and d3 scoring | 1 | ✅ reuse rather than a fourth copy, and the reuse is **validated by reproducing the planner's independently computed P47n control numbers exactly** (depth, spread, V(f), max Ø at all five times) | **ok** |
+| DR-10 | `WHICH_TESTS.md` | 11 | ✅ **my P2-10 DR-15 carry-forward is actioned**: the side-face row removed with a note naming the six deleted tests, and the energy-ledger row's "any side-face test" replaced by `robin_face` and `scalar_flaw`. Only two mentions of the deleted names remain, both in the explanatory note | **ok** |
+| DR-11 | the premise itself | 12 | ✅ **independently confirmed, and it is the step's whole point**: g_loc(17.5 mm) = **0.7159** sits **inside** her crater's implied 0.7095–0.7632, while the Goldstein **average** 0.8134 that P47n used sits **above** it. The deck was using an area-average correlation as a local value | **ok** |
+| DR-12 | 1.9 GB of leg output | — | ⚠ kept as the provenance the numbers are reduced from (SR 8). No action; the next planner may want a retention rule, as P2-7's 5.3 GB and P2-9's legs also persist | **nit** |
+
+**Verdict: accepted.** All three gating rows (a0, a1, b1) reproduce under independent derivation —
+a0 including the mathematics behind it, which I re-derived from Goldstein's average rather than
+checking the implementer's form. No diff-review row is tagged `bug`, and the one deviation from a
+guardrail (DR-2's 13 dropped tokens) was forced by P2-10's own deletions, is exactly the retired
+list, and is declared in three places.
+
+**Carry forward:**
+1. **DR-4 is the one that matters for X1.** The offline chain overstates the realised 15 s heat
+   shift by **~10×** — 2.4× from evaluating at cell centres instead of per open face, and a further
+   ~4.3× because the shape feeds back. It is acceptable at 60–90 s. Any X1 prediction must state
+   its time and use the code's per-face evaluation; an early-time prediction from this chain is not
+   evidence.
+2. **DR-3** — re-run P47n once on C2 to close the control's binary gap. It is cheap and it removes
+   the only extrapolation in the comparison.
+3. **DR-2** — fifth consecutive packet with an unmeetable bar (see the review record for P2-8 b2,
+   P2-9 a1b and a3-viii, P2-10 a1). A guardrail that says "only X differs" must be written against
+   the binary the legs will actually run on.
+4. **DR-7** — state the depth measure's spread **per leg**, not once for the packet; it is 1.9×
+   larger on G1 than on the control.
+
+**Checked and clean:** no source edit (binary `01c49ab554cdeab0` verified, so no tree gate or unit
+re-run is owed); nothing added to any leg's argv; `caffeinate`, `.done` sentinels and a binary
+sha256 in every `DROPPED.txt` (SR 8). SR 3 (×4 on V(f)) and SR 7 honoured. **No unquotable number
+is quoted:** the shape is reported as **not** agreeing with Höser at every time, the R3 chain's own
+overstatement is printed beside its prediction, c2's floor share is explicitly disclaimed as
+shape-driven, and the heat level is restated as a stated input (S from her 30 s volume) rather than
+a result.
+
+
+## P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the bounded check closes (2026-10-29, ACCEPTED by review 2026-10-29; archived 2026-10-30)
+
+**Status:** ACCEPTED by review; all seven gating rows were re-derived independently (a0, a1, a3, a4, a5, a6, b1). Binary
+Stage B `f787140d07e3918b`. `face_heat` defaults to `position`, byte-identical to C2 (tree 0/2639; G1_C 131 files
+identical). Study `tests/MMWSpalling/studies/p2_11b_path/`.
+
+### What the step established
+- **X1 at matched 30 s volume** (S\* 0.2454 = 1.500 × G1's):
+  - depth within ±5.2 % of Höser at all five times;
+  - max Ø frozen at 41–42.5 mm (hers 40 → 73, G1 → 107);
+  - removal slows 69 → 27 cm³/min (60–90 ÷ 0–15 = 0.52; hers 1.69, G1 3.48).
+  - G1 and X1 bracket her on Ø, volume and growth.
+- **Why the hole is narrow** (advisor, 2026-10-30): the top-10-mm wall band receives 0.16 vs 1.20 kW (60 s) and
+  0.09 vs 1.27 kW (90 s), X1 vs G1. Spalling is a threshold, so weak wall heat gives no widening, and the narrowing
+  locks itself in.
+- ⚠ **X1's depth match is bought with the level** (S\* 1.5× G1, all of it landing on the floor).
+- ⚠⚠ **The Höser deck double-counts the standoff decay past s_c = 112.35 mm.** K30 put all of the decay in h
+  (fitted at L 10–14); T_stag also falls once s_c > 30 × 3.745 mm. X1 is affected from ~60 s, G1 from ~90 s
+  (`Claude_markdowns/2026-10-30.md` §1).
+- ⚠⚠ **Confound found 2026-10-30:** every Höser shape and growth comparison used her 47 MPa loaded series; the deck
+  has `confining.p = 0` and no load mechanism, so S\* absorbs both the uptake gap and the load.
+- **Every prediction missed by a large factor.** For a shape-changing rule the offline chain gives a direction, never
+  a size.
+- **Verdict:** the bounded check closes; X1 does not join the deck.
+- **Later the same day** (user: *realistic over matching*; `MODEL_CARD.md` §11 item 5): X1's coordinate is judged the
+  more realistic. Its starvation is most likely the two open-plate pieces both rules borrowed (a standoff factor on
+  every face; flat-plate decay along the wall). X1 was restored default-off (P2-12) as the basis for any future
+  wall-heat work.
+
+### Carry-forwards (review)
+1. **DR-3:** Goldstein is valid for H/D 6–12. Both legs pass 12 D before 60 s, so every late-time row extrapolates.
+2. **DR-6:** re-point `unit/lateral_flux_lock` from `FaceH` to `FaceHr`, where the resolver invariant now lives.
+3. **DR-5:** run the kept unit set whenever `FaceEntry` or its readers change.
+4. **DR-7:** `fl_n_src` = 1 makes path mode's source set mesh-dependent.
+5. **DR-12:** the host slept ~2 h mid-run despite `caffeinate` (it was on battery, or the lid was closed).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-10-30)
+
+Active step:
+- **P2-11b — X1: the surface-path heat rule on Höser** (`ACTIVE_STEP.md`; 2026-10-29). P2-11 G1 archived ACCEPTED
+  (`ARCHIVE_DONE.md` *"P2-11"*: local Goldstein, depth ×1.08, Ø −8 mm, GO). An offline row (a1, G1's shapes, per-face,
+  60–120 s) decides whether the code is written; then `face_heat=path` (surface distance from the stagnation point,
+  standoff to it, flange as `barrier_expr`, gas T marched along the path), scored on shape AND the growth table
+  (her removal rate ×1.7 from 0–15 to 60–90 s, G1 ×3.5). **The bounded check's last step**: e1 closes it.
+
+### The P2-11b file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-11b — X1: the surface-path heat rule on Höser (the bounded heat-model check's last step)
+
+Status: **accepted by review** (2026-10-29; all seven gating rows re-derived independently, plus two source locks I ran because the diff splits the symbol one of them pins). Was: completed (implemented 2026-10-29).
+
+### Context
+
+P2-11 (G1, accepted 2026-10-29; `ARCHIVE_DONE.md` *"P2-11"*) corrected Höser's deck to Goldstein's LOCAL profile:
+depth ×1.08 at matched volume, max Ø −8 mm at 120 s, every prediction landed, decision GO. The hole is still too
+shallow and too wide (depth −24 %, Ø +34 mm at 120 s), and its removal rate accelerates ×3.5 from 0–15 to 60–90 s
+against Höser's ×1.7: the heat uptake grows with the exposed wall area far faster than hers. **X1 tests one
+remedy:** heat follows the jet's path — the same local profile evaluated at the distance ALONG THE ROCK SURFACE from
+the stagnation point, with every face at the stagnation standoff, the flange as a gas barrier, and the gas cooled
+along the same path (research: `studies/p2_11_research/RESEARCH_NOTE.md` §5). ⚠ **Bounded check (user 2026-10-28,
+memory `bounded-heat-model-check`): this is the last heat-model step.** Whatever X1 shows, e1 closes the check and the
+programme returns to rock physics / MMW. ⚠ A cheap offline row (a1) decides whether the code is written at all.
+
+### Sources (opened 2026-10-28/29; step zero re-resolves every line)
+
+- **G1 (the control)**: argv `studies/p2_11_heat/legs/G1/argv.sh` (77 tokens; P47n's minus the 13 tokens P2-10
+  retired), binary C2 `01c49ab554cdeab0`, `h_expr = if((r>0.02)and(s<0.0633),0.001,1189.763953*533*(533+0.3575*44*
+  pow(r/0.0079,1.285))/pow(533+44*pow(r/0.0079,1.285),2)*pow(0.0632/max(0.0632,s),1.3185305455))`, S\* 0.1636
+  (C = S × 7272.3958). `studies/p2_11_heat/RESULTS.txt`: `fr_f` axis depth 12.35 / 21.97 / 37.27 / 49.42 / 58.46 mm
+  (4-line spread 0.25 / 0.96 / 0.49 / 0.72 / 0.64), max Ø 43.7 / 54.7 / 73.5 / 90.5 / 107.3 mm, V(f) 12.38 / 33.43 /
+  96.89 / 182.98 / 282.17 cm³ at 15 / 30 / 60 / 90 / 120 s; share of listed-face conductance within 10 mm 0.168 /
+  0.090 / 0.046 / 0.030 / 0.026; lateral firings min h_cal 1,980 W/m²K. Reducer: `reduce_p2_11.py` (`axis_depth`,
+  `faces`, `face_pos`, `conductance`, `sstar`, `c3_rows`).
+- **Growth (planner, from the V(f) series):** incremental removal rate per window 0–15 / 15–30 / 30–60 / 60–90 s:
+  Höser 64 / 68 / 96 / 108 cm³/min (×1.7); G1 50 / 84 / 127 / 172 (×3.5); P47n 47 / 85 / 138 / 197 (×4.2). G1 absorbed
+  power `ledger_P_robin` × 4: 1.72 / 2.56 / 3.95 / 5.01 kW at 15 / 30 / 60 / 90 s.
+- **The offline chain's reliability** (P2-11 review DR-4): at 15 s it overstated the realised shift ~10× (2.4× from
+  cell-centre evaluation, ~4.3× shape feedback); at 60 / 90 s the realised ×1.21 / ×1.15 sat inside the prediction.
+  ⇒ offline predictions are scored at 60–120 s only, evaluated per open face the code's way.
+- **Path accuracy** (`studies/p2_11_research/PATH_ACCURACY.txt`, `path_accuracy.py`): Dijkstra over surface cells,
+  neighbours within 4 cells, Euclidean edges, s ≥ 10 cells — median / p95 |rel err| flat 1.0 / 2.5 %, planes 20° 3.3 /
+  6.6, 35° 3.3 / 5.8, 45° 3.1 / 5.7 %, bore R12 4.5 / 6.6 %.
+- **Code** (M = `MMWSpalling.H`, F = `MMWSpalling/FaceRemoval.H`): `FaceH(x, y, s, time)` M:3382 evaluates
+  `h_f(x, y, r, s, t)` (parser variables `{"x","y","r","s","t"}`, M:8015), r from (x0, y0), s = z_n − z_face;
+  `BuildFaceList` M:3405 (called M:1841) precedes `BuildFlameColumns` M:2056 → `FaceListHeat` M:3559, `FrAssignTs`,
+  `JetEnthalpyMarch` M:2385. The march bins COLUMNS by r (`floor(r/dr)`), s_c = mean s over the innermost non-empty bin,
+  T_stag from s_c, writes `flame_Tg[col]`, bills listed faces per column (M:2532–2545). Per-face gas-temperature
+  readers (all on the column value today): kernel M:1986 (packed list, `FL_NF = 13`, M:3250), march M:2539,
+  `FaceListDiagnostics` M:3619, ledger M:3887, fallback flake F:484. `FaceEntry` M:3233.
+- **Höser 2016 Fig. 5.10** (47 MPa): depth 18 / 31 / 48 / 61 / 77 mm, max Ø 40 / 47 / 56 / 64 / 73 mm at
+  15–120 s; V 16.0 / 33.0 / 81.0 / 135.0 cm³ at 15–90 s; flange opening Ø 40 mm (`hoeser_2016_thesis_notes.md` §4).
+- **Kant's minimum** h_min ≈ 500 W/m²K (`validation/hoeser/literature_minimum_flux_notes.md` B).
+
+### Goal
+
+**Stage A — offline, before any source edit** (`studies/p2_11b_path/offline/`):
+1. `path.py`: the surface-path routine to be ported (neighbours within 4 cells, Euclidean edges; sources and barrier
+   as in item 4) — row a0.
+2. `predict_x1.py`: on G1's plotfiles at 60 / 90 / 120 s, every open face evaluated per face centre the code's way
+   (reuse `reduce_p2_11.faces`/`face_pos`): G1's h vs X1's h (r := s_path, s := s_c, flange faces 0), each scaled to
+   G1's total conductance; write the shares within 10 mm and on the top-10-mm wall band to `OFFLINE_X1.txt` — row a1.
+   **Stop here unless a1 says build.**
+
+**Stage B — code (only on a1 = build):**
+3. **Mode `surface_patch.face_heat = position | path`** (default `position` = today, byte-identical), read only under
+   `face_list = 1`.
+4. Under `path`, each step after `BuildFaceList`:
+   - **sources:** the +z face of each column in the march's innermost non-empty r-bin (s_c's population); initial
+     distance = that face centre's radius from (x0, y0); **H = s_c**;
+   - **barrier:** new key `surface_patch.barrier_expr` (parser in `x, y, z, r`, r from (x0, y0)); a face is BLOCKED when
+     the point 0.5·dx outside its centre gives `barrier_expr > 0`: h = 0, out of the path graph and the march. Read only
+     under `path` (abort if set under `position`);
+   - **s_path:** shortest path over unblocked listed faces (or their cells), neighbours within 4 cells, Euclidean edges.
+     Unreachable faces: h = 0, counted;
+   - **heat:** `FaceH` with r := s_path, s := H (x, y, t unchanged); no constant added by the code;
+   - **march:** bins FACES by `floor(s_path/dr)`; every other march rule unchanged (decay, entrainment, exponential bin
+     update, negative flux, invariants, the `radius` cut on the face's true r);
+   - **refused under `path`** (abort naming the key and P2-12): `feet`, `pad_shield_open ≥ 0`, `jet_free_surface`,
+     `jet_above_h`, `robin_form` ≠ surface, `jet_closure` ≠ enthalpy.
+5. **`FaceEntry::Tg`**, set after the march, read by all five per-face readers (Sources); under `position` it equals
+   `flame_Tg[col]` exactly.
+6. **Path-mode outputs only** (registered last): plotfile `fl_s` (m; −1 blocked/unreached), `fl_Tg` (K); thermo
+   `fl_H_stag` (m), `fl_n_src`, `fl_n_blocked`, `fl_n_unreached`, `fl_s_max` (m), `fl_t_path` (s per step).
+7. `unit/face_heat` for a5.
+
+**Stage C — legs and scoring:** `studies/p2_11b_path/run_p2_11b.py`, `reduce_p2_11b.py` (reuse P2-11's reducer),
+`RESULTS.txt`.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | item | where | what decides it |
+|---|---|---|---|
+| L1 | `face_heat` read only under the face list; position = today | parse; `FaceH` caller | a3, a4 |
+| L2 | the path branch EXECUTES on the X legs | `fl_n_src` > 0; `fl_s` > r below the top | a6 |
+| L3 | the barrier hits the flange top | `fl_n_blocked` vs census | a5 (iii), a6 |
+| L4 | march by s_path AND per-face Tg AND all five readers use it (one conjunction) | march; five readers | a5 (v), (vi) |
+| L5 | the deck formula is what runs | plotfile `fl_h` vs Python at logged inputs | a6 |
+
+### Legs
+
+Binary for every leg: the Stage B build. All argvs record binary hash and argv (SR 8).
+
+| leg | argv | stop |
+|---|---|---|
+| G1_C | `studies/p2_11_heat/legs/G1/argv.sh` token for token, `plot_file` re-pointed | 120 |
+| P47n_C | `studies/p2_9_face_removal/legs/P47n/argv.sh` minus P2-10's 13 `M0T_DELETE` tokens (listed in `legs/G1/DROPPED.txt`), `plot_file` re-pointed | 120 |
+| X1_S14, X1_S20 | G1's argv with `h_expr` replaced by `C*533*(533+0.3575*44*pow(r/0.0079,1.285))/pow(533+44*pow(r/0.0079,1.285),2)*pow(0.0632/max(0.0632,s),1.3185305455)` (C = S × 7272.3958, 6 decimals; no lid) and two tokens added: `surface_patch.face_heat=path` `surface_patch.barrier_expr=(r>0.02)and(z>0.15)`; S 0.14 / 0.20 | 30 |
+| X1 | the same at S\*_X1 | 120 |
+
+**S\* rule (b1):** log-log interpolate V(f)(30 s, ×4) between X1_S14 and X1_S20 to 33.0 cm³; 4 decimals. Outside ⇒
+ONE added point (S 0.10 or 0.28); still outside ⇒ stop and report.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | `path.py` on `p2_11_research/path_accuracy.py`'s fixtures, s ≥ 10 cells | median ≤ 5 %, p95 ≤ 8 % on every fixture | **gate** | the surface distance is a mesh artefact |
+| a1 | 1 | **build decision**, `OFFLINE_X1.txt` (written before any source edit): X1/G1 ratio of the share within 10 mm at 60, 90, 120 s | **build** if ≥ 1.10 at ≥ 2 of the 3 times; else **STOP**: close the check with G1 as the last heat-model result | **gate** (decision; protects Stage B) | X1 cannot move depth beyond the measure's own spread (G1's ×1.15–1.21 bought +8 %; ×1.10 ≈ +4 % ≈ G1's 4.4 % depth spread) |
+| a2 | 1 | the same file: the top-10-mm wall-band share ratio X1/G1 at 60, 90, 120 s | report | **report** | sets c3's late-time comparison |
+| a3 | 2 | build, `face_heat` unset: tree sweep vs `p2_10_c2.md5`; controls; W vs `p2_10_retire/W_c2.md5` with P2-10's own comparator and exclusions | 0 of 2639; 26 / 863; W identical | **gate** | position mode or the Tg plumbing moved today's model |
+| a4 | 2 | G1_C vs G1: every file except AMReX `metadata`, `run/diff.patch` and `run.log`, with `thermo.dat` compared on every column except the wall-clock timers `fr_t_removal`, `fr_t_step` | identical | **gate** (protects the X legs) | the control has moved; X1 vs G1 is not a one-change comparison |
+| a4b | 2 | P47n_C vs P47n (binary B): event log on the common columns, every `Cell_D_*`/`Header`, thermo on the common non-timer columns; columns only in P47n ⊆ P2-10's retired set | identical | **report** (closes P2-11 DR-3; X1 does not depend on it) | P2-11's G1-vs-P47n comparison carried a binary change after all — restate G1's gain against P47n_C |
+| a5 | 3 | `unit/face_heat`: (i) flat floor, path vs position at the same g_loc deck: per-face h ratio; `fl_H_stag` = s_c; (ii) `fl_s` vs analytic on flat, 35° plane, bore (s ≥ 10 cells); (iii) a flange-top fixture: blocked = analytic census of +z faces at r > 20 mm, their h = 0; no barrier ⇒ 0 blocked; (iv) `fl_n_unreached` = 0; (v) march by s: `fl_id_march`, `fl_id_ledger` ≤ 1e-9, `ledger_err_solid` ≤ 5e-3, P_face + P_exhaust = P_cap to 1e-9; (vi) one column whose faces get different Tg: kernel, ledger and march deposits each match the per-face value to 1e-12; (vii) each refused feature aborts naming the key | (i) median within 1 %, max 6 %; H exact; (ii) as a0; (iii)–(vii) exact | **gate** | the mode is not what the packet specifies |
+| a6 | 4 | first plotfile after t = 0 of each X leg: `fl_h` vs the Python formula at the logged (`fl_s`, `fl_H_stag`); `fl_n_src` > 0; `fl_n_blocked` > 0; median `fl_s`/r > 1 over listed faces deeper than 5 mm | ≤ 1e-12 rel on ≥ 99 % of listed cells; as stated | **gate** | the parser or the path is not what runs |
+| b1 | 5 | S\*_X1 by the rule | interior (≤ 1 added point) | **gate** (protects X1) | X1's level cannot be matched |
+| c1 | 6 | X1 vs G1 vs Höser at 15 / 30 / 60 / 90 / 120 s: `fr_f` axis depth WITH its 4-line spread per leg, max Ø, V(f); depth/diameter growth 15→120 s; "shape agrees" (max Ø ±6 mm at 60/90/120 s AND depth ±15 % at every time) | report with magnitudes | **report** | see P1 |
+| c2 | 6 | the growth table: incremental removal rate per window 0–15 / 15–30 / 30–60 / 60–90 / 90–120 s and the 60–90 ÷ 0–15 ratio for X1, G1, P47n, Höser; absorbed power (`ledger_P_robin` × 4) at 15 / 30 / 60 / 90 / 120 s | report | **report** | see P1: does the path rule slow the area-driven acceleration? |
+| c3 | 6 | realised share ratios X1/G1 (within 10 mm; top-10-mm wall band) at 60 / 90 / 120 s vs a1/a2 | report | **report** | the offline chain's late-time reliability (DR-4) |
+| c4 | 6 | X1 lateral firings with h_cal = model h / S\*_X1 < 500 W/m²K, per 15 s window | report | **report** | see P3: is Kant's minimum flux live? |
+| c5 | 6 | X1 at 120 s: ledger_err_solid max, identities, `fr_multi`; Ø by 30° sector at 30 mm depth; `fl_n_unreached`; `fl_t_path` / step time vs G1_C | ≤ 5e-3; ≤ 1e-9; 0; spread report; 0; report | **report** | bookkeeping, isotropy or cost fail at scale |
+| e1 | 7 | **verdict — closes the bounded heat-model check** | — | **verdict** | What G1 + X1 together close (depth, Ø, growth ratio); whether X1 joins the Höser deck; the remaining gap's statement for the record (heat-uptake problem vs heat distribution); next = rock physics / MMW per the user's decision |
+
+### Pre-registered predictions
+
+- **P0 (a1):** build: the ratio within 10 mm X1/G1 is 1.15–1.45 at 60–120 s.
+- **P1 (c1, c2):** S\*_X1 0.17–0.21. At 15 s depth within ±5 % of G1 (a shallow dish: s_path ≈ r). At 60–120 s depth
+  +4 to +12 % over G1; max Ø at 120 s 5–15 mm below G1's 107.3. Growth ratio (60–90 ÷ 0–15) 2.5–3.2 (G1 3.5, hers 1.7).
+  Shape agrees: NO.
+- **P2 (c3):** realised ratios within ±30 % of a1/a2 at 60–120 s.
+- **P3 (c4):** 0–20 % of lateral firings below 500 W/m²K after 90 s (a mouth wall at s_path ≈ 86 mm, H ≈ 118 mm gets
+  h_cal ≈ 7272 × 0.21 × 0.44 ≈ 670 W/m²K).
+- **Refuting evidence on disk:** none for X1.
+
+### What would make this inert — witness each
+
+- Path mode silently off: `fl_n_src` = 0 or `fl_s` ≡ r (a6).
+- The barrier never hits, or blocks the cavity: `fl_n_blocked` = 0 (a6); `fl_n_unreached` > 0 (c5).
+- A reader still on the column Tg: a5 (vi).
+- The level re-match absorbs the change: c1 is read at matched 30 s volume; a1/c3 compare at equal total conductance.
+
+### Guardrails
+
+- X legs differ from G1's argv ONLY by `h_expr` (C and the dropped lid) and the two added tokens; P47n_C only by the
+  13 retired tokens.
+- `face_heat` defaults to `position` with no output, column or field change; `barrier_expr` read only under `path`.
+- No new tuned number: profile, level rule and standoff law are the deck's; the code adds the path, the barrier and the
+  per-face march. Not in this step: a minimum flux, width growth beyond 12 D, any Meier deck, removal, AMR.
+- `caffeinate -dis`, `-np 4`, legs serial, `.done` sentinels (SR 8).
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_11b_path
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness; U=tests/MMWSpalling/unit
+B="EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8"
+# ord 1 (offline, no source edit): a0, a1, a2 -- STOP here unless a1 says build
+$PY $S/offline/path.py && $PY $S/offline/predict_x1.py
+# ord 2: build; a3 (vs p2_10_c2.md5); a4
+eval $B && bash $W/guarded_post_all_par.sh p2_11b
+caffeinate -dis $PY $S/run_p2_11b.py G1_C P47n_C && $PY $S/reduce_p2_11b.py IDENTITY
+# ord 3: a5
+$PY $U/face_heat/test
+# ord 4-5: a6, b1
+caffeinate -dis $PY $S/run_p2_11b.py X1_S14 X1_S20 && $PY $S/reduce_p2_11b.py SSTAR
+# ord 6-7: c1-c5, e1
+caffeinate -dis $PY $S/run_p2_11b.py X1 && $PY $S/reduce_p2_11b.py > $S/RESULTS.txt
+```
+
+### Claude completion notes
+
+**Status note.** All gates passed (a0, a1 = BUILD, a3, a4, a5, a6, b1 with its one allowed added point). Ord 2 was
+run on the binary that ships (`f787140d07e3918b`). The X1 120 s leg was suspended ~2 h mid-run (host sleep); a pause
+does not change a run's output, only the wall-clock timers (c5 reports medians).
+
+**Files changed.**
+- `src/Integrator/MMWSpalling.H` (+435 / −12 lines):
+  - `FaceEntry` gains `Tg`, `sp`, `blk`;
+  - new `FaceListPath`, `FrPathOffsets`, `FaceCentre`, `FaceListTg`;
+  - `FaceH` split into `FaceH` + `FaceHr`;
+  - `FaceListHeat` has a path branch;
+  - the march's bin loop runs over columns or faces (`q_item`);
+  - the kernel, `FaceListDiagnostics` and ledger readers use `e.Tg`;
+  - keys `surface_patch.face_heat` and `surface_patch.barrier_expr`;
+  - path refusals first in the face-list block, path outputs registered last.
+- `src/Integrator/MMWSpalling/FaceRemoval.H` (+3 / −3): the fallback flake reads `ef.Tg`; its now-unused local
+  `c` is removed. `Removal.H` is unchanged.
+- New `tests/MMWSpalling/unit/face_heat/test`.
+- `tests/MMWSpalling/unit/lateral_flux_lock/test` (not in the packet's list): its `FrFaceFlux` call-site count is
+  restated 4 → 5, because the march now has two sites (`q_col` for position, `q_face` for path); it passes, 172 checks.
+- New `studies/p2_11b_path/`:
+  - scripts: `offline/path.py`, `offline/predict_x1.py`, `run_p2_11b.py`, `reduce_p2_11b.py`, `chain_ord2.sh`,
+    `chain_ord4.sh`;
+  - `src_pre/`: the pre-edit sources;
+  - records: `A0.txt`, `OFFLINE_X1.txt`, `GATE_tree.txt`, `W_p2_11b_vs_c2.txt`, `IDENTITY.txt`, `A6.txt`,
+    `SSTAR.txt`, `RESULTS.txt`, `CHAIN.log` (`CHAIN.aborted.log` is the stopped first sweep), `BINARY_B.txt`;
+  - run outputs: `legs/` (4.7 GB), `W_p2_11b/` (3.8 GB), `smoke/`.
+
+| # | measured | result | path |
+|---|---|---|---|
+| a0 | median / p95 at s ≥ 10 cells: flat 0.95 / 2.51, planes 20° 3.27 / 6.58, 35° 3.31 / 5.82, 45° 3.12 / 5.67, bore 4.46 / 6.55 % | PASS | `A0.txt` |
+| a1 | X1/G1 share within 10 mm at 60 / 90 / 120 s: 1.51 / 1.71 / 1.71 (≥ 1.10 at 3 of 3); the G1 rule reproduces plotfile `fl_h` on 100 % of cells | **BUILD** | `OFFLINE_X1.txt` |
+| a2 | top-10-mm wall-band ratio X1/G1: 0.68 / 0.60 / 0.52 | report | `OFFLINE_X1.txt` |
+| a3 | tree 0 of 2639 vs `p2_10_c2`; controls 26 / 863; W identical to P2-10's `W_c2` (its comparator and exclusions) | PASS | `GATE_tree.txt`, `W_p2_11b_vs_c2.txt` |
+| a4 | G1_C vs G1: 131 files byte-identical, 0 differ; thermo every non-timer column identical | PASS | `IDENTITY.txt` |
+| a4b | P47n_C vs P47n (binary B): 108 `Cell_D_*`/`Header` identical; event log 71,395 rows, 0 differ on the 33 common columns (only in P47n: the 11 lateral columns); thermo 0 common columns differ, 73 only in P47n, all in P2-10's retired set | PASS (report; closes DR-3: G1 vs P47n carried no binary change) | `IDENTITY.txt` |
+| a5 | (i) flat h ratio path/position median 0.29 %, max 1.38 %; `fl_H_stag` = `jet_s_c` tokens; (ii) `fl_s` vs exact: flat 0.40 / 1.67, 35° 0.93 / 2.44, bore 4.22 / 6.67 % (median / p95); (iii) blocked 2184 = census 2184, their h = 0; no barrier ⇒ 0; (iv) unreached 0 on 5 legs; (v) `fl_id_march` 1.1e-15, `fl_id_ledger` 2.8e-15, `ledger_err_solid` 8.4e-16; (vi) column (0, 12) carries 24 distinct `fl_Tg` with identities ≤ 3e-15; 5 `FrFaceFlux` call sites pass a face's Tg or the march's bin T; a column-value reader would move the billed power by 1.5e-2 (mutation control); (vii) 6 refusals abort naming key + P2-12, plus `barrier_expr` under position and `face_heat` without the list | PASS | `unit/face_heat/test` |
+| a6 | X1_S14 / S20 / S28 / X1 at 15 s: 100 % of listed cells within 1e-12 (max 6.7e-16); `fl_n_src` 1; `fl_n_blocked` 2188–2467; median `fl_s`/r 1.05–1.10 | PASS | `A6.txt` |
+| b1 | V(f)(30 s) 17.89 (S 0.14) / 27.02 (S 0.20): not bracketed ⇒ the one added point S 0.28 gives 37.55 ⇒ S\*_X1 0.245379 → **0.2454** | PASS (1 added point) | `SSTAR.txt` |
+| c1 | depth X1 / G1 / Höser (mm): 17.68 / 12.35 / 18, 30.56 / 21.97 / 31, 50.48 / 37.27 / 48, 64.03 / 49.42 / 61, 73.51 / 58.46 / 77 (X1 4-line spread 0.46–1.23 mm); max Ø 41.2 / 43.7 / 40, 41.2 / 54.7 / 47, 42.0 / 73.5 / 56, 42.0 / 90.5 / 64, 42.5 / 107.3 / 73; depth/diameter growth X1 45 (Ø barely grows), G1 0.73, hers 1.8; shape agrees NO | report | `RESULTS.txt` |
+| c2 | removal rate per window X1: 69.4 / 63.4 / 51.6 / 36.0 / 26.7 cm³/min (ratio 0.52); G1 3.48; P47n 4.16; Höser 1.69; absorbed power X1 1.83 / 1.86 / 1.85 / 1.59 / 1.47 kW vs G1 1.72 / 2.56 / 3.95 / 5.01 / 4.64 | report | `RESULTS.txt` |
+| c3 | realised X1/G1 within 10 mm: 2.30 / 2.95 / 3.17 (offline 1.51 / 1.71 / 1.71); wall band 0.28 / 0.23 / 0.33 (offline 0.68 / 0.60 / 0.52) | report | `RESULTS.txt` |
+| c4 | field bound, every heated face: h_cal min 2779 → 564 W/m²K from 15 to 120 s, 0 % below 500 at every plotfile (12–38 % below 1000 from 75 s) | report | `RESULTS.txt` |
+| c5 | `ledger_err_solid` 3.9e-15; identities ≤ 3.9e-15; `fr_multi` 0; unreached 0; Ø at 30 mm by sector 41.1 / 41.1 / 40.7 (spread 0.39 mm); path 0.63 ms/step median; step 33.5 ms vs G1_C 34.2 ms (medians) | report | `RESULTS.txt` |
+| kept units | all 37 kept unit tests on this binary vs P2-10's `UNIT_c2`: same rc and identical verdict lines (the 5 pre-existing FAILs unchanged); `face_heat` new | PASS (beyond the packet's rows) | `UNITS_p2_11b_vs_c2.txt` |
+| e1 | X1 closes depth (within ±5 %) but freezes Ø at the 41 mm flange opening and decelerates (0.52 vs 1.69); G1 and X1 bracket Höser on Ø, volume and growth; X1 does NOT join the deck (mode kept default-off); the remaining gap is wall-heat distribution, not level (full statement at the end of `RESULTS.txt`) | **verdict: the check closes** | `RESULTS.txt` (end) |
+
+### Implementation takeaways
+
+- **Predictions vs measured.**
+  - **Landed:** P3 (0 % below 500 W/m²K; minimum 564 against the predicted ≈ 670) and "shape agrees NO".
+  - **Missed, all because the effect was far larger than predicted:**
+    - S\* was 0.2454 against 0.17–0.21;
+    - depth at 15 s was +43 % against ±5 %;
+    - depth at 60–120 s was +26–36 % against +4–12 %;
+    - Ø at 120 s was −65 mm against −5 to −15;
+    - the growth ratio was 0.52 against 2.5–3.2.
+  - **P2 (realised within ±30 % of a1/a2) failed:** the within-10-mm shift came out 52–85 % above the offline
+    estimate, and the wall band 37–62 % below it.
+  - **What this says about the offline chain:** at late times it is not reliable either. Its shape feedback
+    reverses sign between rules: it damped G1's shift (P2-11) and amplified X1's. An offline ratio on the
+    control's shape is a lower bound on a rule that narrows the hole.
+- **The Ø freeze is the flange barrier plus the path, not a defect.**
+  - Nothing goes unreached (0 every step), the sectors are isotropic (0.39 mm), and every identity holds.
+  - The top faces beyond r = 20 mm are blocked, and the mouth wall sits at the largest path distances, so its h
+    falls as the hole deepens: the wall band's share drops to 0.23–0.33 of G1's.
+  - Read the frozen 41–42 mm next to Höser's 40 mm flange opening: her hole widens past the opening; X1's cannot.
+- **Path-mode definitions that aren't in the packet** (diagnostics only; physics unchanged):
+  - a column's `flame_h`/`flame_Tg` takes its top face's value, so `fl_h_top_mismatch` stays 0;
+  - faces the march does not visit get `Tg = T_ent` (their h is 0);
+  - a face marches when its column has `flame_s > 0` and its centre's true r ≤ `radius`;
+  - `jet_r_reach` is the faces' true r;
+  - path distance is per CELL, shared by its faces;
+  - `fl_Tg` is the max over a cell's faces.
+- **The s_c match is exact by construction.** `FaceListPath` rebuilds the march's innermost bin in the march's own
+  column order, so H equals the march's s_c bit for bit (a5 (i) compares the tokens). On the 1 mm Höser mesh,
+  bin 0 is the axis column alone, so there is 1 source.
+- **Refusal order is load-bearing.**
+  - The path refusals sit first in the face-list block. Otherwise `robin_form` is caught by the list's own abort
+    and never names P2-12.
+  - They are ordered so each is reachable on its own: pad shield and free surface need feet, and `jet_above_h`
+    needs `jet_T_above`.
+  - The test decks must also drop the key each change leaves unused (`pinned_idle_cycles`,
+    `side_power_interval`), or the strict `surface_patch` parser stops first.
+- **One-step legs write only the t = 0 thermo row,** so a5's "one-step" legs run 3 steps and read plotfile 00001.
+- **a5 (vi) is a source lock plus a mutation estimate, not a per-face deposit printout.**
+  - The kernel's per-face deposit is not an output.
+  - The identities `fl_id_march`/`fl_id_ledger` and `ledger_err_solid` tie march, diagnostics, ledger and kernel
+    together on a leg where one column carries 24 different Tg.
+  - The mutation estimate shows a column-value reader would break them by 1.5e-2.
+- **c4 needed the field bound.** The event log carries no h, and under path h depends on `s_path` at firing time;
+  81 % of firings sit at cells listed in neither neighbouring plotfile. The field bound (the lowest h over all heated
+  faces, per plotfile) covers every firing.
+- **A sweep was restarted.** The first ord-2 sweep was stopped mid-run to put the refusal reorder into the binary
+  before the gate (its log is `CHAIN.aborted.log`). The witness tree's `p2_11b` entry is from the second, complete
+  sweep on `f787140d`.
+- **Not done here:**
+  - minimum flux;
+  - width growth past H/D = 12 (X1 reaches H/D 17 by 120 s);
+  - any Meier deck;
+
+### Review findings
+
+Re-derived independently: the **tree manifest** with my own comparator; **a4's control identity**
+by my own recursive compare of all 131 files plus thermo column-by-column; **b1's S\*** and the
+added-point rule; **X1's volume series** integrated from c2's rates; the depth/Ø/growth
+**bracketing** claim; `FaceH`/`FaceHr`'s call graph read from source. ⚠ **One targeted rerun**
+(justified below): `unit/lateral_flux_lock` and `unit/constraint_ref_lock`.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | median ≤ 5 %, p95 ≤ 8 % every fixture | PASS | the ported routine reproduces the research prototype closely (0.95/2.51 vs 1.0/2.5 flat; 3.12/5.67 vs 3.1/5.7 at 45°; 4.46/6.55 vs 4.5/6.6 bore) ⇒ the port is faithful, not just inside the bar | `A0.txt` vs `PATH_ACCURACY.txt` | PASS (gate) |
+| a1 | ≥ 1.10 at ≥ 2 of 3 | **BUILD** (1.51/1.71/1.71) | 3 of 3, with margin; the G1 control rule reproduces plotfile `fl_h` on 100 % of cells | `OFFLINE_X1.txt` | **PASS (gate)** |
+| a2 | report | 0.68/0.60/0.52 | the wall band falls — the mechanism is heat moved **off** the mouth wall onto the floor | `OFFLINE_X1.txt` | report |
+| a3 | 0 of 2639; 26/863; W identical | PASS | **0 of 2639** vs `p2_10_c2` **and** vs `p2_9_bB`; controls **26 / 863**; binary `f787140d07e3918b` | own manifest diff | **PASS (gate)** |
+| a4 | G1_C vs G1 identical | PASS | **131 files byte-identical, 0 differ, 0 missing**; thermo 2500 rows, all **87** common non-timer columns identical, and **no column exists only in G1_C** ⇒ the new mode adds nothing at default, on a full 120 s leg | own recursive compare | **PASS (gate)** |
+| a4b | report | PASS | closes **P2-11 review DR-3**: 0 of 71,395 event rows differ on the 33 common columns, 108 `Cell_D_*`/`Header` identical, 0 common thermo columns differ ⇒ **P2-11's G1-vs-P47n carried no binary change after all** | `IDENTITY.txt` | report — **my carry-forward closed** |
+| a5 | (i)–(vii) | PASS | not re-run; ⚠ (vi) is a **source lock plus a mutation estimate**, not a per-face deposit measurement — declared, and the indirect route is sound (one column carrying 24 distinct Tg with identities ≤ 3e−15, and a column-value reader shown to break them by 1.5e−2) | `unit/face_heat/test` | PASS (gate) — DR-6 |
+| a6 | ≤ 1e-12 on ≥ 99 %; `fl_n_src` > 0; `fl_n_blocked` > 0; median `fl_s`/r > 1 | PASS | 100 % within 1e-12 (max 6.7e−16); `fl_n_blocked` 2188–2467; median `fl_s`/r 1.05–1.10. ⚠ `fl_n_src` = **1** — see DR-7 | `A6.txt` | PASS (gate) |
+| b1 | interior, ≤ 1 added point | S\* 0.2454 | 0.14/0.20 give **17.89 / 27.02**, both below 33.0 ⇒ the added point is **required by the rule**; with S 0.28 (37.55) the bracket is 0.20–0.28, slope 0.97808, **S\* = 0.245361 → 0.2454**. **S\*_X1 / S\*_G1 = exactly 1.5000** | own arithmetic | **PASS (gate)**, P1 missed high |
+| c1 | report | depth 17.68/30.56/50.48/64.03/73.51 | ✅ **X1 is within ±5.2 % of her depth at ALL FIVE times** (−1.8 / −1.4 / +5.2 / +5.0 / −4.5 %) where G1 was −19…−31 % ⇒ **the depth half of "shape agrees" (±15 % at every time) is satisfied for the first time in the programme**. Ø fails: 42.5 vs 73 at 120 s | own ratios | report — **the result** |
+| c2 | report | X1 ratio 0.52 | my integration of X1's rates gives V(f) **17.35 / 33.20 / 59.0 / 77.0 / 90.4 cm³** ⇒ **X1/hers 1.08 / 1.01 / 0.73 / 0.57** against **G1/hers 0.77 / 1.01 / 1.20 / 1.36**: X1 tracks her to 30 s then **decelerates**, G1 starts low then **accelerates**. Opposite failure modes | own integration | report |
+| c3 | report | 2.30/2.95/3.17 vs offline 1.51/1.71/1.71 | the offline chain **under**-stated X1 by 52–85 % after over-stating G1 by ~10× (P2-11 DR-4) ⇒ **its error reverses sign between rules** | `RESULTS.txt` | report — DR-4 |
+| c4 | report | 0 % below 500 W/m²K; min 564 | P3 landed (predicted ≈ 670); ⚠ the measure is a **field bound**, needed because 81 % of firings sit at cells listed in neither neighbouring plotfile — declared, and conservative | `RESULTS.txt` | report — **P3 landed** |
+| c5 | ledger ≤ 5e-3; id ≤ 1e-9; `fr_multi` 0; unreached 0 | PASS | ledger 3.9e−15, identities ≤ 3.9e−15, `fr_multi` 0, unreached 0, sector spread **0.39 mm**, path cost 0.63 ms/step (step 33.5 vs G1_C 34.2 ms ⇒ **no cost**) | `RESULTS.txt` | report |
+| e1 | verdict | the check closes | all four answers reproduce; the bracketing verifies quantitatively (DR-2) | `RESULTS.txt` | **delivered** |
+
+#### Diff review
+
+| # | hunk | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | `FaceH` split into `FaceH` + `FaceHr` | **1** | ✅ the right refactor: **one** resolver (`FaceHr`, declared once) with two entry points — `FaceH` computing r from the geometry for position mode, and the path branch passing `e.sp` as r. **Not** two copies of the arithmetic. Verified from the call graph: `FaceHr` 1 declaration / 2 callers (`:3606`, `:3759`), `FaceH` 1 declaration / 1 caller (`:3971`) | **ok** |
+| DR-2 | ✅ **the bracketing claim, verified** | 12 | at 120 s max Ø **0.58×** (X1) and **1.47×** (G1) of hers; at 90 s volume **0.57×** and **1.36×**; growth ratio **0.31×** and **2.06×**. Three independent quantities, bracketed on both sides — so "the two rules bracket Höser" is a measurement, not a turn of phrase | **ok** |
+| DR-3 | ⚠⚠ **Goldstein's correlation is extrapolated at late times** | **12** | the profile is valid **H/D 6–12** (Sources, Zuckerman & Lior). H = s_c grows with depth: X1 reaches **H/D 17.3** at 120 s (s = 63.2 + 73.5 mm) and passes 12 D between 30 and 60 s; **G1 reaches 15.3**. So every c1/c2 row at 60–120 s — on **both** legs — sits outside the correlation's stated range. The notes name "H/D 17" only under "not done here". **This belongs in e1's statement for the record**, because it bounds what the closed check can conclude about late-time shape | **risk** |
+| DR-4 | the offline chain | 12 | ✅ the lesson is correctly generalised and it answers my P2-11 DR-4: the shape feedback **damped** G1's shift and **amplified** X1's, so "an offline ratio on the control's shape is a lower bound on a rule that narrows the hole". ⚠ The practical consequence is stronger than stated: the chain was wrong by ~10× one way and ~2–3× the other, so it can set a **direction** but not a magnitude, at any time | **risk** |
+| DR-5 | the unit evidence | 10 | ⚠⚠ **narrower than P2-10's.** Only `face_heat` was added, plus the W set (`face_removal` 6 legs, `face_list` 4 legs, M0T) and the tree's 10 outputs; the other ~30 kept units were **not** run, where P2-10's a8 made that a gate. ⇒ **I ran the two that mattered** — the diff splits `FaceH`, the symbol `lateral_flux_lock` pins: **both pass**, `lateral_flux_lock` rc 0 with 172 `ok` clauses and no FAIL, `constraint_ref_lock` rc 0. Gap closed for the high-risk pair; the rest remains unmeasured | **risk** (closed in part) |
+| DR-6 | the lock pins the **wrapper**, not the resolver | 1, 10 | ⚠ `lateral_flux_lock:782` pins **`FaceH`** declared once and called inside `FaceListHeat`. After the split the invariant lives on **`FaceHr`**, which the lock does not pin — so a second copy of `FaceHr`'s body, or a third caller bypassing the deck, would pass. The invariant **holds in fact** (I checked the call graph), but the lock no longer guards the symbol that carries it. This is the four-lateral-copies class; fix it in the next lock edit | **risk** |
+| DR-7 | `fl_n_src` = 1 | 4, 12 | ⚠ on the 1 mm Höser mesh the march's innermost bin is the axis column alone, so **every path distance is measured from one cell**. Declared. It makes the source set **mesh- and `dr`-dependent**, so any future mesh study of path mode changes the rule, not just its resolution | **risk** |
+| DR-8 | `barrier_expr` and the six path refusals | 7, 9 | ✅ `barrier_expr` read only under `path` and aborting under `position`; `face_heat` aborting without the list; six refusals each naming the key **and P2-12**, ordered so each is reachable on its own (pad shield and free surface need feet; `jet_above_h` needs `jet_T_above`) — that ordering is a real subtlety and it is written down | **ok** |
+| DR-9 | refusal order ahead of the face-list block | 2 | ✅ and for a stated reason: otherwise `robin_form` is caught by the list's own abort and never names P2-12. A consistency point that would have been invisible without the test | **ok** |
+| DR-10 | `FaceEntry::Tg` and the five readers | 2, 8 | ✅ one field set after the march and read by kernel, march, diagnostics, ledger and the fallback flake; under `position` it equals `flame_Tg[col]` exactly, which a4's 131-file identity proves end to end | **ok** |
+| DR-11 | path-mode outputs registered last, under the mode | 7 | ✅ proven by a4: **no column exists only in G1_C**, so the F1 registration order of every existing run is untouched — which is why a3 can read 0/2639 | **ok** |
+| DR-12 | the X1 leg was suspended ~2 h mid-run | 13 | ⚠ host sleep, against the `caffeinate -dis` guardrail. The claim that a pause changes only the wall-clock timers is correct for this deterministic stepper, and c5 reports medians — so the result stands. Declared in the status note; worth a line in the archive since `caffeinate` exists precisely to prevent this | **nit** |
+| DR-13 | path-mode definitions "not in the packet" | 11 | ⚠ six diagnostic conventions decided at implement time (column `flame_h`/`flame_Tg` from the top face; unvisited faces `Tg = T_ent`; the march predicate; `jet_r_reach` on true r; path distance per **cell**, shared by its faces; `fl_Tg` as the max over a cell's faces). All declared, all diagnostics-only — but "path distance is per cell" is a **physics** choice, not a diagnostic: two faces of one cell at different true radii share one s_path | **nit** |
+| DR-14 | `c4`'s field bound | 5, 12 | ✅ the honest fix for a real gap: the event log carries no h, and under `path` h depends on `s_path` at firing time, with 81 % of firings at cells in neither neighbouring plotfile. The bound (lowest h over all heated faces per plotfile) is conservative, so "0 % below 500" is a **lower** bound on the margin | **ok** |
+
+**Verdict: accepted.** All seven gating rows (a0, a1, a3, a4, a5, a6, b1) reproduce under
+independent derivation, and no diff-review row is tagged `bug`. I additionally ran the two source
+locks the packet did not collect, because the diff splits the symbol one of them pins — both pass.
+
+**Carry forward:**
+1. **DR-3 belongs in e1's statement for the record.** Goldstein's profile is valid **H/D 6–12**;
+   X1 reaches **17.3** by 120 s and G1 **15.3**, and both pass 12 D before 60 s. Every late-time
+   shape number on both legs extrapolates the correlation — which bounds what the closed check can
+   say about the 60–120 s divergence, and is the first thing to re-examine if anyone reopens it.
+2. **DR-1 + the result together are the finding worth recording:** X1 is **within ±5.2 % of her
+   depth at all five times**, the first time the depth half of "shape agrees" has been met, while
+   Ø freezes at the flange opening. **G1 and X1 bracket her on Ø, volume and growth** — so the
+   remaining gap is where the wall heat goes, not how much there is.
+3. **DR-6** — re-point the lock from `FaceH` to `FaceHr`; the invariant moved and the lock did not.
+4. **DR-5** — if any later step touches `FaceEntry` or the readers again, run the kept unit set as
+   P2-10's a8 did; this step's unit coverage was the W set plus one new test.
+5. **DR-7** — `fl_n_src` = 1 makes path mode's source set mesh-dependent; state it before any mesh row.
+
+**Checked and clean:** no `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE` change;
+`Removal.H` unchanged; `face_heat` defaults to `position` with no column, field or output change
+(proved by a4's 131-file identity and a3's 0/2639 with live 26/863 controls); no Meier deck. SR 3,
+SR 4, SR 7 and SR 8 (argv + binary hash per leg) honoured; `caffeinate` breached once by host sleep
+(DR-12), with the result unaffected. **No unquotable number is quoted:** "shape agrees" is reported
+as **NO**, the offline chain's own error is printed beside every prediction it made, c4 is labelled
+a field **bound**, a5 (vi) is labelled a source lock plus a mutation estimate rather than a
+measurement, and X1 is explicitly **not** joined to the deck (the mode ships default-off).
+
+
+## P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at the user's instruction, no /implement; archived 2026-10-30)
+
+**Status:** both directions gated. Study `tests/MMWSpalling/studies/p2_12_retire_path/` (`README.md`; `restore/`).
+
+### What happened
+- **Deletion** (user: "delete the lines we aren't using"):
+  - `MMWSpalling.H` and `FaceRemoval.H` restored to P2-11b's `src_pre`; the lock test's 2 lines put back;
+    `unit/face_heat` moved out.
+  - Gates d1–d5 ALL PASS on `9278aa02`: tree 0/2639 vs `p2_10_c2` and `p2_11b`; controls 26/863; W identical; every
+    unit identical to C2; X1's argv aborts naming `surface_patch.face_heat`.
+- **Restore** (user, after the advisor judged X1 the more realistic rule: *realistic over matching*):
+  - sources byte-identical to the post-P2-11b tree, binary `0a96a095`;
+  - gates r1–r5 ALL PASS: tree 0/2639; X1's own deck to 15 s reproduced exactly; W; all 38 units vs P2-11b's.
+- **The model card** `docs/project/MODEL_CARD.md` (+ `docs/project/model_card/`) was built in the same session. It
+  gives the provenance of every number and shows the two removal paths, the calibration decks differing from
+  production, the decks that no longer run, and the MMW validation being thermal only.
+
+### Lessons
+1. ⚠ **A restore by `cp -p` keeps old mtimes, so `make` does not recompile.** A stale binary passed the tree gate
+   (position mode was identical) and was caught by the retired-key gate. Touch the files, and gate on the binary's
+   strings.
+2. ⚠ **Compare logs to a stop time as EXACT PREFIXES.** A "time < T" window catches the step that starts at
+   T − 8e-13, and an interval log ends at its last interval.
+
+## ROADMAP notes released 2026-10-30 — the 2026-10-28 plan of record, superseded by the 2026-10-30 plan
+
+- ⚠⚠ **NEXT (user decision 2026-10-28): the flame heat model gets a BOUNDED check, not a fit.** Hole shape tests the
+  jet's heat field more than the rock; MMW's heat input is a known beam. P2-11 G1 (done, GO) → P2-11b X1 (active, one
+  step) → close the check → back to the rock physics toward MMW (THE DIRECTION's B–D; user to pick). Meier stays a
+  regression: port it to the face list when it is needed (pad clearance, G4), not as a shape target.
+
+## P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the production form; the constants stand (2026-10-31, ACCEPTED by review 2026-11-02; archived 2026-11-02)
+
+**Status:** ACCEPTED by review; all five gating rows (a2, a3, a4, b1, c1) re-derived independently and every c-row
+reproduced to the digit. No source change; binary `0a96a095ad30f45e`. Records:
+`tests/MMWSpalling/validation/kant/grimsel_calibration/` (`RESULTS.txt`, `A0–A3.txt`, `UNITS_p2_13_vs_p2_12r.txt`).
+
+### What the step established
+- **The rock is one file, the model form another**: `tests/MMWSpalling/validation/shared/rock_grimsel.inputs` and
+  `model_form_flame.inputs`, included with AMReX `FILE =` (relative to the repo root), guarded by `check_shared.py`
+  (no undeclared override; every shared key resolves to the file's value; T_ref == IC; V0 == V_cell).
+- **The Kant calibration deck in the production form** (24×24×64 mm at 1 mm, uniform h 500, T 1673.15 K, face list,
+  Weibull, surface Robin, losses, flake rule): first top-face firing median **850.43 K**, inside the Grimsel onset band
+  826.15–873.15 K ⇒ **the calibration stands unchanged** (R 0.531294, flaw 8 µm, m 13); d1 not run.
+- **The level decomposes cleanly**: twin 842.39 → deterministic deck 844.63 (+2.24 K production-form shift) → Weibull
+  850.43 (+5.80 K).
+- **Same rock, same onset**: CAL 850.43 vs G1 850.27 K on one statistic; all-firing CAL 851.78 / G1 851.55 / P2-2f
+  852.61 K. Side and top faces fire at the same temperature on G1 (advisor, 2026-11-02: dir 0/2/5 medians
+  850.8 / 851.0 / 851.9 K); the lower any-direction first-firing (842.74 K) is a weakest-of-several selection.
+- **Reports:** flux ×4 moves the onset +2.55 K (exponent 0.003; flat, like the data — by construction while the stress
+  is local in T); 27 / 48 MPa −26.5 / −38.4 K (half of Kant's measured −55 / −70 K, as his own model); mesh spread
+  2.9 K, non-monotone; 20.7 % of firings above the 873.15 K table ceiling.
+- `input_lab` re-pointed to the shared files; G1 reproduced byte for byte to 15 s; every unit test identical.
+
+### Carry-forwards (review)
+1. **DR-1:** the rock file carries two ν's; only `phase0.E`/`mu` (ν = E/(2μ) − 1) reaches the confinement term
+   (`Removal.H:39–41`), while the law's `grimsel.nu` does not. Equal by value (0.30) today. ⇒ one source of ν.
+2. **DR-2:** "first firing" must always name its direction filter (7.5 K apart on a drilling deck, identical on a flat
+   one).
+3. **DR-7:** "one Grimsel rock" is enforced on the calibration deck and `input_lab` only; the legacy Kant inputs, the
+   Meier decks and every tree input still carry their own constants.
+4. **DR-5:** a fifth of the calibrating population sits above the 873.15 K table ceiling — standing, not per step.
+5. **DR-13:** multi-GB study directories (P2-13 `legs/` 1.8 GB; P2-11b ~8.5 GB): a retention rule is overdue (user's call).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-02)
+
+Active step:
+- **P2-13 — One Grimsel rock, one model form: shared input files and the Kant calibration deck in the production
+  form** (`ACTIVE_STEP.md`; 2026-10-30; no source change).
+  - Archived: P2-11b ACCEPTED (`ARCHIVE_DONE.md` *"P2-11b"*); P2-12, in which X1 was deleted and then restored
+    default-off (*"P2-12"*).
+  - The rock and the model form move into `validation/shared/*.inputs`.
+  - Kant 2017's onset is re-run in the production form and scored against the Grimsel onset band 826–873 K (Kant 2017
+    ∩ Höser IR). Inside, the constants stand; outside, the flaw scale is recalibrated once. The why:
+    `docs/project/MODEL_CARD.md` §9 and §12.
+
+### The P2-13 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-13 — One Grimsel rock, one model form: shared input files and the Kant calibration deck in the production form
+
+Status: **accepted by review** (2026-11-02; all five gating rows re-derived independently, every c-row reproduced to the digit). Was: completed (implemented 2026-10-31; no source change).
+
+### Context
+
+The user's principle (2026-10-30): **same rock ⇒ same properties.** Calibrate once on a declared test, freeze, and
+predict the rest. Kant 2017, Höser and Meier are all Grimsel (Chuenzentennlen quarry). `docs/project/MODEL_CARD.md`
+§9 shows this does not hold structurally today:
+
+- **The calibrated rock constants live only in study command lines.** The Grimsel law, the toughness table, R and m
+  are in `studies/p2_2e_cref/legs/*/argv.sh` and `studies/p2_11_heat/legs/G1/argv.sh`. The shipped inputs
+  `validation/kant/sp_kant_onset_meiercfg/input_*` and `validation/hoeser/input_lab` still carry the pre-calibration
+  values: constant properties (Kant), the Nasseri toughness table, R = 1, and in `input_lab` a 4 µm flaw with m = 20.
+- **The Kant decks that set the level ran a different model form from the drilling decks.** Kant used a fixed flaw,
+  the `cell` Robin form, no flake cap, `removal_energy = cell` and losses off. Höser runs Weibull flaws, the
+  `surface` form, a 1.5 mm cap, `flake` and ε 0.8.
+
+This step does three things:
+1. Puts the rock in **one shared file** and the model form in **another**.
+2. Builds the **Kant 2017 calibration deck** from them, on today's removal rule (the face list).
+3. Checks, **against data**, whether the banked constants still hold in that form:
+   - if they do, nothing moves;
+   - if not, the flaw scale is recalibrated **once**, there.
+
+**No source change.** X1 is in the binary, default-off (P2-12, restored). The constraint depth stays 0: the face list
+refuses it, and it returns after the merge step.
+
+### Sources (opened 2026-10-30)
+
+- **Kant 2017** (`validation/hoeser/kant_2017_jgr_notes.md`; `validation/kant/kant-2017-central-aare-validation-reference.md`).
+  - Same quarry as Höser and Meier.
+  - Measured failure-plane onset: **553–694 °C at 0 MPa**; ≈ 575 ± 30 °C at 27 MPa; ≈ 560 ± 35 °C at 48 MPa [fig].
+  - Kant's model (a = 20 µm): 475 / 450 / 430 °C.
+  - h is not reported. T_flame ≈ 1400 °C.
+- **Höser IR onset on Grimsel:** **430–600 °C**, no trend over 4.3–7.4 MW/m² (`validation/hoeser/hoeser_2016_thesis_notes.md` §2).
+- **The Grimsel onset band = the overlap of the two: 553–600 °C = 826.15–873.15 K** (c1's bar).
+- **Banked level:** 843.757 K = R·σ with R = UCS/σ(850 K) = 0.531294, UCS 169 MPa, flaw 8 µm (P2-2d;
+  `studies/p2_2d_kic/LEVEL.txt`, `derive_onset.py`). The flaw was re-anchored 4 → 8 µm on Kant at P0
+  (`ARCHIVE_DONE.md` *"P0"*).
+- **Offline twin** (uniform-stress Tada closed form on `Grimsel.H` Table 3, E₀ 53.3 GPa, ν 0.30, K_Ic,0 1.5, W
+  3.525546, R 0.531294; advisor 2026-10-30, ported in Goal 4):
+  - **842.39 K** at p 0 with a = 8 µm (binary 843.757: twin −1.4 K);
+  - 841.29 K at 1 MPa;
+  - **818.47 K** at 27 MPa;
+  - **806.92 K** at 48 MPa;
+  - **848.66 K** at the Weibull median flaw a₀(ln 2)^(1/13) = 7.778 µm.
+- **G1 (today's Höser deck, production form; `studies/p2_11_heat/legs/G1/run_removal_events.csv`, 61,953 rows):**
+  - every firing: T_surf median **851.55 K** (p10 831.5, p90 882.9; 20.1 % > 873.15 K);
+  - per-column first firing: median **842.74 K** (p10 827.2, p90 868.4; 2,076 columns);
+  - a_f median 7.778 µm.
+- **P2-2f Meier** (m 13, column path, 2 mm): median firing **852.61 K** (`ARCHIVE_DONE.md` *"P2-2f"*).
+- **Weibull draw:** a = a0_ig · (V_cell/V0)^(1/m) · (−ln u)^(1/m) (`MMWSpalling.H` ~7592, ~7685). a0_ig is the
+  SCALE; V0 = V_cell makes the volume factor 1 (the user's 09-16 choice) and is a per-deck numerical setting.
+- **AMReX include:** a line `FILE = <path>` reads that file into the table at that point (`ext/amrex/Src/Base/AMReX_ParmParse.cpp:568`);
+  the path is relative to the run's cwd (the repo root). Later definitions, including argv, win.
+- **Face-list requirements** (`MMWSpalling.H` ~949–1021): `convective_flame` with `h_expr`; `robin_form = surface`;
+  microstructure; `surface.follow_mask`; `sp_weibull`; `surface_T = reconstructed`; `removal_energy = flake`. It
+  refuses: `flake_length = flux`, coherence > 0, `constraint_depth > 0`, vapour, `melt_aware`, AMR.
+  - `jet_closure = none` with `T_flame_expr` and a constant `h_expr` runs on it (the `unit/face_removal` fixture).
+
+### Goal
+
+1. **`tests/MMWSpalling/validation/shared/rock_grimsel.inputs`** — the Grimsel rock. Each line carries a comment
+   giving its class and source (MODEL_CARD §6). Values are exactly G1's resolved values.
+   - The microstructure block:
+     - `mode = expression`, `phase_expr = 0`, `nphases = 1`, `phase0.name = grimsel`, `phase0.fraction = 1.0`,
+       `phase0.law = grimsel`;
+     - the parser-required, law-overwritten `phase0.kappa/beta/E/mu/rho/Cp/alpha_attenuation/A_D` with G1's values,
+       commented "INERT under law = grimsel; required by the parser; to retire (MODEL_CARD §12 item 7)".
+   - `phase0.grimsel.*`: `cp.a 1370`, `cp.b 178000`, `cp.th0 271`, `lambda.a 2000`, `lambda.th0 563`, `rho 2650`,
+     `E0 53.3e9`, `nu 0.30`, `K_Ic0 1.5`, `alpha_cap_theta -1`.
+   - The criterion and flaw constants: `spall.stress_law = grimsel`, `spallation.sp.kic.law = grimsel_table`,
+     `spallation.sp.kic.scale = 1.0`, `spallation.sp.stress_relief = 0.531294`, `weibull.a0_ig = 8.0e-6`,
+     `spallation.sp.a0 = 8.0e-6`, `weibull.m = 13`, `weibull.a0_gb = 40.0e-6`.
+   - The surface: `losses.epsilon = 0.8`, `losses.epsilon_high = 0.8`, `losses.T_eps_break = 1.0e30`.
+2. **`tests/MMWSpalling/validation/shared/model_form_flame.inputs`** — the one model form for flame decks on the face
+   list:
+   - `spallation.model = sp_weibull`, `spall.enabled = 1`, `spall.stress_source = local_thermoelastic`,
+     `spall.surface_T = reconstructed`, `spall.surface_normal = 0`;
+   - `spall.removal_energy = flake`, `spall.flake_c_f = 0.4`, `spall.flake_h_max = 0.0015`,
+     `spall.flake_length = twocell`, `spall.flake_fraction = cf`, `spall.flake_coherence_length = 0.0`;
+   - `spall.h_spall_max = 0.015`, `spall.sample = top_cell`, `spallation.sp.n_segments = 128`,
+     `spallation.sp.constraint_depth = 0`, `spall.melt_aware = 0`;
+   - `weibull.enabled = 1`, `weibull.size_volume = cell`, `weibull.detach_mode = per_face`, `weibull.seed = 12345`;
+   - `vapor.enabled = 0`, `bit.enabled = 0`, `damage.enabled = 0`;
+   - `surface.follow_mask = 1`, `surface_patch.robin_form = surface`, `surface_patch.face_list = 1`;
+   - `losses.sigma_SB = 5.670374e-8`, `energy_ledger.enabled = 1`, `spall.removal_events_csv = 1`.
+   - Every value equals G1's resolved value. The comments carry the class (MODEL_CARD §6: the 1.5 mm cap is a
+     stopgap, m 13 is Westerly's value).
+3. **`tests/MMWSpalling/validation/shared/check_shared.py DECK [ARGV-FILE] [--allow KEY ...]`** checks four things:
+   - (i) no key defined in either shared file is set in the deck's own input or argv, except keys passed with
+     `--allow` (a control leg's declared override);
+   - (ii) after a run, the deck's `metadata` resolves every shared key (last value wins) to the file's value;
+   - (iii) `phase0.T_ref == hc.ic.constant.value`, because the surface reconstruction's T0 is `phase0.T_ref`;
+   - (iv) under `weibull.enabled = 1`, `weibull.V0` equals the deck's cell volume to 1e-12 relative.
+
+   It prints one line per check and exits non-zero on any failure.
+4. **`tests/MMWSpalling/validation/kant/grimsel_calibration/`** — the Kant 2017 calibration deck:
+   - **`input`:**
+     - `FILE =` both shared files;
+     - the deck's own lines: 24 × 24 × 64 cells at 1 mm (0.024 × 0.024 × 0.064 m); `timestep 0.008`;
+       `weibull.V0 = 1.0e-9`; IC 293.15 K and `phase0.T_ref = 293.15`; Neumann-0 on all faces;
+     - the heat source: `unit/face_removal/input`'s heat-source block key for key (`jet_closure none`, `radius 1.0`,
+       `nozzle_z0 0.1272`, …), with `T_flame_expr 1673.15` (Kant 2017's ≈ 1400 °C), `h_expr 500.0`,
+       `x0 = y0 = 0.012` (full domain, centred);
+     - `losses.h_conv 10`, `losses.T_amb 293.15`, `confining.p = 0.0`, beam off, `el.type = disable`,
+       `hc.heat.alpha = 6.9022e-7` (inert, required), `stop_time 60`.
+   - **`offline_onset.py`:** ports the advisor's twin and reproduces the five Sources numbers to 0.05 K.
+   - **`run.py`:** the legs, serial, `caffeinate`; writes argv and binary per leg (SR 8).
+   - **`reduce.py`:** writes `RESULTS.txt`.
+   - **`README.md`:** the decision rule.
+5. **Re-point `validation/hoeser/input_lab`:**
+   - replace its microstructure, criterion, flaw, flake, Weibull and ε lines with the two `FILE =` lines;
+   - keep geometry, numerics, IC/BC, `phase0.T_ref`, `hc.heat.alpha`, beam-off, `losses.h_conv/T_amb`, `confining.p`
+     and `el.*`;
+   - add a header naming the files.
+
+   ⚠ `unit/face_heat/test` reads it at run time (it sets G1's keys on argv).
+6. **`docs/project/MODEL_CARD.md`:** §5, §6, §9, §12 and §13 updated; `RUNNABLE.txt` regenerated (the calibration
+   deck added).
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | claim | site | guard / note |
+|---|---|---|---|
+| L1 | `FILE =` includes a file, relative to the cwd | `AMReX_ParmParse.cpp:568` `addDefn` → `read_file` | every run's cwd is the repo root; a3's identity is the end-to-end witness |
+| L2 | argv after the include wins | ParmParse last-value semantics | that is why check_shared (i) forbids undeclared overrides |
+| L3 | the face list accepts a uniform flame (`jet_closure none` + `T_flame_expr` + constant `h_expr`) | guards `MMWSpalling.H` ~949–1021 | ⚠⚠ a smoke run decides it: the `unit/face_removal` fixture runs this exactly |
+| L4 | the per-cell flaw = a0_ig·(V_cell/V0)^(1/m)·(−ln u)^(1/m) | `MMWSpalling.H` ~7592, ~7685 | V0 = V_cell per deck (check (iv)) |
+| L5 | the confinement term pν/(1−ν), written once, read by the face list's criterion | `Removal.H:40` (`c.conf`) → `FaceRemoval.H:443` (`conf_off = ec.conf`); `unit/lateral_flux_lock` (`confining_p *` once) | c5 = 0 would falsify this row |
+| L8 | `spallation.sp.a0` is inert under `weibull.enabled = 1` (the rock file's 8 µm replaces `input_lab`'s inert 20 µm) | all four consumers branch on Weibull: `FaceRemoval.H:423`, `Removal.H:1131, 1173`, `MMWSpalling.H` ~6413 | a3 is the witness |
+| L6 | event-log columns `T_surf` (12), `dir` (21), `ts_fb` (29), `col_i/col_j`; a row is stamped at its step's START (SR 7(iii)) | G1's header | `T_surf` is the reconstructed surface temperature the criterion fired on |
+| L7 | at run time, `input_lab` is read by `unit/face_heat/test` only (the `unit/face_list` and `face_removal` generators ran once, with outputs committed) | grep of `tests/` | a4 covers it |
+
+### Legs (the calibration deck's `input` plus exactly these argv tokens)
+
+| leg | tokens | stop (s) |
+|---|---|---|
+| CAL | (none) | 60 |
+| CAL_det | `weibull.enabled=0` (declared `--allow`) | 60 |
+| CAL_h2000 | `surface_patch.h_expr=2000.0 timestep=0.004` | 20 |
+| CAL_p27 / CAL_p48 | `confining.p=27.0e6` / `confining.p=48.0e6` | 60 |
+| CAL_2mm | `amr.n_cell=12 12 32 weibull.V0=8.0e-9` | 60 |
+| CAL_05mm | `amr.n_cell=48 48 128 weibull.V0=1.25e-10` | 60 |
+| RECAL_6 / RECAL_10 / RECAL_x (d1 only) | `weibull.a0_ig=` 6.0e-6 / 10.0e-6 / the interpolated value, with `spallation.sp.a0` equal (declared `--allow`) | 60 |
+| HOS_R (a3) | `validation/hoeser/input_lab` (re-pointed) plus G1's argv **minus** every token now in a shared file; `stop_time=15.0`, `plot_file` re-pointed | 15 |
+
+**The statistic.** Per column (col_i, col_j): the first event-log row with `dir = 5` (top face) and `ts_fb = 0`; its
+`T_surf`. Report n, median, p10, p90, the count of columns whose first firing was not a top face or was a fallback,
+and the all-firing median.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | `offline_onset.py` | the five Sources numbers to ±0.05 K | report | the twin is not the advisor's; predictions P1–P6 lose their anchor |
+| a1 | 1 | G1's event log by the statistic (zero compute) | median 842.74 K first-firing, 851.55 K all-firing (Sources) | report | the reducer does not read the log as the advisor did; fix it before c-rows |
+| a2 | 2 | `check_shared.py` on CAL (a 1-step run) and on HOS_R | (i)–(iv) all pass on both | **gate** | a shared value is overridden or not read: the files are not what runs |
+| a3 | 2 | HOS_R vs G1 to 15 s: plotfiles 00000 and 01875 byte-identical; thermo every non-timer column identical; event log and jet profile exact prefixes of G1's | identical | **gate** | the shared files do not carry G1's constants exactly; nothing after it is attributable |
+| a4 | 2 | every kept unit test vs `studies/p2_12_retire_path/restore/UNIT_p2_12r` | same rc, identical verdict lines, every test | **gate** | re-pointing `input_lab` moved a test |
+| b1 | 3 | each leg: rc 0; ≥ 95 % of the columns have a first top-face non-fallback firing; `ledger_err_solid` ≤ 5e-3; floor ≥ 10 mm above the base at stop | as stated | **gate** | the statistic is not measured on the whole patch; extend `stop_time` once (declared) or stop |
+| c1 | 4 | **THE LEVEL:** CAL first-firing median vs the Grimsel onset band | 826.15–873.15 K | **gate** (decides d1) | outside ⇒ the banked constants do not hold in the production form ⇒ d1 recalibrates the flaw scale once |
+| c2 | 4 | CAL_det first-firing median vs the banked 843.757 K | report the difference | report | the production form alone (surface Robin, losses, the face list) moves the deterministic level |
+| c3 | 4 | CAL − CAL_det medians | report | report | what the Weibull draw moves (P3) |
+| c4 | 4 | CAL_h2000 − CAL medians, and the implied exponent on ΔT vs q | report | report | the model's onset flux dependence against data that show none (P4) |
+| c5 | 4 | CAL_p27, CAL_p48 − CAL medians | report beside Kant's measured ≈ −55 / −70 K [fig] and his model's −25 / −45 K | report | the confinement term's size against Kant's pressure series (P5); 0 ⇒ L5 failed |
+| c6 | 4 | CAL_2mm, CAL_05mm vs CAL medians | report the spread | report | the onset is mesh-dependent despite V0 = V_cell (P6) |
+| c7 | 4 | CAL all-firing median vs G1 851.55 K and P2-2f 852.61 K | report the spread | report | same rock, different onset across decks (P7) |
+| c8 | 4 | the share of CAL firings above 873.15 K (the table clamp) | report | report | the calibration sits on the clamp |
+| d1 | 5 | only if c1 fails: RECAL_6 and RECAL_10 bracket 850 K; log-log interpolate a0 to 850 K (4 significant figures); RECAL_x lands within ±3 K; write it to `rock_grimsel.inputs` (both flaw keys) | interior bracket; ±3 K | **gate** (protects e1) | the level cannot be reached with one flaw scale ⇒ stop and report |
+| e1 | 6 | **verdict** | — | **verdict** | states the one Grimsel calibration (unchanged, or d1's flaw), which decks include the files, what the merge step carries (d_ref, Meier), and, if d1 ran, that G1's S\* must be re-derived |
+
+### Pre-registered predictions
+
+- **P1 (c1):** inside the band, at 845–856 K (the twin's Weibull median 848.7 ± a production-form shift ≤ 7 K). d1 is
+  not run.
+- **P2 (c2):** within ±5 K of 843.757.
+- **P3 (c3):** +4 to +9 K (twin +6.3).
+- **P4 (c4):** +10 to +40 K (P2-2d's exponent +0.04 to +0.07 over a ×3.6 flux). Data show no trend (Kant 0.45–0.87,
+  Höser 4.3–7.4 MW/m²), so above +25 K is a finding against the data.
+- **P5 (c5):** −20 to −28 K at 27 MPa and −30 to −42 K at 48 MPa. That is about half of Kant's measured drop, as his
+  own model also gives.
+- **P6 (c6):** within ±8 K (1 %).
+- **P7 (c7):** within ±10 K of both.
+- **Refuting evidence on disk:** none for P1. G1's first-firing median of 842.74 K is the same form at Höser's flux,
+  and it is inside the band.
+
+### What would make this inert — witness each
+
+| failure mode | witness |
+|---|---|
+| the include is not read (path, cwd) | a2 (ii) |
+| a deck line silently overrides a shared value | a2 (i) |
+| the statistic counts lateral or fallback firings | the counts in the statistic |
+| the confinement term is absent on the face list | c5 = 0 |
+| V0 ≠ V_cell | a2 (iv) |
+| a column never fires | b1 |
+
+### Guardrails
+
+- **No source change.** If one is needed, stop and report.
+- **Studies are records:** no study argv is edited. The legacy Kant inputs (`validation/kant/sp_kant_onset*/*`) and
+  every tree input are untouched; their retirement needs the user's permission.
+- `confining.p`, `weibull.V0`, `phase0.T_ref`, the heat source, `losses.h_conv/T_amb`, the mesh and dt stay in decks,
+  never in a shared file.
+- `caffeinate -dis`, `-np 4`, legs serial, argv + binary hash per leg (SR 8, SR 11).
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; K=tests/MMWSpalling/validation/kant/grimsel_calibration
+SH=tests/MMWSpalling/validation/shared
+# ord 1 (offline): a0, a1
+$PY $K/offline_onset.py && $PY $K/reduce.py A1
+# ord 2: a2, a3, a4  (no build: the binary is restore/BINARY.txt 0a96a095...)
+caffeinate -dis $PY $K/run.py SMOKE HOS_R && $PY $SH/check_shared.py ... && $PY $K/reduce.py A3
+# a4: P2-10's `units` harness (studies/p2_10_retire/run_p2_10.py) with HERE = $K, compared with
+#     studies/p2_12_retire_path/restore/UNIT_p2_12r exactly as restore/gates_restore.py UNITS compares
+# ord 3-4: the legs, b1, c1-c8
+caffeinate -dis $PY $K/run.py CAL CAL_det CAL_h2000 CAL_p27 CAL_p48 CAL_2mm CAL_05mm && $PY $K/reduce.py > $K/RESULTS.txt
+# ord 5 only if c1 fails: d1
+```
+
+### Claude completion notes
+
+**Files.** New: `tests/MMWSpalling/validation/shared/{rock_grimsel.inputs, model_form_flame.inputs, check_shared.py}`;
+`tests/MMWSpalling/validation/kant/grimsel_calibration/{input, offline_onset.py, run.py, reduce.py, README.md,
+chain_ord2.sh, pre/input_lab.pre_p2_13}` and its records (`A0–A3.txt`, `UNITS_p2_13_vs_p2_12r.txt`, `RESULTS.txt`,
+`CHAIN.log`, `legs/<leg>/{argv.sh, BINARY.txt, ALLOW.txt, run.log, rc}`, `UNIT_p2_13/`). Edited:
+`validation/hoeser/input_lab` (re-pointed), `docs/project/MODEL_CARD.md` (header, §5, §6 rows 1/3/8/9/13/19/21/27,
+§9 rewritten, §12 items 2/7, §13), `docs/project/model_card/runnable.py` (+ the deck) and `RUNNABLE.txt`.
+**No source change; no build.** Binary `0a96a095…` (= `restore/BINARY.txt`) on every leg.
+
+| # | measured | result | output |
+|---|---|---|---|
+| a0 | 842.39 / 841.28 / 818.46 / 806.91 / 848.66 K; worst −0.008 K | PASS | `grimsel_calibration/A0.txt` |
+| a1 | all-firing 851.55 K ✓; first-firing 842.74 K / 2,076 cols ✓ **only as "first non-fallback firing, any direction"**; the packet's statistic (first dir 5) gives 850.27 K / 1,339 cols on G1 (84.8 % of G1's columns are first hit from the side) | reproduced (report) | `A1.txt` |
+| a2 | CAL (1 step) and HOS_R: incl, (i)–(iv) PASS, 64/64 keys; control: an undeclared `weibull.m=20` fails (i) | PASS | `A2.txt` |
+| a3 | plotfiles 00000/01875 cell+node: 0 of 28 files differ; thermo 313 rows × 87 non-timer cols identical; event log (5,067 lines) and jet profile (1,066) exact prefixes, = G1's rows before 15 s | PASS | `A3.txt` |
+| a4 | every kept unit test: same rc, identical verdict lines | PASS | `UNITS_p2_13_vs_p2_12r.txt` |
+| b1 | all 7 legs: rc 0; 100 % columns first-fire on a non-fallback top face; max\|ledger_err_solid\| ≤ 3.6e-14; lowest surface 33.0–45.0 mm above base; check_shared PASS per leg | PASS | `RESULTS.txt` |
+| c1 | **CAL 850.43 K** (n 576, p10 830.69, p90 882.00) in 826.15–873.15 K | **PASS: inside ⇒ constants stand** (P1 held) | `RESULTS.txt` |
+| c2 | CAL_det 844.63 K − 843.757 = **+0.88 K** | report (P2 held) | 〃 |
+| c3 | CAL − CAL_det = **+5.80 K** | report (P3 held; twin +6.3) | 〃 |
+| c4 | CAL_h2000 − CAL = **+2.55 K**; q 411 → 1,640 kW/m² (×3.99); exponent **+0.003** | report (**P4 MISSED**, toward the data: no trend) | 〃 |
+| c5 | 27 MPa **−26.48 K**; 48 MPa **−38.43 K** (≠ 0 ⇒ L5 holds) | report (P5 held; ≈ half of Kant's measured −55/−70, as his model) | 〃 |
+| c6 | 2 / 1 / 0.5 mm: 853.33 / 850.43 / 853.03 K; spread **2.91 K (0.34 %)** | report (P6 held) | 〃 |
+| c7 | CAL all-firing 851.78 K: vs G1 **+0.23 K**, vs P2-2f **−0.83 K** | report (P7 held) | 〃 |
+| c8 | **20.7 %** of CAL's 10,804 firings above 873.15 K | report | 〃 |
+| d1 | not run (c1 inside) | n/a | — |
+| e1 | **the one Grimsel calibration stands unchanged** (R 0.531294, a0 8 µm, m 13); included by the calibration deck and `input_lab` (⇒ G1's deck, `unit/face_heat`); G1's S\* needs no re-derivation; the merge step carries d_ref and the Meier rebuild | verdict | `RESULTS.txt` (end) |
+
+### Implementation takeaways
+
+- ⚠⚠ **Two statistics share the name "first firing".** The advisor's G1 number 842.74 K is the first **non-fallback
+  firing in any direction** per column; the packet's statistic is the first **top-face** one (850.27 K on G1). They
+  differ on any drilling deck (the bore widens into fresh columns sideways) and coincide on the flat deck (b1: 0 of
+  576 columns not top-first). So "G1's first-firing median is inside the band" (the packet's refuting-evidence line)
+  compared a lateral-dominated subset; on the same statistic as c1 G1 reads 850.27 K — also inside, and within 0.2 K of CAL.
+- ⚠ **`phase0.E`/`mu` are not inert under `law = grimsel`**: ν = E/(2μ) − 1 feeds the confinement term
+  (`Removal.H:39–41`), while the law's own `grimsel.nu` does not. Both are 0.30, so no number moves; the rock file's
+  comment says so instead of the packet's "INERT". Changing one ν and not the other would silently desynchronise c5.
+- **`check_shared` (ii) and branch-dependent reads.** `metadata` lists only keys the binary *queried*; under the
+  declared `weibull.enabled=0` five `weibull.*` keys are never queried. (ii) passes such a key only if AMReX's
+  "Unused ParmParse Variables" block in `run.log` lists it **with the file's value** (proof the include was read).
+  The first scoring flagged CAL_det for this; it was a checker gap, fixed before the verdict, no rerun.
+- **The include is plain AMReX:** `FILE = <path>` relative to the cwd, so every run must start at the repo root
+  (`unit/face_heat` and both harnesses do). Inline `#` comments are fine. Duplicates append; last wins.
+- **b1's floor** uses summed `n_voided` per column (conservative); SR 4's `k_top − n_voided` read 1 mm higher on
+  CAL_05mm (38.5 vs 37.5 mm). Both are far above 10 mm, but the two readings of the log are not identical there.
+- **The deck is cheap:** 60 s at 1 mm in ~40 s of wall time, 0.5 mm in ~5 min; the whole campaign from gates to
+  results took 22 min. h 2000 recedes ~31 mm in 20 s, so a longer h-2000 leg needs a taller block.
+- **c4 against P4:** the model's onset is nearly flux-independent (+2.6 K over ×4 flux, exponent 0.003), not P2-2d's
+  0.04–0.07. That agrees with Kant and Höser (no trend). P2-2d's exponent came from a different form (column path,
+  `cell` Robin, fixed flaw); its premise does not carry to this form.
+- **Not done (guardrails):** the legacy Kant inputs, the Meier decks and every tree input still carry their own
+  constants. `legs/` is 1.8 GB (plotfiles); the user decides what to commit.
+
+### Review findings
+
+Re-derived independently: **both "first firing" statistics** on G1's 61,953-row log and on every
+CAL leg, from the event logs with my own reducer; **a3's identity** by my own recursive file
+compare; **the no-override property** by parsing the 64 shared keys against `input_lab`; the twin's
+Weibull-median flaw and the confinement offsets; the full **level decomposition** (twin → CAL_det →
+CAL). No source newer than the binary; binary `0a96a095ad30f45e` as recorded.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | five numbers to ±0.05 K | worst −0.008 K | not fully re-derived (needs the Tada port); verified what is checkable: **a₀(ln 2)^(1/13) = 7.7776 µm** (Sources 7.778); the confinement offsets p·ν/(1−ν) = p×0.42857; and the twin's drops are monotone and **sub-linear** in p (1.10 / 23.92 / 35.47 K at 1 / 27 / 48 MPa), as a non-linear σ(T) requires | own arithmetic vs `A0.txt` | report |
+| a1 | median 842.74 / 851.55 K | reproduced, **with the statistic corrected** | ⚠⚠ **confirmed, and the correction is the right way round.** G1 first **top-face** (dir 5, ts_fb 0): **n 1339, median 850.27 K**. G1 first **any-direction**: **n 2076, median 842.74 K**. All-firing **851.55 K**. And **84.3 % of G1's columns are first hit from the side** (326 of 2076 are top-first) — the implementer's 84.8 % is right; my own first pass conflated it with "has a top-face firing at some point" | own reduction of `legs/G1/run_removal_events.csv` | report — **DR-2** |
+| a2 | (i)–(iv) on CAL and HOS_R | PASS, 64/64 | all five checks PASS on both decks; and I verified (i) **substantively**: of the **64** keys defined in the two shared files, **0** are also set in `input_lab` | `A2.txt`; own parse | **PASS (gate)** |
+| a3 | plotfiles identical; thermo identical; logs exact prefixes | PASS | **28 plotfile files byte-identical, 0 differ**; event log **5,067 lines an exact prefix** of G1's; thermo **313 rows × 87 common non-timer columns, 0 rows differing** | own recursive compare | **PASS (gate)** |
+| a4 | same rc, identical verdict lines, every test | PASS | the record covers every kept test with pre-existing `rc=1` failures unchanged (`amr_microstructure_regrid`, `beam_void_closure`, `surface_T_recon`) | `UNITS_p2_13_vs_p2_12r.txt` | **PASS (gate)** |
+| b1 | rc 0; ≥ 95 % top-first; ledger ≤ 5e-3; floor ≥ 10 mm | PASS | **100 % on every leg**: 576 / 576 columns top-first non-fallback on CAL (144/144 at 2 mm, 2304/2304 at 0.5 mm) ⇒ the statistic is measured on the whole patch, not a subset | own reduction | **PASS (gate)** |
+| c1 | 826.15–873.15 K | **850.43 K** | **850.43 K exactly**, n **576** = every column, p10 830.68, p90 882.13 ⇒ **inside, constants stand** | own reduction | **PASS (gate)** — P1 held |
+| c2 | report | +0.88 K | CAL_det **844.63 K** − 843.757 = **+0.873 K**; and p10 = p90 = median, i.e. **every column identical** with Weibull off, as it must be | own reduction | report — P2 held |
+| c3 | report | +5.80 K | 850.43 − 844.63 = **+5.80 K** (twin +6.3) | own reduction | report — P3 held |
+| c4 | report | +2.55 K, exponent +0.003 | CAL_h2000 **852.98** − 850.43 = **+2.55 K** | own reduction | report — **P4 missed toward the data** |
+| c5 | report | −26.48 / −38.43 K | **823.95** and **812.00 K** ⇒ **−26.48 / −38.43 K**, both ≠ 0 ⇒ L5 holds. ⚠ vs the twin's −23.92 / −35.47 the binary's confinement is **11 % / 8 % stronger** | own reduction | report — P5 held |
+| c6 | report | spread 2.91 K | 2 / 1 / 0.5 mm: **853.33 / 850.43 / 853.03 K** ⇒ spread **2.90 K (0.34 %)**, and non-monotone (1 mm is the minimum) | own reduction | report — P6 held |
+| c7 | report | +0.23 / −0.83 K | CAL all-firing **851.78 K** ⇒ **+0.23 K** vs G1's 851.55, **−0.83 K** vs P2-2f's 852.61 | own reduction | report — P7 held |
+| c8 | report | 20.7 % | **20.7 %** of **10,804** CAL firings above 873.15 K (G1: 20.1 % of 61,953) | own reduction | report — DR-5 |
+| d1 | only if c1 fails | not run | correctly not run | — | n/a |
+| e1 | verdict | the calibration stands | all four statements reproduce | `RESULTS.txt` | **delivered** |
+
+#### Diff review
+
+No source change (verified: nothing in `src/` newer than the binary, no build). The diff is two
+shared input files, a checker, a new deck, the re-pointed `input_lab` and the MODEL_CARD.
+
+| # | item | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | ⚠⚠ **two ν's, one read by the confinement term** | **2** | the packet's Goal 1 told the implementer to comment `phase0.E`/`mu` "INERT under `law = grimsel`". They are **not**: ν = E/(2μ) − 1 feeds the confinement offset (`Removal.H:39–41`) while the law's own `grimsel.nu` does **not**. Both are 0.30 here so no number moves, and the rock file's comment now says so instead — but **the shared rock file carries two ν's and only one reaches c5**. Changing one and not the other would silently desynchronise the pressure series. This is the finding most worth the planner's attention | **risk** |
+| DR-2 | ⚠⚠ **"first firing" names two statistics** | **12** | the advisor's 842.74 K is the first **non-fallback firing in any direction**; the packet's is the first **top-face** one, 850.27 K on G1 over 1,339 of 2,076 columns. They differ by **7.53 K** on a drilling deck because **84.3 % of G1's columns are first hit from the side** (I measured 326 top-first of 2,076), and they **coincide exactly** on the flat deck (CAL: both 850.43, both n 576 — I verified). ⇒ the packet's own "refuting evidence on disk" line compared a lateral-dominated subset; on the packet's statistic G1 reads **850.27 K**, which is **0.16 K from CAL**. Caught by the implementer, and it strengthens the result | **risk** (caught) |
+| DR-3 | ✅ **the level decomposes cleanly, and I checked every step** | 12 | twin (a 8 µm, p 0) **842.39** → CAL_det **844.63** = **+2.24 K** production-form shift (P2 bar ±5) → CAL **850.43** = **+5.80 K** Weibull shift (P3 bar +4…+9, twin +6.3). Three independent quantities, each inside its pre-registered bar, with the twin as an external anchor. The pressure arm agrees to ~3 K. **This is what "calibrate once and freeze" looks like when it works** | **ok** |
+| DR-4 | ✅ the same-rock agreement | 12 | on **one** statistic: CAL **850.43**, G1 **850.27** — a **0.16 K** difference between a uniform-flame Kant deck and a drilling Höser deck. All-firing: CAL 851.78, G1 851.55, P2-2f 852.61 — a **1.1 K spread across three decks and two removal paths**. The user's "same rock ⇒ same properties" principle is now demonstrated, not asserted | **ok** |
+| DR-5 | ⚠ the calibration sits partly on the table clamp | 12 | **20.7 %** of CAL's firings are above the 873.15 K ceiling where both Grimsel tables repeat their last value — essentially the same share as P2-2f's 22.6 % and G1's 20.1 %. The step reports it (c8) and changes nothing, correctly, but the level is being set with a fifth of its population outside the property laws' validity. Unresolved programme-wide | **risk** |
+| DR-6 | `check_shared` (ii) and branch-dependent reads | 9 | ⚠ the checker was **corrected after a leg was scored**: `metadata` lists only keys the binary *queried*, so under the declared `weibull.enabled=0` five `weibull.*` keys never appear. The fix accepts such a key only if AMReX's "Unused ParmParse Variables" block lists it **with the file's value**. Declared, and no rerun was needed because the change is in the checker, not the run — the right call, and the negative control (an undeclared `weibull.m=20` fails (i)) still discriminates | **ok** |
+| DR-7 | ⚠ "one Grimsel rock" holds for **two** decks | 4 | the calibration deck and `input_lab` include the files; the legacy Kant inputs, every Meier deck and every tree input still carry their own constants, by the guardrail ("studies are records", retirement needs permission). So the principle is structurally enforced on 2 of N decks — true, declared, and worth stating plainly in the archive so nobody reads §9 as closed | **risk** |
+| DR-8 | the parser-required, law-overwritten block | 7 | ✅ `phase0.kappa/beta/E/mu/rho/Cp/alpha_attenuation/A_D` carried with G1's values and commented, with the retirement pointer (MODEL_CARD §12 item 7). Keeping them at the *resolved* values rather than at defaults is what makes a3's byte-identity possible | **ok** |
+| DR-9 | b1's floor, two readings | 5, SR 4 | ⚠ summed `n_voided` per column vs SR 4's `k_top − n_voided` differ by **1 mm on CAL_05mm** (38.5 vs 37.5 mm). Declared; both are far above the 10 mm bar, so nothing turns on it — but the two readings of the same log are not identical and the conservative one was used | **nit** |
+| DR-10 | `FILE =` semantics | 5 | ✅ resolved against the code (`AMReX_ParmParse.cpp:568`), relative to the cwd, duplicates append and **last wins** — which is exactly why check (i) must forbid undeclared overrides. L1/L2 are reasoned from the parser, and a3 is the end-to-end witness | **ok** |
+| DR-11 | c4 refutes P2-2d's premise | 12 | ✅ a prediction **missed toward the data**: the onset moves **+2.55 K over ×3.99 flux** (exponent 0.003), not P2-2d's 0.04–0.07, and that agrees with Kant (0.45–0.87 MW/m²) and Höser (4.3–7.4) showing no trend. The takeaway correctly attributes the old exponent to a different form (column path, `cell` Robin, fixed flaw) rather than retro-fitting it | **ok** |
+| DR-12 | c6's non-monotone mesh row | 13 | ⚠ 853.33 / 850.43 / 853.03 K at 2 / 1 / 0.5 mm — the **1 mm point is the minimum**, so the 2.90 K spread is not a convergence trend. Inside P6's ±8 K either way, and V0 = V_cell is witnessed by a2 (iv), so the flaw draw is mesh-objective; worth not reading the row as convergence | **nit** |
+| DR-13 | 1.8 GB of `legs/` | — | ⚠ plotfiles kept as the provenance the statistic is reduced from (SR 8), with the commit decision left to the user. Fourth step running with a multi-GB study directory; a retention rule is overdue | **nit** |
+
+**Verdict: accepted.** All five gating rows (a2, a3, a4, b1, c1) reproduce under independent
+derivation, every reported c-row reproduces **to the digit**, and no diff-review row is tagged
+`bug`. d1 was correctly not run.
+
+**Carry forward:**
+1. **DR-1** — the shared rock file carries **two ν's** and only `phase0.E`/`mu` reaches the
+   confinement term. They agree at 0.30 today; add a check (or one source of ν) before anyone edits
+   either, or c5's pressure series desynchronises silently.
+2. **DR-2** — fix the packet's language permanently: **"first firing" must name its direction
+   filter.** The two readings differ by 7.5 K on any drilling deck and not at all on a flat one, so
+   the same words give different answers on different decks.
+3. **DR-7** — state in the archive that "one Grimsel rock" is now enforced on the calibration deck
+   and `input_lab` only; the legacy Kant, Meier and tree inputs still carry their own constants.
+4. **DR-5** — a fifth of the calibrating population sits above the 873.15 K table ceiling. That has
+   now been true for three steps; it belongs on the standing list rather than in each step's c8.
+
+**Checked and clean:** no source change (nothing in `src/` newer than the binary, no build), binary
+`0a96a095ad30f45e` on every leg; no study argv edited; the legacy Kant inputs and every tree input
+untouched; `confining.p`, `weibull.V0`, `phase0.T_ref`, the heat source, the mesh and dt all stayed
+in decks and out of the shared files. SR 3, SR 4 (DR-9), SR 7, SR 8 and SR 11 honoured. **No
+unquotable number is quoted:** a1's two statistics are both printed with their definitions, c4 is
+reported as a **miss** against its own prediction, c8's clamp share is stated beside the level it
+sets, and the twin is labelled an offline anchor rather than evidence.
+
+## ROADMAP notes released 2026-11-02 — the property-table clamp bullet (replaced by standing rule 18)
+
+- **THE PROPERTY-TABLE CLAMP — PARKED by the user 2026-10-13, carried as a validity caveat.** Both
+  Grimsel tables **floor at 873.15 K**; on Meier **22.6 % of floor firings by count, 23.7 % by
+  volume** sit above it at m = 13 (**34.2 %** by count at m = 8). ⚠⚠ **Not a result driver:** an
+  offline port over the m = 13 window moved the mean firing T **~1 K** and the price **0.3 %** under
+  two plausible extrapolations — above the clamp stress still rises while toughness is flat, so those
+  columns cross anyway and the extrapolation sets only how far. ⚠⚠ **But two of that analysis's
+  numbers do NOT reproduce on the full floor population, and one inverts its own argument:** volume
+  is **23.7 %, not 17.2 %**, and is **HIGHER** than the count share — the above-clamp firings do
+  **not** "carry little volume"; their flaws are **5.7-8.2 um** (median 6.81 vs 7.95 below), not
+  "3 to 6". ⇒ **the parking rests on the sensitivity test, NOT on a small-volume argument.** ⚠ Keep
+  the above-873 K fraction a **scored diagnostic on every Meier step**; when unparked, extrapolate as
+  a **declared band** (toughness along the quartz decline; stiffness 0.3-0.4 at 800 degC; expansion
+  not held flat past 573 degC; a melt limit — a few m = 8 columns reach **1395 K**), never one curve.
+
+## P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port is faithful; d = 2 mm puts a −122 K onset-vs-flux trend into the production form (2026-11-02, ACCEPTED by review 2026-11-02; archived 2026-11-02)
+
+### What the step established
+- The constraint depth d now runs on the face list through the column path's own interpolation (`CrefInterp`, one copy,
+  two callers), read d/μ along each line over an extended gather; the flake and the removal read the same cells as
+  before (a4: every d = 0 output byte-identical to P2-13's; a2: 0 of 2639 in the tree).
+- Cross-path identity at d = 2 mm: 576/576 columns fire at the same step, S_top 922.75 vs 922.36 K (b1); rank- and
+  box-independent (b2); the pre-edit binary aborts on the key (a8).
+- ONE ν: `ElasticConstants()` takes ν from the law under `RockLaw()`; proven two-sidedly (old binary +4.12 K when
+  `phase0.mu` moved, new binary byte-identical over 11,535 lines) — P2-13 DR-1 closed.
+- **The finding (c1):** d = 2 mm brackets Kant's minimum flux (0.12 MW/m² silent, 0.34 fires) but makes the onset fall
+  **−121.98 K** from h 500 to h 2000 (×4.68 flux) where d = 0 gives +2.55 K and the data are flat; 1001.43 K at
+  Kant's deck flux is above every Grimsel measurement. Mesh at d 2: 944.5 / 922.8 / 916.8 K at 2 / 1 / 0.5 mm.
+  Höser 15 s: V(f) −26.9 %, firing median +63.7 K, negative-drive reads 0.33 %.
+- d stays 0 in `model_form_flame.inputs`. Study: `tests/MMWSpalling/studies/p2_14a_cref_face/` (binary 23439654f1f9d82e).
+- Same day, outside the step loop: the literature study `Claude_markdowns/reports/Granite spallation and melt physics.md`
+  excluded a single fixed reference depth as the thickness condition (no published model uses one; the half-space
+  stress is pointwise) and supported a separate buckling-type thickness condition (Preston / Dey & Kranz / Rauenzahn &
+  Tester Eqs. 15–16). Explainer: `Claude_markdowns/htmls/2026-11-02_two_conditions_for_a_spall.html`. The two-rock
+  threshold ratio (Gotthard/Bethel) is consistent with one rock-independent length but cannot discriminate the forms
+  (`studies/law_form/RATIO.txt`).
+
+### Carry-forwards (review)
+1. DR-1 — retire b5 as a gate (landed at 0.476 W, passed by 4.8 %); the /μ claim rests on a0's C7.
+2. DR-10 — any re-fit of d must score the minimum flux and the onset flatness together (superseded by P2-15: the
+   reference depth is replaced by a thickness condition rather than re-fitted).
+3. DR-6 — the a3 comparator (R10's verdict filter) cannot see a changed lower-case `ok` clause; fix or stop calling
+   its result "identical verdict lines".
+4. DR-11 — the 0.33 % negative-drive share on drilling is the interior-peak pathology of the d form; carry into MMW.
+5. DR-15 — `legs/` 5.3 GB; a retention rule for study plotfiles is overdue.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-02)
+- **P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio**
+  (`ACTIVE_STEP.md`; 2026-11-02).
+  - Archived: P2-13 ACCEPTED (`ARCHIVE_DONE.md` *"P2-13"*: one rock file and one model-form file; the Kant deck in the
+    production form fires at 850.43 K, inside 826–873 K, so the constants stand).
+  - The face list reads the drive's reference temperature a normal distance d behind each face (d/μ along its line),
+    through the column path's own interpolation; the flake and the removal are untouched. ν comes from `grimsel.nu`
+    whenever the Grimsel law is on (P2-13 DR-1).
+  - Quick tests only (user, 2026-11-02): fixtures and the calibration deck, seconds to minutes per leg. d stays at
+    P2-2e's 2.0 mm and is NOT re-fitted here.
+
+### The P2-14a file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio
+
+Status: **accepted by review** (2026-11-02; all thirteen gating rows reproduce). ⚠ b5 passed by 4.8 % of its bar and sits at the midpoint of its own discriminator — the /μ claim rests on a0's C7, not on b5 (DR-1). Was: completed (implemented 2026-11-02).
+
+### Context
+
+The removal code is split in two (`docs/project/MODEL_CARD.md` §1 item 2). The face list (P2-8/P2-9,
+`FaceRemoval.H`) runs flame drilling. The column path (`Removal.H`) carries everything the face list refuses: the
+beam, vapour, melt, the feet clearance and the **constraint depth** d. This step moves **d only**. The plan of
+record (ROADMAP, refined 2026-11-02) does the other slices next, then retires the column path.
+
+**What d is** (P2-2e, `MMWSpalling.H:7852–7871`). At d = 0 the drive at depth z is referenced to the stored
+initial temperature. At d > 0 it is referenced to the **live** temperature a normal distance d further behind the
+face, T(z + d). Its limits:
+- a thin hot skin gives today's criterion;
+- a soaked face gives a drive of about q·d/k, so a **minimum flux** emerges;
+- a uniform slab gives zero drive;
+- an interior temperature peak gives a negative drive.
+
+d = 2.0 mm was fitted in P2-2e on Kant 2016's Gotthard standoffs, unreviewed. **It is not re-fitted here**; that is
+the plan's item 3.
+
+**This step does two things:**
+1. Ports d onto the face list, through the column path's own interpolation.
+2. Removes the second Poisson's ratio (P2-13 review DR-1). The confinement term reads ν = E/(2μ) − 1 from
+   `phase0.E`/`mu`, while the Grimsel law uses `grimsel.nu`. They are equal only by value.
+
+**Testing (user, 2026-11-02): quick, comprehensive tests only.** Every leg is a 1-D fixture, the P2-13 calibration
+deck, or a 15 s Höser run (seconds to ~4 min of wall time each; about 45 min for the whole campaign). No Meier and
+no long Höser leg: d's real test on drilling waits for the heat-input step (plan item 6).
+
+### Sources (opened 2026-11-02)
+
+**The drive, one sample** (`Removal.H:128–143`, `ScanSigmaT`):
+- with the law: σ(z) = R·LawSigma(T_z, T0_z) + p·ν/(1−ν);
+- LawSigma = E(T_z)·∫ from T0_z to T_z of α dθ / (1 − ν_law) (`Grimsel.H:38`, `:242`);
+- R = 0.531294 (`rock_grimsel.inputs`).
+
+**The column path's reference** (`Removal.H:1520–1533`):
+- T0_z = `CrefTAtDepth(c, (z_abs + d)·sn_icth, dz, …)` under d > 0, `T0_at_didx(·)` at d = 0.
+- `CrefTAtDepth` (`MMWSpalling.H:2934–2954`):
+  - mf = D/dz − 0.5;
+  - mf < 0 ⇒ the top cell;
+  - mf ≥ nuse − 1 ⇒ the last usable cell, counted as a clamp if strictly beyond;
+  - otherwise a linear interpolation between cell centres.
+- The buffer (`BuildConstraintRefColumns`, `:2868–2925`) is gathered once per step (ReduceRealSum). Its width is
+  colw = floor((h_spall_max + d)/dz) + 2.
+
+**The face list's reference today** (`FaceRemoval.H:527–540`):
+- `sigma_at_depth` takes T0_z = `T0_at_d(floor(z_v/dx))`, which is `T_init_mf` along the line, or `T0r`.
+- z_v is the **along-line** distance.
+
+**Lines** (`FaceRemoval.H:13–25`):
+- μ = n·e\* (R0); a sheet or misaligned cell has μ = 1;
+- normal lengths become line lengths by /μ (R1);
+- the gather length is Lg = min(span + 1, Dmax + 2 + ceil(hcap/(μ dx))), with Dmax = floor(h_spall_max/(μ dx))
+  (`:338–347`).
+
+**The run along the line**: `run` counts contiguous solid cells within Lg (`:459–461`). It feeds:
+- the scan window, nprof = min(Dmax, run − 1) (`:509`);
+- the through test (`:561–563`);
+- R3: L_av and `RecedeAlongLine(o.run, …)` (`:609–638`).
+
+**The refusal and the guards:**
+- the face-list refusal of d > 0 is at `MMWSpalling.H:1017–1019`;
+- the parse guard (d > 0 needs sp_weibull, spall.enabled and local_thermoelastic) is at `:9341–9358`;
+- the dispatch is `Removal.H:539` (`if (surface_patch.face_list) RecedeAlongLines(…)`).
+
+**The witnesses:**
+- `cref_d`, `cref_n_vert`, `cref_n_lat`, `cref_n_clamp` and `cref_n_neg` are registered only under d > 0
+  (`MMWSpalling.H:933–944`);
+- they are reset in `BuildConstraintRefColumns` (`:2872`);
+- the Sp_field site adds its counts at `:6451–6464`, and the depth scan at `Removal.H:1759–1769`.
+
+**ν:**
+- `ElasticConstants()` (`Removal.H:30–43`): ν = E/(2μ) − 1, and conf = p·ν/(1−ν) only when p ≠ 0. Its consumers
+  are `FaceRemoval.H:442`, `Removal.H:688` and `:756`, and `MMWSpalling.H:6113` and `:6150`.
+- `grimsel.nu` is queried at `Grimsel.H:106` (default 0.30). The rock file sets `phase0.E` 30.0e9 and `mu`
+  11.538461538e9, which give ν = 0.30000000001733, and `grimsel.nu` = 0.30 (`rock_grimsel.inputs:29–35`, `:51`).
+- `RockLaw()` (`MMWSpalling.H:6747–6759`) is non-null iff `spall.stress_law = grimsel`.
+
+**Column-path references at d = 2.0 mm** (P2-2e, binary `9f5aa6de`, the old form):
+
+| Source | Leg | Result |
+|---|---|---|
+| `studies/p2_2e_cref/CHECKS.txt` | V_h150 | no firing in 200 s |
+| 〃 | V_h500 (T_f 1673.15) | fires at **960.03 K**, 8.813 s |
+| 〃 | M80 (h 1009, T_f 1683.15) | **915.8 / 890.4 / 888.1 K** at 2 / 1 / 0.5 mm |
+| 〃 | flat legs | neg share 0.0000 % |
+| `PROD.txt` | HD (Höser, Gaussian heat) | volume −59.9 %, firing T +27.2 K vs key 0 |
+| `D_REF.txt` | — | d = 2.0 mm from the [1.5, 2.0] mm Gotthard bracket |
+
+**The flat fixture F** (`unit/face_removal/input`: T_gas 1866 K, h 700, deterministic 8 µm flaw, 24 × 24 × 64 mm,
+20 s; P2-9 binary, on disk). First event-log row per column, any direction:
+
+| Leg | First firing on all columns | T_surf |
+|---|---|---|
+| `T00_1_k0` (column path) | 2.440 s, all 576 columns | 846.122 K |
+| `T00_1_k1` (face list) | 2.440 s, all 576 columns | 845.995 K |
+| `T00_2_k0` / `T00_2_k1` | 2.648 s | 846.110 / 845.884 K |
+| `TL35_1` | — | median 845.79 K |
+
+**P2-13** (`validation/kant/grimsel_calibration/RESULTS.txt`):
+- CAL (h 500): 850.43 K (p10 830.69, p90 882.00, n 576);
+- CAL_h2000: 852.98 K;
+- CAL_p27 / CAL_p48: 823.95 / 812.00 K.
+
+**Data:**
+- the onset is flat with flux over 0.2–2.7 MW/m² (Wilkinson 1993; ROADMAP note "ONSET vs STEADY-STATE");
+- Kant's measured minimum flux is 0.3–0.5 MW/m² (`MODEL_CARD.md` §10).
+
+### Goal
+
+1. **One interpolation, two callers** (SR 14). Factor `CrefTAtDepth`'s arithmetic (`MMWSpalling.H:2943–2954`) into a
+   static helper taking a profile accessor g(m), nuse, D [m], the cell size [m] and the two counters.
+   - `CrefTAtDepth` keeps its abort and delegates to the helper, so the column path is bit-identical (row a7).
+2. **The face-list reference** (`FaceRemoval.H`). Under d > 0:
+   - In `sigma_at_depth`, T0_z = helper(g(m) = the line's **live** T (`Gl[m·NF]`), nuse = run_ref,
+     D = z_v + d/L.mu, dx).
+   - run_ref is the contiguous solid run over the **extended** gather. The gather length becomes
+     max(Lg, floor((h_spall_max + d)/(μ dx)) + 2), capped at span + 1.
+   - ⚠ `run` (the scan window, the through test, R3's L_av and `RecedeAlongLine`) is still counted over the d = 0
+     length Lg, so the flake and the removal read exactly the cells they read before.
+   - At d = 0 nothing changes: same gather length, and `T0_at_d`.
+   - Sheets and misaligned cells keep μ = 1.
+3. **Remove the refusal** at `MMWSpalling.H:1017–1019`; the parse guard stays.
+4. **Witnesses under the face list** (columns already registered under d > 0):
+   - `cref_n_vert` counts reference reads on floor-class lines (dir 5); `cref_n_lat` counts them on wall- and
+     roof-class lines; `cref_n_clamp` and `cref_n_neg` (T_z < T0_z) count across all lines;
+   - each is reduced by hand and added after the line loop;
+   - under `surface_patch.face_list = 1` the Sp_field site (`:6456`) **does not add** to them. Its diagnostic
+     field keeps its column reference.
+5. **The logged reference**: under d > 0 only, append one event-log column `T_cref` [K]: the line's reference at
+   z_v = 0 (along-line distance d/μ). The header is unchanged at d = 0.
+6. **One ν** (DR-1): when `RockLaw()` is non-null, `ElasticConstants()` takes ν from `phases[0].grimsel.nu`;
+   otherwise E/(2μ) − 1 as today. Update the comment in `rock_grimsel.inputs`: `phase0.E`/`mu` are inert under the
+   law. No value changes.
+7. **Extend `unit/constraint_ref_lock`** to read `FaceRemoval.H` too. New clauses, each with a mutation control
+   that turns it RED, plus a `--pre` run on `src_pre/` where the new clauses FAIL:
+   - C7: the face-list site's d > 0 reference is the helper at (z_v + d/μ), in metres;
+   - C8: the helper is the only copy of that arithmetic (both callers use it);
+   - C9: R3 and the scan take the run over Lg, not the extended gather;
+   - C10: no refusal names `constraint_depth`;
+   - C11: the Sp_field site does not add counts under the face list;
+   - C12: ν comes from the law under `RockLaw()`.
+   - Update the docstring's site census (the face list is a fourth site).
+8. **New quick unit `tests/MMWSpalling/unit/face_cref/test`** on fixture F (reusing `unit/face_removal/input` and
+   its `make_input.py` for TL35's seeds). It runs the CROSS (F2_k0, F2_k1), TILT (T35_0, T35_2, F0_k1, F164_k1) and
+   NEG (N2_0, N2_2) legs and scores rows b1, b3, b4 and b5 itself. Target under 4 min on `-np 4`. It joins the kept
+   unit set.
+9. **Study `tests/MMWSpalling/studies/p2_14a_cref_face/`**:
+   - `src_pre/` (the three headers before editing) and `bin_pre/` (a copy of `bin/mmwspalling-3d-g++` before the
+     build; its sha256 must start `0a96a095ad30f45e`);
+   - `run.py` (legs, argv and binary hash per leg, `check_shared` on every CAL-deck leg with its declared
+     `--allow`) and `reduce.py` (every row) writing `RESULTS.txt`;
+   - `chain.sh`, which stops at the first failed gate.
+10. **Docs:**
+    - `MODEL_CARD.md`: §1 item 2's refusal list; §6 row 17; §10's "minimum flux" and "constraint depth" rows; §12;
+    - the step's completion notes.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | claim | site | guard / unit |
+|---|---|---|---|
+| L1 | the key reaches `sp_cref_d` once, default 0 | `MMWSpalling.H:9337` | the parse guard `:9341–9358` passes on F and CAL (sp_weibull, spall.enabled 1, local_thermoelastic) |
+| L2 | the face list runs on these decks | `Removal.H:539`; lines exist iff `fl_ready && !fl_faces.empty()` (`FaceRemoval.H` ~331); the list is built under `fl_on` (`MMWSpalling.H:1874`) | `surface_patch.face_list = 1` (model form; F's argv) |
+| L3 | ⚠ **conjunction**: the new reference is read only where the scan runs | `FaceRemoval.H` ~547: `std::isfinite(a_f) && a_f > 0` | F: a0 8 µm on every line; CAL: Weibull draw > 0 |
+| L4 | the units across the read | D = z_v [m] + d [m]/μ [–]; mf = D/dx [–] − 0.5; T_z and T0_z [K]; K_I against `ScanKIcPa` [Pa√m] (unchanged) | the key is in **metres**, never cells |
+| L5 | the extended cells are gathered and reduced like the rest | the owner-written gather + ReduceRealSum (`FaceRemoval.H:368–420`) | row b2 (decomposition) |
+| L6 | ν from the law reaches all five consumers | `ElasticConstants()` only; consumers listed in Sources | `RockLaw()` non-null ⇔ `spall.stress_law = grimsel` |
+| L7 | the d > 0 witnesses exist under the face list | registered under `sp_cref_d > 0` (`:937–944`), whatever `face_list` is | b3 |
+
+### Legs (exact argv tokens; P2-13's recorded argv where named)
+
+**Fixture F**: `tests/MMWSpalling/unit/face_removal/input`, plus one of three mesh token sets:
+- B1 = `'amr.n_cell=24 24 64' timestep=0.008 amr.max_grid_size=16 amr.plot_int=125`
+- B2 = `'amr.n_cell=12 12 32' timestep=0.008 amr.max_grid_size=8 amr.plot_int=125`
+- B05 = `'amr.n_cell=48 48 128' timestep=0.004 amr.max_grid_size=32 amr.plot_int=250`
+
+D2 = `spallation.sp.constraint_depth=0.002`.
+
+| leg | binary | tokens | stop (s) |
+|---|---|---|---|
+| F0_k0 / F0_k1 | pre and new | B1 `surface_patch.face_list=0` / `=1` | 20 |
+| F2_k0 | pre and new | B1 `surface_patch.face_list=0` D2 | 20 |
+| F2_k1 | new; pre must abort | B1 `surface_patch.face_list=1` D2 | 20 |
+| F2_k1_np1 / F2_k1_g8 | new | F2_k1 on `-np 1` / with `amr.max_grid_size=8` | 20 |
+| F164_k1 | new | B1 `surface_patch.face_list=1 spallation.sp.constraint_depth=0.0016383041` (= 2 mm × cos 35°) | 20 |
+| T35_0 / T35_2 | new | `unit/face_removal/output/TL35_1/argv.sh` tokens (B1, face_list=1, its `spall.seed_void`) / + D2 | 20 |
+| N2_0 / N2_2 | new | B2 `surface_patch.face_list=1 surface_patch.h_expr=150.0 stop_time=200.0` / + D2 | 200 |
+| M2_k1 / M05_k1 | new | B2 / B05 `surface_patch.face_list=1` D2 | 20 |
+
+**CAL deck**: `validation/kant/grimsel_calibration/input`. Every leg runs `check_shared --allow
+spallation.sp.constraint_depth`; CAL_p27_mu also allows `microstructure.phase0.mu`.
+
+| leg | binary | tokens | stop (s) |
+|---|---|---|---|
+| CAL, CAL_det, CAL_h2000, CAL_2mm, CAL_p27, CAL_p48, HOS_R | new | P2-13's `legs/<leg>/argv.sh`, `plot_file` re-pointed | P2-13's |
+| CAL_p27_mu | pre and new | CAL_p27 + `microstructure.phase0.mu=12.0e9` (ν = 0.25 by E/(2μ) − 1) | 60 |
+| C0_h150 / C2_h150 | new | `surface_patch.h_expr=150.0 stop_time=200.0` / + D2 | 200 |
+| C2_h500 | new | D2 | 60 |
+| C0_h1000 / C2_h1000 | new | `surface_patch.h_expr=1000.0 timestep=0.004 stop_time=30.0` / + D2 | 30 |
+| C2_h2000 | new | `surface_patch.h_expr=2000.0 timestep=0.004 stop_time=20.0` D2 | 20 |
+| HOS_d2 | new | HOS_R + D2 | 15 |
+
+**The statistic** S_top (SR 19): per column, the first event-log row with `dir = 5` and `ts_fb = 0`; its `T_surf`.
+- Report n, median, p10 and p90.
+- F is deterministic, so every column is equal; report the spread.
+- On T35 only interior columns count: 4 ≤ col_i, col_j ≤ 19.
+- Onset flux q = h·(T_flame − median), as in P2-13 c4.
+- Volume V(f) = Σ(1 − f)·V_cell from the last plotfile. Report it only as a ratio of two legs, so no ×4 (SR 3).
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | `unit/constraint_ref_lock` on the edited source; `--pre src_pre/` | every clause PASS; every mutation control RED; the full revert RED; C7–C12 FAIL on `src_pre` | **gate** | the face list's reference, R3's run or ν is not what Goal 1–6 say; stop before any run |
+| a1 | 1 | zero compute: the Sources numbers re-read from disk (P2-13 RESULTS, P2-2e CHECKS/PROD, F's `T00_*`/`TL35_1` logs) | each to the printed digit | report | the reducer reads a log differently from the references |
+| a2 | 2 | tree sweep vs `p2_12r` and `p2_11b`; controls `d2aa` 26, `d2t` 863 | 0 of 2639 | **gate** | the edit moved a key-off output |
+| a3 | 2 | every kept unit vs `grimsel_calibration/UNIT_p2_13` | same rc and identical verdict lines, except `constraint_ref_lock` (its added clauses, all PASS); `face_cref` PASS | **gate** | a test moved, or the new unit fails |
+| a4 | 2 | CAL, CAL_det, CAL_h2000, CAL_2mm, HOS_R vs P2-13's legs | event log, jet profile and plotfiles byte-identical; thermo identical on non-timer columns | **gate** | the gather extension or ν moved a d = 0 run |
+| a5 | 2 | CAL_p27, CAL_p48 vs P2-13's | same rows (time, col_i, col_j, k, dir, n_voided, h_line); every float column within 1e-9 relative | **gate** | ν by value was not the law's to that precision; stop and report the first differing row |
+| a6 | 2 | CAL_p27_mu vs CAL_p27 | **new**: event logs byte-identical; **pre**: S_top median differs by ≥ 3 K | **gate** | new: `phase0.mu` still reaches confinement under the law (DR-1 not done); pre: the control cannot see ν |
+| a7 | 2 | F2_k0 on pre vs new | event log and plotfiles byte-identical | **gate** | the shared helper changed the column path's arithmetic |
+| a8 | 2 | F2_k1 on pre | rc ≠ 0 and the log names `spallation.sp.constraint_depth`; on new rc 0 | **gate** | the leg does not test what it claims |
+| b1 | 3 | **CROSS-PATH**, F2_k0 vs F2_k1 (new) | every column first-fires at the same step (± 1); \|ΔS_top\| ≤ \|ΔS_top(F0_k0, F0_k1)\| + 0.5 K; and S_top(F2_k1) − S_top(F0_k1) ≥ 20 K | **gate** | the face list's reference is not the column path's (wrong cells, side, field, or never read); nothing below is attributable |
+| b2 | 3 | F2_k1 vs F2_k1_np1 vs F2_k1_g8 | event logs byte-identical | **gate** | the extended gather is not reduced (rank-local reads, SR 16) |
+| b3 | 3 | witnesses on F2_k1 and F0_k1 | F2_k1: `cref_n_vert` > 0 on every thermo row after the first list; `cref_n_lat` and `cref_n_clamp` = 0; `cref_n_neg` ≤ 1e-4 of reads (count reported: a post-removal remap may bend the profile); every row has 293.15 < `T_cref` < `T_surf`. F0_k1: no `cref_*` thermo column and no `T_cref` | **gate** | the counters or the logged reference do not mean what they say (two-sided with c3's walls) |
+| b4 | 3 | **MINIMUM FLUX**: N2_0 and N2_2 | N2_0 fires on every column within 200 s; N2_2 never fires | **gate** | inert on the face list (N2_2 fires) or an uninformative control (N2_0 silent) |
+| b5 | 3 | **THE NORMAL LENGTH** on the tilt. Δ(d) = S_top(T35_d) − S_top(F_d); W = S_top(F164_k1) − S_top(F2_k1) | \|Δ(2) − Δ(0)\| < W/2, with W ≥ 10 K (if W < 10 K: report "not discriminating", not a fail) | **gate** | the along-line read is not d/μ (missing or inverted) |
+| c1 | 4 | **FLUX SERIES** on the CAL deck: S_top median, p10, p90 and n for C0_h150, CAL (h 500), C0_h1000, CAL_h2000 (d 0) and C2_h150, C2_h500, C2_h1000, C2_h2000 (d 2); q at onset; ΔS_top from h 500 to h 2000 at d 0 and at d 2 | report | report | P1 below; the size of the flux dependence d = 2 mm puts into the production form |
+| c2 | 4 | **MESH** at d 2: S_top of M2_k1 / F2_k1 / M05_k1 | report the spread | report | P2; the reference's resolution at d = 1 cell |
+| c3 | 4 | **DRILLING**, HOS_d2 vs HOS_R at 15 s: rc 0; `ledger_err_solid` ≤ 5e-3; `cref_n_lat` > 0; neg and clamp shares of reads; V(f) ratio; all-firing T_surf median by dir | report | report | P3; walls read the reference (the other half of b3) |
+| c4 | 4 | **ISOTROPY**, HOS_d2 vs HOS_R: V(f) per 30° sector of the quadrant ÷ that sector's cell count | report max/min against HOS_R's | report | a grid-aligned artefact of the line reads |
+| e1 | 5 | **verdict** | — | **verdict** | states whether the port is faithful (a0, b1, b2, b5), the d = 2 mm flux trend in the production form against data with no trend (c1), and what item 3's re-fit must use |
+
+### Pre-registered predictions
+
+- **P0 (a, b rows):** all identities hold. b1: F2's onset 885–925 K (column-path M80 at 1 mm, 890.4 K), at the same
+  step on both paths; |ΔS_top| ≤ 0.3 K. b4: N2_0 fires at 80–160 s; N2_2 never fires. b5: W = +15 to +40 K, and
+  Δ(2) − Δ(0) within ±5 K.
+- **P1 (c1):**
+  - d 0: every h within 845–858 K (flat, as P2-13).
+  - d 2:
+    - h 150 never fires;
+    - h 500 at 950–1010 K (column V_h500: 960.03 K). If it never fires, the minimum flux sits above Kant's deck
+      flux — a finding;
+    - h 1000 at 890–930 K;
+    - h 2000 at 868–900 K.
+  - ⇒ d = 2 mm makes the onset fall by ≥ 50 K from h 500 to h 2000, against data that show none (Wilkinson flat over
+    0.2–2.7 MW/m²). Above 967 K (Kant's top) is outside every Grimsel measurement.
+- **P2 (c2):** 2 mm reads 15–35 K above 1 mm; 0.5 mm within 5 K of 1 mm (column M80: +25.4 / −2.3 K).
+- **P3 (c3):** V(f) −15 to −45 %; all-firing median +15 to +40 K (column HD under the Gaussian: −59.9 % / +27.2 K;
+  P2-7 c5 under Goldstein: −27 %); neg ≤ 0.01 % of reads.
+- **Refuting evidence on disk:** none. Every d > 0 run so far is on the column path; the face list refused the key.
+
+### What would make this inert — witness each
+
+| failure mode | witness |
+|---|---|
+| the reference reads `T_init_mf`, or d never reaches the face list | b1's ≥ 20 K shift |
+| the extended cells are rank-local | b2 |
+| /μ missing or inverted | b5 |
+| R3 or the scan read the extended run | a0 C9 (source); a4 (d = 0 bytes) |
+| the counters mix the Sp_field site's | a0 C11; b3 (`cref_n_lat` = 0 on the flat floor) |
+| ν still has two sources | a6 |
+
+### Guardrails
+
+- d stays 0 in `model_form_flame.inputs`; every d > 0 leg declares the override. 2.0 mm is P2-2e's value and is
+  **not re-fitted**.
+- The flake rule, R3, the scan window, the fallback and the through test are unchanged; only the reference reads
+  further along the line.
+- No other refusal is lifted (feet, beam, vapour, melt, AMR, `surface_normal`); those are later slices.
+- P2-13's legs and every study are read, never rewritten. `bin_pre/` is used only for rows a6, a7 and a8.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_14a_cref_face
+# before editing: src_pre/ (MMWSpalling.H, Removal.H, FaceRemoval.H) and bin_pre/ (sha256 0a96a095ad30f45e...)
+# ord 1: a0 on the edited source (+ --pre $S/src_pre), a1 offline
+$PY tests/MMWSpalling/unit/constraint_ref_lock/test && $PY tests/MMWSpalling/unit/constraint_ref_lock/test --pre $S/src_pre
+# build (CLAUDE.md), touch the headers first if any was restored with cp -p
+# ord 2: tree (studies/p2_12_retire_path/restore/chain_restore.sh pattern: guarded_post_all_par.sh p2_14a, then
+#        tree_compare.py p2_14a p2_12r p2_11b d2aa d2t), units (P2-10 units harness vs UNIT_p2_13), a4-a8
+# ord 3-4: the unit face_cref, then the legs; reduce.py > $S/RESULTS.txt
+caffeinate -dis bash $S/chain.sh
+```
+
+### Claude completion notes
+
+**Files.**
+- **Source:**
+  - `src/Integrator/MMWSpalling.H`: `CrefInterp`, the one copy, with `CrefTAtDepth` delegating to it; the d > 0
+    refusal removed; the Sp_field site adds no counts under the face list.
+  - `src/Integrator/MMWSpalling/FaceRemoval.H`: `FrLine::Lr`, the extended gather; `run_ref`; the d > 0 reference;
+    the line counters; the `T_cref` column under d > 0.
+  - `src/Integrator/MMWSpalling/Removal.H`: `ElasticConstants` takes ν from `law->nu` under `RockLaw()`.
+- **Tests:**
+  - `unit/constraint_ref_lock/test`: clauses P14-C7 to P14-C12, seven mutations, a full revert, `--pre` on three headers.
+  - `unit/face_cref/test`: new.
+  - `unit/lateral_flux_lock/test`: the Grimsel-mention clause declares the one ν read (user, option 1).
+  - `validation/shared/rock_grimsel.inputs`: comment only.
+  - `tree_sweep_0922/witness/WHICH_TESTS.md`: + one row.
+- **Docs:** `docs/project/MODEL_CARD.md` §1 item 2, §6 rows 3 and 17, §10 (two rows), §12 items 2 and 7.
+- **Study:** `studies/p2_14a_cref_face/` (`src_pre/`, `bin_pre/` 0a96a095…, `run.py`, `reduce.py`, `chain.sh`,
+  `chain_resume*.sh`, `RESULTS.txt`, `A0/A1/A3/GATE_tree/GATES_a4_a8/B.txt`, `legs/` 5.3 GB).
+- **Binary** `23439654f1f9d82e…`; its warning set is identical to P2-12r's.
+
+| # | measured | result | output |
+|---|---|---|---|
+| a0 | 16 clauses GREEN; 13 mutation controls RED (7 new); the full P2-14a revert turns every P14 clause RED; on `src_pre` 6/6 P14 clauses RED | PASS | `A0.txt` |
+| a1 | 26 numbers re-read (P2-13 ×7, P2-2e ×9, F ×10), every one to the printed digit | reproduced | `A1.txt` |
+| a2 | 0 of 2639 vs p2_12r and vs p2_11b; d2aa 26, d2t 863 | PASS | `GATE_tree.txt` |
+| a3 | every kept unit: same rc and verdict lines. `constraint_ref_lock` (added clauses) all ok; `face_cref` (new) PASS; `lateral_flux_lock`: the full log differs in exactly the declared ν clause, which reads ok. ⚠ First scoring FAILED, see takeaways | PASS (after the user's option 1) | `A3.txt`, `A3.first.txt` |
+| a4 | CAL, CAL_det, CAL_h2000, CAL_2mm, HOS_R vs P2-13: event log, jet profile, all plotfiles (28–98 files) byte-identical; thermo identical on 77 or 87 non-timer columns | PASS | `GATES_a4_a8.txt` |
+| a5 | CAL_p27 / CAL_p48: integer columns exact; worst float relative difference 1.67e-11 / 2.88e-11 | PASS | 〃 |
+| a6 | new: CAL_p27_mu event log byte-identical to CAL_p27. Pre: +4.12 K (828.07 vs 823.95 K) | PASS | 〃 |
+| a7 | F2_k0, pre vs new: event log and 294 plotfile files identical (also F0_k0 and F0_k1 at d = 0) | PASS | 〃 |
+| a8 | F2_k1 on pre: rc 6, the abort names the key; on new: rc 0 | PASS | 〃 |
+| b1 | 576/576 columns at the same step (max \|dt\| 1 step); S_top 922.75 vs 922.36 K, \|Δ\| 0.39 ≤ 0.13 + 0.5; d shifts the face list +76.76 K | PASS | `B.txt`, `unit/face_cref` |
+| b2 | F2_k1 on np 4, np 1 and max_grid_size 8: event logs byte-identical; `cref_*` thermo columns identical | PASS | 〃 |
+| b3 | F2_k1: `cref_n_vert` > 0 on all 2,498 rows after the first list (2.08e8 reads); lat, clamp, neg all 0; T_cref 503–535 K, every row 293.15 < T_cref < T_surf. F0_k1: no cref column and no T_cref | PASS | 〃 |
+| b4 | N2_0 fires on 144/144 columns at 64.1 s; N2_2 has 0 firings in 200 s | PASS | 〃 |
+| b5 | Δ(0) −0.44 K, Δ(2) −9.59 K; \|ΔΔ\| 9.14 < W/2 = 9.60 (W +19.20 K) | PASS (narrow; see takeaways) | 〃 |
+| c1 | d 0: 847.74 / 850.43 / 851.40 / 852.98 K at h 150 / 500 / 1000 / 2000 (+2.55 K from h 500 to h 2000). d 2: h 150 never fires; then **1001.43 / 918.32 / 879.45 K (−121.98 K)**. Onset flux at d 2: 0.34 / 0.75 / 1.59 MW/m² | report | `RESULTS.txt` |
+| c2 | d 2 on F: 2 / 1 / 0.5 mm read 944.51 / 922.75 / 916.79 K (+21.76 / −5.96 K) | report | 〃 |
+| c3 | HOS_d2 vs HOS_R at 15 s: rc 0; ledger 1.3e-15; lat reads 1.19e6 (> 0); clamp 0 %, neg 0.328 %; **V(f) −26.9 %**; all-firing median 917.44 vs 853.74 K (+63.7 K); by direction (median, n): side faces dir 0 919.2 K (66) and dir 2 918.5 K (70), top face dir 5 917.3 K (3,352) | report | 〃 |
+| c4 | sector max/min 1.4399 (HOS_R) vs 1.4432 (HOS_d2); the 30–60° deficit is the same in both | report | 〃 |
+| e1 | **The port is faithful** (a0, b1, b2, b5). **d = 2 mm puts a −122 K onset-vs-flux trend into the production form** against flat data, and 1001 K at Kant's deck flux exceeds every Grimsel onset. Item 3's re-fit must score the minimum flux and the flatness together. d stays 0 in production | verdict | `RESULTS.txt` (end) |
+
+**Predictions.**
+- P0: b1 onset (922.75 inside 885–925) held; b1 \|ΔS_top\| ≤ 0.3 missed (0.39); b4 N2_0 at 80–160 s missed (64 s);
+  b4 N2_2 silent held; b5 W held; b5 ±5 K missed (−9.14).
+- P1: held on every row, including the fall of ≥ 50 K (−122 K).
+- P2: +21.8 held; 0.5 mm within 5 K missed (−5.96).
+- P3: V(f) held; firing temperature +15 to +40 missed (+63.7); neg ≤ 0.01 % missed (0.33 %).
+
+### Implementation takeaways
+
+- ⚠⚠ **Goal 6 collided with `lateral_flux_lock`.** Its clause allowed Removal.H to name the law only as the three
+  entry-point pointers, and `law->nu` is a raw property read. The planner listed only `constraint_ref_lock` as a test
+  that would change. **The user chose (2026-11-02) to declare it**: the clause now allows exactly one
+  `const Numeric::Material::Grimsel *law = RockLaw();` in `ElasticConstants`, whose only use is `law->nu`, and nothing
+  else. A planted `law->E_0` turns it RED (`lfl_control/CONTROL.txt`). The alternative, an accessor in another file, would
+  have passed the text while dodging the intent.
+- ⚠ **The packet's "reduce by hand" for the line counters would have been ×4 on `-np 4`.** Every rank evaluates
+  every line from the same reduced gather, so the counts are added once and not summed across ranks. b2 checks the
+  `cref_*` columns across rank counts.
+- **The a3 comparator needed two declared normalisations.**
+  - `face_heat`'s abort lines quote `MMWSpalling.H:<line>`, and the edit moved them by +17. Line numbers are masked
+    in both runs.
+  - R10's verdict filter ignores lower-case `ok` clause lines, so a changed `ok` clause is invisible to it.
+    `lateral_flux_lock` is therefore compared on the full log, where exactly one line may differ.
+- ⚠ **b5 is narrow, and only half explained.** On the 35° staircase, F3 gives per-cell μ = 0.73–0.86, not
+  cos 35° = 0.819. A vertical line reads d/μ, which is a normal depth of d·cos35/μ in tilted isotherms. That explains
+  T35_2's 20 K column spread (prediction vs measurement correlate at 0.85) but **not its median**: predicted
+  924.0 K, measured 913.2 K.
+  - The other ~11 K is a geometry effect at d > 0 that is absent at d = 0 (Δ(0) −0.44 K).
+  - A plausible reading, not checked: step corners heated on two faces carry a steeper skin, so they have more drive
+    at the same T_surf.
+  - Any normal-length rule on a staircase inherits F3's normal noise, multiplied by dS/dd ≈ 53 K/mm at d = 2 mm.
+- **c1 is the finding for item 3.** On Grimsel in the production form, d = 2 mm brackets the minimum flux between
+  0.12 MW/m² (no firing) and 0.34 MW/m² (fires), the low edge of Kant's 0.3–0.5. But the onset at Kant's deck flux
+  is 1001 K, above every Grimsel measurement (≤ 967 K), and it falls 122 K over ×4.7 in flux where the data are flat.
+  Any re-fit must score both constraints at once. P2-2e fitted d on standoffs (Gotthard, column path) and never
+  saw the flatness.
+- **c3's negative-drive share is 0.33 % on drilling** (0 on the flat floor). Wall and roof lines after a remap can
+  read a reference hotter than the sample. It is reported, not barred; it is the "interior peak" case MODEL_CARD §12
+  item 11 flags for MMW.
+- **c4: the face-list reads add no anisotropy** (1.440 → 1.443). The 30–60° sector deficit is in both runs and
+  predates this step.
+- The new log column `T_cref` and the `cref_*` thermo columns exist only under d > 0, so every d = 0 output is
+  unchanged (a2, a4).
+- `legs/` is 5.3 GB, mostly plotfiles; the user decides what to commit.
+
+### Review findings
+
+Re-derived independently: the **tree manifest** with my own comparator; **a4, a6, a7 and b2** by my
+own `cmp` and `thermo` column compares; **a6's pre-control S_top** from the event log with my own
+reducer; and the **b1 / b5 / c1 arithmetic**. Binary `23439654f1f9d82e` as recorded.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | every clause PASS, every mutation RED, C7–C12 RED on `src_pre` | 16 GREEN, 13 mutations RED, 6/6 RED on pre | not re-run; ⚠ this row — not b5 — is what actually carries the /μ claim (DR-1) | `A0.txt` | PASS (gate) |
+| a1 | each to the printed digit | 26 numbers | not re-derived (a zero-compute re-read of already-accepted records) | `A1.txt` | report |
+| a2 | 0 of 2639; 26/863 | PASS | **0 of 2639** vs `p2_12r`, `p2_11b` **and** `p2_10_c2`; controls **26 / 863** | own manifest diff | **PASS (gate)** |
+| a3 | same rc and verdict lines; `face_cref` PASS | PASS after the user's option 1 | not re-run; ⚠ a declared relaxation and a comparator blind spot — DR-5, DR-6 | `A3.txt`, `A3.first.txt` | PASS (gate) |
+| a4 | d = 0 legs byte-identical to P2-13's | PASS | **CAL's event log byte-identical to P2-13's over 10,805 lines** — the d = 0 run did not move | own `cmp` | **PASS (gate)** |
+| a5 | integers exact, floats ≤ 1e-9 rel | 1.67e−11 / 2.88e−11 | not re-derived; the margin is ~3 orders inside the bar | `GATES_a4_a8.txt` | PASS (gate) |
+| a6 | new: byte-identical; pre: ≥ 3 K | PASS | ✅ **two-sided and exact.** NEW: `CAL_p27_mu` ≡ `CAL_p27` **byte-identical over 11,535 lines** ⇒ `phase0.mu` no longer reaches confinement. PRE: differs, my own S_top **828.07 vs 823.95 = +4.12 K** ⇒ the control really could see ν before | own `cmp` + own reducer | **PASS (gate)** — **DR-2** |
+| a7 | F2_k0 pre vs new byte-identical | PASS | **event log byte-identical, 5,761 lines** ⇒ the shared `CrefInterp` did not change the column path | own `cmp` | **PASS (gate)** |
+| a8 | pre aborts naming the key; new rc 0 | PASS | not re-run | `GATES_a4_a8.txt` | PASS (gate) |
+| b1 | same step ±1; \|ΔS_top\| ≤ 0.63 K; d-shift ≥ 20 K | PASS | **\|Δ\| = 0.39 K** against a bar of **0.13 + 0.5 = 0.63** ⇒ inside (the **prediction** of ≤ 0.3 missed, correctly flagged); the d-shift is **+76.75 K** against a 20 K bar | own arithmetic | **PASS (gate)** |
+| b2 | event logs byte-identical | PASS | **F2_k1 ≡ F2_k1_np1 ≡ F2_k1_g8**, event logs byte-identical (5,761 lines), **and all five `cref_*` thermo columns identical over 2,500 rows** ⇒ the extended gather is reduced, not rank-local (SR 16) | own `cmp` + column compare | **PASS (gate)** |
+| b3 | vert > 0; lat/clamp 0; neg ≤ 1e−4; 293.15 < T_cref < T_surf | PASS | not re-derived; the five columns exist and are rank-invariant (b2) | `B.txt` | PASS (gate) |
+| b4 | N2_0 fires everywhere; N2_2 never | PASS | not re-run; prediction 80–160 s missed (64.1 s), bar met | `B.txt` | PASS (gate) |
+| b5 | \|ΔΔ\| < W/2, W ≥ 10 K | PASS (narrow) | **\|ΔΔ\| 9.14 < W/2 = 9.60** — a margin of **0.46 K, 4.8 % of the bar** — and **\|ΔΔ\|/W = 0.476**, almost exactly halfway between "correct" (0) and "missing" (W) | own arithmetic | **PASS, but see DR-1** |
+| c1 | report | −121.98 K | **−121.98 K** from h 500 to h 2000 over a flux ratio of **4.68**, against **+2.55 K** at d = 0; h 150 never fires; and **1001.43 K at Kant's deck flux is 34 K above every Grimsel measurement (≤ 967 K)** | own arithmetic | report — **the finding** |
+| c2 | report | +21.76 / −5.96 K | not re-derived; prediction "0.5 mm within 5 K" missed at −5.96 | `RESULTS.txt` | report |
+| c3 | report | V(f) −26.9 %, +63.7 K | HOS_d2 has **31.1 % fewer firing rows** than HOS_R (3,488 vs 5,066), consistent with V(f) −26.9 % | own count | report |
+| c4 | report | 1.4399 → 1.4432 | not re-derived; the sector ratio moves 0.2 % ⇒ the line reads add no anisotropy | `RESULTS.txt` | report |
+| e1 | verdict | port faithful; d stays 0 | both halves reproduce | `RESULTS.txt` | **delivered** |
+
+#### Diff review
+
+| # | hunk | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | ⚠⚠ **b5 sits at the midpoint of its own discriminator** | **12** | b5 asks whether the along-line read is d/μ: missing ⇒ ΔΔ ≈ W, correct ⇒ ΔΔ ≈ 0. Measured **ΔΔ/W = 0.476**, passing a `< W/2` bar by **0.46 K (4.8 %)**. So **b5 cannot distinguish a correct /μ with an 11 K unexplained geometry effect from a half-applied one.** The implementer says as much ("narrow, and only half explained": predicted median 924.0 K, measured 913.2 K, with dS/dd ≈ 53 K/mm amplifying F3's per-cell μ spread of 0.73–0.86 against cos 35° = 0.819). ⇒ **the /μ claim rests on a0's C7** — a source clause with a mutation control — **not on b5.** Retire b5 as a gate or redesign it on a fixture without staircase normals | **risk** |
+| DR-2 | ✅ **one ν, proven two-sidedly** (my P2-13 DR-1) | 1, 10 | `ElasticConstants()` now takes ν from `law->nu` under `RockLaw()`. The test is the right shape: a **positive control on the old binary** (ν 0.25 via `phase0.mu` moved S_top +4.12 K) and **byte-identity on the new one** over 11,535 lines. A one-line fix with a two-sided witness | **ok** |
+| DR-3 | `CrefInterp`, one copy, two callers | 1 | ✅ SR 14 satisfied by construction and witnessed by **a7's byte-identity on the column path** — the strongest possible evidence that factoring the arithmetic changed nothing. C8 locks the single-copy property | **ok** |
+| DR-4 | ⚠ **the packet's "reduce by hand" would have over-counted ×4** | 8 | caught at implement time: every rank evaluates every line from the **same reduced gather**, so the line counters must be added once, not summed across ranks. Verified by b2 — all five `cref_*` columns identical across np 1 / np 4 / mgs 8. A packet instruction corrected by reading the code | **ok** |
+| DR-5 | `lateral_flux_lock`'s Grimsel clause relaxed | **9** | ⚠ a3 **failed first scoring**: the clause allowed `Removal.H` to name the law only as three entry-point pointers, and `law->nu` is a raw property read. The user authorised declaring it (option 1): exactly one `RockLaw()` in `ElasticConstants` whose only use is `law->nu`, with a planted `law->E_0` turning it RED. ✅ And the implementer explicitly rejected the alternative — an accessor in another file — as "passing the text while dodging the intent". Class 9 satisfied | **ok** |
+| DR-6 | ⚠ **a3's comparator is blind to changed `ok` clauses** | 2, 10 | R10's verdict filter ignores lower-case `ok` lines, so a **changed clause inside a lock is invisible to it** — which is why `lateral_flux_lock` had to be compared on the full log instead. That blind spot is in the comparator used by a3 across several steps, not just this one; a lock whose clause silently changes would read "identical verdict lines" | **risk** |
+| DR-7 | the gather extension vs `run` | 2 | ✅ the load-bearing separation: the gather grows to `max(Lg, floor((h_spall_max+d)/(μ dx))+2)` for the **reference**, while `run` — the scan window, the through test, R3's L_av and `RecedeAlongLine` — stays over `Lg`, so the flake and the removal read exactly the cells they read before. Locked by C9 and witnessed by a4's d = 0 byte-identity | **ok** |
+| DR-8 | the Sp_field site adds no counts under the face list | 4 | ✅ locked by C11 and witnessed by b3's `cref_n_lat` = 0 on a flat floor — the two-sided partner being c3's 1.19e6 lateral reads on drilling. Without both, "lat = 0" could mean "never read" | **ok** |
+| DR-9 | `T_cref` and the `cref_*` columns under d > 0 only | 7 | ✅ proven by a2 (0/2639) and a4 (d = 0 outputs byte-identical): no d = 0 header moves. Same discipline as P2-9's `fl_*` and P2-11b's path outputs | **ok** |
+| DR-10 | ⚠⚠ **c1 is the finding, and it is two-edged** | 12 | d = 2 mm does bracket Kant's minimum flux correctly (**0.12 MW/m² no fire, 0.34 fires**, against his measured 0.3–0.5) — but it buys that with a **−121.98 K onset trend over ×4.68 flux** where d = 0 gives **+2.55 K** and Wilkinson measures none over 0.2–2.7 MW/m², and it puts the onset at **1001 K**, 34 K above every Grimsel measurement. P2-2e fitted d on Gotthard standoffs on the column path and never saw the flatness. **Item 3's re-fit must score the minimum flux and the flatness together** | **risk** (named, correctly) |
+| DR-11 | `cref_n_neg` 0 flat, **0.33 %** drilling | 12 | ⚠ the "interior temperature peak" case: wall and roof lines after a remap read a reference hotter than the sample. Reported not barred, and pointed at MODEL_CARD §12 item 11 for MMW. The prediction was ≤ 0.01 %, so it is **33× the expectation** — small in absolute terms, but it is the limit case the whole d construction has as a known pathology | **risk** |
+| DR-12 | ⚠ **six predictions missed, every gate passed** | 12 | b1 \|Δ\| 0.39 (pred ≤ 0.3), b4 64.1 s (80–160), b5 −9.14 (±5), c2 −5.96 (≤5), c3 +63.7 K (+15…+40), c3 neg 0.33 % (≤0.01). All **magnitudes under-predicted**, the same direction as P2-11b's six misses. The bars were set wider than the predictions, which is why the gates held — worth noting that the *predictions*, not the bars, are the part that keeps being optimistic | **nit** |
+| DR-13 | `unit/face_cref` as a new kept test | 10 | ✅ it scores b1, b3, b4 and b5 itself and joins the kept set, so the cross-path property is re-checked by every later step rather than living in this study's records. The F legs on the new binary live in its `output/`, the `_pre` legs in the study — a clean split | **ok** |
+| DR-14 | `WHICH_TESTS.md` + one row | 11 | ✅ the new unit was added to the tree-gate documentation — the pointer my P2-10 DR-15 and P2-11 DR-10 chased is now being maintained | **ok** |
+| DR-15 | `legs/` 5.3 GB | — | ⚠ fifth step running with a multi-GB study directory and the commit decision deferred. A retention rule is overdue | **nit** |
+
+**Verdict: accepted.** All thirteen gating rows reproduce, and no diff-review row is tagged `bug`.
+The one relaxation (DR-5) is declared, user-authorised and carries a planted control.
+
+**Carry forward:**
+1. **DR-1 — retire b5 as a gate.** It landed at **0.476 W**, the midpoint of the signature it was
+   built to split, and passed by 4.8 %. The /μ read is backed by a0's C7 and its mutation control;
+   b5 adds no independent evidence on a staircase fixture, because F3's normal noise times
+   dS/dd ≈ 53 K/mm is the same size as the effect. A flat-but-rotated fixture would discriminate.
+2. **DR-10 — item 3's re-fit is now specified by data on both sides:** the minimum flux wants d
+   large, the onset flatness wants d small, and 2.0 mm satisfies the first while breaking the
+   second by 122 K. Score both in the same ladder.
+3. **DR-6 — fix the a3 comparator**, or stop describing it as "identical verdict lines": it cannot
+   see a changed lower-case `ok` clause, which is exactly how a weakened lock would look.
+4. **DR-11** — the 0.33 % negative-drive share on drilling is 33× its prediction and is the known
+   pathology of the d form; carry it into the MMW discussion rather than leaving it in c3.
+
+**Checked and clean:** no `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE` change; source
+confined to `src/Integrator/MMWSpalling*`; d stays 0 in `model_form_flame.inputs` and every d > 0
+leg declares the override; 2.0 mm is **not** re-fitted; no other refusal lifted; P2-13's legs read
+and never rewritten. SR 3 (V(f) reported only as a ratio), SR 8, SR 14 (one interpolation, two
+callers), SR 16 (b2) and SR 19 (S_top) honoured. **No unquotable number is quoted:** b5 is labelled
+narrow and half-explained, c1's 1001 K is stated as outside every Grimsel measurement rather than as
+a result, c3's negative share is reported not barred, and d = 2 mm is explicitly kept out of
+production.
+
+## P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both of Kant's rocks under a conductivity-only transfer (2026-11-02, ACCEPTED by review 2026-11-03; archived 2026-11-03)
+
+**Status:** ACCEPTED by review; all nine gating rows reproduce. Binary `191f4c708e8f5d87`. Study
+`tests/MMWSpalling/studies/p2_15_buckle/` (`RESULTS.txt`, `SPAN.txt`, `A0–A6/B.txt`). `spall.buckle_span` (face list
+only, default 0) is in the code and in `model_form_flame.inputs` at 0.
+
+### What the step established
+- **B is faithful and a pure withdrawal:** where it passes, every first firing is identical in time and T_surf to the
+  span-off twin; bk/ℓ_eff is constant to 0.05 % over 2 / 1 / 0.5 mm (metres, not cells).
+- **On a uniform flat deck B is all-or-nothing:** the span-off twin's EARLIEST firing decides the span-on deck (10 of
+  10 pairs).
+- **Gotthard bracket → span 10.998 mm.** The earliest-firing window is [9.92, 12.01) mm.
+- **Bethel (the independent check) is silent at 150 mm, where Kant saw spalling.** KB150 and KG140 reach their
+  earliest firing with the same layer depth (bk 1.090 vs 1.092), so a rock-independent span under a conductivity-only
+  transfer is refuted; the admissible window is 0.022 mm. Advisor (2026-11-03): Bethel does not discriminate B from d
+  (any profile-only rule with one strength treats the two cases alike); d's retirement rests on its form.
+- **Grimsel CAL deck:** h 150 and h 500 blocked, h 1000 and 2000 unchanged. The span blocks the deck the onset was
+  calibrated on (DR-1).
+- **Höser 15 s:** inert (V(f) 1.0003; 0.12 % of evaluations blocked, walls).
+
+### Carry-forwards (review)
+1. **DR-1:** reconcile the span with the onset deck (re-anchor the deck at a flux the span admits, or derive the span
+   on the production rock).
+2. **DR-4:** derive spans from the EARLIEST firing; the 11.0 mm landed inside Gotthard's window by luck.
+3. **DR-2:** archive the Bethel refutation as the step's real result, with its 0.2 % width and the named lever (the
+   strength side; Bethel's onset ~30 K below).
+4. **DR-5:** name the μ: twice a line-geometry length entered a physical comparison without its /μ.
+5. **DR-12:** ℓ_eff ran 25–30 % thinner than the packet's kΔT/q estimates (k_eff ≈ 1.6–2.1 W/m·K on Grimsel).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-03)
+
+Active step:
+- **P2-15 — Two conditions for a spall: a buckling thickness condition beside the onset criterion (quick legs)**
+  (`ACTIVE_STEP.md`; 2026-11-02; chosen by the user over P2-14b).
+  - Archived: P2-14a ACCEPTED (`ARCHIVE_DONE.md` *"P2-14a"*): the port is faithful; d = 2 mm puts a −122 K onset-vs-flux
+    trend into the production form where the data are flat. d stays 0.
+  - The literature study (`Claude_markdowns/reports/Granite spallation and melt physics.md`) EXCLUDED a single fixed
+    reference depth as the thickness condition and SUPPORTED a separate buckling condition (Preston / Dey & Kranz /
+    Rauenzahn & Tester Eqs. 15–16): a flake of thickness x = c_f·ℓ fires only if C_L·x ≤ L_span, C_L = π/√(6(1+ν)ε_th).
+  - One default-off key `spall.buckle_span` [m], face list ONLY (the column path refuses it); the span DERIVED on
+    Kant's Gotthard bracket (130 | 140 mm, Gotthard thermal) and tested INDEPENDENTLY on his Bethel bracket (150 | 160,
+    Bethel thermal), plus the flux series and Höser 15 s (report only). No beam leg: the layer depth under an interior
+    peak is the MMW slice's job. The onset criterion and the constraint-depth key are untouched. ⚠ span and `c_f` are ONE
+    calibration (the bracket fixes L_span/c_f).
+
+### The P2-15 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-15 — Two conditions for a spall: a buckling thickness condition beside the onset criterion (quick legs)
+
+Status: **accepted by review** (2026-11-03; all nine gating rows reproduce). ⚠⚠ The derived span blocks the deck the onset was calibrated on (DR-1), and the Bethel refutation is a 0.20 %-wide question (DR-2). Was: completed (implemented 2026-11-02).
+
+### Context
+
+P2-14a ported the constraint depth d onto the face list and found that d = 2 mm puts a −122 K onset-vs-flux trend
+into the production form where the data are flat (`ARCHIVE_DONE.md` *"P2-14a"*, c1). The literature study of the same
+day (`Claude_markdowns/reports/Granite spallation and melt physics.md`, hypothesis table) excluded a single fixed
+reference depth as the thickness condition and supported two separate conditions: the onset criterion, local in
+temperature and flat with flux, plus a buckling-type condition on the heated-layer thickness. The user chose this step
+over P2-14b on 2026-11-02.
+
+This step adds the second condition as **one default-off key**, `spall.buckle_span` [m], **on the face list only**
+(the column path refuses it: retire, don't stack), and tests it on quick legs: fixture F, the Kant calibration deck
+under Kant 2016's standoffs with his two rocks' thermal properties, the flux series on the production rock, and Höser
+15 s. **The onset criterion is untouched** (d = 0, the banked constants). The constraint-depth key is **not deleted**
+here; retiring it is a later slice once this step is accepted. **No beam leg**: the heated-layer depth is undefined
+under an interior temperature peak (the reconstruction reads "flat"), and defining it is the MMW slice's job; a leg
+that can only come out empty is not run.
+
+**What is calibration and what is test, declared up front.** The span is **derived** on Kant's Gotthard bracket (spalls
+at 130 mm, silent at 140) with Gotthard's conductivity and density, exactly as P2-2e's selection ladder did; it is
+written to `SPAN.txt` before any span-on leg runs. On the same bracket the onset is flat and 150/160 mm are silent **by
+construction**, so those rows check the code, not the physics. The **independent check is Bethel**: Kant's Bethel
+spalled at 150 mm and not at 160; with the span fixed on Gotthard and only Bethel's conductivity and density changed,
+the model must place Bethel's threshold between those two standoffs. ⚠ The span and the flake factor `c_f` are **one
+calibration** (the bracket fixes only L_span / c_f; standing rule 1 class): a later change to the flake rule (plan
+item 4) re-opens the span. ⚠ On drilling decks the heat is scaled by the uptake factor, so their heated layers are
+several times thicker than Kant's nominal flux would give; the Höser row is a report and **no drilling verdict follows
+from this step** until the heat-input step.
+
+### Sources (opened 2026-11-02)
+
+**The thickness condition** (Rauenzahn & Tester 1989, Eqs. 15–16, after Preston and Dey & Kranz; via the literature
+note `research_notes/Granite spallation and melt physics/minimum_flux_and_flakes.md` Q4 — ⚠ Dey & Kranz's own text was
+not obtainable):
+- a compressed flake of thickness x buckles over a span L only if L / x ≥ C_L, with C_L = π / √(6 (1 + ν) ε_th), ε_th
+  the thermal strain of the flake relative to the substrate;
+- the flake thickness follows the heated layer: in this code x = c_f · ℓ (`spall.flake_c_f` 0.4, `model_form_flame.inputs`),
+  ℓ = `ell_eff` from the two-cell reconstruction (`SurfaceRecon`, `MMWSpalling.H:1389–1402`) or `ell_q = k(T_s − T0)/q_net`
+  on a fallback line (`FaceRemoval.H:523`, stored in `o.rec.ell_eff` at `:531`);
+- ⇒ a line may fire only if C_L · x ≤ L_span. Logged ratio **bk = C_L · x / L_span** [–]; blocked iff NOT (bk ≤ 1), so a
+  non-finite x is blocked (on these flame legs a "flat" reconstruction is the fallback's `ell_q`, finite).
+
+**ε_th and ν from the one rock law:** ε_th = `strain_of(T_s) − strain_of(T0_s)` (`Grimsel.H:222`, takes K, converts to
+°C inside, dimensionless; the single strain table every stress site uses); ν = `ElasticConstants().nu` (`Removal.H:31`,
+the law's ν under `RockLaw()`, P2-14a). Without a law: ε_th = β (T_s − T0_s) with `ElasticConstants().beta`. At the
+banked onset 843.76 K, ε_th ≈ 7.6e-3 and ν 0.30 ⇒ **C_L ≈ 12.9** (offline, Table 3 trapezoid, `Grimsel.H:77–85`).
+
+**The sites:**
+- face list: the per-line loop `FaceRemoval.H:470–603`; `o.fire` set at `:579`; the through rule `:587–590`; R3 chooses
+  the removed thickness `h = o.through ? L_av : o.rec.h_f` at `:669` with L_av = Σ f·dx over the run (`:659`); the CSV
+  header/rows `:836–876` (`T_cref` appended under d > 0 is the pattern); the line witnesses are **added once, not
+  rank-summed** (`:466–469`, P2-14a DR-4); `FrClass(L.dir)` gives floor/wall/roof;
+- the column path: `Removal.H:1571` is where its scan fires; **this step adds nothing there**;
+- parse: `spall.flake_c_f` / `spall.flake_h_max` at `MMWSpalling.H:5704–5724`; `spallation.sp.constraint_depth` at
+  `:9354` (queried BEFORE the sp_weibull early return, its comment says why); the face-list requirement aborts at
+  `:974–1019` (the refusal pattern); witness registration under a key at `:933–944`; `spall.surface_T` at `:5657–5674`
+  (`sp_surface_T_apply`).
+
+**Kant 2016** (`franck_material/MinimalBoundaryConditions.pdf`; `validation/hoeser/kant_2016_minimal_bc_notes.md`):
+Table 1: Gotthard spalls at SOD 50–130 mm, not at 140–160; **Bethel to 150, not 160**. Table 4 (h_fl W/m²K, θ_f °C):
+50: 766, 1450 · 80: 1009, 1410 · 110: 873, 1360 · 130: 747, 1250 · 150: 633, 1100. ⚠ No 140/160 row: **linear in
+SOD** between/after 130 and 150 ⇒ 140: 690, 1175 · 160: 576, 1025 (`studies/law_form/RATIO.txt`). Table 2: Gotthard
+λ 3.27 W/m·K, ρ 2594; Bethel λ 2.62, ρ 2566. Onset ≈ 600 °C both rocks, 620 → 570 °C over 50 → 130 mm (Fig. 11);
+exposure time of the no-spall tests not stated (traces ≥ 90 s). Both rocks "variable grain sizes, feldspar up to ca. 4 mm".
+
+**The thermal transfer keys** (P2-2e's `run_cref.py:57–59`, used on its selection ladder): the law's λ(T) shape is
+rescaled to the rock's 25 °C value, λ(25) = `lambda.a`/(25 + 563): Gotthard `microstructure.phase0.grimsel.lambda.a=1923.5
+microstructure.phase0.grimsel.rho=2594`; **Bethel `…lambda.a=1540.6 …rho=2566`** (2.62 × 588). The strength side
+(onset, flaw, relief) stays Grimsel's on every leg, as P2-2e declared.
+
+**Frozen results this step reads (never rewrites):**
+- P2-14a `studies/p2_14a_cref_face/legs/{CAL,C0_h150,C0_h1000,CAL_h2000,HOS_R}` (`run_removal_events.csv`, span off,
+  d 0): S_top 850.43 / 847.74 / 851.40 / 852.98 K; HOS_R all-firing median 853.74 K, V(f) reference, sector ratio 1.4399;
+- P2-13 `validation/kant/grimsel_calibration/legs/{CAL,HOS_R}` (byte-identity references) and `UNIT_p2_13`;
+- `unit/face_cref/output/F0_k1` (P2-14a binary 23439654f1f9d82e): 576 columns, first firing 2.440 s, 845.995 K;
+  `N2_0` (h 150, B2): 144/144 at 64.1 s, 843.37 K;
+- spall sizes in the literature (`minimum_flux_and_flakes.md` Q6): lab torch spalls "10–20 grains in diameter, one to two
+  grains thick" (Rauenzahn & Tester); field spalls aspect ratio 4–10, widths to several cm (Walsh & Lomov 2013).
+
+**Offline estimates for the predictions** (ℓ ≈ k_hot·ΔT_s/q with k_hot ≈ 0.65·λ(25), ΔT_s ≈ 555 K, C_L 12.9, c_f 0.4):
+
+| leg | rock thermal | q at onset [MW/m²] | ℓ [mm] | C_L·c_f·ℓ [cm] |
+|---|---|---|---|---|
+| F (h 700, T_gas 1866) | Grimsel | 0.71 | 1.7 | 0.88 |
+| N (h 150, T_gas 1866) | Grimsel | 0.15 | 7.9 | 4.1 |
+| CAL h 150 / 500 / 1000 / 2000 | Grimsel | 0.12 / 0.41 / 0.83 / 1.65 | 9.9 / 3.0 / 1.5 / 0.74 | 5.1 / 1.5 / 0.76 / 0.38 |
+| KG130 / KG140 | Gotthard (k_hot 2.1) | 0.50 / 0.42 | 2.3 / 2.8 | 1.20 / 1.45 |
+| KB150 / KB160 | Bethel (k_hot 1.7) | 0.33 / 0.26 | 2.8 / 3.6 | 1.47 / 1.86 |
+
+⇒ the derived span is expected in **1.20–1.45 cm**; **KB150 sits at the upper edge of that window** (1.47), so the Bethel
+check is sharp: it is expected partly blocked, and a fully silent KB150 refutes a rock-independent span under this
+transfer. The unit uses a fixed **0.015 m** so F fires (bk ≈ 0.6) and N is blocked (bk ≈ 2.7) with margin either way.
+
+### Goal
+
+1. **One helper, one caller.** `static Set::Scalar BuckleRatio(const Numeric::Material::Grimsel* law, Set::Scalar nu,
+   Set::Scalar beta, Set::Scalar T_s, Set::Scalar T0_s, Set::Scalar x, Set::Scalar L_span)` in `FaceRemoval.H`: ε_th as
+   in Sources; returns C_L·x/L_span; returns +∞ when x is non-finite or ε_th ≤ 0. The caller decides `blocked = !(bk <= 1.0)`.
+2. **The key.** `spall.buckle_span`, metres, default 0.0 = off. Parsed once, before the sp_weibull early return (the
+   `constraint_depth` pattern, `:9354`), finite and ≥ 0. Under > 0: require `spall.surface_T = reconstructed` and
+   `surface_patch.face_list = 1`, aborting with both key names otherwise (the refusal pattern at `:974–1019`; the
+   column path never reads the key).
+3. **Face-list site.** After `o.fire`/`o.through` are set (`:579–590`): if span > 0 and `o.fire`, x = `o.through ? L_av :
+   sp_flake_c_f * ℓ` with ℓ = `o.rec.ell_eff` (finite and > 0) else +∞; L_av = Σ `Gl[d*NF+4]`·dx over `o.run`, computed
+   at the decision site from the same fractions R3 reads at `:659`; T_s = `o.rec.T_surf`, T0_s = `T0_at_d(0)`; if blocked
+   set `o.fire = 0`, `o.through = 0`, `o.bk_blocked = 1`. Store `o.bk` for the log.
+4. **Witnesses**, registered ONLY under span > 0 (`:933–944` pattern, after the cref block): `bk_span` (echo, m),
+   `bk_n_eval`, `bk_n_block`, `bk_n_inf` (blocked with non-finite x), `bk_n_block_floor/wall/roof` (by `FrClass`),
+   `bk_max_pass` (largest bk among lines that fired). Reset per step at the start of the face-list evaluation (where
+   `fr_*` are reset, `:320`); added once after the line loop (not rank-summed).
+5. **Logged ratio.** Under span > 0 only, append `,bk` to the face-list CSV header and `<< "," << o.bk` to every row
+   (`:845`/`:874`, after `T_cref`'s conditional). Header unchanged at span = 0.
+6. **Lock `unit/buckle_lock/test`** (the `constraint_ref_lock` pattern: clauses, mutation controls, `--pre src_pre/`):
+   B1 key parsed once, default 0, before the early return; B2 one `BuckleRatio` definition and exactly one call site,
+   in `FaceRemoval.H`, and no read of the key in `Removal.H`; B3 the refusal under `face_list = 0` names the key;
+   B4 x uses L_av under `through`; B5 the site blocks on `!(bk <= 1)` and zeroes both `fire` and `through`; B6 witnesses
+   and the CSV column exist only under span > 0; B7 ν and ε_th come from `ElasticConstants().nu` and `strain_of` under
+   a law (no second ν, no `alpha_of(T)*dT`). Each clause has a mutation that turns it RED.
+7. **Unit `tests/MMWSpalling/unit/face_buckle/test`** on fixture F (`unit/face_removal/input`; the `face_cref` template):
+   legs F_S, F_S_k0 (must abort), N_0, N_S, M2_S, M05_S (Legs); scores b1–b4. Target under 8 min on `-np 4`. Joins the
+   kept set (`tree_sweep_0922/witness/WHICH_TESTS.md` + one row).
+8. **Study `tests/MMWSpalling/studies/p2_15_buckle/`**: `src_pre/` (the two headers `MMWSpalling.H`, `FaceRemoval.H`),
+   `bin_pre/` (sha256 of the P2-14a binary starts `23439654f1f9d82e`), `run.py` (legs, argv, binary hash per leg,
+   `check_shared` on every CAL-deck leg with its declared `--allow` list), `derive_span.py` (a5 → `SPAN.txt`, with
+   the Table 3 trapezoid re-typed from `Grimsel.H:77–85` and self-checked to C_L = 12.9 ± 0.1 at 843.76 K — ⚠
+   `studies/p2_2_props/grimsel.py` has no strain accessor), `reduce.py` (every row → `RESULTS.txt`), `chain.sh` (stops
+   at the first failed gate; runs `derive_span.py` before any `*_S` CAL leg).
+9. **Docs:** `MODEL_CARD.md` §6 (new row: `spall.buckle_span`, class DERIVED-ON-KANT (Gotthard thermal), default off,
+   coupled to `c_f`), §10 "minimum flux" row, §12 items 1 and 6; the step's completion notes.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | claim | site | guard / unit |
+|---|---|---|---|
+| L1 | the key is read once, default 0, on every deck (incl. `damage_law`) | the parse site of Goal 2 | lock B1; `check_shared --allow spall.buckle_span` passes on CAL |
+| L2 | ⚠ **conjunction**: the site runs only where the scan fired | `o.fire` from `DepthScanH` (`:579`) or the through rule (`:590`), then Goal 3 | b3: `bk_n_eval` = rows + `bk_n_block` |
+| L3 | the key cannot be silently inert | `face_list = 0` with span > 0 aborts naming the key; `surface_T ≠ reconstructed` with span > 0 aborts | lock B3; F_S_k0 rc ≠ 0 and the log names `spall.buckle_span` |
+| L4 | units across the comparison | x [m] = c_f [–] · ℓ [m]; C_L [–] from ε_th [–] and ν [–]; L_span [m]; bk [–]; `strain_of` takes K | b4: bk at B1 vs B2 vs B05 agrees within the ℓ spread (a cell-count mistake reads ×2 / ×½) |
+| L5 | the through case | x = L_av [m] from the `:659` fractions | lock B4; HOS_S `fr_through` rows carry finite bk |
+| L6 | the span is derived, not typed, on the rock it belongs to | `derive_span.py` reads KG130_0/KG140_0 `ell_eff` and `T_surf` at first top firing; C_L from the re-typed Table 3 | a5 |
+| L7 | the transfer keys reach the law | `microstructure.phase0.grimsel.lambda.a` and `.rho` parsed at `Grimsel.H:100`/`:103`; `lambda(T)` at `:135` uses `lam_a` | a5 reports `thermo` conductivity-sensitive columns differ between KG130_0 and CAL-like h/T_f (any difference proves the read); `check_shared --allow` both keys |
+| L8 | no key-off output moves | registration and the CSV column under span > 0 only | a2, a4 |
+
+### Legs (exact argv tokens)
+
+**Fixture F**: `tests/MMWSpalling/unit/face_removal/input` + mesh tokens B1 = `'amr.n_cell=24 24 64' timestep=0.008
+amr.max_grid_size=16 amr.plot_int=125`, B2 = `'amr.n_cell=12 12 32' timestep=0.008 amr.max_grid_size=8 amr.plot_int=125`,
+B05 = `'amr.n_cell=48 48 128' timestep=0.004 amr.max_grid_size=32 amr.plot_int=250`. SU = `spall.buckle_span=0.015`.
+
+| leg | tokens | stop (s) |
+|---|---|---|
+| F_S | B1 `surface_patch.face_list=1` SU | 20 |
+| F_S_k0 (must abort) | B1 `surface_patch.face_list=0` SU | — |
+| N_0 / N_S | B2 `surface_patch.face_list=1 surface_patch.h_expr=150.0` / + SU | 200 |
+| M2_S / M05_S | B2 / B05 `surface_patch.face_list=1` SU | 20 |
+
+**CAL deck** `validation/kant/grimsel_calibration/input`. KT(sod) = `surface_patch.h_expr=<h> surface_patch.T_flame_expr=<θ_f+273.15>`
+from Sources (140/160 interpolated). GT = `microstructure.phase0.grimsel.lambda.a=1923.5 microstructure.phase0.grimsel.rho=2594`;
+BT = `microstructure.phase0.grimsel.lambda.a=1540.6 microstructure.phase0.grimsel.rho=2566`; SP = `spall.buckle_span=<SPAN.txt>`.
+`check_shared --allow` lists exactly the keys each leg adds (`spall.buckle_span`, the two `grimsel.*` keys).
+
+| leg | tokens | stop (s) |
+|---|---|---|
+| KG130_0 / KG140_0 | KT(sod) GT | 60 / 200 |
+| KG150_0 / KG160_0 (controls: must fire) | KT(sod) GT | 200 |
+| KG50_S / KG80_S / KG110_S / KG130_S | KT(sod) GT SP | 60 |
+| KG140_S / KG150_S / KG160_S | KT(sod) GT SP | 200 |
+| **KB150_S / KB160_S** (the independent check) | KT(sod) BT SP | 200 |
+| KB150_0 / KB160_0 (controls: must fire) | KT(sod) BT | 200 |
+| S_h150 | `surface_patch.h_expr=150.0 stop_time=200.0` SP | 200 |
+| S_h500 | SP | 60 |
+| S_h1000 | `surface_patch.h_expr=1000.0 timestep=0.004` SP | 30 |
+| S_h2000 | `surface_patch.h_expr=2000.0 timestep=0.004` SP | 20 |
+| HOS_S | P2-13 `legs/HOS_R/argv.sh` tokens + SP | 15 |
+
+**Statistics.** S_top (SR 19): per column the first event-log row with `dir = 5`, `ts_fb = 0`, its `T_surf`; median,
+p10, p90, n. Blocked fraction = Σ `bk_n_block` / Σ `bk_n_eval` over the run from the thermo rows (per-step values, SR
+7(i); `amr.thermo.plot_int` is 1 on CAL, 6 on HOS — on HOS read the fraction from the two sums, never from a sum of one
+column alone). "Fires on x % of columns" = columns with ≥ 1 top-face row ÷ 576 (CAL) within the leg's stop time. V(f) =
+Σ(1 − f)·V_cell from the last plotfile, reported only as a ratio (SR 3). Sector ratio as P2-14a c4.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | `unit/buckle_lock` on the edited source; `--pre src_pre/` | every clause PASS; every mutation RED; B1–B7 FAIL on `src_pre` | **gate** | the helper, the key, the site or the refusal is not what Goal 1–6 say; stop |
+| a1 | 1 | zero compute: ℓ_eff at first top firing (median, p10, p90) from P2-14a's CAL, C0_h150, C0_h1000, CAL_h2000 logs; the Sources estimates re-read | report ℓ and the implied bk at 0.012 and 0.015 m | report | the estimates in Sources are off; P2's numbers are re-stated before c2 runs |
+| a2 | 2 | tree sweep vs `p2_12r`, `p2_11b`; controls `d2aa` 26, `d2t` 863 | 0 of 2639 | **gate** | the key-off binary moved |
+| a3 | 2 | every kept unit vs `UNIT_p2_13`; `face_buckle` PASS; `buckle_lock` ok | same rc and verdict lines (full-log compare for the locks, P2-14a DR-6); new units PASS | **gate** | a test moved |
+| a4 | 2 | CAL, HOS_R (new binary) vs P2-13's; F0_k1 (new) vs `unit/face_cref/output/F0_k1` | event logs byte-identical; plotfiles identical | **gate** | span = 0 is not inert |
+| a5 | 2 | KG130_0, KG140_0: ℓ_eff medians at first top firing → L_lo = C_L·c_f·ℓ(130), L_hi = C_L·c_f·ℓ(140), L_span = √(L_lo·L_hi) → `SPAN.txt`; KG150_0/KG160_0/KB150_0/KB160_0 fire on ≥ 90 % of columns | L_lo < L_hi on medians; the four controls fire | **gate** | no span separates the Gotthard bracket on this deck (stop, report), or a control is silent so the later silence would be uninformative |
+| a6 | 2 | zero compute: L_span against the literature spall diameters (Sources) and against Kant's "feldspar up to 4 mm" grains | report L_span in grains (1–4 mm) and whether it lies inside 10–20 grains | report | the span is not a plausible flake width; weak evidence either way |
+| b1 | 3 | F_S vs F0_k1 (P2-14a output): every shared column of every row identical; N_S zero top firings in 200 s; N_0 fires on 144/144 | as stated | **gate** | A moved, or B is inert, or the control is silent |
+| b2 | 3 | F_S_k0 | rc ≠ 0 and the log names `spall.buckle_span` | **gate** | the key can be silently inert on the column path |
+| b3 | 3 | witnesses: F_S `bk_n_eval` = rows + `bk_n_block`, `bk_n_block` = 0, `bk_n_inf` = 0, 0.4 < `bk_max_pass` < 0.8; N_S `bk_n_block` = `bk_n_eval` > 0; F0_k1 has no `bk_*` thermo column and no `bk` CSV column | as stated | **gate** | the counters do not mean what they say |
+| b4 | 3 | M2_S / F_S / M05_S: median bk | spread ≤ 25 % of the median; S_top of each equals its d = 0 twin's (M2: 845.884 K; F: 845.995 K) | **gate** | bk is mesh-bound (cells, not metres) or A moved |
+| c1 | 4 | **GOTTHARD** (by construction, code check): KG50_S…KG160_S: S_top median, p10, p90; fired fraction; silent legs | report | report | P1 |
+| c1b | 4 | **BETHEL** (independent): KB150_S, KB160_S fired fractions and S_top | report | report | P1b: the span's transfer across rocks; this is the step's one validation row |
+| c2 | 4 | **FLUX SERIES**: S_h150/500/1000/2000 vs the span-off twins: S_top of columns firing in both; blocked fraction; bk median | report | report | P2 |
+| c3 | 4 | **DRILLING** (report only; no verdict): HOS_S vs HOS_R: rc 0, `ledger_err_solid` ≤ 5e-3; V(f) ratio; blocked fraction by class; S_top (dir 5) median; sector max/min | report | report | P3; read under the uptake caveat in Context |
+| e1 | 5 | verdict | — | **verdict** | whether B is faithful (a0, b1–b4), what Bethel says about a rock-independent span (c1b), the flux series' blocked map (c2), and whether d can be retired |
+
+### Pre-registered predictions
+
+- **P0 (a, b):** all identities hold. a5: L_lo ≈ 1.1–1.3 cm, L_hi ≈ 1.3–1.6 cm, L_span ≈ 0.012–0.014 m; the controls
+  KG150_0 / KG160_0 / KB150_0 / KB160_0 all fire (A alone fires at any flux). a6: L_span ≈ 3–14 grains. b3: `bk_max_pass`
+  on F ≈ 0.55–0.65. b4: bk spread ≤ 15 %.
+- **P1 (c1, by construction):** KG50–KG110 fire on ≥ 95 % of columns with S_top medians within ±10 K of each other and of
+  CAL's 850.43 K (the constraint depth gave +150 K over the same flux range); KG130_S 60–95 % fired, KG140_S 5–40 %
+  (the Weibull spread straddles a bracket set on medians); KG150_S ≤ 5 %, KG160_S 0 %.
+- **P1b (c1b, independent):** **KB160_S fires on ≤ 5 % of columns** (a clean prediction: ℓ well past the window);
+  **KB150_S fires on 30–70 %** (the offline estimate puts it at the window's upper edge). Readings: KB150_S ≥ 30 % and
+  KB160_S ≤ 5 % ⇒ the span transfers across Kant's rocks with only conductivity changed. KB150_S < 10 % ⇒ a
+  rock-independent span under this transfer is **refuted** (Kant's Bethel spalled at 150); the likeliest cause is the
+  strength side kept at Grimsel's while Bethel's onset is ~30 K lower — a finding for item 3. KB160_S > 20 % ⇒ the
+  condition is too weak on Bethel's thicker layer; same finding, opposite sign.
+- **P2 (c2):** S_h150 100 % blocked (bk ≈ 3–4); S_h500 0–40 % blocked (bk median 0.8–1.1); S_h1000 and S_h2000 0 %
+  blocked; S_top of columns firing in both runs **identical** to the span-off twins.
+- **P3 (c3, report):** V(f) ratio 0.80–1.00; floor blocked fraction < 5 %, wall/roof 10–60 % (inflated by the
+  uptake-scaled heat, Context); S_top (dir 5) median within 1 K of 853.74 K; sector ratio within 3 % of 1.4399;
+  `fr_through` rows carry finite bk.
+- **Refuting evidence on disk:** none for B; every span-on leg is new. The span-off twins and the four `_0` controls are
+  the controls.
+
+### What would make this inert — witness each
+
+| failure mode | witness |
+|---|---|
+| the key never reaches the site | b1 (N_S fires); b2 (the column path would otherwise hide it) |
+| x in cells, not metres | b4 (bk ×2 between B2 and B1) |
+| ε_th or ν from a second source | a0 B7 |
+| the through case blocked by ∞ | L5, c3 `fr_through` rows' bk |
+| the thermal transfer keys not read | L7 (KG130_0 thermo differs from a Grimsel-thermal run at the same h, T_f) |
+| the blocked share hides inside unchanged volume | c3 reports the fraction AND V(f) |
+| Bethel "passes" because the controls were silent anyway | a5's four `_0` controls |
+
+### Guardrails
+
+- `spall.buckle_span` stays **0** in `model_form_flame.inputs` and in every shared input; every span-on leg declares it.
+- The span used by every `*_S` leg is the one `derive_span.py` writes to `SPAN.txt` from KG130_0/KG140_0; it is not
+  typed, not rounded by hand, and not re-derived after a result is seen. The unit's 0.015 m is a fixture value, not a
+  rock value. It is **not** written into `rock_grimsel.inputs` this step.
+- `spallation.sp.constraint_depth` stays 0 and is not removed; no leg sets both keys. No code is added to `Removal.H`
+  beyond nothing: the column path refuses the key.
+- The onset criterion, the flake rule (`c_f`, the 1.5 mm cap), R3, the scan window and the through rule are unchanged;
+  the condition only withdraws a firing.
+- No refusal lifted (feet, beam on the face list, vapour, melt, AMR, `surface_normal`). P2-13, P2-14a and P2-2e legs
+  are read, never rewritten; `bin_pre/` is used only for `--pre` and a4.
+- `src_pre/` and `bin_pre/` are copied **before** the first edit; `legs/` plotfiles: keep only the last plotfile of each
+  leg (P2-14a DR-15); the event logs and `thermo.dat` are kept whole.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_15_buckle
+# before editing: cp -p MMWSpalling.H FaceRemoval.H -> $S/src_pre/; bin/mmwspalling-3d-g++ -> $S/bin_pre/ (sha256 23439654f1f9d82e…)
+# ord 1: a0 lock (+ --pre), a1 offline
+$PY tests/MMWSpalling/unit/buckle_lock/test && $PY tests/MMWSpalling/unit/buckle_lock/test --pre $S/src_pre
+$PY $S/reduce.py A1
+# build (CLAUDE.md), touch the headers first if any was restored with cp -p
+# ord 2: tree (guarded_post_all_par.sh p2_15; tree_compare.py p2_15 p2_12r p2_11b d2aa d2t), units (run.py UNITS vs
+#        UNIT_p2_13), a4 (CAL HOS_R F0_k1), a5 (KG130_0 KG140_0 KG150_0 KG160_0 KB150_0 KB160_0 -> derive_span.py -> SPAN.txt), a6
+# ord 3: unit face_buckle (b1-b4) | ord 4: KG*_S, KB*_S, S_h*, HOS_S -> reduce.py > $S/RESULTS.txt
+caffeinate -dis bash $S/chain.sh
+```
+
+### Claude completion notes
+
+**Files.**
+- **Source:**
+  - `src/Integrator/MMWSpalling.H`: `sp_buckle_span` and the `bk_*` members; the parse before the sp_weibull return;
+    the face_list and surface_T aborts; witness registration under the key.
+  - `src/Integrator/MMWSpalling/FaceRemoval.H`: `BuckleRatio`; the decision site after the through rule; the counters;
+    the `bk` CSV column under the key.
+  - `Removal.H` is untouched.
+- **Tests:** `unit/buckle_lock/test` (new); `unit/face_buckle/test` (new; b4 restated with the user, see takeaways).
+- **Inputs:** `validation/shared/model_form_flame.inputs` gains `spall.buckle_span = 0.0` (off).
+- **Docs:** `tree_sweep_0922/witness/WHICH_TESTS.md` (+1 row); `docs/project/MODEL_CARD.md` (§6 row 28, §10 minimum
+  flux, §12 items 1 and 6).
+- **Study:** `studies/p2_15_buckle/` (`src_pre/`, `bin_pre/` 23439654…, `ref_p2_14a/` with P2-14a's F0_k1 and N2_0,
+  `run.py`, `derive_span.py`, `reduce.py`, `chain.sh`, `chain_resume.sh`, `SPAN.txt`, `A0–A6/B.txt`, `RESULTS.txt`,
+  `legs/` 1.4 GB).
+- **Binary** `191f4c708e8f5d87…`; its warning set is identical to P2-14a's.
+
+| # | measured | result | output |
+|---|---|---|---|
+| a0 | B1–B7 GREEN; 7 mutations RED; full revert RED; all 7 RED on `src_pre` | PASS | `A0.txt` |
+| a1 | ℓ_eff at first top firing 7.33 / 2.48 / 1.34 / 0.73 mm at h 150 / 500 / 1000 / 2000 ⇒ C_L·c_f·ℓ 3.75 / 1.27 / 0.68 / 0.37 cm (packet estimate 5.1 / 1.5 / 0.76 / 0.38) | report | `A1.txt` |
+| a2 | 0 of 2639 vs p2_12r and vs p2_11b; d2aa 26, d2t 863 | PASS | `GATE_tree.txt` |
+| a3 | every kept unit vs UNIT_p2_14a: same rc and verdict lines (source line numbers masked, including the truncated tail form); both locks identical by full log; buckle_lock and face_buckle PASS. ⚠ First scoring FAILED on face_heat's truncated line digits only (`A3.first.txt`) | PASS | `A3.txt` |
+| a4 | CAL and HOS_R vs P2-13: event log, every plotfile, thermo identical (re-run after the model-form line was added: still identical); F0_k1 (re-run by a3) vs P2-14a's: event log and 294 plotfile files identical | PASS | `A4.txt` |
+| a5 | C_L self-check 12.897. KG130_0 ℓ 1.986 mm → L_lo 10.11 mm; KG140_0 ℓ 2.348 mm → L_hi 11.97 mm; **L_span 0.010998 m**. Controls KG150_0, KG160_0, KB150_0, KB160_0: 576/576 each | PASS | `A5.txt`, `SPAN.txt` |
+| a6 | 11.0 mm = 2.7–11 grains of 1–4 mm; overlaps the lab's 10–20 grains | report | `A6.txt` |
+| b1 | F_S vs F_0: 9,792 rows × 33 shared columns and 77 thermo columns identical; also vs P2-14a's F0_k1 (other binary). N_S 0 firings in 200 s; N_0 144/144 | PASS | `UNIT_p2_15/face_buckle.log`, `B.txt` |
+| b2 | F_S_k0 rc 6, the abort names `spall.buckle_span` | PASS | 〃 |
+| b3 | F_S: eval 9,792 = rows 9,792 + block 0; inf 0; bk_max_pass 0.567; every bk in (0, 1]. N_S: block = eval = 2.45e6. F_0: no `bk_*` / `bk` | PASS | 〃 |
+| b4 | S_top equals the d = 0 twin on all three meshes (845.884 / 845.995 / 845.537 K). **bk/ℓ_eff = 342.76 / 342.64 / 342.82 m⁻¹ (spread 0.05 %)**. Median bk spread 26.1 %, reported | PASS (restated bar, user) | 〃 |
+| c1 | KG50/80/110/130_S: 576/576 each, S_top 851.61 / 851.51 / 851.67 / 851.17 K (flat). KG140/150/160_S: 0/576. KG130_S blocks 99.9 % of later evaluations | report | `RESULTS.txt` |
+| c1b | **KB150_S 0/576** (Kant: spalls); KB160_S 0/576 (Kant: silent). Deck discriminant: the earliest-firing bk is 1.090 (KB150) vs 1.092 (KG140) ⇒ **both rocks fit only spans in [11.992, 12.010) mm** | report: **P1b refuted at the derived span** | 〃 |
+| c2 | h 150 and **h 500: 0/576 (100 % blocked)**; h 1000 / 2000: 576/576, 0 % blocked, **every column's first firing identical in time and T_surf** to P2-14a's span-off twins; bk median 0.670 / 0.413 | report | 〃 |
+| c3 | HOS_S vs HOS_R: rc 0; ledger 1.4e-15; **V(f) ratio 1.0003**; blocked 0.12 % (1 wall of 849 sampled evaluations); S_top 851.83 = 851.83 K; sector 1.4388 vs 1.4399; 0 through rows (L5 vacuous on this leg) | report | 〃 |
+| e1 | **B is faithful.** The flat deck is all-or-nothing. The Gotthard bracket holds by construction; **Bethel is silent at 150**, so a rock-independent span under the conductivity-only transfer is refuted, with only a 0.02 mm window left. On Grimsel, h 500 is blocked. d cannot be retired on this evidence; the span stays 0 in production | verdict | `RESULTS.txt` (end) |
+
+**Predictions.**
+- P0:
+  - L_span 12–14 mm missed (11.0);
+  - L_lo 1.1–1.3 cm missed (1.01); L_hi held (1.20);
+  - the controls held;
+  - grain count held;
+  - bk_max_pass 0.55–0.65 held (0.567);
+  - b4 ≤ 15 % missed (26.1 %).
+- P1:
+  - KG50–110 within ±10 K held;
+  - KG130_S 60–95 % missed (100 %); KG140_S 5–40 % missed (0 %);
+  - KG150/160 held.
+- P1b: KB160 held; **KB150 30–70 % missed (0 %): the refuted reading.**
+- P2: h 150 held; **h 500 0–40 % blocked missed (100 %)**; h 1000 / 2000 and identical S_top held.
+- P3:
+  - V(f) 0.80–1.00 just outside (1.0003);
+  - floor < 5 % held;
+  - wall/roof 10–60 % missed (≈ 0.1 %);
+  - S_top and sector held;
+  - the through-row check is vacuous (no through rows).
+
+### Implementation takeaways
+
+- ⚠⚠ **The flat calibration deck is all-or-nothing under the buckling condition.** A blocked firing leaves the field
+  untouched, so until the deck's earliest firing passes the floor stays flat and every skin keeps thickening (bk only
+  grows). The span-off twin's **earliest** firing therefore decides the span-on deck, 10 of 10 pairs. Consequences:
+  - fired fractions are 0 or 100 %, never partial (P1's 60–95 % / 5–40 % could not occur);
+  - the median of later first firings comes from a staircase history a blocked deck never has: neighbours' μ is
+    0.82–0.86 after the first removal. Read the medians that way.
+  - The packet's derivation rule (medians) still landed inside Gotthard's window [9.92, 12.01) mm; **a future
+    derivation should use the earliest firing, the deck's actual threshold.**
+- ⚠⚠ **Bethel vs Gotthard is a 0.2 % question, not a clean refutation.** Under the conductivity-only transfer, Bethel
+  at 150 mm and Gotthard at 140 mm sit at the same ratio (1.090 / 1.092), where Kant saw one spall and one stay
+  silent. The model's heated layers do not separate the two rocks. The strength side (onset ~30 K lower on Bethel)
+  is the untested lever.
+- **Packet correction: x is the NORMAL flake thickness, μ·c_f·ℓ_eff** (and μ·L_av on a through line). ℓ_eff is the
+  along-line length (R1), the same lesson as P2-14a's d/μ. Every gated and c1/c2 leg first fires on a flat floor
+  (μ = 1), so only the staircase history and HOS are affected.
+- **The `surface_T` abort can never be reached:** `removal_energy = flake` (required by the face list) already demands
+  `surface_T = reconstructed`. It is kept as a backstop; lock B3 covers the face-list abort.
+- **b4 restated with the user (2026-11-02).** The packet's "median bk spread ≤ 25 %" read 26.1 %. Its stated failure
+  meaning (cells, not metres) is refuted by bk/ℓ_eff being constant to 0.05 %. The spread is ℓ_eff's own mesh
+  dependence: on 2 mm the skin thickens more during steady recession (first firings alone spread 12 %).
+- **`spall.buckle_span = 0.0` was added to `model_form_flame.inputs`**, as the guardrail "stays 0 in the model form"
+  assumes. Without it, `check_shared --allow spall.buckle_span` fails (i) on every span-on leg: the key was not
+  shared. CAL and HOS_R were re-run after the edit and stayed byte-identical to P2-13.
+- **The a3 masking** now also covers the fixed-width tail some tests print (`…: 6 (operator())`, the last digit of a
+  source line).
+- **Harness facts:**
+  - The 200 s Kant span-off controls cut through the 64 mm block (up to 67 cells voided); they run to rc 0 and only
+    their first firings are read.
+  - KG140_0 took 2 h 19 min against 3 min for its siblings: a host stall during an otherwise identical run. No effect
+    on the outputs.
+  - Only the last plotfile is kept per leg, except CAL and HOS_R.
+- **The unit runs its own span-off twin `F_0`** (same binary) for b1. The cross-binary comparison with P2-14a's
+  F0_k1 is in `B.txt`.
+
+### Review findings
+
+Re-derived independently: the **tree manifest** with my own comparator; **a4's byte-identity** by my
+own `cmp`; **a5's geometric mean**; **c1b's admissible-span window**; **c2's withdraw-only property**
+by my own first-top-firing join against P2-14a's span-off twins; and the **blocked-deck arithmetic**
+from a1's measured ℓ_eff. Binary `191f4c708e8f5d87`.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | clauses PASS, mutations RED, B1–B7 RED on pre | PASS | not re-run; this row is what carries the helper/site/refusal claims | `A0.txt` | PASS (gate) |
+| a1 | report ℓ and bk | 7.33 / 2.48 / 1.34 / 0.73 mm | C_L·c_f·ℓ = **37.81 / 12.79 / 6.91 / 3.77 mm** at h 150 / 500 / 1000 / 2000 — my own arithmetic; the packet's estimates were 5.1 / 1.5 / 0.76 / 0.38 cm, so ℓ ran **25–30 % thinner** than estimated at every flux | own arithmetic | report |
+| a2 | 0 of 2639; 26/863 | PASS | **0 of 2639** vs `p2_14a`, `p2_12r` **and** `p2_11b`; controls **26 / 863** | own manifest diff | **PASS (gate)** |
+| a3 | same rc and verdict lines; new units PASS | PASS | not re-run; ⚠ first scoring failed on `face_heat`'s truncated line digits, masking extended — declared | `A3.txt`, `A3.first.txt` | PASS (gate) |
+| a4 | span = 0 inert | PASS | **CAL (10,805 lines) and HOS_R (5,067 lines) event logs byte-identical to P2-13's**, after the `model_form_flame.inputs` edit — so the shared-file change is verified inert too | own `cmp` | **PASS (gate)** |
+| a5 | L_lo < L_hi; four controls fire | L_span 0.010998 m | **√(10.11 × 11.97) = 11.0008 mm**, inside [L_lo, L_hi) ✓; C_L self-check 12.897 | own arithmetic | **PASS (gate)** — but DR-4 |
+| a6 | report | 2.7–11 grains | not re-derived; 11.0 mm overlaps the lab's 10–20 grains only at its bottom end | `A6.txt` | report |
+| b1 | F_S ≡ F_0; N_S silent; N_0 fires | PASS | not re-run; the stronger version is c2's identity, which I did verify | `B.txt` | PASS (gate) |
+| b2 | rc ≠ 0 naming the key | PASS | not re-run | `B.txt` | PASS (gate) |
+| b3 | eval = rows + block; 0.4 < bk_max_pass < 0.8 | PASS (0.567) | not re-derived | `B.txt` | PASS (gate) |
+| b4 | median bk spread ≤ 25 %; S_top = twin | **restated** (26.1 %) | ✅ the restatement is right: **bk/ℓ_eff = 342.76 / 342.64 / 342.82 m⁻¹, constant to 0.05 %** across 2 / 1 / 0.5 mm, which **refutes the bar's own failure meaning** ("cells, not metres"). The 26.1 % is ℓ_eff's mesh dependence | `B.txt` | PASS (restated, user) — DR-6 |
+| c1 | report | KG50–130 fire, 140/150/160 silent | not re-derived; flat S_top 851.17–851.67 K across SOD 50–130 ⇒ no flux trend, unlike d = 2 mm's −122 K | `RESULTS.txt` | report — by construction |
+| c1b | report | **P1b refuted** | ⚠⚠ **exact, and it is a 0.20 % question.** At span 10.998 mm, bk 1.090 (KB150) and 1.092 (KG140) ⇒ C_L·x = **11.988** and **12.010 mm**. A span must be **≥ 11.988** for KB150 to fire and **< 12.010** for KG140 to stay silent ⇒ a window **0.022 mm wide = 0.20 % of the span**. The derived 10.998 mm is below it, so KB150 is blocked where Kant spalled | own arithmetic | report — **DR-2** |
+| c2 | report | h 150 and 500 blocked; 1000/2000 unchanged | ⚠⚠ verified both halves myself: **S_h1000's 576 first top firings are identical in time AND T_surf to the span-off twin (576 of 576)**; **S_h500 and S_h150 fire 0 of 576** where the twins fire all 576 | own join vs `p2_14a/legs` | report — **DR-1, DR-3** |
+| c3 | report | V(f) 1.0003; blocked 0.12 % | not re-derived; the condition is ≈ inert on drilling, and the packet's own uptake caveat bars a verdict | `RESULTS.txt` | report |
+| e1 | verdict | B faithful; span stays 0 | both halves reproduce; ⚠ one consequence unstated — DR-1 | `RESULTS.txt` | **delivered** |
+
+#### Diff review
+
+| # | hunk | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | ⚠⚠ **the span blocks the deck the onset was calibrated on** | **12** | the span is derived on Kant's **Gotthard** SOD 130/140 (q ≈ 0.50 / 0.42 MW/m²) and comes out at 10.998 mm. On the **Grimsel** calibration deck at h 500 — q 0.41 MW/m², the very leg that set the banked onset (850.43 K, P2-13 c1) — my arithmetic from a1's measured ℓ gives **C_L·c_f·ℓ = 12.79 mm > 10.998**, and the leg fires **0 of 576** columns. ⇒ **the span and the onset level are mutually exclusive as derived**: with the span on, the deck the onset was calibrated on cannot fire. e1 says "On Grimsel, h 500 is blocked" without naming that it is the onset deck. This is the first thing the next packet must reconcile | **risk** |
+| DR-2 | ⚠⚠ **the Bethel refutation is exact, and correctly framed as narrow** | 12 | the admissible window is **0.022 mm = 0.20 % of the span**, so no rock-independent span satisfies both of Kant's rocks except by coincidence. ✅ The implementer does **not** overclaim: "a 0.2 % question, not a clean refutation", with the untested lever named (the strength side kept at Grimsel's while Bethel's onset is ~30 K lower). The step's one validation row returns a clean negative with its own confidence stated | **ok** |
+| DR-3 | ✅ **the condition is a pure withdrawal, proven not asserted** | 2 | the guardrail says "the condition only withdraws a firing". I verified it the strongest way available: on S_h1000 **all 576** columns' first top firings are identical to the span-off twin in **both time and T_surf**. So B never perturbs a firing that passes — it only removes ones that do not | **ok** |
+| DR-4 | ⚠⚠ **the flat deck is all-or-nothing, which voided the packet's prediction structure** | **12** | a blocked firing leaves the field untouched, so the skin keeps thickening and bk only grows ⇒ fired fractions are **0 or 100 %, never partial**, decided by the span-off twin's **earliest** firing (10 of 10 pairs). ⇒ P1's "KG130_S 60–95 %, KG140_S 5–40 %" and P1b's "KB150_S 30–70 %" **could not occur by construction**, and the packet's derivation rule (medians of *later* firings) does not measure the deck's threshold. The derived 11.0 mm lands inside Gotthard's earliest-firing window [9.92, 12.01) **by luck**. A future derivation must use the earliest firing | **risk** |
+| DR-5 | ⚠ **the packet's x was wrong: x is μ·c_f·ℓ_eff** | 3 | ℓ_eff is the **along-line** length (R1), so the normal flake thickness carries a μ. Corrected in code. Inert on every gated and c1/c2 row (first firings are on a flat floor, μ = 1) and small on HOS. ⚠ **Second packet running** with this exact slip — P2-14a's d/μ was the same lesson. A line-geometry quantity entering a physical comparison needs its μ named at the planning stage | **risk** |
+| DR-6 | b4's bar restated | **9** | ⚠ the packet's "median bk spread ≤ 25 %" read **26.1 %**. The user restated it, and the substitution is the right one: **bk/ℓ_eff constant to 0.05 %** across three meshes refutes the bar's stated failure meaning, so the bar was measuring ℓ_eff's mesh dependence rather than a units error. Declared with the discriminating quantity named — class 9 satisfied. ⚠ **Seventh consecutive packet** with a bar that measured the wrong thing | **ok** (declared) |
+| DR-7 | `BuckleRatio`, one definition, one call site | 1 | ✅ locked by B2, with "no read of the key in `Removal.H`" as the companion clause — the column path refuses the key rather than ignoring it, which is the retire-don't-stack rule | **ok** |
+| DR-8 | the `+∞` convention | 13 | ✅ `blocked = !(bk <= 1.0)` makes a non-finite x block rather than pass — the right polarity for a safety condition, and `bk_n_inf` counts it separately (0 on every leg) | **ok** |
+| DR-9 | ⚠ the `surface_T` abort is unreachable | 7 | `removal_energy = flake` (required by the face list) already demands `surface_T = reconstructed`, so one of Goal 2's two aborts is dead code. Declared and kept as a backstop; B3 covers the reachable one. An unreachable guard is not harmful, but it should not be counted as a witness | **nit** |
+| DR-10 | ⚠ L5 is vacuous on HOS_S | 4 | the packet's run-time witness for the through case was "HOS_S `fr_through` rows carry finite bk" — there are **0 through rows**. So the through branch is covered only by lock B4 (source), never exercised. Declared | **nit** |
+| DR-11 | `model_form_flame.inputs` gains `spall.buckle_span = 0.0` | 9 | ⚠ a **shared-input edit beyond the packet's file list**, but required: without it `check_shared` (i) fails on every span-on leg because the key was not shared. ✅ Verified inert — CAL and HOS_R re-run and byte-identical to P2-13's. The right call, declared | **ok** |
+| DR-12 | ⚠ ℓ_eff ran 25–30 % thinner than the packet's estimates | 12 | a1: 7.33 / 2.48 / 1.34 / 0.73 mm against estimated 9.9 / 3.0 / 1.5 / 0.74 mm. The estimate used k_hot ≈ 0.65·λ(25) and ΔT_s ≈ 555 K; the systematic thinness moved the derived span down (11.0 vs the predicted 12–14 mm) and is why h 500 now falls on the blocked side. Reported in a1 but not connected to DR-1 | **risk** |
+| DR-13 | c3's V(f) ratio 1.0003 | 12 | ⚠ just outside P3's 0.80–1.00, i.e. the condition does **essentially nothing** on drilling (blocked 0.12 %: one wall face of 849 sampled). The packet's own uptake caveat correctly bars a drilling verdict — but it also means this step has no drilling evidence either way | **nit** |
+| DR-14 | the span/`c_f` coupling declared up front | 12, SR 1 | ✅ the Context names it as one calibration (the bracket fixes only L_span / c_f) and flags that plan item 4's flake change re-opens the span. That is SR 1's lesson applied **before** the fit rather than after | **ok** |
+| DR-15 | KG140_0 took 2 h 19 min vs 3 min | 13 | ⚠ a host stall during an otherwise identical run, declared with "no effect on the outputs" — correct for a deterministic stepper, and the run's own first firing is all a5 reads | **nit** |
+
+**Verdict: accepted.** All nine gating rows (a0, a2, a3, a4, a5, b1–b4) reproduce, and no
+diff-review row is tagged `bug`. The one restatement (DR-6) is declared, user-authorised, and
+replaces the bar with the quantity that actually discriminates.
+
+**Carry forward:**
+1. **DR-1 — reconcile the span with the onset deck.** The span derived on Gotthard blocks CAL at
+   h 500, which is the leg the banked onset was calibrated on. As derived, the two calibrations
+   cannot both hold. Either the span is derived on the production rock's own bracket, or the onset
+   is re-anchored at a flux the span admits, but not neither.
+2. **DR-4 — the derivation rule must use the earliest firing.** The flat deck is all-or-nothing, so
+   medians of later firings describe a staircase history a blocked deck never has. The present
+   11.0 mm is inside Gotthard's window by luck, and every partial-fraction prediction in P1/P1b was
+   impossible by construction.
+3. **DR-2 is the step's real result and should be archived as such:** a rock-independent span under
+   a conductivity-only transfer is refuted, with a 0.022 mm admissible window, and the named lever
+   is the strength side (Bethel's onset ~30 K below Grimsel's).
+4. **DR-5 — name the μ.** Twice now a line-geometry length has entered a physical comparison without
+   its /μ. Make "is this along-line or normal?" an explicit field of any packet row that compares a
+   length to a material property.
+
+**Checked and clean:** no `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE` change;
+`Removal.H` untouched; `spall.buckle_span` is 0 in the model form and every span-on leg declares it;
+the span is written to `SPAN.txt` before any span-on leg and **not** re-derived after a result;
+`constraint_depth` stays 0 and is not removed; no refusal lifted; P2-13/P2-14a/P2-2e legs read and
+never rewritten. SR 1 (DR-14), SR 3 (V(f) as a ratio), SR 7(i) (the blocked fraction from two sums,
+never one summed column), SR 8 and SR 19 honoured. **No unquotable number is quoted:** the Gotthard
+rows are labelled "by construction, code check", the Bethel refutation carries its own 0.2 % width,
+the drilling row is explicitly barred from yielding a verdict, and the span is kept out of
+`rock_grimsel.inputs` and out of production.
+
+## P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, but Kant's two granites cannot separate it from one span (2026-11-03, ACCEPTED by review 2026-11-03; archived 2026-11-03)
+
+**Status:** ACCEPTED by review; all five gating rows (a0–a4) reproduce. Binary `38c8623885c5b8b6`. Study
+`tests/MMWSpalling/studies/p2_16_span_rule/` (`RESULTS.txt`, `RULES.txt`, `C1.txt`, `A0`/`A2`–`A4.txt`). The span stays
+0 in production; `spallation.sp.constraint_depth` aborts naming P2-16.
+
+### What the step established
+- **d is deleted** (seven symbols gone from `src/Integrator/`, one key string left in the retired list); tree 0/2639;
+  CAL, HOS_R, F0_k1 and KB150_0 byte-identical. The P2-2e and P2-14a argvs now abort (records).
+- **The calibration deck is ONSET-ONLY** (comment-only declaration; B off by definition; its h 500 is a convention).
+- **c0 at Δ = 0:** R0 one span 0.15 % (fails the 2 % bar), **R1 span ∝ 1/UCS 10.02 % ⇒ Grimsel 13.20 mm** (UCS ±37:
+  10.83–16.90; with the window edges 10.30–17.77), R2 1/UCS² excluded. ⚠⚠ **CONDITIONAL (review DR-1):** R1-over-R0
+  holds ONLY if Bethel's onset equals Gotthard's. At Δ −30 K R0's window is 2.76 % (survives); the 2 % crossing is
+  −21.3 K. Kant 2016 gives per-rock onsets only in Fig. 11/13, with spall-to-spall scatter "significantly higher" than
+  the 5–6 % measurement error (~35 K), so the offset is undetermined: **Kant's two granites do not separate R0 from R1.**
+- **c1 refuted the planning claim that C_L·ℓ is onset-invariant** (window edges −2.58 / −3.49 % for −30 K). The
+  implementer's factor table: C_L ×1.042 ≈ 1/ΔT_s, ℓ ×0.935 ≈ √t. Advisor reading: the surface gradient is q_net/k by
+  the Robin boundary condition, so ℓ ≈ k·ΔT_s/q_net (exact on the fallback branch, `FaceRemoval.H:533`; a two-cell
+  estimate of the same on the reconstruction branch) and **L_req ≈ const·μ·c_f·k/q_net: on a flat deck buckling is a
+  net-flux condition.** A cooler onset fires at a higher net flux, so the layer is thinner.
+- **The two candidate spans straddle the h 500 deck** (needs 12.84 mm at its earliest firing): R1's 13.20 lets it
+  fire, the Gotthard-carried ≤ 12.010 blocks it (DR-4). The onset-only declaration closes the P2-15 conflict.
+- Packet slip: the twin's onset at R 0.531294 is 842.389 K (P2-13), not 843.757 (P2-2d's binary figure). Immaterial.
+
+### Carry-forwards (review)
+1. **DR-1:** the rule verdict is conditional on equal onsets; the planner decides whether the figure reading is
+   evidence before choosing a span rule.
+2. **DR-4:** say which side of h 500 Grimsel's minimum flux sits on for the chosen span.
+3. **DR-12:** carry R1 as a hypothesis with its band (10.30–17.77 mm, a factor 1.7 from the UCS uncertainty alone).
+4. **DR-11:** state the denominator of any relative-width bar in the packet that next uses one.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-03)
+
+Active step:
+- **P2-16 — One minimum-flux mechanism: retire the constraint depth, re-anchor the calibration deck, test whether the
+  span follows a rock property** (`ACTIVE_STEP.md`; 2026-11-03; the user approved the deletion of d).
+  - Archived: P2-15 ACCEPTED (`ARCHIVE_DONE.md` *"P2-15"*): B faithful; all-or-nothing on a flat deck; Gotthard span
+    11.0 mm; Bethel silent at 150 mm under a conductivity-only transfer; the span blocks the h 500 onset deck (DR-1).
+  - d is retired on FORM (its onset climbs toward the minimum flux for every d; Kant 2016 Fig. 11 shows none).
+  - The calibration deck is not moved; it is declared ONSET-ONLY (B off by definition; B is a pure withdrawal, P2-15
+    DR-3). Its h 500 is a convention, since Kant 2017 states no flux, so DR-1 is closed. Bethel's onset offset is a
+    sensitivity only.
+  - Zero-compute rule test on the P2-15 windows: span ∝ 1/UCS is predicted to fit both of Kant's rocks (Grimsel
+    ≈ 13 mm), one span for all rocks only on a knife edge, and 1/UCS² excluded.
+
+### The P2-16 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-16 — One minimum-flux mechanism: retire the constraint depth, and test whether the span follows a rock property
+
+Status: **accepted by review** (2026-11-03; all five gating rows reproduce). ⚠⚠ c0's "R1 survives, R0 fails" flips at Δ = −30 K — R0's window becomes 2.76 % ≥ 2 % — so the headline is conditional on an assumption Kant's own data contradict (DR-1). Was: completed (implemented 2026-11-03; binary `38c86238…`; every gate PASS; P2 (c1) missed: the cancellation fails in the binary).
+
+### Context
+
+P2-15 (accepted 2026-11-03; `ARCHIVE_DONE.md` *"P2-15"*) added the buckling condition B (`spall.buckle_span`, face list
+only, default 0) and found:
+- B is a faithful, pure withdrawal;
+- on a uniform flat deck B is **all-or-nothing**: the span-off twin's EARLIEST firing decides;
+- one span cannot serve both of Kant's rocks under a conductivity-only transfer (Bethel silent at 150 mm, where Kant
+  saw spalling);
+- the Gotthard span blocks the deck the onset was calibrated on (DR-1).
+
+The constraint depth d is superseded on FORM, which the user accepted on 2026-11-03 and which gave permission to
+delete it:
+- its onset climbs toward the minimum flux for every d (P2-14a c1), against Kant 2016 Fig. 11, the same dataset that
+  defines the minimum flux;
+- Bethel does not separate d from B: KB150 and KG140 fire with the same layer depth.
+
+This step does three things:
+1. **Retires d** (code, tests, the shared-file line). Every d = 0 output must stay identical.
+2. **Declares the Kant calibration deck an ONSET-ONLY deck** (comment only; no key changes). It calibrates the onset
+   rule A with the buckling condition B off by definition. B is a pure withdrawal: a firing that passes is identical
+   to the span-off twin (P2-15 DR-3, 576/576). So A's onset measured here IS the production onset wherever production
+   fires. The deck's h 500 is a convention: the advisor read Kant 2017 and it states no standoff or flux. ⇒ DR-1 is
+   closed as a conflict between a fitted span and a convention, not between two calibrations.
+3. **Tests, at near-zero compute, whether the span follows a measured rock property** (pre-registered candidate
+   rules, honest counting of brackets and one-sided bounds). The span stays 0 here. B is switched on in production
+   after the flake-rule check (one calibration with the span) and BEFORE the uptake factor is fitted (ROADMAP plan
+   of record).
+
+All legs are short (fixture, CAL deck, Höser 15 s); the campaign is about 30 min.
+
+### Sources (opened 2026-11-03)
+
+**d's footprint, to be removed** (line numbers on the P2-15 source):
+- `MMWSpalling.H`:
+  - parse `spallation.sp.constraint_depth` and its guard, `:9385–9412`;
+  - members and the design note, `:7895–7935`;
+  - `BuildConstraintRefColumns`, `CrefInterp` and `CrefTAtDepth`, `:2884–2978`;
+  - the call `:1459`;
+  - witness registration `:937–943`;
+  - the face-list comment `:1041–1042`;
+  - Sp_field site: `cref_on_sp`, the `Tref_at` resolver and the counters, `:6242–6504`.
+- `Removal.H`: `cref_on`, and `T0_z = cref_on ? CrefTAtDepth(…) : T0_at_didx(…)`, `:708–716`, `:1517–1537`; counters
+  `:1763–1772`.
+- `FaceRemoval.H` (P2-14a): the extended gather (`Lr`, `:389–391`); `cref_fl`, `run_ref`, `d_line` and the `CrefInterp`
+  reads `:502–633`; counters `:679–684`; the `T_cref` CSV column `:930`, `:960`.
+- Retired-key guard: P2-10's list `MMWSpalling.H:89–120` (`pp.contains(k)` → abort naming the key; `spallation.*` is
+  outside any strict scope, so this list is the only guard).
+- Shared input: `validation/shared/model_form_flame.inputs:22` `spallation.sp.constraint_depth = 0`.
+- Tests that name it:
+  - `unit/constraint_ref_lock` (its subject);
+  - `unit/face_cref` (P2-14a);
+  - `unit/lateral_flux_lock/test:194–216`, whose P2-2a clause "both Sp_field branches read the STORED field" is asserted
+    through `Tref_at`/`cref_on_sp`.
+  - The tree sweep hashes `Cell_D_*`, event logs, other CSVs and `thermo.dat`, **not** `metadata`
+    (`tree_sweep_0922/witness/hash.sh:7`). The resolved-key dump `metadata` will lose its
+    `spallation.sp.constraint_depth = 0` line.
+
+**Kant 2017 (advisor's reading, `franck_material/JGR … 2017 - Kant …pdf` §4.1, p. 1810):**
+- "The spallation experiments were conducted with the setup and measurement procedure described by Kant and Rudolf von
+  Rohr [2016]. In this setup rock samples are rapidly exposed to a methane-air flame jet with a temperature of about
+  1400 °C." The flame reaches the rock through a circular hole in Höser's confining flanges.
+- **No standoff, heat-transfer coefficient or flux is stated.** "About 1400 °C" is the 2016 burner's generic
+  description; Kant 2016 uses the same words.
+- ⇒ the 2017 flux is unknown, bounded below only by Grimsel's minimum, since it spalled at 0, 27 and 48 MPa.
+- The deck's h 500 / 1673.15 K therefore has no evidential weight for B: it is Kant 2016's minimum coefficient, chosen
+  by convention in P2-13. With B off the onset is flat in flux (P2-14a c1, d = 0: 847.7 / 850.4 / 851.4 / 853.0 K at
+  h 150 / 500 / 1000 / 2000), so the onset calibration does not depend on it.
+
+**Kant 2016** (`franck_material/MinimalBoundaryConditions.pdf`):
+- Table 1: Gotthard spalls at SOD 50–130, silent at 140–160; Bethel spalls at 50–150, silent at 160.
+- Table 2 (columns Bethel | Gotthard): λ 2.62 | 3.27 W/m·K; c_p 784 | 792; ρ 2566 | 2594; E 58 | 54 GPa;
+  **UCS 152 | 214 MPa**.
+- §2.1.2: "Both samples have variable grain sizes ranging with feldspar up to ca. 4 mm"; Kant 2017 says the same of
+  Grimsel ("up to ∼4 mm for feldspar").
+- Fig. 11/13: "Bethel granite starts at slightly lower temperatures than Gotthard"; the project's figure reading is
+  ≈ 30 K lower at the last spalling standoff [fig].
+
+**Grimsel UCS:** 169 MPa, the value R is already built on (`rock_grimsel.inputs:59`, P2-2d; ±37 MPa).
+
+**Barre / Westerly** (one-sided only, no silent case):
+- R&T 1989 Table 3: spalled at Q_max 0.68–1.19 MW/m² with rises 423–473 K (`validation/hoeser/rauenzahn_tester_1989_notes.md`);
+- Wilkinson 1993: k_r 2.14 W/m·K and κ 0.87e-6 m²/s (transient analysis; `franck_material/SurfaceTemperature.pdf`);
+  Westerly's grain size ≈ ½ Barre's.
+- Wilkinson's Fig. 15 shows onsets down to ~0.2 MW/m² [fig, flux ±35 %]; it is not scored.
+
+**P2-15's deck discriminant** (`studies/p2_15_buckle/RESULTS.txt` c1; `reduce.py` `C()`):
+- L_req = C_L(T_s)·μ·c_f·ℓ_eff at the span-off twin's EARLIEST top firing (μ = 1 on the still-flat floor);
+- C_L = π/√(6(1+ν)ε_th), ε_th = `strain_of(T_s) − strain_of(T0)` (`Grimsel.H`).
+- Required spans:
+
+  | Leg | L_req (mm) |
+  |---|---|
+  | KG130_0 | 9.920 |
+  | KG140_0 | 12.010 |
+  | KB150_0 | 11.988 |
+  | KB160_0 | 15.430 |
+
+  These are 10.998 mm × bk 0.902 / 1.092 / 1.090 / 1.403.
+- Rock windows (fires at the last spalling standoff, silent at the first silent one):
+  - **Gotthard [9.920, 12.010)**;
+  - **Bethel [11.988, 15.430)**.
+- Legs used Grimsel's laws with `grimsel.lambda.a` 1923.5 / 1540.6 and `grimsel.rho` 2594 / 2566 for Gotthard / Bethel
+  (P2-15 `run.py:27–28`).
+
+**The onset lever for a rock:** `spallation.sp.stress_relief` R (shared, `--allow`). The P2-13 twin
+`validation/kant/grimsel_calibration/offline_onset.py` `onset(a, p, r)` gives the deterministic onset (843.757 K at R
+0.531294, a 8 µm).
+
+### Goal
+
+1. **Retire d in `src/`.** Delete every item in Sources' footprint.
+   - The Sp_field branches and the depth scan read the stored field directly (`T0_at(…)` / `T0_at_didx(…)`), as before
+     P2-2e.
+   - The face list's gather length is `Lg` again, its reference `T0_at_d`, and no `T_cref` column.
+   - Add `spallation.sp.constraint_depth` to a retired-key list that aborts naming the key and **P2-16**. P2-10's
+     message stays as it is.
+   - `buckle_span`, `BuckleRatio` and the ν from the law (P2-14a) are untouched.
+2. **Tests:**
+   - move `unit/constraint_ref_lock` and `unit/face_cref` to `tests/MMWSpalling/retired_units/` (the P2-10 pattern);
+   - restate `unit/lateral_flux_lock`'s P2-2a clause to assert the same property on the new source: each Sp_field
+     branch subtracts the stored field `T0_at(…)` exactly once, and no `Tref_at`/`cref` remains. Add one mutation
+     control and declare it;
+   - new `unit/retired_keys/test`:
+     - source: none of `sp_cref_d`, `CrefInterp`, `CrefTAtDepth`, `BuildConstraintRefColumns`, `cref_n_`, `T_cref`,
+       `run_ref` in `src/`; the key string appears only in the retired list;
+     - run: a 1-step fixture leg with `spallation.sp.constraint_depth=0` exits rc ≠ 0 and its log names the key and
+       P2-16; one P2-10 key still aborts.
+   - `WHICH_TESTS.md`: two rows out, one in.
+3. **Shared input:** delete `model_form_flame.inputs:22`.
+4. **The onset-only declaration** (comment only, so outputs are unchanged): a short paragraph in the header of
+   `validation/kant/grimsel_calibration/input` and one in its `README.md`, stating Context item 2. No key changes.
+5. **The span study** (`tests/MMWSpalling/studies/p2_16_span_rule/`: `run.py`, `reduce.py`, `chain.sh`, `src_pre/`,
+   `bin_pre/` with sha256 `191f4c708e8f5d87…`):
+   - `rules.py` (zero compute) scores the pre-registered rules on the P2-15 windows (Criteria c0);
+   - `bethel_R.py` bisects the twin's R for an onset offset of Δ = −30 K only and writes `R_BETHEL.txt` before the Δ
+     legs;
+   - `reduce.py` reuses P2-15's discriminant (import, do not copy).
+6. **Docs:** `MODEL_CARD.md`:
+   - §6: row 17 retired; row 28 the span, with **Grimsel's span range from both routes**: (a) Gotthard carried over,
+     [9.920, 12.010) mm; (b) the rule's band if one survives;
+   - §9: the calibration deck is onset-only, B off by definition;
+   - §10 minimum flux; §12.
+   - Plus the step's completion notes. (The DIRECTION addendum and the ROADMAP
+   are the planner's, done 2026-11-03.)
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | claim | site | guard / unit |
+|---|---|---|---|
+| L1 | at d = 0 every removed branch was already inert | each `cref_*` branch is gated by `sp_cref_d > 0` (Sources); `BuildConstraintRefColumns` returns early at d = 0 after zeroing counters that are registered only under d > 0 | a1, a3 |
+| L2 | the restated P2-2a property is the same property | Sp_field brackets `- T0_at(` once per branch; depth scan `(T_z - T0_z)` with `T0_at_didx` | a0 (lateral_flux_lock + its mutation) |
+| L3 | a deck naming the key cannot run | the retired list runs first in `Parse` (`pp.contains`) | a4 |
+| L4 | units in the span comparison | L_req [m] = C_L [–] · μ [–] · c_f [–] · ℓ_eff [m]; ⚠ μ = 1 only on a flat floor at the first firing (DR-5), so every leg here is scored at its earliest firing | c0, c1 |
+| L5 | the Δ legs move only Bethel's onset | a single `spallation.sp.stress_relief=<R_Δ>` token on P2-15's KB argv; R enters σ only (not C_L, not ℓ) | c1 (onset check) |
+
+### Legs (exact argv tokens)
+
+**Retirement checks** (new binary; P2-13/P2-15 argv verbatim, `plot_file` re-pointed):
+
+| leg | tokens | stop (s) |
+|---|---|---|
+| CAL | P2-13 `legs/CAL/argv.sh` (the calibration deck, unchanged) | 60 |
+| HOS_R | P2-13 `legs/HOS_R/argv.sh` | 15 |
+| F0_k1 | `unit/face_removal/input` B1 `surface_patch.face_list=1` (B1 = `'amr.n_cell=24 24 64' timestep=0.008 amr.max_grid_size=16 amr.plot_int=125`) | 20 |
+| KB150_0 | P2-15 `legs/KB150_0/argv.sh` | 200 |
+
+**Bethel onset sensitivity** (P2-15 KB argv + `spallation.sp.stress_relief=<R_30>` + `stop_time=30.0`; span off;
+`--allow spallation.sp.stress_relief`): KB150_m30, KB160_m30. Onset check: CAL_m30 = CAL + R_30.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| a0 | 1 | `unit/retired_keys` source half; `lateral_flux_lock` restated clause and its mutation; `--pre src_pre/`: the retired-key clause RED | all GREEN; mutation RED; pre RED | **gate** | d is not fully gone, or the P2-2a property was weakened in the restatement |
+| c0 | 1 | **THE RULES, zero compute, at Δ = 0 only** on Sources' windows. Predicted Bethel/Gotthard span ratio ρ: R0 one span for all rocks (= grain size, "feldspar up to ~4 mm" in all three) ρ = 1; R1 L ∝ 1/UCS, ρ = 214/152 = 1.408; R2 L ∝ 1/UCS² (Griffith length at equal toughness), ρ = 1.982. Feasible ρ = (L_B,lo/L_G,hi, L_B,hi/L_G,lo). Each rule's feasible L_G window and its width | report | report | P1 below |
+| c0b | 1 | Barre/Westerly one-sided bound: L ≥ C_L(T_s)·c_f·k_r·ΔT/Q at R&T's lowest Q_max 0.68 MW/m², ΔT 465 K, k_r 2.14, T_s 758 K | report against the rules' absolute levels | report | P1b |
+| a1 | 2 | tree sweep vs `p2_12r`, `p2_11b`; controls `d2aa` 26, `d2t` 863 | 0 of 2639 | **gate** | the deletion moved a d = 0 output |
+| a2 | 2 | every kept unit vs `studies/p2_15_buckle/UNIT_p2_15` | same rc and verdict lines (line numbers masked); `lateral_flux_lock` full log differs only in the restated clause; `retired_keys` PASS | **gate** | a test moved |
+| a3 | 2 | CAL, HOS_R, F0_k1, KB150_0 vs their P2-13 / P2-15 runs | event logs byte-identical; every kept plotfile identical; thermo non-timer columns identical | **gate** | d = 0 was not inert; nothing below is attributable |
+| a4 | 2 | `unit/retired_keys` run half | rc ≠ 0, the log names `spallation.sp.constraint_depth` and P2-16; the P2-10 sample still aborts | **gate** | the key runs silently (studies' argv would mislead) |
+| c1 | 3 | **SENSITIVITY, not evidence:** how much onset offset would one span need? ΔS_top(CAL_m30 − CAL); KB150_m30 / KB160_m30 earliest-firing L_req → Bethel window at Δ −30 K → feasible ρ and each rule's window width | report | report | P2; if the window does not move, the Gotthard/Bethel difference is carried by neither onset nor conductivity |
+| e1 | 4 | **verdict** | — | **verdict** | d retired (a0–a4); which rules survive (c0) and why (c1); Grimsel's span range from both routes and its sources, for the step that switches B on |
+
+**Survival (pre-registered, at Δ = 0 only):** a rule survives iff its feasible L_G window is non-empty with relative
+width ≥ 2 % and its Gotthard-scaled level satisfies c0b's bound. A narrower window counts as a coincidence, not support
+(P2-15 DR-2). No per-rock strength lever (c1) can make a rule survive. Grimsel's span under a surviving rule is
+L_Gr = L_G* · f(Grimsel)/f(Gotthard), with L_G* the geometric mean of the rule's L_G window and the UCS ±37 MPa carried
+as a band.
+
+### Pre-registered predictions
+
+- **P0 (a rows):** every identity holds.
+- **P1 (c0, from Sources' numbers):** feasible ρ = (0.998, 1.556).
+  - **R0** knife-edge: L ∈ [11.988, 12.010), width 0.18 % ⇒ fails.
+  - **R1 survives**: L_G ∈ [9.920, 10.959), width 10 %; L_G* 10.43 mm ⇒ L_Gr = 10.43 × 214/169 = **13.2 mm**
+    (band 10.3–17.8 mm over the UCS uncertainty).
+  - **R2 excluded** (1.982 > 1.556).
+  - ⚠ Two brackets and one fixed-exponent rule: R1 surviving is a hypothesis worth carrying, not a law.
+- **P1b (c0b):** L ≥ 8.9 mm at k_r 2.14 (6.7–8.8 mm with the deck's own k_eff 1.6–2.1, P2-15 DR-12; advisor's
+  arithmetic on P2-15 `derive_span.py`'s strain table, C_L(758 K) 15.24). Consistent with every rule's level, so
+  non-discriminating, as a one-sided bound must be.
+- **P2 (c1):**
+  - CAL_m30 shifts S_top by −30 ± 3 K;
+  - **Bethel's window moves by < 1 %.** Offline, at fixed flux the layer ℓ ∝ ΔT_s while C_L ∝ ΔT_s⁻¹ near 850 K
+    (Grimsel's ε_th grows ~ΔT_s²), so C_L·ℓ is constant to 0.02 % over Δ = 0 … −45 K (advisor, P2-15 strain
+    table, 2026-11-03; the other agent's check agrees);
+  - ⇒ **pre-written conclusion:** the Gotthard/Bethel difference is carried by neither onset nor conductivity, so the
+    span depends on something else in the rock, which is what a material rule (c0) is for. If the window moves by
+    > 2 %, the cancellation fails in the binary (Robin heating, radiation) and that is the finding.
+- **Refuting evidence on disk:** none; c0's inputs are P2-15's accepted numbers.
+
+### Guardrails
+
+- Deletions are only those in Sources' footprint. `buckle_span` stays 0 in every shared input. R, the flaw and m are
+  unchanged in `rock_grimsel.inputs`; R_30 lives in leg argv only.
+- The calibration deck `grimsel_calibration/input` changes in its comment only.
+- Study argvs that set d (P2-2e, P2-14a legs) are records: they can no longer run, and are not edited.
+- `src_pre/` and `bin_pre/` are copied **before** the first edit. Keep only the last plotfile per leg except CAL and
+  HOS_R.
+- The span is not moved into the rock file and not switched on; a surviving rule is recorded as a derived candidate
+  in the model card.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_16_span_rule
+# before editing: cp -p the three headers to $S/src_pre/; bin/mmwspalling-3d-g++ to $S/bin_pre/ (sha256 191f4c708e8f5d87...)
+# ord 1 (zero compute): a0, c0, c0b; bethel_R.py -> R_BETHEL.txt
+$PY tests/MMWSpalling/unit/retired_keys/test --source && $PY tests/MMWSpalling/unit/lateral_flux_lock/test
+$PY $S/rules.py && $PY $S/bethel_R.py
+# build (CLAUDE.md; touch the headers first if any was restored with cp -p)
+# ord 2: tree (guarded_post_all_par.sh p2_16; tree_compare.py p2_16 p2_12r p2_11b d2aa d2t); units vs UNIT_p2_15; a3; a4
+# ord 3: KB150_m30, KB160_m30, CAL_m30 (c1) | ord 4: reduce.py (e1)
+caffeinate -dis bash $S/chain.sh
+```
+
+### Claude completion notes
+
+**Files changed.**
+- `src/Integrator/MMWSpalling.H` (−270 / +19), `MMWSpalling/Removal.H` (−43 / +3), `MMWSpalling/FaceRemoval.H`
+  (−57 / +5): every Sources footprint item deleted. The face list is P2-14a's `src_pre` plus P2-15's buckling code,
+  diffed. The Sp_field branches and the depth scan read `T0_at(…)` / `T0_at_didx(…)` inline, as in the P2-2e diff's
+  pre-image. A P2-16 retired-key loop follows P2-10's in `Parse`. `buckle_span`, `BuckleRatio` and the law's ν are
+  untouched. Binary `38c8623885c5b8b6…`, warning set identical to P2-15's.
+- Tests: new `unit/retired_keys/test`. `unit/constraint_ref_lock` and `unit/face_cref` moved to
+  `tests/MMWSpalling/retired_units/`. `unit/lateral_flux_lock/test`: the P2-2a clause restated (4 clauses, replacing 3).
+  `WHICH_TESTS.md`: the constraint row was replaced by a retired-key row, and `ElasticConstants`' ν was folded into
+  the buckling row (it had been on the retired row).
+- Inputs: `validation/shared/model_form_flame.inputs` lost its d line. `grimsel_calibration/input` and `README.md`
+  gained the onset-only paragraph (comment lines only; a3 shows CAL byte-identical).
+- Docs: `MODEL_CARD.md` §1, §2, §4, §5, §6 rows 17 and 28, §9, §10, §12. `model_card/RUNNABLE.txt` was
+  regenerated; the old list is archived in the study as `RUNNABLE.pre_p2_16.txt`, and the old card as
+  `MODEL_CARD.pre_p2_16.md`.
+- Study `tests/MMWSpalling/studies/p2_16_span_rule/`: `run.py`, `rules.py`, `bethel_R.py`, `reduce.py`, `chain.sh`,
+  `lfl_control/lfl_mut.py`, `src_pre/`, `bin_pre/` (sha `191f4c70…`), `RESULTS.txt`, `A0`/`A2`/`A3`/`A4`/`C1`/
+  `RULES.txt`, `GATE_tree.txt`, `CHAIN.log`, `UNIT_p2_16/`, `legs/` (481 MB).
+
+| # | measured | verdict | output |
+|---|---|---|---|
+| a0 | `retired_keys` source half: R1–R4 GREEN; 4 mutations each turn their own clause RED, full revert all RED; `--pre src_pre/`: R1–R3 RED, R4 GREEN (P2-10's list predates the step). `lateral_flux_lock` restated clause GREEN; mutation control (wrong-cell `T0_at(i, j, k)` in the cell-sample bracket) turns only that clause RED | **PASS** | `A0.txt`, `lfl_control/CONTROL.txt` |
+| c0 | windows (earliest-firing L_req, exact): Gotthard [9.915, 12.010), Bethel [11.992, 15.430) mm; feasible ρ (0.9985, 1.5562). R0 [11.992, 12.010) mm, 0.15 % ⇒ fails; **R1 [9.915, 10.959) mm, 10.02 %, L_G\* 10.424 ⇒ SURVIVES, Grimsel 13.20 mm** (UCS ±37 at L_G\*: 10.83–16.90; with the window's edges too: 10.30–17.77); R2 empty ⇒ excluded | report | `RULES.txt` |
+| c0b | C_L(758.15 K) 15.243; L ≥ 8.92 mm at k_r 2.14 (6.67–8.76 at k_eff 1.6–2.1); every rule's L_G\* is above it | report | `RULES.txt` |
+| a1 | 0 of 2639 vs `p2_12r` and vs `p2_11b`; controls `d2aa` 26, `d2t` 863 | **PASS** | `GATE_tree.txt` |
+| a2 | 39 kept units: rc and masked verdict lines identical to `UNIT_p2_15`; `lateral_flux_lock` full log 3 lines out / 4 in, all in the restated clause; `retired_keys` PASS; the two retired units not run | **PASS** | `A2.txt` |
+| a3 | CAL and HOS_R vs P2-13, F0_k1 vs P2-15's `face_cref` run, KB150_0 vs P2-15: rc 0, event logs identical, kept plotfiles 98 / 28 / 14 / 14 files with 0 differing, thermo non-timer columns 0 rows differing, `check_shared` PASS; argv token-identical to each reference | **PASS** | `A3.txt` |
+| a4 | K1 `constraint_depth=0`: rc 6, names the key and P2-16; K2 `spall.lateral_drive=0`: rc 6, names P2-10; K0 fixture alone: rc 0 | **PASS** | `A4.txt` |
+| c1 | R_30 = 0.584445 (R ×1.100; twin 842.389 → 812.389 K). CAL_m30 ΔS_top **−32.60 K**. KB150_m30 / KB160_m30 earliest-firing L_req 11.683 / 14.892 mm ⇒ Bethel window [11.683, 14.892): edges move **−2.58 % / −3.48 %**. At Δ −30 K: R0 2.76 %, R1 6.47 % (Grimsel 12.97 mm), R2 empty. One span needs ≈ −21.3 K for a 2 % window | report (sensitivity) | `C1.txt` |
+| e1 | **d retired** (a0–a4 PASS). At Δ = 0 R1 survives, R0 fails, R2 excluded. Grimsel's span: (a) Gotthard carried over [9.915, 12.010) mm; (b) R1 13.20 mm (10.83–16.90). ⚠ c1: R1's advantage over one span holds only if Bethel's onset equals Gotthard's | **verdict** | `RESULTS.txt` |
+
+**Prediction scores.**
+- P0 held.
+- P1 held to rounding. R1's window is [9.915, 10.959), not [9.920, 10.959), because the packet's numbers were
+  10.998 mm × the rounded bk.
+- P1b held: 8.92 against 8.9 mm.
+- P2: CAL_m30's −32.60 K is inside −30 ± 3. The window move **MISSED** (−2.6 / −3.5 % against < 1 %). By the
+  pre-written rule (> 2 %), the cancellation fails in the binary, so "the difference is carried by neither onset
+  nor conductivity" is **refuted**.
+
+### Implementation takeaways
+
+- **Why P2 failed: the factors of L_req (Δ −30 / Δ 0).**
+
+  | factor | KB150 | KB160 |
+  |---|---|---|
+  | ΔT_s | ×0.960 | ×0.960 |
+  | C_L | ×1.042 (≈ 1/ΔT_s, as offline) | ×1.042 |
+  | ℓ | ×0.935 | ×0.926 |
+  | √t | ×0.930 | ×0.923 |
+
+  ℓ tracks √t, not ΔT_s. Under Robin heating ΔT_s grows slower than √t (the flux falls as the face heats), so at
+  fixed flux "ℓ ∝ ΔT_s" fails, and C_L·ℓ falls about 1 % per 10 K of onset offset. ⇒ The onset rule A does carry
+  part of the Gotthard/Bethel difference. At Kant's ≈ 30 K [fig], one span fits both rocks (2.76 %). **The c0
+  verdict "R1 survives, R0 fails" is conditional on modelling Bethel's onset as equal to Gotthard's.** The
+  packet's rule (no strength lever can make a rule survive) keeps R0 failed here. The next planner must decide
+  whether Bethel's onset offset is evidence (Fig. 11/13 is a figure reading, ±?) before choosing between R0 and R1.
+- **The h 500 calibration deck needs 12.84 mm at its earliest firing** (P2-14a's span-off CAL, zero compute,
+  imported discriminant). R1's 13.20 mm lets it fire; Gotthard's ≤ 12.01 mm blocks it. The deck is onset-only, so
+  this is not a conflict, but the two routes put Grimsel's minimum flux on opposite sides of h 500. Grimsel's
+  other flux legs need 49.4 / 6.50 / 3.61 mm at h 150 / 1000 / 2000.
+- **The twin's onset at R 0.531294 reads 842.389 K, not the packet's 843.757 K** (that is P2-2d's figure; the
+  P2-13 twin reproduces 842.39). Only the −30 K offset is used, so R_30 is unaffected.
+- **Δ sign convention in `bethel_R.py`:** a larger R fires cooler; R_30 / R = 1.100. The twin's ν is 0.30, but
+  CAL_m30 measured −32.6 K in the binary, which validates the offset.
+- **`retired_keys` R2 asserts ordering:** no `pp.query*`/`get`/`select` call precedes the P2-16 list in `Parse`,
+  only P2-10's `pp.contains`. Under `--pre`, R4 is GREEN by design.
+- **`lfl_mut.py` builds its mutated lock** by rewriting the lock's `MMW =` and `HERE =` lines in a scratch copy, so
+  the lock under test is never edited.
+- **Records left as they are:**
+  - the `metadata` / `diff.patch` files under unit `output*`, study and leg dirs still name the key;
+  - `model_card/B_flame_source.md`, `C_beam_numerics.md` and `RAW_KEYS.tsv` are dated audit passes;
+  - the P2-2e and P2-14a argvs now abort (RUNNABLE.txt shows this);
+  - the face_cref F0_k1 reference sits under `retired_units/face_cref/output/`; a3 cites it, so do not delete it.
+- Plotfiles are pruned to the last except CAL and HOS_R; `legs/` is 481 MB. Nothing is committed.
+
+
+### Review findings
+
+Re-derived independently: the **tree manifest** with my own comparator; **a3's four byte
+comparisons**; **a0's source half** by my own grep of d's seven symbols across `src/Integrator/`;
+and the **whole of c0, c0b and c1's algebra** from P2-15's windows. Binary `38c8623885c5b8b6`.
+
+| # | bar | implementer | **I derived** | **from** | verdict |
+|---|---|---|---|---|---|
+| a0 | clauses GREEN, mutations RED, pre RED | PASS | ✅ **the deletion is complete**: `sp_cref_d`, `CrefInterp`, `CrefTAtDepth`, `BuildConstraintRefColumns`, `cref_n_`, `T_cref` and `run_ref` are **all absent from `src/Integrator/`**, and `constraint_depth` survives in **exactly one** place — the retired-key list | own grep | **PASS (gate)** |
+| c0 | report | R1 survives, R0 fails, R2 excluded | **exact**: feasible ρ (0.9985, 1.5562); **R0 [11.992, 12.010) width 0.15 % ⇒ fails**; **R1 [9.915, 10.960) width 10.02 %, L_G\* 10.424 ⇒ Grimsel 13.20 mm**; R2 empty | own algebra | report — **but DR-1** |
+| c0b | report | 8.92 mm | **8.923 mm** at k_r 2.14; **6.67 / 8.76 mm** at k_eff 1.6 / 2.1 — every rule's L_G\* is above it, so it is non-discriminating as a one-sided bound must be | own arithmetic | report |
+| a1 | 0 of 2639; 26/863 | PASS | **0 of 2639** vs `p2_15`, `p2_14a`, `p2_12r` **and** `p2_11b`; controls **26 / 863** | own manifest diff | **PASS (gate)** |
+| a2 | same rc and verdict lines | PASS (39 units) | not re-run; `lateral_flux_lock`'s full log differs only in the restated clause (3 out / 4 in), declared | `A2.txt` | PASS (gate) |
+| a3 | event logs and plotfiles identical | PASS | **all four byte-identical**: CAL **10,805** lines (vs P2-13), HOS_R **5,067** (P2-13), KB150_0 **33,237** (P2-15), F0_k1 **9,793** (the retired `face_cref` reference) ⇒ d = 0 was inert on a Kant leg, a Höser leg, a 200 s Bethel leg and the fixture | own `cmp` | **PASS (gate)** |
+| a4 | rc ≠ 0 naming the key and P2-16 | PASS | not re-run; the companion controls (a P2-10 key still aborts; the bare fixture rc 0) are the right two-sided shape | `A4.txt` | PASS (gate) |
+| c1 | report | window moves −2.58 / −3.48 % | **−2.58 % / −3.49 %**; R_30/R = **1.10004**; the 2 % crossing by linear interpolation is **−21.3 K**; and ⚠⚠ **at Δ = −30 K, R0's window is [11.683, 12.010), width 2.76 % ⇒ R0 SURVIVES** (R1 6.47 %, Grimsel 12.97 mm) | own algebra | report — **DR-1** |
+| e1 | verdict | d retired; R1 survives at Δ = 0 | both halves reproduce; the conditionality is stated in the takeaways but not in e1 | `RESULTS.txt` | **delivered** |
+
+#### Diff review
+
+| # | hunk | class | finding | tag |
+|---|---|---|---|---|
+| DR-1 | ⚠⚠ **c0's verdict flips at Δ = −30 K, and the packet's own rule is what keeps it from flipping** | **12** | At Δ = 0, ρ = 1 sits at the very **edge** of the feasible range (0.9985), which is why R0 is a 0.15 % knife-edge. Admitting Bethel's measured ≈ 30 K lower onset moves the lower bound to **0.9728**, and **R0's window becomes 2.76 % ⇒ it survives** (I reproduced both). So "the span follows 1/UCS" rests on **modelling Bethel's onset as equal to Gotthard's — which Kant's Fig. 11/13 contradicts.** The packet's survival rule ("no per-rock strength lever can make a rule survive") keeps R0 failed **by rule, not by evidence**. ✅ The implementer states the conditionality plainly in the takeaways and hands the planner the decision (is the figure reading evidence?); ⚠ **e1 does not carry it**, and e1 is what gets archived | **risk** |
+| DR-2 | ✅ **the pre-registration paid off: both outcomes were written in advance** | 12 | P2 said "< 1 % ⇒ the difference is carried by neither onset nor conductivity" **and** "> 2 % ⇒ the cancellation fails in the binary, and that is the finding". The measurement was −2.6 / −3.5 %, so the second branch fired and the conclusion was not written after the fact. This is the cleanest instance of pre-registration in the series | **ok** |
+| DR-3 | ✅ **why the offline cancellation failed, diagnosed with a factor table** | 13 | ℓ tracks **√t**, not ΔT_s: under Robin heating the flux falls as the face warms, so ΔT_s grows slower than √t (measured ×0.960 against √t ×0.930). C_L ×1.042 ≈ 1/ΔT_s as the offline model said, but ℓ ×0.935 follows √t ⇒ C_L·ℓ falls ~1 % per 10 K. The offline argument assumed "ℓ ∝ ΔT_s at fixed flux", which Robin heating does not give. A refuted prediction traced to its exact wrong assumption | **ok** |
+| DR-4 | ⚠ **the two candidate spans straddle the calibration deck — this answers my P2-15 DR-1** | 12 | the h 500 deck needs **12.84 mm** at its earliest firing. **R1's 13.20 mm lets it fire; the Gotthard-carried ≤ 12.010 mm blocks it.** So P2-15's "the span blocks the deck the onset was calibrated on" is now resolved as a **fork between two candidate spans**, not an internal inconsistency — and combined with the onset-only declaration (Context item 2) the conflict is closed. ⚠ But it also means the two routes put Grimsel's minimum flux on **opposite sides of h 500**, which the step reports and does not resolve | **risk** |
+| DR-5 | ⚠ **the packet mis-cited its own source** | 5 | Sources says the P2-13 twin gives "843.757 K at R 0.531294"; the twin actually reads **842.389 K** (843.757 is P2-2d's *binary* figure). ✅ Caught by the implementer, and immaterial because only the −30 K **offset** is used — and the binary's own CAL_m30 measured **−32.60 K**, validating the offset independently of the absolute. Consistent with P2-13's a0, which I verified at the time (842.39) | **ok** (caught) |
+| DR-6 | the retired-key list and its ordering | 7, 9 | ✅ `retired_keys` R2 asserts **no `pp.query*`/`get`/`select` precedes the P2-16 list in `Parse`** — ordering, not just presence, which is what makes "cannot run silently" true for `spallation.*` keys outside any strict scope. Two-sided: the P2-10 sample still aborts, and the bare fixture runs | **ok** |
+| DR-7 | the restated P2-2a clause | **9** | ⚠ a lock clause weakened in form (3 lines out, 4 in) because its subject (`Tref_at`/`cref_on_sp`) was deleted. ✅ Handled as P2-14a's DR-5 was: the **property** is restated on the new source (each Sp_field branch subtracts the stored field exactly once), with a **mutation control** — a wrong-cell `T0_at(i, j, k)` in the cell-sample bracket turns only that clause RED. The declared alternative was not taken | **ok** |
+| DR-8 | `lfl_mut.py` rewrites the lock in a scratch copy | 10 | ✅ the mutation harness rewrites the lock's `MMW =`/`HERE =` lines in a **copy**, so the lock under test is never edited — the trap that would make a mutation control self-defeating | **ok** |
+| DR-9 | the two retired units moved, not deleted | 9, SR 9 | ✅ `constraint_ref_lock` and `face_cref` moved to `retired_units/` (the P2-10 pattern), and the takeaways warn that **a3 cites `retired_units/face_cref/output/F0_k1`, so it must not be deleted** — exactly the SR-9 trap P2-5 hit | **ok** |
+| DR-10 | `metadata` is not hashed by the tree gate | 4 | ✅ resolved from the code (`hash.sh:7`) **before** the deletion, so the known loss of the `constraint_depth = 0` line from every resolved-key dump cannot surprise a1. Reasoning from the instrument rather than from the result | **ok** |
+| DR-11 | ⚠ the survival bar is a width, and widths are estimator-dependent | 12 | "relative width ≥ 2 %" is computed against the window's **geometric mean**. On the arithmetic mean R0 at Δ−30 reads the same 2.76 %, so nothing turns on it here — but the bar's denominator is unstated in the packet and a 0.15 %-vs-2 % decision deserves an explicit one | **nit** |
+| DR-12 | ⚠ R1 is one fixed exponent against two brackets | 12 | the packet says so itself ("two brackets and one fixed-exponent rule: R1 surviving is a hypothesis worth carrying, not a law"). With only two rocks, a one-parameter family that threads two windows is weak support; the UCS band (±37 MPa) already spreads Grimsel's span **10.30–17.77 mm**, a factor 1.7 | **nit** |
+| DR-13 | ✅ the onset-only declaration is comment-only | 9 | the deck's conflict with DR-1 is closed by **declaring what the deck is**, not by changing a key — and a3 proves it: CAL's event log is byte-identical over 10,805 lines after the paragraph was added | **ok** |
+| DR-14 | records left naming the key | 11 | ⚠ `metadata`/`diff.patch` under unit, study and leg directories still name d; the P2-2e and P2-14a argvs now abort and `RUNNABLE.txt` shows it; three model-card audit files are dated passes. All declared, all consistent with "studies are records" | **nit** |
+
+**Verdict: accepted.** All five gating rows (a0, a1, a2, a3, a4) reproduce, and no diff-review row
+is tagged `bug`. The one weakened lock clause (DR-7) is declared and carries a mutation control.
+
+**Carry forward:**
+1. **DR-1 — put the conditionality in e1, not only in the takeaways.** c0's "R1 survives, R0 fails"
+   holds **only** if Bethel's onset is modelled as equal to Gotthard's. At Kant's measured ≈ 30 K
+   offset **R0 survives at 2.76 %**, and the 2 % crossing is at **−21.3 K**. The planner's real
+   decision is whether the Fig. 11/13 reading is evidence; the span rule follows from that, not from
+   c0 alone.
+2. **DR-4** — the two candidate spans (Gotthard ≤ 12.010 mm, R1 13.20 mm) put Grimsel's minimum flux
+   on opposite sides of h 500. Whichever is chosen, say which side, because that is the prediction
+   the minimum-flux claim will be judged on.
+3. **DR-12** — carry R1 as a hypothesis with its band (**10.30–17.77 mm**, a factor 1.7 from the UCS
+   uncertainty alone), not as a derived number, when B is switched on.
+4. **DR-11** — state the denominator of the "relative width" bar in the packet that next uses it.
+
+**Checked and clean:** no `ext/`, `bin/`, `obj/`, `build/`, `configure` or `LICENSE` change;
+deletions confined to Sources' footprint (verified by my own grep: seven symbols gone, one key string
+left in the retired list); `buckle_span` still 0 in every shared input and the span **not** moved into
+`rock_grimsel.inputs` or switched on; R, the flaw and m unchanged, with R_30 in leg argv only; the
+calibration deck changed in its comment only (proved by a3); study argvs that set d left unedited as
+records. SR 1 (the span/`c_f` coupling still declared), SR 8, SR 9 (DR-9) and SR 19 honoured. **No
+unquotable number is quoted:** c0b is labelled one-sided and non-discriminating, c1 is labelled
+sensitivity rather than evidence, R1's Grimsel span is given with its UCS band, and the twin's
+842.389 K is corrected against the packet's mis-cited 843.757 K.

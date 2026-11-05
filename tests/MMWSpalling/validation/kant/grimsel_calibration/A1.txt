@@ -1,0 +1,11 @@
+a1 -- G1's event log by the statistic (zero compute): tests/MMWSpalling/studies/p2_11_heat/legs/G1
+====================================================================================================
+  packet statistic (first dir=5, ts_fb=0 row per column):  n 1339  median   850.27 K  p10  830.87  p90  882.31
+  advisor's (first non-fallback firing, ANY direction):     n 2076  median   842.74 K  p10  827.22  p90  868.43
+  all firings:                                             n 61953  median   851.55 K  p10  831.55  p90  882.88
+  columns fired 2076; first firing NOT a non-fallback top face: 1760 (84.8 %)
+  Sources: first-firing 842.74 K over 2,076 columns -> reproduced by the ADVISOR's statistic: yes (842.740)
+           all-firing 851.55 K -> yes (851.551)
+  ⚠ the packet's own statistic gives 850.27 K on G1 (1339 columns): G1's columns are mostly first reached from
+    the side as the bore widens. On the flat calibration deck the two coincide iff b1's top-face count holds.
+a1 REPRODUCED (report): the reducer reads the log as the advisor did; the statistic named in the packet is a different column subset on G1

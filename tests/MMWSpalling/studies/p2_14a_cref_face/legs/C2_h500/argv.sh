@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/kant/grimsel_calibration/input spallation.sp.constraint_depth=0.002 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_14a_cref_face/legs/C2_h500/run

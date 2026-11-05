@@ -57,7 +57,9 @@
 // written by two rows is composed instead of overwritten. Removal.H is included
 // INSIDE the class body, so this cannot live there.
 #include <map>
-#include <cstdlib>   // D2ab: std::strtod, for side_face_T = live
+#include <array>
+#include <queue>       // P2-11b: the surface path's Dijkstra
+#include <functional>  // std::greater
 #include <cstdint>
 #include <fstream>
 #include <sstream>
@@ -85,6 +87,49 @@ public:
 
     static void Parse(MMWSpalling& value, IO::ParmParse& pp)
     {
+        // P2-10: THE RETIRED KEYS. The flame wall machinery the face list made
+        // redundant -- the side-face heat family, the lateral criterion (regime 6,
+        // banking, the thermal shift), per-cell removal and the wall march with
+        // its cold body -- is deleted. A deck that still names one of its keys
+        // aborts here, naming the key, instead of running with it ignored
+        // (`spall.*` sits outside any strict ParmParse scope, so this list is
+        // the only guard those keys have).
+        for (const char* k : {
+                                "spall.lateral_drive",
+                                "spall.lateral_removal",
+                                "spall.lateral_subcell",
+                                "spall.lateral_thermal",
+                                "spall.per_cell_removal",
+                                "surface_patch.side_face_flux",
+                                "surface_patch.side_face_h",
+                                "surface_patch.side_face_T",
+                                "surface_patch.side_face_h_r_min",
+                                "surface_patch.side_face_h_law",
+                                "surface_patch.side_face_h_datum",
+                                "surface_patch.side_face_factor_above",
+                                "surface_patch.side_face_area_law",
+                                "surface_patch.side_face_step_height",
+                                "surface_patch.side_face_staircase",
+                                "surface_patch.step_diag_radius",
+                                "surface_patch.jet_wall_march",
+                                "surface_patch.jet_wall_mdot",
+                                "surface_patch.jet_body",
+                                "surface_patch.jet_body_T",
+                                "surface_patch.jet_body_h_scale"})
+            if (pp.contains(k))
+                Util::Abort(INFO, k, " was retired in P2-10 (the flame wall machinery: "
+                            "side-face heat, the lateral criterion, per-cell removal and "
+                            "the wall march were deleted); remove it from the input");
+        // P2-16: THE CONSTRAINT DEPTH (P2-2e, carried onto the face list in P2-14a) is
+        // retired: its onset climbs toward the minimum flux for every d, which Kant 2016
+        // Fig. 11 does not show, and spall.buckle_span (P2-15) is the minimum-flux
+        // mechanism kept. Same guard as above: `spallation.*` is outside any strict
+        // scope, so an unread key would otherwise run silently ignored.
+        for (const char* k : {"spallation.sp.constraint_depth"})
+            if (pp.contains(k))
+                Util::Abort(INFO, k, " was retired in P2-16 (the constraint depth was "
+                            "deleted; spall.buckle_span carries the minimum flux); remove "
+                            "it from the input");
         // Reuse HeatConduction's parse: hc.heat.alpha (diffusivity κ/(ρ c_p)),
         // hc.heat.refinement_threshold, hc.ic.*, hc.bc.temp.* (BC on T).
         // The "Temp" / "Temp_old" fields it registers serve as our T field.
@@ -165,7 +210,7 @@ public:
         // ⚠⚠ P1g-3 deliverable 7: THE TWO LEN FALLBACK COUNTERS, REGISTERED HERE
         // AND THE PLACEMENT TOOK FOUR ATTEMPTS. Registration must be BOTH after
         // the keys are parsed AND outside every mode guard:
-        //   - inside `if (sp_lateral_drive)` (within the side-face-flux guard):
+        //   - inside the lateral-drive guard (deleted in P2-10):
         //     unreachable on p0_steady_column, which has no surface patch
         //   - inside `if (weibull_enabled && ...)`: unreachable there too, that
         //     leg sets weibull.enabled = 0
@@ -183,10 +228,6 @@ public:
                                              "len_fb_h0", false);
             value.RegisterIntegratedVariable(&value.sp_len_fb_q0,
                                              "len_fb_q0", false);
-            value.RegisterIntegratedVariable(&value.lat_len_fb_h0_n,
-                                             "lat_len_fb_h0", false);
-            value.RegisterIntegratedVariable(&value.lat_len_fb_q0_n,
-                                             "lat_len_fb_q0", false);
         }
 
         // Step 11: optional vaporisation removal. Default-off and shares
@@ -313,15 +354,25 @@ public:
                 {
                     std::string plaw;
                     pp.query_default(pfx + ".law", plaw, std::string("constant"));
+                    // ⚠⚠ PARSED UNCONDITIONALLY, AND THAT IS THE POINT.
+                    // The law's coefficients are read whether or not THIS key
+                    // turns the thermal half on, because P2-2b's mechanical
+                    // half (`spall.stress_law = grimsel`) consults the same
+                    // object. When this was inside the `grimsel` branch, a leg
+                    // running the mechanical set alone -- which is exactly how
+                    // the Kant ladder separates conduction from mechanics --
+                    // got a DEFAULT-CONSTRUCTED law, so
+                    // `<pfx>.grimsel.alpha_cap_theta` was silently ignored and
+                    // (c7)'s two alpha fits would have come back IDENTICAL,
+                    // reporting no sensitivity where the key had simply never
+                    // been read. Every coefficient is defaulted to the
+                    // reference's recommendation, so parsing it always is
+                    // free, and `queryclass` consuming the keys is what keeps
+                    // a mistyped one from passing unnoticed.
+                    pp.queryclass<Numeric::Material::Grimsel>(
+                        pfx + ".grimsel", value.phases[i].grimsel);
                     if (plaw == "grimsel")
-                    {
                         value.phases[i].grimsel_law = true;
-                        // the laws' own coefficients are parsable under
-                        // <pfx>.grimsel.*, all defaulted to the reference's
-                        // recommendations, so a leg normally sets nothing.
-                        pp.queryclass<Numeric::Material::Grimsel>(
-                            pfx + ".grimsel", value.phases[i].grimsel);
-                    }
                     else if (plaw != "constant")
                         Util::Abort(INFO, "microstructure.phase", i,
                                     ".law must be 'constant' or 'grimsel', got: ",
@@ -581,6 +632,17 @@ public:
         if (value.spall_enabled && !value.microstructure_enabled)
             Util::Abort(INFO, "MMWSpalling: spall.enabled requires microstructure.nphases");
 
+        // ⚠⚠ P2-2d d7: CROSS-KEY, AND IT HAS TO BE HERE. `grimsel_table` reads
+        // K_Ic0 and the at-temperature ratio off phase 0's law object, so it
+        // needs a phase to read. `ParseSpallationModel` (:206) runs BEFORE
+        // `phases` is resized (:293), so the check belongs with the other
+        // cross-key aborts, not beside the key's own parse.
+        if (value.kic_law == KIcLaw::GrimselTable && value.phases.empty())
+            Util::Abort(INFO, "spallation.sp.kic.law = grimsel_table needs "
+                              "phase 0 to carry the Grimsel law: K_Ic0 and the "
+                              "at-temperature ratio come from it, never from a "
+                              "new scalar. Set microstructure.nphases >= 1.");
+
         if (value.vapor_enabled && !value.microstructure_enabled)
             Util::Abort(INFO, "MMWSpalling: vapor.enabled requires microstructure.nphases");
 
@@ -713,14 +775,6 @@ public:
                 value.RegisterIntegratedVariable(&value.surf_cols_robin, "surf_cols_robin", false);
                 value.RegisterIntegratedVariable(&value.surf_q_mean,     "surf_q_mean",     false);
                 value.RegisterIntegratedVariable(&value.surf_side_share, "surf_side_share", false);
-                value.RegisterIntegratedVariable(&value.surf_side_P_top,
-                                                 "surf_side_P_top",    false);
-                value.RegisterIntegratedVariable(&value.surf_side_P_buried,
-                                                 "surf_side_P_buried", false);
-                value.RegisterIntegratedVariable(&value.surf_side_P_rin,
-                                                 "surf_side_P_rin",  false);
-                value.RegisterIntegratedVariable(&value.surf_side_P_rout,
-                                                 "surf_side_P_rout", false);
             }
             // A1: removal-event log validity.
             if (value.sp_emit_removal_events_csv)
@@ -843,235 +897,11 @@ public:
                                       "(spall.enabled or vapor.enabled)");
                 value.RegisterIntegratedVariable(&value.foot_mech_vol,  "foot_mech_vol",  false);
                 value.RegisterIntegratedVariable(&value.foot_mech_cols, "foot_mech_cols", false);
+                // P2-2f: appended after foot_mech_cols and gated on the SAME
+                // key, so no input without foot_body_clearance = 1 gains a
+                // thermo.dat column and the 2639-file identity is untouched.
+                value.RegisterIntegratedVariable(&value.foot_mech_E,    "foot_mech_E",    false);
             }
-            // D2k: side-face diagnostics, registered LAST and only when the key
-            // is on, so every pre-D2k thermo.dat column keeps its position and
-            // the reference set stays byte-identical with the key off.
-            if (value.surface_patch.enabled && value.surface_patch.side_face_flux)
-            {
-                if (!value.removal_enabled())
-                    Util::Abort(INFO, "surface_patch.side_face_flux = 1 requires removal "
-                                      "(spall.enabled or vapor.enabled): with no void cells "
-                                      "there are no exposed vertical faces");
-                if (!value.surface_follow_mask)
-                    Util::Abort(INFO, "surface_patch.side_face_flux = 1 requires "
-                                      "surface.follow_mask = 1");
-                value.RegisterIntegratedVariable(&value.side_P_face,  "side_P_face",  false);
-                // P1e: registered only under the key, so a keys-off run keeps
-                // its exact thermo column set and the frozen tree stays identical.
-                // P1f: the lateral mode's own counters, registered only under the
-                // key. ⚠ lat_cand vs lat_fires separates "nothing qualified" from
-                // "nothing fired", and lat_no_faceT is the runtime witness that the
-                // face temperature actually arrived (inertness case 1).
-                if (value.sp_lateral_drive)
-                {
-                    value.RegisterIntegratedVariable(&value.lat_cand_n,
-                                                     "lat_cand", false);
-                    value.RegisterIntegratedVariable(&value.lat_fires,
-                                                     "lat_fires", false);
-                    value.RegisterIntegratedVariable(&value.lat_voided_n,
-                                                     "lat_voided", false);
-                    value.RegisterIntegratedVariable(&value.lat_no_faceT_n,
-                                                     "lat_no_faceT", false);
-                    value.RegisterIntegratedVariable(&value.lat_ell_med,
-                                                     "lat_ell_med", false);
-                    // deliverable 12. ⚠ Inside the SAME `sp_lateral_drive`
-                    // guard, so a keys-off run keeps its exact thermo.dat
-                    // column set and no re-pin is owed -- asserted, not assumed.
-                    value.RegisterIntegratedVariable(&value.lat_qmax,
-                                                     "lat_qmax", false);
-                    value.RegisterIntegratedVariable(&value.lat_Tface_max,
-                                                     "lat_Tface_max", false);
-                }
-                // P1g-1: nested INSIDE the drive guard above is not enough --
-                // these must appear only when the banking law is actually on,
-                // or an OFF leg's thermo.dat column set moves and (a1) fails
-                // for a reporting reason rather than a physics one.
-                if (value.sp_lateral_thermal)
-                {
-                    value.RegisterIntegratedVariable(&value.lat_shift_n,
-                                                     "lat_shift", false);
-                    value.RegisterIntegratedVariable(&value.lat_shift_refuse,
-                                                     "lat_shift_refuse", false);
-                    value.RegisterIntegratedVariable(&value.lat_shift_E,
-                                                     "lat_shift_E", false);
-                    value.RegisterIntegratedVariable(&value.lat_shift_E_est,
-                                                     "lat_shift_E_est", false);
-                    value.RegisterIntegratedVariable(&value.lat_shift_ratio,
-                                                     "lat_shift_ratio", false);
-                    value.RegisterIntegratedVariable(&value.lat_overlap_n,
-                                                     "lat_overlap", false);
-                    value.RegisterIntegratedVariable(&value.lat_orphan_n,
-                                                     "lat_orphan", false);
-                    // P1g-2c: the truth diagnostic, the coverage counter and the
-                    // three-way refusal split. ⚠ All inside the SAME
-                    // sp_lateral_thermal guard, so a leg with the key off keeps
-                    // its exact column set and the identity gate is untouched.
-                    value.RegisterIntegratedVariable(&value.lat_shift_real,
-                                                     "lat_shift_real", false);
-                    value.RegisterIntegratedVariable(&value.lat_shift_realfrac,
-                                                     "lat_shift_realfrac", false);
-                    value.RegisterIntegratedVariable(&value.lat_touch_multi,
-                                                     "lat_touch_multi", false);
-                    value.RegisterIntegratedVariable(&value.lat_twoaxis_n,
-                                                     "lat_twoaxis", false);
-                    value.RegisterIntegratedVariable(&value.lat_ref_ell,
-                                                     "lat_ref_ell", false);
-                    value.RegisterIntegratedVariable(&value.lat_ref_void,
-                                                     "lat_ref_void", false);
-                    value.RegisterIntegratedVariable(&value.lat_ref_short,
-                                                     "lat_ref_short", false);
-                }
-                if (value.sp_lateral_subcell)
-                {
-                    value.RegisterIntegratedVariable(&value.lat_bank_n,
-                                                     "lat_bank", false);
-                    value.RegisterIntegratedVariable(&value.lat_bank_hf,
-                                                     "lat_bank_hf", false);
-                    value.RegisterIntegratedVariable(&value.lat_accum_sum,
-                                                     "lat_accum_sum", false);
-                    value.RegisterIntegratedVariable(&value.lat_void_colmax,
-                                                     "lat_void_colmax", false);
-                }
-                if (value.surface_patch.side_face_staircase)
-                {
-                    value.RegisterIntegratedVariable(&value.side_sc_mean,
-                                                     "side_sc_mean", false);
-                    value.RegisterIntegratedVariable(&value.side_sc_min,
-                                                     "side_sc_min", false);
-                    value.RegisterIntegratedVariable(&value.side_sc_cols,
-                                                     "side_sc_cols", false);
-                    value.RegisterIntegratedVariable(&value.side_P_in35,
-                                                     "side_P_in35", false);
-                }
-                value.RegisterIntegratedVariable(&value.side_P_loss,  "side_P_loss",  false);
-                value.RegisterIntegratedVariable(&value.side_faces,   "side_faces",   false);
-                // D2r-1: registered ONLY when side_face_factor_above is set.
-                // A new thermo column changes thermo.dat, and the frozen A_f02
-                // baseline must stay byte-comparable (Goal item 1), so a run
-                // that does not set the key keeps its exact column set.
-                if (value.surface_patch.side_face_factor_above >= 0.0)
-                {
-                    value.RegisterIntegratedVariable(&value.side_P_face_above,
-                                                     "side_P_face_above", false);
-                    value.RegisterIntegratedVariable(&value.side_cols_above,
-                                                     "side_cols_above",   false);
-                    value.RegisterIntegratedVariable(&value.wall_step_q, "wall_step_q", false);
-                    value.RegisterIntegratedVariable(&value.wall_step_n, "wall_step_n", false);
-                }
-                // D2x: registered ONLY under side_face_area_exact, for the same
-                // reason -- a new thermo column changes thermo.dat and would
-                // break byte comparison against the frozen baselines.
-                if (value.surface_patch.side_face_area_exact)
-                    value.RegisterIntegratedVariable(&value.side_w_mean, "side_w_mean", false);
-                // D2z: registered ONLY under the step key, so every other
-                // thermo.dat header is untouched and the d2z1.md5 tree
-                // reference stays valid for runs without it.
-                // ⚠ None of these can read only one value: delta_mean is the
-                // measured step height, delta_fallback_cols counts a named
-                // population, and riser_area_ratio compares the two area laws.
-                if (value.surface_patch.side_face_step_height)
-                {
-                    value.RegisterIntegratedVariable(&value.delta_mean,
-                                                     "delta_mean", false);
-                    value.RegisterIntegratedVariable(&value.delta_fallback_cols,
-                                                     "delta_fallback_cols", false);
-                    value.RegisterIntegratedVariable(&value.riser_area_ratio,
-                                                     "riser_area_ratio", false);
-                    // The drain witness must report the EFFECTIVE flux under the
-                    // same face rule as the kernel, or correct code fails
-                    // criterion (b): WallStepDiagnostic uses the RAW cell
-                    // conductivity and knows nothing about a factor applied
-                    // inside k_face, so scaling the face would move it only
-                    // through the temperatures.
-                    value.RegisterIntegratedVariable(&value.wall_step_q_eff,
-                                                     "wall_step_q_eff", false);
-                    // D2z-2. All APPENDED, nothing above moves, and all still
-                    // behind side_face_step_height so a keys-off run registers
-                    // no new column and witness/d2z1.md5 stays valid.
-                    // deliverable 1: the normaliser behind delta_mean, made
-                    // auditable. delta_faces / delta_n (the pair count) is the
-                    // mean riser height in cells.
-                    value.RegisterIntegratedVariable(&value.step_delta_faces,
-                                                     "delta_faces", false);
-                    // deliverable 3: attribution for SW -- without it a bad
-                    // Meier result cannot be pinned on the multi-cell branch.
-                    value.RegisterIntegratedVariable(&value.side_P_face_multi,
-                                                     "side_P_face_multi", false);
-                    // deliverable 2, in the order the packet fixes.
-                    value.RegisterIntegratedVariable(&value.wall_step_n_in,
-                                                     "wall_step_n_in", false);
-                    value.RegisterIntegratedVariable(&value.wall_step_q_in,
-                                                     "wall_step_q_in", false);
-                    value.RegisterIntegratedVariable(&value.wall_step_q_eff_in,
-                                                     "wall_step_q_eff_in", false);
-                    value.RegisterIntegratedVariable(&value.step_g_mean,
-                                                     "step_g_mean", false);
-                    value.RegisterIntegratedVariable(&value.step_g_max,
-                                                     "step_g_max", false);
-                    value.RegisterIntegratedVariable(&value.wall_step_f_multi,
-                                                     "wall_step_f_multi", false);
-                    // D2aa deliverables 3 and 4. APPENDED; nothing above moves.
-                    // Registered under side_face_step_height, as D2z-2's were:
-                    // every D2aa leg sets it and `S0` sets none of it, so the
-                    // identity leg and witness/d2z1.md5 stay valid.
-                    value.RegisterIntegratedVariable(&value.side_A_bore, "side_A_bore", false);
-                    value.RegisterIntegratedVariable(&value.side_A_pads, "side_A_pads", false);
-                    value.RegisterIntegratedVariable(&value.side_A_wall, "side_A_wall", false);
-                    value.RegisterIntegratedVariable(&value.side_P_bore, "side_P_bore", false);
-                    value.RegisterIntegratedVariable(&value.side_P_pads, "side_P_pads", false);
-                    value.RegisterIntegratedVariable(&value.side_P_wall, "side_P_wall", false);
-                    value.RegisterIntegratedVariable(&value.wall_step_f_multi_pads,
-                                                     "wall_step_f_multi_pads", false);
-                    // D2ab deliverable 1, the witness. APPENDED; nothing above
-                    // moves. Registered only when the explicit pair is GIVEN,
-                    // so `S0` (which sets neither) gains no column and the
-                    // header-delta identity and witness/d2z1.md5 both hold.
-                    // On a constant leg this reads back side_face_T exactly; on
-                    // a `live` leg it tracks jet_T_exhaust one step behind.
-                    if (value.surface_patch.side_face_h >= 0.0)
-                        value.RegisterIntegratedVariable(&value.side_T_eff,
-                                                         "side_T_wall", false);
-                    // P2-1 deliverables 2 and 6. APPENDED, and registered ONLY
-                    // under side_face_h_law = derived, so a `typed` leg gains no
-                    // column, the header-delta identity holds and the frozen
-                    // tree needs no re-pin. ⚠ This is the "keyed off by default"
-                    // half of the rule -- it is NOT also declared as a re-pin.
-                    if (value.surface_patch.side_face_h_derived)
-                    {
-                        value.RegisterIntegratedVariable(&value.side_h_used_min,
-                                                         "side_h_used_min", false);
-                        value.RegisterIntegratedVariable(&value.side_h_used_p05,
-                                                         "side_h_used_p05", false);
-                        value.RegisterIntegratedVariable(&value.side_h_used_p50,
-                                                         "side_h_used_p50", false);
-                        value.RegisterIntegratedVariable(&value.side_h_used_p95,
-                                                         "side_h_used_p95", false);
-                        value.RegisterIntegratedVariable(&value.side_h_used_max,
-                                                         "side_h_used_max", false);
-                        value.RegisterIntegratedVariable(&value.side_h_used_n,
-                                                         "side_h_used_n", false);
-                        // the law's own state, so the branch that decides each
-                        // face is an OUTPUT in stated units rather than an
-                        // inference from the result (deliverable 2).
-                        value.RegisterIntegratedVariable(&value.wall_h_corner,
-                                                         "wall_h_corner", false);
-                        value.RegisterIntegratedVariable(&value.wall_z_fill,
-                                                         "wall_z_fill", false);
-                        value.RegisterIntegratedVariable(&value.wall_r_bore,
-                                                         "wall_r_bore", false);
-                        value.RegisterIntegratedVariable(&value.wall_h_duct,
-                                                         "wall_h_duct", false);
-                        value.RegisterIntegratedVariable(&value.wall_uDe,
-                                                         "wall_uDe", false);
-                        value.RegisterIntegratedVariable(&value.wall_sector,
-                                                         "wall_sector", false);
-                        value.RegisterIntegratedVariable(&value.wall_law_on,
-                                                         "wall_law_on", false);
-                    }
-                }
-            }
-
             // P2-2 changes 1 and 4: the witnesses (b5) and (b3) read.
             // ⚠ Registered ONLY when a phase actually uses the grimsel law or
             // the relief factor is set, so a default leg gains NO column and
@@ -1110,62 +940,173 @@ public:
                                                  "sn_recession_superseded", false);
         }
 
-        // D2z: alpha = kappa/(rho*cp) must come FROM THE RUN. Without a
-        // material there is no rho*cp to divide by, and the only way to
-        // proceed would be a hardcoded diffusivity -- which is the tuning
-        // constant the packet forbids. Refuse instead of inventing one.
-        if (value.surface_patch.enabled &&
-            value.surface_patch.side_face_step_height
-            && !value.material && !value.microstructure_enabled)
-            Util::Abort(INFO, "surface_patch.side_face_step_height = 1 needs a material: "
-                              "the conductance correction uses alpha = kappa/(rho*cp) "
-                              "taken from mat->effective_rhocp(T), and hardcoding a "
-                              "diffusivity would reintroduce exactly the tuning constant "
-                              "this closure exists to remove");
-
-        // D2q-2b item 5: per-cell removal preconditions, cross-checked here
-        // because they live in three different parse blocks.
-        if (value.spall_per_cell_removal)
+        // P2-15: the buckling condition lives on the face list only (the column path never
+        // reads the key -- retire, don't stack) and reads the reconstructed skin length, so
+        // either missing would leave the key SILENTLY INERT: both abort, naming the key.
+        // Witnesses registered ONLY under the key.
+        if (value.sp_buckle_span > 0.0)
         {
-            if (!value.removal_enabled())
-                Util::Abort(INFO, "spall.per_cell_removal = 1 requires removal "
-                                  "(spall.enabled or vapor.enabled)");
-            if (!(value.surface_patch.enabled && value.surface_patch.side_face_flux))
-                Util::Abort(INFO, "spall.per_cell_removal = 1 requires "
-                                  "surface_patch.side_face_flux = 1: without it an exposed "
-                                  "lateral face is never heated, so the criterion evaluated "
-                                  "there reads bulk rock and the mechanism is silently inert");
-            // side_face_flux already implies this, but state it directly: the
-            // requirement belongs to per-cell removal on its own terms (phi is
-            // still the sole input to UpdateSurfaceMaskFromPhi, and a cell
-            // voided off-top does not move its column's phi). See RESULTS.md Q1.
+            if (!value.surface_patch.face_list)
+                Util::Abort(INFO, "spall.buckle_span > 0 (P2-15, the buckling thickness "
+                            "condition) is evaluated only on the face list: it needs "
+                            "surface_patch.face_list = 1; got spall.buckle_span = ",
+                            value.sp_buckle_span, " m");
+            if (!value.sp_surface_T_apply)
+                Util::Abort(INFO, "spall.buckle_span > 0 (P2-15) reads the reconstructed "
+                            "heated-layer length: it needs spall.surface_T = reconstructed");
+            value.RegisterIntegratedVariable(&value.bk_span_out,      "bk_span",          false);
+            value.RegisterIntegratedVariable(&value.bk_n_eval,        "bk_n_eval",        false);
+            value.RegisterIntegratedVariable(&value.bk_n_block,       "bk_n_block",       false);
+            value.RegisterIntegratedVariable(&value.bk_n_inf,         "bk_n_inf",         false);
+            value.RegisterIntegratedVariable(&value.bk_n_block_floor, "bk_n_block_floor", false);
+            value.RegisterIntegratedVariable(&value.bk_n_block_wall,  "bk_n_block_wall",  false);
+            value.RegisterIntegratedVariable(&value.bk_n_block_roof,  "bk_n_block_roof",  false);
+            value.RegisterIntegratedVariable(&value.bk_max_pass,      "bk_max_pass",      false);
+        }
+
+        // P2-8: THE FACE LIST. Validated HERE, where every key it depends on
+        // has been parsed, and its thermo columns and plotfile fields are
+        // registered LAST and ONLY under the key, so a key-off run gains no
+        // column and no field (CODE_CENSUS F1: registration order is
+        // load-bearing for the 2639 gate).
+        if (value.surface_patch.face_list)
+        {
+            const SurfacePatch& sp = value.surface_patch;
+            // P2-11b: face_heat = path. Every feature it does not carry ABORTS,
+            // naming the key and the step that owns it -- FIRST in this block,
+            // so a robin_form the list itself refuses still names its key here,
+            // and in an order where each abort is reachable on its own (the
+            // pad shield and the free surface both need feet).
+            if (sp.face_heat_path)
+            {
+                auto ph_abort = [] (const char* key) {
+                    Util::Abort(INFO, "surface_patch.face_heat = path (P2-11b, heat along "
+                                "the surface path) does not carry ", key, "; that is P2-12's");
+                };
+                if (sp.pad_shield_open >= 0.0) ph_abort("surface_patch.pad_shield_open >= 0");
+                if (sp.jet_free_surface) ph_abort("surface_patch.jet_free_surface = 1");
+                if (sp.feet) ph_abort("surface_patch.nozzle_descent = feet");
+                if (sp.jet_above_h) ph_abort("surface_patch.jet_above_h = 1");
+                if (sp.robin_form != SurfacePatch::RobinForm::Surface)
+                    ph_abort("surface_patch.robin_form other than surface");
+                if (!sp.jet_enthalpy) ph_abort("surface_patch.jet_closure other than enthalpy");
+            }
+            if (!(sp.mode == SurfacePatch::Mode::ConvectiveFlame && sp.use_expr))
+                Util::Abort(INFO, "surface_patch.face_list = 1 requires mode = "
+                            "convective_flame with an h_expr map: F2 evaluates h_expr "
+                            "at every face centre");
+            if (sp.robin_form != SurfacePatch::RobinForm::Surface)
+                Util::Abort(INFO, "surface_patch.face_list = 1 requires robin_form = "
+                            "surface: F4 keeps the column-top face on the surface form");
+            if (!value.microstructure_enabled)
+                Util::Abort(INFO, "surface_patch.face_list = 1 requires the "
+                            "microstructure path (its consumers live in "
+                            "AdvanceMicrostructure)");
             if (!value.surface_follow_mask)
-                Util::Abort(INFO, "spall.per_cell_removal = 1 requires "
-                                  "surface.follow_mask = 1: the phi-window surface mask "
-                                  "would keep selecting a cell this mechanism has voided");
-            // The ONE case where the column gate and the per-cell gate would
-            // genuinely differ. Under weibull the column path gates on the
-            // 4-connected cluster labeller, which reduces to Sp_top >= 1 only
-            // while the area filter is inactive. With the filter ON there is no
-            // lateral analogue of a top-z-plane labeller, so refuse rather than
-            // silently fall back to Sp >= 1. Generalising the labeller to the
-            // exposed-face set is a separate packet.
+                Util::Abort(INFO, "surface_patch.face_list = 1 requires "
+                            "surface.follow_mask = 1: the `top` class is the mask "
+                            "column top");
+            value.RegisterIntegratedVariable(&value.fl_n_top,   "fl_n_top",   false);
+            value.RegisterIntegratedVariable(&value.fl_n_up,    "fl_n_up",    false);
+            value.RegisterIntegratedVariable(&value.fl_n_side,  "fl_n_side",  false);
+            value.RegisterIntegratedVariable(&value.fl_n_down,  "fl_n_down",  false);
+            value.RegisterIntegratedVariable(&value.fl_P_top,   "fl_P_top",   false);
+            value.RegisterIntegratedVariable(&value.fl_P_up,    "fl_P_up",    false);
+            value.RegisterIntegratedVariable(&value.fl_P_side,  "fl_P_side",  false);
+            value.RegisterIntegratedVariable(&value.fl_P_down,  "fl_P_down",  false);
+            value.RegisterIntegratedVariable(&value.fl_P_march, "fl_P_march", false);
+            value.RegisterIntegratedVariable(&value.fl_w_fallback, "fl_w_fallback", false);
+            value.RegisterIntegratedVariable(&value.fl_h_top_mismatch,
+                                             "fl_h_top_mismatch", false);
+            value.RegisterIntegratedVariable(&value.fl_id_march,  "fl_id_march",  false);
+            value.RegisterIntegratedVariable(&value.fl_id_ledger, "fl_id_ledger", false);
+            value.RegisterNewFab(value.fl_w_mf, nullptr, 1, 0, "fl_w", true);
+            value.RegisterNewFab(value.fl_h_mf, nullptr, 1, 0, "fl_h", true);
+
+            // P2-9 deliverable 5: ONE breaking rule under the same key. Every
+            // path it does not carry ABORTS, naming the step that owns it.
+            auto fr_abort = [] (const char* what, const char* owner) {
+                Util::Abort(INFO, "surface_patch.face_list = 1 (P2-9, one breaking "
+                            "rule along one line per surface cell) does not carry ",
+                            what, "; that is ", owner, "'s");
+            };
+            if (value.vapor_enabled) fr_abort("regime 2 (vapor.enabled)", "the MMW step");
+            if (value.bit_enabled)   fr_abort("regime 3 (bit.enabled)", "a later step");
+            if (sp.feet && sp.foot_body_clearance)
+                fr_abort("regime 4 (surface_patch.foot_body_clearance)", "P2-11");
+            if (value.melt_aware) fr_abort("spall.melt_aware", "the MMW step");
+            if (value.spall_surface_normal) fr_abort("spall.surface_normal = 1", "a later step");
+            if (!value.sp_local_thermoelastic)
+                fr_abort("a stress source that is not temperature-derived "
+                         "(spall.stress_source != local_thermoelastic)", "the MMW step");
+            if (value.max_level > 0) fr_abort("amr.max_level > 0", "a later step");
+            // ⚠ beyond the packet's list (declared): the line rule has no
+            // route for these, so each would be silently dropped
+            if (value.spallation_model != SpallationModel::SpWeibull || !value.spall_enabled)
+                fr_abort("a removal model other than sp_weibull spallation", "the MMW step");
+            if (!value.sp_surface_T_apply)
+                fr_abort("spall.surface_T other than reconstructed (R1 IS the "
+                         "reconstruction)", "a later step");
+            if (!value.sp_removal_energy_flake)
+                fr_abort("spall.removal_energy other than flake (R3 IS the remap)", "a later step");
+            if (value.sp_flake_len_flux || value.sp_flake_frac_weibull || value.sp_size_flux)
+                fr_abort("spall.flake_length = flux / flake_fraction = weibull / "
+                         "weibull.size_volume = flux (per-column flux lengths)", "a later step");
+            if (value.spall_flake_coh_len > 0.0)
+                fr_abort("spall.flake_coherence_length > 0 (a per-column cap)", "a later step");
             if (value.weibull_enabled &&
                 value.weibull_detach_mode == DetachMode::ConnectedCluster &&
                 value.weibull_A_crit > 0.0)
-                Util::Abort(INFO, "spall.per_cell_removal = 1 is incompatible with "
-                                  "weibull.detach_mode = connected_cluster and "
-                                  "weibull.A_crit > 0: the 4-connected cluster filter is "
-                                  "defined over the top-z plane and has no lateral "
-                                  "analogue, so the column gate and the per-cell gate "
-                                  "would differ. Unset A_crit (the filter is then a no-op "
-                                  "and both gates reduce to Sp >= 1), or drop "
-                                  "per_cell_removal");
-            // Item 8: overhang census. Registered LAST and only with the key
-            // on, so every pre-D2q-2b thermo.dat column keeps its position.
-            value.RegisterIntegratedVariable(&value.pcr_overhang_cells, "pcr_overhang_cells", false);
-            value.RegisterIntegratedVariable(&value.pcr_lateral_cells,  "pcr_lateral_cells",  false);
+                fr_abort("weibull.detach_mode = connected_cluster with A_crit > 0 "
+                         "(a top-plane labeller)", "a later step");
+            value.RegisterIntegratedVariable(&value.fr_n_c[0],    "fr_n_floor",    false);
+            value.RegisterIntegratedVariable(&value.fr_n_c[1],    "fr_n_wall",     false);
+            value.RegisterIntegratedVariable(&value.fr_n_c[2],    "fr_n_roof",     false);
+            value.RegisterIntegratedVariable(&value.fr_v_c[0],    "fr_v_floor",    false);
+            value.RegisterIntegratedVariable(&value.fr_v_c[1],    "fr_v_wall",     false);
+            value.RegisterIntegratedVariable(&value.fr_v_c[2],    "fr_v_roof",     false);
+            value.RegisterIntegratedVariable(&value.fr_fb_c[0],   "fr_fb_floor",   false);
+            value.RegisterIntegratedVariable(&value.fr_fb_c[1],   "fr_fb_wall",    false);
+            value.RegisterIntegratedVariable(&value.fr_fb_c[2],   "fr_fb_roof",    false);
+            value.RegisterIntegratedVariable(&value.fr_smax_c[0], "fr_smax_floor", false);
+            value.RegisterIntegratedVariable(&value.fr_smax_c[1], "fr_smax_wall",  false);
+            value.RegisterIntegratedVariable(&value.fr_smax_c[2], "fr_smax_roof",  false);
+            value.RegisterIntegratedVariable(&value.fr_clip,      "fr_clip",       false);
+            value.RegisterIntegratedVariable(&value.fr_cap,       "fr_cap",        false);
+            value.RegisterIntegratedVariable(&value.fr_sheet,     "fr_sheet",      false);
+            value.RegisterIntegratedVariable(&value.fr_multi,     "fr_multi",      false);
+            value.RegisterIntegratedVariable(&value.fr_overlap,   "fr_overlap",    false);
+            value.RegisterIntegratedVariable(&value.fr_id_remap,  "fr_id_remap",   false);
+            value.RegisterIntegratedVariable(&value.fr_ncell,     "fr_ncell",      false);
+            value.RegisterIntegratedVariable(&value.fr_through,   "fr_through",    false);
+            value.RegisterIntegratedVariable(&value.fr_E_drop,    "fr_E_drop",     false);
+            value.RegisterIntegratedVariable(&value.fr_fresh,     "fr_fresh",      false);
+            // P2-9 rev 2 item 7
+            value.RegisterIntegratedVariable(&value.fr_misaligned,  "fr_misaligned",  false);
+            value.RegisterIntegratedVariable(&value.fr_noskin_c[0], "fr_noskin_floor", false);
+            value.RegisterIntegratedVariable(&value.fr_noskin_c[1], "fr_noskin_wall",  false);
+            value.RegisterIntegratedVariable(&value.fr_noskin_c[2], "fr_noskin_roof",  false);
+            value.RegisterIntegratedVariable(&value.fr_t_removal,   "fr_t_removal",   false);
+            value.RegisterIntegratedVariable(&value.fr_t_step,      "fr_t_step",      false);
+            // 3 ghosts: the smoothed normal reads +-3 cells (5x5x5 kernel, then
+            // a central difference)
+            value.RegisterNewFab(value.fr_f_mf,     nullptr, 1, 3, "fr_f",     true);
+            value.RegisterNewFab(value.fr_score_mf, nullptr, 1, 0, "fr_score", true);
+            value.RegisterNewFab(value.fr_mu_mf,    nullptr, 1, 0, "fr_mu",    true);
 
+            // P2-11b: face_heat = path -- its outputs are registered LAST and
+            // only under path (a position run gains none).
+            if (sp.face_heat_path)
+            {
+                value.RegisterIntegratedVariable(&value.fl_H_stag,      "fl_H_stag",      false);
+                value.RegisterIntegratedVariable(&value.fl_n_src,       "fl_n_src",       false);
+                value.RegisterIntegratedVariable(&value.fl_n_blocked,   "fl_n_blocked",   false);
+                value.RegisterIntegratedVariable(&value.fl_n_unreached, "fl_n_unreached", false);
+                value.RegisterIntegratedVariable(&value.fl_s_max,       "fl_s_max",       false);
+                value.RegisterIntegratedVariable(&value.fl_t_path,      "fl_t_path",      false);
+                value.RegisterNewFab(value.fl_s_mf,  nullptr, 1, 0, "fl_s",  true);
+                value.RegisterNewFab(value.fl_Tg_mf, nullptr, 1, 0, "fl_Tg", true);
+            }
         }
 
         if (value.vapor_enabled && !value.vapor_A_beam_override)
@@ -1483,18 +1424,14 @@ protected:
 
     void Advance(int lev, Set::Scalar time, Set::Scalar dt) override
     {
+        // P2-9 rev 2 item 7: the step's wall time (a thermo column only under
+        // the face list; measured always, read by nothing else)
+        const double fr_step_t0 = amrex::second();
         // P0b deliverable 1.1: ONE surface temperature per column for this
         // whole step -- criterion, BC and removal. Must be first: every
         // consumer below reads it, and temp_mf is swapped into temp_old_mf
         // partway through.
         BuildSurfaceTColumns(lev, dt);
-        // P2-1 deliverable 2: the wall law's per-step state and the ONE height
-        // datum, built here because the criterion -- the earliest of the four
-        // reader roles -- runs below in UpdateRemovalAfterCohesive. Building it
-        // once is what makes the four roles agree per face; building it per
-        // role would make them disagree by a sub-step. No-op, and no
-        // allocation, under the default side_face_h_law = typed.
-        UpdateWallLawState(lev);
         // P2-2 change 1: the property fields, refreshed at the cell
         // temperature BEFORE the criterion and the conduction dispatch read
         // them. No-op unless a phase sets law = grimsel.
@@ -1515,10 +1452,6 @@ protected:
         // BEFORE the H/Temp swaps below so the reset H(T_amb)/T_amb values
         // become the "old" state consumed by the thermal advance step.
         UpdateRemovalAfterCohesive(lev, time, dt);
-        // D2q-2b item 6: lateral per-cell removal, AFTER the column pass so the
-        // top-cell path is untouched and this step's newly exposed faces are
-        // the ones scored next step. No-op with the key off.
-        PerCellRemoval(lev, time, dt);
         std::swap(*H_mf[lev], *H_old_mf[lev]);
         std::swap(*temp_mf[lev], *temp_old_mf[lev]);
         if      (microstructure_enabled)                          AdvanceMicrostructure(lev, time, dt);
@@ -1529,6 +1462,11 @@ protected:
         // dispatch a single InvertHtoT here. The microstructure variant
         // selects the per-phase Material::Table by cell phase ID.
         InvertHtoT(lev);
+        {
+            double ts = amrex::second() - fr_step_t0;
+            amrex::ParallelDescriptor::ReduceRealMax(ts);
+            fr_t_step = static_cast<Set::Scalar>(ts);
+        }
     }
 
     void AdvanceConstAlpha(int lev, Set::Scalar time, Set::Scalar dt)
@@ -1892,18 +1830,6 @@ protected:
             ? ColumnTopSolid(lev) : amrex::Vector<int>();
         const int* ktc = k_top_col.data();
         const int ncx = dhi[0] - dlo[0] + 1;
-        // D2z: advance the per-column recession phase off this same mask,
-        // before anything reads it this step. Cheap (one pass over columns) and
-        // rank-consistent, because k_top_col is already domain-reduced.
-        if (surface_patch.side_face_step_height && owner && !k_top_col.empty())
-        {
-            step_split_nx = static_cast<std::size_t>(ncx);
-            UpdateColumnPhase(k_top_col, time);
-            AssertStepSplit(k_top_col, time);
-        }
-        const Set::Scalar* c_tl = col_t_last.empty() ? nullptr : col_t_last.data();
-        const Set::Scalar* c_dt = col_dt.empty()     ? nullptr : col_dt.data();
-        const int*         c_nv = col_nvoid.empty()  ? nullptr : col_nvoid.data();
         // D2q-1: the beam path counts SOLID cells, not geometric distance.
         // Only needed when the beam is actually on (BeamSource returns 0 at
         // P = 0), which keeps the large beam-free runs free of the gather.
@@ -1934,65 +1860,7 @@ protected:
         const bool        a_D_on  = (a_D != 0.0);
         const Set::Scalar h_gb0   = h_gb_conductance;
         const Set::Scalar dx_ax[3] = {DX[0], DX[1], DX[2]};
-        // D2k: side-face flux. One SurfaceCellFlux call serves both lateral
-        // axes and the face-form conductance 2k/dx equals the top face's
-        // 2k/dz, so require cubic cells rather than silently using dz for a
-        // face whose normal spacing is dx.
-        const bool        side_on = surface_patch.enabled && surface_patch.side_face_flux && owner;
-        const Set::Scalar side_f  = surface_patch.side_face_factor;
-        const Set::Scalar side_f_above = surface_patch.side_face_factor_above;
-        // D2x: both new keys default to the previous behaviour, so an unset run
-        // takes the identical branch and the identical expression below.
-        const Set::Scalar side_r_min2 = surface_patch.side_face_r_min
-                                      * surface_patch.side_face_r_min;
-        const bool side_area_exact = surface_patch.side_face_area_exact;
-        // D2z: the step-height closure's kernel locals.
-        //
-        // alpha = kappa / (rho*cp) is the thermal DIFFUSIVITY, taken from where
-        // both halves are consumed: the per-cell conductivity field kp (== the
-        // stencil's own kc) and mat->effective_rhocp(T), evaluated at the SAME
-        // cell temperature the conduction stencil uses (T_old(i,j,k)).
-        // ⚠ alpha is NOT the codebase's `kappa`, which is CONDUCTIVITY.
-        // dz*v/alpha is dimensionless; dz*v/conductivity is not, and the error
-        // would be silent -- no abort, no failed assertion.
-        // ⚠ The global `material` is NULL under microstructure -- which is
-        // every input this closure runs on. Use the CELL'S PHASE material, the
-        // same object the phase tables are built from, and fall back to the
-        // global only when there is no microstructure.
-        const Numeric::Material::Constant* mat_ph =
-            phase_materials.empty() ? nullptr : phase_materials.data();
-        const int mat_nph = static_cast<int>(phase_materials.size());
-        const Numeric::Material::Material* mat_k = material;
-        const bool side_step_h = surface_patch.side_face_step_height;
-        // P1e: the staircase orientation correction. Default off, and the
-        // parser refuses it without side_face_step_height, because all four
-        // AreaOfDelta sites live behind that key -- a silent no-op is the
-        // failure mode the guard prevents.
-        const bool side_staircase = surface_patch.side_face_staircase;
-        const bool wetted_law  =
-            (surface_patch.side_face_area_law == SurfacePatch::SideAreaLaw::Wetted);
-        const Set::Scalar t_now = time;
-        // D2q-2b item 7: cap the coefficient a SIDE face sees, ONLY when
-        // per-cell removal is on. -1 = no cap, which is every pre-D2q-2b run.
-        // Applied identically in the kernel and in the ledger, or the ledger
-        // stops reproducing the kernel's flux.
-        const Set::Scalar side_hmax =
-            (surface_patch.side_face_flux && spall_per_cell_removal)
-            ? surface_patch.side_face_h_max : Set::Scalar(-1.0);
-        // D2aa: the explicit lateral (h, T) pair, hoisted for the device lambda.
-        const Set::Scalar side_h_ex = surface_patch.side_face_h;
-        // D2ab deliverable 2: the annulus pair reaches only faces beyond the
-        // burner radius; inside it a face keeps the inherited impinging map.
-        // 0 (the default) squares to 0 and r2_col >= 0 always holds, so an
-        // unset run takes the identical branch -- identity by construction.
-        const Set::Scalar side_h_rmin2 = surface_patch.side_face_h_r_min
-                                       * surface_patch.side_face_h_r_min;
         const Set::Scalar inv_dx  = 1.0 / DX[0];
-        const Set::Scalar inv_dy  = 1.0 / DX[1];
-        if (side_on && !(std::abs(DX[0] - DX[1]) <= 1.0e-12 * DX[0] &&
-                         std::abs(DX[0] - DX[2]) <= 1.0e-12 * DX[0]))
-            Util::Abort(INFO, "surface_patch.side_face_flux = 1 requires cubic cells "
-                        "(dx = dy = dz); got ", DX[0], ", ", DX[1], ", ", DX[2]);
 
         // Step 11b: the Hu onset validation uses a homogeneous one-phase
         // microstructure so the DP damage fields exist. Apply the same
@@ -2010,33 +1878,21 @@ protected:
                                    ? surface_patch.T_at(time) : 0.0;
         // D2a: one per-column (h, T_gas) evaluation per call, shared by the
         // kernel, the pin rule, the ledger and the diagnostics.
+        // P2-8 F1: the face list, after the column tops and BEFORE the march
+        // (BuildFlameColumns), which bills every listed face.
+        const bool fl_on = surface_patch.face_list && sp_on && void_aware
+                           && !sp_presc;
+        if (fl_on) BuildFaceList(lev, k_top_col);
         if (sp_on) BuildFlameColumns(lev, time, dt, k_top_col);
-        // D2ab deliverable 1: the RESOLVED wall temperature, not
-        // surface_patch.side_face_T -- under `live` the key holds the -1
-        // sentinel and the number lives in side_T_eff.
-        // ⚠ Hoisted HERE, not with the other side_* locals above, because
-        // BuildFlameColumns is what resolves it. Reading it earlier would hand
-        // the kernel the PREVIOUS step's value while the march and the ledger
-        // used this one -- a split the power identity would catch, but only
-        // after a 16-minute leg.
-        const Set::Scalar side_T_ex = side_T_eff;
         const Set::Scalar* fh  = sp_on ? flame_h.data()  : nullptr;
         const Set::Scalar* fTg = sp_on ? flame_Tg.data() : nullptr;
-        // D2r-1: per-column stand-off, so the side factor can differ above and
-        // below the nozzle plane. Same array the march and the pin rule read.
-        const Set::Scalar* fs  = sp_on ? flame_s.data()  : nullptr;
+        // P2-8 F5: the list every kernel face reads.
+        const FaceEntry* flp = fl_on ? fl_faces.data() : nullptr;
         // C1: pinned runs the face Newton (face_form = true) plus the pin.
         const bool        sp_pinned = sp_on && surface_patch.robin_form ==
                                       SurfacePatch::RobinForm::Pinned;
         const bool        sp_face  = surface_patch.robin_form ==
                                      SurfacePatch::RobinForm::Face || sp_pinned;
-        // P0b rev5 deliverable 7: the lateral rule fires only under `surface`,
-        // and rev7 deliverable 6 lets it be switched off there without
-        // touching the top faces.
-        const bool        sp_surfform = surface_patch.robin_form ==
-                                        SurfacePatch::RobinForm::Surface
-                                     && surface_patch.side_T_form ==
-                                        SurfacePatch::SideTForm::Follow;
         if (sp_pinned) BuildPinEffective(lev, time);
         const Set::Scalar* tpe = sp_pinned ? pin_T_eff.data() : nullptr;
 
@@ -2059,6 +1915,8 @@ protected:
                 void_aware ? removed_mf.Patch(lev, mfi) : surface_mf.Patch(lev, mfi);
             Set::Patch<const Set::Scalar> phi   =
                 void_aware ? phi_mf.Patch(lev, mfi) : surface_mf.Patch(lev, mfi);
+            amrex::Array4<const int> fli;
+            if (fl_on) fli = fl_index->const_array(mfi);
             amrex::ParallelFor(bx, [=] (int i, int j, int k) {
                 Set::Scalar Tc = T_old(i, j, k);
                 Set::Scalar Dc = Df(i, j, k);
@@ -2103,56 +1961,6 @@ protected:
                         else             return Set::Scalar(0.0);
                     }
                     Set::Scalar kf = 1.0 / inv;
-                    // D2z Step 3: correct the LATERAL face conductance across a
-                    // staircase step. THIS is the site -- the harmonic face
-                    // conductance -- not the level-set shift in Removal.H,
-                    // which is recession, not conduction.
-                    //
-                    // The interface at the SHORTER column's top level is solid
-                    // on both sides: no void, so the void test above leaves it
-                    // alone. The model treats the taller column's cell there as
-                    // buried interior when it physically sits only delta*dz
-                    // below the surface, and that is the drain -- k*dT/dx into
-                    // rock nothing has heated.
-                    //
-                    // g(delta) scales it to what a cell at its TRUE depth would
-                    // pass. ⚠ SYMMETRIC: the test and delta depend only on the
-                    // unordered pair, so the face carries the same conductance
-                    // evaluated from either side and energy is conserved.
-                    if (side_step_h && axis < 2 && dk == 0 && ktc && c_tl
-                        && (mat_k || (mat_ph && pc >= 0 && pc < mat_nph)))
-                    {
-                        const int c1 = (j  - dlo[1]) * ncx + (i  - dlo[0]);
-                        const int c2 = (jj - dlo[1]) * ncx + (ii - dlo[0]);
-                        const int k1 = ktc[c1], k2 = ktc[c2];
-                        const int kS = k1 < k2 ? k1 : k2;      // shorter column's top
-                        const int kT = k1 < k2 ? k2 : k1;
-                        const int cS = k1 < k2 ? c1 : c2;
-                        const int cT = k1 < k2 ? c2 : c1;
-                        if (kT > kS && k == kS)
-                        {
-                            int fb = 0;
-                            const Set::Scalar d =
-                                PairDelta(ktc, c_tl, c_dt, c_nv, cT, cS, t_now, fb);
-                            // v = dz / dt_i of the TALLER column -- it is that
-                            // column's cell being treated as buried, so its own
-                            // near-surface length alpha/v is the relevant one.
-                            // Symmetric, because "taller" is a property of the
-                            // unordered pair.
-                            const Set::Scalar rc =
-                                (mat_ph && pc >= 0 && pc < mat_nph)
-                                ? mat_ph[pc].effective_rhocp(Tc)
-                                : mat_k->effective_rhocp(Tc);
-                            Set::Scalar a_diff = 0.0;
-                            if (rc > 0.0 && c_dt[cT] > 0.0 && kc > 0.0)
-                            {
-                                const Set::Scalar alpha_d = kc / rc;
-                                const Set::Scalar v = DX[2] / c_dt[cT];
-                                if (alpha_d > 0.0) a_diff = DX[2] * v / alpha_d;
-                            }
-                            kf *= StepConductance(d, kT - kS, a_diff);
-                        }
-                    }
                     return kf;
                 };
 
@@ -2203,168 +2011,25 @@ protected:
                                     nullptr,
                                     SurfaceRobinT(
                                         static_cast<std::size_t>(col_c)));
+                // P2-8 F4: the column-top +z face keeps the surface form, x w
+                // (gain AND losses: both scale with the face's area).
+                int fl_f = 0, fl_n = 0;
+                if (fl_on && !self_void) { fl_f = fli(i, j, k, 0); fl_n = fli(i, j, k, 1); }
+                // P2-9: a LISTED cell's every face -- the top included -- is
+                // heated below at the cell's one T_s, x w (FrFaceFlux).
+                if (fl_n > 0) { q_in = 0.0; q_out = 0.0; }
                 if (in_patch) div_kgrad += q_in * inv_dz;
 
-                // D2k: flux on EXPOSED VERTICAL FACES of a staircase wall.
-                // A solid cell whose column lies in the patch and which has a
-                // void lateral neighbour is a piece of exposed wall: the gas
-                // reaches it, and before D2k the model heated only the column
-                // top, so a firing cell beside a taller cold column lost
-                // k(T_top - T_wall)/dx through a face that was never heated
-                // (~240 kW/m2 at 2 mm, ~480 at 1 mm, against q_pin ~ 520 --
-                // the 1/dx scaling that makes refinement worse, D2j-0b).
-                //
-                // The face uses the SAME SurfaceCellFlux call as the column's
-                // top face -- the column's h and T_gas, its pin, the same
-                // losses -- evaluated at this cell's own T. Reusing the shared
-                // routine is load-bearing: it carries the state rule
-                // T_s = min(T_f, T_pin), so a side-heated cell cannot be
-                // driven above the firing temperature and become an
-                // unremovable heat reservoir.
-                //
-                // The `s <= 0` exclusion applies identically and for free: a
-                // column above the nozzle plane has flame_h = 0 (set in
-                // BuildFlameColumns under jet_enthalpy, or by the h_expr
-                // itself), so q_side is exactly 0 there. Nothing here weakens
-                // the D2j-0b C1/C2/C3 finding.
-                //
-                // Out-of-domain lateral neighbours are NOT faces: removed_mf's
-                // ghosts are undefined outside the domain (the k_face lambda
-                // above takes the same care).
-                const Set::Scalar r2_col = (x - sp_x0) * (x - sp_x0)
-                                         + (y - sp_y0) * (y - sp_y0);
-                const bool col_in_patch = side_on && sp_on && !sp_presc && !self_void
-                                        && r2_col <= sp_r2 && r2_col >= side_r_min2;
-                if (col_in_patch)
+
+                // P2-9 R1: EVERY listed face -- top, up, side, down -- at its
+                // OWN h (F2), the CELL's T_s, x its weight (F3). Risers are
+                // part of the surface, not surfaces of their own.
+                for (int q = fl_f; q < fl_f + fl_n; ++q)
                 {
-                    const bool vxm = (i > dlo[0]) && rem(i-1, j, k) > 0.5;
-                    const bool vxp = (i < dhi[0]) && rem(i+1, j, k) > 0.5;
-                    const bool vym = (j > dlo[1]) && rem(i, j-1, k) > 0.5;
-                    const bool vyp = (j < dhi[1]) && rem(i, j+1, k) > 0.5;
-                    const int nfx = (vxm ? 1 : 0) + (vxp ? 1 : 0);
-                    const int nfy = (vym ? 1 : 0) + (vyp ? 1 : 0);
-                    if (nfx + nfy > 0)
-                    {
-                        Set::Scalar s_in = 0.0, s_out = 0.0, s_rob = 0.0, s_los = 0.0;
-                        Set::Scalar h_side = fh ? fh[col_c] : Set::Scalar(0.0);
-                        Set::Scalar T_side = fTg ? fTg[col_c] : Set::Scalar(0.0);
-                        // D2aa: the explicit lateral pair overrides the inherited
-                        // top-face map. Both or neither, enforced at parse.
-                        // D2ab deliverable 2: gated on the COLUMN radius,
-                        // which is the same r2_col the patch test above uses.
-                        if (side_h_ex >= 0.0 && r2_col >= side_h_rmin2)
-                        { h_side = side_h_ex; T_side = side_T_ex; }
-                        // P2-1 deliverable 4, ROLE 1 of 4 (the KERNEL -- what
-                        // actually heats the rock). One resolver, per face.
-                        Set::Scalar h_face =
-                            SideFaceH(h_side, r2_col, static_cast<int>(col_c), k);
-                        if (side_hmax > 0.0 && h_face > side_hmax) h_face = side_hmax;
-                        // P0b rev5 deliverable 7 -- ONE RULE, TWO REGIMES for a
-                        // lateral face. Revision 2 left every side face on the
-                        // cell average, and the Meier rerun then measured the
-                        // side faces carrying 47 % of P_robin over the rate
-                        // window (62 % by the end of the run), so "a lateral
-                        // face has no column profile" stopped being a small
-                        // approximation.
-                        //   7a  HOLE WALL, r >= side_face_h_r_min: the FACE
-                        //       Newton. A non-receding wall conducts inward
-                        //       diffusively -- penetration passes dz at 1.45 s
-                        //       (2 mm) and is 8.3 cells by 100 s -- so its
-                        //       near-face profile is very nearly LINEAR, which
-                        //       is the half-cell profile the face form already
-                        //       assumes. Not the surface reconstruction: that
-                        //       fits an EXPONENTIAL of the column's recession
-                        //       rate, and a wall is not receding.
-                        //   7b  FLOOR RISER, r < side_face_h_r_min: the owning
-                        //       COLUMN's T_surf. A riser is the vertical step
-                        //       of a receding floor, so the column's own
-                        //       exponential IS its profile -- exact for a
-                        //       one-cell step, and the multi-cell riser share
-                        //       is logged to bound the rest.
-                        // ⚠ Both regimes are reached ONLY under robin_form =
-                        // surface. Under cell/face/pinned lat_face == sp_face
-                        // and lat_Ts == 0, so the controls and every frozen
-                        // study from d2v to d2ad stay byte-identical.
-                        const bool lat_wall = sp_surfform
-                                            && (r2_col >= side_h_rmin2);
-                        const bool lat_face = sp_surfform ? true : sp_face;
-                        const Set::Scalar lat_Ts = (sp_surfform && !lat_wall)
-                            ? SurfaceRobinT(static_cast<std::size_t>(col_c))
-                            : Set::Scalar(0.0);
-                        SurfaceCellFlux(true, lat_face, 1.0,
-                                        h_face,
-                                        T_side,
-                                        kc, DX[0], Tc,
-                                        eps_lo, eps_hi, T_eps_b, sig_SB, h_c, T_a,
-                                        s_in, s_out, s_rob, s_los,
-                                        tpe ? tpe[col_c] : Set::Scalar(0.0),
-                                        nullptr, lat_Ts);
-                        // dx == dy == dz is enforced when the key is on, so one
-                        // call serves both axes and inv_dx == inv_dy.
-                        // D2r-1: above the nozzle plane (s <= 0) the side
-                        // factor may differ. Sentinel < 0 keeps the single
-                        // uniform factor, so unset is byte-identical.
-                        const bool above_c =
-                            (side_f_above >= 0.0 && fs && !(fs[col_c] > 0.0));
-                        const Set::Scalar sf_c = above_c ? side_f_above : side_f;
-                        // D2x: the derived area applies to BELOW-plane faces
-                        // only. Above the plane the D2r-1 sentinel path is
-                        // untouched, so a leg setting side_face_factor_above =
-                        // 0.0 still puts exactly 0 W there; honest area on the
-                        // free surface would blanket it (the D2u fault).
-                        // D2z: the step-height closure. delta uses BOTH
-                        // columns' phases; the per-cell split is Step 3b.
-                        // BELOW-plane only, same as D2x -- above the plane the
-                        // D2r-1 sentinel path is untouched.
-                        if (side_step_h && !above_c && ktc && c_tl)
-                        {
-                            const int kT = ktc[col_c];
-                            Set::Scalar wsum = 0.0;
-                            int fb = 0;
-                            const Set::Scalar pT =
-                                ColPhi(c_tl, c_dt, c_nv, col_c, t_now, fb);
-                            const int nbr[4] = {col_c - 1, col_c + 1,
-                                                col_c - ncx, col_c + ncx};
-                            const bool has[4] = {vxm, vxp, vym, vyp};
-                            // P1e: riser cell counts per face, 0 where the
-                            // face is not open. SITE 1 OF 4 -- the flux kernel,
-                            // i.e. what actually heats the rock.
-                            int rn[4] = {0, 0, 0, 0};
-                            for (int d = 0; d < 4; ++d)
-                            {
-                                if (!has[d]) continue;
-                                const int cS = nbr[d];
-                                const int kS = ktc[cS];
-                                const int n  = kT - kS;
-                                if (n < 1) continue;
-                                rn[d] = n;
-                                int fbS = 0;
-                                const Set::Scalar pS =
-                                    ColPhi(c_tl, c_dt, c_nv, cS, t_now, fbS);
-                                const Set::Scalar w =
-                                    StepCellWeight(n, k, kT, kS, pT, pS);
-                                wsum += AreaOfDelta(w < 0.0 ? 0.0 : w, wetted_law);
-                            }
-                            // P1e: the factor is PER COLUMN, so it multiplies the
-                            // summed area, never an individual face's share.
-                            if (side_staircase)
-                                wsum *= StaircaseFactor(rn[0], rn[1], rn[2], rn[3]);
-                            div_kgrad += (s_in - s_out) * wsum * inv_dx;
-                        }
-                        else if (side_area_exact && !above_c && ktc)
-                        {
-                            const int nc = ktc[col_c];
-                            Set::Scalar wsum = 0.0;
-                            if (vxm) wsum += RiserWeight(nc - ktc[col_c - 1],   DX[0], DX[2]);
-                            if (vxp) wsum += RiserWeight(nc - ktc[col_c + 1],   DX[0], DX[2]);
-                            if (vym) wsum += RiserWeight(nc - ktc[col_c - ncx], DX[0], DX[2]);
-                            if (vyp) wsum += RiserWeight(nc - ktc[col_c + ncx], DX[0], DX[2]);
-                            div_kgrad += (s_in - s_out) * wsum * inv_dx;
-                        }
-                        else
-                        div_kgrad += sf_c * (s_in - s_out)
-                                   * (Set::Scalar(nfx) * inv_dx + Set::Scalar(nfy) * inv_dy);
-                    }
+                    Set::Scalar a_in = 0.0, a_out = 0.0, a_rob = 0.0, a_los = 0.0;
+                    FrFaceFlux(flp[q], fTg ? flp[q].Tg : Set::Scalar(0.0), kc, Tc, DX[0],
+                               a_in, a_out, a_rob, a_los);
+                    div_kgrad += flp[q].w * (a_in - a_out) * inv_dx;
                 }
 
                 // E1: Beer-Lambert path is measured through material from the
@@ -2411,6 +2076,8 @@ protected:
         // E1: standing beam-deposition closure counter (thermo.dat).
         if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, k_top_col);
         // S1: whole-domain energy ledger (thermo.dat), after the H update.
+        // P2-8: the per-class robin power, the kernel's terms summed by class.
+        if (fl_on) FaceListDiagnostics(lev);
         if (ledger_enabled) EnergyLedger(lev, time, dt, k_top_col);
         // C1/D2a: pinned-closure branch counts and spatial-flame diagnostics.
         if (owner && (sp_pinned || (sp_on && surface_patch.use_expr)))
@@ -2436,27 +2103,6 @@ protected:
         const amrex::Box& domain = geom[lev].Domain();
         const int nx = domain.length(0), ny = domain.length(1);
         const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
-        // D2ab deliverable 1: resolve the wall gas temperature ONCE per step,
-        // here, before the march (called below), the conduction kernel and the
-        // ledger read it. All three must see the SAME number: the march charges
-        // the side term into jet_P_face, so a kernel/march split breaks the
-        // power identity -- the one check that catches it.
-        //
-        // ⚠ Under `live` this is the march's own jet_T_exhaust from the
-        // PREVIOUS step. The march that computes this step's value runs below,
-        // so using its own output inside itself would be circular. Same
-        // one-step lag as jet_T_rec (D2b, :2793) and at dt = 16 ms the exhaust
-        // moves well under 1 K per step.
-        //
-        // ⚠ First step: no exhaust exists yet, and the ONE value that must not
-        // be used as the seed is the 293 K ambient -- an h chosen to heat the
-        // wall would REFRIGERATE it. Seed with the nozzle temperature, the
-        // gas's upper bound, for exactly one step out of ~31 000.
-        if (surface_patch.side_face_T_live)
-            side_T_eff = (jet_T_exhaust > 0.0) ? jet_T_exhaust
-                                               : surface_patch.jet_T_nozzle;
-        else
-            side_T_eff = surface_patch.side_face_T;
         if (!surface_patch.use_expr)
         {
             flame_h.assign(ncols, surface_patch.h_conv);
@@ -2578,273 +2224,56 @@ protected:
             if (in_coll) s_min = std::min(s_min, s);
         }
         patch_min_standoff = std::isfinite(s_min) ? s_min : 0.0;
+        // P2-8 F2: every listed face's h, at its centre, BEFORE the march.
+        if (surface_patch.face_list)
+        {
+            FaceListHeat(lev, z_n, time, k_top_col);
+            // P2-9 R1: every listed cell's T_s, before the march bills them
+            FrAssignTs(lev);
+        }
         if (surface_patch.jet_enthalpy) JetEnthalpyMarch(lev, time, k_top_col);
-        // D2r-1 item 3: gated on the same key as its thermo columns, so an
-        // unset run does no extra work and writes the same thermo.dat.
-        if (surface_patch.side_face_factor_above >= 0.0)
-            WallStepDiagnostic(lev, k_top_col, time);
+        if (surface_patch.face_list) FaceListTg(lev);
     }
 
-    // D2z: per-column recession phase, advanced once per step from the
-    // domain-reduced k_top_col. A column whose k_top DROPPED since last step
-    // voided at least one cell; record the interval since its previous void as
-    // the TRAILING interval and stamp t_last.
-    //
-    // ⚠ TRAILING, not hindsight. The offline estimator can look at the actual
-    // next void; the live one cannot, so it extrapolates with the previous
-    // interval. Intervals vary 2-10 %, so this is second order, and the clamp
-    // at phi = 1 degrades an overdue column gracefully instead of letting it
-    // run away.
-    //
-    // A column with fewer than two voids has no interval and gets phi = 1 at
-    // the use site, i.e. delta = the discrete cell count and g = 1 -- exactly
-    // today's behaviour. That population is counted, never silently absorbed.
-    void UpdateColumnPhase(const amrex::Vector<int>& k_top_col, Set::Scalar time)
+    // P2-11b item 5: every listed face's gas temperature, after the march.
+    // position: the column's value, exactly. path: the march wrote e.Tg per
+    // face; a face it did not visit (blocked, unreached, s <= 0) takes T_ent,
+    // and the column's flame_Tg (column diagnostics only under the list) takes
+    // its top face's value. Then the path-mode plotfile fields.
+    void FaceListTg(int lev)
     {
-        const std::size_t ncols = k_top_col.size();
-        if (col_ktop_prev.size() != ncols)
+        if (!fl_ready) return;
+        if (!surface_patch.face_heat_path)
         {
-            col_ktop_prev.assign(ncols, std::numeric_limits<int>::min());
-            col_t_last.assign(ncols, 0.0);
-            col_dt.assign(ncols, 0.0);
-            col_nvoid.assign(ncols, 0);
+            for (auto& e : fl_faces) e.Tg = flame_Tg[static_cast<std::size_t>(e.col)];
+            return;
         }
-        for (std::size_t c = 0; c < ncols; ++c)
+        for (const auto& e : fl_faces)
+            if (e.cls == FL_TOP) flame_Tg[static_cast<std::size_t>(e.col)] = e.Tg;
+        if (fl_s_mf[lev] && fl_Tg_mf[lev])
         {
-            const int k = k_top_col[c];
-            if (k == std::numeric_limits<int>::min()) continue;
-            const int kp = col_ktop_prev[c];
-            if (kp != std::numeric_limits<int>::min() && k < kp)
+            fl_s_mf[lev]->setVal(-1.0);
+            fl_Tg_mf[lev]->setVal(0.0);
+            for (amrex::MFIter mfi(*fl_index, false); mfi.isValid(); ++mfi)
             {
-                if (col_nvoid[c] >= 1)
-                {
-                    const Set::Scalar dt = time - col_t_last[c];
-                    if (dt > 0.0) col_dt[c] = dt;
-                }
-                col_t_last[c] = time;
-                ++col_nvoid[c];
-            }
-            col_ktop_prev[c] = k;
-        }
-    }
-
-    // D2z Step 3b: ASSERT the per-cell split, do not trust it.
-    //
-    // The packet's split ((1-phi_T) top, 1 per middle, phi_S lowest) sums to
-    // delta - 1: the phi_S piece belongs to a cell with NO void neighbour, so
-    // it must be FOLDED INTO the lowest exposed cell. Without this assertion
-    // the four sites can be edited "identically" and still disagree with the
-    // ledger, and the disagreement would look like physics.
-    //
-    // Per pair: sum StepCellWeight over the exposed cells k in [kS+1, kT] and
-    // require it to equal delta to round-off.
-    void AssertStepSplit(const amrex::Vector<int>& k_top_col, Set::Scalar time)
-    {
-        if (!amrex::ParallelDescriptor::IOProcessor()) return;
-        const std::size_t ncols = k_top_col.size();
-        if (ncols == 0 || col_t_last.empty()) return;
-        const int nx = static_cast<int>(step_split_nx);
-        if (nx <= 0) return;
-        const int* ktc = k_top_col.data();
-        const int ny = static_cast<int>(ncols) / nx;
-        for (int j = 0; j < ny; ++j)
-        for (int i = 0; i < nx; ++i)
-        {
-            const int cT = j * nx + i;
-            if (ktc[cT] == std::numeric_limits<int>::min()) continue;
-            const int nb[2] = {(i + 1 < nx) ? cT + 1 : -1,
-                               (j + 1 < ny) ? cT + nx : -1};
-            for (int d = 0; d < 2; ++d)
-            {
-                if (nb[d] < 0) continue;
-                int ca = cT, cb = nb[d];
-                if (ktc[cb] == std::numeric_limits<int>::min()) continue;
-                if (ktc[cb] > ktc[ca]) { const int t = ca; ca = cb; cb = t; }
-                const int kT = ktc[ca], kS = ktc[cb];
-                const int n = kT - kS;
-                if (n < 1) continue;
-                int fb = 0;
-                const Set::Scalar pT = ColPhi(col_t_last.data(), col_dt.data(),
-                                              col_nvoid.data(), ca, time, fb);
-                const Set::Scalar pS = ColPhi(col_t_last.data(), col_dt.data(),
-                                              col_nvoid.data(), cb, time, fb);
-                Set::Scalar sum = 0.0;
-                for (int k = kS + 1; k <= kT; ++k)
-                    sum += StepCellWeight(n, k, kT, kS, pT, pS);
-                const Set::Scalar d_pair = Set::Scalar(n) + pS - pT;
-                if (std::abs(sum - d_pair) > 1.0e-10 * std::max(1.0, std::abs(d_pair)))
-                    Util::Abort(INFO, "D2z Step 3b split is inconsistent at columns (",
-                                ca, ",", cb, ") n = ", n, ": per-cell pieces sum to ",
-                                sum, " but delta = ", d_pair,
-                                ". The four side sites and the ledger would disagree "
-                                "and it would look like physics.");
+                const amrex::Box& bx = mfi.validbox();
+                amrex::Array4<const int> const& fi = fl_index->const_array(mfi);
+                amrex::Array4<Set::Scalar> const& fs = (*fl_s_mf[lev]).array(mfi);
+                amrex::Array4<Set::Scalar> const& ft = (*fl_Tg_mf[lev]).array(mfi);
+                const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+                for (int k = lo.z; k <= hi.z; ++k)
+                for (int j = lo.y; j <= hi.y; ++j)
+                for (int i = lo.x; i <= hi.x; ++i)
+                    for (int q = fi(i, j, k, 0); q < fi(i, j, k, 0) + fi(i, j, k, 1); ++q)
+                    {
+                        const FaceEntry& e = fl_faces[static_cast<std::size_t>(q)];
+                        if (e.blk || !(e.sp >= 0.0)) continue;
+                        fs(i, j, k) = e.sp;
+                        ft(i, j, k) = std::max(ft(i, j, k), e.Tg);
+                    }
             }
         }
     }
-
-    // D2r-1 item 3 (owed since D2q-2c): THE DRAIN, measured. When a column
-    // spalls it drops one cell, so its hot new top cell sits against the buried
-    // interior of the taller column beside it and loses k*(T_top - T_wall)/dx
-    // sideways. D2o-0b measured 302 kW/m^2 -- 58 % of the ~520 arriving -- and
-    // it doubles when dx halves, because nothing heats the receiving rock.
-    // Reported as the mean over exactly those faces, with the face count, so a
-    // mesh pair can be compared directly against that number.
-    // Diagnostic only: reads state, writes no field, changes no trajectory.
-    void WallStepDiagnostic(int lev, const amrex::Vector<int>& k_top_col,
-                            Set::Scalar time_now = 0.0)
-    {
-        const amrex::Box& domain = geom[lev].Domain();
-        const int nx = domain.length(0);
-        const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
-        const int ihi_dom = domain.bigEnd(0),   jhi_dom = domain.bigEnd(1);
-        const Set::Scalar* DX = geom[lev].CellSize();
-        const bool void_aware = removal_enabled();
-        Set::Scalar q_sum = 0.0, n_face = 0.0, q_eff = 0.0;
-        // D2z-2 deliverable 2: the IN-GATE twins. This loop walks EVERY column
-        // in the domain, and heating stops at surface_patch.radius, so the
-        // patch edge carries permanent cliffs whose outer column has never
-        // fired: nvoid < 2 => phi = 1 => delta = n, and col_dt = 0 => a = 0, so
-        // StepConductance returns exactly 1. Those faces enter at g = 1 and
-        // outnumber the real ones -- D2z's ungated mean g read 0.843 where the
-        // in-patch value is g(0.257) = 0.335.
-        // ⚠ surface_patch.radius is 0.2 on Meier (the whole domain), so it is
-        // NOT usable as this gate; step_diag_radius is its own key.
-        // ⚠ The gate is applied to the TALLER column -- the one whose face IS
-        // the riser, and the one that sits OUTSIDE the patch at an edge cliff.
-        // delta_offline.py applies the radius the same way, which is what
-        // criterion (b) means by specifying both sides identically.
-        const Set::Scalar sdr  = surface_patch.step_diag_radius;
-        const bool gate_on     = (sdr > 0.0);
-        const Set::Scalar sdr2 = sdr * sdr;
-        const Set::Scalar* PLO_d = geom[lev].ProbLo();
-        Set::Scalar q_in = 0.0, qe_in = 0.0, n_in = 0.0;
-        Set::Scalar g_sum = 0.0, g_max = 0.0, n_multi = 0.0;
-        // D2aa deliverable 4: the same multi-cell count restricted to the pad
-        // ring [foot_r_inner, foot_r_outer). Required by the false-pass test --
-        // without it an in-band rate cannot be told from the step drain
-        // returning on the ring the burner rests on.
-        Set::Scalar n_pads = 0.0, n_pads_multi = 0.0;
-        const Set::Scalar ri2_p = surface_patch.foot_r_inner * surface_patch.foot_r_inner;
-        const Set::Scalar ro2_p = surface_patch.foot_r_outer * surface_patch.foot_r_outer;
-        for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box& bx = mfi.validbox();
-            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).const_array(mfi);
-            amrex::Array4<const Set::Scalar> const& kp    = (*kappa_mf[lev]).const_array(mfi);
-            amrex::Array4<const Set::Scalar> const& Df    = (*D_mf[lev]).const_array(mfi);
-            // Lateral neighbours are read through the GHOST layer, exactly as
-            // the conduction kernel and the side-face branch already do, so the
-            // measurement does not depend on the box decomposition.
-            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
-            amrex::Array4<const Set::Scalar> const& ph_w = (*phase_mf[lev]).const_array(mfi);
-            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
-            const int nbr[4][2] = {{-1,0},{1,0},{0,-1},{0,1}};
-            for (int j = lo.y; j <= hi.y; ++j)
-            for (int i = lo.x; i <= hi.x; ++i)
-            {
-                const std::size_t c = static_cast<std::size_t>(j - jlo_dom) * nx + (i - ilo_dom);
-                const int k = k_top_col[c];
-                if (k == std::numeric_limits<int>::min()) continue;
-                if (k < lo.z || k > hi.z) continue;
-                const Set::Scalar Tc = T_old(i, j, k);
-                const Set::Scalar kc = kp(i, j, k) * std::exp(-kappa_damage_alpha * Df(i, j, k));
-                for (const auto& d : nbr)
-                {
-                    const int i2 = i + d[0], j2 = j + d[1];
-                    if (i2 < ilo_dom || i2 > ihi_dom || j2 < jlo_dom || j2 > jhi_dom) continue;
-                    const std::size_t c2 =
-                        static_cast<std::size_t>(j2 - jlo_dom) * nx + (i2 - ilo_dom);
-                    const int k2 = k_top_col[c2];
-                    if (k2 == std::numeric_limits<int>::min()) continue;
-                    // The neighbour must be TALLER, so the cell beside this top
-                    // is that column's buried interior, not its own top.
-                    if (k2 <= k) continue;
-                    if (void_aware && rem(i2, j2, k) > 0.5) continue;   // not solid there
-                    const Set::Scalar q_raw = kc * (Tc - T_old(i2, j2, k)) / DX[0];
-                    q_sum  += q_raw;
-                    // D2z criterion (b): the EFFECTIVE flux, under the SAME
-                    // face rule the kernel applies. This diagnostic reads the
-                    // RAW cell conductivity, so without this it would move only
-                    // through the temperatures and a correct conductance
-                    // correction would look like it did nothing.
-                    Set::Scalar g = 1.0;
-                    if (surface_patch.side_face_step_height && !col_t_last.empty()
-                        && (material || !phase_materials.empty()))
-                    {
-                        int fb = 0;
-                        const Set::Scalar d =
-                            PairDelta(k_top_col.data(), col_t_last.data(), col_dt.data(),
-                                      col_nvoid.data(), static_cast<int>(c2),
-                                      static_cast<int>(c), time_now, fb);
-                        const int pcw = static_cast<int>(ph_w(i, j, k));
-                        const Set::Scalar rc =
-                            (!phase_materials.empty() && pcw >= 0
-                             && pcw < static_cast<int>(phase_materials.size()))
-                            ? phase_materials[pcw].effective_rhocp(Tc)
-                            : material->effective_rhocp(Tc);
-                        Set::Scalar a_d = 0.0;
-                        if (rc > 0.0 && col_dt[c2] > 0.0 && kc > 0.0)
-                            a_d = DX[2] * (DX[2] / col_dt[c2]) / (kc / rc);
-                        g = StepConductance(d, k2 - k, a_d);
-                    }
-                    q_eff  += q_raw * g;
-                    n_face += 1.0;
-                    // The in-gate population: taller column (i2, j2) inside
-                    // step_diag_radius of the patch centre. Ungated columns
-                    // keep their old meaning above, untouched.
-                    const Set::Scalar x2 = PLO_d[0] + (i2 + 0.5) * DX[0]
-                                         - surface_patch.x0;
-                    const Set::Scalar y2 = PLO_d[1] + (j2 + 0.5) * DX[1]
-                                         - surface_patch.y0;
-                    if (!gate_on || (x2 * x2 + y2 * y2) <= sdr2)
-                    {
-                        q_in  += q_raw;
-                        qe_in += q_raw * g;
-                        n_in  += 1.0;
-                        g_sum += g;
-                        if (g > g_max) g_max = g;
-                        if (k2 - k >= 2) n_multi += 1.0;
-                    }
-                    // Pad ring: independent of step_diag_radius, because the
-                    // ring is a fixed piece of hardware, not a scoring choice.
-                    {
-                        const Set::Scalar xp = PLO_d[0] + (i2 + 0.5) * DX[0]
-                                             - surface_patch.x0;
-                        const Set::Scalar yp = PLO_d[1] + (j2 + 0.5) * DX[1]
-                                             - surface_patch.y0;
-                        const Set::Scalar rr = xp * xp + yp * yp;
-                        if (rr >= ri2_p && rr < ro2_p)
-                        {
-                            n_pads += 1.0;
-                            if (k2 - k >= 2) n_pads_multi += 1.0;
-                        }
-                    }
-                }
-            }
-        }
-        amrex::ParallelDescriptor::ReduceRealSum(q_sum);
-        amrex::ParallelDescriptor::ReduceRealSum(q_eff);
-        amrex::ParallelDescriptor::ReduceRealSum(n_face);
-        amrex::ParallelDescriptor::ReduceRealSum(q_in);
-        amrex::ParallelDescriptor::ReduceRealSum(qe_in);
-        amrex::ParallelDescriptor::ReduceRealSum(n_in);
-        amrex::ParallelDescriptor::ReduceRealSum(g_sum);
-        amrex::ParallelDescriptor::ReduceRealSum(n_multi);
-        amrex::ParallelDescriptor::ReduceRealMax(g_max);
-        amrex::ParallelDescriptor::ReduceRealSum(n_pads);
-        amrex::ParallelDescriptor::ReduceRealSum(n_pads_multi);
-        wall_step_f_multi_pads = (n_pads > 0.0) ? n_pads_multi / n_pads : 0.0;
-        wall_step_q     = (n_face > 0.0) ? q_sum / n_face : 0.0;
-        wall_step_q_eff = (n_face > 0.0) ? q_eff / n_face : 0.0;
-        wall_step_n_in     = n_in;
-        wall_step_q_in     = (n_in > 0.0) ? q_in  / n_in : 0.0;
-        wall_step_q_eff_in = (n_in > 0.0) ? qe_in / n_in : 0.0;
-        step_g_mean        = (n_in > 0.0) ? g_sum / n_in : 0.0;
-        step_g_max         = g_max;
-        wall_step_f_multi  = (n_in > 0.0) ? n_multi / n_in : 0.0;
-        wall_step_n     = n_face;
-    }
-
 
     // D2b: burner-on-feet descent (surface_patch.nozzle_descent = feet), lev 0,
     // once per step, before the stand-offs are computed. The foot annulus is
@@ -3046,29 +2475,11 @@ protected:
         const int nx = domain.length(0), ny = domain.length(1);
         const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
         const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
-        const Set::Scalar side_r_min2 = surface_patch.side_face_r_min
-                                      * surface_patch.side_face_r_min;
-        // D2ab deliverable 2: the annulus pair's radius gate. ⚠ This is NOT
-        // side_face_r_min: that one selects which COLUMNS take a side term at
-        // all, this one selects which of them take the EXPLICIT pair rather
-        // than the inherited map. Two different radii, deliberately separate.
-        const Set::Scalar side_h_rmin2 = surface_patch.side_face_h_r_min
-                                       * surface_patch.side_face_h_r_min;
-        const bool side_area_exact = surface_patch.side_face_area_exact;
-        const bool side_step_h_m = surface_patch.side_face_step_height;
-        const bool side_staircase_m = surface_patch.side_face_staircase;
-        const bool wetted_law_m =
-            (surface_patch.side_face_area_law == SurfacePatch::SideAreaLaw::Wetted);
         const Set::Scalar* DX  = geom[lev].CellSize();
         const Set::Scalar* PLO = geom[lev].ProbLo();
         const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;
         const bool pinned = surface_patch.robin_form == SurfacePatch::RobinForm::Pinned;
         const bool face   = surface_patch.robin_form == SurfacePatch::RobinForm::Face || pinned;
-        // P0b rev5 deliverable 7, march copy of the lateral rule (rev7 d6 switch).
-        const bool surf_form_m = surface_patch.robin_form ==
-                                 SurfacePatch::RobinForm::Surface
-                              && surface_patch.side_T_form ==
-                                 SurfacePatch::SideTForm::Follow;
 
         // Top-cell T_old and k_c per column (one owner per column; exact sum).
         std::vector<Set::Scalar> jTc(ncols, 0.0), jkc(ncols, 0.0);
@@ -3092,159 +2503,7 @@ protected:
         amrex::ParallelDescriptor::ReduceRealSum(jTc.data(), static_cast<int>(ncols));
         amrex::ParallelDescriptor::ReduceRealSum(jkc.data(), static_cast<int>(ncols));
 
-        // D2k: exposed vertical faces, so the side power comes OUT OF THE JET
-        // BUDGET instead of appearing from nowhere (the D2a failure this march
-        // exists to prevent; it is invisible in a fixed-h test).
-        //
-        // The march is serial and replicated, so every rank needs the wall
-        // cells' T and kappa, and a column's wall cells are spread over the
-        // z-decomposition. A dense (column x k) gather would be tens of MB per
-        // step, so gather sparsely in two passes:
-        //   1. per column, nslots = 1 + max(k_top - k) over its exposed cells
-        //      (ReduceIntMax over ncols ints); flat columns give 0;
-        //   2. prefix-sum the counts into offsets -- identical on every rank --
-        //      and ReduceRealSum three arrays of that total length.
-        // Only columns the march actually visits are gathered (inside the
-        // patch and with s > 0), which is what keeps the total small: the
-        // tall rim columns above the nozzle plane are excluded here exactly as
-        // they are excluded from the march and from the kernel's side term.
-        const bool side_on = surface_patch.side_face_flux;
-        std::vector<int> side_nslot;
-        std::vector<std::size_t> side_off;
-        std::vector<Set::Scalar> sT, sK, sN;
-        std::size_t side_total = 0;
-        if (side_on)
-        {
-            const int ihi_dom = domain.bigEnd(0), jhi_dom = domain.bigEnd(1);
-            const bool void_aware = removal_enabled();
-            side_nslot.assign(ncols, 0);
-            // Which columns the march will visit (same test as the bin loop).
-            std::vector<unsigned char> march_col(ncols, 0);
-            for (int j = 0; j < ny; ++j)
-            for (int i = 0; i < nx; ++i)
-            {
-                const std::size_t c = static_cast<std::size_t>(j) * nx + i;
-                if (k_top_col[c] == std::numeric_limits<int>::min()) continue;
-                if (!(flame_s[c] > 0.0)) continue;
-                const Set::Scalar x = PLO[0] + (Set::Scalar(i + ilo_dom) + 0.5) * DX[0];
-                const Set::Scalar y = PLO[1] + (Set::Scalar(j + jlo_dom) + 0.5) * DX[1];
-                const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
-                if (dxp * dxp + dyp * dyp <= r2max) march_col[c] = 1;
-            }
-            // Local pass over cells: record (column, slot, T, kappa, faces).
-            struct SideHit { std::size_t col; int slot; Set::Scalar T, K, N; };
-            std::vector<SideHit> hits;
-            if (void_aware)
-            for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
-            {
-                const amrex::Box& bx = mfi.validbox();
-                amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).const_array(mfi);
-                amrex::Array4<const Set::Scalar> const& kp    = (*kappa_mf[lev]).const_array(mfi);
-                amrex::Array4<const Set::Scalar> const& Df    = (*D_mf[lev]).const_array(mfi);
-                amrex::Array4<const Set::Scalar> const& rem   = (*removed_mf[lev]).const_array(mfi);
-                const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
-                for (int k = lo.z; k <= hi.z; ++k)
-                for (int j = lo.y; j <= hi.y; ++j)
-                for (int i = lo.x; i <= hi.x; ++i)
-                {
-                    const std::size_t c = static_cast<std::size_t>(j - jlo_dom) * nx + (i - ilo_dom);
-                    if (!march_col[c]) continue;
-                    if (rem(i, j, k) > 0.5) continue;
-                    // D2x: the radius gate, mirroring the kernel's col_in_patch.
-                    if (side_r_min2 > 0.0)
-                    {
-                        const Set::Scalar xc = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
-                        const Set::Scalar yc = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
-                        const Set::Scalar dxp2 = xc - surface_patch.x0, dyp2 = yc - surface_patch.y0;
-                        if (dxp2 * dxp2 + dyp2 * dyp2 < side_r_min2) continue;
-                    }
-                    const bool mxm = (i > ilo_dom && rem(i-1, j, k) > 0.5);
-                    const bool mxp = (i < ihi_dom && rem(i+1, j, k) > 0.5);
-                    const bool mym = (j > jlo_dom && rem(i, j-1, k) > 0.5);
-                    const bool myp = (j < jhi_dom && rem(i, j+1, k) > 0.5);
-                    const int nfi = (mxm ? 1 : 0) + (mxp ? 1 : 0)
-                                  + (mym ? 1 : 0) + (myp ? 1 : 0);
-                    if (nfi == 0) continue;
-                    // D2x: the march bills the jet for what the KERNEL deposits,
-                    // so it must carry the same per-edge weights. The packet
-                    // names two call sites; this is a third, and criterion (e)'s
-                    // identity jet_P_face = tops + sides + side_loss is what
-                    // proves it has to change with them.
-                    Set::Scalar nf = Set::Scalar(nfi);
-                    // D2z: the march must bill the jet for exactly what the
-                    // kernel deposits, so it carries the same per-cell step
-                    // weights. ⚠ :2507's side_f_m defaults to 1.0, which is
-                    // numerically the same as the derived branch, so a missed
-                    // site here is INVISIBLE except through criterion (c)'s
-                    // power identity.
-                    if (side_step_h_m && !col_t_last.empty())
-                    {
-                        const int kT = k_top_col[c];
-                        int fb = 0;
-                        const Set::Scalar pT = ColPhi(col_t_last.data(), col_dt.data(),
-                                                      col_nvoid.data(), c, time, fb);
-                        const std::size_t nb[4] = {c - 1, c + 1, c - nx, c + nx};
-                        const bool hs[4] = {mxm, mxp, mym, myp};
-                        nf = 0.0;
-                        // P1e SITE 2 OF 4 -- the march. It bills the jet for what
-                        // the kernel deposits, so it must carry the same factor or
-                        // the power identity breaks.
-                        int rn[4] = {0, 0, 0, 0};
-                        for (int d = 0; d < 4; ++d)
-                        {
-                            if (!hs[d]) continue;
-                            const int kS = k_top_col[nb[d]];
-                            const int nn = kT - kS;
-                            if (nn < 1) continue;
-                            rn[d] = nn;
-                            int fbS = 0;
-                            const Set::Scalar pS = ColPhi(col_t_last.data(), col_dt.data(),
-                                                          col_nvoid.data(), nb[d], time, fbS);
-                            const Set::Scalar w = StepCellWeight(nn, k, kT, kS, pT, pS);
-                            nf += AreaOfDelta(w < 0.0 ? 0.0 : w, wetted_law_m);
-                        }
-                        if (side_staircase_m)
-                            nf *= StaircaseFactor(rn[0], rn[1], rn[2], rn[3]);
-                    }
-                    else if (side_area_exact)
-                    {
-                        const int nc2 = k_top_col[c];
-                        nf = 0.0;
-                        if (mxm) nf += RiserWeight(nc2 - k_top_col[c - 1],  DX[0], DX[2]);
-                        if (mxp) nf += RiserWeight(nc2 - k_top_col[c + 1],  DX[0], DX[2]);
-                        if (mym) nf += RiserWeight(nc2 - k_top_col[c - nx], DX[0], DX[2]);
-                        if (myp) nf += RiserWeight(nc2 - k_top_col[c + nx], DX[0], DX[2]);
-                    }
-                    const int slot = k_top_col[c] - k;
-                    if (slot < 0) continue;
-                    hits.push_back({c, slot, T_old(i, j, k),
-                                    kp(i, j, k) * std::exp(-kappa_damage_alpha * Df(i, j, k)),
-                                    nf});
-                    if (slot + 1 > side_nslot[c]) side_nslot[c] = slot + 1;
-                }
-            }
-            amrex::ParallelDescriptor::ReduceIntMax(side_nslot.data(), static_cast<int>(ncols));
-            side_off.assign(ncols, 0);
-            for (std::size_t c = 0; c < ncols; ++c)
-            {
-                side_off[c] = side_total;
-                side_total += static_cast<std::size_t>(side_nslot[c]);
-            }
-            if (side_total > 0)
-            {
-                sT.assign(side_total, 0.0);
-                sK.assign(side_total, 0.0);
-                sN.assign(side_total, 0.0);
-                for (const auto& h : hits)
-                {
-                    const std::size_t idx = side_off[h.col] + static_cast<std::size_t>(h.slot);
-                    sT[idx] = h.T; sK[idx] = h.K; sN[idx] = h.N;
-                }
-                amrex::ParallelDescriptor::ReduceRealSum(sT.data(), static_cast<int>(side_total));
-                amrex::ParallelDescriptor::ReduceRealSum(sK.data(), static_cast<int>(side_total));
-                amrex::ParallelDescriptor::ReduceRealSum(sN.data(), static_cast<int>(side_total));
-            }
-        }
+        const bool fl_on_m = surface_patch.face_list && fl_ready;
 
         // Bin the marching columns by r.
         const Set::Scalar dr = surface_patch.jet_dr > 0.0 ? surface_patch.jet_dr
@@ -3335,22 +2594,10 @@ protected:
         const bool fsurf = surface_patch.jet_free_surface;
         Set::Scalar T_gas = T_stag;
         Set::Scalar P_face = 0.0, r_reach = 0.0;
+        Set::Scalar fl_Pm = 0.0;   // P2-8: the list faces billed, before any cap
         Set::Scalar P_neg = 0.0, fs_cols = 0.0, T_mouth = 0.0;
         bool have_mouth = false;
         // q_robin of column c at gas temperature Tg (the kernel's inputs).
-        // D2k: with side_face_flux the column draws on the jet through its
-        // exposed vertical faces too. The extra is returned in the SAME units
-        // as the top face (W/m^2 of dx*dy), so every P_bin += q*dA below, and
-        // therefore jet_P_face and the cap, pick it up unchanged. The face
-        // areas are dy*dz and dx*dz; cells are cubic when the key is on, so
-        // each face contributes exactly one dA-equivalent.
-        // D2x: under the derived area the weight already lives in sN, so the
-        // factor here is 1 -- and side_face_factor may not be set at all.
-        // D2z names the step key EXPLICITLY here. Falling through to
-        // side_face_factor would give 1.0 by default -- accidentally the right
-        // number -- so the omission would not show up anywhere.
-        const Set::Scalar side_f_m = (side_area_exact || side_step_h_m)
-            ? Set::Scalar(1.0) : surface_patch.side_face_factor;
         auto q_col = [&](std::size_t c, Set::Scalar Tg) -> Set::Scalar
         {
             int reason = 0;
@@ -3362,65 +2609,67 @@ protected:
                             sigma_SB, h_conv, T_amb, q_in, q_out, q_rob, q_los, Tpin,
                             nullptr, SurfaceRobinT(static_cast<std::size_t>(c)));
             Set::Scalar q_tot = q_rob;
-            if (side_on && side_total > 0 && side_nslot[c] > 0)
+            // P2-8 F4/F5: the column's listed faces, billed to its bin -- the top
+            // face x w, every other face by the face Newton at its own h, x w.
+            // The face area is dx*dz against the bin's dA = dx*dy (cubic).
+            // P2-9 R1: every listed face of the column -- the top included --
+            // at its cell's T_s (FrFaceFlux), x w, billed to the column's bin.
+            if (fl_on_m)
             {
-                const Set::Scalar w = DX[2] / DX[0];   // == 1 (cubic cells enforced)
-                for (int s = 0; s < side_nslot[c]; ++s)
+                q_tot = 0.0;
+                for (int q = fl_col_first[c]; q < fl_col_first[c] + fl_col_count[c]; ++q)
                 {
-                    const std::size_t idx = side_off[c] + static_cast<std::size_t>(s);
-                    if (!(sN[idx] > 0.0)) continue;
+                    const FaceEntry& e = fl_faces[static_cast<std::size_t>(q)];
                     Set::Scalar a_in = 0.0, a_out = 0.0, a_rob = 0.0, a_los = 0.0;
-                    // D2aa deliverable 2: the SIDE faces take the explicit pair
-                    // when it is given. ⚠ This must be applied HERE as well as
-                    // in the kernel and the ledger: the march accounts the side
-                    // term into jet_P_face, so an override the march cannot see
-                    // breaks the power identity (criterion (c)) -- which is the
-                    // one check that catches a kernel<->march split.
-                    // D2ab deliverables 1 and 2: the resolved temperature
-                    // (side_T_eff, never the key) and the radius gate, applied
-                    // here EXACTLY as in the kernel and the ledger. The column
-                    // radius is rebuilt from c because the march indexes
-                    // columns flat; nx, PLO, DX and the domain corner are all
-                    // in scope and are the same ones BuildFlameColumns used.
-                    const int ci = static_cast<int>(c % static_cast<std::size_t>(nx));
-                    const int cj = static_cast<int>(c / static_cast<std::size_t>(nx));
-                    const Set::Scalar cx = PLO[0]
-                        + (Set::Scalar(ci + ilo_dom) + 0.5) * DX[0] - surface_patch.x0;
-                    const Set::Scalar cy = PLO[1]
-                        + (Set::Scalar(cj + jlo_dom) + 0.5) * DX[1] - surface_patch.y0;
-                    const bool ex_c = (surface_patch.side_face_h >= 0.0)
-                                   && (cx * cx + cy * cy >= side_h_rmin2);
-                    const Set::Scalar h_s = ex_c ? surface_patch.side_face_h : flame_h[c];
-                    const Set::Scalar T_s = ex_c ? side_T_eff : Tg;
-                    // P2-1 deliverable 4, ROLE 2 of 4 (the MARCH). ⚠ It bills
-                    // the jet for what the kernel deposits, so a law the kernel
-                    // applies and the march does not breaks the power identity
-                    // -- the one check that catches a kernel<->march split.
-                    // ⚠ `slot` IS the height: slot = k_top_col[c] - k, so the
-                    // cell this row stands for is k_top_col[c] - s.
-                    const Set::Scalar h_face =
-                        SideFaceH(h_s, cx * cx + cy * cy, static_cast<int>(c),
-                                  k_top_col[c] - s);
-                    // P0b rev5 deliverable 7, MIRRORED. ⚠ The march accounts
-                    // the side term into jet_P_face, so a rule the kernel
-                    // applies and the march does not breaks the power identity
-                    // -- criterion (b), and the one check that catches a
-                    // kernel<->march split. Same gate, same radius, same
-                    // column T_surf.
-                    const bool lat_wall_m = surf_form_m
-                        && (cx * cx + cy * cy >= side_h_rmin2);
-                    const bool lat_face_m = surf_form_m ? true : face;
-                    const Set::Scalar lat_Ts_m = (surf_form_m && !lat_wall_m)
-                        ? SurfaceRobinT(c) : Set::Scalar(0.0);
-                    SurfaceCellFlux(true, lat_face_m, 1.0, h_face, T_s,
-                                    sK[idx], DX[0], sT[idx], eps_rad, eps_rad_hi, T_eps_break,
-                                    sigma_SB, h_conv, T_amb, a_in, a_out, a_rob, a_los, Tpin,
-                                    nullptr, lat_Ts_m);
-                    q_tot += side_f_m * a_rob * sN[idx] * w;
+                    FrFaceFlux(e, Tg, e.K, e.T, DX[0], a_in, a_out, a_rob, a_los);
+                    q_tot += e.w * a_rob * (DX[2] / DX[0]);
                 }
+                return q_tot;
             }
             return q_tot;
         };
+        // P2-11b: face_heat = path -- the march bins FACES by floor(s_path/dr):
+        // every unblocked, reached face whose column marches (flame_s > 0) and
+        // whose centre lies within the patch radius (its TRUE r). A face is
+        // billed alone, exactly as q_col bills it inside its column. Faces the
+        // march does not visit keep T_ent. Every other rule is the column
+        // march's (s_c from the column bins, decay, entrainment, exponential
+        // update, negative flux, invariants); free surface and the pin are
+        // refused under path (Parse).
+        const bool path = surface_patch.face_heat_path && fl_on_m;
+        std::vector<std::vector<std::size_t>> fbins;
+        std::vector<Set::Scalar> face_r;
+        if (path)
+        {
+            face_r.assign(fl_faces.size(), 0.0);
+            for (std::size_t q = 0; q < fl_faces.size(); ++q)
+            {
+                FaceEntry& e = fl_faces[q];
+                e.Tg = T_ent;
+                if (e.blk || !(e.sp >= 0.0)) continue;
+                if (!(flame_s[static_cast<std::size_t>(e.col)] > 0.0)) continue;
+                Set::Scalar x, y, z;
+                FaceCentre(e, PLO, DX, x, y, z);
+                const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+                const Set::Scalar r2 = dxp * dxp + dyp * dyp;
+                if (r2 > r2max) continue;
+                const std::size_t b = static_cast<std::size_t>(std::floor(e.sp / dr));
+                if (b >= fbins.size()) fbins.resize(b + 1);
+                fbins[b].push_back(q);
+                face_r[q] = std::sqrt(r2);
+            }
+        }
+        auto q_face = [&](std::size_t q, Set::Scalar Tg) -> Set::Scalar
+        {
+            const FaceEntry& e = fl_faces[q];
+            Set::Scalar a_in = 0.0, a_out = 0.0, a_rob = 0.0, a_los = 0.0;
+            FrFaceFlux(e, Tg, e.K, e.T, DX[0], a_in, a_out, a_rob, a_los);
+            return e.w * a_rob * (DX[2] / DX[0]);
+        };
+        // one march over items: columns (position) or faces (path)
+        auto q_item = [&](std::size_t c, Set::Scalar Tg) -> Set::Scalar
+        { return path ? q_face(c, Tg) : q_col(c, Tg); };
+        const std::vector<std::vector<std::size_t>>& mbins = path ? fbins : bins;
         // Optional profile log: one row per non-empty bin (inlet T_gas, P_bin,
         // the jet's share), rank 0, at the first step of each interval.
         bool prof = false;
@@ -3432,9 +2681,9 @@ protected:
             prow.setf(std::ios::scientific);
             prow.precision(16);
         }
-        for (std::size_t ib = 0; ib < bins.size(); ++ib)
+        for (std::size_t ib = 0; ib < mbins.size(); ++ib)
         {
-            const auto& bin = bins[ib];
+            const auto& bin = mbins[ib];
             if (bin.empty()) continue;
             const Set::Scalar T_in = T_gas;
             // D2c exponential: the bin's columns see the bin-mean gas
@@ -3449,7 +2698,7 @@ protected:
                 Set::Scalar P_in = 0.0, G = 0.0;
                 for (std::size_t c : bin)
                 {
-                    Set::Scalar q1 = q_col(c, T_in), q0 = q_col(c, T_in - 1.0);
+                    Set::Scalar q1 = q_item(c, T_in), q0 = q_item(c, T_in - 1.0);
                     if (!count) { q1 = std::max(Set::Scalar(0.0), q1); q0 = std::max(Set::Scalar(0.0), q0); }
                     P_in += q1;
                     G    += q1 - q0;
@@ -3466,8 +2715,10 @@ protected:
             Set::Scalar P_bin = 0.0, P_nb = 0.0;
             for (std::size_t c : bin)
             {
-                flame_Tg[c] = T_col;
-                const Set::Scalar q_rob = q_col(c, T_col);
+                if (path) fl_faces[c].Tg = T_col;
+                else      flame_Tg[c] = T_col;
+                const Set::Scalar q_rob = q_item(c, T_col);
+                if (fl_on_m) fl_Pm += q_rob * dA;
                 if (count)
                 {
                     // D2c: rock hotter than the gas heats the gas.
@@ -3479,7 +2730,7 @@ protected:
             P_bin *= dA;
             P_neg += P_nb * dA;
             if (P_bin > 0.0)
-                for (std::size_t c : bin) r_reach = std::max(r_reach, col_r[c]);
+                for (std::size_t c : bin) r_reach = std::max(r_reach, path ? face_r[c] : col_r[c]);
             // avail >= 0, so a negative P_bin (count) always takes the second
             // branch and raises T_gas; the clamp acts only when P_bin > 0.
             const Set::Scalar avail = mcp * (T_gas - T_ent);
@@ -3558,8 +2809,12 @@ protected:
             // gas in the hole: the inlet of the first free-surface bin.
             jet_T_rec_next = have_mouth ? T_mouth : T_gas;
         }
+
         jet_P_decay   = P_budget - jet_P_cap;
         jet_P_face    = P_face;
+        if (fl_on_m) fl_P_march = fl_Pm;
+        // the gas leaving the floor, which is the gas leaving the domain (P2-10:
+        // the wall march that carried it on up the bore is deleted).
         jet_T_exhaust = T_gas;
         jet_P_exhaust = mcp * (T_gas - T_ent);
         jet_r_reach   = r_reach;
@@ -3585,7 +2840,8 @@ protected:
             Util::Abort(INFO, "jet enthalpy invariant violated at time ", time,
                         ": jet_P_face = ", P_face, ", jet_P_exhaust = ", jet_P_exhaust,
                         ", jet_P_cap = ", jet_P_cap, ", jet_P_decay = ", jet_P_decay,
-                        ", jet_P_neg = ", P_neg, ", nozzle budget = ", P_nozzle);
+                        ", jet_P_neg = ", P_neg,
+                        ", nozzle budget = ", P_nozzle);
     }
 
     // C1: per-column pin used by this step: pin_T_eff[col] = pin_T[col] unless
@@ -3627,10 +2883,28 @@ protected:
         const amrex::Vector<int> solid_run = ColumnSolidRunBelowTop(lev, k_top_col);
 
         std::vector<Set::Scalar> Ttop(ncols, 0.0), T1(ncols, 0.0);
+        // ⚠⚠ P2-2d deliverable 6: THE PER-CELL CONDUCTIVITY FOR THE VERTICAL
+        // FLAW READ. `ell_flux` below used `phases[0].kappa` -- the deck's
+        // per-phase SCALAR -- while the LATERAL read (Removal.H, `kc_cell`)
+        // uses the per-cell field. They agree under `law = constant` and
+        // DIVERGE under the Grimsel law, where lambda halves by 600 degC. That
+        // is the same per-phase-constant class P2-2b's zero-exception rule
+        // removed for rho/c_p; it survived here only because `(a1)`'s predicate
+        // scans `rho` and `Cp` and not `kappa`.
+        //
+        // ⚠⚠ THE EVALUATION TEMPERATURE IS THE TOP CELL CENTRE, STATED. The
+        // field is cell-centred, so this is lambda(T_cell), not lambda(T_surf).
+        // It matters: `ell_q^3` spans 8.36e-9 (scalar k = 1.5) to ~1.34e-8
+        // (lambda at an 850 K surface) to ~1.67e-8 (a cell centre nearer
+        // 768 K), so `V_ref` moves ~25 % on this choice alone. Cell-centre is
+        // chosen to MATCH THE LATERAL READ, which is what makes the two
+        // comparable at all -- not because the surface value is wrong.
+        std::vector<Set::Scalar> Ktop(ncols, 0.0);
         for (amrex::MFIter mfi(*temp_mf[lev], false); mfi.isValid(); ++mfi)
         {
             const amrex::Box& vbx = mfi.validbox();
             amrex::Array4<const Set::Scalar> const& T = (*temp_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& KA = (*kappa_mf[lev]).const_array(mfi);
             const int vklo = vbx.smallEnd(2), vkhi = vbx.bigEnd(2);
             for (int j = vbx.smallEnd(1); j <= vbx.bigEnd(1); ++j)
             for (int i = vbx.smallEnd(0); i <= vbx.bigEnd(0); ++i)
@@ -3638,12 +2912,14 @@ protected:
                 const int c  = (j - dom_jlo) * nx_dom + (i - dom_ilo);
                 const int kt = k_top_col[c];
                 if (kt >= vklo && kt <= vkhi)  Ttop[c] = T(i, j, kt);
+                if (kt >= vklo && kt <= vkhi)  Ktop[c] = KA(i, j, kt);
                 if (kt - 1 >= vklo && kt - 1 <= vkhi &&
                     kt - 1 >= domain.smallEnd(2))  T1[c] = T(i, j, kt - 1);
             }
         }
         amrex::ParallelDescriptor::ReduceRealSum(Ttop.data(), ncols);
         amrex::ParallelDescriptor::ReduceRealSum(T1.data(),   ncols);
+        amrex::ParallelDescriptor::ReduceRealSum(Ktop.data(), ncols);
 
         if (static_cast<int>(surf_x_hold.size()) != ncols)
             surf_x_hold.assign(ncols, 0.0);
@@ -3723,8 +2999,16 @@ protected:
                           * (Ts_pre * Ts_pre * Ts_pre * Ts_pre
                              - T_amb * T_amb * T_amb * T_amb)
                         - h_conv * (Ts_pre - T_amb);
+                    // ⚠ P2-2d d6: the PER-CELL conductivity at the top cell
+                    // centre, matching the lateral read. Falls back to the
+                    // per-phase scalar only if the field is unavailable (it is
+                    // written at init for every phase under every law, so this
+                    // is belt-and-braces, not a routine path).
+                    const Set::Scalar k_use =
+                        (c < static_cast<int>(Ktop.size()) && Ktop[c] > 0.0)
+                        ? Ktop[c] : phases[0].kappa;
                     if (q_net > 0.0 && Ts_pre > T0)
-                        ell_flux = phases[0].kappa * (Ts_pre - T0) / q_net;
+                        ell_flux = k_use * (Ts_pre - T0) / q_net;
                     else
                         sp_len_fb_q0 += 1.0;
                 }
@@ -3947,22 +3231,698 @@ protected:
     // that is the closure (the resolved surface rides at T_fire while the
     // coarse cell average lags below it). Non-pinned callers pass T_pin = 0,
     // so the cell and face arithmetic are untouched.
-    AMREX_GPU_HOST_DEVICE
-    // D2x: the per-edge riser weight. A surface descending Dz across one cell
-    // of width dx has true area dy*sqrt(dx^2 + Dz^2); the TOP face already
-    // carries dx*dy, so the riser carries the remainder,
-    // dy*(sqrt(dx^2 + Dz^2) - dx), spread over the n cells of that riser, each
-    // of face area dx*dz:   w = (sqrt(dx^2 + (n*dz)^2) - dx) / (n*dz)
-    // PER DIRECTION -- each lateral neighbour has its own drop, so the four
-    // neighbours contribute four independent weights and must not be lumped.
-    // Cubic cells give w(1) = 0.4142, w(2) = 0.6180, w(3) = 0.7208 -> 1.
-    // w >= 0.4142 BY CONSTRUCTION: a riser face exists only where the surface
-    // drops at least one full cell, so the local slope is at least 1. The
-    // f = 0.2 it replaces is BELOW the minimum the geometry permits.
-    static Set::Scalar RiserWeight(int n, Set::Scalar dx, Set::Scalar dz)
+    // P2-8 group A: RiserWeight (D2x, side_face_area_exact) DELETED.
+
+    // =====================================================================
+    // P2-8 -- THE SURFACE FACE LIST: one list, one heat rule, one area rule.
+    // =====================================================================
+    // F1 (BuildFaceList)  every face between a SOLID cell and a VOID cell in
+    //     +-x, +-y, +-z, inside the patch, from removed_mf. The domain's +z
+    //     boundary is the rock's open surface (gas above); the other domain
+    //     boundaries are NOT faces (symmetry planes, base, outer walls).
+    //     Built ONCE per step, after the column tops and before the march,
+    //     gathered to every rank and sorted canonically (column, k, direction),
+    //     so every consumer reads the SAME list in the SAME order whatever the
+    //     decomposition.
+    // F2 (FaceH, via FaceListHeat)  h = h_expr(x_f, y_f, r_f, s_f, t) at the
+    //     FACE CENTRE, s_f = z_n - z_f; 0 where s_f <= 0 unless jet_above_h
+    //     (enthalpy closure); x the pad-shield factor. T_gas = flame_Tg[c].
+    //     At a column-top +z face the arguments are BuildFlameColumns' own, so
+    //     it reproduces flame_h[c] bit for bit (fl_h_top_mismatch == 0).
+    // F3 (FaceWeight)  w = 1/(|nx|+|ny|+|nz|), n the unit outward normal of the
+    //     SMOOTHED solid fraction (FrSmoothedGradient, P2-9 rev 2). Flat floor:
+    //     w = 1 exactly. 45 deg staircase: 1/sqrt2 per face, summing to the
+    //     plane. Zero gradient => w = 1, counted (fl_w_fallback). One w per
+    //     CELL, applied to each of its faces.
+    // F4  every listed face -- the column top included -- is heated at its
+    //     cell's one T_s, x w (FrFaceFlux, P2-9).
+    // F5  the kernel, the ledger, the march (billing each face to its column's
+    //     bin) and the line rule read F1-F4 and nothing else.
+    struct FaceEntry
     {
-        const Set::Scalar d = Set::Scalar(n < 1 ? 1 : n) * dz;
-        return (std::sqrt(dx * dx + d * d) - dx) / d;
+        int i = 0, j = 0, k = 0;   // the solid cell (global index)
+        int dir = 0;               // 0 -x, 1 +x, 2 -y, 3 +y, 4 -z, 5 +z
+        int cls = 0;               // FL_TOP / FL_UP / FL_SIDE / FL_DOWN
+        int col = 0;               // column index (j - jlo)*nx + (i - ilo)
+        int fb = 0;                // 1 = w by zero-gradient fallback
+        Set::Scalar w = 1.0;       // F3
+        Set::Scalar nx = 0.0, ny = 0.0, nz = 0.0;   // F3 unit outward normal
+        Set::Scalar h = 0.0;       // F2
+        Set::Scalar T = 0.0, K = 0.0;   // the cell's T_old and conductivity
+        // P2-9 R1 (FrAssignTs; not in the gather): the CELL's surface
+        // temperature, or tsfb = 1 for the face Newton on fl_faces[qline]
+        Set::Scalar Ts = 0.0;
+        int tsfb = 1, qline = 0;
+        // P2-11b item 5: the face's gas temperature, set after the march and
+        // read by every per-face consumer (kernel, march, diagnostics, ledger,
+        // the fallback flake). Under face_heat = position it IS flame_Tg[col].
+        Set::Scalar Tg = 0.0;
+        // P2-11b item 4 (face_heat = path only): the surface-path distance of
+        // the face's cell from the stagnation sources [m] (-1: blocked or
+        // unreached), and 1 = blocked by surface_patch.barrier_expr.
+        Set::Scalar sp = -1.0;
+        int blk = 0;
+    };
+    static constexpr int FL_TOP = 0, FL_UP = 1, FL_SIDE = 2, FL_DOWN = 3;
+    static constexpr int FL_NF = 13;     // doubles per packed entry
+    std::vector<FaceEntry>   fl_faces;
+    std::vector<int>         fl_col_first, fl_col_count;
+    std::vector<Set::Scalar> fl_wtop;    // per column: the top face's w (1 if none)
+    std::unique_ptr<amrex::iMultiFab> fl_index;   // per cell: first entry, count
+    bool fl_ready = false;
+    Set::Field<Set::Scalar> fl_w_mf, fl_h_mf;
+    Set::Scalar fl_n_top = 0.0, fl_n_up = 0.0, fl_n_side = 0.0, fl_n_down = 0.0;
+    Set::Scalar fl_P_top = 0.0, fl_P_up = 0.0, fl_P_side = 0.0, fl_P_down = 0.0;
+    Set::Scalar fl_P_march = 0.0, fl_w_fallback = 0.0;
+    Set::Scalar fl_h_top_mismatch = 0.0;
+    // b2's identities, formed in DOUBLE (thermo prints %g, six digits, which
+    // cannot resolve a 1e-9 bar): |jet_P_face - sum fl_P| / |sum fl_P| (the
+    // march vs the kernel's terms) and |ledger_P_robin - sum fl_P| / |sum fl_P|
+    // (the ledger's per-cell mirror vs the same).
+    Set::Scalar fl_id_march = 0.0, fl_id_ledger = 0.0;
+    // P2-11b item 6 (face_heat = path only; registered last): the stagnation
+    // standoff H = s_c [m], the source / blocked / unreached counts, the
+    // largest reached s_path [m], the path's wall time per step [s]; plotfile
+    // fl_s (m; -1 blocked or unreached) and fl_Tg (K).
+    Set::Scalar fl_H_stag = 0.0, fl_n_src = 0.0, fl_n_blocked = 0.0;
+    Set::Scalar fl_n_unreached = 0.0, fl_s_max = 0.0, fl_t_path = 0.0;
+    Set::Field<Set::Scalar> fl_s_mf, fl_Tg_mf;
+
+    // =====================================================================
+    // P2-11b -- THE SURFACE PATH (surface_patch.face_heat = path). Heat follows
+    // the jet along the rock: every listed face is heated by the deck's h_expr
+    // evaluated with r := s_path (the distance ALONG THE SURFACE from the
+    // stagnation point) and s := H (the stagnation standoff), and the march
+    // bins FACES by s_path. One routine, ported from
+    // studies/p2_11b_path/offline/path.py (a0):
+    //   sources  the cell under the +z face (FL_TOP) of each column in the
+    //            march's innermost non-empty r-bin -- s_c's own population --
+    //            at d0 = that face centre's radius from (x0, y0); H = s_c
+    //   barrier  a face is BLOCKED when barrier_expr(x, y, z, r) > 0 at the
+    //            point 0.5 dx outside its centre: h = 0, out of the graph and
+    //            the march
+    //   graph    the cells holding at least one unblocked listed face; an edge
+    //            joins two nodes whose index offset o has |o| <= 4 cells,
+    //            weight dx |o| (Euclidean). Plain binary-heap Dijkstra.
+    //   unreached faces get h = 0 and are counted.
+    // Every rank holds the same replicated list, so every rank computes the
+    // same distances. Returns H (= s_c; 0 when no column marches).
+    // =====================================================================
+    static const std::vector<std::array<int, 4>>& FrPathOffsets()
+    {
+        // (di, dj, dk, index into FrPathLen); |o|^2 <= 16
+        static const std::vector<std::array<int, 4>> off = [] {
+            std::vector<std::array<int, 4>> o;
+            for (int a = -4; a <= 4; ++a)
+            for (int b = -4; b <= 4; ++b)
+            for (int c = -4; c <= 4; ++c)
+            {
+                const int n2 = a * a + b * b + c * c;
+                if (n2 == 0 || n2 > 16) continue;
+                o.push_back({a, b, c, n2});
+            }
+            return o;
+        }();
+        return off;
+    }
+
+    Set::Scalar FaceListPath(int lev, Set::Scalar z_n, Set::Scalar time,
+                             const amrex::Vector<int>& k_top_col)
+    {
+        const double t0 = amrex::second();
+        const amrex::Box& domain = geom[lev].Domain();
+        const int nx = domain.length(0), ny = domain.length(1);
+        const int ilo_dom = domain.smallEnd(0), jlo_dom = domain.smallEnd(1);
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar dx = DX[0];
+        const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;
+
+        // 1. the march's innermost non-empty r-bin, built exactly as
+        //    JetEnthalpyMarch builds it (column centres, dr, flame_s > 0, the
+        //    radius cut), and s_c = the mean s over it in the same order
+        const Set::Scalar dr = surface_patch.jet_dr > 0.0 ? surface_patch.jet_dr
+                                                          : std::max(DX[0], DX[1]);
+        std::size_t b_in = std::numeric_limits<std::size_t>::max();
+        std::vector<std::pair<std::size_t, Set::Scalar>> src_cols;   // (col, r)
+        for (int j = 0; j < ny; ++j)
+        for (int i = 0; i < nx; ++i)
+        {
+            const std::size_t col = static_cast<std::size_t>(j) * nx + i;
+            if (k_top_col[col] == std::numeric_limits<int>::min()) continue;
+            if (!(flame_s[col] > 0.0)) continue;
+            const Set::Scalar x = PLO[0] + (Set::Scalar(i + ilo_dom) + 0.5) * DX[0];
+            const Set::Scalar y = PLO[1] + (Set::Scalar(j + jlo_dom) + 0.5) * DX[1];
+            const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+            const Set::Scalar r2 = dxp * dxp + dyp * dyp;
+            if (r2 > r2max) continue;
+            const Set::Scalar r = std::sqrt(r2);
+            const std::size_t b = static_cast<std::size_t>(std::floor(r / dr));
+            if (b < b_in) { b_in = b; src_cols.clear(); }
+            if (b == b_in) src_cols.emplace_back(col, r);
+        }
+        Set::Scalar H = 0.0;
+        if (!src_cols.empty())
+        {
+            for (const auto& sc : src_cols) H += flame_s[sc.first];
+            H /= Set::Scalar(src_cols.size());
+        }
+
+        // 2. the cells (a cell's faces are contiguous: the list is sorted by
+        //    column, k, dir) and the barrier
+        const std::size_t nf = fl_faces.size();
+        std::vector<int> cell_q0, cell_nq, cell_i, cell_j, cell_k;
+        std::vector<unsigned char> cell_node;
+        long n_blk = 0;
+        for (std::size_t q = 0; q < nf; ++q)
+        {
+            FaceEntry& e = fl_faces[q];
+            if (q == 0 || e.i != fl_faces[q - 1].i || e.j != fl_faces[q - 1].j
+                       || e.k != fl_faces[q - 1].k)
+            {
+                cell_q0.push_back(static_cast<int>(q));
+                cell_nq.push_back(0);
+                cell_i.push_back(e.i); cell_j.push_back(e.j); cell_k.push_back(e.k);
+                cell_node.push_back(0);
+            }
+            ++cell_nq.back();
+            e.blk = 0;
+            e.sp  = -1.0;
+            if (surface_patch.has_barrier)
+            {
+                Set::Scalar x, y, z;
+                FaceCentre(e, PLO, DX, x, y, z);
+                const int ax = e.dir / 2;
+                const Set::Scalar sg = (e.dir % 2 == 1) ? 0.5 : -0.5;
+                if (ax == 0) x += sg * DX[0];
+                else if (ax == 1) y += sg * DX[1];
+                else z += sg * DX[2];
+                const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+                if (surface_patch.barrier_f(x, y, z, std::sqrt(dxp * dxp + dyp * dyp)) > 0.0)
+                { e.blk = 1; ++n_blk; }
+            }
+            if (!e.blk) cell_node.back() = 1;
+        }
+        const std::size_t nc = cell_q0.size();
+
+        // 3. a dense index over the nodes' bounding box
+        int i0 = std::numeric_limits<int>::max(), j0 = i0, k0 = i0;
+        int i1 = std::numeric_limits<int>::min(), j1 = i1, k1 = i1;
+        for (std::size_t n = 0; n < nc; ++n)
+        {
+            if (!cell_node[n]) continue;
+            i0 = std::min(i0, cell_i[n]); i1 = std::max(i1, cell_i[n]);
+            j0 = std::min(j0, cell_j[n]); j1 = std::max(j1, cell_j[n]);
+            k0 = std::min(k0, cell_k[n]); k1 = std::max(k1, cell_k[n]);
+        }
+        std::vector<Set::Scalar> dist(nc, std::numeric_limits<Set::Scalar>::infinity());
+        long n_src = 0;
+        if (i1 >= i0)
+        {
+            const long bx = i1 - i0 + 1, by = j1 - j0 + 1, bz = k1 - k0 + 1;
+            std::vector<int> idx(static_cast<std::size_t>(bx * by * bz), -1);
+            auto at = [&] (int i, int j, int k) -> long {
+                return (static_cast<long>(k - k0) * by + (j - j0)) * bx + (i - i0); };
+            for (std::size_t n = 0; n < nc; ++n)
+                if (cell_node[n]) idx[static_cast<std::size_t>(at(cell_i[n], cell_j[n], cell_k[n]))]
+                    = static_cast<int>(n);
+
+            // 4. the sources: the cell under each source column's top face
+            using QE = std::pair<Set::Scalar, int>;
+            std::priority_queue<QE, std::vector<QE>, std::greater<QE>> pq;
+            for (const auto& sc : src_cols)
+            {
+                const std::size_t c = sc.first;
+                for (int q = fl_col_first[c]; q < fl_col_first[c] + fl_col_count[c]; ++q)
+                {
+                    const FaceEntry& e = fl_faces[static_cast<std::size_t>(q)];
+                    if (e.cls != FL_TOP || e.blk) continue;
+                    const long a = at(e.i, e.j, e.k);
+                    const int n = idx[static_cast<std::size_t>(a)];
+                    if (n < 0) continue;
+                    ++n_src;
+                    if (sc.second < dist[static_cast<std::size_t>(n)])
+                    {
+                        dist[static_cast<std::size_t>(n)] = sc.second;
+                        pq.emplace(sc.second, n);
+                    }
+                }
+            }
+            // 5. Dijkstra
+            static const std::array<Set::Scalar, 17> len = [] {
+                std::array<Set::Scalar, 17> l{};
+                for (int m = 0; m < 17; ++m) l[static_cast<std::size_t>(m)] = std::sqrt(Set::Scalar(m));
+                return l;
+            }();
+            const auto& OFF = FrPathOffsets();
+            while (!pq.empty())
+            {
+                const QE top = pq.top();
+                pq.pop();
+                const std::size_t n = static_cast<std::size_t>(top.second);
+                if (top.first > dist[n]) continue;
+                const int ci = cell_i[n], cj = cell_j[n], ck = cell_k[n];
+                for (const auto& o : OFF)
+                {
+                    const int p = ci + o[0], q = cj + o[1], r = ck + o[2];
+                    if (p < i0 || p > i1 || q < j0 || q > j1 || r < k0 || r > k1) continue;
+                    const int m = idx[static_cast<std::size_t>(at(p, q, r))];
+                    if (m < 0) continue;
+                    const Set::Scalar nd = top.first + dx * len[static_cast<std::size_t>(o[3])];
+                    if (nd < dist[static_cast<std::size_t>(m)])
+                    {
+                        dist[static_cast<std::size_t>(m)] = nd;
+                        pq.emplace(nd, m);
+                    }
+                }
+            }
+        }
+
+        // 6. the heat: FaceH with r := s_path, s := H; blocked / unreached 0
+        long n_unr = 0;
+        Set::Scalar s_max = 0.0;
+        for (std::size_t n = 0; n < nc; ++n)
+        {
+            for (int q = cell_q0[n]; q < cell_q0[n] + cell_nq[n]; ++q)
+            {
+                FaceEntry& e = fl_faces[static_cast<std::size_t>(q)];
+                if (e.blk) { e.h = 0.0; continue; }
+                if (!std::isfinite(dist[n])) { e.h = 0.0; ++n_unr; continue; }
+                e.sp = dist[n];
+                s_max = std::max(s_max, e.sp);
+                Set::Scalar x, y, z;
+                FaceCentre(e, PLO, DX, x, y, z);
+                e.h = FaceHr(x, y, e.sp, H, time);
+            }
+        }
+        (void) z_n;
+        fl_H_stag      = H;
+        fl_n_src       = static_cast<Set::Scalar>(n_src);
+        fl_n_blocked   = static_cast<Set::Scalar>(n_blk);
+        fl_n_unreached = static_cast<Set::Scalar>(n_unr);
+        fl_s_max       = s_max;
+        {
+            double tp = amrex::second() - t0;
+            amrex::ParallelDescriptor::ReduceRealMax(tp);
+            fl_t_path = static_cast<Set::Scalar>(tp);
+        }
+        return H;
+    }
+
+    // a listed face's centre (the expressions FaceListHeat uses, token for token)
+    static void FaceCentre(const FaceEntry& e, const Set::Scalar* PLO, const Set::Scalar* DX,
+                           Set::Scalar& x, Set::Scalar& y, Set::Scalar& z_f)
+    {
+        Set::Scalar ox = 0.5, oy = 0.5;
+        if (e.dir == 0) ox = 0.0; else if (e.dir == 1) ox = 1.0;
+        if (e.dir == 2) oy = 0.0; else if (e.dir == 3) oy = 1.0;
+        x = (ox == 0.5) ? PLO[0] + (Set::Scalar(e.i) + 0.5) * DX[0]
+                        : PLO[0] + (Set::Scalar(e.i) + ox) * DX[0];
+        y = (oy == 0.5) ? PLO[1] + (Set::Scalar(e.j) + 0.5) * DX[1]
+                        : PLO[1] + (Set::Scalar(e.j) + oy) * DX[1];
+        if (e.dir == 5)      z_f = PLO[2] + Set::Scalar(e.k + 1) * DX[2];
+        else if (e.dir == 4) z_f = PLO[2] + Set::Scalar(e.k) * DX[2];
+        else                 z_f = PLO[2] + (Set::Scalar(e.k) + 0.5) * DX[2];
+    }
+
+    // =====================================================================
+    // P2-9 rev 2 item 4 -- THE NORMAL. n = -grad F_s / |grad F_s|: F = the
+    // solid FRACTION (fr_f), F_s = F smoothed by a normalised Gaussian,
+    // sigma = 1 cell truncated at +-2 cells (a fixed 5x5x5 stencil, separable
+    // weights), grad by central differences of F_s. P2-8's +-1 indicator
+    // gradient read every step edge as a 45 deg corner: +5 to +10 % area at
+    // intermediate tilts (rev 1 a2 vi). ONE function: BuildFaceList calls it for
+    // every listed cell, and the kernel, ledger, march, R0 and diagnostics read
+    // the n and w it leaves in the list.
+    // =====================================================================
+    static Set::Scalar FrGauss(int a)
+    {
+        static const Set::Scalar e1 = std::exp(-0.5), e2 = std::exp(-2.0);
+        static const Set::Scalar sum = 1.0 + 2.0 * e1 + 2.0 * e2;
+        const int b = a < 0 ? -a : a;
+        return (b == 0 ? 1.0 : (b == 1 ? e1 : e2)) / sum;
+    }
+    static Set::Scalar FrSmoothAt(const amrex::Array4<const Set::Scalar>& F, int i, int j, int k)
+    {
+        Set::Scalar s = 0.0;
+        for (int c = -2; c <= 2; ++c)
+        for (int b = -2; b <= 2; ++b)
+        for (int a = -2; a <= 2; ++a)
+            s += FrGauss(a) * FrGauss(b) * FrGauss(c) * F(i + a, j + b, k + c);
+        return s;
+    }
+    static Set::Vector FrSmoothedGradient(const amrex::Array4<const Set::Scalar>& F,
+                                         int i, int j, int k, Set::Scalar dx)
+    {
+        Set::Vector g;
+        g(0) = (FrSmoothAt(F, i + 1, j, k) - FrSmoothAt(F, i - 1, j, k)) / (2.0 * dx);
+        g(1) = (FrSmoothAt(F, i, j + 1, k) - FrSmoothAt(F, i, j - 1, k)) / (2.0 * dx);
+        g(2) = (FrSmoothAt(F, i, j, k + 1) - FrSmoothAt(F, i, j, k - 1)) / (2.0 * dx);
+        return g;
+    }
+
+    // The solid fraction at first use: 1 on solid, 0 on void (after any seed).
+    void FrInitFraction(int lev)
+    {
+        if (fr_f_init) return;
+        for (amrex::MFIter mfi(*fr_f_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<Set::Scalar> const& ff = (*fr_f_mf[lev]).array(mfi);
+            amrex::Array4<const Set::Scalar> const& rm = (*removed_mf[lev]).const_array(mfi);
+            amrex::ParallelFor(bx, [=] (int i, int j, int k) {
+                ff(i, j, k) = (rm(i, j, k) > 0.5) ? 0.0 : 1.0; });
+        }
+        fr_f_init = true;
+    }
+
+    // The fraction's ghost rule: box to box and periodic by FillBoundary; out
+    // of the domain, ABOVE the top is gas (0); a SYMMETRY PLANE (the patch
+    // centre lies on that side) is mirrored; every other side takes the
+    // nearest in-domain cell.
+    void FillFractionGhosts(int lev)
+    {
+        amrex::MultiFab& Fm = *fr_f_mf[lev];
+        Fm.FillBoundary(geom[lev].periodicity());
+        const amrex::Box& dom = geom[lev].Domain();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar* PHI = geom[lev].ProbHi();
+        const Set::Scalar tol = 1.0e-9 * (PHI[0] - PLO[0]);
+        const bool mir_lo[3] = {std::abs(surface_patch.x0 - PLO[0]) <= tol,
+                                std::abs(surface_patch.y0 - PLO[1]) <= tol, false};
+        const bool mir_hi[3] = {std::abs(surface_patch.x0 - PHI[0]) <= tol,
+                                std::abs(surface_patch.y0 - PHI[1]) <= tol, false};
+        const bool per[3] = {geom[lev].isPeriodic(0), geom[lev].isPeriodic(1),
+                             geom[lev].isPeriodic(2)};
+        for (amrex::MFIter mfi(Fm, false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box gb = mfi.fabbox();
+            amrex::Array4<Set::Scalar> const& a = Fm.array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(gb), hi = amrex::ubound(gb);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                int p[3] = {i, j, k};
+                bool out = false, gas = false;
+                for (int d = 0; d < 3; ++d)
+                {
+                    if (per[d]) continue;
+                    const int dl = dom.smallEnd(d), dh = dom.bigEnd(d);
+                    if (p[d] < dl) { out = true; p[d] = mir_lo[d] ? 2 * dl - 1 - p[d] : dl; }
+                    else if (p[d] > dh)
+                    {
+                        out = true;
+                        if (d == 2) gas = true;
+                        p[d] = mir_hi[d] ? 2 * dh + 1 - p[d] : dh;
+                    }
+                }
+                if (!out) continue;
+                if (gas) { a(i, j, k) = 0.0; continue; }
+                if (!gb.contains(amrex::IntVect(AMREX_D_DECL(p[0], p[1], p[2]))))
+                    Util::Abort(INFO, "FillFractionGhosts: a ghost's source cell (", p[0], ", ",
+                                p[1], ", ", p[2], ") is outside its own fab -- a box narrower "
+                                "than 3 cells at a domain side");
+                a(i, j, k) = a(p[0], p[1], p[2]);
+            }
+        }
+    }
+
+    // F3 -- THE AREA RULE. The one weight function.
+    static Set::Scalar FaceWeight(const Set::Vector& g, Set::Scalar& nx,
+                                  Set::Scalar& ny, Set::Scalar& nz, int& fb)
+    {
+        const Set::Scalar gn = std::sqrt(g(0) * g(0) + g(1) * g(1) + g(2) * g(2));
+        if (!(gn > 0.0)) { nx = ny = nz = 0.0; fb = 1; return 1.0; }
+        nx = -g(0) / gn; ny = -g(1) / gn; nz = -g(2) / gn;
+        fb = 0;
+        return 1.0 / (std::abs(nx) + std::abs(ny) + std::abs(nz));
+    }
+
+    // F2 -- THE HEAT RULE. The one heat resolver: h at a face centre.
+    Set::Scalar FaceH(Set::Scalar x, Set::Scalar y, Set::Scalar s, Set::Scalar time)
+    {
+        const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+        const Set::Scalar r2 = dxp * dxp + dyp * dyp;
+        const Set::Scalar r = std::sqrt(r2);
+        return FaceHr(x, y, r, s, time);
+    }
+    // P2-11b: the same with r given -- face_heat = path passes r := s_path,
+    // s := H. (pad_shield_open is refused under path, so its r is never read
+    // there.)
+    Set::Scalar FaceHr(Set::Scalar x, Set::Scalar y, Set::Scalar r, Set::Scalar s,
+                       Set::Scalar time)
+    {
+        Set::Scalar h = 0.0;
+        if (surface_patch.jet_enthalpy)
+            h = (s > 0.0 || surface_patch.jet_above_h)
+              ? surface_patch.h_f(x, y, r, s, time) : Set::Scalar(0.0);
+        else
+            h = surface_patch.h_f(x, y, r, s, time);
+        if (!(std::isfinite(h) && h >= 0.0))
+            Util::Abort(INFO, "surface_patch.face_list: h_expr must be finite and >= 0 "
+                        "at every face centre; got h = ", h, " at x = ", x, ", y = ", y,
+                        ", s = ", s);
+        const Set::Scalar pad_open = surface_patch.pad_shield_open;
+        if (pad_open >= 0.0 && r >= surface_patch.foot_r_inner
+                            && r <  surface_patch.foot_r_outer)
+            h *= pad_open;
+        return h;
+    }
+
+    // F1 + F3 -- THE LIST BUILDER. Once per step, before BuildFlameColumns.
+    void BuildFaceList(int lev, const amrex::Vector<int>& k_top_col_in)
+    {
+        fl_ready = false;
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo = domain.smallEnd(0), jlo = domain.smallEnd(1), klo = domain.smallEnd(2);
+        const int ihi = domain.bigEnd(0),   jhi = domain.bigEnd(1),   khi = domain.bigEnd(2);
+        const int nx = domain.length(0), ny = domain.length(1);
+        const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        if (!(std::abs(DX[0] - DX[1]) <= 1.0e-12 * DX[0] &&
+              std::abs(DX[0] - DX[2]) <= 1.0e-12 * DX[0]))
+            Util::Abort(INFO, "surface_patch.face_list = 1 requires cubic cells; got ",
+                        DX[0], ", ", DX[1], ", ", DX[2]);
+        const amrex::Vector<int> k_top_col =
+            k_top_col_in.empty() ? ColumnTopSolid(lev) : k_top_col_in;
+        const Set::Scalar r2max = surface_patch.radius * surface_patch.radius;
+        const Set::Scalar a_D = kappa_damage_alpha;
+
+        // P2-9 rev 2 item 4: F3's field is the SOLID FRACTION (3 ghosts, the
+        // fraction's own ghost rule), and its normal is the smoothed one.
+        const amrex::BoxArray& ba = removed_mf[lev]->boxArray();
+        const amrex::DistributionMapping& dm = removed_mf[lev]->DistributionMap();
+        FrInitFraction(lev);
+        FillFractionGhosts(lev);
+
+        // the local faces, packed FL_NF doubles each
+        std::vector<Set::Scalar> loc;
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& Sa  = (*fr_f_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& kp  = (*kappa_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& Df  = (*D_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                if (rem(i, j, k) > 0.5) continue;
+                const Set::Scalar x = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
+                const Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
+                const Set::Scalar dxp = x - surface_patch.x0, dyp = y - surface_patch.y0;
+                if (dxp * dxp + dyp * dyp > r2max) continue;
+                bool open[6];
+                open[0] = (i > ilo) && rem(i - 1, j, k) > 0.5;
+                open[1] = (i < ihi) && rem(i + 1, j, k) > 0.5;
+                open[2] = (j > jlo) && rem(i, j - 1, k) > 0.5;
+                open[3] = (j < jhi) && rem(i, j + 1, k) > 0.5;
+                open[4] = (k > klo) && rem(i, j, k - 1) > 0.5;
+                open[5] = (k == khi) || rem(i, j, k + 1) > 0.5;
+                if (!(open[0] || open[1] || open[2] || open[3] || open[4] || open[5]))
+                    continue;
+                const int col = (j - jlo) * nx + (i - ilo);
+                // P2-9 rev 2: THE normal (FrSmoothedGradient), the one function
+                // every consumer's n and w come from
+                const Set::Vector g = FrSmoothedGradient(Sa, i, j, k, DX[0]);
+                Set::Scalar fnx = 0.0, fny = 0.0, fnz = 0.0;
+                int fb = 0;
+                const Set::Scalar w = FaceWeight(g, fnx, fny, fnz, fb);
+                // the conductivity exactly as the kernel forms it
+                const Set::Scalar K = (a_D != 0.0) ? kp(i, j, k) * std::exp(-a_D * Df(i, j, k))
+                                                   : kp(i, j, k);
+                for (int d = 0; d < 6; ++d)
+                {
+                    if (!open[d]) continue;
+                    const int cls = (d == 5) ? ((k == k_top_col[static_cast<std::size_t>(col)])
+                                                ? FL_TOP : FL_UP)
+                                  : (d == 4) ? FL_DOWN : FL_SIDE;
+                    const Set::Scalar pk[FL_NF] = {
+                        Set::Scalar(i), Set::Scalar(j), Set::Scalar(k), Set::Scalar(d),
+                        Set::Scalar(cls), Set::Scalar(col), Set::Scalar(fb), w,
+                        fnx, fny, fnz, T_old(i, j, k), K};
+                    loc.insert(loc.end(), pk, pk + FL_NF);
+                }
+            }
+        }
+        // gather: disjoint rank segments, summed -- identical on every rank
+        const int np = amrex::ParallelDescriptor::NProcs();
+        const int me = amrex::ParallelDescriptor::MyProc();
+        std::vector<int> cnt(static_cast<std::size_t>(np), 0);
+        cnt[static_cast<std::size_t>(me)] = static_cast<int>(loc.size() / FL_NF);
+        amrex::ParallelDescriptor::ReduceIntSum(cnt.data(), np);
+        std::size_t off = 0, tot = 0;
+        for (int p = 0; p < np; ++p)
+        {
+            if (p == me) off = tot;
+            tot += static_cast<std::size_t>(cnt[static_cast<std::size_t>(p)]);
+        }
+        std::vector<Set::Scalar> all(tot * FL_NF, 0.0);
+        std::copy(loc.begin(), loc.end(), all.begin() + static_cast<std::ptrdiff_t>(off * FL_NF));
+        if (tot > 0)
+            amrex::ParallelDescriptor::ReduceRealSum(all.data(), static_cast<int>(tot * FL_NF));
+        fl_faces.assign(tot, FaceEntry());
+        for (std::size_t q = 0; q < tot; ++q)
+        {
+            const Set::Scalar* p = all.data() + q * FL_NF;
+            FaceEntry& e = fl_faces[q];
+            e.i = static_cast<int>(p[0]); e.j = static_cast<int>(p[1]);
+            e.k = static_cast<int>(p[2]); e.dir = static_cast<int>(p[3]);
+            e.cls = static_cast<int>(p[4]); e.col = static_cast<int>(p[5]);
+            e.fb = static_cast<int>(p[6]); e.w = p[7];
+            e.nx = p[8]; e.ny = p[9]; e.nz = p[10]; e.T = p[11]; e.K = p[12];
+        }
+        std::sort(fl_faces.begin(), fl_faces.end(),
+                  [](const FaceEntry& a, const FaceEntry& b) {
+                      if (a.col != b.col) return a.col < b.col;
+                      if (a.k != b.k) return a.k < b.k;
+                      return a.dir < b.dir; });
+        // per column: the entry range and the top face's weight
+        fl_col_first.assign(ncols, 0);
+        fl_col_count.assign(ncols, 0);
+        fl_wtop.assign(ncols, 1.0);
+        Set::Scalar n_cls[4] = {0.0, 0.0, 0.0, 0.0}, n_fb = 0.0;
+        for (std::size_t q = 0; q < fl_faces.size(); ++q)
+        {
+            const FaceEntry& e = fl_faces[q];
+            const std::size_t c = static_cast<std::size_t>(e.col);
+            if (fl_col_count[c] == 0) fl_col_first[c] = static_cast<int>(q);
+            ++fl_col_count[c];
+            if (e.cls == FL_TOP) fl_wtop[c] = e.w;
+            n_cls[e.cls] += 1.0;
+            if (e.fb) n_fb += 1.0;
+        }
+        fl_n_top = n_cls[FL_TOP]; fl_n_up = n_cls[FL_UP];
+        fl_n_side = n_cls[FL_SIDE]; fl_n_down = n_cls[FL_DOWN];
+        fl_w_fallback = n_fb;
+        // per cell: the entry range (a cell's faces are contiguous by the sort)
+        if (!fl_index || fl_index->boxArray() != ba || fl_index->DistributionMap() != dm)
+            fl_index = std::make_unique<amrex::iMultiFab>(ba, dm, 2, 0);
+        fl_index->setVal(0);
+        if (fl_w_mf[lev]) fl_w_mf[lev]->setVal(0.0);
+        for (amrex::MFIter mfi(*fl_index, false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<int> const& fi = fl_index->array(mfi);
+            amrex::Array4<Set::Scalar> fw;
+            if (fl_w_mf[lev]) fw = (*fl_w_mf[lev]).array(mfi);
+            for (std::size_t q = 0; q < fl_faces.size(); ++q)
+            {
+                const FaceEntry& e = fl_faces[q];
+                if (!bx.contains(amrex::IntVect(AMREX_D_DECL(e.i, e.j, e.k)))) continue;
+                if (fi(e.i, e.j, e.k, 1) == 0) fi(e.i, e.j, e.k, 0) = static_cast<int>(q);
+                fi(e.i, e.j, e.k, 1) += 1;
+                if (fw) fw(e.i, e.j, e.k) += e.w;
+            }
+        }
+        fl_ready = true;
+    }
+
+    // F2 over the list. Called by BuildFlameColumns once z_n is known and
+    // BEFORE the march, which bills every face at this h.
+    void FaceListHeat(int lev, Set::Scalar z_n, Set::Scalar time,
+                      const amrex::Vector<int>& k_top_col)
+    {
+        if (!fl_ready) return;
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        long mism = 0;
+        // P2-11b: face_heat = path -- every face from the surface path; the
+        // column's flame_h (read only by column diagnostics under the list)
+        // takes its top face's value, so fl_h_top_mismatch stays an identity.
+        if (surface_patch.face_heat_path)
+        {
+            FaceListPath(lev, z_n, time, k_top_col);
+            for (const auto& e : fl_faces)
+                if (e.cls == FL_TOP) flame_h[static_cast<std::size_t>(e.col)] = e.h;
+        }
+        else
+        for (auto& e : fl_faces)
+        {
+            Set::Scalar ox = 0.5, oy = 0.5;
+            if (e.dir == 0) ox = 0.0; else if (e.dir == 1) ox = 1.0;
+            if (e.dir == 2) oy = 0.0; else if (e.dir == 3) oy = 1.0;
+            // ⚠ the column-centre and top-face expressions are BuildFlameColumns'
+            // own, token for token, so the top face reproduces flame_h exactly.
+            const Set::Scalar x = (ox == 0.5) ? PLO[0] + (Set::Scalar(e.i) + 0.5) * DX[0]
+                                              : PLO[0] + (Set::Scalar(e.i) + ox) * DX[0];
+            const Set::Scalar y = (oy == 0.5) ? PLO[1] + (Set::Scalar(e.j) + 0.5) * DX[1]
+                                              : PLO[1] + (Set::Scalar(e.j) + oy) * DX[1];
+            Set::Scalar z_f;
+            if (e.dir == 5)      z_f = PLO[2] + Set::Scalar(e.k + 1) * DX[2];
+            else if (e.dir == 4) z_f = PLO[2] + Set::Scalar(e.k) * DX[2];
+            else                 z_f = PLO[2] + (Set::Scalar(e.k) + 0.5) * DX[2];
+            e.h = FaceH(x, y, z_n - z_f, time);
+            if (e.cls == FL_TOP
+                && !(e.h == flame_h[static_cast<std::size_t>(e.col)])) ++mism;
+        }
+        fl_h_top_mismatch = static_cast<Set::Scalar>(mism);
+        if (fl_h_mf[lev])
+        {
+            fl_h_mf[lev]->setVal(0.0);
+            for (amrex::MFIter mfi(*fl_index, false); mfi.isValid(); ++mfi)
+            {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::Array4<const int> const& fi = fl_index->const_array(mfi);
+                amrex::Array4<Set::Scalar> const& fh = (*fl_h_mf[lev]).array(mfi);
+                const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+                for (int k = lo.z; k <= hi.z; ++k)
+                for (int j = lo.y; j <= hi.y; ++j)
+                for (int i = lo.x; i <= hi.x; ++i)
+                    for (int q = fi(i, j, k, 0); q < fi(i, j, k, 0) + fi(i, j, k, 1); ++q)
+                        fh(i, j, k) = std::max(fh(i, j, k), fl_faces[static_cast<std::size_t>(q)].h);
+            }
+        }
+    }
+
+    // The per-class robin power, from the replicated list with the kernel's
+    // own inputs (T_old, kc, flame_h/flame_Tg, SurfaceRobinT) -- the kernel's
+    // deposit term by term, summed by class. Every rank computes the same.
+    void FaceListDiagnostics(int lev)
+    {
+        fl_P_top = fl_P_up = fl_P_side = fl_P_down = 0.0;
+        if (!fl_ready) return;
+        const Set::Scalar* DX = geom[lev].CellSize();
+        const Set::Scalar A = DX[0] * DX[1];
+        const bool face_top = surface_patch.robin_form == SurfacePatch::RobinForm::Face;
+        Set::Scalar P[4] = {0.0, 0.0, 0.0, 0.0};
+        for (const auto& e : fl_faces)
+        {
+            Set::Scalar q_in = 0.0, q_out = 0.0, q_rob = 0.0, q_los = 0.0;
+            // P2-9: the kernel's own term, FrFaceFlux, for every class
+            // (P2-11b: at the face's own gas temperature)
+            FrFaceFlux(e, e.Tg, e.K, e.T, DX[0], q_in, q_out, q_rob, q_los);
+            (void) face_top;
+            P[e.cls] += e.w * q_rob * A;
+        }
+        fl_P_top = P[FL_TOP]; fl_P_up = P[FL_UP]; fl_P_side = P[FL_SIDE]; fl_P_down = P[FL_DOWN];
+        const Set::Scalar Ps = fl_P_top + fl_P_up + fl_P_side + fl_P_down;
+        fl_id_march = (std::abs(Ps) > 0.0) ? std::abs(jet_P_face - Ps) / std::abs(Ps) : 0.0;
     }
 
     static void SurfaceCellFlux(bool in_patch, bool face_form, Set::Scalar surf_c,
@@ -4126,14 +4086,6 @@ protected:
                                       SurfacePatch::RobinForm::Pinned && lev == 0;
         const bool        sp_face  = surface_patch.robin_form ==
                                      SurfacePatch::RobinForm::Face || sp_pinned;
-        // P0b rev5 deliverable 7, ledger copy of the lateral rule. ⚠ It must
-        // mirror the kernel EXACTLY -- same gate, same branch, same order --
-        // or ledger_err breaks, which is the check that makes the mirror
-        // provable rather than asserted.
-        const bool        sp_surfform_l = surface_patch.robin_form ==
-                                         SurfacePatch::RobinForm::Surface
-                                      && surface_patch.side_T_form ==
-                                         SurfacePatch::SideTForm::Follow;
         const Set::Scalar sp_r2    = surface_patch.radius * surface_patch.radius;
         const Set::Scalar sp_T     = (sp_on && sp_presc) ? surface_patch.T_at(time) : 0.0;
 
@@ -4150,86 +4102,14 @@ protected:
 
         Set::Scalar EH0sol_s = 0.0, EH0sol_c = 0.0;
         Set::Scalar P_robin = 0.0, P_loss = 0.0, P_robin_side = 0.0;
-        Set::Scalar side_P_topcell = 0.0, side_P_buried = 0.0;
-        // ⚠⚠ REVISION 7 DELIVERABLE 2 -- RE-BIN AT THE LIVE GATE.
-        // side_P_{bore,pads,wall} split on foot_r_inner/foot_r_outer, and
-        // under surface_patch.nozzle_descent = prescribed BOTH ARE ZERO, so
-        // every face lands in `wall` and the "100 % of side power is hole
-        // wall" reading of revision 5 was an artefact of a dead gate. These
-        // two split on side_face_h_r_min, which is the radius the lateral
-        // closure itself switches on (40 mm on Meier), so they measure the
-        // thing deliverable 7 actually branches on.
-        Set::Scalar side_P_rin = 0.0, side_P_rout = 0.0;
         // Per-column side power, for the wall/riser split that no plotfile can
         // give (38 fields, none of them a side flux). Sized only when the key
         // is on.
         const bool sidecsv = surface_patch.side_power_interval > 0.0;
         std::vector<Set::Scalar> sidecol;
-        // D2k
-        const bool        side_on = sp_on && surface_patch.side_face_flux;
-        const Set::Scalar side_f  = surface_patch.side_face_factor;
-        // D2r-1: mirrors the kernel's per-region factor. If these two ever
-        // disagree the ledger stops reproducing the flux and ledger_err breaks,
-        // which is the whole reason the twin exists.
-        const Set::Scalar side_f_above = surface_patch.side_face_factor_above;
-        // D2x: the same two keys, read identically. ledger_err staying at 1e-15
-        // is the proof this mirror is exact.
-        const Set::Scalar side_r_min2 = surface_patch.side_face_r_min
-                                      * surface_patch.side_face_r_min;
-        // D2ab deliverable 2: mirrors the kernel's gate exactly, or ledger_err
-        // breaks -- which is what makes the mirror provable, not asserted.
-        const Set::Scalar side_h_rmin2 = surface_patch.side_face_h_r_min
-                                       * surface_patch.side_face_h_r_min;
-        const bool side_area_exact = surface_patch.side_face_area_exact;
-        const bool side_step_h_l = surface_patch.side_face_step_height;
-        const bool side_staircase_l = surface_patch.side_face_staircase;
-        const bool wetted_law_l =
-            (surface_patch.side_face_area_law == SurfacePatch::SideAreaLaw::Wetted);
-        Set::Scalar delta_sum = 0.0, delta_n = 0.0, delta_fb = 0.0, delta_faces = 0.0;
-        Set::Scalar ratio_num = 0.0, ratio_den = 0.0;
-        // D2q-2b item 7: cap the coefficient a SIDE face sees, ONLY when
-        // per-cell removal is on. -1 = no cap, which is every pre-D2q-2b run.
-        // Applied identically in the kernel and in the ledger, or the ledger
-        // stops reproducing the kernel's flux.
-        const Set::Scalar side_hmax =
-            (surface_patch.side_face_flux && spall_per_cell_removal)
-            ? surface_patch.side_face_h_max : Set::Scalar(-1.0);
-        const int ihi_dom = domain.bigEnd(0), jhi_dom = domain.bigEnd(1);
-        Set::Scalar side_rob = 0.0, side_los = 0.0, side_n = 0.0, side_multi = 0.0;
-        // P1e diagnostics. sc_min starts at 1.0 so a run with no contributing
-        // face reports the identity rather than a sentinel. sc_seen counts
-        // DISTINCT columns, which is what side_sc_cols names -- a per-cell count
-        // would multiply every column by its riser height.
-        Set::Scalar sc_num = 0.0, sc_den = 0.0, sc_min = 1.0, sc_in35 = 0.0;
-        std::vector<char> sc_seen;
-        if (surface_patch.side_face_staircase && !k_top_col.empty())
-            sc_seen.assign(k_top_col.size(), 0);
-        // D2aa deliverable 3: the CHARGED lateral area and the side power split
-        // by radial band about (x0, y0) -- bore r < foot_r_inner, pads
-        // [foot_r_inner, foot_r_outer), wall beyond. Accumulated from exactly
-        // the same `Aside` and `(s_in - s_out) * Aside` that feed side_faces
-        // and side_P_face, so criterion (d) closes to round-off by
-        // construction rather than by agreement.
-        Set::Scalar A_bore = 0.0, A_pads = 0.0, A_wall = 0.0;
-        Set::Scalar P_bore = 0.0, P_pads = 0.0, P_wall = 0.0;
-        Set::Scalar side_ab_P = 0.0, side_ab_n = 0.0;   // D2r-1 witness
-        // P2-1 deliverable 6: the distribution of the coefficient ACTUALLY
-        // USED, over the faces the law is applied to. ⚠ A fixed-bin histogram,
-        // not a gathered sample: quantiles of a per-rank sample are not
-        // rank-independent, and this one reduces with a single ReduceLongSum.
-        // ⚠ Per BOX, so it MUST be reduced -- the opposite of a per-COLUMN
-        // accumulator. Getting that backwards gave exactly 4x on 4 ranks twice
-        // in P1g-2b/2c.
-        std::vector<long> h_hist;
-        if (surface_patch.side_face_h_derived)
-            h_hist.assign(SIDE_H_BINS + 1, 0);
-        // D2x: the realised weight, accumulated ONLY over the faces the
-        // derived area actually applies to. Above-plane faces are governed by
-        // side_face_factor_above, a DIFFERENT law; counting them here (they are
-        // ~79 % of all faces late in a Meier run, at weight 0) would dilute the
-        // mean to 0.147 and hide the derived number this diagnostic exists to
-        // report. Both are per-face sums, so the ratio is the weighted mean.
-        Set::Scalar side_w_sum = 0.0, side_w_n = 0.0;
+        // P2-8: under the face list the ledger mirrors the LIST, face for face.
+        const bool        fl_on_l = surface_patch.face_list && sp_on && void_aware
+                                    && !sp_presc && fl_ready;
         std::vector<int> has_surf(static_cast<std::size_t>(ncx) * ncy, 0);
         // rev7 d2: sized here, where ncx/ncy are known, not at the declaration.
         if (sidecsv) sidecol.assign(static_cast<std::size_t>(ncx) * ncy, 0.0);
@@ -4244,6 +4124,8 @@ protected:
             amrex::Array4<const Set::Scalar> const& surf  = (*surface_mf[lev]).const_array(mfi);
             amrex::Array4<const Set::Scalar> const& rem   =
                 void_aware ? (*removed_mf[lev]).const_array(mfi) : (*surface_mf[lev]).const_array(mfi);
+            amrex::Array4<const int> fli_l;
+            if (fl_on_l) fli_l = fl_index->const_array(mfi);
             const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
             for (int k = lo.z; k <= hi.z; ++k)
             for (int j = lo.y; j <= hi.y; ++j)
@@ -4290,295 +4172,26 @@ protected:
                                 sp_pinned ? pin_T_eff[col] : Set::Scalar(0.0),
                                 nullptr,
                                 SurfaceRobinT(static_cast<std::size_t>(col)));
+                // P2-8 F4: the top face x w, exactly as the kernel weights it.
+                int fl_f = 0, fl_n = 0;
+                if (fl_on_l) { fl_f = fli_l(i, j, k, 0); fl_n = fli_l(i, j, k, 1); }
+                // P2-9: a listed cell's faces all come through FrFaceFlux below.
+                if (fl_n > 0) { q_rob = 0.0; q_los = 0.0; }
                 P_robin += q_rob * A;
                 P_loss  += q_los * A;
-
-                // D2k: the identical side-face term, or ledger_err breaks.
-                // Same call, same inputs, same f; the areas are the lateral
-                // faces dy*dz and dx*dz instead of the top face dx*dy.
-                const Set::Scalar r2_col =
-                    (x - surface_patch.x0) * (x - surface_patch.x0)
-                  + (y - surface_patch.y0) * (y - surface_patch.y0);
-                if (side_on && !sp_presc && sp_on
-                    && r2_col <= sp_r2 && r2_col >= side_r_min2)
+                // P2-9 R1: every listed face, mirrored from the kernel.
+                for (int q = fl_f; q < fl_f + fl_n; ++q)
                 {
-                    const bool vxm = (i > ilo_dom)     && rem(i-1, j, k) > 0.5;
-                    const bool vxp = (i < ihi_dom)     && rem(i+1, j, k) > 0.5;
-                    const bool vym = (j > jlo_dom)     && rem(i, j-1, k) > 0.5;
-                    const bool vyp = (j < jhi_dom)     && rem(i, j+1, k) > 0.5;
-                    const int nfx = (vxm ? 1 : 0) + (vxp ? 1 : 0);
-                    const int nfy = (vym ? 1 : 0) + (vyp ? 1 : 0);
-                    if (nfx + nfy > 0)
-                    {
-                        Set::Scalar s_in = 0.0, s_out = 0.0, s_rob = 0.0, s_los = 0.0;
-                        Set::Scalar h_side = sp_on ? flame_h[col] : Set::Scalar(0.0);
-                        Set::Scalar T_side = sp_on ? flame_Tg[col] : Set::Scalar(0.0);
-                        // D2aa: mirrors the kernel exactly, or ledger_err breaks.
-                        // D2ab: same radius gate, same resolved temperature.
-                        if (surface_patch.side_face_h >= 0.0
-                            && r2_col >= side_h_rmin2)
-                        { h_side = surface_patch.side_face_h;
-                          T_side = side_T_eff; }
-                        // P2-1 deliverable 4, ROLE 3 of 4 (the LEDGER). Mirrors
-                        // the kernel exactly, or ledger_err breaks.
-                        Set::Scalar h_face =
-                            SideFaceH(h_side, r2_col, static_cast<int>(col), k);
-                        if (side_hmax > 0.0 && h_face > side_hmax) h_face = side_hmax;
-                        // ⚠⚠ RESTRICTED TO THE LAW'S OWN SCOPE. The first
-                        // smoke filled this over EVERY lateral face, including
-                        // r < side_face_h_r_min where the typed path uses the
-                        // h_expr map -- which spans 167 to 1358 on its own, so
-                        // (b2)'s "p95/p05 >= 2x" would have passed with the law
-                        // switched OFF. A span test outside the mechanism's
-                        // scope measures the configuration, not the mechanism.
-                        if (!h_hist.empty()
-                            && surface_patch.side_face_h >= 0.0
-                            && r2_col >= side_h_rmin2)
-                        {
-                            int b = static_cast<int>(h_face / SIDE_H_BIN_W);
-                            if (b < 0) b = 0;
-                            if (b > SIDE_H_BINS) b = SIDE_H_BINS;
-                            // ⚠ weighted by the OPEN FACE COUNT, so the
-                            // quantiles are per FACE as deliverable 6 states.
-                            // Per cell they would under-weight every corner,
-                            // which is where the law differs most from typed.
-                            h_hist[static_cast<std::size_t>(b)] += (nfx + nfy);
-                        }
-                        // P0b rev5 deliverable 7, mirrored from the kernel.
-                        const bool lat_wall_l = sp_surfform_l
-                                              && (r2_col >= side_h_rmin2);
-                        const bool lat_face_l = sp_surfform_l ? true : sp_face;
-                        const Set::Scalar lat_Ts_l = (sp_surfform_l && !lat_wall_l)
-                            ? SurfaceRobinT(static_cast<std::size_t>(col))
-                            : Set::Scalar(0.0);
-                        SurfaceCellFlux(true, lat_face_l, 1.0,
-                                        h_face,
-                                        T_side,
-                                        kc, DX[0], Tc,
-                                        eps_rad, eps_rad_hi, T_eps_break, sigma_SB,
-                                        h_conv, T_amb, s_in, s_out, s_rob, s_los,
-                                        sp_pinned ? pin_T_eff[col] : Set::Scalar(0.0),
-                                        nullptr, lat_Ts_l);
-                        const bool above_r = (side_f_above >= 0.0)
-                                           && sp_on && !(flame_s[col] > 0.0);
-                        const bool above_c = sp_on && !(flame_s[col] > 0.0);
-                        const Set::Scalar sf_c = above_r ? side_f_above : side_f;
-                        // D2x: mirrors the kernel branch exactly, including
-                        // which faces it applies to and in what order.
-                        Set::Scalar Aside;
-                        // D2z-2 deliverable 3: the n >= 2 part of Aside. Zero
-                        // on every branch but the step-height one.
-                        Set::Scalar A_multi = 0.0;
-                        // D2z: mirrors the kernel's step branch EXACTLY --
-                        // same faces, same order, same per-cell split. If it
-                        // does not, ledger_err blows up, which is precisely the
-                        // check that makes the mirror provable rather than
-                        // asserted.
-                        if (side_step_h_l && !above_r && !k_top_col.empty()
-                            && !col_t_last.empty())
-                        {
-                            const int kT = k_top_col[col];
-                            // P1e: riser cell counts, 0 where not open.
-                            int rn_l[4] = {0, 0, 0, 0};
-                            int fb = 0;
-                            const Set::Scalar pT = ColPhi(col_t_last.data(), col_dt.data(),
-                                                          col_nvoid.data(), col, time, fb);
-                            const int nb[4] = {col - 1, col + 1,
-                                               col - ncx, col + ncx};
-                            const bool hs[4] = {vxm, vxp, vym, vyp};
-                            Set::Scalar wsum = 0.0, dsum = 0.0, wmulti = 0.0;
-                            int nfb = 0, nstep = 0, npair = 0;
-                            for (int d = 0; d < 4; ++d)
-                            {
-                                if (!hs[d]) continue;
-                                const int kS = k_top_col[nb[d]];
-                                const int nn = kT - kS;
-                                if (nn < 1) continue;
-                                int fbS = 0;
-                                const Set::Scalar pS = ColPhi(col_t_last.data(), col_dt.data(),
-                                                              col_nvoid.data(), nb[d], time, fbS);
-                                const Set::Scalar w = StepCellWeight(nn, k, kT, kS, pT, pS);
-                                rn_l[d] = nn;
-                                const Set::Scalar aw =
-                                    AreaOfDelta(w < 0.0 ? 0.0 : w, wetted_law_l);
-                                wsum += aw;
-                                // D2z-2 deliverable 3: the share of the area --
-                                // and so of side_P_face -- drawn by faces with
-                                // n >= 2. Without it a bad SW result cannot be
-                                // attributed to the amplification rather than
-                                // to anything else.
-                                if (nn >= 2) wmulti += aw;
-                                ++nstep;                       // stepped FACES (cell x direction)
-                                // D2z-2 deliverable 1: delta_mean must be the
-                                // PAIR's full step height, not StepCellWeight's
-                                // per-cell share -- the two coincide only at
-                                // n = 1, and D2z's live column read -87.5 %
-                                // against the offline estimator on the 1 mm rim
-                                // (26.6 % multi-cell).
-                                //
-                                // ⚠ Accumulated ONCE PER PAIR, at the taller
-                                // column's top exposed cell (k == kT), NOT once
-                                // per stepped face. The packet's wording says
-                                // "once per stepped face", but this branch runs
-                                // for every exposed cell of the riser, so a
-                                // per-face accumulation would weight an n-cell
-                                // pair n times -- area weighting -- while
-                                // delta_offline.py weights every PAIR equally.
-                                // Criterion (b) compares the two directly, so
-                                // matching its weighting is what "specify both
-                                // sides the same way" requires. The per-face
-                                // count is not lost: it is the new `delta_faces`
-                                // column, and delta_faces / delta_n is the mean
-                                // riser height in cells.
-                                if (k == kT)
-                                {
-                                    const Set::Scalar dp = Set::Scalar(nn) + pS - pT;
-                                    dsum += (dp > 0.0 ? dp : 0.0);
-                                    ++npair;
-                                    nfb += (fb | fbS);
-                                }
-                            }
-                            // P1e SITE 3 OF 4 -- THE LEDGER MIRROR. :3980 states
-                            // this branch matches the kernel "EXACTLY -- same
-                            // faces, same order, same per-cell split. If it does
-                            // not, ledger_err blows up." That is precisely why
-                            // applying the factor at three sites of four FAILS
-                            // LOUDLY instead of silently: criterion (e).
-                            // ⚠ A_multi is a SHARE of Aside, so it takes the same
-                            // factor or the share stops being a share.
-                            if (side_staircase_l)
-                            {
-                                const Set::Scalar scf = StaircaseFactor(
-                                    rn_l[0], rn_l[1], rn_l[2], rn_l[3]);
-                                // Diagnostics, area-weighted by the area the
-                                // column WOULD have contributed, which is the
-                                // weighting the delivered power actually sees.
-                                sc_num += scf * wsum;
-                                sc_den += wsum;
-                                if (scf < sc_min) sc_min = scf;
-                                if (col >= 0 && col < static_cast<int>(sc_seen.size())
-                                    && !sc_seen[col])
-                                { sc_seen[col] = 1; }
-                                wsum   *= scf;
-                                wmulti *= scf;
-                            }
-                            Aside = wsum * DX[0] * dz;
-                            A_multi = wmulti * DX[0] * dz;
-                            delta_sum   += dsum;
-                            // ⚠ was (nfx + nfy) -- EVERY exposed lateral face,
-                            // including the nn < 1 directions that contribute
-                            // nothing to the sum and so biased the mean DOWN.
-                            delta_n     += Set::Scalar(npair);
-                            delta_faces += Set::Scalar(nstep);
-                            delta_fb    += Set::Scalar(nfb);
-                            // riser_area_ratio: assigned area over the OTHER
-                            // law's, on the same faces, so the two laws can be
-                            // compared without running both.
-                            Set::Scalar other = 0.0;
-                            for (int d = 0; d < 4; ++d)
-                            {
-                                if (!hs[d]) continue;
-                                const int kS = k_top_col[nb[d]];
-                                const int nn = kT - kS;
-                                if (nn < 1) continue;
-                                int fbS = 0;
-                                const Set::Scalar pS = ColPhi(col_t_last.data(), col_dt.data(),
-                                                              col_nvoid.data(), nb[d], time, fbS);
-                                const Set::Scalar w = StepCellWeight(nn, k, kT, kS, pT, pS);
-                                other += AreaOfDelta(w < 0.0 ? 0.0 : w, !wetted_law_l);
-                            }
-                            // P1e SITE 4 OF 4 -- the opposite-law diagnostic. It
-                            // exists so the two area laws can be compared without
-                            // running both, so it must be corrected the same way
-                            // or the comparison acquires a spurious ~0.81 factor.
-                            if (side_staircase_l)
-                                other *= StaircaseFactor(rn_l[0], rn_l[1],
-                                                         rn_l[2], rn_l[3]);
-                            ratio_num += wsum;
-                            ratio_den += other;
-                        }
-                        else if (side_area_exact && !above_r && !k_top_col.empty())
-                        {
-                            const int nc = k_top_col[col];
-                            Set::Scalar wsum = 0.0;
-                            if (vxm) wsum += RiserWeight(nc - k_top_col[col - 1],   DX[0], dz);
-                            if (vxp) wsum += RiserWeight(nc - k_top_col[col + 1],   DX[0], dz);
-                            if (vym) wsum += RiserWeight(nc - k_top_col[col - ncx], DX[0], dz);
-                            if (vyp) wsum += RiserWeight(nc - k_top_col[col + ncx], DX[0], dz);
-                            Aside = wsum * DX[0] * dz;
-                            side_w_sum += wsum;
-                            side_w_n   += Set::Scalar(nfx + nfy);
-                        }
-                        else
-                        {
-                            Aside = sf_c
-                                * (Set::Scalar(nfx) * DX[1] * dz + Set::Scalar(nfy) * DX[0] * dz);
-                            if (!side_area_exact)
-                            {
-                                side_w_sum += sf_c * Set::Scalar(nfx + nfy);
-                                side_w_n   += Set::Scalar(nfx + nfy);
-                            }
-                        }
-                        P_robin  += s_rob * Aside;
-                        P_loss   += s_los * Aside;
-                        // P0b deliverable 1.2: side faces have no column
-                        // profile, so they keep the CELL AVERAGE. That is a
-                        // real approximation, so the share of P_robin they
-                        // carry goes on the record rather than being assumed
-                        // small -- without it the Meier rerun is not
-                        // interpretable.
-                        P_robin_side += s_rob * Aside;
-                        // P0b rev5 deliverable 9, bin 2: "does the receiving
-                        // cell later fire?". The honest online proxy is
-                        // whether the cell IS its own column's top cell -- the
-                        // one the criterion scores next -- or is buried below
-                        // it and cannot fire until the floor recedes past it.
-                        // ⚠ Share of power is not share of error: a buried
-                        // cell's heat is not wasted, it is stored and arrives
-                        // later. This bounds which side power can act on the
-                        // RATE, which is the question deliverable 9 asks.
-                        if (!k_top_col.empty() && k == k_top_col[col])
-                             side_P_topcell += s_rob * Aside;
-                        else side_P_buried  += s_rob * Aside;
-                        if (r2_col >= side_h_rmin2) side_P_rout += s_rob * Aside;
-                        else                        side_P_rin  += s_rob * Aside;
-                        // P1e: the fraction of side power landing inside 35 mm.
-                        // ⚠ Accumulated as (s_in - s_out)*Aside, the SAME
-                        // quantity side_P_face is built from (side_rob), so the
-                        // reported number is a true fraction of it rather than of
-                        // a different integral. It is the roughness measure that
-                        // says whether side heat went to the WALL or, once the
-                        // floor roughens, onto the FLOOR -- which is what decides
-                        // how to read any rate change.
-                        if (surface_patch.side_face_staircase &&
-                            r2_col < Set::Scalar(0.035 * 0.035))
-                            sc_in35 += (s_in - s_out) * Aside;
-                        if (sidecsv && col >= 0 &&
-                            col < static_cast<int>(sidecol.size()))
-                            sidecol[col] += s_rob * Aside;
-                        side_rob += (s_in - s_out) * Aside;
-                        side_multi += (s_in - s_out) * A_multi;
-                        side_los += s_los * Aside;
-                        {
-                            const Set::Scalar ri2 = surface_patch.foot_r_inner
-                                                  * surface_patch.foot_r_inner;
-                            const Set::Scalar ro2 = surface_patch.foot_r_outer
-                                                  * surface_patch.foot_r_outer;
-                            const Set::Scalar Pf = (s_in - s_out) * Aside;
-                            if (r2_col < ri2)       { A_bore += Aside; P_bore += Pf; }
-                            else if (r2_col < ro2)  { A_pads += Aside; P_pads += Pf; }
-                            else                    { A_wall += Aside; P_wall += Pf; }
-                        }
-                        side_n   += Set::Scalar(nfx + nfy);
-                        // D2r-1 criterion (c): THE MECHANISM'S OWN WITNESS.
-                        // If this is 0 on the test leg, the leg heated nothing
-                        // and the result is a plumbing failure, not physics.
-                        if (above_c)
-                        {
-                            side_ab_P += (s_in - s_out) * Aside;
-                            side_ab_n += Set::Scalar(nfx + nfy);
-                        }
-                    }
+                    const FaceEntry& e = fl_faces[static_cast<std::size_t>(q)];
+                    Set::Scalar a_in = 0.0, a_out = 0.0, a_rob = 0.0, a_los = 0.0;
+                    FrFaceFlux(e, e.Tg, kc, Tc, DX[0], a_in, a_out, a_rob, a_los);
+                    const Set::Scalar Af = e.w * DX[0] * dz;
+                    P_robin      += a_rob * Af;
+                    P_loss       += a_los * Af;
+                    if (e.cls == FL_TOP) continue;
+                    P_robin_side += a_rob * Af;
+                    if (sidecsv && col >= 0 && col < static_cast<int>(sidecol.size()))
+                        sidecol[col] += a_rob * Af;
                 }
             }
         }
@@ -4588,97 +4201,6 @@ protected:
         amrex::ParallelDescriptor::ReduceRealSum(EHsol_c);
         amrex::ParallelDescriptor::ReduceRealSum(P_robin);
         amrex::ParallelDescriptor::ReduceRealSum(P_loss);
-        if (side_on)
-        {
-            amrex::ParallelDescriptor::ReduceRealSum(side_rob);
-            amrex::ParallelDescriptor::ReduceRealSum(side_multi);
-            for (Set::Scalar* q : {&A_bore, &A_pads, &A_wall,
-                                   &P_bore, &P_pads, &P_wall})
-                amrex::ParallelDescriptor::ReduceRealSum(*q);
-            side_A_bore = A_bore; side_A_pads = A_pads; side_A_wall = A_wall;
-            side_P_bore = P_bore; side_P_pads = P_pads; side_P_wall = P_wall;
-            amrex::ParallelDescriptor::ReduceRealSum(side_los);
-            amrex::ParallelDescriptor::ReduceRealSum(side_n);
-            side_P_face = side_rob;
-            // P1e: reduce and publish. ⚠ sc_min takes ReduceRealMin, not Sum --
-            // a summed minimum is meaningless and would read ~nranks.
-            if (surface_patch.side_face_staircase)
-            {
-                amrex::ParallelDescriptor::ReduceRealSum(sc_num);
-                amrex::ParallelDescriptor::ReduceRealSum(sc_den);
-                amrex::ParallelDescriptor::ReduceRealSum(sc_in35);
-                amrex::ParallelDescriptor::ReduceRealMin(sc_min);
-                long ncol_sc = 0;
-                for (char c : sc_seen) ncol_sc += (c ? 1 : 0);
-                amrex::ParallelDescriptor::ReduceLongSum(ncol_sc);
-                side_sc_mean = (sc_den > 0.0) ? sc_num / sc_den : 1.0;
-                side_sc_min  = sc_min;
-                side_sc_cols = static_cast<Set::Scalar>(ncol_sc);
-                side_P_in35  = (std::abs(side_rob) > 0.0)
-                             ? sc_in35 / side_rob : 0.0;
-            }
-            side_P_face_multi = side_multi;
-            side_P_loss = side_los;
-            // D2x: the face-count-weighted mean realised weight. It must land
-            // in [0.4142, 1] by construction; 0.2 would mean the key is inert.
-            if (side_area_exact)
-            {
-                amrex::ParallelDescriptor::ReduceRealSum(side_w_sum);
-                amrex::ParallelDescriptor::ReduceRealSum(side_w_n);
-                side_w_mean = (side_w_n > 0.0) ? side_w_sum / side_w_n : 0.0;
-            }
-            // D2z: delta_mean is a population mean over the LIVE face set and
-            // is therefore TIME-WEIGHTED, not at-birth. ⚠ Masked on its own
-            // population (below-plane step faces only): D2x's side_w_mean read
-            // 0.147 because 79 % of late-run faces are above-plane under a
-            // different law and were counted at weight zero.
-            if (side_step_h_l)
-            {
-                amrex::ParallelDescriptor::ReduceRealSum(delta_sum);
-                amrex::ParallelDescriptor::ReduceRealSum(delta_n);
-                amrex::ParallelDescriptor::ReduceRealSum(delta_fb);
-                amrex::ParallelDescriptor::ReduceRealSum(delta_faces);
-                amrex::ParallelDescriptor::ReduceRealSum(ratio_num);
-                amrex::ParallelDescriptor::ReduceRealSum(ratio_den);
-                delta_mean          = (delta_n > 0.0) ? delta_sum / delta_n : 0.0;
-                delta_fallback_cols = delta_fb;
-                step_delta_faces    = delta_faces;
-                riser_area_ratio    = (ratio_den > 0.0) ? ratio_num / ratio_den : 0.0;
-            }
-            side_faces  = side_n;
-            if (!h_hist.empty())
-            {
-                amrex::ParallelDescriptor::ReduceLongSum(
-                    h_hist.data(), static_cast<int>(h_hist.size()));
-                long tot = 0;
-                for (long v : h_hist) tot += v;
-                side_h_used_n = Set::Scalar(tot);
-                auto qtl = [&](Set::Scalar q) -> Set::Scalar {
-                    if (tot <= 0) return Set::Scalar(0.0);
-                    const long want = static_cast<long>(q * Set::Scalar(tot));
-                    long run = 0;
-                    for (std::size_t b = 0; b < h_hist.size(); ++b)
-                    {
-                        run += h_hist[b];
-                        if (run > want)
-                            return (Set::Scalar(b) + 0.5) * SIDE_H_BIN_W;
-                    }
-                    return (Set::Scalar(h_hist.size() - 1) + 0.5) * SIDE_H_BIN_W;
-                };
-                side_h_used_min = qtl(0.0);
-                side_h_used_p05 = qtl(0.05);
-                side_h_used_p50 = qtl(0.50);
-                side_h_used_p95 = qtl(0.95);
-                side_h_used_max = qtl(0.999999);
-            }
-            if (surface_patch.side_face_factor_above >= 0.0)
-            {
-                amrex::ParallelDescriptor::ReduceRealSum(side_ab_P);
-                amrex::ParallelDescriptor::ReduceRealSum(side_ab_n);
-                side_P_face_above = side_ab_P;
-                side_cols_above   = side_ab_n;
-            }
-        }
         amrex::ParallelDescriptor::ReduceIntMax(has_surf.data(), static_cast<int>(has_surf.size()));
         if (!ledger_started)
         {
@@ -4704,20 +4226,17 @@ protected:
         const Set::Scalar P_beam = (beam.power_at(time) > 0.0) ? beam_P_dep : 0.0;
         ledger_P_beam  = P_beam;
         ledger_P_robin = P_robin;
+        if (fl_on_l)
+        {
+            const Set::Scalar Ps = fl_P_top + fl_P_up + fl_P_side + fl_P_down;
+            fl_id_ledger = (std::abs(Ps) > 0.0) ? std::abs(P_robin - Ps) / std::abs(Ps) : 0.0;
+        }
         // P0b witnesses for robin_form = surface.
         if (surface_patch.robin_form == SurfacePatch::RobinForm::Surface)
         {
             amrex::ParallelDescriptor::ReduceRealSum(P_robin_side);
-            amrex::ParallelDescriptor::ReduceRealSum(side_P_topcell);
-            amrex::ParallelDescriptor::ReduceRealSum(side_P_buried);
-            amrex::ParallelDescriptor::ReduceRealSum(side_P_rin);
-            amrex::ParallelDescriptor::ReduceRealSum(side_P_rout);
             surf_side_share = (std::abs(P_robin) > 0.0)
                               ? P_robin_side / P_robin : 0.0;
-            surf_side_P_top    = side_P_topcell;
-            surf_side_P_buried = side_P_buried;
-            surf_side_P_rin    = side_P_rin;
-            surf_side_P_rout   = side_P_rout;
             // rev7 d2: the per-column side-power log. Deliverable 2 is explicit
             // that the wall/riser split "cannot be a re-analysis" -- the
             // plotfiles carry 38 fields and not one of them is a side flux, and
@@ -4782,7 +4301,13 @@ protected:
         ledger_E_H_solid = EHsol_s + EHsol_c;
         const Set::Scalar dE_sol = (EHsol_s - ledger_E_H0_sol_s)
                                  + (EHsol_c - ledger_E_H0_sol_c);
-        ledger_err_solid = (dE_sol - (ledger_E_src - ledger_E_flake))
+        // P2-2f: foot_mech_E is the pad-clearance sink -- enthalpy that left the
+        // SOLID set mechanically. Without it this row cannot close on any leg
+        // with feet + foot_body_clearance, which is one cause and not two: the
+        // gap between ledger_err and ledger_err_solid is the flake credit the
+        // TOTAL row omits by design, and the accepted CTRL5 shows a larger gap
+        // while closing here to 7.78e-04.
+        ledger_err_solid = (dE_sol - (ledger_E_src - ledger_E_flake - foot_mech_E))
                            / std::max(std::abs(ledger_E_src), Set::Scalar(1.0e-30));
         ledger_surface_missing_cols = Set::Scalar(n_missing);
     }
@@ -4958,400 +4483,6 @@ protected:
     // scan in the code now uses this rule -- `removed` alone -- so Removal.H
     // PASS 1 no longer additionally requires phi >= 0.
     // =====================================================================
-    // P2-1: THE COMPOSITE WALL LAW
-    // =====================================================================
-    // The hole wall was heated through ONE hand-typed scalar applied flat at
-    // every depth. These four members replace it with a law, under
-    // `surface_patch.side_face_h_law = derived` (default `typed`, so every
-    // frozen anchor is untouched).
-    //
-    //      h_wall(z) = h_wj(z)   for z <  z_fill     (wall jet, thin layer)
-    //                = h_duct    for z >= z_fill     (fully-developed annulus)
-    //
-    // The two earlier derivations are not rivals, they are the same flow at two
-    // heights: at the corner the gas has just turned off the floor and runs as
-    // a thin fast layer on a free stream; once the layer fills the wall-to-
-    // shield gap there is no free stream left to entrain and the flow IS the
-    // duct.
-    //
-    // ⚠⚠ A HARD SWITCH AT z_fill, NEVER max(h_wj, h_duct). Under the `max` the
-    // duct is never selected -- h_wj is still ~96 W/m^2K at z = 400 mm against
-    // the duct's ~58 -- so the crossover would do nothing and the deep wall
-    // would keep a model that no longer applies.
-    //
-    // ⚠ The step at z_fill is a factor ~2.6 and is ACCEPTED, not blended. It is
-    // safe because the datum is the LOCAL CORNER FLOOR, so z_fill is a height
-    // above a floor that descends through the run: the step sweeps through the
-    // rock rather than sitting at one elevation, and cannot etch a ledge. A
-    // blend would need a second length that nothing measures.
-    //
-    // ⚠⚠ THE HALF IN c_f/2 IS SETTLED BY MEASUREMENT, NOT BY READING A
-    // DEFINITION. A six-laboratory compilation of plane wall-jet data reports
-    // the friction velocity directly, which is convention-free:
-    // u_tau/U_max = 0.050-0.064. The friction law below reproduces that band
-    // only with the half; the other reading requires 0.083, which no
-    // measurement shows.
-    //
-    // Offline twin, and the derivation of every constant:
-    //   tests/MMWSpalling/studies/p2_1_wallh/wall_law.py  (+ WALL_H.txt)
-    static constexpr Set::Scalar WJ_VEL   = 1.05;   // v_max = C u D_e / r
-    static constexpr Set::Scalar WJ_DELTA = 0.09;   // delta = C r at the corner
-    static constexpr Set::Scalar WJ_GROW  = 0.073;  // d delta / dz up the wall
-    static constexpr Set::Scalar WJ_CF_A  = 0.0315; // c_f = A Re_delta^B
-    static constexpr Set::Scalar WJ_CF_B  = -0.182;
-    static constexpr Set::Scalar WJ_PR    = 0.72;   // gas Prandtl number
-    static constexpr Set::Scalar WJ_P_ATM = 101325.0;
-    static constexpr Set::Scalar WJ_R_GAS = 287.0;
-    // ⚠ The burner's water-cooled shield is Oe67 mm => 33.5 mm radius, from the
-    // VT5 burner drawings. This is NOT surface_patch.side_face_h_r_min (40 mm,
-    // the Oe80 feet): that gates WHICH faces take wall treatment, this is what
-    // the annulus GAP is measured against. It is a declared constant rather
-    // than a key because the step is allowed to add exactly ONE key.
-    static constexpr Set::Scalar WJ_R_SHIELD = 0.0335;
-    // deliverable 6's histogram: 5 W/m^2K bins to 1500, with the last bin an
-    // overflow catch-all. The law's whole range on the Meier wall is 55-330, so
-    // the resolution is ~2 % of the quantity and nothing saturates.
-    static constexpr int         SIDE_H_BINS  = 300;
-    static constexpr Set::Scalar SIDE_H_BIN_W = 5.0;
-
-    // Sutherland's law for air (White, Viscous Fluid Flow, 2nd ed. Eq. 1-36).
-    static Set::Scalar WallMu(Set::Scalar T)
-    {
-        const Set::Scalar mu0 = 1.716e-5, T0 = 273.15, S = 110.4;
-        return mu0 * std::pow(T / T0, 1.5) * (T0 + S) / (T + S);
-    }
-
-    // The height at which the layer fills the wall-to-shield gap [m]. Returns 0
-    // when the gap is already thinner than the corner layer, i.e. no wall-jet
-    // zone at all.
-    static Set::Scalar WallZFill(Set::Scalar r)
-    {
-        const Set::Scalar gap = r - WJ_R_SHIELD;
-        const Set::Scalar d_c = WJ_DELTA * r;
-        return (gap <= d_c) ? Set::Scalar(0.0) : (gap - d_c) / WJ_GROW;
-    }
-
-    // The wall-jet branch at height z above the corner, at radius r.
-    Set::Scalar WallJetBranch(Set::Scalar z, Set::Scalar r) const
-    {
-        if (!(r > 0.0) || !(wall_nu > 0.0)) return Set::Scalar(0.0);
-        const Set::Scalar v_c = WJ_VEL * wall_uDe / r;
-        const Set::Scalar d_c = WJ_DELTA * r;
-        const Set::Scalar d_z = d_c + WJ_GROW * (z > 0.0 ? z : Set::Scalar(0.0));
-        // plane-jet momentum conservation: v^2 * delta = const
-        const Set::Scalar v = v_c * std::sqrt(d_c / d_z);
-        const Set::Scalar Re = v * d_z / wall_nu;
-        if (!(Re > 0.0)) return Set::Scalar(0.0);
-        const Set::Scalar cf = WJ_CF_A * std::pow(Re, WJ_CF_B);
-        const Set::Scalar St = (0.5 * cf) / std::pow(WJ_PR, 2.0 / 3.0);
-        return St * wall_rho * wall_cp * v;
-    }
-
-    // The composite law [W/m^2K].
-    Set::Scalar WallJetH(Set::Scalar z, Set::Scalar r) const
-    {
-        if (z >= WallZFill(r)) return wall_h_duct;
-        return WallJetBranch(z, r);
-    }
-
-    // =====================================================================
-    // THE ONE PER-FACE RESOLVER -- every lateral role calls exactly this.
-    // =====================================================================
-    // ⚠⚠ Removal.H:589-594 pre-registers this bug family: three times now the
-    // criterion has read something the flux never used (Pa vs MPa, the Newton
-    // length d_n vs DX[0], the coefficient cap). Making the per-height
-    // resolution a single function that all four roles call is how the fourth
-    // is prevented rather than found by a campaign.
-    //
-    // With the law off this returns `h_typed` unchanged and bit-for-bit, which
-    // is what keeps every frozen anchor byte-identical.
-    Set::Scalar SideFaceH(Set::Scalar h_typed, Set::Scalar r2_col,
-                          int col, int k) const
-    {
-        if (!surface_patch.side_face_h_derived || !wall_law_ready)
-            return h_typed;
-        if (col < 0 || col >= static_cast<int>(wall_corner.size()))
-            return h_typed;
-        const int kc = wall_corner[static_cast<std::size_t>(col)];
-        if (kc == std::numeric_limits<int>::min()) return h_typed;
-        Set::Scalar z = (Set::Scalar(k - kc) - 0.5) * wall_dz;
-        if (z < 0.5 * wall_dz) z = 0.5 * wall_dz;
-        const Set::Scalar h = WallJetH(z, std::sqrt(r2_col));
-        return (h > 0.0) ? h : h_typed;
-    }
-
-    // =====================================================================
-    // THE HEIGHT DATUM -- ONE definition, built once per step.
-    // =====================================================================
-    //   k_corner[col] = the DEEPEST column top on the straight ray from this
-    //   column inward to the axis, truncated at the wall band's own inner edge
-    //   r = side_face_h_r_min.   z = (k - k_corner - 1/2) dz, floored at dz/2.
-    //
-    // ⚠ NOT the nearest open neighbour's top. That reads the one-cell
-    // STAIRCASE tread, not the hole's floor: on the Meier wall it gives a
-    // median height of 7 mm where the crater floor profile puts the band at
-    // 30-65 mm. The wall-jet layer is 4.4 mm at the corner and ~15 mm by
-    // z = 150 mm, so it spans several treads -- a 2 mm ledge every 10 mm is
-    // ROUGHNESS and does not restart the jet. Resetting z at each tread would
-    // also make the datum mesh-dependent, which is the D2j-0b failure mode.
-    //
-    // ⚠ NOT the axis front either (that is the p50 90 mm prior packets quote):
-    // the jet turns at the corner under THIS azimuth, and the crater floor
-    // rises ~50 mm from the axis to the band.
-    //
-    // ⚠ r_gate is reused deliberately: inside it the code is already in regime
-    // 7b (floor riser), so it is the EXISTING floor/wall boundary and the datum
-    // introduces no new radius.
-    //
-    // Decomposition-independent by construction: it is a pure function of
-    // k_top, which ColumnTopSolid has already ReduceIntMax'd.
-    amrex::Vector<int> ColumnWallCorner(int lev,
-                                        const amrex::Vector<int>& k_top) const
-    {
-        const amrex::Box& domain = geom[lev].Domain();
-        const int ilo = domain.smallEnd(0), jlo = domain.smallEnd(1);
-        const int nx = domain.length(0), ny = domain.length(1);
-        const Set::Scalar* DX = geom[lev].CellSize();
-        const Set::Scalar* PLO = geom[lev].ProbLo();
-        const Set::Scalar x0 = surface_patch.x0, y0 = surface_patch.y0;
-        const Set::Scalar rg2 = surface_patch.side_face_h_r_min
-                              * surface_patch.side_face_h_r_min;
-        const int MISS = std::numeric_limits<int>::min();
-        amrex::Vector<int> out(k_top.size(), MISS);
-        if (k_top.empty()) return out;
-        auto r2_of = [&](int i, int j) {
-            const Set::Scalar x = PLO[0] + (Set::Scalar(i + ilo) + 0.5) * DX[0] - x0;
-            const Set::Scalar y = PLO[1] + (Set::Scalar(j + jlo) + 0.5) * DX[1] - y0;
-            return x * x + y * y;
-        };
-        for (int j = 0; j < ny; ++j)
-        for (int i = 0; i < nx; ++i)
-        {
-            const std::size_t c = static_cast<std::size_t>(j) * nx + i;
-            if (k_top[c] == MISS || r2_of(i, j) < rg2) continue;
-            int best = k_top[c];
-            // march inward along the ray to the axis, one cell at a time
-            const int n = (i > j ? i : j);
-            for (int s = 1; s <= n; ++s)
-            {
-                const Set::Scalar t = 1.0 - Set::Scalar(s) / Set::Scalar(n + 1);
-                const int ii = static_cast<int>(
-                    std::lround((Set::Scalar(i) + 0.5) * t - 0.5));
-                const int jj = static_cast<int>(
-                    std::lround((Set::Scalar(j) + 0.5) * t - 0.5));
-                if (ii < 0 || jj < 0 || ii >= nx || jj >= ny) break;
-                if (r2_of(ii, jj) < rg2) break;
-                const int kt = k_top[static_cast<std::size_t>(jj) * nx + ii];
-                if (kt != MISS && kt < best) best = kt;
-            }
-            out[c] = best;
-        }
-        return out;
-    }
-
-    // The azimuthal fraction of a full circle of radius r about the patch axis
-    // that lies INSIDE the domain. The Meier input is a quarter annulus with
-    // the axis at the domain corner, so this is exactly 1/4; a centred patch
-    // gives 1. Derived from geometry already in scope, so the step adds no key
-    // for it, and logged, so the quarter-domain assumption is an output rather
-    // than a comment.
-    Set::Scalar PatchAzimuthFraction(int lev, Set::Scalar r) const
-    {
-        const amrex::Box& domain = geom[lev].Domain();
-        const Set::Scalar* DX = geom[lev].CellSize();
-        const Set::Scalar* PLO = geom[lev].ProbLo();
-        const Set::Scalar xlo = PLO[0], ylo = PLO[1];
-        const Set::Scalar xhi = PLO[0] + Set::Scalar(domain.length(0)) * DX[0];
-        const Set::Scalar yhi = PLO[1] + Set::Scalar(domain.length(1)) * DX[1];
-        if (!(r > 0.0)) return Set::Scalar(0.0);
-        const int N = 2048;
-        int in = 0;
-        for (int a = 0; a < N; ++a)
-        {
-            const Set::Scalar th = 2.0 * 3.14159265358979323846
-                                 * (Set::Scalar(a) + 0.5) / Set::Scalar(N);
-            const Set::Scalar x = surface_patch.x0 + r * std::cos(th);
-            const Set::Scalar y = surface_patch.y0 + r * std::sin(th);
-            if (x >= xlo && x <= xhi && y >= ylo && y <= yhi) ++in;
-        }
-        // ⚠⚠ 0, NOT 1, when the probe circle lies wholly outside the domain.
-        // Returning 1 is what the first smoke run did, silently: the probe used
-        // surface_patch.radius = 0.2 m against a 0.12 m domain, every sample
-        // fell outside, and the fallback handed back a FULL circle -- so
-        // mdot_full came out 4x too small and the whole law with it. A
-        // degenerate probe is a failure to be reported, not a default.
-        return (in > 0) ? Set::Scalar(in) / Set::Scalar(N) : Set::Scalar(0.0);
-    }
-
-    // =====================================================================
-    // The per-step law state. MUST run before the criterion, i.e. first in
-    // Advance: the criterion is the earliest of the four roles.
-    // =====================================================================
-    void UpdateWallLawState(int lev)
-    {
-        wall_law_ready = false;
-        wall_law_on = 0.0;
-        if (!surface_patch.side_face_h_derived) { wall_corner.clear(); return; }
-        if (!SurfaceOwner(lev) || !removal_enabled()) { wall_corner.clear(); return; }
-
-        const amrex::Vector<int> k_top = ColumnTopSolid(lev);
-        if (k_top.empty()) { wall_corner.clear(); return; }
-        wall_corner = ColumnWallCorner(lev, k_top);
-
-        const amrex::Box& domain = geom[lev].Domain();
-        const Set::Scalar* DX = geom[lev].CellSize();
-        const int nz = domain.length(2);
-        const int klo = domain.smallEnd(2);
-        const int nx_dom = domain.length(0), ny_dom = domain.length(1);
-        wall_dz = DX[2];
-
-        // THE BORE, from the void mask -- never from the event log, whose
-        // estimator is biased ~0.3 mm (P1g-2c carried risk iv). Area-equivalent
-        // rather than max-radius: a staircased wall makes the max radius a
-        // one-cell artefact. Taken over the live wall band only, so the collar
-        // near the mouth cannot stand in for the bore.
-        // ⚠ One pass over columns into a histogram, then a prefix sum: the void
-        // count at level k is the number of columns whose top lies below k. The
-        // naive nz*ncols double loop is 1.1M compares EVERY step.
-        const int MISS = std::numeric_limits<int>::min();
-        std::vector<long> below(static_cast<std::size_t>(nz) + 1, 0);
-        for (std::size_t c = 0; c < k_top.size(); ++c)
-        {
-            const int kt = k_top[c];
-            if (kt == MISS) continue;
-            const int kk = kt + 1 - klo;                 // first void level
-            if (kk <= 0) below[0] += 1;
-            else if (kk < nz) below[static_cast<std::size_t>(kk)] += 1;
-        }
-        for (int k = 1; k < nz; ++k) below[static_cast<std::size_t>(k)]
-            += below[static_cast<std::size_t>(k - 1)];
-        // the live band: drop 20 mm above the advancing front and 100 mm below
-        // the mouth. ⚠ a band within 20 mm of either front is not comparable,
-        // and the collar near the mouth runs ~10 mm wider than the bore, so
-        // including it would let the collar stand in for the hole.
-        int k_deep = nz;                   // deepest level carrying any void
-        for (int k = 0; k < nz; ++k)
-            if (below[static_cast<std::size_t>(k)] > 0) { k_deep = k; break; }
-        // ⚠ The band must be defined on the hole that EXISTS, not on a fixed
-        // depth. The first smoke run drilled 15 mm in 40 s, the 100 mm mouth pad
-        // then emptied the band, and the area-equivalent bore collapsed onto the
-        // WJ_R_SHIELD clamp -- a 0.3 mm gap, h_duct 770 and z_fill 0, i.e. every
-        // face on a duct branch that does not exist. Pads are applied only when
-        // the hole is deep enough to carry them; otherwise the middle half of
-        // the void range is used.
-        const int pad_lo = static_cast<int>(0.020 / DX[2] + 0.5);
-        const int pad_hi = static_cast<int>(0.100 / DX[2] + 0.5);
-        int b_lo = k_deep, b_hi = nz - 1;
-        if ((b_hi - b_lo) > 2 * (pad_lo + pad_hi))
-        { b_lo = k_deep + pad_lo; b_hi = (nz - 1) - pad_hi; }
-        else if (b_hi > b_lo)
-        { const int q = (b_hi - b_lo) / 4; b_lo += q; b_hi -= q; }
-        long nvoid = 0; int nk = 0;
-        for (int k = b_lo; k <= b_hi && k < nz; ++k)
-        {
-            const long nv = below[static_cast<std::size_t>(k)];
-            if (nv > 0) { nvoid += nv; ++nk; }
-        }
-        Set::Scalar r_bore = 0.0;
-        if (nk > 0)
-        {
-            // ⚠ Probed at a quarter of the smaller domain extent, NOT at
-            // surface_patch.radius: the patch radius may exceed the domain (the
-            // Meier input sets 0.2 m on a 0.12 m box). With the axis on a
-            // domain corner the azimuth fraction is identical for every radius
-            // that fits, so this is exact rather than a sample of a guess.
-            const Set::Scalar Lx = Set::Scalar(nx_dom) * DX[0];
-            const Set::Scalar Ly = Set::Scalar(ny_dom) * DX[1];
-            const Set::Scalar f = PatchAzimuthFraction(
-                lev, 0.25 * ((Lx < Ly) ? Lx : Ly));
-            wall_sector = f;
-            const Set::Scalar A = (Set::Scalar(nvoid) / Set::Scalar(nk))
-                                * DX[0] * DX[1] / (f > 0.0 ? f : Set::Scalar(1.0));
-            r_bore = std::sqrt(A / 3.14159265358979323846);
-        }
-        wall_r_bore = r_bore;
-        // ⚠⚠ NO ANNULUS YET. Until the bore clears the burner shield by at
-        // least two cells there is no gap to run a duct through and no corner
-        // for a wall jet to turn at, so the law is NOT applied and the typed
-        // coefficient stands. Reported through wall_law_on, so the inert period
-        // is an OUTPUT -- an inert law that nothing shows is the failure mode
-        // three keys in this line of packets already hit.
-        if (!(r_bore > WJ_R_SHIELD + 2.0 * DX[0]))
-        {
-            wall_law_on = 0.0;
-            wall_h_duct = 0.0; wall_h_corner = 0.0; wall_z_fill = 0.0;
-            wall_corner.clear();
-            return;
-        }
-
-        // THE GAS STATE. side_T_eff is the temperature the wall faces actually
-        // see (jet_T_exhaust under side_face_T = live), so the law is derived at
-        // the state it is applied at, not at nozzle conditions -- the gas
-        // reaching the wall has already impinged.
-        const Set::Scalar T_gas = (side_T_eff > 0.0)
-            ? side_T_eff : surface_patch.jet_T_nozzle;
-        if (!(T_gas > 0.0)) { wall_corner.clear(); return; }
-        wall_cp  = surface_patch.jet_cp;
-        wall_rho = WJ_P_ATM / (WJ_R_GAS * T_gas);
-        wall_nu  = WallMu(T_gas) / wall_rho;
-
-        // THE MOMENTUM PRODUCT. ⚠⚠ u and D_e are never split: writing u alone
-        // would mean quoting a nozzle velocity of ~1500 m/s, which is an
-        // artefact of reading a momentum-equivalent diameter against a
-        // geometric exit area. The momentum-equivalent pair satisfies
-        // rho_inf u^2 D_e^2 = rho_j U_j^2 D^2, so
-        //     u D_e = U_j D sqrt(rho_j/rho_inf)
-        //           = 4 mdot_full / (pi D sqrt(rho_j rho_inf)),
-        // which is convention-free and needs no velocity at all.
-        // ⚠ jet_mdot is the SECTOR's share (the parse says so of jet_De_ref);
-        // the law needs the FULL burner, hence the azimuth fraction.
-        const Set::Scalar f_sec = (wall_sector > 0.0) ? wall_sector : Set::Scalar(1.0);
-        const Set::Scalar mdot_full = surface_patch.jet_mdot / f_sec;
-        const Set::Scalar rho_j = WJ_P_ATM / (WJ_R_GAS * surface_patch.jet_T_nozzle);
-        const Set::Scalar D = surface_patch.jet_D;
-        wall_uDe = (D > 0.0 && rho_j > 0.0)
-            ? 4.0 * mdot_full / (3.14159265358979323846 * D
-                                 * std::sqrt(rho_j * wall_rho))
-            : Set::Scalar(0.0);
-
-        // THE DUCT BRANCH. Gnielinski on the concentric annulus between the
-        // bore and the shield, with the ENTRAINED mass flow (the recirculating
-        // below-nozzle flow m_jet = mdot/phi), floored at the laminar Nusselt
-        // number so a correlation cannot undershoot its own floor.
-        const Set::Scalar gap = r_bore - WJ_R_SHIELD;
-        const Set::Scalar D_h = 2.0 * gap;
-        const Set::Scalar A_an = 3.14159265358979323846
-                               * (r_bore * r_bore - WJ_R_SHIELD * WJ_R_SHIELD);
-        const Set::Scalar phi_e = (jet_T_exhaust > 0.0
-                                   && surface_patch.jet_T_nozzle > jet_T_exhaust)
-            ? (jet_T_stag - jet_T_exhaust)
-              / (surface_patch.jet_T_nozzle - jet_T_exhaust)
-            : Set::Scalar(1.0);
-        const Set::Scalar m_an = mdot_full
-            / ((phi_e > 1e-3 && phi_e <= 1.0) ? phi_e : Set::Scalar(1.0));
-        const Set::Scalar k_g = 1.5207e-11 * T_gas * T_gas * T_gas
-                              - 4.8574e-8 * T_gas * T_gas
-                              + 1.0184e-4 * T_gas - 3.9333e-4;
-        Set::Scalar h_duct = 0.0;
-        if (A_an > 0.0 && D_h > 0.0 && k_g > 0.0)
-        {
-            const Set::Scalar Re = (m_an / A_an) * D_h / WallMu(T_gas);
-            Set::Scalar Nu = 0.012 * (std::pow(Re, 0.87) - 280.0)
-                           * std::pow(WJ_PR, 0.4);
-            if (Nu < 5.74) Nu = 5.74;     // laminar annulus floor
-            h_duct = Nu * k_g / D_h;
-        }
-        wall_h_duct = h_duct;
-
-        wall_law_ready = (wall_uDe > 0.0 && wall_rho > 0.0 && wall_nu > 0.0
-                          && wall_h_duct > 0.0 && wall_sector > 0.0);
-        wall_law_on = wall_law_ready ? 1.0 : 0.0;
-        wall_h_corner = wall_law_ready ? WallJetH(0.0, r_bore) : Set::Scalar(0.0);
-        wall_z_fill   = WallZFill(r_bore);
-        if (!wall_law_ready) wall_corner.clear();
-    }
-
-    // =====================================================================
     // P2-2 change 1: UpdatePropertyFields — the per-step property refresh.
     // =====================================================================
     // ⚠⚠ THE PROPERTIES ARE STATIC PER-CELL FIELDS FILLED AT INIT.
@@ -5365,7 +4496,7 @@ protected:
     // the damage factor exp(-a_D D) to `kappa_mf`. It is not a temperature
     // refresh and must not be mistaken for one.
     //
-    // Called FIRST in Advance, beside P2-1's UpdateWallLawState, so the
+    // Called FIRST in Advance (where P2-1's wall-law state also ran), so the
     // criterion (`:1436`) and the kernel/march/ledger all see ONE set by
     // construction -- the ordering P2-1 validated.
     //
@@ -6291,6 +5422,29 @@ private:
             Util::Abort(INFO, "spall.stress_source must be 'mechanics' or "
                               "'local_thermoelastic', got ", stress_src);
 
+        // ⚠⚠ P2-2b: the MECHANICAL half of the measured property set.
+        //   scalar  (default) -- the criterion reads the per-phase E and beta
+        //                        scalars, i.e. the pre-P2-2b arithmetic.
+        //   grimsel           -- the criterion takes E(T) and the accumulated
+        //                        thermal strain from the law, through the one
+        //                        `LawSigma` entry point.
+        // ⚠ This is SEPARATE from `microstructure.phaseN.law`, which is the
+        // THERMAL half (lambda, rho, c_p into conduction). One key for both
+        // would make the Kant ladder's K1 and K2 rungs identical and destroy
+        // (c1)'s attribution -- the reason this key exists.
+        // ⚠ `grimsel` here without the phase law is legal and meaningful: it
+        // is the mechanical set ALONE, which is what separates the two halves.
+        std::string stress_law;
+        pp.query_default("spall.stress_law", stress_law,
+                         std::string("scalar"));
+        if (stress_law == "scalar")
+            value.sp_stress_law_grimsel = false;
+        else if (stress_law == "grimsel")
+            value.sp_stress_law_grimsel = true;
+        else
+            Util::Abort(INFO, "spall.stress_law must be 'scalar' or "
+                              "'grimsel', got ", stress_law);
+
         // Step 20: surface-normal (slope-aware) spall CRITERION.
         //
         // ⚠ D2z-1: the RECESSION half of Step 20 no longer applies. Whole-cell
@@ -6463,36 +5617,6 @@ private:
                         "inert and hides that the search depth is doing the "
                         "bounding -- which is the fault this key exists to fix.");
 
-        // P1f: the lateral mode. Default 0 = INERT.
-        // ⚠ These are `spall.*`, so the `surface_patch.side_face_*` else-chain that
-        // refuses that family when side_face_flux is off does NOT apply here; the
-        // guards below are this pair's only protection. AMReX merely WARNS about an
-        // unused ParmParse variable, so a silent no-op is the failure mode.
-        pp.query_default("spall.lateral_drive",   value.sp_lateral_drive,   false);
-        pp.query_default("spall.lateral_removal", value.sp_lateral_removal, false);
-        if (value.sp_lateral_removal && !value.sp_lateral_drive)
-            Util::Abort(INFO, "spall.lateral_removal = 1 requires "
-                              "spall.lateral_drive = 1: removal voids the cell the "
-                              "lateral criterion fired, so without the drive there "
-                              "is nothing to remove.");
-        // P1g-1 deliverable 1: SUB-CELL LATERAL RECESSION, default OFF.
-        // ⚠⚠ Why a third key rather than changing regime 6 in place. Regime 6
-        // today voids a whole 2 mm cell for a flake the criterion earned at
-        // 1.5 mm -- a 1.33x over-removal on 99.9 % of firings, because
-        // h_f_lat sits at the spall.flake_h_max cap. Banking the thickness
-        // instead is a CHANGE OF REMOVAL LAW, not a bug fix, so it is keyed
-        // and the old behaviour remains reachable for comparison.
-        // ⚠ The conjunction is deliberately three-deep -- subcell requires
-        // removal, which already requires drive -- so the banking block below
-        // is unreachable unless all three are set, and (c3) scores exactly that.
-        pp.query_default("spall.lateral_subcell", value.sp_lateral_subcell, false);
-        // P1g-2 deliverable 2: THE THERMAL HALF of lateral sub-cell recession.
-        // ⚠⚠ NO `requires` ABORT, and that is a lesson paid for: P1g-1 shipped
-        // `lateral_subcell requires lateral_removal` and its own negative-control
-        // leg (`drive = 0` + `subcell = 1`) then returned rc 6. A control leg that
-        // must RUN AND BE INERT cannot be guarded in Parse. Reachability lives at
-        // the use site, as `bank_on && sp_lateral_thermal`, and (c5) scores it.
-        pp.query_default("spall.lateral_thermal", value.sp_lateral_thermal, false);
         // ⚠⚠ P1g-3 deliverables 5 + 6: TWO KEYS, NOT ONE, AND THAT IS THE POINT.
         // The step changes the flake LENGTH estimate and the FRACTION of it that
         // leaves. One key would confound them, and (b4)'s 2x2 is what separates
@@ -6511,74 +5635,6 @@ private:
             else Util::Abort(INFO, "spall.flake_fraction must be 'cf' or "
                                    "'weibull', got: ", ff);
         }
-        // ⚠⚠ DELIBERATELY NOT an abort-if-unaccompanied, unlike lateral_removal
-        // above. The packet's NEG leg is exactly `lateral_drive = 0` with
-        // `lateral_subcell = 1`, and its bar is that banking events are ZERO --
-        // so this combination must RUN and be inert, not abort. An abort here
-        // makes (c3) unrunnable, which is how it was caught. Reachability is
-        // enforced at the use site by the three-deep conjunction
-        //   lat_on && sp_lateral_removal && sp_lateral_subcell
-        // which is what the reachability ledger names as the guard.
-        // ⚠⚠ P1e IS A PREREQUISITE, NOT A CARRIED-OVER SETTING. The lateral mode is
-        // grid-isotropic only because the staircase correction makes side heat
-        // isotropic per unit of wall AREA; with it off the lateral drive inherits
-        // the same sqrt(2) over-count the vertical mode has, and criterion (c)
-        // fails by construction rather than by physics.
-        // ⚠ surface_patch is parsed at :139 and ParseSpallSettings at :158, so this
-        // flag IS set by the time this runs -- the conjunction was checked, not
-        // assumed (the P1f revision-3 blocker was exactly an unchecked conjunction).
-        // ⚠⚠ P1f deliverable 7 -- (a1)'s CELL-FORM HALF, AS A DIRECT CALL.
-        // The lateral pass only ever calls SurfaceCellFlux with face_form = true,
-        // so the cell-form branch -- the one that must write NOTHING to
-        // T_face_out -- never gets exercised in anger, and a wrong write there
-        // would be SILENT: the criterion would receive a cell average dressed as
-        // a face temperature. A source-level assertion (three write sites, none
-        // after the cell-form marker) is not runtime cover, so this is the real
-        // thing: one direct call with face_form = false and the out-parameter
-        // pre-set to a sentinel, checked on every run that turns the mode on.
-        // ⚠ Pure arithmetic, so it is safe at Parse time -- no fields needed.
-        if (value.sp_lateral_drive || value.sp_lateral_removal)
-        {
-            Set::Scalar q_i = 0, q_o = 0, q_r = 0, q_l = 0;
-            const Set::Scalar sentinel = -12345.0;
-            Set::Scalar probe = sentinel;
-            // face_form = false => the CELL form. Representative arguments; the
-            // branch is selected by the flags, not by the values.
-            SurfaceCellFlux(/*in_patch=*/true, /*face_form=*/false, 1.0,
-                            500.0, 1200.0, 1.5, 2.0e-3, 700.0,
-                            0.8, 0.9, 1000.0, 5.67e-8, 10.0, 293.15,
-                            q_i, q_o, q_r, q_l,
-                            /*T_pin=*/0.0, /*branch=*/nullptr,
-                            /*T_surf_in=*/0.0, &probe);
-            if (probe != sentinel)
-                Util::Abort(INFO, "P1f self-test: SurfaceCellFlux wrote ", probe,
-                            " to T_face_out on its CELL-FORM branch, which must "
-                            "write nothing -- q_robin there is h*(T_gas - Tc) on "
-                            "the CELL AVERAGE, and Tc is not a face temperature. "
-                            "The lateral criterion would be handed the wrong "
-                            "quantity with no symptom. Sentinel was ", sentinel);
-            // ⚠ And the face form MUST write, or the lateral mode is silently
-            // starved: the companion half of the same contract.
-            probe = sentinel;
-            SurfaceCellFlux(true, /*face_form=*/true, 1.0,
-                            500.0, 1200.0, 1.5, 2.0e-3, 700.0,
-                            0.8, 0.9, 1000.0, 5.67e-8, 10.0, 293.15,
-                            q_i, q_o, q_r, q_l, 0.0, nullptr, 0.0, &probe);
-            if (probe == sentinel || !(probe > 0.0))
-                Util::Abort(INFO, "P1f self-test: SurfaceCellFlux did NOT write a "
-                            "positive face temperature to T_face_out on its "
-                            "face-Newton branch; the lateral criterion has no "
-                            "temperature to read and would be inert.");
-        }
-        if ((value.sp_lateral_drive || value.sp_lateral_removal)
-            && !value.surface_patch.side_face_staircase)
-            Util::Abort(INFO, "spall.lateral_drive / spall.lateral_removal require "
-                              "surface_patch.side_face_staircase = 1: the lateral "
-                              "mode is grid-isotropic only because the staircase "
-                              "area correction is applied. Without it the lateral "
-                              "drive carries the same sqrt(2) azimuthal over-count "
-                              "the per-column criterion does, and the mode would be "
-                              "measuring the grid.");
 
         std::string remE;
         pp.query_default("spall.removal_energy", remE, std::string("cell"));
@@ -6723,26 +5779,6 @@ private:
         // Deliberately writes NO diagnostic column: a new thermo.dat or
         // removal_events.csv field breaks the 2639-file identity on headers
         // alone, whatever the numbers do.
-        // D2q-2b item 5: per-cell removal. Default 0 = off and byte-identical
-        // to every pre-D2q-2b result.
-        //
-        // Preconditions are enforced here rather than trusted to the input:
-        //  * `surface_patch.side_face_flux = 1` -- without it an exposed
-        //    lateral face is never heated, so the criterion evaluated there
-        //    reads bulk rock and the mechanism is silently inert.
-        //  * `surface.follow_mask = 1` -- this one is NOT cosmetic. `phi` is
-        //    still the sole input to UpdateSurfaceMaskFromPhi (D2q-1 site 7,
-        //    unconverted). Per-cell removal can void a cell without moving the
-        //    column's phi, so the window `0 <= phi < dz` would keep pointing at
-        //    a now-void cell and the surface flux would be applied to a void.
-        //    follow_mask takes the surface from the rem-based k_top instead.
-        //    See RESULTS.md Q1.
-        int pcr = 0;
-        pp.query_default("spall.per_cell_removal", pcr, 0);
-        if (pcr != 0 && pcr != 1)
-            Util::Abort(INFO, "spall.per_cell_removal must be 0 or 1, got: ", pcr);
-        value.spall_per_cell_removal = (pcr == 1);
-
 
         // NOTE the `spall.` prefix: ParseSpallSettings receives the TOP-level
         // ParmParse, so every key in this function carries its own prefix.
@@ -6983,21 +6019,34 @@ private:
         const Set::Scalar te_relief = sp_relief;
         if (use_local_TE)
         {
-            if (phases.empty() || !(phases[0].E > 0.0 && phases[0].mu > 0.0))
+            const ElasticConsts ec = ElasticConstants();
+            if (!ec.ok)
                 Util::Abort(INFO, "spall.stress_source = local_thermoelastic "
                                   "needs phase 0 with E > 0 and mu > 0");
-            te_E    = phases[0].E;
-            te_beta = phases[0].beta;
-            te_nu   = phases[0].E / (2.0 * phases[0].mu) - 1.0;
+            te_E    = ec.E;
+            te_beta = ec.beta;
+            te_nu   = ec.nu;
             te_Tref = phases[0].T_ref;
             if (!(te_nu > -1.0 && te_nu < 0.5))
                 Util::Abort(INFO, "local_thermoelastic: phase 0 Poisson's "
                                   "ratio out of physical range, got ", te_nu);
         }
+        // P2-2b deliverable 4: the rock law for the Sp_field DIAGNOSTIC site.
+        // ⚠⚠ THE TWO-FIRING-SITE INVARIANT. This site and `Removal.H`'s depth
+        // scan are the two places the criterion is formed, and P0 deliberately
+        // closed the gap between them; both are switched by the SAME
+        // `RockLaw()`, hoisted here the way `te_E`/`te_beta` already are so a
+        // `[=, this]` closure never reads `phases` itself.
+        const Numeric::Material::Grimsel *te_g = use_local_TE ? RockLaw()
+                                                              : nullptr;
         const Set::Scalar a0_loc      = sp_a0;
         const int         n_seg       = sp_n_segments;
         const KIcLaw      law         = kic_law;
         const Set::Scalar kic_scale_  = kic_scale;
+        // ⚠ hoisted for the same reason te_g is: this site sits in a
+        // `[=, this]` ParallelFor and must not read `phases` itself.
+        const Numeric::Material::Grimsel *kic_g =
+            phases.empty() ? nullptr : &phases[0].grimsel;
         const Set::Scalar K_Ic0_      = kic_K_Ic0;
         const Set::Scalar T_ref_kic_  = kic_T_ref;
         const Set::Scalar T_melt_     = kic_T_melt;
@@ -7006,15 +6055,8 @@ private:
         // sigma_xx (Kant Eq. 15, 1-D-confined geometry). Exact-zero short-
         // circuit preserves byte-identity when confining.p is unset.
         // Single-phase scope (uses phases[0]); multi-phase not supported.
-        Set::Scalar sp_conf_offset = 0.0;
-        if (confining_p != 0.0 && !phases.empty() &&
-            phases[0].E > 0.0 && phases[0].mu > 0.0)
-        {
-            const Set::Scalar nu_local =
-                phases[0].E / (2.0 * phases[0].mu) - 1.0;
-            if (nu_local > -1.0 && nu_local < 1.0)
-                sp_conf_offset = confining_p * nu_local / (1.0 - nu_local);
-        }
+        // P2-9 rev 2: ONE copy, ElasticConstants().
+        const Set::Scalar sp_conf_offset = ElasticConstants().conf;
 
         if (!use_presc_s && !use_local_TE)
             Util::RealFillBoundary(*stress_mf[lev], geom[lev]);
@@ -7068,15 +6110,6 @@ private:
         // below the top z-slab stay zero on plotfiles.
         Sp_field_mf[lev]->setVal(0.0);
 
-        // D2q-2b item 6: per-cell removal scores every exposed face, so the
-        // six-neighbour void test below needs a current ghost layer on
-        // removed_mf. Parse() guarantees removal is enabled whenever the key
-        // is on.
-        const bool pcr_on = spall_per_cell_removal;
-        const int dlo_pc[3] = {domain.smallEnd(0), domain.smallEnd(1), domain.smallEnd(2)};
-        const int dhi_pc[3] = {domain.bigEnd(0),   domain.bigEnd(1),   domain.bigEnd(2)};
-        if (pcr_on) Util::RealFillBoundary(*removed_mf[lev], geom[lev]);
-
         for (amrex::MFIter mfi(*Sp_field_mf[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.tilebox();
@@ -7089,12 +6122,6 @@ private:
             amrex::Array4<const Set::Scalar> T0_a;
             if (T_init_mf.size() > static_cast<std::size_t>(lev) && T_init_mf[lev])
                 T0_a = (*T_init_mf[lev]).const_array(mfi);
-            // Bound to Sp_field_mf as a harmless placeholder when the key is
-            // off; the lambda never reads it then (mirrors the AdvanceMicro-
-            // structure convention for rem/phi).
-            amrex::Array4<const Set::Scalar> const& rem_pc = pcr_on
-                ? (*removed_mf[lev]).const_array(mfi)
-                : (*Sp_field_mf[lev]).const_array(mfi);
             amrex::Array4<const Set::Matrix> sig_node;
             if (!use_presc_s && !use_local_TE) sig_node = (*stress_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> flaw_a;
@@ -7108,44 +6135,7 @@ private:
 
             amrex::LoopOnCpu(bx, [&] (int i, int j, int k) {
                 const int ksurf = k_top_col_p[col_index_sp(i, j)];
-                // D2q-2b item 6: with per-cell removal the criterion is
-                // evaluated on EVERY exposed face, not only the column top.
-                // `nx_in, ny_in, nz_in` is the inward normal of the face being
-                // scored -- (0,0,-1) is the top face, i.e. exactly the
-                // pre-D2q-2b behaviour, which is why the key-off path below is
-                // the original code unchanged.
-                int nx_in = 0, ny_in = 0, nz_in = -1;
-                if (!pcr_on)
-                {
-                    if (k != ksurf) return;
-                }
-                else
-                {
-                    if (rem_pc(i, j, k) > 0.5) return;       // void: nothing to score
-                    // An exposed face has a void (or out-of-domain) neighbour.
-                    // removed_mf carries one ghost, refilled before this call,
-                    // so the six-neighbour read is valid at box seams; the
-                    // domain top counts as exposed, matching `k == ksurf`.
-                    const bool ez = (k == top_k) || rem_pc(i, j, k + 1) > 0.5;
-                    const bool exm = (i > dlo_pc[0]) && rem_pc(i - 1, j, k) > 0.5;
-                    const bool exp_ = (i < dhi_pc[0]) && rem_pc(i + 1, j, k) > 0.5;
-                    const bool eym = (j > dlo_pc[1]) && rem_pc(i, j - 1, k) > 0.5;
-                    const bool eyp = (j < dhi_pc[1]) && rem_pc(i, j + 1, k) > 0.5;
-                    if (!(ez || exm || exp_ || eym || eyp)) return;
-                    // Score the face whose inward normal is most favourable.
-                    // At a0 << dx every sample lands in this cell, so all
-                    // normals give the same Sp and the choice is immaterial;
-                    // the loop is written generally so it stays correct if the
-                    // flaw ever approaches a cell width.
-                    if (!ez)
-                    {
-                        nz_in = 0;
-                        if      (exm) { nx_in =  1; }
-                        else if (exp_) { nx_in = -1; }
-                        else if (eym) { ny_in =  1; }
-                        else           { ny_in = -1; }
-                    }
-                }
+                if (k != ksurf) return;
                 // Receded surface top face (== domain top z when nothing above
                 // this column has been removed, since then ksurf == top_k).
                 const Set::Scalar z_surf_face =
@@ -7157,16 +6147,12 @@ private:
                 Set::Scalar Tsurf = use_presc_T ? presc_T_f(time) : T_a(i, j, k);
 
                 // P0: reconstruct the SURFACE temperature from the top two
-                // cell averages. ⚠ Applied to the TOP FACE only: under
-                // spall.per_cell_removal a lateral face has no column profile,
-                // and per-cell removal stays off in this programme -- so a
-                // lateral face keeps the cell average and that is stated, not
-                // silently assumed. Needs a solid second cell; when the
+                // cell averages. Needs a solid second cell; when the
                 // contiguous solid run below the top is a single cell there is
                 // no profile to read and the cell average stands (counted).
                 SurfaceRecon rec;
                 bool rec_ok = false;
-                if (recon_on && nz_in == -1 && nx_in == 0 && ny_in == 0)
+                if (recon_on)
                 {
                     const std::size_t c_rec =
                         static_cast<std::size_t>(col_index_sp(i, j));
@@ -7244,32 +6230,39 @@ private:
                         // false with the key off, so the pre-P0 expression
                         // below is reached unchanged and bit-for-bit.
                         if (rec_ok && dv <= 0.5 * dz)
+                        {
+                            // P2-2b deliverable 4, law path.
+                            if (te_g)
+                                return te_relief
+                                     * LawSigma(te_g, T_recon_at(dv),
+                                                T0_at(i, j, k))
+                                     + sp_conf_offset;
+                            // ⚠ pre-P2-2b expression, VERBATIM.
                             return te_relief * te_E * te_beta
                                    * (T_recon_at(dv) - T0_at(i, j, k))
                                    / (1.0 - te_nu) + sp_conf_offset;
+                        }
                         // 1-D-confined thermoelastic sigma_xx from T, same form
                         // and compression-positive convention as the h_spall
                         // scan (Removal.H). Sample temp_mf at the cell
-                        // containing the requested depth along the INWARD FACE
-                        // NORMAL, clamped into the box.
-                        //
-                        // D2q-2b: for the top face (nz_in = -1, nx_in = ny_in
-                        // = 0) this is bit-for-bit the pre-D2q-2b expression.
-                        // For a lateral face it steps sideways into the rock
-                        // instead of downwards -- the same rule, evaluated
-                        // where it currently is not. At a0 = 20 um against
-                        // dx = 2 mm the step count is 0 for every sample, so
-                        // the criterion is a function of THIS CELL alone.
+                        // containing the requested depth below the top face,
+                        // clamped into the box.
                         const int nstep = static_cast<int>(std::floor(dv / dz));
-                        int i_d = i + nx_in * nstep;
-                        int j_d = j + ny_in * nstep;
-                        int k_d = k + nz_in * nstep;
+                        const int i_d = i, j_d = j;
+                        int k_d = k - nstep;
                         if (k_d > ksurf)    k_d = ksurf;
                         if (k_d < vbx_lo_k) k_d = vbx_lo_k;
-                        if (i_d < dlo_pc[0]) i_d = dlo_pc[0];
-                        if (i_d > dhi_pc[0]) i_d = dhi_pc[0];
-                        if (j_d < dlo_pc[1]) j_d = dlo_pc[1];
-                        if (j_d > dhi_pc[1]) j_d = dhi_pc[1];
+                        // P2-2b deliverable 4, law path -- the SECOND branch
+                        // of this site. ⚠ Both branches must convert together:
+                        // leaving one on the scalar form would make the
+                        // diagnostic disagree with itself depending only on
+                        // whether the sample fell inside the top half-cell.
+                        if (te_g)
+                            return te_relief
+                                 * LawSigma(te_g, T_a(i_d, j_d, k_d),
+                                            T0_at(i_d, j_d, k_d))
+                                 + sp_conf_offset;
+                        // ⚠ pre-P2-2b expression, VERBATIM.
                         return te_relief * te_E * te_beta
                                * (T_a(i_d, j_d, k_d) - T0_at(i_d, j_d, k_d))
                                / (1.0 - te_nu) + sp_conf_offset;
@@ -7282,10 +6275,6 @@ private:
                     return -sigma(0, 0) + sp_conf_offset;
                 };
 
-                // P2-2 change 3, READ 1 of 2 (the VERTICAL flaw). The size
-                // term is applied HERE because ell_q is a per-column flux
-                // length and InitializeFlaws runs once. Identity under the
-                // default.
                 // P2-2 change 3, READ 1 of 2 (the VERTICAL flaw). The size term
                 // is applied HERE, not in InitializeFlaws, because `ell_q` is a
                 // per-column FLUX length and init runs once. Identity under the
@@ -7315,7 +6304,12 @@ private:
                     rec_ok ? T_recon_at(a_loc * icth) : Tsurf;
 
                 Set::Scalar K_Ic_MPa;
-                if (law == KIcLaw::NasseriTable)
+                if (law == KIcLaw::GrimselTable)
+                    // P2-2d d7, toughness site 1 of 4. ⚠ kic_scale_ multiplies
+                    // uniformly here exactly as it does for Nasseri, so the
+                    // R/scale degeneracy `(a2)` proves is unchanged by route.
+                    K_Ic_MPa = kic_scale_ * kic_g->K_Ic_of(T_kic);
+                else if (law == KIcLaw::NasseriTable)
                     K_Ic_MPa = Numeric::SpCriterion::KIcNasseri(T_kic, kic_scale_);
                 else
                     K_Ic_MPa = Numeric::SpCriterion::KIcLinear(
@@ -7562,10 +6556,70 @@ private:
         }
     }
 
+    // ====================================================================
+    // P2-2b deliverable 4: THE ONE THERMOELASTIC STRESS ENTRY POINT.
+    // ====================================================================
+    // ⚠⚠ EVERY law-path stress in the rock goes through here, so
+    // `Grimsel::sigma_thermal` is called from exactly ONE place in src/ and
+    // `unit/lateral_flux_lock` can assert that as a fact rather than a habit.
+    // Grimsel.H's header records three independent WRONG answers for this one
+    // stress, each from a site that wrote its own formula:
+    //   * `alpha(T_s)*dT`            OVERSTATES  (alpha triples 300->500 degC)
+    //   * accumulated strain, cold E UNDERSTATES (E halves by 600 degC)
+    //   * `INTEGRAL(E*alpha dtheta)` wrong outright -- elasticity has no path
+    //     memory; stress is the CURRENT stiffness times the CURRENT strain.
+    // ⇒ accumulate the STRAIN, multiply by the stiffness AT T_hot, which is
+    // what `sigma_thermal` does and what `(b2)` scores to 1e-12 against an
+    // independent twin BETWEEN table nodes as well as on them.
+    //
+    // ⚠ `static` and taking the law by POINTER on purpose. The `Sp_field`
+    // diagnostic site sits inside `amrex::ParallelFor` under a `[=, this]`
+    // capture, where the per-column vectors and callables of the host path
+    // cannot go (see Removal.H's note at the lateral criterion). A pointer
+    // hoisted before the loop crosses that boundary; a 15.7 KB by-value copy
+    // of the two property tables would be carried into every closure.
+    //
+    // ⚠⚠ THE SIGN. Returns COMPRESSION-POSITIVE for T_hot > T_cold, matching
+    // `SpCriterion::K_I`'s convention and the double-negation the pre-P2-2b
+    // expressions perform. `Removal.H:1833` returns `-sg(0,0)` for the same
+    // reason. A reversed bracket here would discard every hot flake and stop
+    // all drilling -- it is what rev 4 of this packet would have shipped.
+    //
+    // ⚠ Under the law, `nu` is the LAW's (parsed, 0.30 by default), not the
+    // deck's `E/(2 mu) - 1`. On both production decks those agree at 0.30; if
+    // a deck ever disagrees, the law wins on the law path by construction.
+    static Set::Scalar LawSigma(const Numeric::Material::Grimsel *g,
+                                Set::Scalar T_hot, Set::Scalar T_cold)
+    {
+        return g->sigma_thermal(T_hot, T_cold);
+    }
+
+    // The rock law for the criterion, or nullptr under the shipped `constant`
+    // default. ⚠ ONE place decides this, so "is the law on?" cannot be
+    // answered differently at two of the three stress sites -- which is the
+    // failure mode `MMWSpalling.H`'s two-firing-site invariant exists to stop.
+    // ⚠ Phase 0 by construction: the T-derived sigma_xx path is already
+    // phase-0-only (it aborts on an empty `phases`), and widening that is not
+    // in this packet.
+    const Numeric::Material::Grimsel *RockLaw() const
+    {
+        // ⚠⚠ GATED ON `spall.stress_law`, NOT on the phase's thermal law.
+        // Gating this on `phases[0].grimsel_law` -- which is what the first
+        // implementation did -- ties the criterion to conduction, so the Kant
+        // ladder's K1 (thermal only) and K2 (+ mechanical) become the same
+        // run and (c1) cannot attribute the onset shift to either half.
+        // ⚠ The law OBJECT still comes from phase 0, because that is where the
+        // parsed constants live; what this key decides is only whether the
+        // criterion consults it.
+        return (sp_stress_law_grimsel && !phases.empty())
+             ? &phases[0].grimsel : nullptr;
+    }
+
     // UpdateRemovalAfterCohesive — extracted to a partial header to keep this
     // file navigable. The definition is still an inline member of MMWSpalling,
     // textually included here at its original position (R1 refactor).
     #include "Integrator/MMWSpalling/Removal.H"
+    #include "Integrator/MMWSpalling/FaceRemoval.H"
 
     // Build the global-material H<->T table once. Microstructure tables
     // are built per phase in InitializeMicrostructure(); see phase_tables.
@@ -7749,113 +6803,6 @@ private:
                 mask(i, j, k) = (p >= 0.0 && p < dz) ? 1.0 : 0.0;
             });
         }
-    }
-
-    // D2q-2b items 6 + 8: LATERAL per-cell removal.
-    //
-    // Runs after UpdateSpAfterMechanics, which (with the key on) has already
-    // written Sp for every exposed cell, scored along that cell's own face
-    // normal. This pass only decides and flips.
-    //
-    // SCOPE -- and this is what makes criterion (f) exact rather than
-    // approximate. Only cells that are NOT their column's top and that have an
-    // exposed LATERAL face are considered here. The column top keeps its
-    // existing path entirely (depth scan, flake coherence, h_col remainder).
-    // A flat interior therefore has no candidate cells at all, so with the key
-    // on its rate is not merely close to the key-off rate, it is produced by
-    // the identical code. Anything (f) detects is a real difference, not drift.
-    //
-    // MPI CONSISTENCY -- no precedent in this codebase, so stated explicitly:
-    //  * The criterion is LOCAL. At a0 = 20 um against dx = 2 mm every sample
-    //    in the K_I integral lands in the scored cell (floor(dv/dz) = 0), so Sp
-    //    is a function of that cell's own T and a_f. No column gather is needed
-    //    -- unlike the top-cell path, where a column spans ranks and k_top must
-    //    be reduced.
-    //  * The only non-local read is the six-neighbour void test, taken from
-    //    removed_mf's one-ghost layer refilled inside UpdateSpAfterMechanics.
-    //  * Decide-then-flip. Sp was computed from the FROZEN pre-pass state, and
-    //    this pass reads only Sp (an owned cell) when flipping. So no cell's
-    //    fate depends on whether a neighbour was flipped first, and the result
-    //    is independent of box decomposition and iteration order. Flipping in
-    //    place while re-testing exposure would have made a rank's sweep order
-    //    observable -- the same class of bug as the 0-ghost removed_mf seam
-    //    defect found earlier in this project.
-    //  * Ghosts are refilled after the flip, and the counters are reduced.
-    void PerCellRemoval(int lev, Set::Scalar /*time*/, Set::Scalar /*dt*/)
-    {
-        pcr_lateral_cells  = 0.0;
-        pcr_overhang_cells = 0.0;
-        if (!spall_per_cell_removal || !SurfaceOwner(lev)) return;
-
-        const amrex::Box& domain = geom[lev].Domain();
-        const int dlo[3] = {domain.smallEnd(0), domain.smallEnd(1), domain.smallEnd(2)};
-        const int dhi[3] = {domain.bigEnd(0),   domain.bigEnd(1),   domain.bigEnd(2)};
-        const amrex::Vector<int> k_top = ColumnTopSolid(lev);
-        const int nx = domain.length(0), ilo = dlo[0], jlo = dlo[1];
-        // Mirrors Removal.H:125 -- regime_field_mf exists only on this branch.
-        const bool sp_weibull_spall =
-            spall_enabled && spallation_model == SpallationModel::SpWeibull;
-
-        Set::Scalar n_fired = 0.0;
-        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box& bx = mfi.validbox();
-            amrex::Array4<Set::Scalar>       const& rem = (*removed_mf[lev]).array(mfi);
-            amrex::Array4<const Set::Scalar> const& Sp  = (*Sp_field_mf[lev]).const_array(mfi);
-            amrex::Array4<Set::Scalar>       const& reg = (*regime_mf[lev]).array(mfi);
-            amrex::Array4<Set::Scalar>       const& D   = (*D_mf[lev]).array(mfi);
-            amrex::Array4<Set::Scalar> regf;
-            if (sp_weibull_spall) regf = (*regime_field_mf[lev]).array(mfi);
-            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
-            for (int k = lo.z; k <= hi.z; ++k)
-            for (int j = lo.y; j <= hi.y; ++j)
-            for (int i = lo.x; i <= hi.x; ++i)
-            {
-                if (rem(i, j, k) > 0.5) continue;
-                const int kt = k_top[(j - jlo) * nx + (i - ilo)];
-                if (k == kt) continue;                  // the column path owns the top
-                const bool lat =
-                    ((i > dlo[0]) && rem(i - 1, j, k) > 0.5) ||
-                    ((i < dhi[0]) && rem(i + 1, j, k) > 0.5) ||
-                    ((j > dlo[1]) && rem(i, j - 1, k) > 0.5) ||
-                    ((j < dhi[1]) && rem(i, j + 1, k) > 0.5);
-                if (!lat) continue;
-                if (!(Sp(i, j, k) >= 1.0)) continue;
-                rem(i, j, k) = 1.0;
-                reg(i, j, k) = 1.0;                     // spall regime
-                if (sp_weibull_spall) regf(i, j, k) = 1.0;
-                D(i, j, k) = 0.0;
-                // H and T are deliberately NOT reset -- see Removal.H's note:
-                // a void cell is insulating, its stored state is inert, and
-                // resetting it both breaks the energy ledger's neutrality and
-                // produces a spurious cold checkerboard.
-                n_fired += 1.0;
-            }
-        }
-        amrex::ParallelDescriptor::ReduceRealSum(n_fired);
-        pcr_lateral_cells = n_fired;
-
-        // The flip changed the void mask; refill before anything reads it.
-        Util::RealFillBoundary(*removed_mf[lev], geom[lev]);
-
-        // Item 8: overhang census -- void cells with SOLID directly above.
-        // A one-cell fillet at the corner is expected. A DEEP undercut is a
-        // finding to report, not a bug to suppress: nothing in this model
-        // collapses an overhang, so whatever forms, stays.
-        Set::Scalar n_over = 0.0;
-        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box& bx = mfi.validbox();
-            amrex::Array4<const Set::Scalar> const& rem = (*removed_mf[lev]).const_array(mfi);
-            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
-            for (int k = lo.z; k <= hi.z; ++k)
-            for (int j = lo.y; j <= hi.y; ++j)
-            for (int i = lo.x; i <= hi.x; ++i)
-                if (rem(i, j, k) > 0.5 && k < dhi[2] && rem(i, j, k + 1) <= 0.5)
-                    n_over += 1.0;
-        }
-        amrex::ParallelDescriptor::ReduceRealSum(n_over);
-        pcr_overhang_cells = n_over;
     }
 
     // D2q-2b item 0: flip the seeded index-space box to void, once, right
@@ -8724,235 +7671,14 @@ private:
     Set::Scalar jet_P_neg    = 0.0; // thermo: sum of negative q_robin*dA [W] (count)
     std::vector<Set::Scalar> jet_fs_z0;   // per column face height at the first march [m]
     Set::Scalar foot_mech_vol  = 0.0;     // thermo: cumulative mechanically removed volume [m^3]
+    // P2-2f: cumulative enthalpy that left the SOLID set with pad-cleared rock
+    // [J]. Credited to ledger_err_solid; kept OUT of ledger_E_flake so the
+    // heat-driven price (floor + wall) excludes mechanical removal on both
+    // sides of the ratio. See Removal.H's pad-clearance block for why this is a
+    // booking-only term and why the field must not be written.
+    Set::Scalar foot_mech_E    = 0.0;     // thermo: cumulative pad-clearance enthalpy [J]
     Set::Scalar foot_mech_cols = 0.0;     // thermo: columns cleared this step
     std::vector<int> foot_clear_k;        // per column target top k (INT_MIN = none)
-    // D2k: side-face flux on exposed vertical faces (surface_patch.side_face_flux).
-    Set::Scalar side_P_face = 0.0;  // thermo: net power into side faces [W] (f applied)
-    // P1e diagnostics, registered ONLY under surface_patch.side_face_staircase.
-    Set::Scalar side_sc_mean = 1.0;  // area-weighted mean staircase factor
-    Set::Scalar side_sc_min  = 1.0;  // smallest factor seen this step
-    Set::Scalar side_sc_cols = 0.0;  // DISTINCT columns with a corrected face
-    Set::Scalar side_P_in35  = 0.0;  // share of side_P_face landing at r < 35 mm
-    // D2r-1 witness: side-face power delivered to columns ABOVE the
-    // nozzle plane, and the face count. Registered ONLY when
-    // side_face_factor_above is set, so unset runs keep their exact
-    // thermo.dat -- which is what keeps the frozen A_f02 comparable.
-    Set::Scalar side_P_face_above = 0.0;
-    Set::Scalar side_w_mean = 0.0;  // D2x thermo: mean realised riser weight
-
-    // D2z: per-column recession PHASE, maintained off the existing k_top_col
-    // mask (side_face_flux = 1 forces surface.follow_mask = 1, so the mask is
-    // always built). k_top_col is a domain-wide REDUCED vector identical on
-    // every rank, so these are rank-consistent and regrid-safe by construction.
-    //
-    // ⚠ NOT the stored sub-cell remainder: under whole-cell removal phi_top is
-    // single-valued (dz/2 - O(1e-16), drifting ~1.6e-16 over a run), so it
-    // cannot express a lag at all. The phase must be TIME-based.
-    amrex::Vector<int>         col_ktop_prev;   // last step's k_top per column
-    amrex::Vector<Set::Scalar> col_t_last;      // time of that column's last void
-    amrex::Vector<Set::Scalar> col_dt;          // its TRAILING flip interval
-    amrex::Vector<int>         col_nvoid;       // voids so far
-    std::size_t                step_split_nx = 0;  // domain nx, for the Step 3b assertion
-    // Thermo, registered only under side_face_step_height (Goal 5).
-    Set::Scalar delta_mean          = 0.0;  // TIME-WEIGHTED over the live faces
-    Set::Scalar delta_fallback_cols = 0.0;
-    Set::Scalar riser_area_ratio    = 0.0;  // assigned area / the other law's
-
-    // phi_i = clamp((t - t_last_i)/dt_i, 0, 1), from the column's own TRAILING
-    // interval. Fewer than two voids => no interval => phi = 1, so delta falls
-    // back to the discrete cell count and g = 1, i.e. exactly today's
-    // behaviour. The fallback is NAMED (delta_fallback_cols), never silent.
-    AMREX_FORCE_INLINE
-    static Set::Scalar ColPhi(const Set::Scalar* t_last, const Set::Scalar* dt_i,
-                              const int* nvoid, int c, Set::Scalar time, int& fb)
-    {
-        if (nvoid[c] < 2 || !(dt_i[c] > 0.0)) { fb = 1; return 1.0; }
-        const Set::Scalar p = (time - t_last[c]) / dt_i[c];
-        return p < 0.0 ? Set::Scalar(0.0) : (p > 1.0 ? Set::Scalar(1.0) : p);
-    }
-
-    // delta = |n + phi_S - phi_T|, n = k_top[T] - k_top[S] >= 1 (S is the
-    // SHORTER/deeper column, T the taller). BOTH phases -- reading only the
-    // lower column's returns ~0 by construction, because a step is born the
-    // instant the deeper column flips.
-    AMREX_FORCE_INLINE
-    static Set::Scalar PairDelta(const int* ktc, const Set::Scalar* t_last,
-                                 const Set::Scalar* dt_i, const int* nvoid,
-                                 int cT, int cS, Set::Scalar time, int& fb)
-    {
-        const int n = ktc[cT] - ktc[cS];
-        const Set::Scalar pT = ColPhi(t_last, dt_i, nvoid, cT, time, fb);
-        const Set::Scalar pS = ColPhi(t_last, dt_i, nvoid, cS, time, fb);
-        const Set::Scalar d = Set::Scalar(n) + pS - pT;
-        return d > 0.0 ? d : Set::Scalar(0.0);
-    }
-
-    // The heating area, in FOOTPRINTS (multiply by dx*dy).
-    //   step   : delta                       -- a real vertical face
-    //   wetted : sqrt(1 + delta^2) - 1       -- the EXACT ramp, which is
-    //            RiserWeight's own formula with the continuous delta in place
-    //            of the integer cell count. NOT delta^2/2 (small-step limit).
-    // D2z Step 3b: how delta splits over the cells of an n-cell riser.
-    // The taller column's exposed cells run from k_top(S)+1 to k_top(T), which
-    // is exactly n cells. DERIVED, then asserted (AssertStepSplit):
-    //
-    //   n == 1 : the single cell carries the whole lag,  1 - phi_T + phi_S
-    //   n >= 2 : top      (k == kT)        -> 1 - phi_T
-    //            lowest   (k == kS + 1)    -> 1 + phi_S   <- phi_S folded in
-    //            middle                    -> 1
-    //   sum    = (1-phi_T) + (n-2) + (1+phi_S) = n - phi_T + phi_S = delta  ✓
-    //
-    // ⚠ The packet's split ((1-phi_T), 1 per middle, phi_S on the lowest) sums
-    // to delta - 1: the phi_S piece geometrically belongs to a cell with NO
-    // void neighbour, so it must be FOLDED INTO the lowest exposed cell rather
-    // than occupy one of its own.
-    AMREX_FORCE_INLINE
-    static Set::Scalar StepCellWeight(int n, int k, int kT, int kS,
-                                      Set::Scalar phiT, Set::Scalar phiS)
-    {
-        if (n <= 1) return 1.0 - phiT + phiS;
-        if (k == kT)     return 1.0 - phiT;
-        if (k == kS + 1) return 1.0 + phiS;
-        return 1.0;
-    }
-
-    AMREX_FORCE_INLINE
-    // ⚠⚠ P1e: THE STAIRCASE ORIENTATION CORRECTION.
-    //
-    // A staircase approximation of an inclined wall exposes MORE face area than
-    // the wall has: on a Cartesian grid a round wall's diagonal column presents
-    // two open faces where an axis column presents one, so the diagonals collect
-    // ~sqrt(2) times the side heat for the same physical wall. The standard
-    // correction is the ratio of the true face area to the staircase area, which
-    // for a surface normal n in the horizontal plane is
-    //
-    //     factor = 1 / (|n_x| + |n_y|)
-    //
-    // and the normal's components are proportional to the summed RISER HEIGHTS
-    // of the open faces on each axis. Hence hypot(hx, hy) / (hx + hy).
-    //
-    // ⚠ It is a DISCRETISATION FIX, NOT A THRESHOLD. Exactly 1 on a grid-aligned
-    // wall, exactly 1 on a thin pillar (an opposing pair is not a sloped wall),
-    // exactly 1/sqrt(2) on a 45 degree corner, and it converges with mesh.
-    // Nothing in it is fitted, and by construction it lies in [1/sqrt(2), 1] for
-    // any non-negative hx, hy -- so NO CLAMP IS NEEDED. If a clamp ever looks
-    // necessary the inputs are wrong.
-    //
-    // ⚠ The arguments are RISER CELL COUNTS, not metres. The ratio is
-    // scale-invariant -- dz cancels exactly between numerator and denominator --
-    // so taking integers both removes a dependency on dz at the call sites and
-    // avoids a rounding step. A face that is not open passes 0.
-    static Set::Scalar StaircaseFactor(int n_xm, int n_xp, int n_ym, int n_yp)
-    {
-        const Set::Scalar hx = Set::Scalar(n_xm + n_xp);
-        const Set::Scalar hy = Set::Scalar(n_ym + n_yp);
-        const Set::Scalar sum = hx + hy;
-        // No open face, or risers of zero height: there is no orientation to
-        // correct, so the factor is exactly 1 and the area is untouched.
-        if (!(sum > 0.0)) return 1.0;
-        return std::hypot(hx, hy) / sum;
-    }
-
-    static Set::Scalar AreaOfDelta(Set::Scalar delta, bool wetted)
-    {
-        return wetted ? (std::sqrt(1.0 + delta * delta) - 1.0) : delta;
-    }
-
-    // g(delta, n, a) = (1 - e^{-delta a}) / (1 - e^{-n a}),  a = dz*v/alpha.
-    //
-    // D2z-2 deliverable 4. The factor corrects the GRID's lateral flux across a
-    // step to what the TRUE step would pass. Under the quasi-steady recession
-    // profile the grid's own drop across that face goes as 1 - e^{-n a},
-    // because the grid has ALREADY RESOLVED the step as n cells; the true drop
-    // goes as 1 - e^{-delta a}. The correction is their ratio.
-    //
-    // ⚠ D2z normalised by 1 - e^{-a} -- i.e. to n = 1 -- REGARDLESS of n, so for
-    // n >= 2 it double-counted the depth the grid had already resolved and
-    // AMPLIFIED the flux, up to 1/(1 - e^{-a}). That was an arithmetic error,
-    // not a modelling choice, so there is no key and nothing to A/B:
-    //
-    //     a     n  delta   D2z form   derived
-    //   1.29    2    2.3     1.31      1.026
-    //   0.65    2    2.3     1.62      1.066
-    //   0.65    3    3.2     1.83      1.020
-    //   0.65    2    1.8     1.44      0.948   <- a CLAMP to 1 would be wrong
-    //                                             in the other direction
-    // Three properties, each verified before this was written:
-    //   * n == 1 reproduces the D2z form to machine precision, so nothing
-    //     measured inside the arbiter's r < 25 mm (0.0 % multi-cell) changes.
-    //   * a -> 0 degenerates to delta/n, NOT min(delta, 1).
-    //   * the never-fired fallback (phi = 1 on both columns => delta = n)
-    //     returns EXACTLY 1 for any a, with no special case. The D2z form
-    //     returned 1.67 at n = 3 and 2.90 at n = 7 (each at its own mesh's a).
-    AMREX_FORCE_INLINE
-    static Set::Scalar StepConductance(Set::Scalar delta, int n, Set::Scalar a)
-    {
-        const Set::Scalar nn = Set::Scalar(n > 1 ? n : 1);
-        // a -> 0: (1 - e^{-delta a})/(1 - e^{-n a}) -> delta/n.
-        if (!(a > 1.0e-12)) return delta < nn ? delta / nn : Set::Scalar(1.0);
-        const Set::Scalar den = 1.0 - std::exp(-nn * a);
-        if (!(den > 0.0)) return 1.0;
-        Set::Scalar g = (1.0 - std::exp(-delta * a)) / den;
-        return g < 0.0 ? Set::Scalar(0.0) : g;
-    }
-    Set::Scalar side_cols_above   = 0.0;
-    Set::Scalar wall_step_q       = 0.0;  // mean k*dT/dx across the wall step [W/m^2]
-    Set::Scalar wall_step_q_eff   = 0.0;  // D2z: the same mean under g(delta)
-    Set::Scalar wall_step_n       = 0.0;  // faces in that mean
-    // D2z-2: the same three over the step_diag_radius population, plus the
-    // conductance the meter actually applied and the multi-cell fraction.
-    Set::Scalar wall_step_n_in     = 0.0;
-    Set::Scalar wall_step_q_in     = 0.0;
-    Set::Scalar wall_step_q_eff_in = 0.0;
-    Set::Scalar step_g_mean        = 0.0;
-    Set::Scalar step_g_max         = 0.0;
-    Set::Scalar wall_step_f_multi  = 0.0;
-    Set::Scalar step_delta_faces   = 0.0;  // stepped FACES behind delta_mean
-    Set::Scalar side_P_face_multi  = 0.0;  // side_P_face drawn by n >= 2 faces
-    // D2aa: charged lateral area [m^2] and side power [W] by radial band.
-    // D2ab deliverable 1: the wall gas temperature ACTUALLY applied this step.
-    // Resolved once in BuildFlameColumns; the kernel, the march and the ledger
-    // all read this member and never surface_patch.side_face_T. Host state,
-    // NOT checkpointed, exactly like jet_T_rec.
-    Set::Scalar side_T_eff  = -1.0; // thermo [K]
-    Set::Scalar side_A_bore = 0.0, side_A_pads = 0.0, side_A_wall = 0.0;
-    Set::Scalar side_P_bore = 0.0, side_P_pads = 0.0, side_P_wall = 0.0;
-    Set::Scalar wall_step_f_multi_pads = 0.0;  // multi-cell fraction, pad ring
-    Set::Scalar side_P_loss = 0.0;  // thermo: side-face surface losses [W] (f applied)
-    Set::Scalar side_faces  = 0.0;  // thermo: number of exposed lateral faces heated
-
-    // ---- P2-1: THE DERIVED WALL COEFFICIENT -------------------------------
-    // Per-step state for the composite wall law. Computed ONCE at the top of
-    // Advance (UpdateWallLawState) and read by all four roles, so the
-    // criterion, the kernel, the march and the ledger cannot disagree about
-    // which law ran -- which is the whole point of the step and what
-    // unit/lateral_flux_lock's P2-1 block asserts.
-    //
-    // ⚠ Host state, NOT checkpointed, exactly like side_T_eff and jet_T_rec.
-    // ⚠ The gas state is side_T_eff, which BuildFlameColumns writes AFTER the
-    //   criterion runs, so at the criterion it is one step stale. That
-    //   staleness is PRE-EXISTING (the criterion already heats with that same
-    //   side_T_eff) and the lock declares T_gas equal across the four sites on
-    //   that basis; the law inherits it and adds none of its own.
-    Set::Scalar wall_uDe     = 0.0; // u*D_e, the jet's momentum product [m^2/s]
-    Set::Scalar wall_rho     = 0.0; // gas density at the wall gas state [kg/m^3]
-    Set::Scalar wall_nu      = 0.0; // kinematic viscosity [m^2/s]
-    Set::Scalar wall_cp      = 0.0; // gas c_p [J/kgK] (surface_patch.jet_cp)
-    Set::Scalar wall_h_duct  = 0.0; // the duct branch [W/m^2K]
-    Set::Scalar wall_r_bore  = 0.0; // measured bore radius [m]
-    Set::Scalar wall_sector  = 0.0; // simulated azimuthal fraction of the disc
-    Set::Scalar wall_dz      = 0.0; // the cell height the datum counts in [m]
-    bool        wall_law_ready = false;
-    // k_corner per column, SAME indexing as ColumnTopSolid: (j-jlo)*nx+(i-ilo).
-    amrex::Vector<int> wall_corner;
-    // thermo, registered ONLY under side_face_h_law = derived so the typed
-    // default adds no column and the frozen tree is untouched.
-    Set::Scalar side_h_used_min = 0.0, side_h_used_p05 = 0.0;
-    Set::Scalar side_h_used_p50 = 0.0, side_h_used_p95 = 0.0;
-    Set::Scalar side_h_used_max = 0.0, side_h_used_n   = 0.0;
-    Set::Scalar wall_h_corner   = 0.0;  // the law at z = 0, r = r_bore
-    Set::Scalar wall_z_fill     = 0.0;  // the wall-jet/duct switch height [m]
-    Set::Scalar wall_law_on     = 0.0;  // 1 while the law is actually applied
     // P2-2 change 1: how many times the property fields were refreshed.
     Set::Scalar prop_refresh_n  = 0.0;
     // (b5)'s two-temperature probe reads these: the MEAN refreshed
@@ -8979,6 +7705,13 @@ private:
     // exactly this member, so no site can be missed and an eighth stress
     // expression cannot appear un-relieved.
     Set::Scalar sp_relief = 1.0;
+    // P2-15: the buckling thickness condition (spall.buckle_span [m], 0 = off; face list only).
+    // A fired line is withdrawn unless C_L x <= L_span (FaceRemoval.H, BuckleRatio). Witnesses
+    // registered only under the key; per step, reset and added once in RecedeAlongLines.
+    Set::Scalar sp_buckle_span = 0.0;
+    Set::Scalar bk_span_out = 0.0, bk_n_eval = 0.0, bk_n_block = 0.0, bk_n_inf = 0.0,
+                bk_n_block_floor = 0.0, bk_n_block_wall = 0.0, bk_n_block_roof = 0.0,
+                bk_max_pass = 0.0;
     // =====================================================================
     // P2-2 change 3: THE STRESSED VOLUME.
     // =====================================================================
@@ -9003,18 +7736,27 @@ private:
     // v = 0, so kappa/v is both singular and circular (it needs the rate the
     // criterion is trying to predict). P1g-3 established ell_q as an identity.
     bool sp_size_flux = false;
+    // ⚠⚠ P2-2d deliverable 8: `V_ref` IS A SEPARATE KEY FROM `weibull.V0`.
+    // `V0` stays the MESH-INDEPENDENCE anchor read under `cell`, where
+    // V_cell/V0 == 1 exactly on both decks. `flux` needs a different reference
+    // -- the stressed volume is ell_q^3, not a cell -- and sharing V0 for both
+    // jobs is what makes the cross-deck 8x difference in V0 (Meier 8e-9, Kant
+    // 1e-9) leak into a quantity that has nothing to do with the mesh.
+    // ⚠ -1 means UNSET, and `flux` with it unset ABORTS rather than silently
+    // borrowing V0: an anchor taken from the wrong reference is exactly the
+    // class of silent-default error this line of packets keeps hitting.
+    Set::Scalar weibull_V_ref = -1.0;
 
     // The size factor for a stressed volume V. Returns 1 exactly under the
     // default, which is what keeps every frozen anchor byte-identical.
     Set::Scalar WeibullSizeFactor(Set::Scalar V) const
     {
         if (!sp_size_flux) return 1.0;
-        if (!(V > 0.0) || !(weibull_V0 > 0.0)) return 1.0;
-        return std::pow(V / weibull_V0, 1.0 / weibull_m);
+        // ⚠ P2-2d d8: `flux` reads V_ref, NOT V0. Parse aborts if it is unset,
+        // so reaching here with a bad value is not a routine path.
+        if (!(V > 0.0) || !(weibull_V_ref > 0.0)) return 1.0;
+        return std::pow(V / weibull_V_ref, 1.0 / weibull_m);
     }
-    // Per-column side power at the current flame vectors, for the enthalpy
-    // march's budget. Empty unless side_face_flux and jet_closure = enthalpy.
-    std::vector<Set::Scalar> side_P_col;
     long        jet_profile_last = -1; // last jet_profile_interval index written
     bool        jet_profile_header_written = false;
 
@@ -9052,114 +7794,30 @@ private:
         // `cell` control legs identical to the scored leg by construction and
         // destroyed the comparison the gate depends on.
         enum class RobinForm { Cell, Face, Pinned, Surface };
-        // Revision 7 deliverable 6, `surface_patch.side_face_closure`: which closure a LATERAL face takes under
-        // robin_form = surface. `follow` (default) is the revision-5 rule --
-        // the face Newton on the hole wall, the owning column's T_surf on a
-        // floor riser. `cell` forces the pre-revision-5 cell average back onto
-        // lateral faces ONLY, leaving the top faces on the surface form, so
-        // the wall closure's effect can be measured on one binary with one key
-        // instead of by differencing two packets. ⚠ Inert unless
-        // robin_form = surface, so cell/face/pinned stay byte-identical.
-        enum class SideTForm { Follow, CellAvg };
+        // P2-8 group A: `side_face_closure` (SideTForm) DELETED -- `cell` was
+        // set only by an abort test; the lateral closure is always `follow`.
 
         bool enabled = false;
         Mode mode = Mode::PrescribedTemperature;
         RobinForm robin_form = RobinForm::Cell;
-        SideTForm side_T_form = SideTForm::Follow;
         Set::Scalar pinned_idle_cycles = 2.0; // C1: robin_form = pinned only
-        // D2k: flux on exposed vertical faces of a staircase wall (default-off;
-        // side_face_flux = 0 is byte-identical to every pre-D2k result).
-        bool side_face_flux = false;
-        Set::Scalar side_face_factor = 1.0;
-        // D2q-2b: cap on a side face's heat-transfer coefficient, applied only
-        // when spall.per_cell_removal = 1. See the parse block for why 80.
-        Set::Scalar side_face_h_max = 80.0;
-        // D2r-1: the side factor for columns ABOVE the nozzle plane (s <= 0).
-        // SENTINEL -1 = "use side_face_factor", so every run that does not set
-        // it is byte-identical. The drain flows into the taller column's buried
-        // interior; that column's top is above the plane, so its h is ~0 and
-        // its side faces have received 0 x f = 0 in every run ever done. This
-        // key is what lets a leg heat exactly those faces and nothing else.
-        Set::Scalar side_face_factor_above = -1.0;
-        // D2x: heat a side face only where its column's radius from (x0, y0) is
-        // >= this (0 = no restriction). The map's cone flank and the hole wall
-        // need different treatment and one side term serves both.
-        Set::Scalar side_face_r_min = 0.0;
-        // D2z-2: radius gate for WallStepDiagnostic ONLY. 0.0 = whole domain =
-        // D2z behaviour. Diagnostics-only: it selects which faces are averaged
-        // and touches no flux, area or trajectory.
-        Set::Scalar step_diag_radius = 0.0;
-        // D2aa deliverable 2: an explicit heat-transfer pair for the BELOW-PLANE
-        // lateral faces, replacing the top-face map they inherit today.
-        // Sentinel -1 = inherit = exactly today's behaviour, so identity holds.
-        // ⚠ BOTH-OR-NEITHER at parse: setting h without T_gas REFRIGERATES the
-        // wall, because T defaults to the 293 K ambient. That has bitten this
-        // line before and it is an abort, not a warning.
-        Set::Scalar side_face_h = -1.0;
-        Set::Scalar side_face_T = -1.0;
-        // D2ab deliverable 1: surface_patch.side_face_T = live tracks the
-        // march's OWN jet_T_exhaust instead of a frozen constant. D2aa fed the
-        // wall 1463.5 K lifted from SW while WL and WL81's own exhaust ran at
-        // 1601.3 and 1631.0 K -- gas that gives up less heat to the wall stays
-        // hotter -- so the driving dT was 22 %/27 % too small and every D2aa
-        // wall number was self-inconsistent. Default false = the constant form,
-        // which is what reproduces D2aa.
-        bool        side_face_T_live = false;
-        // D2ab deliverable 2: the explicit (h, T) pair is the ANNULUS
-        // coefficient, so it may only reach faces that are IN the annulus --
-        // beyond the burner radius. Below r_min a face keeps the INHERITED
-        // impinging map. Measured on D2aa's own region columns, 64.6 % of the
-        // side power sat INSIDE foot_r_outer (bore staircase risers and pad-ring
-        // step faces, in impinging flow, not in the annulus), so D2aa applied
-        // the annulus coefficient to two thirds of the wrong faces.
-        // 0.0 = today's behaviour (the pair reaches every lateral face), so an
-        // unset run takes the identical branch and identity holds.
-        Set::Scalar side_face_h_r_min = 0.0;
-        // P2-1 deliverable 3: the wall coefficient's LAW.
-        //   typed   (DEFAULT) -- side_face_h applied flat at every height, the
-        //                        shipped behaviour; every frozen anchor from
-        //                        d2v onward stays byte-identical.
-        //   derived           -- the composite wall-jet/duct law, WallJetH().
-        // ⚠ It REPLACES the pair's coefficient and is read only where that pair
-        // is applied, so it is scoped by exactly the same radius gate.
-        bool side_face_h_derived = false;
+        // P2-8: THE SURFACE FACE LIST (`surface_patch.face_list`, default 0).
+        // With it on, every solid face touching void (all six directions) is
+        // listed once per step and heated, weighted and judged from that one
+        // list (BuildFaceList / FaceListHeat / FaceWeight). 0 => every site
+        // runs its pre-P2-8 code.
+        bool face_list = false;
+        // P2-11b: surface_patch.face_heat = position (default, today) | path
+        // (heat along the surface path; FaceListPath), and the gas barrier
+        // surface_patch.barrier_expr(x, y, z, r), read only under path.
+        bool face_heat_path = false;
+        bool has_barrier = false;
+        amrex::Parser            barrier_parser;
+        amrex::ParserExecutor<4> barrier_f;
         // D2aa deliverable 1: open fraction of the pad ring [foot_r_inner,
         // foot_r_outer). 0 = fully shielded (no gas under the pads), 1 = today.
         // Sentinel -1 = inert. ⚠ A BOUND, not a fitted coefficient.
         Set::Scalar pad_shield_open = -1.0;
-        // D2x: replace the side_face_factor fudge on BELOW-plane faces with the
-        // derived per-edge riser area (see RiserWeight). f multiplies an AREA
-        // inside h*A*(T_gas - T), where an area factor and an h factor are
-        // algebraically indistinguishable, so no output can falsify it.
-        bool side_face_area_exact = false;
-        // D2z: the step-height closure. Pay each riser its TRUE sub-cell height
-        // delta = |n + phi_S - phi_T| (BOTH columns' phases), and correct the
-        // lateral face conductance across the step by
-        //   g(delta) = (1 - exp(-delta*a)) / (1 - exp(-a)),  a = dz*v/alpha
-        // with v = dz/dt_i from the column's own trailing flip interval and
-        // alpha = kappa/(rho*cp) the thermal DIFFUSIVITY. g(1) = 1 exactly, so
-        // delta = 1 is today's un-weighted face and the scheme degrades to
-        // current behaviour rather than to zero. No tuning constant.
-        bool side_face_step_height = false;
-        // ⚠⚠ P1e: the staircase ORIENTATION correction, default OFF.
-        // Multiplies the per-column side-face area sum by
-        // hypot(hx, hy) / (hx + hy), the ratio of the true inclined area to the
-        // staircase area, with hx/hy the summed riser heights of the open faces
-        // on each axis. A DISCRETISATION FIX, not a threshold: exactly 1 on a
-        // grid-aligned wall and on a thin pillar, 1/sqrt(2) on a 45 degree
-        // corner, convergent with mesh, nothing fitted. See StaircaseFactor.
-        // ⚠ NOT side_face_factor (a scalar user multiplier, default 1.0) -- a
-        // different key with a different meaning. Do not conflate them.
-        bool side_face_staircase = false;
-        // Which law the HEAT sees. The conductance correction is identical on
-        // both, so a leg pair isolates the heating law.
-        //   step   : riser area = delta * dz * dy   (a real vertical face)
-        //   wetted : the EXACT ramp (sqrt(1+delta^2) - 1) * dx * dy -- a phase
-        //            lag on a smooth floor has no vertical face at all.
-        // ⚠ NOT delta^2/2: that is the small-step limit and it OVERcharges
-        // exactly where A's floor lives (2.0 vs a true 1.236 at delta = 2).
-        enum class SideAreaLaw { Step, Wetted };
-        SideAreaLaw side_face_area_law = SideAreaLaw::Step;
         Set::Scalar x0 = 0.0, y0 = 0.0, radius = 0.0;
         Set::Scalar T_ext   = 0.0;
         Set::Scalar h_conv  = 0.0;  // convective_flame: flame coefficient h_fl
@@ -9234,39 +7892,6 @@ private:
                                   "foot_r_inner (", v.foot_r_inner, "). The annulus "
                                   "is read under surface_patch.nozzle_descent = feet, "
                                   "so the shield needs a feet run.");
-            // D2ab deliverable 1. Same both-exits home, for the same reason:
-            // jet_closure is parsed BELOW the side_face block, so this cannot
-            // live there, and the use_expr path returns early so it cannot live
-            // at the tail of Parse either.
-            //
-            // ⚠ WITHOUT THE MARCH THERE IS NO jet_T_exhaust. `live` would then
-            // sit on its first-step seed (jet_T_nozzle) for the whole run and
-            // NOTHING in any output would say so -- the wall would simply be
-            // fed a constant that nobody chose. That is the exact failure mode
-            // this line of packets keeps paying for (the inert Meier lever, the
-            // inert pad-ring guard), so it is an abort.
-            if (v.side_face_T_live && !v.jet_enthalpy)
-                Util::Abort(INFO, "surface_patch.side_face_T = live tracks the jet "
-                                  "march's own jet_T_exhaust, which only exists under "
-                                  "surface_patch.jet_closure = enthalpy. Without the "
-                                  "march the key would SILENTLY hold its first-step "
-                                  "seed for the entire run. Set jet_closure = enthalpy, "
-                                  "or give side_face_T an explicit temperature in K.");
-            // P2-1, and HERE for exactly the two reasons recorded above:
-            // jet_closure parses BELOW the side_face block, and the use_expr
-            // path returns early so the tail of Parse is unreachable.
-            //
-            // ⚠⚠ The derived law needs the burner's MOMENTUM and its exhaust
-            // gas state. Both exist only under the enthalpy march; without it
-            // the law would have no jet to derive from and would silently fall
-            // back to the typed scalar it was meant to replace.
-            if (v.side_face_h_derived && !v.jet_enthalpy)
-                Util::Abort(INFO, "surface_patch.side_face_h_law = derived derives the "
-                                  "wall coefficient from the burner's momentum and its "
-                                  "exhaust gas state, both of which exist only under "
-                                  "surface_patch.jet_closure = enthalpy. Without the "
-                                  "march the law has no jet to derive from. Set "
-                                  "jet_closure = enthalpy, or leave the law `typed`.");
         }
 
         static void Parse(SurfacePatch &v, IO::ParmParse &pp)
@@ -9275,6 +7900,39 @@ private:
             pp.query_default("enabled", en, 0);
             v.enabled = (en != 0);
             if (!v.enabled) return;
+
+            {
+                int fl = 0;
+                pp.query_default("face_list", fl, 0);
+                if (fl != 0 && fl != 1)
+                    Util::Abort(INFO, "surface_patch.face_list must be 0 or 1, got: ", fl);
+                v.face_list = (fl == 1);
+            }
+            // P2-11b: read only under the face list; position = today.
+            if (pp.contains("face_heat"))
+            {
+                if (!v.face_list)
+                    Util::Abort(INFO, "surface_patch.face_heat is read only under "
+                                      "surface_patch.face_list = 1");
+                std::string fh;
+                pp.query_required("face_heat", fh);
+                if      (fh == "position") v.face_heat_path = false;
+                else if (fh == "path")     v.face_heat_path = true;
+                else Util::Abort(INFO, "surface_patch.face_heat must be 'position' or "
+                                       "'path', got: ", fh);
+            }
+            if (pp.contains("barrier_expr"))
+            {
+                if (!v.face_heat_path)
+                    Util::Abort(INFO, "surface_patch.barrier_expr is read only under "
+                                      "surface_patch.face_heat = path");
+                std::string be;
+                pp.query_required("barrier_expr", be);
+                v.barrier_parser = amrex::Parser(be);
+                v.barrier_parser.registerVariables({"x", "y", "z", "r"});
+                v.barrier_f = v.barrier_parser.compile<4>();
+                v.has_barrier = true;
+            }
 
             // Legacy `type` key — always consumed so the strict parser does
             // not choke on existing Step 6d-style inputs.
@@ -9308,23 +7966,6 @@ private:
             else if (robin_str == "surface") v.robin_form = RobinForm::Surface;
             else Util::Abort(INFO, "surface_patch.robin_form must be 'cell', 'face', "
                                    "'pinned' or 'surface', got: ", robin_str);
-            // Revision 7 deliverable 6. Only meaningful under `surface`; read
-            // unconditionally so ParmParse's strict unused-key check cannot
-            // abort a leg that sets it while sweeping forms.
-            {
-                std::string side_str;
-                pp.query_default("side_face_closure", side_str, std::string("follow"));
-                if      (side_str == "follow") v.side_T_form = SideTForm::Follow;
-                else if (side_str == "cell")   v.side_T_form = SideTForm::CellAvg;
-                else Util::Abort(INFO, "surface_patch.side_face_closure must be "
-                                       "'follow' or 'cell', got: ", side_str);
-                if (v.side_T_form == SideTForm::CellAvg &&
-                    v.robin_form != RobinForm::Surface)
-                    Util::Message(INFO, "surface_patch.side_face_closure = cell is INERT "
-                                        "unless robin_form = surface: it switches off "
-                                        "the lateral surface closure, which only that "
-                                        "form turns on.");
-            }
             if (v.robin_form == RobinForm::Face && v.mode != Mode::ConvectiveFlame)
                 Util::Abort(INFO, "surface_patch.robin_form = face requires "
                                   "surface_patch.mode = convective_flame");
@@ -9355,255 +7996,18 @@ private:
                                       "and >= 0, got: ", v.pinned_idle_cycles);
             }
 
-            // D2k: side-face flux on exposed vertical faces of a staircase
-            // wall. Default-off; with 0 the code path is byte-identical to
-            // every pre-D2k result (no term, no new thermo column).
-            {
-                int sff = 0;
-                pp.query_default("side_face_flux", sff, 0);
-                if (sff != 0 && sff != 1)
-                    Util::Abort(INFO, "surface_patch.side_face_flux must be 0 or 1, got: ", sff);
-                v.side_face_flux = (sff == 1);
-                if (v.side_face_flux)
-                {
-                    if (v.mode != Mode::ConvectiveFlame)
-                        Util::Abort(INFO, "surface_patch.side_face_flux = 1 requires "
-                                          "surface_patch.mode = convective_flame");
-                    // D2x: query_default ADDS the key to the table (the D2c
-                    // lesson), so "was it given by the user" must be captured
-                    // BEFORE the first query_default that names it.
-                    const bool f_given = pp.contains("side_face_factor");
-                    pp.query_default("side_face_factor", v.side_face_factor, 1.0);
-        // D2z-2: radius gate for the DRAIN DIAGNOSTIC only -- it selects which
-        // faces WallStepDiagnostic averages and changes no flux, no area and no
-        // trajectory. Default 0.0 = whole domain = D2z behaviour exactly, which
-        // is what keeps the identity legs and the 2639-file tree gate valid.
-        // ⚠ Deliberately NOT surface_patch.radius, which is 0.2 (the whole
-        // domain) on the Meier input.
-        pp.query_default("step_diag_radius", v.step_diag_radius, 0.0);
-        // D2aa deliverable 2. ⚠ pp.contains() must be read BEFORE query_default,
-        // which ADDS the key to the ParmParse table.
-        {
-            const bool h_given = pp.contains("side_face_h");
-            const bool T_given = pp.contains("side_face_T");
-            if (h_given != T_given)
-                Util::Abort(INFO,
-                    "surface_patch.side_face_h and surface_patch.side_face_T are "
-                    "both-or-neither. Setting h without T_gas REFRIGERATES the wall: "
-                    "side_face_T defaults to the 293 K ambient, so a lateral face "
-                    "would be COOLED by a coefficient chosen to heat it. Give both, "
-                    "or neither and inherit the top-face map.");
-            pp.query_default("side_face_h", v.side_face_h, -1.0);
-            // D2ab deliverable 1: side_face_T takes a temperature in K OR the
-            // word `live`. Read as a STRING and converted here rather than
-            // through the Scalar overload, because the Scalar path would reject
-            // `live` with ALAMO's own parser error instead of this one.
-            {
-                std::string sfT;
-                pp.query_default("side_face_T", sfT, std::string("-1"));
-                if (sfT == "live") { v.side_face_T_live = true; v.side_face_T = -1.0; }
-                else
-                {
-                    const char* b = sfT.c_str();
-                    char* e = nullptr;
-                    const double tv = std::strtod(b, &e);
-                    while (e && (*e == ' ' || *e == '\t')) ++e;
-                    if (!e || e == b || *e != '\0')
-                        Util::Abort(INFO, "surface_patch.side_face_T must be a gas "
-                            "temperature in K, or the word 'live' to track the "
-                            "march's own jet_T_exhaust each step; got: ", sfT);
-                    v.side_face_T = tv;
-                }
-            }
+            // D2aa deliverable 1: the pad ring's OPEN FRACTION. P2-10: read here,
+            // outside the deleted side-face block that held it, so a face-list deck
+            // keeps the key (FaceH and BuildFlameColumns read it).
             // ⚠ contains() BEFORE query_default, which ADDS the key.
-            const bool pad_given = pp.contains("pad_shield_open");
-            pp.query_default("pad_shield_open", v.pad_shield_open, -1.0);
-            if (pad_given
-                && !(v.pad_shield_open >= 0.0 && v.pad_shield_open <= 1.0))
-                Util::Abort(INFO, "surface_patch.pad_shield_open is the OPEN FRACTION "
-                                  "of the pad ring and must lie in [0, 1]; got ",
-                            v.pad_shield_open);
-            if (h_given && !(v.side_face_h >= 0.0
-                             && (v.side_face_T > 0.0 || v.side_face_T_live)))
-                Util::Abort(INFO, "surface_patch.side_face_h must be >= 0 and "
-                                  "surface_patch.side_face_T must be > 0 K (or "
-                                  "'live'); got h = ",
-                            v.side_face_h, ", T = ", v.side_face_T);
-            // D2ab deliverable 2. ⚠ contains() BEFORE query_default, which ADDS
-            // the key -- the trap that aborted every D2aa side_face_flux run.
-            const bool rmin_given = pp.contains("side_face_h_r_min");
-            pp.query_default("side_face_h_r_min", v.side_face_h_r_min, 0.0);
-            // ⚠ Without the pair this key is SILENTLY INERT: it gates an
-            // override that is not being applied. D2aa lost a leg to exactly
-            // that failure mode (a guard in the wrong place stopped firing and
-            // the key did nothing), so it is an abort, not a default.
-            if (rmin_given && !h_given)
-                Util::Abort(INFO, "surface_patch.side_face_h_r_min gates the explicit "
-                    "(surface_patch.side_face_h, surface_patch.side_face_T) pair by "
-                    "radius, so without that pair it is SILENTLY INERT -- it would "
-                    "gate nothing and no output would show it. Set side_face_h and "
-                    "side_face_T as well, or drop this key.");
-            if (rmin_given && !(std::isfinite(v.side_face_h_r_min)
-                                && v.side_face_h_r_min >= 0.0))
-                Util::Abort(INFO, "surface_patch.side_face_h_r_min must be finite and "
-                                  ">= 0 m, got: ", v.side_face_h_r_min);
-
-            // P2-1 deliverable 3. Default `typed` == the shipped behaviour, so
-            // an input that does not mention this key is byte-identical.
-            std::string hlaw;
-            pp.query_default("side_face_h_law", hlaw, std::string("typed"));
-            if (hlaw == "derived") v.side_face_h_derived = true;
-            else if (hlaw != "typed")
-                Util::Abort(INFO, "surface_patch.side_face_h_law must be 'typed' or "
-                                  "'derived', got: ", hlaw);
-            // ⚠ Same reasoning as side_face_h_r_min above: the law replaces the
-            // pair's coefficient at the pair's own call sites, so without the
-            // pair it would be SILENTLY INERT -- the third inert key in this
-            // line of packets. Abort, not a default.
-            if (v.side_face_h_derived && !h_given)
-                Util::Abort(INFO, "surface_patch.side_face_h_law = derived replaces the "
-                    "coefficient of the explicit (surface_patch.side_face_h, "
-                    "surface_patch.side_face_T) pair, and is read only where that pair "
-                    "is applied, so without the pair it would be SILENTLY INERT. Set "
-                    "side_face_h and side_face_T as well, or leave the law `typed`.");
-        }
-                    if (!(std::isfinite(v.side_face_factor) && v.side_face_factor >= 0.0))
-                        Util::Abort(INFO, "surface_patch.side_face_factor must be finite "
-                                          "and >= 0, got: ", v.side_face_factor);
-                    // D2q-2b item 7: cap on the coefficient a SIDE face may see.
-                    // Applied only when spall.per_cell_removal = 1 (checked at
-                    // the use site), so it is inert for every pre-D2q-2b run.
-                    //
-                    // The default 80 W/m2K sits BELOW h* -- the coefficient at
-                    // which a wall reaches the 821 K firing point inside its
-                    // 121 s dwell (116 at T_gas = 1400, 88.5 at the arbiter's
-                    // 1600, 75 at 1750). So the wall provably cannot be heated
-                    // into spalling on its own: any lateral removal has to come
-                    // from the corner drain, which is the claim under test.
-                    // DECLARED, never fitted -- a failure routes to the packet's
-                    // decision rule, not to another value.
-                    pp.query_default("side_face_factor_above",
-                                     v.side_face_factor_above, -1.0);
-                    if (v.side_face_factor_above >= 0.0 &&
-                        !std::isfinite(v.side_face_factor_above))
-                        Util::Abort(INFO, "surface_patch.side_face_factor_above must be finite "
-                                          "and >= 0 (unset = use side_face_factor), got: ",
-                                    v.side_face_factor_above);
-                    pp.query_default("side_face_h_max", v.side_face_h_max, 80.0);
-                    if (!(std::isfinite(v.side_face_h_max) && v.side_face_h_max > 0.0))
-                        Util::Abort(INFO, "surface_patch.side_face_h_max must be finite "
-                                          "and > 0, got: ", v.side_face_h_max);
-                    // D2x: heat only faces at r >= side_face_r_min.
-                    pp.query_default("side_face_r_min", v.side_face_r_min, 0.0);
-                    if (!(std::isfinite(v.side_face_r_min) && v.side_face_r_min >= 0.0))
-                        Util::Abort(INFO, "surface_patch.side_face_r_min must be finite "
-                                          "and >= 0, got: ", v.side_face_r_min);
-                    // D2x: the derived per-edge riser area.
-                    int aex = 0;
-                    pp.query_default("side_face_area_exact", aex, 0);
-                    if (aex != 0 && aex != 1)
-                        Util::Abort(INFO, "surface_patch.side_face_area_exact must be 0 "
-                                          "or 1, got: ", aex);
-                    v.side_face_area_exact = (aex == 1);
-                    // Two area laws must never be set at once: f multiplies an
-                    // AREA inside h*A*(T_gas - T), so a stray f would silently
-                    // shadow the derived weight and nothing downstream could
-                    // tell them apart.
-                    if (v.side_face_area_exact && f_given)
-                        Util::Abort(INFO, "surface_patch.side_face_area_exact = 1 replaces "
-                                          "surface_patch.side_face_factor on below-plane "
-                                          "faces; do not set both");
-                    // D2z: the step-height closure. Same reasoning as above --
-                    // it replaces the area factor outright, so a stray f or the
-                    // D2x derived weight alongside it would shadow the derived
-                    // delta and nothing downstream could tell them apart.
-                    int sh = 0;
-                    pp.query_default("side_face_step_height", sh, 0);
-                    if (sh != 0 && sh != 1)
-                        Util::Abort(INFO, "surface_patch.side_face_step_height must be 0 "
-                                          "or 1, got: ", sh);
-                    v.side_face_step_height = (sh == 1);
-                    if (v.side_face_step_height && f_given)
-                        Util::Abort(INFO, "surface_patch.side_face_step_height = 1 derives "
-                                          "the riser area from the column phases and "
-                                          "replaces surface_patch.side_face_factor; "
-                                          "do not set both");
-                    if (v.side_face_step_height && v.side_face_area_exact)
-                        Util::Abort(INFO, "surface_patch.side_face_step_height = 1 and "
-                                          "surface_patch.side_face_area_exact = 1 are two "
-                                          "different area laws; set at most one");
-                    // P1e. Default 0, so every frozen leg is byte-identical
-                    // without it.
-                    int sc = 0;
-                    pp.query_default("side_face_staircase", sc, 0);
-                    if (sc != 0 && sc != 1)
-                        Util::Abort(INFO, "surface_patch.side_face_staircase must be "
-                                          "0 or 1, got: ", sc);
-                    v.side_face_staircase = (sc == 1);
-                    // ⚠⚠ ALL FOUR AreaOfDelta SITES LIVE BEHIND
-                    // side_face_step_height, so without it this key would be a
-                    // SILENT NO-OP -- which is the single failure mode most
-                    // likely to produce a clean-looking but meaningless leg.
-                    // Refuse it instead.
-                    if (v.side_face_staircase && !v.side_face_step_height)
-                        Util::Abort(INFO, "surface_patch.side_face_staircase = 1 "
-                            "requires surface_patch.side_face_step_height = 1: the "
-                            "staircase correction multiplies the per-column area "
-                            "sum at the four step-height AreaOfDelta sites, and "
-                            "every one of them is inside that key's branch. "
-                            "Without it the correction would silently do nothing.");
-                    // The heating law. Parsed unconditionally so that naming it
-                    // without the step key is refused rather than ignored --
-                    // AMReX only WARNS about an unused ParmParse variable.
-                    const bool law_given = pp.contains("side_face_area_law");
-                    std::string law;
-                    pp.query_default("side_face_area_law", law, std::string("step"));
-                    if (law == "step")
-                        v.side_face_area_law = SurfacePatch::SideAreaLaw::Step;
-                    else if (law == "wetted")
-                        v.side_face_area_law = SurfacePatch::SideAreaLaw::Wetted;
-                    else
-                        Util::Abort(INFO, "surface_patch.side_face_area_law must be 'step' "
-                                          "or 'wetted', got: ", law);
-                    if (law_given && !v.side_face_step_height)
-                        Util::Abort(INFO, "surface_patch.side_face_area_law requires "
-                                          "surface_patch.side_face_step_height = 1");
-                }
-                else if (pp.contains("side_face_h_max"))
-                    Util::Abort(INFO, "surface_patch.side_face_h_max requires "
-                                      "surface_patch.side_face_flux = 1");
-                else if (pp.contains("side_face_factor_above"))
-                    Util::Abort(INFO, "surface_patch.side_face_factor_above requires "
-                                      "surface_patch.side_face_flux = 1");
-                else if (pp.contains("side_face_factor"))
-                    Util::Abort(INFO, "surface_patch.side_face_factor requires "
-                                      "surface_patch.side_face_flux = 1");
-                else if (pp.contains("side_face_r_min"))
-                    Util::Abort(INFO, "surface_patch.side_face_r_min requires "
-                                      "surface_patch.side_face_flux = 1");
-                else if (pp.contains("side_face_area_exact"))
-                    Util::Abort(INFO, "surface_patch.side_face_area_exact requires "
-                                      "surface_patch.side_face_flux = 1");
-                else if (pp.contains("side_face_step_height"))
-                    Util::Abort(INFO, "surface_patch.side_face_step_height requires "
-                                      "surface_patch.side_face_flux = 1");
-                // ⚠ P1e: without this row the key would be SILENTLY IGNORED when
-                // side_face_flux is off -- AMReX only WARNS about an unused
-                // ParmParse variable -- which is the same silent-no-op failure the
-                // step-height guard exists to prevent.
-                else if (pp.contains("side_face_staircase"))
-                    Util::Abort(INFO, "surface_patch.side_face_staircase requires "
-                                      "surface_patch.side_face_flux = 1");
-                else if (pp.contains("side_face_area_law"))
-                    Util::Abort(INFO, "surface_patch.side_face_area_law requires "
-                                      "surface_patch.side_face_flux = 1");
-                // D2ab: the pair and its radius gate act only on side faces.
-                else if (pp.contains("side_face_h"))
-                    Util::Abort(INFO, "surface_patch.side_face_h requires "
-                                      "surface_patch.side_face_flux = 1");
-                else if (pp.contains("side_face_h_r_min"))
-                    Util::Abort(INFO, "surface_patch.side_face_h_r_min requires "
-                                      "surface_patch.side_face_flux = 1");
+            {
+                const bool pad_given = pp.contains("pad_shield_open");
+                pp.query_default("pad_shield_open", v.pad_shield_open, -1.0);
+                if (pad_given
+                    && !(v.pad_shield_open >= 0.0 && v.pad_shield_open <= 1.0))
+                    Util::Abort(INFO, "surface_patch.pad_shield_open is the OPEN FRACTION "
+                                      "of the pad ring and must lie in [0, 1]; got ",
+                                v.pad_shield_open);
             }
 
             std::string face;
@@ -10152,18 +8556,6 @@ private:
     // scan's result. 1.0 means nothing was lost.
     Set::Scalar sn_recession_superseded = 0.0;
 
-    // D2q-2b item 5: per-cell removal (default off). The two preconditions
-    // are cross-checked in Parse() once every block has been read, since they
-    // live in other parse blocks.
-    bool spall_per_cell_removal = false;
-    // Item 8: thermo counters, registered only when the key is on.
-    // pcr_overhang_cells = void cells with solid directly above (the undercut
-    // census -- a one-cell fillet is expected, a deep undercut is a FINDING,
-    // not a bug, because nothing in the model collapses one).
-    // pcr_lateral_cells  = cells removed this step through a lateral face.
-    Set::Scalar pcr_overhang_cells = 0.0;
-    Set::Scalar pcr_lateral_cells  = 0.0;
-
     // D2q-2b item 0: debug-only seeded interior void, `ilo jlo klo ihi jhi khi`
     // in index space. Empty = off (the default), and ApplySeedVoid returns
     // immediately. See the parse block for why it carries no diagnostic.
@@ -10189,6 +8581,15 @@ private:
     // stress heterogeneity and cavity stress redistribution; see
     // mlmg-shelved-local-thermoelastic-notes.md.
     bool sp_local_thermoelastic = false;
+    // ⚠⚠ P2-2b: THE MECHANICAL HALF OF THE GRIMSEL SET, KEYED SEPARATELY FROM
+    // THE THERMAL HALF. `microstructure.phaseN.law = grimsel` routes lambda,
+    // rho and c_p into conduction; this routes E and the thermal strain into
+    // the CRITERION. They must be independently switchable or the Kant ladder
+    // collapses -- `K1` (thermal only) and `K2` (+ mechanical) would be the
+    // same run, and `(c1)` could not say which property moved the onset.
+    // Default false ⇒ the criterion keeps its pre-P2-2b scalar arithmetic bit
+    // for bit even when the thermal law is on.
+    bool sp_stress_law_grimsel = false;
     // Step 20: surface-normal (slope-aware) spall criterion + removal. When
     // true, the K_I depth scan runs in the local surface-normal frame and a
     // flake of normal thickness h recedes its column by h/cos(theta) -- the
@@ -10302,7 +8703,16 @@ private:
     // elastic-solver BC. Default 0 short-circuits to byte-identical.
     Set::Scalar confining_p = 0.0;
 
-    enum class KIcLaw { NasseriTable, Linear };
+    // ⚠⚠ P2-2d deliverable 7: `GrimselTable` routes K_Ic to the MEASURED
+    // at-temperature ratio for the rock the experiments were run on
+    // (Grimsel.H's T3_KIc, ten rows). `NasseriTable` is WESTERLY granite
+    // (SpCriterion.H:86) applied to Grimsel rock, and stays the DEFAULT so the
+    // shipped tree is byte-identical.
+    // ⚠ K_Ic0 comes from the LAW (`Grimsel::K_Ic0`), never a new scalar.
+    // ⚠⚠ The Grimsel ratio FLOORS at 600 degC (0.60 repeated at 600 and 650),
+    // so K_Ic >= 0.900 always -- that floor is the cliff `(a5)` maps, and it is
+    // why nothing is scored above 873 K.
+    enum class KIcLaw { NasseriTable, Linear, GrimselTable };
     KIcLaw      kic_law         = KIcLaw::NasseriTable;
     Set::Scalar kic_scale       = 1.0;  // multiplicative scale on Nasseri table
     Set::Scalar kic_K_Ic0       = 0.0;  // linear law: K_Ic(T_ref)
@@ -10362,16 +8772,6 @@ private:
     // one-cell steps everywhere and the rule would fire a third of a HEALTHY
     // floor; measured offline, 6 mm fires 0.0 % of rev 7's floor and 35-41 % of
     // P1's stalled one. See tests/.../p1b_support_rule/exposure.py.
-    // ⚠⚠ P1f: the LATERAL mode. Both default OFF.
-    // The vertical criterion reads a per-COLUMN 1-D profile, and after P1e's area
-    // correction a diagonal wall column still carries 1.4142 face-equivalents of
-    // an axis column -- the same arc with sqrt(2) fewer columns. So no per-column
-    // criterion can be azimuthally isotropic on a round wall, however the area is
-    // corrected. These keys put the criterion on the FACE instead.
-    bool sp_lateral_drive   = false;  // spall.lateral_drive
-    bool sp_lateral_removal = false;  // spall.lateral_removal (regime 6)
-    bool sp_lateral_subcell = false;  // spall.lateral_subcell (P1g-1 banking)
-    bool sp_lateral_thermal = false;  // spall.lateral_thermal (P1g-2 the sink)
     // ⚠⚠ P1g-3: the flake thickness, derived instead of picked.
     bool sp_flake_len_flux     = false;  // spall.flake_length  = flux
     bool sp_flake_frac_weibull = false;  // spall.flake_fraction = weibull
@@ -10393,83 +8793,6 @@ private:
     // absence behind a plausible number.
     Set::Scalar sp_len_fb_h0 = 0.0;
     Set::Scalar sp_len_fb_q0 = 0.0;
-    // the LATERAL site's own pair -- reported separately, because the wall's
-    // flux comes from a different source than the floor's and the two sites
-    // fall back for different reasons.
-    Set::Scalar lat_len_fb_h0_n = 0.0;
-    Set::Scalar lat_len_fb_q0_n = 0.0;
-    // P1g-2 diagnostics, registered only under spall.lateral_thermal.
-    Set::Scalar lat_shift_n       = 0.0;  // faces whose row was shifted
-    Set::Scalar lat_shift_refuse  = 0.0;  // refused: row shorter than the minimum
-    Set::Scalar lat_shift_E       = 0.0;  // enthalpy the shift took out [J]
-    Set::Scalar lat_shift_E_est   = 0.0;  // the INDEPENDENT analytic estimate [J]
-    Set::Scalar lat_shift_ratio   = 0.0;  // displaced row volume / banked volume
-    Set::Scalar lat_overlap_n     = 0.0;  // cells written by BOTH writers in a step
-    Set::Scalar lat_orphan_n      = 0.0;  // banks left referring to no solid cell
-    // P1g-2c deliverable 1: THE TRUTH DIAGNOSTIC. lat_shift_E is what the shift
-    // INTENDED to move; lat_shift_real is what the FIELD actually lost, summed
-    // over the touched cells before and after the write-back. ⚠⚠ The two
-    // existing ratios (lat_shift_ratio, lat_shift_E_est/lat_shift_E) are both
-    // built from the intended shift, so both read ~1 while the field loses 15 %
-    // -- which is exactly why nothing caught the overwrite.
-    Set::Scalar lat_shift_real    = 0.0;  // enthalpy the FIELD lost [J]
-    Set::Scalar lat_shift_realfrac= 0.0;  // lat_shift_real / lat_shift_E
-    Set::Scalar lat_touch_multi   = 0.0;  // cells written by MORE THAN ONE row
-    // P1g-2c deliverable 2: without this a clean ratio cannot be told from a run
-    // that simply had no corners -- which is how the old 45 deg test passed.
-    Set::Scalar lat_twoaxis_n     = 0.0;  // shifting faces with BOTH axes active
-    // P1g-2c deliverable 6: lat_shift_refuse conflated three outcomes under one
-    // name that reads as a failure. Split: a genuinely bad decay length, the
-    // VOID-at-gather case (the ~25,000, where the bank voided the face cell so
-    // the row gathers length 0), and a real but too-short row.
-    Set::Scalar lat_ref_ell       = 0.0;  // ell <= 0
-    Set::Scalar lat_ref_void      = 0.0;  // runlen == 0: face cell already void
-    Set::Scalar lat_ref_short     = 0.0;  // runlen in 1..ROWMIN-1
-    // ⚠⚠ P1g-1: THE LATERAL RECESSION ACCUMULATOR, as PERSISTENT PER-COLUMN
-    // state -- the same idiom as lat_score / lat_kfire / k_top_global, which are
-    // per-column Vectors reduced across ranks rather than MultiFabs.
-    //
-    // Why not a MultiFab. The accumulator must CARRY ITS REMAINDER PAST A VOID:
-    // once a cell voids, the lateral criterion skips it forever (it tests
-    // rm > 0.5 first), so a per-cell accumulator can never void more than once
-    // and the banking law would read 0.5 cells per firing instead of 0.75. The
-    // remainder therefore has to live with the recession TRACK, not the cell.
-    // Keying it to the column also avoids the face normal entirely, which is the
-    // blocker that rules out mirroring the vertical remap: a two-open-face corner
-    // cell has two normals and no principled split between them.
-    // ⚠ The honest cost of keying to the column: recession at different k in one
-    // column shares one accumulator. On the riser geometry the column recedes as
-    // a single track so this is exact; on a re-entrant wall it would conflate two.
-    // ⚠ NOT a MultiFab also keeps every plotfile's component list unchanged, so
-    // (a1)'s 2639 files cannot move for a reporting reason.
-    amrex::Vector<Set::Scalar> lat_accum_col;   // banked depth per column [m]
-    amrex::Vector<Set::Scalar> lat_nfire_col;   // that column's lateral firings
-    // P1g-1 diagnostics, registered only under spall.lateral_subcell so a
-    // keys-off run keeps its exact thermo.dat column set and owes no re-pin.
-    Set::Scalar lat_bank_n      = 0.0;  // lateral firings that BANKED this step
-    Set::Scalar lat_bank_hf     = 0.0;  // sum of h_f_lat banked this step [m]
-    Set::Scalar lat_accum_sum   = 0.0;  // sum of the accumulator over solid cells [m]
-    Set::Scalar lat_void_colmax = 0.0;  // max regime-6 voids in ONE column this step
-    // ⚠ lat_void_colmax is the cascade witness named in the packet's inertness
-    // list: voiding a cell and pushing the un-flaked remainder's enthalpy into
-    // the neighbour could fire it next step and run away. It is a MAX, not a
-    // mean -- a mean would average a cascade away.
-    // P1f diagnostics, registered only under spall.lateral_drive.
-    Set::Scalar lat_cand_n     = 0.0;  // (cell, face) pairs that reached K_I/K_Ic
-    Set::Scalar lat_fires      = 0.0;  // columns whose lateral criterion fired
-    Set::Scalar lat_voided_n   = 0.0;  // cells actually voided as regime 6
-    Set::Scalar lat_no_faceT_n = 0.0;  // faces skipped for want of a face T
-    Set::Scalar lat_ell_med    = 0.0;  // mean ell_lat over firing columns [m]
-    // ⚠⚠ P1f deliverable 12: THE SUB-THRESHOLD SCORE. lat_q / lat_score are
-    // written only inside `if (score >= 1.0 ...)` (Removal.H:675), so a face
-    // that did NOT fire has no logged score and lat_q reads 0.0 by
-    // initialisation -- which is exactly where a bound needs checking. These
-    // two are taken BEFORE that branch, over every candidate, so (w)'s upper
-    // bound and the (v) ladder have a population to read. lat_Tface_max is the
-    // face temperature OF THE CANDIDATE ATTAINING lat_qmax, kept paired across
-    // ranks (a separate max on each would decouple them).
-    Set::Scalar lat_qmax       = 0.0;  // max K_I/K_Ic over ALL candidates [-]
-    Set::Scalar lat_Tface_max  = 0.0;  // T_face of the candidate attaining it [K]
     // P1b diagnostics, registered only under spall.support_rule.
     // P0b witnesses, registered only under robin_form = surface.
     // surf_side_share is deliverable 1.2's requirement: side faces keep the
@@ -10478,17 +8801,6 @@ private:
     Set::Scalar surf_cols_robin = 0.0;
     Set::Scalar surf_q_mean     = 0.0;
     Set::Scalar surf_side_share = 0.0;
-    // P0b rev5 deliverable 9 bin 2: the side Robin power split by whether the
-    // receiving cell is its own column's top cell (scored next step) or buried
-    // beneath it. Registered with surf_side_share, so no run that does not
-    // reconstruct gains a thermo column.
-    Set::Scalar surf_side_P_top    = 0.0;
-    Set::Scalar surf_side_P_buried = 0.0;
-    // Revision 7 deliverable 2: the same power split at side_face_h_r_min --
-    // the LIVE gate -- rather than at foot_r_inner/outer, which are 0 under
-    // `prescribed` descent and sent everything into the `wall` bin.
-    Set::Scalar surf_side_P_rin    = 0.0;   // r <  side_face_h_r_min
-    Set::Scalar surf_side_P_rout   = 0.0;   // r >= side_face_h_r_min
     bool side_power_header_written = false;
     long side_power_last = -1;
     // P0b (c''): cumulative enthalpy carried out of the domain by flakes, the
@@ -10697,7 +9009,7 @@ private:
         return (std::isfinite(x) && x > 0.0) ? x : 0.0;
     }
 
-    // Everything from a given x. Split out from ReconstructSurfaceT so the
+    // Everything from a given x. Split out of the reconstruction so the
     // per-column builder can substitute a smoothed or held x (deliverables
     // 1.3, 5.1, 5.2) without duplicating a line of the algebra.
     // ⚠ P1g-3: `ell_flux` and `frac_over` are appended with defaults that
@@ -10796,16 +9108,6 @@ private:
         return r;
     }
 
-    static SurfaceRecon ReconstructSurfaceT(Set::Scalar T_top, Set::Scalar T_1,
-                                            Set::Scalar T0, Set::Scalar dz,
-                                            Set::Scalar T_gas_cap,
-                                            Set::Scalar c_f,
-                                            Set::Scalar h_f_max)
-    {
-        return ReconFromX(T_top, T0, dz,
-                          RawSurfaceX(T_top, T_1, T0), T_gas_cap, c_f, h_f_max);
-    }
-
     // Upper bound on the gas temperature this configuration can present to the
     // rock, used only as a ceiling on the reconstruction. Time-independent and
     // read from Parse'd values, so it introduces NO dependence on
@@ -10851,6 +9153,14 @@ private:
             Util::Abort(INFO, "confining.p must be finite, got ",
                         value.confining_p);
 
+        // P2-15: the buckling span, read on EVERY deck, BEFORE the sp_weibull early return:
+        // ALAMO does not abort on an unused top-level key (standing rule 1), so a key read
+        // only on one branch would be silently inert on the other. Its cross-key requirements
+        // are checked in Parse after the face list and spall.surface_T are both parsed.
+        pp.query_default("spall.buckle_span", value.sp_buckle_span, 0.0);
+        if (!(std::isfinite(value.sp_buckle_span) && value.sp_buckle_span >= 0.0))
+            Util::Abort(INFO, "spall.buckle_span must be finite and >= 0 m, got: ",
+                        value.sp_buckle_span);
         if (value.spallation_model != SpallationModel::SpWeibull) return;
 
         // Hard mutual-exclusion: sp_weibull bypasses CZM (Step 15 Weibull
@@ -10887,10 +9197,29 @@ private:
         pp.query_default("spallation.sp.kic.law", law_str, std::string("nasseri_table"));
         if      (law_str == "nasseri_table") value.kic_law = KIcLaw::NasseriTable;
         else if (law_str == "linear")        value.kic_law = KIcLaw::Linear;
+        else if (law_str == "grimsel_table") value.kic_law = KIcLaw::GrimselTable;
         else Util::Abort(INFO,
-            "spallation.sp.kic.law must be 'nasseri_table' or 'linear', got: ", law_str);
+            "spallation.sp.kic.law must be 'nasseri_table', 'linear' or "
+            "'grimsel_table', got: ", law_str);
+        // ⚠⚠ `grimsel_table` reads K_Ic0 and the at-temperature ratio off the
+        // PHASE-0 LAW OBJECT, which P2-2b parses unconditionally -- so this
+        // works whether or not the thermal law is on, and a leg can select the
+        // toughness route alone.
+        // ⚠ ITS "needs a phase" CHECK CANNOT LIVE HERE. `ParseSpallationModel`
+        // runs at :206 and `value.phases` is not resized until :293, so a
+        // `phases.empty()` test at this point is ALWAYS true and aborts every
+        // legal leg. The check sits with the other cross-key aborts after the
+        // microstructure block instead.
 
-        if (value.kic_law == KIcLaw::NasseriTable)
+        // ⚠⚠ `grimsel_table` TAKES `scale` AND NOT `K_Ic0`. The else-branch
+        // below `query_required`s `spallation.sp.kic.K_Ic0`, which is right for
+        // `linear` (it has no table to read a level off) and WRONG for
+        // `grimsel_table`: its K_Ic0 is the LAW's, and requiring a scalar here
+        // would reintroduce exactly the hand-typed per-phase constant the
+        // packet forbids -- and would let a leg set a level that silently
+        // disagrees with the law it is supposed to be reading.
+        if (value.kic_law == KIcLaw::NasseriTable
+            || value.kic_law == KIcLaw::GrimselTable)
         {
             pp.query_default("spallation.sp.kic.scale", value.kic_scale, 1.0);
             if (!(std::isfinite(value.kic_scale) && value.kic_scale > 0.0))
@@ -10949,7 +9278,7 @@ private:
         // WEIBULL-MODE KEY, and it is parsed OUTSIDE the mode guard for that
         // reason. Inside it, a run with `weibull.enabled = 0` never executed the
         // parse and silently took the MEMBER default 15.0 (:9608) -- which is
-        // exactly what `unit/lateral_drive/input:120` does, while Meier's
+        // exactly what P1f's lateral-drive fixture did, while Meier's
         // `input_drilling:124` sets 20.0. The flake fraction below reads `m`, so
         // the fixture and the validation leg would have derived thicknesses
         // 33 % apart for no stated reason.
@@ -10996,6 +9325,19 @@ private:
                 else if (svol != "cell")
                     Util::Abort(INFO, "weibull.size_volume must be 'cell' or "
                                       "'flux', got: ", svol);
+                // ⚠⚠ P2-2d d8: the flux reference, separate from V0.
+                pp.query_default("weibull.V_ref", value.weibull_V_ref, -1.0);
+                if (value.sp_size_flux
+                    && !(std::isfinite(value.weibull_V_ref)
+                         && value.weibull_V_ref > 0.0))
+                    Util::Abort(INFO,
+                        "weibull.size_volume = flux requires weibull.V_ref > 0."
+                        " It is NOT weibull.V0: V0 is the mesh-independence "
+                        "anchor (V_cell/V0 == 1 on both decks), while the flux "
+                        "mode's stressed volume is ell_q^3. Borrowing V0 would "
+                        "import the 8x cross-deck difference in V0 into a "
+                        "quantity that has nothing to do with the mesh. Got: ",
+                        value.weibull_V_ref);
             }
 
             pp.query_default("weibull.seed", value.weibull_seed, 0);

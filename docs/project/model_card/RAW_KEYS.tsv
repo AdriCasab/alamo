@@ -1,0 +1,359 @@
+key	differs	KANT_onset	KANT_dref	HOSER_47	HOSER_0	HOSER_0_S	MEIER	MEIER_dref	MMW_ZHANG	HU_onset	overridden
+DistributionMapping.verbose		0	0	0	0	0	0	0	0	0	
+alamo.program		[mmwspalling]	[mmwspalling]	[mmwspalling]	[mmwspalling]	[mmwspalling]	[mmwspalling]	[mmwspalling]	[mmwspalling]	[mmwspalling]	
+alpha		0.0 0.0	0.0 0.0	0.0 0.0	0.0 0.0	0.0 0.0	0.0 0.0	0.0 0.0	0.0 0.0	0.0 0.0	
+amr.abort_on_nan		1	1	1	1	1	1	1	1	1	
+amr.base_regrid_int		0	0	0	0	0	0	0	0	0	
+amr.blocking_factor		2	2	2	2	2	2	2	2	2	
+amr.cell.all		1	1	1	1	1	1	1	1	1	
+amr.cell.any		1	1	1	1	1	1	1	1	1	
+amr.check_input		1	1	1	1	1	1	1	1	1	
+amr.grid_eff	DIFF	0.7	0.7	0.7	0.7	0.7	0.7	0.7	1.0	0.7	
+amr.max_grid_size	DIFF	12	25	25	25	25	60	60	-	16	KANT_dref:12; MEIER:20; MEIER_dref:20
+amr.max_level		0	0	0	0	0	0	0	0	0	
+amr.max_plot_level		-1	-1	-1	-1	-1	-1	-1	-1	-1	
+amr.n_cell	DIFF	24 24 24	4 4 150	50 50 150	50 50 150	50 50 150	60 60 300	60 60 300	128 128 32	32 32 32	KANT_dref:24 24 24; MEIER:70 70 60; MEIER_dref:70 70 60
+amr.n_error_buf		1	1	1	1	1	1	1	-	1	
+amr.n_proper		1	1	1	1	1	1	1	1	1	
+amr.node.all		0	0	0	0	0	0	0	0	0	
+amr.node.any		1	1	1	1	1	1	1	1	1	
+amr.plot_dt		-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	
+amr.plot_file		output	output	output	output	output	output	output	output	output	
+amr.plot_int	DIFF	100000	4000	1875	625	3750	3125	3125	10	1	KANT_dref:100000; MEIER:8000; MEIER_dref:8000
+amr.refine_grid_layout		1	1	1	1	1	1	1	1	1	
+amr.regrid_int		1000000	1000000	1000000	1000000	1000000	1000000	1000000	1000000	1000000	
+amr.thermo.int		1	1	1	1	1	1	1	1	1	
+amr.thermo.plot_dt		-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	
+amr.thermo.plot_int	DIFF	-1	1	6	6	6	6	6	-1	-1	
+amr.verbose		0	0	0	0	0	0	0	0	0	
+amrex.abort_on_out_of_gpu_memory		0	0	0	0	0	0	0	0	0	
+amrex.abort_on_unused_inputs		0	0	0	0	0	0	0	0	0	
+amrex.async_out		0	0	0	0	0	0	0	0	0	
+amrex.async_out_nfiles		64	64	64	64	64	64	64	64	64	
+amrex.fpe_trap_invalid		0	0	0	0	0	0	0	0	0	
+amrex.fpe_trap_overflow		0	0	0	0	0	0	0	0	0	
+amrex.fpe_trap_zero		0	0	0	0	0	0	0	0	0	
+amrex.handle_sigabrt		1	1	1	1	1	1	1	1	1	
+amrex.handle_sigfpe		1	1	1	1	1	1	1	1	1	
+amrex.handle_sigill		1	1	1	1	1	1	1	1	1	
+amrex.handle_sigint		1	1	1	1	1	1	1	1	1	
+amrex.handle_sigsegv		1	1	1	1	1	1	1	1	1	
+amrex.handle_sigterm		0	0	0	0	0	0	0	0	0	
+amrex.init_snan		0	0	0	0	0	0	0	0	0	
+amrex.mf.alloc_single_chunk		0	0	0	0	0	0	0	0	0	
+amrex.signal_handling		1	1	1	1	1	1	1	1	1	
+amrex.the_arena_defragmentation		1	1	1	1	1	1	1	1	1	
+amrex.the_arena_init_size		8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	
+amrex.the_arena_is_managed		0	0	0	0	0	0	0	0	0	
+amrex.the_arena_release_threshold		9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	
+amrex.the_async_arena_release_threshold		9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	
+amrex.the_comms_arena_defragmentation		1	1	1	1	1	1	1	1	1	
+amrex.the_comms_arena_init_size		8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	
+amrex.the_comms_arena_release_threshold		9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	
+amrex.the_device_arena_defragmentation		1	1	1	1	1	1	1	1	1	
+amrex.the_device_arena_init_size		8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	
+amrex.the_device_arena_release_threshold		9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	
+amrex.the_managed_arena_defragmentation		1	1	1	1	1	1	1	1	1	
+amrex.the_managed_arena_init_size		8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	
+amrex.the_managed_arena_release_threshold		9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	
+amrex.the_pinned_arena_defragmentation		1	1	1	1	1	1	1	1	1	
+amrex.the_pinned_arena_init_size		8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	8388608	
+amrex.the_pinned_arena_release_threshold		9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	9223372036854775807	
+amrex.throw_exception		1	1	1	1	1	1	1	1	1	KANT_onset:0; KANT_dref:0; HOSER_47:0; HOSER_0:0; HOSER_0_S:0; MEIER:0; MEIER_dref:0; MMW_ZHANG:0; HU_onset:0
+amrex.use_gpu_aware_mpi		0	0	0	0	0	0	0	0	0	
+amrex.vector_growth_factor		1.5	1.5	1.5	1.5	1.5	1.5	1.5	1.5	1.5	
+amrex.verbose		1	1	1	1	1	1	1	1	1	
+beam.P0		0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	MEIER:11400.0; MEIER_dref:11400.0
+beam.R	DIFF	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.2	0.0	
+beam.alpha_expr	DIFF	1.0	1.0	2000.0	2000.0	2000.0	2000.0	2000.0	300	1.0	
+beam.lambda		2.19e-3	2.19e-3	2.19e-3	2.19e-3	2.19e-3	2.19e-3	2.19e-3	2.19e-3	2.19e-3	
+beam.omega0		0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02	
+beam.profile	DIFF	gaussian	gaussian	uniform	uniform	uniform	uniform	uniform	-	gaussian	
+beam.radius	DIFF	0.0	0.0	0.02	0.02	0.02	0.042	0.042	-	0.0	
+beam.schedule.P		-	-	-	-	-	-	-	800.0 1800.0 2300.0 2800.0 1700.0 2800.0 1700.0 3200.0 0.0	-	
+beam.schedule.t_end		-	-	-	-	-	-	-	150.0 390.0 510.0 750.0 850.0 1050.0 1200.0 1250.0 1750.0	-	
+beam.x0	DIFF	0.012	0.012	0.0	0.0	0.0	0.07	0.07	0.05	0.05	
+beam.y0	DIFF	0.012	0.012	0.0	0.0	0.0	0.07	0.07	0.05	0.05	
+beam.z0	DIFF	0.024	0.024	0.10	0.10	0.10	0.120	0.120	0.025	0.1	
+bit.enabled		0	0	0	0	0	0	0	-	0	MEIER:1; MEIER_dref:1
+bit.feed_rate		-	-	-	-	-	[4.166667e-4]	[4.166667e-4]	-	-	
+bit.radius		-	-	-	-	-	[0.042]	[0.042]	-	-	
+bit.start_time		-	-	-	-	-	[0.0]	[0.0]	-	-	
+bit.x0		-	-	-	-	-	[0.07]	[0.07]	-	-	
+bit.y0		-	-	-	-	-	[0.07]	[0.07]	-	-	
+bit.z0		-	-	-	-	-	[0.120]	[0.120]	-	-	
+cohesive.enabled		0	0	0	0	0	0	0	0	0	
+conductivity.h_gb0		0.0	0.0	0.0	0.0	0.0	0.0	0.0	-	0.0	
+conductivity.kappa_damage_alpha		0.0	0.0	0.0	0.0	0.0	0.0	0.0	-	0.0	
+confining.p	DIFF	1.0e6	1.0e6	0.0	0.0	0.0	1.0e6	1.0e6	0	0	
+damage.cohesion	DIFF	1	1	1	1	1	1	1	1	20.0e6	
+damage.enabled	DIFF	0	0	0	0	0	0	0	0	1	
+damage.gb_multiplier	DIFF	1	1	1	1	1	1	1	1	1.0	
+damage.m	DIFF	1	1	1	1	1	1	1	1	1.0	
+damage.n	DIFF	1	1	1	1	1	1	1	1	2.0	
+damage.phi_deg	DIFF	0	0	0	0	0	0	0	0	30.0	
+damage.prescribed_stress.enabled		0	0	0	0	0	0	0	0	0	
+damage.psi0	DIFF	0	0	0	0	0	0	0	0	0.25	
+damage.stiffness_floor	DIFF	9.9999999999999995e-07	9.9999999999999995e-07	9.9999999999999995e-07	9.9999999999999995e-07	9.9999999999999995e-07	9.9999999999999995e-07	9.9999999999999995e-07	9.9999999999999995e-07	1.0	
+el.bc.type	DIFF	-	-	-	-	-	-	-	constant	zlo_roller_321	
+el.elastic_ref_threshold		-	-	-	-	-	-	-	0.01	0.01	
+el.eta_ref_threshold	DIFF	0.01	0.01	0.01	0.01	0.01	0.01	0.01	1.0	1.0	
+el.interval	DIFF	-	-	-	-	-	-	-	1000000	1	
+el.max_coarsening_level	DIFF	-	-	-	-	-	-	-	-1	2	
+el.model1.E	DIFF	30.0e9	30.0e9	30.0e9	30.0e9	30.0e9	30.0e9	30.0e9	1.0	29.98e9	
+el.model1.F0		0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	0 0 0 0 0 0 0 0 0	
+el.model1.nu	DIFF	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.19	
+el.model_neumann_boundary		0	0	0	0	0	0	0	0	0	
+el.nmodels		1	1	1	1	1	1	1	1	1	
+el.plot_disp		-	-	-	-	-	-	-	1	1	
+el.plot_psi		-	-	-	-	-	-	-	1	1	
+el.plot_rhs		-	-	-	-	-	-	-	1	1	
+el.plot_strain		-	-	-	-	-	-	-	1	1	
+el.plot_stress		-	-	-	-	-	-	-	1	1	
+el.print_model		-	-	-	-	-	-	-	0	0	
+el.print_residual		-	-	-	-	-	-	-	0	0	
+el.ref_threshold	DIFF	0.01	0.01	0.01	0.01	0.01	0.01	0.01	1.0	1.0	
+el.solver.bottom_solver		-	-	-	-	-	-	-	-	cg	
+el.solver.max_iter		-	-	-	-	-	-	-	-	1000	
+el.solver.normalize_ddw		-	-	-	-	-	-	-	-	1	
+el.solver.nriters		-	-	-	-	-	-	-	1	1	
+el.solver.tol_abs		-	-	-	-	-	-	-	-	1.0e-16	
+el.solver.tol_rel		-	-	-	-	-	-	-	-	1.0e-6	
+el.solver.verbose		-	-	-	-	-	-	-	0	0	
+el.time_evolving	DIFF	-	-	-	-	-	-	-	0	1	
+el.tstart		-	-	-	-	-	-	-	-1	-1	
+el.type	DIFF	disable	disable	disable	disable	disable	disable	disable	-	static	
+el.zero_out_displacement	DIFF	-	-	-	-	-	-	-	0	1	
+energy_ledger.enabled	DIFF	0	1	1	1	1	1	1	-	0	
+explicitmesh.on		0	0	0	0	0	0	0	0	0	
+fabarray.comm_tile_size		1024000 1024000 1024000	1024000 1024000 1024000	1024000 1024000 1024000	1024000 1024000 1024000	1024000 1024000 1024000	1024000 1024000 1024000	1024000 1024000 1024000	1024000 1024000 1024000	1024000 1024000 1024000	
+fabarray.mfiter_tile_size		1024000 8 8	1024000 8 8	1024000 8 8	1024000 8 8	1024000 8 8	1024000 8 8	1024000 8 8	1024000 8 8	1024000 8 8	
+geometry.coord_sys		0	0	0	0	0	0	0	0	0	
+geometry.is_periodic		0 0 0	0 0 0	0 0 0	0 0 0	0 0 0	0 0 0	0 0 0	0 0 0	0 0 0	
+geometry.prob_hi	DIFF	0.024 0.024 0.024	0.0040000000000000001 0.0040000000000000001 0.14999999999999999	0.050000000000000003 0.050000000000000003 0.14999999999999999	0.050000000000000003 0.050000000000000003 0.14999999999999999	0.050000000000000003 0.050000000000000003 0.14999999999999999	0.12 0.12 0.5	0.12 0.12 0.5	0.10000000000000001 0.10000000000000001 0.025000000000000001	0.10000000000000001 0.10000000000000001 0.10000000000000001	
+geometry.prob_lo	DIFF	0 0 0	0 0 0	0 0 0	0 0 0	0 0 0	0 0 -0.10000000000000001	0 0 -0.10000000000000001	0 0 0	0 0 0	
+hc.bc.temp.constant.type.xhi		neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	
+hc.bc.temp.constant.type.xlo		neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	
+hc.bc.temp.constant.type.yhi		neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	
+hc.bc.temp.constant.type.ylo		neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	
+hc.bc.temp.constant.type.zhi		neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	
+hc.bc.temp.constant.type.zlo		neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	neumann	
+hc.bc.temp.constant.val.xhi		0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	
+hc.bc.temp.constant.val.xlo		0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	
+hc.bc.temp.constant.val.yhi		0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	
+hc.bc.temp.constant.val.ylo		0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	
+hc.bc.temp.constant.val.zhi		0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	
+hc.bc.temp.constant.val.zlo		0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	
+hc.bc.temp.type		constant	constant	constant	constant	constant	constant	constant	constant	constant	
+hc.heat.alpha	DIFF	6.9045e-7	6.9045e-7	6.9022e-7	6.9022e-7	6.9022e-7	6.9022e-7	6.9022e-7	1.3e-6	1.143e-6	
+hc.heat.refinement_threshold		1.0	1.0	1.0	1.0	1.0	1.0	1.0	1.0	1.0	
+hc.ic.constant.value	DIFF	293.15	293.15	293.15	293.15	293.15	293.15	293.15	297.5	280.15	
+hc.ic.type		constant	constant	constant	constant	constant	constant	constant	constant	constant	
+implicit.max_iter		100	100	100	100	100	100	100	100	100	
+implicit.tol_abs		0	0	0	0	0	0	0	0	0	
+implicit.tol_rel	DIFF	1e-10	1e-10	1e-10	1e-10	1e-10	1e-10	1e-10	1e-8	1e-10	
+implicit.verbose	DIFF	0	0	0	0	0	0	0	1	0	
+losses.T_amb	DIFF	293.15	293.15	293.15	293.15	293.15	293.15	293.15	297.5	280.15	
+losses.T_eps_break	DIFF	1.0e30	1.0e30	1.0e30	1.0e30	1.0e30	1.0e30	1.0e30	1510.5	1.0e30	
+losses.epsilon	DIFF	0.0	0.0	0.8	0.8	0.8	0.8	0.8	0.8	0.0	
+losses.epsilon_high	DIFF	0.0	0.0	0.8	0.8	0.8	0.8	0.8	0.8	0.0	
+losses.h_conv	DIFF	0.0	0.0	10.0	10.0	10.0	10.0	10.0	51.0	0.0	
+losses.sigma_SB	DIFF	0.0	0.0	5.670374e-8	5.670374e-8	5.670374e-8	5.670374e-8	5.670374e-8	5.670374419e-8	0.0	
+material.type		-	-	-	-	-	-	-	zhang	-	
+material.zhang.L_m		-	-	-	-	-	-	-	340000	-	
+material.zhang.L_v		-	-	-	-	-	-	-	4800000	-	
+material.zhang.T_m		-	-	-	-	-	-	-	1510.5	-	
+material.zhang.T_ref		-	-	-	-	-	-	-	273.14999999999998	-	
+material.zhang.T_vap_hi		-	-	-	-	-	-	-	3503	-	
+material.zhang.T_vap_lo		-	-	-	-	-	-	-	3233	-	
+material.zhang.cp.T_break		-	-	-	-	-	-	-	1510.5	-	
+material.zhang.cp.a_hi		-	-	-	-	-	-	-	0.184	-	
+material.zhang.cp.a_lo		-	-	-	-	-	-	-	-0.00027300000000000002	-	
+material.zhang.cp.b_hi		-	-	-	-	-	-	-	1249	-	
+material.zhang.cp.b_lo		-	-	-	-	-	-	-	0.89400000000000002	-	
+material.zhang.cp.c_lo		-	-	-	-	-	-	-	788	-	
+material.zhang.fus_width		-	-	-	-	-	-	-	200	-	
+material.zhang.kappa.T_cap		-	-	-	-	-	-	-	1273	-	
+material.zhang.kappa.a		-	-	-	-	-	-	-	0.31540000000000001	-	
+material.zhang.kappa.b		-	-	-	-	-	-	-	0.00038000000000000002	-	
+material.zhang.rho.T_cap		-	-	-	-	-	-	-	1273	-	
+material.zhang.rho.a		-	-	-	-	-	-	-	-0.28770000000000001	-	
+material.zhang.rho.b		-	-	-	-	-	-	-	2884	-	
+material.zhang.rho.cap		-	-	-	-	-	-	-	2300	-	
+max_step		2147483647	2147483647	2147483647	2147483647	2147483647	2147483647	2147483647	2147483647	2147483647	
+melt.lambda_crit		0.40000000000000002	0.40000000000000002	0.40000000000000002	0.40000000000000002	0.40000000000000002	0.40000000000000002	0.40000000000000002	-	0.40000000000000002	
+microstructure.mode		expression	expression	expression	expression	expression	expression	expression	-	expression	
+microstructure.nphases		1	1	1	1	1	1	1	-	1	
+microstructure.phase0.A_D	DIFF	0.0	0.0	0.0	0.0	0.0	0.0	0.0	-	0.034	
+microstructure.phase0.Cp	DIFF	790.0	790.0	790.0	790.0	790.0	790.0	790.0	-	827.20	
+microstructure.phase0.E	DIFF	30.0e9	30.0e9	30.0e9	30.0e9	30.0e9	30.0e9	30.0e9	-	29.98e9	
+microstructure.phase0.L_m		0	0	0	0	0	0	0	-	0	
+microstructure.phase0.L_v		0	0	0	0	0	0	0	-	0	
+microstructure.phase0.T_m		1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	-	1e+30	
+microstructure.phase0.T_ref	DIFF	293.15	293.15	293.15	293.15	293.15	293.15	293.15	-	280.15	
+microstructure.phase0.T_vap_hi		1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	-	1e+30	
+microstructure.phase0.T_vap_lo		1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	-	1e+30	
+microstructure.phase0.alpha_attenuation	DIFF	0.0	0.0	2000.0	2000.0	2000.0	2000.0	2000.0	-	0.0	
+microstructure.phase0.alpha_beta.T0		846.14999999999998	846.14999999999998	846.14999999999998	846.14999999999998	846.14999999999998	846.14999999999998	846.14999999999998	-	846.14999999999998	
+microstructure.phase0.alpha_beta.dV		0.0063	0.0063	0.0063	0.0063	0.0063	0.0063	0.0063	-	0.0063	
+microstructure.phase0.alpha_beta.enabled		0	0	0	0	0	0	0	-	0	
+microstructure.phase0.alpha_beta.linear_strain		0.0020956053704710431	0.0020956053704710431	0.0020956053704710431	0.0020956053704710431	0.0020956053704710431	0.0020956053704710431	0.0020956053704710431	-	0.0020956053704710431	
+microstructure.phase0.alpha_beta.width		10	10	10	10	10	10	10	-	10	
+microstructure.phase0.beta		8.0e-6	8.0e-6	8.0e-6	8.0e-6	8.0e-6	8.0e-6	8.0e-6	-	8.0e-6	
+microstructure.phase0.fraction		1.0	1.0	1.0	1.0	1.0	1.0	1.0	-	1.0	
+microstructure.phase0.fus_width		0	0	0	0	0	0	0	-	0	
+microstructure.phase0.grimsel.E0		-	53300000000	53300000000	53300000000	53300000000	53300000000	53300000000	-	-	
+microstructure.phase0.grimsel.K_Ic0		-	1.5	1.5	1.5	1.5	1.5	1.5	-	-	
+microstructure.phase0.grimsel.T_ref		-	293.14999999999998	293.14999999999998	293.14999999999998	293.14999999999998	293.14999999999998	293.14999999999998	-	-	
+microstructure.phase0.grimsel.alpha_cap_theta		-	-1	-1	-1	-1	-1	-1	-	-	
+microstructure.phase0.grimsel.cp.a		-	1370	1370	1370	1370	1370	1370	-	-	
+microstructure.phase0.grimsel.cp.b		-	178000	178000	178000	178000	178000	178000	-	-	
+microstructure.phase0.grimsel.cp.th0		-	271	271	271	271	271	271	-	-	
+microstructure.phase0.grimsel.lambda.a		-	2000	2000	2000	2000	2000	2000	-	-	
+microstructure.phase0.grimsel.lambda.th0		-	563	563	563	563	563	563	-	-	
+microstructure.phase0.grimsel.nu		-	0.29999999999999999	0.29999999999999999	0.29999999999999999	0.29999999999999999	0.29999999999999999	0.29999999999999999	-	-	
+microstructure.phase0.grimsel.rho		-	2650	2650	2650	2650	2650	2650	-	-	
+microstructure.phase0.kappa	DIFF	1.5	1.5	1.5	1.5	1.5	1.5	1.5	-	2.50	
+microstructure.phase0.law	DIFF	constant	grimsel	grimsel	grimsel	grimsel	grimsel	grimsel	-	-	
+microstructure.phase0.mu	DIFF	11.538461538e9	11.538461538e9	11.538461538e9	11.538461538e9	11.538461538e9	11.538461538e9	11.538461538e9	-	12.5966386555e9	
+microstructure.phase0.name	DIFF	grimsel	grimsel	grimsel	grimsel	grimsel	grimsel	grimsel	-	granite2	
+microstructure.phase0.rho	DIFF	2750.0	2750.0	2750.0	2750.0	2750.0	2750.0	2750.0	-	2640.0	
+microstructure.phase_expr		0	0	0	0	0	0	0	-	0	
+phase.T_m		1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	
+phase.T_ref		0	0	0	0	0	0	0	0	0	
+phase.T_v		1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	1e+30	
+phase.lh_m		0	0	0	0	0	0	0	0	0	
+phase.lh_v		0	0	0	0	0	0	0	0	0	
+plot_file	DIFF	/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/kant/sp_kant_onset_meiercfg/output/R500_1.0/run	/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_2e_cref/legs/G2.0_130/run	/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_11_heat/legs/G1/run	/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_7_hoeser_heat/legs/HG/run	/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/whatif_uptake/legs/s100/run	/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_2c_meier/ctrl8/m13/run	/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_2e_cref/legs/SD/run	tests/MMWSpalling/validation/zhang/zhang_oglesby/output	tests/MMWSpalling/validation/hu/hu_spall_onset/output/granite2	KANT_onset:tests/MMWSpalling/validation/kant/sp_kant_onset_meiercfg/output/model; KANT_dref:tests/MMWSpalling/validation/kant/sp_kant_onset_meiercfg/output/model; HOSER_47:tests/MMWSpalling/validation/hoeser/output/lab; HOSER_0:tests/MMWSpalling/validation/hoeser/output/lab; HOSER_0_S:tests/MMWSpalling/validation/hoeser/output/lab; MEIER:tests/MMWSpalling/validation/meier/sp_meier_pilot/output/drilling; MEIER_dref:tests/MMWSpalling/validation/meier/sp_meier_pilot/output/drilling
+solver	DIFF	explicit	explicit	explicit	explicit	explicit	explicit	explicit	implicit	explicit	
+spall.C_h		1	1	1	1	1	1	1	-	-	
+spall.clusters_csv		0	0	0	0	0	0	0	0	0	
+spall.damage_threshold		0.98999999999999999	0.98999999999999999	0.98999999999999999	0.98999999999999999	0.98999999999999999	0.98999999999999999	0.98999999999999999	-	-	
+spall.driving_ref		[flake]	-	-	-	-	-	-	-	-	
+spall.driving_stress		[differential]	-	-	-	-	-	-	-	-	
+spall.enabled	DIFF	1	1	1	1	1	1	1	0	0	
+spall.flake_c_f	DIFF	0.40000000000000002	0.40000000000000002	0.4	0.4	0.4	0.4	0.4	-	0.40000000000000002	
+spall.flake_coherence_length	DIFF	0.004	0.004	0.0	0.0	0.0	0.0	0.0	-	-	HOSER_47:0.004; HOSER_0:0.004; HOSER_0_S:0.004; MEIER:0.004; MEIER_dref:0.004
+spall.flake_fraction		cf	cf	cf	cf	cf	cf	cf	-	-	
+spall.flake_h_max	DIFF	0	0	0.0015	0.0015	0.0015	0.0015	0.0015	-	-	
+spall.flake_length	DIFF	twocell	flux	twocell	twocell	twocell	twocell	twocell	-	-	
+spall.h_col_events_csv		0	0	0	0	0	0	0	0	0	
+spall.h_spall_max		0.015	0.015	0.015	0.015	0.015	0.015	0.015	-	-	
+spall.h_spall_n_segments		0	0	0	0	0	0	0	-	-	
+spall.lateral_drive	DIFF	0	0	-	1	1	1	1	-	-	
+spall.lateral_removal	DIFF	0	0	-	1	1	1	1	-	-	
+spall.lateral_subcell	DIFF	0	0	-	1	1	1	1	-	-	
+spall.lateral_thermal	DIFF	0	0	-	1	1	1	1	-	-	
+spall.melt_aware		0	0	0	0	0	0	0	-	0	
+spall.per_cell_removal		0	0	-	0	0	0	0	-	-	
+spall.prescribed_ratio.enabled		0	0	0	0	0	0	0	-	-	
+spall.removal_energy	DIFF	cell	cell	flake	flake	flake	flake	flake	-	cell	
+spall.removal_events_csv	DIFF	1	1	1	1	1	1	1	-	0	
+spall.sample		top_cell	top_cell	top_cell	top_cell	top_cell	top_cell	top_cell	-	-	
+spall.shallow_depth		0.0060000000000000001	0.0060000000000000001	0.0060000000000000001	0.0060000000000000001	0.0060000000000000001	0.0060000000000000001	0.0060000000000000001	-	-	
+spall.stress_law		-	grimsel	grimsel	grimsel	grimsel	grimsel	grimsel	-	-	
+spall.stress_source	DIFF	local_thermoelastic	local_thermoelastic	local_thermoelastic	local_thermoelastic	local_thermoelastic	local_thermoelastic	local_thermoelastic	mechanics	mechanics	
+spall.surface_T	DIFF	reconstructed	reconstructed	reconstructed	reconstructed	reconstructed	reconstructed	reconstructed	-	cell_average	
+spall.surface_normal		0	0	0	0	0	0	0	-	0	
+spall.xi_s		8	8	8	8	8	8	8	-	-	
+spallation.model	DIFF	sp_weibull	sp_weibull	sp_weibull	sp_weibull	sp_weibull	sp_weibull	sp_weibull	damage_law	damage_law	
+spallation.sp.a0	DIFF	80.0e-6	8.0e-6	20.0e-6	20.0e-6	20.0e-6	20.0e-6	20.0e-6	-	-	KANT_onset:8.0e-6
+spallation.sp.constraint_depth	DIFF	-	0.002	0	0	0	-	0.002	-	-	
+spallation.sp.kic.law	DIFF	nasseri_table	grimsel_table	grimsel_table	grimsel_table	grimsel_table	grimsel_table	grimsel_table	-	-	KANT_dref:nasseri_table; HOSER_47:nasseri_table; HOSER_0:nasseri_table; HOSER_0_S:nasseri_table; MEIER:nasseri_table; MEIER_dref:nasseri_table
+spallation.sp.kic.scale		1.0	1.0	1.0	1.0	1.0	1.0	1.0	-	-	
+spallation.sp.n_segments		128	128	128	128	128	128	128	-	-	
+spallation.sp.prescribed_T_surface.enabled		0	0	0	0	0	0	0	-	-	
+spallation.sp.prescribed_stress.enabled		0	0	0	0	0	0	0	-	-	
+spallation.sp.stress_relief	DIFF	1	0.531294	0.531294	0.531294	0.531294	0.531294	0.531294	-	-	
+stop_time	DIFF	45.0	200	120.0	30.0	30.0	500	500	1750.0	45.0	KANT_onset:90.0; KANT_dref:90.0; HOSER_47:30.0; MEIER:56.0; MEIER_dref:56.0
+surface.follow_mask	DIFF	1	1	1	1	1	1	1	-	0	
+surface.refine_depth		0	0	0	0	0	0	0	-	0	
+surface.refine_height		0	0	0	0	0	0	0	-	0	
+surface_patch.T_expr	DIFF								-	638.22+3.74*t	
+surface_patch.T_ext	DIFF	293.15	293.15	0	0	0	0	0	-	280.15	
+surface_patch.T_flame	DIFF	1673.15	1523.15	-	-	-	-	-	-	0	KANT_dref:1673.15
+surface_patch.enabled	DIFF	1	1	1	1	1	1	1	0	1	HOSER_47:0; HOSER_0:0; HOSER_0_S:0; MEIER:0; MEIER_dref:0
+surface_patch.face		zhi	zhi	zhi	zhi	zhi	zhi	zhi	-	zhi	
+surface_patch.face_list		-	-	1	-	-	-	-	-	-	
+surface_patch.foot_body_clearance		-	-	-	-	-	1	1	-	-	
+surface_patch.foot_npads		-	-	-	-	-	3	3	-	-	
+surface_patch.foot_pad_quantile		-	-	-	-	-	0.9	0.9	-	-	
+surface_patch.foot_r_inner		-	-	-	-	-	0.028	0.028	-	-	
+surface_patch.foot_r_outer		-	-	-	-	-	0.040	0.040	-	-	
+surface_patch.foot_rule		-	-	-	-	-	pads	pads	-	-	
+surface_patch.foot_standoff		-	-	-	-	-	0.050	0.050	-	-	
+surface_patch.h_conv	DIFF	500	747	-	-	-	-	-	-	0.0	KANT_onset:150.0; KANT_dref:150.0
+surface_patch.h_expr	DIFF	-	-	if((r>0.02)and(s<0.0633),0.001,1189.763953*533*(533+0.3575*44*pow(r/0.0079,1.285))/pow(533+44*pow(r/0.0079,1.285),2)*pow(0.0632/max(0.0632,s),1.3185305455))	if((r>0.02)and(s<0.0637),0.001,7272.3958*533/(533+44*pow(r/0.0079,1.285))*pow(0.0632/max(0.0632,s),1.3185305455))	if((r>0.02)and(s<0.0637),0.001,727.239580*533/(533+44*pow(r/0.0079,1.285))*pow(0.0632/max(0.0632,s),1.3185305455))	(if(s>0.0,((1449.0*((0.0075/(2.0*(max(0.01875,r))))*((max(0.01875,r))*(max(0.01875,r))+2.0*(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075*(max(0.01875,r))-1.1*(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075*0.0075)/(((max(0.01875,r))+(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075)*((max(0.01875,r))+(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075)))/0.19763872491145218*pow(0.09/max(0.09,s),1.0))*(0.5*(1.0+cos(3.141592653589793*(min(0.056,max(0.04,r))-0.04)/0.016)))+142.0*(1.0-(0.5*(1.0+cos(3.141592653589793*(min(0.056,max(0.04,r))-0.04)/0.016))))),142.0)*(0.5*(1.0+cos(3.141592653589793*(min(0.076,max(0.06,r))-0.06)/0.016)))+0.001*(1.0-(0.5*(1.0+cos(3.141592653589793*(min(0.076,max(0.06,r))-0.06)/0.016)))))	(if(s>0.0,((1075.9*((0.0075/(2.0*(max(0.01875,r))))*((max(0.01875,r))*(max(0.01875,r))+2.0*(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075*(max(0.01875,r))-1.1*(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075*0.0075)/(((max(0.01875,r))+(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075)*((max(0.01875,r))+(0.1*((min(0.09,max(0.015,s)))/0.0075-6.0))*0.0075)))/0.19763872491145218*pow(0.09/max(0.09,s),1.0))*(0.5*(1.0+cos(3.141592653589793*(min(0.056,max(0.04,r))-0.04)/0.016)))+142.0*(1.0-(0.5*(1.0+cos(3.141592653589793*(min(0.056,max(0.04,r))-0.04)/0.016))))),142.0)*(0.5*(1.0+cos(3.141592653589793*(min(0.076,max(0.06,r))-0.06)/0.016)))+0.001*(1.0-(0.5*(1.0+cos(3.141592653589793*(min(0.076,max(0.06,r))-0.06)/0.016)))))	-	-	
+surface_patch.jet_D	DIFF	-	-	0.0079	0.0079	0.0079	0.0075	0.0075	-	-	
+surface_patch.jet_De_ref	DIFF	-	-	0.003745	0.003745	0.003745	0.0035555966839916735	0.0035555966839916735	-	-	
+surface_patch.jet_T_above		-	-	-1	-1	-1	-1	-1	-	-	
+surface_patch.jet_T_ent		-	-	293.15	293.15	293.15	293.15	293.15	-	-	
+surface_patch.jet_T_ent_mode	DIFF	-	-	fixed	fixed	fixed	exhaust	exhaust	-	-	
+surface_patch.jet_T_nozzle	DIFF	-	-	1866.0	1866.0	1866.0	1900.0	1900.0	-	-	
+surface_patch.jet_above_h		-	-	0	0	0	0	0	-	-	
+surface_patch.jet_bin_update		-	-	exponential	exponential	exponential	exponential	exponential	-	-	
+surface_patch.jet_body		-	-	-	0	0	-	0	-	-	
+surface_patch.jet_body_T		-	-	-	320	320	-	320	-	-	
+surface_patch.jet_body_h_scale		-	-	-	1	1	-	1	-	-	
+surface_patch.jet_closure	DIFF	none	none	enthalpy	enthalpy	enthalpy	enthalpy	enthalpy	-	none	
+surface_patch.jet_core_length	DIFF	-	-	30.0	30.0	30.0	8.0	8.0	-	-	
+surface_patch.jet_cp		-	-	1250.0	1250.0	1250.0	1250.0	1250.0	-	-	
+surface_patch.jet_decay_diameter		-	-	momentum	momentum	momentum	momentum	momentum	-	-	
+surface_patch.jet_dr		-	-	0	0	0	0	0	-	-	
+surface_patch.jet_entrained_mass		-	-	1	1	1	1	1	-	-	
+surface_patch.jet_free_surface		-	-	0	0	0	0	0	-	-	
+surface_patch.jet_mdot	DIFF	-	-	3.4e-3	3.4e-3	3.4e-3	0.0037826388888888888	0.0037826388888888888	-	-	
+surface_patch.jet_negative_flux		-	-	count	count	count	count	count	-	-	
+surface_patch.jet_profile_interval	DIFF	-	-	1.0	1.0	1.0	10.0	2.0	-	-	
+surface_patch.jet_stagnation		-	-	decay	decay	decay	decay	decay	-	-	
+surface_patch.jet_wall_march		-	-	-	0	0	-	0	-	-	
+surface_patch.jet_wall_mdot		-	-	-	jet	jet	-	jet	-	-	
+surface_patch.mode	DIFF	convective_flame	convective_flame	convective_flame	convective_flame	convective_flame	convective_flame	convective_flame	-	prescribed_T	
+surface_patch.nozzle_collision_radius	DIFF	-	-	0.004	0.004	0.004	0.028	0.028	-	-	
+surface_patch.nozzle_descent	DIFF	prescribed	prescribed	prescribed	prescribed	prescribed	feet	feet	-	prescribed	
+surface_patch.nozzle_feed		-	-	0.0	0.0	0.0	-	-	-	-	
+surface_patch.nozzle_feed_max		-	-	-	-	-	inf	inf	-	-	
+surface_patch.nozzle_z0		-	-	0.2132	0.2132	0.2132	-	-	-	-	
+surface_patch.pad_shield_open		-	-	-1	-1	-1	-1	-1	-	-	
+surface_patch.pinned_idle_cycles		-	-	1.0e9	1.0e9	1.0e9	1.0e9	1.0e9	-	-	
+surface_patch.radius	DIFF	0.05	0.05	0.08	0.08	0.08	0.2	0.2	-	0.015	
+surface_patch.robin_form	DIFF	cell	cell	surface	surface	surface	surface	surface	-	cell	MEIER:pinned
+surface_patch.side_face_T		-	-	-	live	live	live	live	-	-	
+surface_patch.side_face_area_exact		-	-	-	0	0	0	0	-	-	
+surface_patch.side_face_area_law		-	-	-	wetted	wetted	wetted	wetted	-	-	
+surface_patch.side_face_closure		follow	follow	-	follow	follow	follow	follow	-	-	
+surface_patch.side_face_factor		-	-	-	1	1	1	1	-	-	
+surface_patch.side_face_factor_above	DIFF	-	-	-	-1	-1	0.0	0.0	-	-	
+surface_patch.side_face_flux	DIFF	0	0	-	1	1	1	1	-	0	
+surface_patch.side_face_h		-	-	-	169.3	169.3	169.3	169.3	-	-	
+surface_patch.side_face_h_datum		-	-	-	bore	bore	-	bore	-	-	
+surface_patch.side_face_h_law		-	-	-	derived 19675f215d61ef38a6daea372ba8cd1b001fa1a8730b64d616880486844d6e58	derived 19675f215d61ef38a6daea372ba8cd1b001fa1a8730b64d616880486844d6e58	derived 19675f215d61ef38a6daea372ba8cd1b001fa1a8730b64d616880486844d6e58	derived 19675f215d61ef38a6daea372ba8cd1b001fa1a8730b64d616880486844d6e58	-	-	
+surface_patch.side_face_h_max		-	-	-	80	80	80	80	-	-	
+surface_patch.side_face_h_r_min	DIFF	-	-	-	0.036	0.036	0.040	0.036	-	-	
+surface_patch.side_face_h_scale	DIFF	-	-	-	1	1	-	1.0	-	-	
+surface_patch.side_face_r_min		-	-	-	0	0	0	0	-	-	
+surface_patch.side_face_staircase		-	-	-	1	1	1	1	-	-	
+surface_patch.side_face_step_height		-	-	-	1	1	1	1	-	-	
+surface_patch.side_power_interval		-	-	10.0	10.0	10.0	10.0	10.0	-	-	
+surface_patch.step_diag_radius	DIFF	-	-	-	0	0	0.050	0.050	-	-	
+surface_patch.type		prescribed_temperature	prescribed_temperature	prescribed_temperature	prescribed_temperature	prescribed_temperature	prescribed_temperature	prescribed_temperature	-	prescribed_temperature	
+surface_patch.x0	DIFF	0.012	0.012	0.0	0.0	0.0	0.0	0.0	-	0.05	
+surface_patch.y0	DIFF	0.012	0.012	0.0	0.0	0.0	0.0	0.0	-	0.05	
+system.amount		mol	mol	mol	mol	mol	mol	mol	mol	mol	
+system.current		A	A	A	A	A	A	A	A	A	
+system.length		m	m	m	m	m	m	m	m	m	
+system.luminousintensity		cd	cd	cd	cd	cd	cd	cd	cd	cd	
+system.mass		kg	kg	kg	kg	kg	kg	kg	kg	kg	
+system.temperature		K	K	K	K	K	K	K	K	K	
+system.time		s	s	s	s	s	s	s	s	s	
+timestep	DIFF	0.0125	0.0125	0.008	0.008	0.008	0.016	0.016	2.0	0.8	MEIER:0.001; MEIER_dref:0.001
+vapor.enabled		0	0	0	0	0	0	0	0	0	
+weibull.V0	DIFF	-	-	1.0e-9	1.0e-9	1.0e-9	8e-09	8e-09	-	-	
+weibull.V_ref		-	-	-1	-1	-1	-1	-1	-	-	
+weibull.a0_gb	DIFF	[400.0e-6]	-	40.0e-6	40.0e-6	40.0e-6	40.0e-6	40.0e-6	-	-	HOSER_47:20.0e-6; HOSER_0:20.0e-6; HOSER_0_S:20.0e-6; MEIER:20.0e-6; MEIER_dref:20.0e-6
+weibull.a0_ig	DIFF	[80.0e-6]	-	8.0e-6	8.0e-6	8.0e-6	8.0e-6	8.0e-6	-	-	HOSER_47:4.0e-6; HOSER_0:4.0e-6; HOSER_0_S:4.0e-6; MEIER:4.0e-6; MEIER_dref:4.0e-6
+weibull.detach_mode		-	-	per_face	per_face	per_face	per_face	per_face	-	-	
+weibull.enabled	DIFF	0	0	1	1	1	1	1	-	-	
+weibull.m	DIFF	15	15	13	13	13	13	13	-	-	HOSER_47:20.0; HOSER_0:20.0; HOSER_0_S:20.0; MEIER:20.0; MEIER_dref:20.0
+weibull.seed		-	-	12345	12345	12345	12345	12345	-	-	
+weibull.size_volume		-	-	cell	cell	cell	cell	cell	-	-	

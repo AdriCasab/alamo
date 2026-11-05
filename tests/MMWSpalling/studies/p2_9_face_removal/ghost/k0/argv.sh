@@ -1,0 +1,1 @@
+/Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/face_removal/input surface_patch.face_list=0 amr.max_grid_size=64 stop_time=2.456 amr.plot_int=1 'geometry.is_periodic=1 1 0' plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_9_face_removal/ghost/k0/run

@@ -18,17 +18,23 @@ so it selects against the gate's whole purpose.
 
 ## Site → test
 
+P2-10 deleted the side-face family and its six tests (`side_face_flux`, `side_face_area`,
+`side_face_step_height`, `side_staircase`, `lateral_drive`, `wall_march`); their row is gone.
+P2-16 deleted the constraint depth; its two tests (`constraint_ref_lock`, `face_cref`) moved to
+`tests/MMWSpalling/retired_units/` and their row is replaced by the retired-key row.
+
 | you changed | run | cost |
 |---|---|---|
 | the enthalpy **march** (`JetEnthalpyMarch`, `jet_P_face`, per-bin `T_gas`, `side_P_col`) | `unit/jet_enthalpy`, `unit/jet_d2c` | 239 + 189 s |
 | `BuildFlameColumns` (`flame_h`, `flame_Tg`, `flame_s`, the h/T maps) | `unit/jet_enthalpy`, `unit/robin_jet` | 239 + 25 s |
 | the **feet rule** / burner descent (`FeetDescent`, `foot_*`, `nozzle_descent`) | `unit/robin_feet` | 217 s |
-| **side faces** (`side_face_*`, `k_face`'s lateral branch, `WallStepDiagnostic`) | `unit/side_face_flux`, `unit/side_face_area`, `unit/side_face_step_height` | ~60 s |
 | the **top-face Robin** / `SurfaceCellFlux` | `unit/robin_face`, `unit/robin_pinned` | 7 + 19 s |
 | **removal** (`Removal.H`, `h_c`, the flip test, `removed_mf`) | `unit/spall_event`, `unit/removal_increment`, `unit/scalar_flaw` | ~15 s |
 | the **beam** / Beer-Lambert deposition | `unit/beam_void_closure` | 13 s |
 | **mesh / AMR / decomposition** plumbing | `studies/s1_surface_resolution --smoke` | 9 s |
-| the **energy ledger** (`EnergyLedger`, `ledger_err`) | any side-face test — `ledger_err` is checked in all of them | — |
+| the **retired-key lists** in `MMWSpalling::Parse` (P2-10's flame-wall keys; P2-16's `spallation.sp.constraint_depth`) | `unit/retired_keys` (source half + one-step abort legs), `unit/lateral_flux_lock` | 3 + 60 s |
+| the **buckling condition** (`spall.buckle_span`, `BuckleRatio`, the face list's withdrawal of a fired line) or `ElasticConstants`' ν (the law's, P2-14a) | `unit/buckle_lock` (source; B7 locks the ν), `unit/lateral_flux_lock` (the one declared ν read), `unit/face_buckle` (P2-15: A unmoved, N blocked, witnesses, bk in metres) | 1 + 340 s |
+| the **energy ledger** (`EnergyLedger`, `ledger_err`) | `unit/robin_face`, `unit/scalar_flaw` (both check `ledger_err`; so do `robin_jet`, `robin_pinned`, `jet_d2c`, `pad_clear_ledger`) | 7 + 9 s |
 
 ⚠ `unit/beam_void_closure` **exits 1 by design**: its T3 is D2z-1's documented
 debt. `rc = 1` from that test alone is the expected state, not a regression.

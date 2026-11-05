@@ -1,0 +1,24 @@
+P2-2d SCORE
+========================================================================
+
+(b1) TREE IDENTITY AT THE SHIPPED DEFAULTS
+      p2_2b_final vs p2_2d: 0 differing lines of 2639
+      path coverage symmetric difference: 0
+  ok    (b1) 0 differing of 2639 at the shipped defaults
+  ok    (b1) both manifests cover exactly the same paths
+
+      POSITIVE CONTROL (the method must find real differences):
+        base_d2r0c   vs p2_2d: 1726 differing of 2639
+        d2t          vs p2_2d: 1726 differing of 2639
+        d2aa         vs p2_2d: 52 differing of 2639
+        p2_2a_r7     vs p2_2d: 0 differing of 2639
+  ok    (b1) the comparison METHOD detects known differences -- without this the row passes on an empty stream, which it did twice
+
+  ⚠ the binary this was taken on is recorded beside the manifest;
+    the guard line in TREE_p2_2d.log asserts it never moved.
+    GUARD: binary pinned at e4cf235898d9f2b3…  label=p2_2d
+    GUARD: do NOT run 'make' until this sweep finishes.
+    GUARD: binary unchanged across the sweep; p2_2d identity result is valid.
+
+========================================================================
+PASS

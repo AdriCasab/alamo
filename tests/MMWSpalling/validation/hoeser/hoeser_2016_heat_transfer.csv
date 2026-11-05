@@ -1,0 +1,23 @@
+# Höser 2016 Fig. 4.25/4.26: PSI calorimeter, CONFINED ring (Ø40 x 35 mm), nozzle D1 = 7.9 mm, lambda 1.1; axis (stagnation) values read off figures (+-5 % of axis span).
+# h = q_sen/(T_f - T_surf) with T_f the nozzle-exit flame temperature (Fig. 3.8: 1270/1400/1480/1600 C at 23/28/33/38 kW).
+L,Q_f_kW,q_sen_MWm2,h_kWm2K
+5,23,5.5,6.5
+8,23,4.2,4.9
+10,23,3.3,3.7
+11,23,2.9,3.4
+13,23,2.2,2.5
+14,23,1.9,2.1
+5,28,6.8,
+8,28,5.3,
+11,28,3.8,
+14,28,2.5,
+5,33,7.9,
+8,33,6.5,
+11,33,4.7,
+14,33,3.2,
+5,38,9.1,9.0
+8,38,7.4,7.1
+10,38,6.1,5.7
+11,38,5.4,5.0
+13,38,4.3,3.7
+14,38,3.8,3.2

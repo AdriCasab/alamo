@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+# D2x: surface_patch.side_face_r_min and surface_patch.side_face_area_exact --
+# ⚠⚠ RETIRED BY P2-8 GROUP A (2026-10-26). Both keys are DELETED: no live deck
+# set either (the settings audit, Claude_markdowns/2026-10-26.md §7), and the
+# D2x derived riser weight (RiserWeight) went with area_exact. What this test
+# scored -- the radius gate (b), the weight's range (c, c2), the weight as the
+# ratio (d) -- is gone with the keys. What is KEPT:
+#
+#   (e) THE LEDGER TWIN MIRRORS on ON (side_face_flux = 1, no group-A key):
+#       ledger_err <= 1e-12 and the absolute residual < 1e-9 J.
+#   (r) EACH RETIRED KEY ABORTS: given at its former DEFAULT value, so an abort
+#       can only mean "the key is gone". `surface_patch.*` is parsed through
+#       queryclass, whose unused-key check aborts and names the key.
+#
+# Geometry: ./input (the D2k side_face_flux case verbatim).
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import os
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT = os.path.join(HERE, "input")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "output")
+
+VARIANTS = {"ON": ["surface_patch.side_face_flux=1"]}
+RETIRED = ["surface_patch.side_face_r_min=0.0", "surface_patch.side_face_area_exact=0"]
+
+FAIL = []
+
+
+def check(name, cond, detail):
+    print(f"  {'PASS' if cond else 'FAIL'}  {name}: {detail}")
+    if not cond:
+        FAIL.append(name)
+
+
+def run(name, keys):
+    pf = os.path.join(OUT, name)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, INPUT,
+            f"plot_file={pf}"] + keys)
+    os.makedirs(OUT, exist_ok=True)
+    with open(pf + ".log", "w") as log:
+        log.write(" ".join(cmd) + "\n")
+        log.flush()
+        return subprocess.call(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+
+
+def thermo(name):
+    p = os.path.join(OUT, name, "thermo.dat")
+    head = open(p).readline().split()
+    a = np.loadtxt(p, skiprows=1, ndmin=2)
+    return {c: a[:, i] for i, c in enumerate(head)}
+
+
+def main():
+    if len(sys.argv) == 1:
+        rc = run("ON", VARIANTS["ON"])
+        print(f"  ON: rc={rc}")
+        if rc != 0:
+            check("ON runs", False, f"rc={rc}")
+            return 1
+    T = thermo("ON")
+    err = np.abs(T["ledger_err"])
+    src = np.abs(T["ledger_E_src"])
+    i = int(np.argmax(err))
+    absres = err[i] * src[i]
+    check("(e) ON ledger twin mirrors", err[i] <= 1e-12 and absres < 1e-9,
+          f"max|ledger_err| {err[i]:.2e} (bar 1e-12), absolute residual {absres:.2e} J")
+    check("(e) ON has side faces", T["side_faces"].max() > 0,
+          f"side_faces max {T['side_faces'].max():.0f}")
+    for key in RETIRED:
+        pf = os.path.join(OUT, "RETIRED")
+        cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "1", BIN, INPUT,
+                f"plot_file={pf}", "stop_time=0.0", "surface_patch.side_face_flux=1", key])
+        r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+        txt = r.stdout + r.stderr
+        nm = key.split("=")[0].split(".", 1)[1]
+        check(f"(r) retired key aborts: {key}", r.returncode != 0 and nm in txt,
+              f"rc={r.returncode}" + ("" if nm in txt else f"; '{nm}' not named in output"))
+    print(("FAIL: " + ", ".join(FAIL)) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

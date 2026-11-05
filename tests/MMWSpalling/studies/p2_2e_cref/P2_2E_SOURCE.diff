@@ -1,0 +1,476 @@
+# P2-2e SOURCE DIFF -- pre-change -> post-change, src/ only.
+# PRE-CHANGE source = git HEAD + tests/MMWSpalling/studies/p2_5_hoeser/legs/G05/run/diff.patch
+#   (the working tree P2-5 ran on, binary 5dc0a53fb874c632c8311f3d; no src/ change between P2-5 and P2-2e)
+# Reconstruct:  git archive HEAD <these two files> | tar -x -C D && (cd D && git apply --include=<file> <that diff.patch>)
+# Checked: this diff removes ONLY the 4 Sp_field T0_at(...) reads and the old T0_z statement.
+
+--- a/src/Integrator/MMWSpalling.H
++++ b/src/Integrator/MMWSpalling.H
+@@ -1268,6 +1268,19 @@
+ 
+         }
+ 
++        // P2-2e: the constraint-depth witnesses. ⚠ Registered LAST and ONLY
++        // under d > 0, so a d = 0 leg gains no column and every existing column
++        // keeps its position -- the "keyed off by default" half of the rule,
++        // NOT also declared as a re-pin (CODE_CENSUS F1: order is load-bearing).
++        if (value.sp_cref_d > 0.0)
++        {
++            value.RegisterIntegratedVariable(&value.cref_d_out,   "cref_d",       false);
++            value.RegisterIntegratedVariable(&value.cref_n_vert,  "cref_n_vert",  false);
++            value.RegisterIntegratedVariable(&value.cref_n_lat,   "cref_n_lat",   false);
++            value.RegisterIntegratedVariable(&value.cref_n_clamp, "cref_n_clamp", false);
++            value.RegisterIntegratedVariable(&value.cref_n_neg,   "cref_n_neg",   false);
++        }
++
+         if (value.vapor_enabled && !value.vapor_A_beam_override)
+         {
+             // Default beam-area convention: Gaussian effective area
+@@ -1606,6 +1619,15 @@
+         // branch. No-op under damage_law. Reads the same nodal stress field
+         // produced by the static elastic solve (Step 7) used by the
+         // hu_breakage_index f_b pipeline.
++        // ⚠⚠ P2-2e: the constraint reference is gathered HERE, immediately
++        // before the FIRST of the two firing sites. UpdateSpAfterMechanics runs
++        // at this line and UpdateRemovalAfterCohesive (the depth scan) below it,
++        // and only UpdateSpClusters -- which writes neither the temperature nor
++        // the void mask -- runs between them, so one gather here IS the state
++        // both sites see. Removal.H's own gathers are function-local and built
++        // AFTER this call, which is why the reference cannot live there. No-op,
++        // no allocation and no reduction at d = 0.
++        BuildConstraintRefColumns(lev);
+         UpdateSpAfterMechanics(lev, time, dt);
+         // Step 15c: 4-connected component labeller over the Sp >= 1 surface
+         // zone. Default-off everywhere except sp_weibull + weibull.enabled;
+@@ -4035,6 +4057,106 @@
+     // gather (the jTc/jkc pattern), never a k-1 neighbour read: the pre-P0 code
+     // clamps its sample index into the validbox, so a direct read would make
+     // the criterion depend on amr.max_grid_size at every box seam.
++    // ⚠⚠ P2-2e: THE GATHERED CONSTRAINT REFERENCE. One live-temperature band per
++    // column, from the column top down past h_spall_max + d, gathered across the
++    // z-decomposition (the T_col_prof pattern: each cell written by the ONE rank
++    // whose validbox holds it, then ReduceRealSum). Read by BOTH vertical firing
++    // sites through CrefTAtDepth, so they cannot disagree.
++    // ⚠ NEVER a box-local read: the Sp_field site's own deeper branch clamps at
++    // the BOX bound (vbx_lo_k) and would hit it d/dz cells down.
++    // ⚠ The same column-top rule as both sites (topmost cell with removed_mf <=
++    // 0.5, ReduceIntMax -- GatherColumnSurface), and the same contiguous-solid-
++    // run guard as the depth scan (ColumnSolidRunBelowTop), so the reference
++    // never reads through an interior void as if it were constraining rock.
++    void BuildConstraintRefColumns(int lev)
++    {
++        // ⚠ reset PER STEP, before the early return, so a non-owning level or a
++        // d = 0 run never leaves a stale count in thermo.dat.
++        cref_n_vert = cref_n_lat = cref_n_clamp = cref_n_neg = 0.0;
++        cref_d_out  = sp_cref_d;
++        if (!(sp_cref_d > 0.0) || !SurfaceOwner(lev)) return;
++
++        const amrex::Box& domain = geom[lev].Domain();
++        const int dom_ilo = domain.smallEnd(0), dom_jlo = domain.smallEnd(1);
++        const int nx_dom  = domain.length(0);
++        const int ncols   = nx_dom * domain.length(1);
++        const int top_k   = domain.bigEnd(2);
++        const Set::Scalar dz = geom[lev].CellSize()[2];
++
++        cref_ktop.assign(ncols, top_k);
++        GatherColumnSurface(lev, cref_ktop, dom_ilo, dom_jlo, nx_dom, top_k);
++        const amrex::Vector<int> run = ColumnSolidRunBelowTop(lev, cref_ktop);
++
++        // The band. The scan's deepest sample sits h_spall_max (+ the flaw's own
++        // a_f) below the face and its reference d further: cells
++        // 0 .. floor((h_spall_max + d)/dz) are the packet's
++        // `floor((h_spall_max + d)/dz) + 1`, and ONE more covers the a_f
++        // overhang so a read at the deepest crack interpolates rather than
++        // clamping. Clamps are still counted (cref_n_clamp).
++        cref_colw = static_cast<int>(std::floor((spall_h_spall_max + sp_cref_d) / dz)) + 2;
++        cref_T_col.assign(static_cast<std::size_t>(ncols) * cref_colw, 0.0);
++        for (amrex::MFIter mfi(*temp_mf[lev], false); mfi.isValid(); ++mfi)
++        {
++            const amrex::Box& bx = mfi.validbox();
++            amrex::Array4<const Set::Scalar> const& T = (*temp_mf[lev]).const_array(mfi);
++            const int klo = bx.smallEnd(2), khi = bx.bigEnd(2);
++            for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); ++j)
++            for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); ++i)
++            {
++                const int c  = (j - dom_jlo) * nx_dom + (i - dom_ilo);
++                const int kt = cref_ktop[c];
++                if (kt == std::numeric_limits<int>::min()) continue;
++                for (int m = 0; m < cref_colw; ++m)
++                {
++                    const int k = kt - m;
++                    if (k < klo || k > khi) continue;
++                    cref_T_col[static_cast<std::size_t>(c) * cref_colw + m] = T(i, j, k);
++                }
++            }
++        }
++        amrex::ParallelDescriptor::ReduceRealSum(
++            cref_T_col.data(), static_cast<int>(cref_T_col.size()));
++
++        // Usable cells per column: the band, the domain floor and the solid run.
++        // `run` already stops at the domain floor (kt - klo + 1 with no void).
++        cref_nuse.assign(ncols, 0);
++        for (int c = 0; c < ncols; ++c)
++            if (cref_ktop[c] != std::numeric_limits<int>::min())
++                cref_nuse[c] = std::min(cref_colw, run[c]);
++    }
++
++    // T at VERTICAL depth D [m] below the TOP FACE of the buffer's own column top,
++    // linear between cell centres ((m + 1/2) dz) -- METRES, never cells. A read
++    // beyond the last usable cell (band, domain floor or the end of the contiguous
++    // solid run) returns that cell and is COUNTED. A read above the top cell
++    // centre returns the top cell: it is not a floor clamp, and for any d above
++    // half a cell it cannot occur.
++    // ⚠ Callers pass D measured from THEIR face plus (cref_ktop[c] - k_site)*dz,
++    // which is 0 whenever the two tops agree -- and they do by construction (one
++    // rule, one state) -- but keeps the read physically exact if they ever did not.
++    Set::Scalar CrefTAtDepth(std::size_t c, Set::Scalar D, Set::Scalar dz,
++                             long& n_read, long& n_clamp) const
++    {
++        ++n_read;
++        const int nuse = cref_nuse[c];
++        if (nuse <= 0)
++            Util::Abort(INFO, "P2-2e: the constraint reference was read on a column "
++                              "with no gathered top -- a firing site scored a column "
++                              "BuildConstraintRefColumns did not see");
++        const Set::Scalar* g = cref_T_col.data() + c * static_cast<std::size_t>(cref_colw);
++        Set::Scalar mf = D / dz - 0.5;
++        if (mf < 0.0) mf = 0.0;
++        const Set::Scalar mlast = static_cast<Set::Scalar>(nuse - 1);
++        if (mf >= mlast)
++        {
++            if (mf > mlast) ++n_clamp;
++            return g[nuse - 1];
++        }
++        const int m0 = static_cast<int>(std::floor(mf));
++        const Set::Scalar w = mf - static_cast<Set::Scalar>(m0);
++        return (1.0 - w) * g[m0] + w * g[m0 + 1];
++    }
++
+     void BuildSurfaceTColumns(int lev, Set::Scalar dt)
+     {
+         if (!sp_surface_T_recon || !SurfaceOwner(lev)) return;
+@@ -7672,6 +7794,14 @@
+              rec_n_fallback = 0, rec_n_hfcap = 0, rec_n_hfbnd = 0;
+         Set::Scalar rec_sum_dT = 0.0;
+ 
++        // P2-2e: the constraint reference at THIS site. Per-box accumulation,
++        // hand-reduced once after the loop (the rule P1g-1/P1g-2 paid for).
++        // ⚠ Only the local_thermoelastic branch carries a stress reference; the
++        // prescribed-sigma and stress_mf branches have none to move.
++        const bool        cref_on_sp = (sp_cref_d > 0.0) && use_local_TE;
++        const Set::Scalar cref_d_sp  = sp_cref_d;
++        long sp_cref_vert = 0, sp_cref_lat = 0, sp_cref_clamp = 0, sp_cref_neg = 0;
++
+         // Sp is a per-column diagnostic; clear everywhere first so cells
+         // below the top z-slab stay zero on plotfiles.
+         Sp_field_mf[lev]->setVal(0.0);
+@@ -7837,6 +7967,50 @@
+                     if (!T0_a) return te_Tref;
+                     const Set::Scalar v = T0_a(ii, jj, kk);
+                     return std::isfinite(v) ? v : te_Tref;
++                };
++                // ⚠⚠ P2-2e: THE REFERENCE OF THE DRIVE at normal depth `depth`.
++                // d = 0: the stored initial temperature at the sampled cell --
++                // exactly the pre-P2-2e argument, so the expressions below are
++                // bit-identical. d > 0:
++                //  * TOP face: the LIVE temperature d further behind the face,
++                //    read from the gathered column (CrefTAtDepth) -- the SAME
++                //    values the depth scan reads. NOT T_a(i_d, j_d, k_d): that is
++                //    clamped at this box's bottom and would read the wrong cell at
++                //    a seam once the read is d/dz cells deep.
++                //  * LATERAL face (reached only under spall.per_cell_removal,
++                //    OFF on every production leg): the packet's lateral form
++                //    T0 + dT_s exp(-(xi + d)/ell) on THIS branch's own profile.
++                //    This branch has no flux length -- its sample is the cell
++                //    average at every depth -- so `ell` is its two-cell SLOPE
++                //    along the inward normal, the same construction as the
++                //    lateral criterion's own `ell` (Removal.H), one cell inward
++                //    and therefore inside temp_mf's ghost layer (the read that
++                //    criterion already makes). No inward decay (soaked or
++                //    inverted) gives a zero bracket: the uniform-slab limit.
++                //    ⚠ Declared: Removal.H's lateral criterion references with
++                //    its flux length ell_use; the two lateral sites were never
++                //    one model (this one is isothermal across the flake).
++                auto Tref_at = [&] (Set::Scalar depth_n,
++                                    int ii, int jj, int kk) -> Set::Scalar {
++                    if (!cref_on_sp) return T0_at(ii, jj, kk);
++                    if (nx_in == 0 && ny_in == 0)
++                    {
++                        const std::size_t c =
++                            static_cast<std::size_t>(col_index_sp(i, j));
++                        return CrefTAtDepth(c, (depth_n + cref_d_sp) * icth
++                                               + Set::Scalar(cref_ktop[c] - ksurf) * dz,
++                                            dz, sp_cref_vert, sp_cref_clamp);
++                    }
++                    ++sp_cref_lat;
++                    const Set::Scalar T0c = T0_at(i, j, k);
++                    const Set::Scalar dTc = T_a(i, j, k) - T0c;
++                    const Set::Scalar dTb = T_a(i + nx_in, j + ny_in, k) - T0c;
++                    if (!(dTc > 0.0) || !(dTb > 0.0) || dTc <= dTb)
++                        return T_a(i, j, k);
++                    const Set::Scalar ell_s = DX[0] / std::log(dTc / dTb);
++                    if (!(ell_s > 0.0) || !std::isfinite(ell_s))
++                        return T_a(i, j, k);
++                    return T0c + dTc * std::exp(-(depth_n * icth + cref_d_sp) / ell_s);
+                 };
+                 auto sigma_at_depth = [&] (Set::Scalar depth) -> Set::Scalar {
+                     const Set::Scalar dv = depth * icth;  // vertical sample depth
+@@ -7853,15 +8027,19 @@
+                         // below is reached unchanged and bit-for-bit.
+                         if (rec_ok && dv <= 0.5 * dz)
+                         {
++                            // P2-2e: the drive's reference -- T0 at d = 0
++                            // (bit-identical), T(depth + d) under d > 0.
++                            const Set::Scalar Tref_h = Tref_at(depth, i, j, k);
++                            if (cref_on_sp && T_recon_at(dv) < Tref_h) ++sp_cref_neg;
+                             // P2-2b deliverable 4, law path.
+                             if (te_g)
+                                 return te_relief
+                                      * LawSigma(te_g, T_recon_at(dv),
+-                                                T0_at(i, j, k))
++                                                Tref_h)
+                                      + sp_conf_offset;
+                             // ⚠ pre-P2-2b expression, VERBATIM.
+                             return te_relief * te_E * te_beta
+-                                   * (T_recon_at(dv) - T0_at(i, j, k))
++                                   * (T_recon_at(dv) - Tref_h)
+                                    / (1.0 - te_nu) + sp_conf_offset;
+                         }
+                         // 1-D-confined thermoelastic sigma_xx from T, same form
+@@ -7892,14 +8070,22 @@
+                         // leaving one on the scalar form would make the
+                         // diagnostic disagree with itself depending only on
+                         // whether the sample fell inside the top half-cell.
++                        // P2-2e: the drive's reference -- T0 at the sampled
++                        // cell at d = 0 (bit-identical); under d > 0 the
++                        // gathered column (top face) or the profile model
++                        // (lateral face). ⚠ The SAMPLE T_a(i_d, j_d, k_d) is
++                        // unchanged: the stress formula is not, only its
++                        // reference (packet guardrail).
++                        const Set::Scalar Tref_d = Tref_at(depth, i_d, j_d, k_d);
++                        if (cref_on_sp && T_a(i_d, j_d, k_d) < Tref_d) ++sp_cref_neg;
+                         if (te_g)
+                             return te_relief
+                                  * LawSigma(te_g, T_a(i_d, j_d, k_d),
+-                                            T0_at(i_d, j_d, k_d))
++                                            Tref_d)
+                                  + sp_conf_offset;
+                         // ⚠ pre-P2-2b expression, VERBATIM.
+                         return te_relief * te_E * te_beta
+-                               * (T_a(i_d, j_d, k_d) - T0_at(i_d, j_d, k_d))
++                               * (T_a(i_d, j_d, k_d) - Tref_d)
+                                / (1.0 - te_nu) + sp_conf_offset;
+                     }
+                     int k_d = ksurf - static_cast<int>(std::floor(dv / dz));
+@@ -7955,6 +8141,20 @@
+             });
+         }
+ 
++        // P2-2e: this site's share of the constraint-reference witnesses.
++        // Hand-reduced (extensive = false is not reduced by the Integrator), and
++        // ADDED to the members BuildConstraintRefColumns zeroed this step --
++        // Removal.H adds the depth scan's and the lateral criterion's share.
++        if (cref_on_sp)
++        {
++            long cnt[4] = {sp_cref_vert, sp_cref_lat, sp_cref_clamp, sp_cref_neg};
++            amrex::ParallelDescriptor::ReduceLongSum(cnt, 4);
++            cref_n_vert  += static_cast<Set::Scalar>(cnt[0]);
++            cref_n_lat   += static_cast<Set::Scalar>(cnt[1]);
++            cref_n_clamp += static_cast<Set::Scalar>(cnt[2]);
++            cref_n_neg   += static_cast<Set::Scalar>(cnt[3]);
++        }
++
+         // P0 witnesses. Hand-reduced (extensive = false is not reduced by the
+         // Integrator) and written on every rank so thermo.dat is identical for
+         // any rank count.
+@@ -9706,6 +9906,43 @@
+     // expression cannot appear un-relieved.
+     Set::Scalar sp_relief = 1.0;
+     // =====================================================================
++    // P2-2e: THE CONSTRAINT DEPTH.
++    // =====================================================================
++    // `spallation.sp.constraint_depth` [m], default 0 = today, byte-identical.
++    // Under d > 0 the thermal DRIVE at depth z below a face is referenced to the
++    // temperature a fixed material length d BEHIND it, T(z + d), instead of to
++    // the stored initial temperature. Limits: thin skin -> today's criterion
++    // (the banked level stands); soaked face -> drive ~ q d / k, so a MINIMUM
++    // FLUX q_min ~ k dT_c / d emerges; uniform slab -> 0; interior-peaked
++    // (beam) profile -> negative drive and no firing.
++    // ⚠⚠ WHAT CHANGES IS THE FAILURE DRIVE, NOT THE STRESS. In a half-space
++    // with T = T(z) linear elasticity gives a surface stress set by T_s - T_far
++    // whatever the gradient, so today's stress is elastically right. Under
++    // d > 0 every quantity the three sites still call "sigma" is the MISMATCH
++    // drive across a surface-parallel crack of lateral size ~d; the name is
++    // kept and documented at each site (ACTIVE_STEP P2-2e, advisor log §17).
++    // ⚠ A MODE SWITCH, not a knob: d = 0 is today's absolute criterion; any
++    // d > 0 is the differential, which -> 0 as d -> 0. Small d is NOT "nearly
++    // today" (offline: no Kant standoff fires at d <= 3 mm on Gotthard).
++    // ⚠ A ROCK PROPERTY, set ONCE on Kant 2016's SOD 130 / 150 bracket and
++    // never adjusted afterwards.
++    Set::Scalar sp_cref_d = 0.0;
++    // The per-step GATHERED reference column, built ONCE per step BEFORE either
++    // firing site runs (BuildConstraintRefColumns, called just ahead of
++    // UpdateSpAfterMechanics) so the Sp_field site and the depth scan read the
++    // SAME values in the SAME step -- the two-firing-site invariant. Never
++    // allocated at d = 0.
++    amrex::Vector<Set::Scalar> cref_T_col; // [c*cref_colw + m] = T(i,j,cref_ktop[c]-m)
++    amrex::Vector<int>         cref_ktop;  // the column top the buffer is indexed from
++    amrex::Vector<int>         cref_nuse;  // usable cells: band, domain floor, solid run
++    int                        cref_colw = 0;
++    // Thermo witnesses, registered ONLY under d > 0 and appended LAST, so a d = 0
++    // leg gains no column and every existing column keeps its position.
++    // PER-STEP: reset in BuildConstraintRefColumns and written as-is (`false`),
++    // each site hand-reducing what its own per-box loop accumulated.
++    Set::Scalar cref_d_out = 0.0, cref_n_vert = 0.0, cref_n_lat = 0.0,
++                cref_n_clamp = 0.0, cref_n_neg = 0.0;
++    // =====================================================================
+     // P2-2 change 3: THE STRESSED VOLUME.
+     // =====================================================================
+     // `weibull.size_volume = cell | flux`, default `cell` (identity).
+@@ -11760,6 +11997,37 @@
+             Util::Abort(INFO, "confining.p must be finite, got ",
+                         value.confining_p);
+ 
++        // P2-2e: THE CONSTRAINT DEPTH. ⚠⚠ Queried BEFORE the sp_weibull early
++        // return on purpose: ALAMO does not abort on an unused top-level key
++        // (standing rule 1), so a key read only on the sp_weibull branch would
++        // be SILENTLY INERT on a damage_law deck. ⚠ Every input of the abort
++        // below is already parsed -- the P2-4 lesson that an abort reading an
++        // unparsed member is dead code: spall.enabled and spall.stress_source in
++        // ParseSpallSettings (Parse :164), surface_patch at :139, and
++        // spallation.model just above, all before this function (:206).
++        pp.query_default("spallation.sp.constraint_depth", value.sp_cref_d, 0.0);
++        if (!(std::isfinite(value.sp_cref_d) && value.sp_cref_d >= 0.0))
++            Util::Abort(INFO, "spallation.sp.constraint_depth must be finite and "
++                              ">= 0 m, got: ", value.sp_cref_d);
++        if (value.sp_cref_d > 0.0)
++        {
++            // The SAME conjunction Removal.H forms as `sp_weibull_use_T_face`
++            // (sp_weibull_spall && (prescribed_T || local_thermoelastic)).
++            const bool presc_T_face = value.surface_patch.enabled &&
++                value.surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature;
++            const bool use_T_face = value.spall_enabled &&
++                value.spallation_model == SpallationModel::SpWeibull &&
++                (presc_T_face || value.sp_local_thermoelastic);
++            if (!use_T_face)
++                Util::Abort(INFO, "spallation.sp.constraint_depth > 0 references the "
++                    "criterion's drive to the temperature d BEHIND the face, and only "
++                    "the T-derived criterion path reads it (spallation.model = "
++                    "sp_weibull, spall.enabled = 1, and spall.stress_source = "
++                    "local_thermoelastic or surface_patch.mode = prescribed_T). "
++                    "Without that path the key would be SILENTLY INERT. Got d = ",
++                    value.sp_cref_d, " m");
++        }
++
+         if (value.spallation_model != SpallationModel::SpWeibull) return;
+ 
+         // Hard mutual-exclusion: sp_weibull bypasses CZM (Step 15 Weibull
+--- a/src/Integrator/MMWSpalling/Removal.H
++++ b/src/Integrator/MMWSpalling/Removal.H
+@@ -503,6 +503,17 @@
+         long lat_no_faceT = 0, lat_cand = 0, lat_skip_hside = 0;
+         // P1g-3: the LATERAL site's own two LEN fallback counters.
+         long lat_len_fb_h0 = 0, lat_len_fb_q0 = 0;
++        // ⚠⚠ P2-2e: the constraint depth at BOTH Removal.H sites (the lateral
++        // criterion and the depth scan). `sp_cref_d > 0` alone is the switch:
++        // Parse aborts unless d > 0 comes with the T-derived criterion path, and
++        // `sp_weibull_use_T_face` is not formed until much later in this
++        // function -- AFTER the lateral criterion, which must read it too.
++        // Witnesses are accumulated per BOX (the scan runs a column only on the
++        // rank owning its top, :1497; the lateral loop is per box) and reduced
++        // ONCE below the scan.
++        const bool        cref_on    = sp_cref_d > 0.0;
++        const Set::Scalar cref_d_loc = sp_cref_d;
++        long cref_vert = 0, cref_lat = 0, cref_clamp = 0, cref_neg = 0;
+         // ⚠⚠ deliverable 12: taken over EVERY candidate, before the firing
+         // branch -- the sub-threshold score (w)'s upper bound has to read.
+         Set::Scalar lat_qmax_l = 0.0, lat_Tfq_l = 0.0;
+@@ -892,6 +903,37 @@
+                             auto sigma_lat = [&] (Set::Scalar xi) -> Set::Scalar {
+                                 Set::Scalar jump = dT_s * std::exp(-xi / ell);
+                                 if (!(jump > 0.0)) return Set::Scalar(0.0);
++                                // ⚠⚠ P2-2e: the reference continues THIS site's
++                                // own exponential d further behind the face,
++                                // T_ref(xi) = T0 + dT_s exp(-(xi + d)/ell_use),
++                                // with ell_use the FLUX length (or its counted
++                                // two-cell fallbacks, lat_len_fb_h0/_q0). At the
++                                // face the bracket is dT_s (1 - e^{-d/ell_q}) ~
++                                // q d / k: the same minimum-flux law the
++                                // vertical field read gives.
++                                // ⚠ RESOLVED AGAINST THE CODE, NOT THE CITATION
++                                // (standing rule 14): the jump above uses `ell`,
++                                // the two-cell SLOPE length (:803), not the flux
++                                // length -- `ell_use` feeds only h_f -- although
++                                // the comment above a_f calls `ell` the flux
++                                // length. The jump is left as it is (the stress
++                                // formula does not change); only the reference
++                                // uses ell_use, as the packet specifies. On every
++                                // leg without spall.flake_length = flux the two
++                                // are the SAME number.
++                                // ⚠ ell_use > 0 here: h_f = frac_l * ell_use and
++                                // a non-positive h_f `continue`d above.
++                                if (cref_on)
++                                {
++                                    const Set::Scalar jref =
++                                        dT_s * std::exp(-(xi + cref_d_loc) / ell_use);
++                                    ++cref_lat;
++                                    if (jump < jref) ++cref_neg;
++                                    if (lat_g)
++                                        return relief_loc
++                                             * LawSigma(lat_g, T0 + jump, T0 + jref);
++                                    return C_th * (jump - jref);
++                                }
+                                 // P2-2b deliverable 4: strain AND stiffness at
+                                 // the LOCAL temperature T0 + jump, not a fixed
+                                 // coefficient times dT.
+@@ -1964,9 +2006,27 @@
+                                         const Set::Scalar T_z = T_at_zv(z_v);
+                                         // P2-2a change A: the reference at the
+                                         // cell holding this sample depth.
+-                                        const Set::Scalar T0_z = T0_at_didx(
+-                                            static_cast<int>(
+-                                                std::floor(z_v / dz)));
++                                        // ⚠⚠ P2-2e: under constraint_depth > 0
++                                        // the LIVE temperature d further
++                                        // behind the face, from the column
++                                        // gathered before EITHER site ran --
++                                        // the same values the Sp_field site
++                                        // reads. Normal depth z_abs + d, so the
++                                        // vertical read is (z_abs + d)*sn_icth
++                                        // (identical to z_v + d with Step 20
++                                        // off). METRES, interpolated: never a
++                                        // cell index. d = 0 is the pre-P2-2e
++                                        // call, bit for bit.
++                                        const Set::Scalar T0_z = cref_on
++                                            ? CrefTAtDepth(
++                                                  static_cast<std::size_t>(idx),
++                                                  (z_abs + cref_d_loc) * sn_icth
++                                                  + Set::Scalar(cref_ktop[idx] - k_top) * dz,
++                                                  dz, cref_vert, cref_clamp)
++                                            : T0_at_didx(
++                                                  static_cast<int>(
++                                                      std::floor(z_v / dz)));
++                                        if (cref_on && T_z < T0_z) ++cref_neg;
+                                         // ⚠⚠ P1: the profile comes from the
+                                         // EXPONENTIAL reconstruction, never
+                                         // from T_at_zv -- that lambda
+@@ -2266,6 +2326,19 @@
+                 }
+             }
+         }
++        // P2-2e: the depth scan's and the lateral criterion's share of the
++        // constraint-reference witnesses, added to what the Sp_field site
++        // contributed this step. ⚠ `cref_on` is global, so every rank reaches
++        // this collective or none does.
++        if (cref_on)
++        {
++            long cnt[4] = {cref_vert, cref_lat, cref_clamp, cref_neg};
++            amrex::ParallelDescriptor::ReduceLongSum(cnt, 4);
++            cref_n_vert  += static_cast<Set::Scalar>(cnt[0]);
++            cref_n_lat   += static_cast<Set::Scalar>(cnt[1]);
++            cref_n_clamp += static_cast<Set::Scalar>(cnt[2]);
++            cref_n_neg   += static_cast<Set::Scalar>(cnt[3]);
++        }
+         if (ncols > 0)
+         {
+             amrex::ParallelDescriptor::ReduceIntSum(spall_fires_col.data(), ncols);

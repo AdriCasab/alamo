@@ -1,0 +1,147 @@
+P2-13 a0 -- the offline onset twin (uniform stress, Tada weight, Grimsel.H via KIC_CPP.txt)
+================================================================================================
+  W = 3.525546   R = 0.531294   nu = 0.30   m = 13   (K_Ic, E, strain: tests/MMWSpalling/studies/p2_2_props/KIC_CPP.txt)
+  p 0, a 8 um                           842.39 K   advisor  842.39 K   -0.001 K   PASS
+  p 1 MPa                               841.28 K   advisor  841.29 K   -0.005 K   PASS
+  p 27 MPa                              818.46 K   advisor  818.47 K   -0.008 K   PASS
+  p 48 MPa                              806.91 K   advisor  806.92 K   -0.007 K   PASS
+  p 0, Weibull median a 7.778 um        848.66 K   advisor  848.66 K   -0.003 K   PASS
+
+  for the legs (not bars): onset at the Weibull median flaw a0*(ln 2)^(1/m)
+    a0  6.0 um: median flaw 5.833 um -> 902.64 K   (deterministic a = a0: 898.07 K)
+    a0 10.0 um: median flaw 9.722 um -> 811.92 K   (deterministic a = a0: 808.78 K)
+    Weibull median, p 27 MPa: 821.67 K (shift -26.98 K)
+    Weibull median, p 48 MPa: 810.17 K (shift -38.48 K)
+
+a0 PASS (5 of 5 rows within 0.05 K)
+
+a1 -- G1's event log by the statistic (zero compute): tests/MMWSpalling/studies/p2_11_heat/legs/G1
+====================================================================================================
+  packet statistic (first dir=5, ts_fb=0 row per column):  n 1339  median   850.27 K  p10  830.87  p90  882.31
+  advisor's (first non-fallback firing, ANY direction):     n 2076  median   842.74 K  p10  827.22  p90  868.43
+  all firings:                                             n 61953  median   851.55 K  p10  831.55  p90  882.88
+  columns fired 2076; first firing NOT a non-fallback top face: 1760 (84.8 %)
+  Sources: first-firing 842.74 K over 2,076 columns -> reproduced by the ADVISOR's statistic: yes (842.740)
+           all-firing 851.55 K -> yes (851.551)
+  ⚠ the packet's own statistic gives 850.27 K on G1 (1339 columns): G1's columns are mostly first reached from
+    the side as the bore widens. On the flat calibration deck the two coincide iff b1's top-face count holds.
+a1 REPRODUCED (report): the reducer reads the log as the advisor did; the statistic named in the packet is a different column subset on G1
+
+a2 -- check_shared on CAL (a 1-step run, legs/SMOKE) and on HOS_R (input_lab re-pointed)
+====================================================================================================
+  check_shared tests/MMWSpalling/validation/kant/grimsel_calibration/input  argv tests/MMWSpalling/validation/kant/grimsel_calibration/legs/SMOKE/argv.sh
+    incl  PASS  the deck includes both shared files (2 FILE lines)
+    (i)   PASS  no undeclared override of a shared key (0 declared)
+    (ii)  PASS  metadata resolves all 64 shared keys to the file's value
+    (iii) PASS  phase0.T_ref 293.15 == hc.ic.constant.value 293.15
+    (iv)  PASS  weibull.V0 1e-09 == V_cell 1e-09 (rel 0.0e+00)
+  check_shared PASS
+  check_shared tests/MMWSpalling/validation/hoeser/input_lab  argv tests/MMWSpalling/validation/kant/grimsel_calibration/legs/HOS_R/argv.sh
+    incl  PASS  the deck includes both shared files (2 FILE lines)
+    (i)   PASS  no undeclared override of a shared key (0 declared)
+    (ii)  PASS  metadata resolves all 64 shared keys to the file's value
+    (iii) PASS  phase0.T_ref 293.15 == hc.ic.constant.value 293.15
+    (iv)  PASS  weibull.V0 1e-09 == V_cell 1e-09 (rel 0.0e+00)
+  check_shared PASS
+  control: SMOKE's argv + an undeclared weibull.m=20 -> (i) FAILS, as it must
+a2 PASS (gate)
+
+a3 -- HOS_R (input_lab re-pointed + G1's argv minus the shared keys) vs G1, to 15 s
+====================================================================================================
+  rc 0; binary 0a96a095ad30f45e (G1 ran on P2-11's binary; same default-path code, P2-12 r2/r5)
+  plotfile 00000cell: 7 files, 0 differ, 0 only on one side
+  plotfile 00000node: 7 files, 0 differ, 0 only on one side
+  plotfile 01875cell: 7 files, 0 differ, 0 only on one side
+  plotfile 01875node: 7 files, 0 differ, 0 only on one side
+  thermo: 313 rows to 15 s, 87 non-timer columns, 0 rows differ
+  run_removal_events.csv: 5067 lines, exact prefix of G1's YES; G1 has 5067 lines with time < 15 s
+  run_jet_profile.csv: 1066 lines, exact prefix of G1's YES; G1 has 1066 lines with time < 15 s
+a3 PASS (gate)
+
+a4 -- every kept unit test with input_lab re-pointed vs P2-12r's UNIT_p2_12r: rc and verdict lines
+====================================================================================================
+  alpha_beta_transition        rc  rc=0 ->  rc=0   verdict lines identical (1)
+  amr_microstructure_regrid    rc  rc=1 ->  rc=1   verdict lines identical (4)
+  beam                         rc  rc=0 ->  rc=0   verdict lines identical (2)
+  beam_void_closure            rc  rc=1 ->  rc=1   verdict lines identical (9)
+  constraint_ref_lock          rc  rc=0 ->  rc=0   verdict lines identical (1)
+  convective_patch             rc  rc=0 ->  rc=0   verdict lines identical (2)
+  dp_yield                     rc  rc=0 ->  rc=0   verdict lines identical (1)
+  equilibrium                  rc  rc=0 ->  rc=0   verdict lines identical (1)
+  face_heat                    rc  rc=0 ->  rc=0   verdict lines identical (30)
+  face_list                    rc  rc=0 ->  rc=0   verdict lines identical (18)
+  face_removal                 rc  rc=0 ->  rc=0   verdict lines identical (1)
+  gb_cohesive                  rc  rc=0 ->  rc=0   verdict lines identical (1)
+  gradient_blind               rc  rc=0 ->  rc=0   verdict lines identical (1)
+  grain_topology               rc  rc=0 ->  rc=0   verdict lines identical (1)
+  heterogeneous_enthalpy       rc  rc=0 ->  rc=0   verdict lines identical (1)
+  heterogeneous_kappa          rc  rc=1 ->  rc=1   verdict lines identical (2)
+  jet_d2c                      rc  rc=0 ->  rc=0   verdict lines identical (31)
+  jet_enthalpy                 rc  rc=0 ->  rc=0   verdict lines identical (19)
+  latent_heat                  rc  rc=0 ->  rc=0   verdict lines identical (1)
+  lateral_flux_lock            rc  rc=0 ->  rc=0   verdict lines identical (2)
+  pad_clear_ledger             rc  rc=0 ->  rc=0   verdict lines identical (1)
+  pin_clock                    rc  rc=0 ->  rc=0   verdict lines identical (1)
+  regime_low_high_power        rc  rc=0 ->  rc=0   verdict lines identical (1)
+  removal_increment            rc  rc=0 ->  rc=0   verdict lines identical (13)
+  robin_face                   rc  rc=0 ->  rc=0   verdict lines identical (15)
+  robin_feet                   rc  rc=0 ->  rc=0   verdict lines identical (20)
+  robin_jet                    rc  rc=0 ->  rc=0   verdict lines identical (14)
+  robin_pinned                 rc  rc=0 ->  rc=0   verdict lines identical (12)
+  scalar_flaw                  rc  rc=0 ->  rc=0   verdict lines identical (17)
+  seed_void                    rc  rc=0 ->  rc=0   verdict lines identical (7)
+  sp_lefm                      rc  rc=0 ->  rc=0   verdict lines identical (4)
+  sp_melt_skeleton             rc  rc=1 ->  rc=1   verdict lines identical (7)
+  sp_v_n_regime                rc  rc=0 ->  rc=0   verdict lines identical (4)
+  spall_event                  rc  rc=0 ->  rc=0   verdict lines identical (1)
+  stefan                       rc  rc=0 ->  rc=0   verdict lines identical (1)
+  surface_T_recon              rc  rc=1 ->  rc=1   verdict lines identical (8)
+  thermal_stress               rc  rc=0 ->  rc=0   verdict lines identical (1)
+  voronoi                      rc  rc=0 ->  rc=0   verdict lines identical (4)
+a4 (every test): PASS
+
+b1 -- each leg: rc 0; >= 95 % columns with a first top-face non-fallback firing; ledger_err_solid <= 5e-3; floor >= 10 mm above the base at stop; plus check_shared on the leg's own argv
+====================================================================================================
+  CAL        rc 0  top-first columns  576/ 576 (100.0 %)  not-top-first 0  max|ledger_err_solid| 1.11e-14  lowest surface 45.0 mm above base  check_shared PASS  -> PASS
+  CAL_det    rc 0  top-first columns  576/ 576 (100.0 %)  not-top-first 0  max|ledger_err_solid| 1.11e-14  lowest surface 45.0 mm above base  check_shared PASS  -> PASS
+  CAL_h2000  rc 0  top-first columns  576/ 576 (100.0 %)  not-top-first 0  max|ledger_err_solid| 4.40e-15  lowest surface 33.0 mm above base  check_shared PASS  -> PASS
+  CAL_p27    rc 0  top-first columns  576/ 576 (100.0 %)  not-top-first 0  max|ledger_err_solid| 1.11e-14  lowest surface 44.0 mm above base  check_shared PASS  -> PASS
+  CAL_p48    rc 0  top-first columns  576/ 576 (100.0 %)  not-top-first 0  max|ledger_err_solid| 1.11e-14  lowest surface 43.0 mm above base  check_shared PASS  -> PASS
+  CAL_2mm    rc 0  top-first columns  144/ 144 (100.0 %)  not-top-first 0  max|ledger_err_solid| 3.11e-15  lowest surface 44.0 mm above base  check_shared PASS  -> PASS
+  CAL_05mm   rc 0  top-first columns 2304/2304 (100.0 %)  not-top-first 0  max|ledger_err_solid| 3.61e-14  lowest surface 37.5 mm above base  check_shared PASS  -> PASS
+b1 PASS (gate)
+
+c -- the onset (the packet statistic, first top-face non-fallback firing per column)
+====================================================================================================
+  CAL        n  576  median   850.43 K  p10  830.69  p90  882.00   all-firing median 851.78 K
+  CAL_det    n  576  median   844.63 K  p10  844.63  p90  844.63   all-firing median 844.57 K
+  CAL_h2000  n  576  median   852.98 K  p10  835.05  p90  883.38   all-firing median 855.40 K
+  CAL_p27    n  576  median   823.95 K  p10  813.09  p90  853.54   all-firing median 824.84 K
+  CAL_p48    n  576  median   812.00 K  p10  801.44  p90  831.56   all-firing median 813.40 K
+  CAL_2mm    n  144  median   853.33 K  p10  831.42  p90  885.51   all-firing median 850.97 K
+  CAL_05mm   n 2304  median   853.03 K  p10  832.43  p90  884.76   all-firing median 852.21 K
+
+c1 THE LEVEL: CAL first-firing median 850.43 K vs the Grimsel onset band 826.15-873.15 K -> INSIDE (PASS) (gate)
+   P1 predicted 845-856 K: held
+   (advisor's any-direction statistic on CAL: 850.43 K; identical iff every first firing is a top face)
+c2 CAL_det median 844.63 K - banked 843.757 = +0.88 K   (P2: within +-5 K: held)
+c3 CAL - CAL_det = +5.80 K   (what the Weibull draw moves; P3 +4..+9 K, twin +6.3: held)
+c4 CAL_h2000 - CAL = +2.55 K; onset flux q = h(T_flame - T_onset): 411 -> 1640 kW/m2 (x3.99); implied exponent dln(dT)/dln(q) = +0.0033   (P4 +10..+40 K: MISSED; above +25 K is a finding against data that show no trend)
+c5 CAL_p27 - CAL = -26.48 K   (Kant measured ~-55 K [fig], his model -25 K; P5 -28..-20 K: held)
+c5 CAL_p48 - CAL = -38.43 K   (Kant measured ~-70 K [fig], his model -45 K; P5 -42..-30 K: held)
+c6 mesh: 2 mm 853.33 / 1 mm 850.43 / 0.5 mm 853.03 K; spread 2.91 K = 0.34 %   (P6 within +-8 K: held)
+c7 CAL all-firing median 851.78 K: vs G1 851.55 +0.23 K, vs P2-2f Meier 852.61 -0.83 K   (P7 within +-10 K: held)
+c8 share of CAL firings above 873.15 K (the table clamp): 20.7 % of 10804
+
+e1 VERDICT inputs: c1 INSIDE; b1 PASS
+
+e1 VERDICT: THE ONE GRIMSEL CALIBRATION STANDS UNCHANGED.
+   R 0.531294, flaw scale 8 um (weibull.a0_ig = spallation.sp.a0), m 13, Grimsel laws and Table 3:
+   in the production form (surface Robin, losses, Weibull, flake rule, face list) the Kant onset is
+   850.43 K, inside the Grimsel band; d1 was not run, so G1's S* needs no re-derivation.
+   Files: validation/shared/rock_grimsel.inputs + model_form_flame.inputs, included by
+   validation/kant/grimsel_calibration/input and validation/hoeser/input_lab (hence G1's deck and
+   unit/face_heat). NOT yet included: the legacy Kant inputs (sp_kant_onset*), the Meier decks and
+   every tree input (untouched by the guardrails; their retirement needs the user's permission).
+   The merge step carries: d_ref (refused by the face list; its 2.0 mm was calibrated on the column
+   path, Kant 2016 Gotthard properties) and the Meier deck, which must be rebuilt to include both files.

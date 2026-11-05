@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where The Relief Factor Went</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+            svg: { fontCache: 'global' } };
+</script>
+<script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#f4f5f3; --surface:#ffffff; --surface-2:#eceeeb;
+    --ink:#1c2227; --ink-soft:#4b5661; --granite:#737f8a;
+    --rule:#d3d8d8; --rule-soft:#e4e8e7;
+    --petrol:#0f6470; --petrol-wash:#e0eef0;
+    --amber:#9a5b0a; --amber-wash:#f6ecd9;
+    --red:#9b2f22; --red-wash:#f8e7e4;
+    --code-bg:#eef0ee;
+    --serif:"Newsreader", Georgia, "Times New Roman", serif;
+    --sans:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono:"IBM Plex Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper:#111619; --surface:#181f23; --surface-2:#1f272c;
+      --ink:#e6ebeb; --ink-soft:#a7b2b8; --granite:#8c979e;
+      --rule:#2c363c; --rule-soft:#222b30;
+      --petrol:#6cc3cc; --petrol-wash:#13272a;
+      --amber:#dfa74a; --amber-wash:#2a2114;
+      --red:#e38a7d; --red-wash:#2c1a17;
+      --code-bg:#1e262b;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper:#111619; --surface:#181f23; --surface-2:#1f272c;
+    --ink:#e6ebeb; --ink-soft:#a7b2b8; --granite:#8c979e;
+    --rule:#2c363c; --rule-soft:#222b30;
+    --petrol:#6cc3cc; --petrol-wash:#13272a;
+    --amber:#dfa74a; --amber-wash:#2a2114;
+    --red:#e38a7d; --red-wash:#2c1a17;
+    --code-bg:#1e262b;
+  }
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);
+       font-size:17.5px;line-height:1.55;padding-inline:16px;padding-block:0 64px}
+  .wrap{max-width:76ch;margin:0 auto}
+  .masthead{padding-block:40px 24px;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+           color:var(--petrol);font-weight:600;margin:0 0 10px}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(30px,5vw,44px);line-height:1.1;
+     margin:10px 0 12px;text-wrap:balance}
+  .dek{font-size:19px;color:var(--ink-soft);margin:0 0 18px;max-width:60ch}
+  .meta{font-family:var(--sans);font-size:13px;color:var(--granite);display:flex;flex-wrap:wrap;gap:6px 18px}
+  h2{font-family:var(--serif);font-weight:600;font-size:28px;line-height:1.2;margin:56px 0 10px;
+     padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+  h3{font-family:var(--serif);font-weight:600;font-size:21px;margin:30px 0 8px;text-wrap:balance}
+  .num{font-family:var(--sans);font-weight:500;font-size:13px;letter-spacing:.1em;color:var(--petrol);
+       display:block;margin-bottom:6px}
+  p{margin:0 0 14px;text-wrap:pretty}
+  .lead{font-size:19px;color:var(--ink-soft)}
+  .eq{margin:6px 0 16px;padding:10px 14px;background:var(--surface);border-left:3px solid var(--petrol);
+      border-radius:0 6px 6px 0;overflow-x:auto}
+  .eq .lab{font-family:var(--sans);font-size:12px;color:var(--granite);letter-spacing:.06em;
+           text-transform:uppercase;margin-bottom:4px}
+  .vars{font-family:var(--sans);font-size:14.5px;line-height:1.5;margin:-6px 0 16px;padding:0;
+        list-style:none;border-top:1px dashed var(--rule-soft)}
+  .vars li{display:grid;grid-template-columns:minmax(6.5em,auto) 1fr;gap:12px;padding:6px 0;
+           border-bottom:1px dashed var(--rule-soft);margin:0}
+  .vars .sym{font-family:var(--mono);font-size:13.5px;color:var(--petrol);white-space:nowrap}
+  .box{margin:18px 0;padding:14px 18px;border-radius:6px;border:1px solid var(--rule-soft);background:var(--surface)}
+  .box .tag{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.1em;
+            text-transform:uppercase;margin-bottom:6px}
+  .box p:last-child{margin-bottom:0}
+  .box.note{background:var(--petrol-wash);border-color:transparent} .box.note .tag{color:var(--petrol)}
+  .box.retired{background:var(--amber-wash);border-color:transparent} .box.retired .tag{color:var(--amber)}
+  .box.open{background:var(--red-wash);border-color:transparent} .box.open .tag{color:var(--red)}
+  .tbl{overflow-x:auto;margin:0 0 18px}
+  table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:14.5px}
+  th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--rule-soft)}
+  thead th{border-bottom:1px solid var(--rule);font-weight:600;color:var(--ink-soft);font-size:13.5px}
+  .n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);padding:1px 4px;border-radius:3px}
+  .small{font-size:14px;color:var(--ink-soft);font-family:var(--sans)}
+  .pipeline{counter-reset:step;list-style:none;padding:0;margin:0 0 18px}
+  .pipeline li{counter-increment:step;display:grid;grid-template-columns:2.4em 1fr;gap:10px;
+               padding:10px 0;border-bottom:1px solid var(--rule-soft);margin:0}
+  .pipeline li::before{content:counter(step);font-family:var(--sans);font-weight:600;color:var(--petrol);
+                       font-size:14px;padding-top:3px}
+  .pipeline b{font-family:var(--sans);font-weight:600;font-size:15px;display:block}
+  .pipeline span{display:block;font-size:16px;color:var(--ink-soft)}
+  footer{margin-top:50px;padding-top:16px;border-top:1px solid var(--rule);font-family:var(--sans);
+         font-size:13.5px;color:var(--granite)}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="masthead">
+  <p class="eyebrow">Companion to the Grimsel Spallation Model &middot; P2-2d</p>
+  <h1>Where The Relief Factor Went</h1>
+  <p class="dek">The model has been carrying a 25 % discrepancy in its relief factor for two weeks.
+  It now looks like a borrowed toughness table, not a missing mechanism. Along the way, four versions
+  of the plan turned out to rest on arithmetic that did not hold.</p>
+  <p class="meta"><span>12 October 2026</span><span>No simulations run</span><span>All numbers computed from the model's own property tables</span></p>
+</div>
+
+<p class="lead">Everything below is a desk result. Nothing here comes from a simulation. The numbers
+are produced by solving the model's firing condition by hand, using the same property tables the code
+uses. That is worth saying plainly, because a desk result can be checked but it cannot be trusted the
+way a run can.</p>
+
+<h2><span class="num">Part 1</span>What the relief factor is, and why it was a problem</h2>
+
+<p>When a flake is about to lift off the rock face, not all of the stress in the heated skin is
+available to drive the crack. Some of it is relieved &mdash; by microcracks, by the flake's edges
+already being free, by the surface bulging. The model collects all of that into one number between
+zero and one, which multiplies the stress before the crack sees it. Call it the relief factor.</p>
+
+<p>It should be possible to say roughly what that number ought to be. The flake fails in compression,
+so the stress that matters is measured against the rock's crushing strength. Relief is therefore
+strength divided by stress. For Grimsel granite that gives a band, because the crushing strength is
+known to about plus or minus twenty per cent.</p>
+
+<p>The problem: when the number was <em>fitted</em>, so that the model fired at the temperature Kant
+measured, it came out about <strong>25 % below that band</strong> &mdash; and under both treatments of
+thermal expansion. A relief factor below its own band means the model needs the stress pulled below
+the rock's crushing strength before it will fire. Something was being absorbed that is not relief.</p>
+
+<h2><span class="num">Part 2</span>The result: stress cancels, and one number is left</h2>
+
+<p>The useful step was to stop fitting the relief factor and instead set it to what it means &mdash;
+strength over stress. Put that into the firing condition and the stress cancels:</p>
+
+<div class="eq"><div class="lab">The firing condition, with relief set to its definition</div>
+\[ R\,\sigma\,\cdot\,1.99\sqrt{a} \;=\; K_{Ic}(T_s),
+   \qquad R \;=\; \frac{\mathrm{UCS}}{\sigma} \]
+\[ \Longrightarrow\quad K_{Ic}^{\,\mathrm{needed}}
+   \;=\; 1.99\,\mathrm{UCS}\,\sqrt{a}
+   \;=\; 0.951\ \mathrm{MPa}\sqrt{\mathrm{m}} \]
+</div>
+<ul class="vars">
+  <li><span class="sym">\(R\)</span><span>relief factor, dimensionless, 0 to 1</span></li>
+  <li><span class="sym">\(\sigma\)</span><span>thermal stress in the heated skin, MPa</span></li>
+  <li><span class="sym">\(\mathrm{UCS}\)</span><span>crushing strength, 169 &plusmn; 37 MPa for Grimsel granite</span></li>
+  <li><span class="sym">\(a\)</span><span>flaw half-length, held at 8 &micro;m in the deck</span></li>
+  <li><span class="sym">\(K_{Ic}\)</span><span>the rock's toughness at the surface temperature</span></li>
+  <li><span class="sym">\(1.99\)</span><span>the edge-crack geometry factor &mdash; Equation 3 of the plan. Re-derived here from the weight-function integral in the code rather than quoted: \(2\!\int_0^{\pi/2}\! g(\sin\theta)\,d\theta/\sqrt{\pi} = 1.9891\)</span></li>
+</ul>
+
+<p>Stiffness, thermal expansion and Poisson's ratio all drop out. What is left is a single question:
+<em>at what temperature does \(K_{Ic}(T_s)\) fall to \(0.951\)?</em> That is a much cleaner question
+than the one we were asking, and it needs no fitting at all.</p>
+
+<h2><span class="num">Part 3</span>The likely culprit: a toughness table from the wrong rock</h2>
+
+<p>The model takes its toughness-versus-temperature curve from Nasseri's measurements. Those were
+made on <strong>Westerly</strong> granite. Our rock is Grimsel. And Grimsel's own curve is already
+sitting in the code &mdash; it was added with the other material properties &mdash; but the firing
+criterion cannot reach it. The input key that selects a toughness law accepts only two values, and
+the Grimsel option is not one of them.</p>
+
+<p>The two curves disagree where it matters:</p>
+
+<div class="tbl">
+<table>
+  <thead><tr><th>toughness at the firing temperature</th><th class="n">\(\mathrm{MPa}\sqrt{\mathrm{m}}\)</th></tr></thead>
+  <tbody>
+    <tr><td>Nasseri, Westerly granite &mdash; what the model uses</td><td class="n">0.63</td></tr>
+    <tr><td>Grimsel's own table &mdash; present but unreachable</td><td class="n">0.93</td></tr>
+    <tr><td><b>needed</b>, with relief at its definition</td><td class="n"><b>0.95</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="box note">
+  <p class="tag">The result</p>
+  <p>Switching to Grimsel's own toughness curve closes the 25 % relief discrepancy to
+  <strong>between 2 % and 5 %</strong>. The fix is one extra option on an input key and one branch at
+  each of the two places the criterion reads toughness.</p>
+</div>
+
+<p>With that change, and nothing fitted, the model fires at <strong>839 to 845 K</strong> against a
+target of 850 K, and the flaw it implies is <strong>7.7 &micro;m</strong> against the 8 &micro;m the
+deck holds. For comparison, the old Westerly table at the same relief fires at 734 K &mdash; over a
+hundred kelvin away. So the two curves are easy to tell apart, which means the test has real power.</p>
+
+<h2><span class="num">Part 4</span>What failed</h2>
+
+<p>Four successive versions of the work package were written, reviewed, and found to rest on
+arithmetic that did not hold. They are listed here because each failure changed what the step is
+for, and because the pattern matters more than the individual mistakes.</p>
+
+<ol class="pipeline">
+  <li><b>Separating toughness from relief is impossible</b>
+      <span>The plan was to measure relief and a toughness correction separately, using two firing
+      temperatures. But both are plain constants, one on each side of the firing condition, so only
+      their <em>ratio</em> ever appears. Two measurements give that ratio twice. They never give the
+      two numbers. Four versions of the plan were built on this.</span></li>
+  <li><b>The flux-exponent formula was wrong three times</b>
+      <span>Kant measured how the firing temperature moves with heat flux. A formula was written to
+      turn that measurement into the flaw-size exponent. The first version left out the fact that
+      toughness falls as the rock heats. The second left out the fact that stress does not rise in
+      proportion to temperature. Each correction changed the answer by a factor, not a few per cent.
+      The formula was never needed: the model computes each firing temperature itself, so the slope
+      can simply be measured.</span></li>
+  <li><b>A 34 % shortfall that was not there</b>
+      <span>The gap between what the new toughness curve supplies and what is needed was reported as
+      34 %. It was two different temperatures divided by each other. At one consistent temperature
+      the gap is 2 to 5 %. Left uncorrected, this would have sent the next step looking for a
+      mechanism that does not need to exist.</span></li>
+  <li><b>The firing-temperature test is a cliff, not a measurement</b>
+      <span>Because stress cancels, the test depends only on crushing strength and flaw size. Both
+      are uncertain. One standard deviation of crushing strength is the difference between
+      <em>never firing at all</em> and firing 130 K early. A five per cent band on the firing
+      temperature looks precise and is not.</span></li>
+  <li><b>The two property treatments were physically incoherent</b>
+      <span>To bracket the uncertainty in thermal expansion, one treatment capped expansion above
+      300 &deg;C &mdash; on the grounds that the extra expansion goes into microcracks rather than
+      loading the flake. But the same microcracking also softens the rock, and that softening was
+      left at full strength. Capping one and not the other was the <em>only</em> combination that
+      appeared to reproduce Kant's flux measurement. Treated coherently, the model misses it by a
+      factor of two to three.</span></li>
+</ol>
+
+<h2><span class="num">Part 5</span>The deeper problem: we are working at the edge of the data</h2>
+
+<p>Grimsel's measured property tables stop at 600 &deg;C. Both the stiffness curve and the toughness
+curve repeat their 600 &deg;C value at 650 &deg;C, and the code holds them flat above that. The model
+fires at 566 to 577 &deg;C. So every slope we quote rests on the <strong>last measured interval</strong>,
+550 to 600 &deg;C, and anything evaluated above 600 &deg;C is reading a clamp rather than a
+measurement.</p>
+
+<p>That has two consequences, and the second is the one that matters.</p>
+
+<p>First, some numbers in the earlier analysis &mdash; including the relief factor fitted during the
+previous step &mdash; were evaluated at 608 &deg;C, past the last data point. They are reported now
+as context, not as results.</p>
+
+<p>Second, and more seriously: in that final interval the stiffness loss and the expansion gain
+nearly cancel each other out.</p>
+
+<div class="tbl">
+<table>
+  <thead><tr><th>across 550 to 600 &deg;C</th><th class="n">expansion capped</th><th class="n">expansion full</th></tr></thead>
+  <tbody>
+    <tr><td>stiffness falls by</td><td class="n">&minus;13.8 %</td><td class="n">&minus;13.8 %</td></tr>
+    <tr><td>accumulated expansion rises by</td><td class="n">+9.7 %</td><td class="n">+19.6 %</td></tr>
+    <tr><td><b>stress changes by</b></td><td class="n"><b>&minus;5.4 %</b></td><td class="n"><b>+3.1 %</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="box open">
+  <p class="tag">Why this limits the flux exponent</p>
+  <p>Stress is nearly flat where the rock fires, because two larger effects are cancelling. The flux
+  exponent depends on the <em>slope</em> of stress with temperature &mdash; which is that small
+  residual. Thermal expansion above 300 &deg;C is the one property the reference marks as an
+  estimate, good to about plus or minus thirty per cent. An error that size does not nudge the
+  residual; it can <strong>reverse its sign</strong>.</p>
+  <p>This is not bad luck. We fire in the quartz transition, which is exactly where softening and
+  expansion trade off against one another &mdash; and exactly where the measurements stop.</p>
+</div>
+
+<p>So the flux exponent cannot carry quantitative weight. It can still say whether the model produces
+any flux dependence at all, whether the sign is right, and whether the size is within a factor. It
+cannot be compared digit for digit with Kant's measurement.</p>
+
+<p>The flaw size implied by the firing condition is immune to all of this, because it depends only on
+toughness and crushing strength &mdash; no stress, no stiffness, no expansion. That is why it, and
+not the firing temperature, is now the result the step is judged on.</p>
+
+<h2><span class="num">Part 6</span>One smaller finding, from the mesh side</h2>
+
+<p>The flaw size is scaled by the volume of rock under stress, divided by a reference volume. Until
+now that reference has been set to the size of a computational cell, which makes the whole term
+cancel exactly &mdash; which is deliberate, because it keeps the answer independent of the mesh.</p>
+
+<p>The planned change makes the stressed volume physical: the depth the heat has actually reached.
+Once that happens the reference volume stops cancelling and becomes a live scale &mdash; and the two
+test cases use cells of different size, so the same physics would make the flaw <em>larger</em> on
+one and <em>smaller</em> on the other, by up to a factor of 1.7. One input key cannot be both a mesh
+anchor and a material constant. It has to be split, and the new one anchored where the scaling factor
+is exactly one, which is the only choice that does not make the flaw depend on the exponent being
+measured.</p>
+
+<h2><span class="num">Part 7</span>What this means for the programme</h2>
+
+<div class="box retired">
+  <p class="tag">Retired</p>
+  <p>Fitting relief and a toughness correction together. Fitting the flaw-size exponent to Kant's
+  flux measurement. The formula relating the two. Capping expansion without also softening stiffness.
+  The claim that a third of the discrepancy is unexplained.</p>
+</div>
+
+<div class="box note">
+  <p class="tag">Standing</p>
+  <p>Relief computed from strength over stress, not fitted. The flaw-size exponent taken from
+  published granite measurements rather than fitted. Grimsel's own toughness curve made reachable.
+  The implied flaw as the quantity the step is judged on.</p>
+</div>
+
+<p>The step that follows has <strong>no fitted parameters</strong> in it, which is the first time that
+has been true in this part of the programme. Relief comes from a definition, the exponent from the
+literature, the toughness from the rock's own table. Three quantities are then predictions rather
+than outputs of a fit: the firing temperature, the implied flaw, and the flux exponent.</p>
+
+<p>Whether that is convincing depends on something outside the model. The step is being set up so
+that a near miss and a clean hit are distinguishable in advance, because a prediction that lands
+within a couple of per cent on a model with this much property uncertainty should be treated as
+suspicious until the sensitivity has been read. Tester's group said the same thing about their own
+matched results in 1993: good agreement can be the result of errors cancelling.</p>
+
+<div class="box open">
+  <p class="tag">The real constraint</p>
+  <p>Measured stiffness and toughness for Grimsel granite <strong>above 600 &deg;C</strong>. Without
+  them, no formula can carry the flux exponent, because the slope it needs lives in the interval where
+  the tables end. This is a data problem, not a modelling one.</p>
+  <p>Second: the published split between mechanically measured and spallation-inferred Weibull moduli
+  &mdash; 20 against 8 to 13 &mdash; is the number the literature comparison rests on, and it has been
+  taken second-hand from a paper that was never obtained. It should be bought before any of this is
+  written up.</p>
+</div>
+
+<footer>
+  Desk results only; no simulation was run. Numbers computed from the property tables in
+  <span style="font-family:var(--mono)">src/Numeric/Material/Grimsel.H</span> and
+  <span style="font-family:var(--mono)">src/Numeric/SpCriterion.H</span>, and the crack geometry factor
+  derived from the weight-function integral rather than quoted. Full working and the review exchange:
+  <span style="font-family:var(--mono)">Claude_markdowns/2026-10-09.md</span> &sect;1&ndash;7.
+  Companion to <span style="font-family:var(--mono)">general_plan.html</span>.
+</footer>
+
+</div>
+</body>
+</html>

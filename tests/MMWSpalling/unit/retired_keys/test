@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""P2-16 (a0 source half, a4 run half) -- THE CONSTRAINT DEPTH IS RETIRED, NOT DEFAULTED OFF.
+
+`spallation.sp.constraint_depth` (P2-2e; carried onto the face list in P2-14a) is deleted. `spallation.*` sits
+outside any strict ParmParse scope and ALAMO does not abort on an unused top-level key (standing rule 1), so a
+deleted parse alone would leave every study argv that sets d running SILENTLY with d ignored. The retired-key list
+in MMWSpalling::Parse is the only guard; this test proves it from both sides.
+
+Source half (comments included: a leftover NAME in a comment is a leftover too, as in P2-10's clause):
+  R1 none of the deleted names (sp_cref_d, CrefInterp, CrefTAtDepth, BuildConstraintRefColumns, cref_n_*,
+     T_cref, run_ref, Tref_at, cref_on) appears anywhere in src/
+  R2 the key string appears in src/ exactly ONCE, in the P2-16 retired-key list, and that list runs in Parse
+     before any key is queried
+  R3 its abort names the key (the loop variable) and P2-16
+  R4 P2-10's retired-key list is intact (three probes) and its message unchanged
+Each clause has a MUTATION that must turn it RED, and the full revert turns every clause RED. With --pre <dir>
+(MMWSpalling.H, Removal.H, FaceRemoval.H before P2-16, substituted for their src/ copies) R1-R3 must be RED and
+R4 GREEN (P2-10's list predates this step).
+
+Run half (bin/mmwspalling-3d-g++, the gradient_blind fixture, ONE step of 0.008 s, -np 1):
+  K1 + spallation.sp.constraint_depth=0  -> rc != 0, output names the key and P2-16 (the former DEFAULT value,
+     so an abort can only mean "the key is gone", never "the value was refused")
+  K2 + spall.lateral_drive=0             -> rc != 0, output names the key and P2-10 (the old list still works)
+  K0 the fixture alone                   -> rc == 0 (or "aborts" would hold for a binary refusing every deck)
+
+Usage: test [--source | --run] [--pre <dir>]     (default: both halves)
+"""
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+SRC = os.path.join(ROOT, "src")
+KEY = "spallation.sp.constraint_depth"
+DELETED = re.compile(r"\b(?:sp_cref_d|CrefInterp|CrefTAtDepth|BuildConstraintRefColumns|T_cref|run_ref|"
+                     r"Tref_at|cref_on|cref_on_sp)\b|\bcref_n_\w+")
+SUBST = {"MMWSpalling.H": os.path.join("Integrator", "MMWSpalling.H"),
+         "Removal.H": os.path.join("Integrator", "MMWSpalling", "Removal.H"),
+         "FaceRemoval.H": os.path.join("Integrator", "MMWSpalling", "FaceRemoval.H")}
+
+
+def read_src(pre=None):
+    """{relpath under src/: text} for every C++ source; under --pre the three headers come from <pre>"""
+    out = {}
+    for dp, _d, fs in os.walk(SRC):
+        for fn in fs:
+            if fn.endswith((".H", ".h", ".cpp", ".cc")):
+                p = os.path.join(dp, fn)
+                out[os.path.relpath(p, SRC)] = open(p, errors="replace").read()
+    if pre:
+        for fn, rel in SUBST.items():
+            out[rel] = open(os.path.join(pre, fn)).read()
+    return out
+
+
+MMW = SUBST["MMWSpalling.H"]
+
+
+def clauses(src):
+    out = []
+
+    def need(name, ok):
+        out.append((name, bool(ok)))
+
+    left = ["%s:%d" % (rel, ln) for rel, t in src.items()
+            for ln, line in enumerate(t.split("\n"), 1) if DELETED.search(line)]
+    need("R1 no deleted constraint-depth name anywhere in src/ (%d line(s)%s)"
+         % (len(left), (": " + ", ".join(left[:4])) if left else ""), not left)
+
+    m = src[MMW]
+    total = sum(t.count(KEY) for t in src.values())
+    body = re.search(r"static void Parse\(MMWSpalling& value, IO::ParmParse& pp\)\s*\{([\s\S]*?)\n    \}\n", m)
+    body = body.group(1) if body else ""
+    lst = re.search(r'for \(const char\* k : \{"%s"\}\)\s*if \(pp\.contains\(k\)\)\s*Util::Abort\(INFO, k,'
+                    % re.escape(KEY), body)
+    first_q = re.search(r"pp\.(?:query|queryclass|select|get|contains\(\"(?!%s))" % re.escape(KEY),
+                        body[:lst.start()] if lst else "")
+    # the P2-10 loop's own `pp.contains(k)` is the only query allowed before it
+    pre_q = [x for x in re.finditer(r"pp\.\w+\(", body[:lst.start()] if lst else "")
+             if not x.group(0).startswith("pp.contains(")]
+    need("R2 the key appears in src/ exactly once, in the P2-16 retired-key list, which runs in Parse before any "
+         "key is queried (%d occurrence(s))" % total,
+         total == 1 and lst is not None and not pre_q and first_q is None)
+
+    msg = re.search(r'for \(const char\* k : \{"%s"\}\)[\s\S]*?remove "\s*"it from the input"\);' % re.escape(KEY), m)
+    need("R3 the abort names the key (the loop variable k) and P2-16",
+         msg is not None and "P2-16" in msg.group(0) and "Util::Abort(INFO, k," in msg.group(0))
+
+    probes = ['"spall.lateral_drive"', '"surface_patch.side_face_flux"', '"surface_patch.jet_wall_march"']
+    need("R4 P2-10's retired-key list is intact (3 probes) and its message unchanged",
+         all(m.count(p) == 1 for p in probes)
+         and 'was retired in P2-10 (the flame wall machinery: "' in m)
+    return out
+
+
+def _mmw(fn):
+    return lambda s: dict(s, **{MMW: fn(s[MMW])})
+
+
+MUTATIONS = [
+    ("R1", "plant the member `Set::Scalar sp_cref_d = 0.0;` back",
+     _mmw(lambda t: t.replace("    Set::Scalar sp_buckle_span = 0.0;",
+                              "    Set::Scalar sp_cref_d = 0.0;\n    Set::Scalar sp_buckle_span = 0.0;", 1))),
+    ("R2", "re-add the parse of the key (a second occurrence, which would run with it read)",
+     _mmw(lambda t: t.replace('        pp.query_default("spall.buckle_span"',
+                              '        { Set::Scalar d0 = 0.0; pp.query_default("%s", d0, 0.0); }\n'
+                              '        pp.query_default("spall.buckle_span"' % KEY, 1))),
+    ("R3", "the message stops naming P2-16",
+     _mmw(lambda t: t.replace(" was retired in P2-16 (the constraint depth", " was retired (the constraint depth", 1))),
+    ("R4", "drop one P2-10 key from its list",
+     _mmw(lambda t: t.replace('                                "spall.lateral_drive",\n', "", 1))),
+]
+
+
+def source_half(pre):
+    src = read_src()
+    bad = 0
+    print("SOURCE HALF (a0) -- POST-CHANGE src/ (must be GREEN):")
+    res = clauses(src)
+    for nm, ok in res:
+        print("  %s  %s" % ("ok  " if ok else "FAIL", nm))
+        bad += 0 if ok else 1
+    print("\nMUTATION CONTROLS (each must turn its own clause RED):")
+    s_all = src
+    for tgt, label, fn in MUTATIONS:
+        s2 = fn(src)
+        changed = s2 != src
+        rr = dict((k.split()[0], v) for k, v in clauses(s2))
+        was = dict((k.split()[0], v) for k, v in res).get(tgt, False)
+        ok = changed and was and not rr.get(tgt, True)
+        print("  %s  %s: %s" % ("ok  " if ok else "FAIL", label,
+              "source unchanged" if not changed else (tgt + (" goes RED" if not rr.get(tgt, True) else " STAYS GREEN"))))
+        bad += 0 if ok else 1
+        s_all = fn(s_all)
+    still = [k.split()[0] for k, v in clauses(s_all) if v]
+    print("  %s  full revert of every mutation: %s" % ("ok  " if not still else "FAIL",
+          "every clause RED" if not still else "still GREEN: " + ", ".join(still)))
+    bad += 1 if still else 0
+    if pre:
+        rp = clauses(read_src(pre))
+        print("\nPRE-CHANGE headers (%s) -- R1-R3 must be RED, R4 GREEN:" % pre)
+        for nm, ok in rp:
+            want = nm.startswith("R4")
+            print("  %s  %s" % (("GRN " if ok else "RED ") + ("    " if ok == want else "!!  "), nm[:100]))
+            bad += 0 if ok == want else 1
+    return bad
+
+
+def leg(extra):
+    d = tempfile.mkdtemp(prefix="retkey_")
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "1",
+            os.path.join(ROOT, "bin", "mmwspalling-3d-g++"),
+            os.path.join(ROOT, "tests", "MMWSpalling", "unit", "gradient_blind", "input")] + extra + \
+           ["stop_time=0.008", "plot_file=%s" % os.path.join(d, "run")]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+
+def run_half():
+    bad = 0
+    print("RUN HALF (a4) -- one step of the gradient_blind fixture, -np 1:")
+    for tag, extra, want_abort, names in (
+            ("K1", ["%s=0" % KEY], True, [KEY, "P2-16"]),
+            ("K2", ["spall.lateral_drive=0"], True, ["spall.lateral_drive", "P2-10"]),
+            ("K0", [], False, [])):
+        rc, txt = leg(extra)
+        named = all(n in txt for n in names)
+        ok = (rc != 0) == want_abort and named
+        print("  %s  %s %-38s rc=%d%s" % ("ok  " if ok else "FAIL", tag, " ".join(extra) or "(fixture alone)", rc,
+              ("  names " + " + ".join(names)) if names and named else
+              ("  ** does not name " + " / ".join(n for n in names if n not in txt)) if names else ""))
+        bad += 0 if ok else 1
+    return bad
+
+
+def main():
+    pre = sys.argv[sys.argv.index("--pre") + 1] if "--pre" in sys.argv else None
+    print("P2-16 -- THE CONSTRAINT DEPTH IS RETIRED")
+    print("=" * 84)
+    bad = 0
+    if "--run" not in sys.argv:
+        bad += source_half(pre)
+    if "--source" not in sys.argv:
+        if "--run" not in sys.argv:
+            print()
+        bad += run_half()
+    print("=" * 84)
+    if bad:
+        print("FAIL: %d check(s)" % bad)
+        return 1
+    print("PASS: the constraint depth is deleted from src/, its key aborts naming P2-16, and P2-10's list still works.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

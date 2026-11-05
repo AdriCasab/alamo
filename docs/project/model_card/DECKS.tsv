@@ -1,0 +1,10 @@
+label	metadata	compiled	git	represents
+KANT_onset	tests/MMWSpalling/validation/kant/sp_kant_onset_meiercfg/output/R500_1.0/run/metadata	10/07/26	92882ce95-dirty	Kant 2017 onset anchor (flat flame, R500 1 mm leg) -- the rock-law calibration deck
+KANT_dref	tests/MMWSpalling/studies/p2_2e_cref/legs/G2.0_130/run/metadata	10/19/26	800b2b24f-dirty	Kant 2016 minimum-flux ladder, Gotthard properties, d_ref 2.0 mm, SOD 130 (P2-2e, not reviewed)
+HOSER_47	tests/MMWSpalling/studies/p2_11_heat/legs/G1/run/metadata	10/28/26	800b2b24f-dirty	Hoeser 47 MPa series deck, G1 (P2-11, accepted) -- today's Hoeser deck
+HOSER_0	tests/MMWSpalling/studies/p2_7_hoeser_heat/legs/HG/run/metadata	10/19/26	800b2b24f-dirty	Hoeser 0 MPa at her measured heat, Goldstein average profile (P2-7 HG, accepted)
+HOSER_0_S	tests/MMWSpalling/studies/whatif_uptake/legs/s100/run/metadata	10/19/26	800b2b24f-dirty	Hoeser 0 MPa what-if, HG with h x 0.10 (whatif_uptake, no /plan)
+MEIER	tests/MMWSpalling/studies/p2_2c_meier/ctrl8/m13/run/metadata	10/12/26	800b2b24f-dirty	Meier pilot, feet, Grimsel properties, m = 13 (P2-2f rev 2, accepted) -- last quotable Meier deck
+MEIER_dref	tests/MMWSpalling/studies/p2_2e_cref/legs/SD/run/metadata	10/19/26	800b2b24f-dirty	Meier with d_ref 2.0 mm (P2-2e SD, stalled at the pads, not reviewed)
+MMW_ZHANG	tests/MMWSpalling/validation/zhang/zhang_oglesby/output/metadata	05/30/26	04e11e99c-dirty	Zhang/Oglesby MMW thermal validation (beam on, no removal)
+HU_onset	tests/MMWSpalling/validation/hu/hu_spall_onset/output/granite2/metadata	09/30/26	92882ce95-dirty	Hu granite-2 prescribed-temperature onset

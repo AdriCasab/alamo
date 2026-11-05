@@ -52,15 +52,37 @@ L = F["road"].split("\n")
 s = L.index("## Standing rules")
 e = next(i for i, l in enumerate(L) if i > s and l.startswith("## "))
 n_rules = sum(1 for i in range(s, e) if re.match(r"^\d+\. ", L[i]))
-chk(n_rules <= 15, f"standing rules: {n_rules} > cap of 15")
+chk(n_rules <= 20, f"standing rules: {n_rules} > cap of 20")   # raised by the user 2026-10-12
 chk(F["road"].count("\nActive step:\n") == 1, "roadmap: not exactly one 'Active step:' label")
 act = L.index("Active step:")
 mil = next(i for i, l in enumerate(L) if l.startswith("Next milestones"))
 n_act = sum(1 for i in range(act, mil) if L[i].startswith("- "))
 chk(n_act == 1, f"'Active step:' holds {n_act} entries, must hold exactly 1 "
                 "(this is the check the label-only version missed)")
-chk("over its own cap, deliberately" in F["road"],
-    "roadmap exceeds its cap without the dated exemption note")
+# ⚠⚠ This asserted the exemption phrase UNCONDITIONALLY, so it failed on every
+# IN-budget roadmap and stayed red for a whole campaign -- and a check that always
+# fails is not a check, it is a dead light that makes a real breach invisible. It also
+# asserted the EXCUSE rather than the LIMIT: it never measured a budget at all. Measure
+# the three CLAUDE.md states; the dated note is required only when one is truly breached.
+rows = F["road"].rstrip("\n").split("\n")
+g, hand = 0, 0
+for l in rows:
+    if l.startswith("## Current Status"):
+        g = 1
+    if l.startswith("Active step:"):
+        g = 0
+    if not g:
+        hand += 1
+nxt = next((i for i, l in enumerate(L) if i > mil and l.startswith("## ")), len(rows))
+over = [m for m, c in (
+    ("hand-written %d > 350" % hand, hand > 350),
+    ("total %d > 600" % len(rows), len(rows) > 600),
+    ("Active+Next %d > 100" % (nxt - act), nxt - act > 100),
+) if c]
+chk(not over or "over its own cap, deliberately" in F["road"],
+    "roadmap over budget (%s) without the dated exemption note" % "; ".join(over))
+budget = ("roadmap: hand-written %d/350, total %d/600, Active+Next %d/100, "
+          "standing rules %d/20" % (hand, len(rows), nxt - act, n_rules))
 
 # 5. the generators referenced by the specs must exist
 for t in ("archive_index.py", "roadmap_status.py"):
@@ -68,6 +90,7 @@ for t in ("archive_index.py", "roadmap_status.py"):
     chk(t in F["plan"], f"plan.md does not name {t}")
 
 print(f"spec_check: {5} invariant groups, {len(fail)} failures")
+print(" ", budget)
 for m in fail:
     print("  FAIL", m)
 sys.exit(1 if fail else 0)

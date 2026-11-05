@@ -192,9 +192,13 @@ def thermal_strain(theta_s, cap_300=False):
     # the breakpoints that fall inside (20, theta_s], in order
     cuts = [20.0] + [t for t in _TH if 20.0 < t < theta_s] + [theta_s]
     if cap_300:
-        cuts = sorted(set(c for c in cuts if c <= 300.0)
-                      + ([300.0, theta_s] if theta_s > 300.0 else []))
-        cuts = [c for c in cuts if c <= max(300.0, theta_s)]
+        # ⚠ FIXED 2026-10-08: this read `set(...) + [...]`, which raises
+        # TypeError, so the capped branch had NEVER been executed -- the (c7)
+        # sensitivity had no offline twin to cross-check against at all.
+        keep = set(c for c in cuts if c <= 300.0)
+        if theta_s > 300.0:
+            keep |= {300.0, theta_s}
+        cuts = sorted(c for c in keep if c <= max(300.0, theta_s))
     acc = 0.0
     for lo, hi in zip(cuts[:-1], cuts[1:]):
         if hi <= lo:

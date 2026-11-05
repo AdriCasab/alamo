@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/kant/grimsel_calibration/input 'amr.n_cell=12 12 32' weibull.V0=8.0e-9 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_14a_cref_face/legs/CAL_2mm/run

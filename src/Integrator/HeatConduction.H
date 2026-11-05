@@ -273,6 +273,10 @@ private:
     //
 
     IC::IC<Set::Scalar>* ic = nullptr;                    // Object used to initialize temperature field
+protected:
+    // P2-9 rev 2: protected (was private) so a derived integrator can refill
+    // the temperature ghosts through the solver's own BC after it writes T
+    // mid-step (MMWSpalling's removal). That member only.
     BC::BC<Set::Scalar>* bc = nullptr;       // Object used to update temp field boundary ghost cells
 };
 } // namespace Integrator

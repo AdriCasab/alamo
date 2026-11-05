@@ -61,6 +61,39 @@ def read_fabs(path):
     return out
 
 
+def read_fabs_boxed(path):
+    """-> list of dicts {lo, hi, ncomp, npts, comp: [list-of-float per comp]}.
+
+    ⚠ ADDED, not a change to `read_fabs`: that function's (ncomp, npts, bytes)
+    shape is depended on by `unit/pin_clock/test`, where the bar is byte
+    identity and decoding to float would weaken it. This variant keeps the BOX
+    BOUNDS, which a spatial reduction needs to place a cell, and decodes to
+    floats. AMReX FAB ordering is i fastest, then j, then k.
+    """
+    import struct
+    blob = open(path, "rb").read()
+    out, pos = [], 0
+    while True:
+        m = HDR.search(blob, pos)
+        if not m:
+            break
+        lo = tuple(int(m.group(i)) for i in (2, 3, 4))
+        hi = tuple(int(m.group(i)) for i in (5, 6, 7))
+        ncomp = int(m.group(11))
+        npts = 1
+        for a, b in zip(lo, hi):
+            npts *= (b - a + 1)
+        start = m.end()
+        need = ncomp * npts * 8
+        comp = [list(struct.unpack_from("<%dd" % npts, blob,
+                                        start + c * npts * 8))
+                for c in range(ncomp)]
+        out.append({"lo": lo, "hi": hi, "ncomp": ncomp, "npts": npts,
+                    "comp": comp})
+        pos = start + need
+    return out
+
+
 def var_names(header_path, ncomp):
     """AMReX plotfile Header: line 0 is the version, line 1 the component
     count, then one variable name per line."""

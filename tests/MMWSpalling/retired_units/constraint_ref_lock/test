@@ -1,0 +1,398 @@
+#!/usr/bin/env python3
+"""P2-2e (deliverable 7, gate a4) -- THE CONSTRAINT-REFERENCE LOCK.
+
+Asserts, by source inspection, that EVERY stress-reference read named in the
+packet's reachability ledger reads the constraint reference under
+`spallation.sp.constraint_depth > 0`, that the two vertical firing sites read
+the SAME gathered values, that the gather precedes the first firing site, and
+that the reference is read in METRES from a gathered (never box-local) column.
+
+THE SITES (enumerated by grepping every T0_at/T0_at_didx/T0_at_d/LawSigma/
+ScanSigmaT reference read; re-census 2026-11-02, P2-14a -- there are no others):
+  (Removal.H  lateral criterion  law + verbatim: DELETED in P2-10 with the
+   criterion; its clause C4 and mutation control went with it)
+  Removal.H  depth scan          law  LawSigma(scan_g, T_z, T0_z)
+                                 verbatim  (T_z - T0_z)
+  MMWSpalling.H Sp_field top half-cell  law + verbatim
+  MMWSpalling.H Sp_field deeper/lateral law + verbatim
+  FaceRemoval.H the face list's line scan (P2-14a, the FOURTH site): ScanSigmaT
+                over T0_z = CrefInterp(the line's live T, run_ref, z_v + d/mu)
+ONE interpolation (CrefInterp, MMWSpalling.H) serves the column buffer
+(through CrefTAtDepth) and the line.
+
+P2-14a clauses (prefixed P14-, the packet's C7-C12):
+  P14-C7  the face-list reference under d > 0 is CrefInterp at (z_v + d/mu), metres
+  P14-C8  CrefInterp is the only copy of the arithmetic, and both callers use it
+  P14-C9  R3 and the scan count `run` over Lg; only the reference reads the extended run
+  P14-C10 no refusal names constraint_depth
+  P14-C11 the Sp_field site adds no counts under the face list
+  P14-C12 nu comes from the law under RockLaw()
+
+⚠⚠ RED IS DEMONSTRATED, NOT ASSERTED. Each clause has a MUTATION control that
+reverts exactly one P2-2e edit textually and must turn that clause RED; a
+"full revert" control reverts them all and must turn EVERY clause red. With
+`--pre <dir>` the clauses are also run against an actual pre-change source
+pair (MMWSpalling.H + Removal.H) and must all FAIL there.
+
+Usage:  test [--pre <dir holding MMWSpalling.H, Removal.H and FaceRemoval.H>]
+  --pre: every P14- clause must be RED on that source (the pre-P2-14a headers);
+  the older clauses are reported, not gated (they describe code that existed).
+"""
+import os
+import re
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+MMW = os.path.join(ROOT, "src", "Integrator", "MMWSpalling.H")
+REM = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "Removal.H")
+FRM = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "FaceRemoval.H")
+
+
+def nocomment(t):
+    return re.sub(r"//[^\n]*", "", t)
+
+
+def body(txt, header, end=r"\n    \}"):
+    """The body of the first member function whose signature matches."""
+    m = re.search(header + r"[\s\S]*?\{([\s\S]*?)" + end, txt)
+    return m.group(1) if m else ""
+
+
+def clauses(mmw, rem, frm):
+    """[(name, bool)] -- every clause, evaluated on one source triple."""
+    out = []
+
+    def need(name, ok):
+        out.append((name, bool(ok)))
+
+    # C1 the key: parsed once, default 0, BEFORE the sp_weibull early return
+    psm = body(mmw, r"static void ParseSpallationModel\(", r"\n    \}\n")
+    q = psm.find('"spallation.sp.constraint_depth"')
+    r = psm.find("if (value.spallation_model != SpallationModel::SpWeibull) return;")
+    need("C1 the key is parsed ONCE, default 0.0, BEFORE the sp_weibull early "
+         "return (so a damage_law deck cannot leave it silently unused)",
+         mmw.count('"spallation.sp.constraint_depth"') == 1
+         and 'query_default("spallation.sp.constraint_depth", value.sp_cref_d, 0.0)' in mmw
+         and 0 <= q < r)
+
+    # C2 the abort names the T-face conjunction
+    need("C2 d > 0 aborts unless the T-derived criterion path is on (the SAME "
+         "conjunction Removal.H forms as sp_weibull_use_T_face)",
+         re.search(r"if \(value\.sp_cref_d > 0\.0\)[\s\S]{0,900}?"
+                   r"value\.spall_enabled &&[\s\S]{0,200}?SpallationModel::SpWeibull"
+                   r"[\s\S]{0,200}?sp_local_thermoelastic[\s\S]{0,400}?Util::Abort",
+                   mmw) is not None)
+
+    # C3 the depth scan
+    need("C3 the depth scan's reference is CrefTAtDepth at normal depth "
+         "(z_abs + d), converted with sn_icth -- METRES, under d > 0; "
+         "T0_at_didx at d = 0",
+         # ⚠ gaps sized for the 40-50 column indentation of this site: the
+         # first draft's 120/260 were a few characters short and read RED on
+         # correct source, which made C3's mutation control vacuous.
+         re.search(r"const Set::Scalar T0_z = cref_on\s*\?\s*CrefTAtDepth\("
+                   r"[\s\S]{0,400}?\(z_abs \+ cref_d_loc\) \* sn_icth"
+                   r"[\s\S]{0,400}?:\s*T0_at_didx\(", rem) is not None
+         and "LawSigma(scan_g, T_z, T0_z)" in rem
+         and len(re.findall(r"\(T_z - T0_z\)", rem)) == 1)
+
+    # C5 the Sp_field site, both branches, through ONE resolver
+    tref = re.search(r"auto Tref_at = \[&\] \(Set::Scalar depth_n,([\s\S]*?)\n                \};",
+                     mmw)
+    tb = tref.group(1) if tref else ""
+    need("C5 BOTH Sp_field branches take their reference from the ONE resolver "
+         "Tref_at; its TOP-face path reads CrefTAtDepth at (depth + d)*icth and "
+         "no LATERAL path is left (deleted in P2-10); d = 0 is T0_at(...)",
+         len(re.findall(r"const Set::Scalar Tref_h = Tref_at\(depth, i, j, k\);", mmw)) == 1
+         and len(re.findall(r"const Set::Scalar Tref_d = Tref_at\(depth, i_d, j_d, k_d\);", mmw)) == 1
+         and "LawSigma(te_g, T_recon_at(dv),\n                                                Tref_h)" in mmw
+         and "LawSigma(te_g, T_a(i_d, j_d, k_d),\n                                            Tref_d)" in mmw
+         and "(T_recon_at(dv) - Tref_h)" in mmw
+         and "(T_a(i_d, j_d, k_d) - Tref_d)" in mmw
+         and "if (!cref_on_sp) return T0_at(ii, jj, kk);" in tb
+         and re.search(r"CrefTAtDepth\(c, \(depth_n \+ cref_d_sp\) \* icth", tb) is not None
+         and "ell_s" not in tb and "nx_in" not in tb)
+
+    # C6 one buffer, both vertical sites, never box-local
+    crd = body(mmw, r"Set::Scalar CrefTAtDepth\(std::size_t c,")
+    hlp = body(mmw, r"static Set::Scalar CrefInterp\(const Profile& g,")
+    need("C6 the two VERTICAL firing sites read the SAME gathered buffer: "
+         "CrefTAtDepth is called once in each file, and its body reads only "
+         "cref_T_col -- no Array4, no T_a, no box index (so it cannot be "
+         "box-local)",
+         rem.count("CrefTAtDepth(") == 1
+         and len(re.findall(r"\bCrefTAtDepth\(", mmw)) == 2       # def + 1 call
+         and "cref_T_col" in crd
+         and not re.search(r"\bT_a\(|Array4|\.array\(|validbox|vbx_lo", crd))
+
+    # C7 the gather precedes the FIRST firing site
+    adv = mmw
+    i_b = adv.find("        BuildConstraintRefColumns(lev);\n        UpdateSpAfterMechanics(lev, time, dt);")
+    i_r = adv.find("        UpdateRemovalAfterCohesive(lev, time, dt);")
+    need("C7 BuildConstraintRefColumns runs IMMEDIATELY before "
+         "UpdateSpAfterMechanics and therefore before UpdateRemovalAfterCohesive "
+         "(the depth scan) -- both sites see one gather of one state",
+         i_b >= 0 and i_r > i_b)
+
+    # C8 the gather is a gather
+    bcr = body(mmw, r"void BuildConstraintRefColumns\(int lev\)")
+    need("C8 the reference column is a validbox-filled, ReduceRealSum-gathered "
+         "band with the SAME column-top rule (GatherColumnSurface) and solid-run "
+         "guard (ColumnSolidRunBelowTop) as the depth scan",
+         "validbox()" in bcr and "ReduceRealSum(" in bcr and "cref_T_col" in bcr
+         and "GatherColumnSurface(" in bcr and "ColumnSolidRunBelowTop(" in bcr)
+
+    # C9 metres, interpolated
+    need("C9 the read is in METRES and INTERPOLATED between cell centres "
+         "(D/dz - 1/2 and a weight), never a floor(D/dz) cell read -- in the ONE "
+         "helper CrefInterp, to which CrefTAtDepth delegates (P2-14a)",
+         "Set::Scalar mf = D / dz - 0.5;" in hlp
+         and "(1.0 - w) * g(m0) + w * g(m0 + 1)" in hlp
+         and "std::floor(D / dz)" not in hlp
+         and "return CrefInterp(" in crd)
+
+    # C10 witnesses keyed and last
+    i_p = mmw.find('"sn_recession_superseded", false);')
+    i_c = mmw.find('"cref_n_vert",  false);')
+    need("C10 the cref_* witnesses are registered ONLY under d > 0 and AFTER the "
+         "last pre-existing registration, so a d = 0 thermo.dat is unchanged",
+         i_p >= 0 and i_c > i_p
+         and re.search(r"if \(value\.sp_cref_d > 0\.0\)\s*\{\s*value\.RegisterIntegratedVariable"
+                       r"\(&value\.cref_d_out", mmw) is not None)
+
+    # C11 nothing left un-routed
+    need("C11 NO stress-reference read is left on the old reference: no "
+         "LawSigma(te_g, ..., T0_at(...)) and no `- T0_at(` in a Sp_field bracket",
+         not re.search(r"LawSigma\(te_g,[^;]*?T0_at\(", mmw)
+         and not re.search(r"- T0_at\(", mmw))
+
+    # ---------------------------------------------------------------- P2-14a
+    m_, r_, f_ = nocomment(mmw), nocomment(rem), nocomment(frm)
+    sad = re.search(r"auto sigma_at_depth = \[&\] \(Set::Scalar d\) -> Set::Scalar \{([\s\S]*?)\n\s*\};", f_)
+    sb = sad.group(1) if sad else ""
+    need("P14-C7 the face list's d > 0 reference is CrefInterp over the line's LIVE T "
+         "(Gl[m*NF]) and its solid run, at z_v + d/mu in METRES (d_line = sp_cref_d / L.mu); "
+         "d = 0 stays T0_at_d",
+         re.search(r"const Set::Scalar T0_z = cref_fl\s*\?\s*CrefInterp\(T_line, run_ref, "
+                   r"z_v \+ d_line, dx,", sb) is not None
+         and re.search(r":\s*T0_at_d\(static_cast<int>\(std::floor\(z_v / dx\)\)\);", sb) is not None
+         and "const Set::Scalar d_line = sp_cref_d / L.mu;" in f_
+         and re.search(r"auto T_line = \[Gl\] \(int m\) -> Set::Scalar \{ return Gl\[m \* NF\]; \};", f_)
+         is not None
+         and "ScanSigmaT(scan_g, T_z, T0_z, 1.0, conf_off, pE, pB, pNu)" in sb)
+
+    need("P14-C8 CrefInterp is the ONLY copy of the interpolation: defined once (MMWSpalling.H), "
+         "called by CrefTAtDepth and by the face list, and no other file computes D/dz - 0.5",
+         len(re.findall(r"static Set::Scalar CrefInterp\(", m_)) == 1
+         and len(re.findall(r"\bCrefInterp\(", m_)) == 2          # def + CrefTAtDepth
+         and len(re.findall(r"\bCrefInterp\(", f_)) >= 1
+         # the reference's own form `mf = D / dz - 0.5` (ScanTAtZv's sample lerp
+         # `u = z_v / dz - 0.5` in Removal.H is the T_z sample, not the reference)
+         and not re.search(r"\bmf = [^;]*/ d[xz] - 0\.5", r_ + f_)
+         and len(re.findall(r"\bmf = [^;]*/ d[xz] - 0\.5", m_)) == 1)
+
+    need("P14-C9 `run` (the scan window, the through test, R3's L_av and RecedeAlongLine) is "
+         "counted over Lg; only run_ref reads the extended gather Lr",
+         "while (run < L.Lg && Gl[run * NF + 3] > 0.5) ++run;" in f_
+         and "while (run_ref < L.Lr && Gl[run_ref * NF + 3] > 0.5) ++run_ref;" in f_
+         and "const int nprof = std::min(L.Dmax, run - 1);" in f_
+         and "RecedeAlongLine(o.run, L.Dmax," in f_
+         and "for (int d = 0; d < o.run; ++d)" in f_
+         # declaration, its own while loop (3), the two CrefInterp reads: nowhere else
+         and len(re.findall(r"\brun_ref\b", f_)) == 6
+         and "dhi = std::min(dhi, L.Lr - 1);" in f_)
+
+    need("P14-C10 no refusal names constraint_depth (the face list carries d)",
+         not re.search(r"fr_abort\([^;]*constraint_depth", m_))
+
+    i6 = m_.find("ReduceLongSum(cnt, 4);")
+    need("P14-C11 the Sp_field site adds no cref counts under the face list "
+         "(if (cref_on_sp && !surface_patch.face_list)); the lines add their own",
+         re.search(r"if \(cref_on_sp && !surface_patch\.face_list\)\s*\{\s*long cnt\[4\] = "
+                   r"\{sp_cref_vert", m_) is not None
+         and i6 >= 0
+         and re.search(r"if \(cref_fl\)\s*\{\s*cref_n_vert\s*\+= static_cast<Set::Scalar>\(cref_cnt\[0\]\);",
+                       f_) is not None)
+
+    ecb = body(r_, r"ElasticConsts ElasticConstants\(\) const")
+    need("P14-C12 nu comes from the law under RockLaw() (grimsel.nu, the nu LawSigma uses); "
+         "E/(2 mu) - 1 only without the law",
+         re.search(r"const Numeric::Material::Grimsel \*law = RockLaw\(\);\s*"
+                   r"c\.nu = law \? law->nu : phases\[0\]\.E / \(2\.0 \* phases\[0\]\.mu\) - 1\.0;",
+                   ecb) is not None)
+    return out
+
+
+# --------------------------------------------------------------------------
+# MUTATIONS: each reverts ONE P2-2e edit, textually, on the CURRENT source.
+def m_scan(mmw, rem, frm):
+    r2 = re.sub(r"const Set::Scalar T0_z = cref_on\s*\?[\s\S]*?:\s*T0_at_didx\(",
+                "const Set::Scalar T0_z = T0_at_didx(", rem, count=1)
+    return mmw, r2, frm
+
+
+def m_sp(mmw, rem, frm):
+    m2 = mmw.replace("Tref_at(depth, i_d, j_d, k_d)", "T0_at(i_d, j_d, k_d)")
+    return m2, rem, frm
+
+
+def m_order(mmw, rem, frm):
+    m2 = mmw.replace("        BuildConstraintRefColumns(lev);\n        UpdateSpAfterMechanics(lev, time, dt);",
+                     "        UpdateSpAfterMechanics(lev, time, dt);\n        BuildConstraintRefColumns(lev);")
+    return m2, rem, frm
+
+
+def m_boxlocal(mmw, rem, frm):
+    m2 = mmw.replace("const Set::Scalar* g = cref_T_col.data()",
+                     "const Set::Scalar* g = T_a(0, 0, 0) + cref_T_col.data()")
+    return m2, rem, frm
+
+
+def m_cells(mmw, rem, frm):
+    m2 = mmw.replace("        Set::Scalar mf = D / dz - 0.5;\n        if (mf < 0.0) mf = 0.0;\n        const Set::Scalar mlast",
+                     "        Set::Scalar mf = std::floor(D / dz);\n        if (mf < 0.0) mf = 0.0;\n        const Set::Scalar mlast")
+    return m2, rem, frm
+
+
+def m_key_after(mmw, rem, frm):
+    """move the key's query below the sp_weibull return"""
+    m2 = mmw.replace('pp.query_default("spallation.sp.constraint_depth", value.sp_cref_d, 0.0);',
+                     "", 1)
+    m2 = m2.replace("        if (value.spallation_model != SpallationModel::SpWeibull) return;",
+                    "        if (value.spallation_model != SpallationModel::SpWeibull) return;\n"
+                    '        pp.query_default("spallation.sp.constraint_depth", value.sp_cref_d, 0.0);', 1)
+    return m2, rem, frm
+
+
+def m14_ref(mmw, rem, frm):
+    """the face list back on the stored initial T (T0_at_d) under d > 0"""
+    return mmw, rem, frm.replace("? CrefInterp(T_line, run_ref, z_v + d_line, dx, n_ref, cref_cnt[2])",
+                                 "? T0_at_d(static_cast<int>(std::floor(z_v / dx)))")
+
+
+def m14_mu(mmw, rem, frm):
+    """d along the line WITHOUT the /mu"""
+    return mmw, rem, frm.replace("const Set::Scalar d_line = sp_cref_d / L.mu;",
+                                 "const Set::Scalar d_line = sp_cref_d;")
+
+
+def m14_copy(mmw, rem, frm):
+    """a second, private copy of the interpolation in the face list"""
+    return mmw, rem, frm.replace("auto T_line = [Gl] (int m) -> Set::Scalar { return Gl[m * NF]; };",
+                                 "auto T_line = [Gl] (int m) -> Set::Scalar { return Gl[m * NF]; };\n"
+                                 "                auto lerp = [&] (Set::Scalar D) { Set::Scalar mf = D / dx - 0.5; return mf; };")
+
+
+def m14_run(mmw, rem, frm):
+    """R3 recedes over the extended run"""
+    return mmw, rem, frm.replace("RecedeAlongLine(o.run, L.Dmax,", "RecedeAlongLine(run_ref, L.Dmax,")
+
+
+def m14_refuse(mmw, rem, frm):
+    """put the refusal back"""
+    return mmw.replace('if (value.spall_surface_normal) fr_abort("spall.surface_normal = 1", "a later step");',
+                       'if (value.sp_cref_d > 0.0)\n                fr_abort("spallation.sp.constraint_depth > 0", '
+                       '"a later step");\n            if (value.spall_surface_normal) '
+                       'fr_abort("spall.surface_normal = 1", "a later step");'), rem, frm
+
+
+def m14_spadd(mmw, rem, frm):
+    """the Sp_field site adds its counts under the face list again"""
+    return mmw.replace("if (cref_on_sp && !surface_patch.face_list)", "if (cref_on_sp)"), rem, frm
+
+
+def m14_nu(mmw, rem, frm):
+    """nu back from the scalar pair under the law"""
+    return mmw, rem.replace("c.nu = law ? law->nu : phases[0].E / (2.0 * phases[0].mu) - 1.0;",
+                            "c.nu = phases[0].E / (2.0 * phases[0].mu) - 1.0;"), frm
+
+
+MUTATIONS = [
+    ("revert the depth scan's reference to T0_at_didx", m_scan, "C3"),
+    ("revert the Sp_field deeper branch to T0_at(i_d,j_d,k_d)", m_sp, "C5"),
+    ("build the gather AFTER the first firing site", m_order, "C7"),
+    ("let the reader touch a box-local Array4", m_boxlocal, "C6"),
+    ("read the reference by CELL index", m_cells, "C9"),
+    ("parse the key AFTER the sp_weibull early return", m_key_after, "C1"),
+    ("P2-14a: the face list reads T0_at_d under d > 0", m14_ref, "P14-C7"),
+    ("P2-14a: d along the line without /mu", m14_mu, "P14-C7"),
+    ("P2-14a: a private copy of the interpolation in FaceRemoval.H", m14_copy, "P14-C8"),
+    ("P2-14a: R3 recedes over the extended run", m14_run, "P14-C9"),
+    ("P2-14a: the constraint_depth refusal restored", m14_refuse, "P14-C10"),
+    ("P2-14a: the Sp_field site adds under the face list", m14_spadd, "P14-C11"),
+    ("P2-14a: nu from E/(2 mu) - 1 under the law", m14_nu, "P14-C12"),
+]
+
+
+def m14_all(mmw, rem, frm):
+    for _, fn, t in MUTATIONS:
+        if t.startswith("P14-"):
+            mmw, rem, frm = fn(mmw, rem, frm)
+    return mmw, rem, frm
+
+
+def main():
+    pre = None
+    if "--pre" in sys.argv:
+        pre = sys.argv[sys.argv.index("--pre") + 1]
+    mmw, rem, frm = open(MMW).read(), open(REM).read(), open(FRM).read()
+    bad = 0
+
+    print("P2-2e (a4) -- THE CONSTRAINT-REFERENCE LOCK")
+    print("=" * 84)
+    print("POST-CHANGE source (must be GREEN):")
+    res = clauses(mmw, rem, frm)
+    for nm, ok in res:
+        print(f"  {'ok  ' if ok else 'FAIL'}  {nm}")
+        bad += 0 if ok else 1
+
+    print("\nMUTATION CONTROLS (each must turn its own clause RED):")
+    for label, fn, target in MUTATIONS:
+        mm, rr, ff = fn(mmw, rem, frm)
+        changed = (mm != mmw) or (rr != rem) or (ff != frm)
+        r2 = dict(clauses(mm, rr, ff))
+        hit = [k for k, v in r2.items() if k.split()[0] == target and not v]
+        # ⚠ NON-VACUITY: a control only discriminates if its clause was GREEN
+        # on the unmutated source. A clause already red "goes red" for free --
+        # exactly how the first draft's C3/C4 controls passed while C3/C4 failed.
+        was_green = any(k.split()[0] == target and v for k, v in res)
+        ok = changed and bool(hit) and was_green
+        print(f"  {'ok  ' if ok else 'FAIL'}  {label}: "
+              f"{'source unchanged -- the mutation did not apply' if not changed else (target + ' goes RED' if hit else target + ' STAYS GREEN')}")
+        bad += 0 if ok else 1
+
+    # the FULL REVERT of P2-14a: every P14 clause must go RED at once
+    mm, rr, ff = m14_all(mmw, rem, frm)
+    r_all = clauses(mm, rr, ff)
+    still = [k for k, v in r_all if k.startswith("P14-") and v]
+    print(f"  {'ok  ' if not still else 'FAIL'}  full revert of every P2-14a mutation: "
+          f"{'every P14 clause RED' if not still else 'still GREEN: ' + ', '.join(x.split()[0] for x in still)}")
+    bad += 1 if still else 0
+
+    if pre:
+        print(f"\nPRE-CHANGE source ({pre}) -- every P14 clause must be RED (older ones reported):")
+        pm = open(os.path.join(pre, "MMWSpalling.H")).read()
+        pr = open(os.path.join(pre, "Removal.H")).read()
+        pf = open(os.path.join(pre, "FaceRemoval.H")).read()
+        rp = clauses(pm, pr, pf)
+        green = [nm for nm, ok in rp if ok and nm.startswith("P14-")]
+        for nm, ok in rp:
+            tag = ("RED " if not ok else "GRN!") if nm.startswith("P14-") else ("red " if not ok else "grn ")
+            print(f"  {tag}  {nm[:76]}")
+        print(f"  => {sum(1 for nm, ok in rp if nm.startswith('P14-') and not ok)} of "
+              f"{sum(1 for nm, _ in rp if nm.startswith('P14-'))} P14 clauses RED on the pre-change source")
+        bad += len(green)
+
+    print("=" * 84)
+    if bad:
+        print(f"FAIL: {bad} check(s)")
+        return 1
+    print("PASS: every ledger site reads the constraint reference under d > 0,")
+    print("      through one gathered column read in metres, built before the")
+    print("      first firing site -- and each clause is shown to discriminate.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

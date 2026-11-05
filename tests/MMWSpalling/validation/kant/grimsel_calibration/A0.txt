@@ -1,0 +1,16 @@
+P2-13 a0 -- the offline onset twin (uniform stress, Tada weight, Grimsel.H via KIC_CPP.txt)
+================================================================================================
+  W = 3.525546   R = 0.531294   nu = 0.30   m = 13   (K_Ic, E, strain: tests/MMWSpalling/studies/p2_2_props/KIC_CPP.txt)
+  p 0, a 8 um                           842.39 K   advisor  842.39 K   -0.001 K   PASS
+  p 1 MPa                               841.28 K   advisor  841.29 K   -0.005 K   PASS
+  p 27 MPa                              818.46 K   advisor  818.47 K   -0.008 K   PASS
+  p 48 MPa                              806.91 K   advisor  806.92 K   -0.007 K   PASS
+  p 0, Weibull median a 7.778 um        848.66 K   advisor  848.66 K   -0.003 K   PASS
+
+  for the legs (not bars): onset at the Weibull median flaw a0*(ln 2)^(1/m)
+    a0  6.0 um: median flaw 5.833 um -> 902.64 K   (deterministic a = a0: 898.07 K)
+    a0 10.0 um: median flaw 9.722 um -> 811.92 K   (deterministic a = a0: 808.78 K)
+    Weibull median, p 27 MPa: 821.67 K (shift -26.98 K)
+    Weibull median, p 48 MPa: 810.17 K (shift -38.48 K)
+
+a0 PASS (5 of 5 rows within 0.05 K)

@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/kant/grimsel_calibration/input plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_17_buckle_on/legs/CAL1/run

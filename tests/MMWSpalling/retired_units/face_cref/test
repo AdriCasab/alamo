@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""P2-14a -- THE CONSTRAINT DEPTH ON THE FACE LIST, quick unit (rows b1, b3, b4, b5).
+
+Fixture F (unit/face_removal/input: uniform gas 1866 K, h 700, one 8 um flaw, a 24 x 24 x 64 mm Grimsel block)
+with spallation.sp.constraint_depth d = 2 mm (D2) on both removal paths:
+  CROSS  F0_k0 / F0_k1 (d 0), F2_k0 / F2_k1 (d 2 mm): the face list's reference = the column path's (b1)
+  TILT   T35_0 / T35_2 (TL35's 35 deg plane, d 0 / 2 mm), F164_k1 (flat, d = 2 mm cos 35): the along-line read
+         is d/mu (b5)
+  NEG    N2_0 / N2_2 (2 mm, h 150, 200 s): a minimum flux appears (b4)
+Witnesses (b3) on F2_k1 and F0_k1. The statistic S_top: per column, the first event-log row with dir = 5 and
+ts_fb = 0 (the column path logs only top firings: every row), its T_surf; on T35 only 4 <= col_i, col_j <= 19.
+Usage: test [--no-run]   (--no-run re-scores output/ on disk)
+"""
+import csv
+import importlib.machinery
+import importlib.util
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT = os.path.join(ROOT, "tests", "MMWSpalling", "unit", "face_removal", "input")
+OUT = os.path.join(HERE, "output")
+MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+B1 = ["amr.n_cell=24 24 64", "timestep=0.008", "amr.max_grid_size=16", "amr.plot_int=125"]
+B2 = ["amr.n_cell=12 12 32", "timestep=0.008", "amr.max_grid_size=8", "amr.plot_int=125"]
+D2 = ["spallation.sp.constraint_depth=0.002"]
+K0, K1 = ["surface_patch.face_list=0"], ["surface_patch.face_list=1"]
+NEG = ["surface_patch.h_expr=150.0", "stop_time=200.0"]
+DT = 0.008
+
+
+def tl35_seeds():
+    ld = importlib.machinery.SourceFileLoader("fr_test", os.path.join(ROOT, "tests", "MMWSpalling", "unit",
+                                                                    "face_removal", "test"))
+    m = importlib.util.module_from_spec(importlib.util.spec_from_loader("fr_test", ld))
+    ld.exec_module(m)
+    return "spall.seed_void=" + " ".join(str(v) for b in m.tilt_seeds(35.0, 0.0, "1") for v in b)
+
+
+LEGS = {
+    "F0_k0": B1 + K0, "F0_k1": B1 + K1,
+    "F2_k0": B1 + K0 + D2, "F2_k1": B1 + K1 + D2,
+    "F164_k1": B1 + K1 + ["spallation.sp.constraint_depth=0.0016383041"],
+    "T35_0": B1 + K1 + ["SEEDS"], "T35_2": B1 + K1 + ["SEEDS"] + D2,
+    "N2_0": B2 + K1 + NEG, "N2_2": B2 + K1 + NEG + D2,
+}
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg, flush=True)
+    if not ok:
+        FAIL.append(msg)
+
+
+def run(name, toks):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    if "SEEDS" in toks:
+        toks = [tl35_seeds() if t == "SEEDS" else t for t in toks]
+    a = MPI + [BIN, INPUT] + toks + ["plot_file=" + os.path.join(d, "run")]
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join("'%s'" % x if " " in x else x for x in a) + "\n")
+    with open(os.path.join(d, "run.log"), "w") as log:
+        rc = subprocess.call(a, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    open(os.path.join(d, "rc"), "w").write("%d\n" % rc)
+    print("  ran %-8s rc=%d" % (name, rc), flush=True)
+    return rc
+
+
+def events(name):
+    p = os.path.join(OUT, name, "run_removal_events.csv")
+    return list(csv.DictReader(open(p))) if os.path.exists(p) else []
+
+
+def first_top(name, interior=False):
+    """{(i, j): (time, T_surf)} -- the S_top rows"""
+    f = {}
+    for r in events(name):
+        if "dir" in r and not (r["dir"] == "5" and float(r["ts_fb"]) == 0.0):
+            continue
+        c = (int(r["col_i"]), int(r["col_j"]))
+        if interior and not (4 <= c[0] <= 19 and 4 <= c[1] <= 19):
+            continue
+        f.setdefault(c, (float(r["time"]), float(r["T_surf"])))
+    return f
+
+
+def S(name, interior=False):
+    v = np.array([x[1] for x in first_top(name, interior).values()])
+    return float(np.median(v)) if len(v) else float("nan"), (float(v.max() - v.min()) if len(v) else 0.0), len(v)
+
+
+def thermo(name):
+    L = open(os.path.join(OUT, name, "run", "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    return h, [[float(x) for x in r.split("\t")] for r in L[1:] if r.strip()]
+
+
+def main():
+    if "--no-run" not in sys.argv:
+        print("P2-14a face_cref -- running %d legs (-np 4)" % len(LEGS), flush=True)
+        for n, t in LEGS.items():
+            need(run(n, list(t)) == 0, "%s rc 0" % n)
+    print("\nS_top per leg (median, spread over columns, n):")
+    st = {}
+    for n in LEGS:
+        st[n] = S(n, interior=n.startswith("T35"))
+        print("  %-8s %9.3f K   spread %.3f K   n %d" % ((n,) + st[n]))
+
+    # ---- b1 CROSS-PATH
+    print("\nb1 -- CROSS-PATH: the face list's d = 2 mm reference is the column path's")
+    a, b = first_top("F2_k0"), first_top("F2_k1")
+    same_cols = set(a) == set(b) and len(a) == 576
+    dt_max = max(abs(a[c][0] - b[c][0]) for c in a) if same_cols else float("inf")
+    need(same_cols and dt_max <= DT + 1e-9,
+         "every column first-fires at the same step +-1 on both paths (576 columns; max |dt| %.4f s)" % dt_max)
+    d2 = abs(st["F2_k1"][0] - st["F2_k0"][0])
+    d0 = abs(st["F0_k1"][0] - st["F0_k0"][0])
+    need(d2 <= d0 + 0.5, "|S_top(F2_k1) - S_top(F2_k0)| = %.3f K <= |d=0 difference| %.3f + 0.5 K" % (d2, d0))
+    sh = st["F2_k1"][0] - st["F0_k1"][0]
+    need(sh >= 20.0, "d = 2 mm moves the face list's onset: S_top(F2_k1) - S_top(F0_k1) = %+.2f K >= 20 K" % sh)
+
+    # ---- b3 witnesses
+    print("\nb3 -- the witnesses mean what they say")
+    h, rows = thermo("F2_k1")
+    ix = {c: h.index(c) for c in ("cref_n_vert", "cref_n_lat", "cref_n_clamp", "cref_n_neg")}
+    started = [r for r in rows if r[0] > 1.5 * DT]
+    vert = [r[ix["cref_n_vert"]] for r in started]
+    need(len(started) > 0 and min(vert) > 0, "F2_k1: cref_n_vert > 0 on every thermo row after the first list "
+         "(%d rows, min %g)" % (len(started), min(vert) if vert else 0))
+    lat = sum(r[ix["cref_n_lat"]] for r in rows)
+    clp = sum(r[ix["cref_n_clamp"]] for r in rows)
+    neg = sum(r[ix["cref_n_neg"]] for r in rows)
+    reads = sum(vert)
+    need(lat == 0 and clp == 0, "F2_k1: cref_n_lat %g and cref_n_clamp %g are 0 on the flat floor" % (lat, clp))
+    need(neg <= 1e-4 * reads, "F2_k1: cref_n_neg %g <= 1e-4 of %g reads" % (neg, reads))
+    ev = events("F2_k1")
+    ok = bool(ev) and "T_cref" in ev[0] and all(293.15 < float(r["T_cref"]) < float(r["T_surf"]) for r in ev)
+    need(ok, "F2_k1: every event row has 293.15 < T_cref < T_surf (%d rows)" % len(ev))
+    h0, _ = thermo("F0_k1")
+    ev0 = events("F0_k1")
+    need(not any(c.startswith("cref_") for c in h0) and (not ev0 or "T_cref" not in ev0[0]),
+         "F0_k1 (d = 0): no cref_* thermo column and no T_cref event column")
+
+    # ---- b4 minimum flux
+    print("\nb4 -- MINIMUM FLUX at h 150 (2 mm, 200 s)")
+    n0, n2 = first_top("N2_0"), first_top("N2_2")
+    t0 = [v[0] for v in n0.values()]
+    need(len(n0) == 144, "N2_0 (d 0) fires on every column within 200 s (%d/144; first %.1f s, last %.1f s)"
+         % (len(n0), min(t0) if t0 else -1, max(t0) if t0 else -1))
+    need(len(events("N2_2")) == 0, "N2_2 (d 2 mm) never fires (%d firings)" % len(events("N2_2")))
+
+    # ---- b5 the normal length on the tilt
+    print("\nb5 -- THE NORMAL LENGTH: the read is d/mu along the line")
+    D0 = st["T35_0"][0] - st["F0_k1"][0]
+    D2_ = st["T35_2"][0] - st["F2_k1"][0]
+    W = st["F164_k1"][0] - st["F2_k1"][0]
+    print("  Delta(0) = %+.3f K  Delta(2) = %+.3f K  W = S(F164) - S(F2) = %+.3f K" % (D0, D2_, W))
+    if abs(W) < 10.0:
+        print("  NOT DISCRIMINATING: |W| %.2f K < 10 K (reported, not a fail)" % abs(W))
+    else:
+        need(abs(D2_ - D0) < abs(W) / 2.0, "|Delta(2) - Delta(0)| = %.3f K < |W|/2 = %.3f K" % (abs(D2_ - D0), abs(W) / 2.0))
+
+    print("\n" + ("FAIL: %d check(s)" % len(FAIL) if FAIL else "PASS"))
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

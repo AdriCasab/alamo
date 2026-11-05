@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  html{color-scheme:light}
+  body{margin:0;font:14px system-ui,sans-serif}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>The Flaw Volume Anchor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#f5f6f5; --surface:#fffffe;
+    --ink:#14191d; --ink-soft:#49545d; --granite:#6e7a85;
+    --rule:#d4d9d9; --rule-soft:#e6eae9;
+    --ochre:#8f5d0d; --ochre-wash:#f5ecd9;
+    --teal:#1a615c; --teal-wash:#e1edeb;
+    --alarm:#9a2e20; --alarm-wash:#f8e8e5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper:#0f1417; --surface:#161d21;
+      --ink:#e8eded; --ink-soft:#a3afb5; --granite:#8c989f;
+      --rule:#2a343a; --rule-soft:#212a2f;
+      --ochre:#d8a03f; --ochre-wash:#2a2115;
+      --teal:#63bdb4; --teal-wash:#152625;
+      --alarm:#e08679; --alarm-wash:#2b1a18;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper:#0f1417; --surface:#161d21;
+    --ink:#e8eded; --ink-soft:#a3afb5; --granite:#8c989f;
+    --rule:#2a343a; --rule-soft:#212a2f;
+    --ochre:#d8a03f; --ochre-wash:#2a2115;
+    --teal:#63bdb4; --teal-wash:#152625;
+    --alarm:#e08679; --alarm-wash:#2b1a18;
+  }
+
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size:16.5px; line-height:1.62; padding:0 20px;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{ max-width:40rem; margin:0 auto; padding-block:56px 72px; }
+
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--granite); margin:0 0 14px;
+  }
+  h1{
+    font-family:"Newsreader", Georgia, serif;
+    font-weight:600; font-size:clamp(2rem,7vw,2.85rem);
+    line-height:1.12; letter-spacing:-.015em;
+    margin:0 0 14px; text-wrap:balance;
+  }
+  .standfirst{
+    font-family:"Newsreader", Georgia, serif;
+    font-size:1.19rem; line-height:1.5; color:var(--ink-soft);
+    margin:0 0 36px; text-wrap:pretty;
+  }
+  h2{
+    font-family:"Newsreader", Georgia, serif;
+    font-weight:600; font-size:1.42rem; line-height:1.2;
+    letter-spacing:-.01em; margin:46px 0 12px; text-wrap:balance;
+  }
+  h3{ font-weight:600; font-size:.98rem; margin:26px 0 8px; }
+  p{ margin:0 0 15px; text-wrap:pretty; }
+  hr{ border:0; border-top:1px solid var(--rule); margin:42px 0; }
+  code{ font-family:"IBM Plex Mono", monospace; font-size:.88em; color:var(--teal); }
+  .v{ font-family:"IBM Plex Mono", monospace; font-size:.88em; }
+
+  .panel{
+    background:var(--surface); border:1px solid var(--rule);
+    border-radius:3px; padding:20px 22px; margin:0 0 8px;
+  }
+  .panel dl{ margin:0; display:grid; gap:14px; }
+  .panel dt{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--granite); margin-bottom:2px;
+  }
+  .panel dd{ margin:0; font-size:.96rem; line-height:1.5; }
+
+  .eq{
+    margin:22px 0; padding:18px 20px; background:var(--surface);
+    border-left:2px solid var(--ochre); overflow-x:auto;
+  }
+  .eq.cool{ border-left-color:var(--teal); }
+  .eq .line{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:1.02rem; line-height:1.75; white-space:nowrap;
+  }
+  .eq .line + .line{ margin-top:6px; }
+  .eq .note{
+    font-size:.84rem; color:var(--ink-soft); margin-top:11px;
+    line-height:1.5; white-space:normal;
+  }
+  .eq sub, .eq sup{ font-size:.72em; }
+  .hi{ color:var(--ochre); font-weight:500; }
+  .cl{ color:var(--teal); font-weight:500; }
+
+  .syms{
+    display:grid; grid-template-columns:auto 1fr; gap:6px 16px;
+    margin:18px 0 22px; font-size:.92rem;
+  }
+  .syms .s{ font-family:"IBM Plex Mono", monospace; white-space:nowrap; }
+  .syms .d{ color:var(--ink-soft); }
+
+  .tbl-wrap{ overflow-x:auto; margin:22px 0; }
+  table{ border-collapse:collapse; width:100%; font-size:.92rem; }
+  caption{
+    caption-side:top; text-align:left;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--granite); padding-bottom:10px;
+  }
+  th, td{
+    padding:9px 12px; text-align:right;
+    border-bottom:1px solid var(--rule-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  th:first-child, td:first-child{ text-align:left; }
+  thead th{
+    font-weight:600; font-size:.84rem; color:var(--ink-soft);
+    border-bottom:1px solid var(--rule);
+  }
+  tbody tr:last-child td{ border-bottom:1px solid var(--rule); }
+  tr.worst td{ background:var(--alarm-wash); font-weight:500; }
+  tr.pick td{ background:var(--teal-wash); font-weight:500; }
+
+  .flag{ margin:24px 0; padding:16px 18px; border-radius:3px; font-size:.95rem; line-height:1.55; }
+  .flag p{ margin:0 0 10px; }
+  .flag p:last-child{ margin:0; }
+  .flag .tag{
+    display:block; font-family:"IBM Plex Mono", monospace;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:7px;
+  }
+  .flag.bad{ background:var(--alarm-wash); } .flag.bad .tag{ color:var(--alarm); }
+  .flag.fix{ background:var(--teal-wash); } .flag.fix .tag{ color:var(--teal); }
+  .flag.minor{ background:var(--ochre-wash); } .flag.minor .tag{ color:var(--ochre); }
+
+  ul{ margin:0 0 15px; padding-left:1.15em; }
+  li{ margin-bottom:7px; }
+  li::marker{ color:var(--granite); }
+  .site{ font-family:"IBM Plex Mono", monospace; font-size:.8rem; color:var(--granite); }
+  footer{
+    margin-top:48px; padding-top:18px; border-top:1px solid var(--rule);
+    font-size:.84rem; color:var(--granite);
+  }
+  a{ color:var(--teal); }
+  a:focus-visible, .eq:focus-visible{ outline:2px solid var(--ochre); outline-offset:3px; }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">P2-2d &middot; pre-run design note &middot; rev 3</p>
+  <h1>The Flaw Volume Anchor</h1>
+  <p class="standfirst">Our model wants a Weibull modulus of 3&ndash;5. Every published granite value is 10&ndash;25. That gap looked like a defect in the fit &mdash; until it turned out Wilkinson &amp; Tester measured both numbers in 1993 and reported the same discrepancy.</p>
+
+  <div class="panel">
+    <dl>
+      <div>
+        <dt>The anomaly</dt>
+        <dd>Kant's measured flux exponent forces <em>m</em> far below every published granite modulus.</dd>
+      </div>
+      <div>
+        <dt>The resolution</dt>
+        <dd>Published values are <strong>strength</strong> moduli. Converted, our chain demands <strong>6.8&ndash;10.1</strong> &mdash; which brackets Wilkinson &amp; Tester's spallation-inferred <strong>8</strong> for Barre granite.</dd>
+      </div>
+      <div>
+        <dt>The fix still needed</dt>
+        <dd>Split <code>weibull.V0</code> into a mesh anchor and a material reference, anchored where the size factor is exactly 1.</dd>
+      </div>
+    </dl>
+  </div>
+
+  <h2>The literature already documents our anomaly</h2>
+
+  <p>Wilkinson &amp; Tester obtained the Weibull modulus for granite two different ways and got two different answers:</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <caption>Published granite moduli</caption>
+      <thead>
+        <tr><th>how it was obtained</th><th>m</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Mechanical</strong> tests</td><td>20</td></tr>
+        <tr class="pick"><td>Back-fitted from <strong>spallation</strong> &mdash; Barre</td><td>8</td></tr>
+        <tr><td>Back-fitted from <strong>spallation</strong> &mdash; Westerly</td><td>13</td></tr>
+        <tr><td>Shen 2018, from 280 measured spalls</td><td>10&ndash;17</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The spallation-inferred modulus is roughly <strong>half</strong> the mechanically measured one, and that was in print in 1993. So a fit that comes out low is not a defect in our model &mdash; it is the documented behaviour of this particular measurement.</p>
+
+  <h2>The chain, with its hidden assumption exposed</h2>
+
+  <p>The onset temperature moves with flux because a deeper-soaked rock offers a longer flaw. Writing the stressed volume as a power of the heated depth makes the assumption visible:</p>
+
+  <div class="eq" tabindex="0">
+    <div class="line">V &nbsp;&prop;&nbsp; &ell;<sub>q</sub><sup><span class="hi">n</span></sup> &nbsp;&nbsp;&nbsp;&nbsp;&ell;<sub>q</sub> = k (T<sub>s</sub> &minus; T<sub>0</sub>) / q</div>
+    <div class="line">&nbsp;</div>
+    <div class="line">e &nbsp;=&nbsp; <span class="hi">n</span> / (2m + <span class="hi">n</span>) &nbsp;&nbsp;&rArr;&nbsp;&nbsp; m &nbsp;=&nbsp; (<span class="hi">n</span>/2) &middot; (1&minus;e)/e</div>
+    <p class="note"><span class="cl">n = 3</span> &mdash; what we use today &mdash; assumes the spalling region stays geometrically similar as it grows, i.e. a cube, or a disk of fixed aspect ratio. Note the shape of the result: <strong>m is linear in n</strong>. Get the geometry power wrong by a factor of two and the modulus is wrong by a factor of two.</p>
+  </div>
+
+  <h2>The convention is the whole story</h2>
+
+  <p>At <span class="v">n = 3</span>, with Kant's measured exponent of 0.229&ndash;0.306:</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <caption>m demanded at n = 3, by convention</caption>
+      <thead>
+        <tr><th>statistics on&hellip;</th><th>m demanded</th><th>against the literature</th></tr>
+      </thead>
+      <tbody>
+        <tr class="worst"><td>flaw <strong>length</strong></td><td>3.40 &ndash; 5.05</td><td>matches nothing published</td></tr>
+        <tr class="pick"><td>flaw <strong>strength</strong></td><td>6.80 &ndash; 10.10</td><td>brackets Barre's 8, reaches Shen's 10</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The two conventions are related by <span class="v">m<sub>strength</sub> = 2 m<sub>flaw</sub></span>. Under that substitution the <em>scatter</em> of firing stress across the floor is identical to every digit &mdash; so switching conventions buys nothing physical, and it is not a cure for heterogeneity.</p>
+
+  <p>But it is decisive for the one external check available to us. It determines whether our fitted modulus sits <strong>on a published spallation value</strong> or a factor of two below everything in print. With no geometry correction at all, the strength reading lands on Barre granite.</p>
+
+  <h3>Aspect ratio: a refinement, not a rescue</h3>
+
+  <p>Real spalls are thin disks, not cubes &mdash; and their aspect ratio grows with size, from about 1.5&nbsp;:&nbsp;1 at 200&nbsp;&micro;m to roughly 6&nbsp;:&nbsp;1 at 1&nbsp;mm, with 6.91 recommended from 280 measured spalls. That makes <span class="v">n &gt; 3</span>:</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <caption>m demanded (strength convention), by geometry power</caption>
+      <thead><tr><th>n</th><th>m demanded</th><th>covers</th></tr></thead>
+      <tbody>
+        <tr><td>3 &nbsp;(cube, today)</td><td>6.8 &ndash; 10.1</td><td>Barre 8</td></tr>
+        <tr><td>4</td><td>9.1 &ndash; 13.5</td><td>Westerly 13</td></tr>
+        <tr><td>5</td><td>11.3 &ndash; 16.8</td><td>Shen's band</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>So the aspect ratio tunes us <em>within</em> the literature rather than being needed to get us there. That demotes it from a blocker to a reported sensitivity &mdash; which is the right place for it, because a power law fitted from two anchors is not defensible: it predicts 1.21&times; thickness growth where our own reference note records 1.36&times;.</p>
+
+  <h2>The V<sub>0</sub> fix, and why the anchor is forced</h2>
+
+  <p>Separately from the modulus question, one input key is doing two incompatible jobs. Under <code>size_volume = cell</code>, <span class="v">V<sub>0</sub></span> must equal the cell volume or mesh-independence is lost. Under <code>flux</code>, it must be mesh-independent or cross-deck comparison is lost. Those are opposites, so the key has to split.</p>
+
+  <p>What has changed is the <em>reason</em> for where the new one is anchored. The size factor multiplies the baseline flaw:</p>
+
+  <div class="eq cool" tabindex="0">
+    <div class="line">a<sub>f</sub> &nbsp;=&nbsp; a<sub>0</sub> &middot; ( &ell;<sub>q</sub>&sup3; / V<sub>ref</sub> )<sup>1/m</sup></div>
+    <p class="note">If the bracket is anything other than 1 at the calibration point, then <span class="v">a<sub>0</sub></span>'s effective value depends on the fitted <em>m</em> &mdash; so the flaw becomes coupled to the modulus we are trying to measure. <strong>Factor = 1 is the unique m-independent choice.</strong></p>
+  </div>
+
+  <p>That forces the anchor to the leg where the flaw and the relief factor were calibrated &mdash; <span class="v">h = 500</span>. At the 850&nbsp;K target, with the deck's <span class="v">k = 1.5</span> and <span class="v">T<sub>flame</sub> = 1673.15&nbsp;K</span>:</p>
+
+  <div class="eq cool" tabindex="0">
+    <div class="line">q<sub>net</sub> = 500 &times; (1673.15 &minus; 850) = 0.412 MW/m&sup2;</div>
+    <div class="line">&ell;<sub>q</sub> = 1.5 &times; 556.85 / 411575 = <span class="cl">2.029 mm</span></div>
+    <div class="line">V<sub>ref</sub> = &ell;<sub>q</sub>&sup3; = <span class="cl">8.36&times;10<sup>&minus;9</sup> m&sup3;</span></div>
+    <p class="note">A closed-form constant, because T<sub>s</sub> at the anchor is pinned at 850&nbsp;K by the fit target rather than by R. No circularity, and no new diagnostic.</p>
+  </div>
+
+  <p>Anchoring there also leaves the other leg's flaw <strong>2.47&times;</strong> larger at <em>m</em> = 4, which is 1.57&times; in stress intensity. That spread is the point: it is what pulls the two onsets apart, and today they sit only <strong>2.5&nbsp;K</strong> apart, which is why toughness and relief cannot be told apart at all.</p>
+
+  <h3>This problem has a name in another field</h3>
+
+  <p>Cleavage fracture in steels hit it identically. The Beremin local approach integrates stress over a reference volume, and the literature states both things we derived independently: that the reference volume "only scales the microcrack size distribution but does not change the distribution shape," so it and the scale parameter are one calibration; and that taking it as the mesh size is acceptable only "for low stress gradients," where "the mesh size is not significant."</p>
+
+  <p>A 2&nbsp;mm thermal skin carrying 500&nbsp;K is about as steep a gradient as this field offers. The literature is telling us ours is precisely the case where a mesh-sized reference is not safe.</p>
+
+  <h3>The founding precedent</h3>
+
+  <p>Dey &amp; Kranz did this in 1985, "relating heat penetration depths to an assumed Weibull distribution of fracture-nucleation sites." Their four assumptions read as a checklist against ours: spalls form by <strong>compressive</strong> stress through the same mechanism as uniaxial splitting in a compression test (which is why the relief band is <span class="v">UCS/&sigma;</span>); heat diffuses only a short distance, so the stress state is independent of hole shape; <strong>plate buckling</strong> governs separation; and Weibull describes strength variation at the <strong>spall-thickness scale</strong>.</p>
+
+  <p>The third is a step we have not built &mdash; buckling is named in the founding paper and is our pre-registered next suspect for whatever the relief factor is currently absorbing.</p>
+
+  <hr>
+
+  <h2>Three things to carry forward</h2>
+
+  <div class="flag minor">
+    <span class="tag">The deck uses the wrong modulus, by the literature's own reckoning</span>
+    <p>Meier's <code>input_drilling</code> sets <span class="v">m = 20</span> &mdash; Wilkinson &amp; Tester's <strong>mechanical</strong> value, where spallation calls for 8&ndash;13. So the fit is <em>correcting a documented error</em>, not inventing a suspiciously low number.</p>
+  </div>
+
+  <div class="flag bad">
+    <span class="tag">The load-bearing number is second-hand</span>
+    <p>The whole reconciliation rests on that 8 / 13 split, and our own reference note states its provenance plainly: three of four primary sources are <strong>paywalled and were never fetched</strong>, and no number in it came from reading a PDF.</p>
+    <p>Independent searching corroborates the <em>shape</em> of the story &mdash; 10&ndash;17 recommended, index 15&ndash;20, probable range 15&ndash;25 &mdash; but <strong>not</strong> the mechanical-versus-spallation split itself. That paper should be obtained before any of this is written up.</p>
+  </div>
+
+  <div class="flag minor">
+    <span class="tag">&ell;<sub>q</sub> is a proxy, not a spall</span>
+    <p>Our anchor's <span class="v">&ell;<sub>q</sub> = 2.03&nbsp;mm</span> is larger than every measured spall thickness &mdash; Wilkinson reports 0.1&ndash;1&nbsp;mm, H&ouml;ser's 200&nbsp;&micro;m spalls imply 100&ndash;200&nbsp;&micro;m. The cube over-counts the stressed volume, exactly as the thin-disk geometry predicts. The degeneracy absorbs it, so the fit is unaffected &mdash; but <span class="v">&ell;<sub>q</sub>&sup3;</span> should be described as a <em>proxy</em> for the stressed volume, never as the spall's own volume.</p>
+  </div>
+
+  <h2>And the heterogeneity risk, honestly</h2>
+
+  <p>Because the scatter is identical under both conventions, the floor's firing stress still varies by <strong>1.8&ndash;2.5&times;</strong> at the fitted modulus, against 1.17&times; at the deck's current <em>m</em> = 20. Half the Meier floor has frozen once before.</p>
+
+  <p>But the literature says real granite's spallation modulus <em>is</em> 8&ndash;13, and real spallation demonstrably works at that heterogeneity. So nature tolerates this much scatter. The open question is whether <strong>our numerics</strong> do &mdash; which is a narrower and far more answerable question than whether the model is wrong.</p>
+
+  <footer>
+    Planning note, 9 October 2026, rev 3. No source edits made.
+    Literature via <span class="site">tests/MMWSpalling/validation/spall_thickness/REFERENCES.md</span>
+    (Wilkinson &amp; Tester 1993; Shen 2018; Walsh 2014; H&ouml;ser 2016) &mdash; read its provenance note before quoting.
+    Code: <span class="site">MMWSpalling.H:9129</span> (size factor),
+    <span class="site">:7357-7365</span> &amp; <span class="site">Removal.H:815-817</span> (both flaw reads),
+    <span class="site">:11122-11126</span> (mode parse),
+    <span class="site">input_model:97</span> (Kant's 8&nbsp;&micro;m flaw),
+    <span class="site">fit_relief.py:50</span> (the h = 500 calibration leg).
+  </footer>
+
+</div>
+</body>
+</html>
