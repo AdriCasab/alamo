@@ -56,7 +56,6 @@ microstructure.number_of_grains = 30
 microstructure.seed             = 7
 microstructure.nphases          = 1
 
-microstructure.phase0.name              = central_aare
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 2.50
 microstructure.phase0.beta              = 8.0e-6
@@ -64,14 +63,12 @@ microstructure.phase0.E                 = 35.0e9
 microstructure.phase0.mu                = 13.8888888889e9
 microstructure.phase0.rho               = 2630.0
 microstructure.phase0.Cp                = 800.0
-microstructure.phase0.alpha_attenuation = 300.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 microstructure.phase0.T_vap_lo          = 700.0
 microstructure.phase0.T_vap_hi          = 750.0
 microstructure.phase0.L_v               = 0.0
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # sp_weibull branch + Weibull per-cell flaws.
@@ -110,8 +107,8 @@ beam.lambda     = 2.19e-3
 beam.x0         = 0.008
 beam.y0         = 0.008
 beam.z0         = 0.016
-beam.alpha_expr = 300.0
-beam.R          = 0.0
+beam.eps_r     = 1.0
+beam.tan_delta = 0.10456479761137524   # fixture: alpha = 300.0 1/m by construction (eps_r 1 => R 0); lambda 2.19e-3
 
 losses.epsilon       = 0.0
 losses.epsilon_high  = 0.0
@@ -150,4 +147,3 @@ el.model1.E  = 35.0e9
 el.model1.nu = 0.26
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
-solver = explicit

@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+"""P2-24 unit/face_vapor -- A LISTED CELL PAST H_vap_hi LEAVES, ONCE, BOOKED; A BURIED ONE IS COUNTED. Runs -np 4.
+
+  z2 [gate]
+    U3 (input; zero conduction, uniform q 1e7 W/m2, alpha 2000 1/m, R 0, crack rule held off):
+       t_v = dz [H_vap_hi - H(T0)] / (q (1 - e^-2)), H_vap_hi from the run's own table print (run.log), H(T0) from the
+       t = 0 plotfile; the step of the first void (the thermo row stamped t is the step that ENDED at t) vs the step
+       in which the top layer crosses H_vap_hi (n_v = ceil(t_v/dt)): bar |n_void - n_v| <= 1 (the rule reads H at the
+       START of a step, so the exact expectation is n_v + 1, printed); 64 cells voided within 2 steps (thermo
+       fr_n_vapor and the events CSV's regime-2 rows); ledger_E_vapor = sum of H V over the regime-2 cells of the void
+       step's plotfile (the regime field is per step) to the printed digits, and at the end those cells are the
+       removed set with H unchanged (frozen); |ledger_err| and |ledger_err_solid| <= 1e-9 on every row
+       (the solid row's non-vacuity: without the vapour term it would read ledger_E_vapor / ledger_E_src, printed).
+    U4 (U3, vapor.enabled 0): no cell removed, the top past T_vap_hi at the end.
+    U5 (U3, beam.P0 0): no cell removed, fr_n_vapor 0 on every row.
+    U6 (U5 and the SECOND layer at T_vap_hi + 10 K under a 300 K top; a deck copy with the expression IC): fr_n_vapor_int
+       64 on every row whose removal read a face list (step 2 on: step 1's kernel builds the list -- the packet's
+       "step 1"), fr_n_vapor 0, no cell removed.
+    U3 on --bin_pre (the P2-23 build): rc != 0. As written the deck stops on the new beam keys; a copy of the deck and
+       the rock file WITHOUT beam.melt_factor / beam.R_melt (U3pre) shows the refusal the packet names: the face list
+       refused vapour as "regime 2 (vapor.enabled)".
+Usage: test [--bin_pre PATH]   (exit 1 on a failed bar)
+"""
+import argparse
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input")
+ROCK = os.path.join(ROOT, "tests", "MMWSpalling", "validation", "shared", "rock_grimsel.inputs")
+OUT = os.path.join(HERE, "output")
+MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+DT, DZ, NCOL = 0.05, 1.0e-3, 64
+Q = 3141.5926535897934 / (math.pi * 0.01 ** 2)        # W/m2: the deck's P0 over the uniform disk
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def run(name, extra, binary=BIN, deck=DECK):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    argv = MPI + [binary, deck] + extra + ["plot_file=" + os.path.join(d, "run")]
+    t0 = time.time()
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    for b in os.listdir(ROOT):           # an abort's Backtrace.N lands in the cwd (the repo root): keep it with the leg
+        if b.startswith("Backtrace.") and os.path.getmtime(os.path.join(ROOT, b)) >= t0 - 1.0:
+            shutil.move(os.path.join(ROOT, b), os.path.join(d, b))
+    log = ((r.stdout or "") + (r.stderr or "")).replace("\0", "")
+    open(os.path.join(d, "run.log"), "w").write(log)
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join(argv) + "\n")
+    return r.returncode, os.path.join(d, "run"), log
+
+
+def thermo(run_dir):
+    L = open(os.path.join(run_dir, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    return [dict(zip(h, [x.strip() for x in r.split("\t")])) for r in L[1:]]
+
+
+def last_plot(run_dir, n=None):
+    n = sorted(p for p in os.listdir(run_dir) if p.endswith("cell"))[-1] if n is None else "%05dcell" % n
+    ds = yt.load(os.path.join(run_dir, n))
+    ad = ds.all_data()
+    o = np.lexsort((ad["x"].to_value(), ad["y"].to_value(), ad["z"].to_value()))
+    return ds, {f: ad[f].to_value()[o] for f in ("H", "Temp", "removed", "regime", "cell_volume")}
+
+
+def u3(log, d3):
+    m = re.search(r"H\(vap_hi 3503 K\) = ([0-9.eE+-]+)", log)
+    H_vap = float(m.group(1))
+    ds0 = yt.load(os.path.join(d3, "00000cell"))
+    H0 = ds0.all_data()["H"].to_value()
+    need(np.ptp(H0) == 0.0, "U3 IC uniform: H(T0) %.10e J/m3 on every cell" % H0[0])
+    t_v = DZ * (H_vap - H0[0]) / (Q * (1.0 - math.exp(-2.0)))
+    n_v = math.ceil(t_v / DT)
+    print("  U3 H_vap_hi %.10e J/m3 (the run's table); q %.6e W/m2; t_v = %.6f s; the crossing step n_v %d" % (
+        H_vap, Q, t_v, n_v))
+    rows = thermo(d3)
+    nv = [(float(r["time"]), float(r["fr_n_vapor"])) for r in rows]
+    first = next(((t, n) for t, n in nv if n > 0), None)
+    need(first is not None, "U3 a vapour void exists")
+    if first is None:
+        return
+    n_void = round(first[0] / DT)
+    need(abs(n_void - n_v) <= 1, "z2 U3 first void on step %d (row t = %g s) vs t_v's step %d: |d| %d step "
+         "(bar 1; exact expectation n_v + 1 = %d, the rule reads H at the step's start)" % (
+             n_void, first[0], n_v, abs(n_void - n_v), n_v + 1))
+    n2 = sum(n for t, n in nv if n_void <= round(t / DT) <= n_void + 1)
+    ev = os.path.join(os.path.dirname(d3), "run_removal_events.csv")
+    E = [l.split(",") for l in open(ev).read().splitlines()[1:]]
+    n_ev = sum(1 for e in E if e[3] == "2")
+    need(n2 == NCOL and n_ev == NCOL and sum(n for _, n in nv) == NCOL,
+         "z2 U3 voided within 2 steps %d (64); events CSV regime-2 rows %d (64); total fr_n_vapor %d (64)" % (
+             n2, n_ev, sum(n for _, n in nv)))
+    # the regime field is PER STEP (reset each step, Shared.H): read it on the void step's plotfile
+    _, fv = last_plot(d3, n_void)
+    sel = (fv["removed"] > 0.5) & (np.abs(fv["regime"] - 2.0) < 0.5)
+    EV = float(np.sum(fv["H"][sel] * fv["cell_volume"][sel]))
+    tok = rows[-1]["ledger_E_vapor"]
+    need(int(sel.sum()) == NCOL and tok == "%g" % EV,
+         "z2 U3 ledger_E_vapor %s J = sum H V over the %d regime-2 cells of plotfile %05d: %s J (%.10e; %%g)" % (
+             tok, int(sel.sum()), n_void, "%g" % EV, EV))
+    _, fl = last_plot(d3)
+    need(np.array_equal(fl["removed"] > 0.5, sel) and np.array_equal(fl["H"][sel], fv["H"][sel]),
+         "z2 U3 at the end the removed set is those %d cells and their H is unchanged since the void (frozen)" % int(
+             sel.sum()))
+    e1 = max(abs(float(r["ledger_err"])) for r in rows)
+    e2 = max(abs(float(r["ledger_err_solid"])) for r in rows)
+    need(e1 <= 1e-9 and e2 <= 1e-9, "z2 U3 max |ledger_err| %.2e, max |ledger_err_solid| %.2e (bar 1e-9); without the "
+         "vapour term the solid row would read %.4f" % (e1, e2, float(tok) / float(rows[-1]["ledger_E_src"])))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--bin_pre", default=None)
+    a = ap.parse_args()
+    print("P2-24 unit/face_vapor (H J/m3, E J, t s, counts per step)")
+    print("=" * 100)
+    rc, d3, log = run("U3", [])
+    need(rc == 0, "U3 runs (rc %d)" % rc)
+    if rc == 0:
+        u3(log, d3)
+    rc, d4, _ = run("U4", ["vapor.enabled=0"])
+    need(rc == 0, "U4 runs (rc %d)" % rc)
+    if rc == 0:
+        _, f = last_plot(d4)
+        need(int((f["removed"] > 0.5).sum()) == 0 and f["Temp"].max() > 3503.0,
+             "z2 U4 (vapour off): removed %d (0); max T %.1f K (past T_vap_hi 3503)" % (
+                 int((f["removed"] > 0.5).sum()), f["Temp"].max()))
+    rc, d5, _ = run("U5", ["beam.P0=0.0", "stop_time=0.5"])
+    need(rc == 0, "U5 runs (rc %d)" % rc)
+    if rc == 0:
+        _, f = last_plot(d5)
+        r5 = thermo(d5)
+        need(int((f["removed"] > 0.5).sum()) == 0 and all(float(r["fr_n_vapor"]) == 0 for r in r5),
+             "z2 U5 (no beam): removed %d (0); fr_n_vapor 0 on all %d rows" % (int((f["removed"] > 0.5).sum()), len(r5)))
+    # U6's two-layer IC: a copy of the deck with the constant IC replaced (an argv cannot unset hc.ic.constant.value)
+    d = os.path.join(OUT, "U6_deck")
+    os.makedirs(d, exist_ok=True)
+    deck6 = os.path.join(d, "input")
+    src = open(DECK).read()
+    ic_c = "hc.ic.type           = constant      # U6 sets an expression IC (the test writes a deck copy)\nhc.ic.constant.value = 300.0\n"
+    assert ic_c in src
+    open(deck6, "w").write(src.replace(ic_c, 'hc.ic.type = expression\nhc.ic.expression.coord = cartesian\n'
+                                       'hc.ic.expression.region0 = "300.0+3213.0*(z>=0.006)*(z<0.007)"\n'))
+    rc, d6, _ = run("U6", ["beam.P0=0.0", "stop_time=0.5"], deck=deck6)
+    need(rc == 0, "U6 runs (rc %d)" % rc)
+    if rc == 0:
+        _, f = last_plot(d6)
+        R6 = thermo(d6)
+        i1 = next(i for i, r in enumerate(R6) if float(r["fl_n_top"]) > 0)
+        r6 = R6[i1 + 1:]      # step 1's kernel BUILDS the list; the removal first reads one on step 2 (as face_melt)
+        vi = sorted(set(r["fr_n_vapor_int"] for r in r6))
+        li = sorted(set(r["fr_n_lid"] for r in r6))
+        need(len(r6) > 0 and vi == ["64"] and all(r["fr_n_vapor"] == "0" for r in r6)
+             and int((f["removed"] > 0.5).sum()) == 0,
+             "z2 U6 (the buried layer at 3513 K): fr_n_vapor_int %s on the %d rows whose removal read a face list "
+             "(from t = %s; 64); fr_n_vapor 0; removed %d (0); fr_n_lid %s (the lid exclusion); max T %.1f K" % (
+                 vi, len(r6), r6[0]["time"] if r6 else "-", int((f["removed"] > 0.5).sum()), li, f["Temp"].max()))
+    if a.bin_pre:
+        rc, _, lg = run("U3_bin_pre", [], binary=os.path.abspath(a.bin_pre))
+        why = next((l.strip() for l in lg.splitlines() if "melt_factor" in l or "R_melt" in l or "regime 2" in l),
+                   "(no line naming the keys)")
+        need(rc != 0, "z2 U3 on bin_pre: rc %d (!= 0); %s" % (rc, re.sub(r"\x1b\[[0-9;]*m", "", why)[:140]))
+        d = os.path.join(OUT, "U3pre_deck")
+        os.makedirs(d, exist_ok=True)
+        rock = os.path.join(d, "rock_grimsel_no_beam_melt.inputs")
+        open(rock, "w").write("".join(l for l in open(ROCK) if not re.match(r"\s*beam\.(melt_factor|R_melt)\b", l)))
+        deck = os.path.join(d, "input")
+        open(deck, "w").write("".join(
+            ("FILE = " + os.path.relpath(rock, ROOT) + "\n") if l.startswith("FILE = ") and "rock_grimsel" in l else l
+            for l in open(DECK) if not re.match(r"\s*beam\.(melt_factor|R_melt)\b", l)))
+        rc, _, lg = run("U3pre", [], binary=os.path.abspath(a.bin_pre), deck=deck)
+        why = next((l.strip() for l in lg.splitlines() if "regime 2" in l), "(no line naming regime 2)")
+        k = why.find("regime 2")
+        need(rc != 0 and "regime 2" in lg, "z2 U3pre (no beam melt keys) on bin_pre: rc %d; ...%s" % (
+            rc, re.sub(r"\x1b\[[0-9;]*m", "", why[max(0, k - 60):k + 60])))
+    else:
+        print("  ----  z2 U3 on bin_pre NOT RUN (no --bin_pre)")
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

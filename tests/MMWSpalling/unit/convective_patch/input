@@ -67,8 +67,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.008
 beam.y0     = 0.008
 beam.z0     = 0.192
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 # Surface losses off.
 losses.epsilon  = 0.0
@@ -84,13 +82,11 @@ losses.T_amb    = 293.15
 #
 surface_patch.enabled = 1
 surface_patch.mode    = convective_flame
-surface_patch.face    = zhi
 surface_patch.x0      = 0.008
 surface_patch.y0      = 0.008
 surface_patch.radius  = 0.05
 surface_patch.h_conv  = 1000.0
 surface_patch.T_flame = 1673.15
-surface_patch.T_ext   = 293.15
 
 #
 # HEAT CONDUCTION: hc.heat.alpha unused on the material path but required.
@@ -128,4 +124,3 @@ el.solver.nriters = 1
 el.ref_threshold     = 1.0
 el.eta_ref_threshold = 1.0
 
-solver = explicit

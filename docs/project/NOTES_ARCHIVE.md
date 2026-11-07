@@ -2658,3 +2658,31 @@ Regenerate the index with `python3 docs/project/tools/notes_index.py`.
   ⚠ Not an alarm about the rate **level** — that is P2's item (blowing `h_eff = h·B/(e^B − 1)`,
   `cp(T)`), with literature magnitudes, and was never P1's to fix.
 
+
+
+## ROADMAP notes released 2026-11-05 (P2-19 planning): column-path and Meier-jet caveats that no longer constrain the next steps
+
+- ⚠⚠ **THE EXHAUST RECIRCULATION HOLDS THE FLOOR POWER UP.** Under `jet_T_ent_mode = exhaust` the
+  floor map ×0.743 cut `jet_P_face` only 7 % (1,870 → 1,743 W): entrained mass 2.07 → 3.23 g/s, cap
+  +17 %. A floor-coefficient change is not a delivered-power change — read the budget (`2026-10-13.md` §13).
+- ⚠⚠ **THE MEIER FLOOR GAS NEVER CAME FROM THE JET CLOSURE'S DECAY.** Under `exhaust` T_mix 1,504 K ⇒
+  D_e 8.05 mm, core 8.6 D, T_stag 1,742–1,804 K at 85–107 mm; the SAME deck in `fixed` mode reads 720–831 K.
+  P2-5 validates the decay first (bracketed `jet_core_length`); P2-5b must choose Meier's mode and core explicitly (`2026-10-14.md` §6).
+- ⚠⚠ **`phi` IS NEVER READ BY THE CONDUCTION KERNEL** (`MMWSpalling.H:1699-1700`, absent from the
+  `ParallelFor` at `:1701-1835`) ⇒ a receded cell is still a full `dz` of rock thermally, and a naive
+  enthalpy subtraction reads `ell` back **1.32× / 3.81× too long** at `dz/ell` = 2 / 1, and **flat** at 0.5.
+- ⚠⚠ **PARTIAL RECESSION IS THE CONSISTENT SCHEME, and the machinery exists** —
+  `phi_new = phi_old − h_c` (`Removal.H:1475`), with `h_c` forced to `dz` at `:1387`. Voiding a whole
+  cell and pushing the remainder's enthalpy to the neighbour **cascades one cell per time step**.
+- ⚠⚠ **THE STATE CANNOT EXPRESS LATERAL RECESSION.** Per-column floor from one scalar
+  (`phi = base − (k−klo)·dz`, `Removal.H:2818-2821`); a lagging column can only be removed from its
+  top, so no sharp floor/wall edge can be rounded. A lateral accumulator must be a **new field**.
+- ⚠⚠ **AN UNDERCUT MAKES `surface_mf` WRONG, NOT STALE** — it is still phi-derived, and
+  `UpdateSurfaceMaskFromPhi` could not be converted identity-preservingly. Any packet creating one
+  runs `surface.follow_mask = 1` or fixes the mask under its own gate; restate beam-closure contiguity.
+- ⚠⚠ **THE FLUX-ANCHORED ESTIMATOR CANCELS THE FLAKE-SCALE CRITERION.** The map **peaks at the pad
+  ring** (1.19 MW/m² at 38–42 mm against 0.80 on axis), so anchoring `ell` to flux gives the wall band
+  `ell` ≈ 1.1 mm, the cap stops binding and every wall column fires again. **Land one at a time.**
+- ⚠⚠ **THE KANT ANCHOR RUNS THE WRONG BC.** `sp_kant_onset_meiercfg/test:113-120` never passes
+  `surface_patch.robin_form`, so it defaults to `Cell` while Meier runs `surface`. ≈19 of the 21.6 %
+  firing-time spread is that BC artefact, **not** the estimator.

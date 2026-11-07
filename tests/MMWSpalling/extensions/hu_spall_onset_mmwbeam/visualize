@@ -26,8 +26,8 @@ import yt
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# Read beam.P0 and beam.R straight from the input file so they cannot drift
-# out of sync with the run that produced the plotfiles.
+# Read beam.P0 and the dielectric description straight from the input file so
+# they cannot drift out of sync with the run that produced the plotfiles.
 def _parse_input_scalar(key, default):
     path = os.path.join(ROOT, "input_granite2")
     try:
@@ -44,7 +44,10 @@ def _parse_input_scalar(key, default):
 
 
 P0      = _parse_input_scalar("beam.P0", 5000.0)   # beam power [W]
-R       = _parse_input_scalar("beam.R", 0.2)       # surface reflectivity
+# P2-21 (P2-20 review): beam.R is retired; the reflection is COMPUTED from
+# beam.eps_r as MMWBeam.H does (Fresnel, normal incidence; vacuum default 1 => 0)
+_n      = _parse_input_scalar("beam.eps_r", 1.0) ** 0.5
+R       = ((_n - 1.0) / (_n + 1.0)) ** 2              # surface reflectivity
 Y_SLICE = 0.05                                     # beam-axis y location [m]
 
 

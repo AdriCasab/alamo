@@ -64,7 +64,6 @@ microstructure.mode       = expression
 microstructure.phase_expr = 0
 microstructure.nphases    = 1
 
-microstructure.phase0.name              = grimsel
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 1.5
 microstructure.phase0.beta              = 8.0e-6
@@ -72,16 +71,13 @@ microstructure.phase0.E                 = 30.0e9
 microstructure.phase0.mu                = 11.538461538e9
 microstructure.phase0.rho               = 2750.0
 microstructure.phase0.Cp                = 790.0
-microstructure.phase0.alpha_attenuation = 2000.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 microstructure.phase0.T_m               = 1473.0
 microstructure.phase0.fus_width         = 50.0
 microstructure.phase0.L_m               = 335000.0
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
-damage.enabled = 0
 
 # no spallation, no beam, no losses -- the table is the only thing under test
 spall.enabled = 0
@@ -90,8 +86,6 @@ beam.lambda     = 1.0e-3
 beam.x0         = 0.004
 beam.y0         = 0.004
 beam.z0         = 0.008
-beam.alpha_expr = 1
-beam.R          = 0.0
 beam.P0         = 0.0
 
 losses.epsilon  = 0.0

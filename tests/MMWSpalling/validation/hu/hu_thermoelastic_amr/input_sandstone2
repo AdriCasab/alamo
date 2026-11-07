@@ -45,8 +45,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.05
 beam.y0     = 0.05
 beam.z0     = 0.1
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 losses.epsilon  = 0.0
 losses.sigma_SB = 0.0
@@ -54,13 +52,10 @@ losses.h_conv   = 0.0
 losses.T_amb    = 280.15
 
 surface_patch.enabled = 1
-surface_patch.type    = prescribed_temperature
-surface_patch.face    = zhi
 surface_patch.x0      = 0.05
 surface_patch.y0      = 0.05
 surface_patch.radius  = 0.015
 surface_patch.T_expr  = 684.64+2.46*t
-surface_patch.T_ext   = 280.15
 surface_patch.h_conv  = 0.0
 
 hc.heat.alpha = 2.412e-6
@@ -157,4 +152,3 @@ el.bc.constant.val.xloyhizhi  = 0.0 0.0 0.0
 el.bc.constant.type.xhiyhizhi = trac trac trac
 el.bc.constant.val.xhiyhizhi  = 0.0 0.0 0.0
 
-solver = explicit

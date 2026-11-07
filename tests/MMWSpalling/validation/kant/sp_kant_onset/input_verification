@@ -65,7 +65,6 @@ microstructure.mode       = expression
 microstructure.phase_expr = 0
 microstructure.nphases    = 1
 
-microstructure.phase0.name              = central_aare
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 2.50
 microstructure.phase0.beta              = 8.0e-6
@@ -73,11 +72,9 @@ microstructure.phase0.E                 = 35.0e9
 microstructure.phase0.mu                = 13.8888888889e9
 microstructure.phase0.rho               = 2630.0
 microstructure.phase0.Cp                = 800.0
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # Spallation toggle: LEFM Sp branch. Deterministic flaw a0 = 20 um (Moeri
@@ -100,8 +97,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.012
 beam.y0     = 0.012
 beam.z0     = 0.024
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 losses.epsilon       = 0.0
 losses.epsilon_high  = 0.0
@@ -118,13 +113,11 @@ losses.T_amb         = 293.15
 # a well-resolved number of timesteps. Bi = h_fl*a/lambda = 2e-3 << 0.5.
 surface_patch.enabled = 1
 surface_patch.mode    = convective_flame
-surface_patch.face    = zhi
 surface_patch.x0      = 0.012
 surface_patch.y0      = 0.012
 surface_patch.radius  = 0.05
 surface_patch.h_conv  = 150.0
 surface_patch.T_flame = 1673.15
-surface_patch.T_ext   = 293.15
 
 hc.heat.alpha = 1.1882129e-6
 hc.heat.refinement_threshold = 1.0
@@ -161,4 +154,3 @@ el.model1.nu = 0.26
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
 
-solver = explicit

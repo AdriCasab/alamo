@@ -1,0 +1,114 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# P2-24 unit/face_vapor: A LISTED CELL WHOSE ENTHALPY HAS PASSED H_vap_hi LEAVES, ONCE; A BURIED ONE IS COUNTED.
+# The production rock and form (the face list, the rock file's melt AND vapour set: Zhang's, LIT) on an 8 mm cube
+# of 1 mm cells, the patch off, ZERO conduction (grimsel.lambda.a = 0: every cell heats on its own deposition, so the
+# adiabatic time to vapour is exact), no losses, a UNIFORM beam over the whole top (radius 10 mm > the 8 mm side):
+# q = P0 / (pi r^2) = 1e7 W/m2, eps_r 1 (R = 0) and tan_delta such that alpha = 2000 1/m exactly in the code's
+# association (2 pi sqrt(eps_r) (tan_delta / lambda)), so the top layer (alpha dz = 2) absorbs (1 - e^-2) of q.
+# ONE loss-table pair (alpha flat, the scalar path: alpha_varies() false), so the melt keys sit at their no-op values
+# (melt_factor 1, R_melt = R = 0) -- the rule under test is the face list's, not the beam's.
+# THE CRACK RULE IS HELD OFF (K_Ic x 1e6): with no conduction the top layer's 1-D stress fires the face list's crack rule at
+# 0.1 s and the cube spalls away layer by layer (gone at 1.75 s, the smoke run) before any cell reaches H_vap_hi. The
+# lines are still scanned; none fires (bk_n_eval stays 0: B is evaluated on a firing line only).
+#   U3 (this deck): the top layer reaches H_vap_hi of the phase table at
+#        t_v = dz [H_vap_hi - H(T0)] / (q (1 - e^-2))      (H per volume, both from the run's own table)
+#      and its 64 cells leave in one step as regime 2, booked in ledger_E_vapor.
+#   U4 vapor.enabled = 0: no void, T runs past T_vap_hi.   U5 beam.P0 = 0: no void.
+#   U6 beam.P0 = 0 and the SECOND layer at T_vap_hi + 10 K under a cold top: fr_n_vapor_int 64, no void.
+#
+# check_shared: allow losses.epsilon
+# check_shared: allow losses.epsilon_high
+# check_shared: allow microstructure.phase0.grimsel.lambda.a
+# check_shared: allow beam.eps_r
+# check_shared: allow beam.tan_delta
+# check_shared: allow beam.tan_delta_T
+# check_shared: allow beam.melt_factor
+# check_shared: allow beam.R_melt
+# check_shared: allow spallation.sp.kic.scale
+# check_shared: allow vapor.enabled
+
+FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
+
+alamo.program = mmwspalling
+plot_file = tests/MMWSpalling/unit/face_vapor/output/U3
+
+timestep  = 0.05
+stop_time = 3.2
+
+amr.plot_int        = 1
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.max_grid_size   = 4
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+amr.n_cell           = 8 8 8
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 0.008 0.008 0.008
+geometry.is_periodic = 0 0 0
+alpha = 0.0 0.0
+weibull.V0 = 1.0e-9                # the cell volume (1 mm)^3
+
+microstructure.phase0.grimsel.lambda.a = 0.0  # NO conduction
+microstructure.phase0.T_ref = 300.0           # = the IC
+
+hc.ic.type           = constant      # U6 sets an expression IC (the test writes a deck copy)
+hc.ic.constant.value = 300.0
+hc.heat.alpha        = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+conductivity.h_gb0 = 0.0
+confining.p = 0.0
+losses.epsilon      = 0.0
+losses.epsilon_high = 0.0
+losses.h_conv       = 0.0
+losses.T_amb        = 300.0
+
+surface_patch.enabled = 0
+surface_patch.radius  = 1.0
+surface_patch.x0      = 0.004
+surface_patch.y0      = 0.004
+
+vapor.enabled = 1                  # the face list's vapour rule (P2-24)
+spallation.sp.kic.scale = 1.0e6    # the crack rule held off (see the header)
+
+beam.profile    = uniform
+beam.radius     = 0.01
+beam.P0         = 3141.5926535897934   # q = 1e7 W/m2 over the 10 mm disk
+beam.omega0     = 0.01
+beam.lambda     = 2.19e-3
+beam.x0         = 0.004
+beam.y0         = 0.004
+beam.z0         = 0.008
+beam.eps_r      = 1.0
+beam.tan_delta  = 0.6970986507425017   # alpha = 2000 1/m exactly in the code's association
+beam.tan_delta_T = 295.15 1.0          # ONE pair: alpha flat, the scalar path
+beam.melt_factor = 1.0                 # the no-op values (the scalar path refuses any other)
+beam.R_melt      = 0.0
+
+el.type      = disable
+el.nmodels   = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

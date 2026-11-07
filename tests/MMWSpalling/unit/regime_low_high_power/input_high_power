@@ -42,7 +42,6 @@ microstructure.mode       = expression
 microstructure.phase_expr = 0
 microstructure.nphases    = 1
 
-microstructure.phase0.name              = uniform
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 1.0
 microstructure.phase0.beta              = 0.0
@@ -50,17 +49,14 @@ microstructure.phase0.E                 = 1.0
 microstructure.phase0.mu                = 0.4
 microstructure.phase0.rho               = 1.0
 microstructure.phase0.Cp                = 1.0
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 300.0
 microstructure.phase0.T_vap_lo          = 2000.0
 microstructure.phase0.T_vap_hi          = 2000.0
 microstructure.phase0.L_v               = 0.0
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
-damage.enabled = 0
 
 spall.enabled                     = 1
 spall.damage_threshold            = 0.99
@@ -80,8 +76,8 @@ beam.lambda     = 1.0e-3
 beam.x0         = 0.5
 beam.y0         = 0.5
 beam.z0         = 1.0
-beam.alpha_expr = 0
-beam.R          = 0.0
+beam.eps_r     = 1.0
+beam.tan_delta = 0.0   # fixture: alpha = 0 1/m by construction (eps_r 1 => R 0); lambda 1.0e-3
 beam.P0         = 425.0
 
 losses.epsilon       = 0.0

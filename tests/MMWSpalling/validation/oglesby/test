@@ -1,0 +1,505 @@
+#!/usr/bin/env python3
+"""P2-23 -- DOE test #19 on the production rock and the ONE breaking rule (validation/oglesby/input). No plotfile is
+read: thermo.dat, <run>_buckle_log.csv and <run>_removal_events.csv only.
+
+  b1 [gate] RUN_DIR (B0): the first step row with bk_n_eval > 0 (the onset fires on some line) exists, at t <= 40 s
+  b2 [report, the result] every PRE-MELT step row (before the first finite bc_z_melt): removals fr_n_floor + wall +
+     roof = 0; bk_n_block = bk_n_eval; the minimum bk_lb over the buckle log's pre-melt rows >= 2
+  b2r [report] the buckle log's branch split: fractions of evaluated rows with fb = 1, nodepth = 1, finite ell_eff;
+     the largest finite ell_eff
+  b3 [report, with --control DIR] (P: alpha 2000, 150 W): removals summed and the first-removal time; on PASSED
+     lines (blocked 0) fb and bk; on fired events h_f and ell_eff; the deepest removed cell above the block's bottom
+  c1 [report, --flat DIR] B0F vs B0: b2's quantities; bc_z_peak, first-fire and first-melt times
+  c2 [report, --fine DIR] B1 vs B0: the same, and bc_z_peak at first melt
+  c3 [report] B0 (and B1): rows at and after first melt -- bk_n_eval, removals, logged lines with T_surf >= phase.T_m
+  c4 [report] B0 (and B1) at first fire and first melt: bc_ell_p, bc_ell_pk (the FULL central column) beside the
+     15 mm window and the 2.4 mm layer limit; the buckle log's ell_p on the nearest logged step
+Units: times s; depths, lengths, x m (printed mm); T K; bk, bk_lb, score dimensionless; powers W.
+The thermo row stamped t reports the step that ENDED at t; the buckle log and the event log stamp the step's START.
+
+Usage: test RUN_DIR [--control DIR] [--flat DIR] [--fine DIR]   (RUN_DIR = B0's plot_file; exit 1 on b1)
+
+P2-24 MODE (--onset): DOE test #19 through its 1,580 s of heating and 220 s of cooling, the melt a state (M legs).
+  Every post-melt comparison is aligned on ONSET = the first step row with a finite bc_z_melt (the central column's
+  peak >= the phase's T_m 1510.5 K, f_L >= 0.5) in the model, 495 s on Fig. 34's clock in the test (the last window
+  before the radiometer's jump); the DOE clock maps to the model's by -210 s (beam-on; studies/p2_24_melt_vapour/Z0.txt).
+  The plateau and melt-spot rows bin by the INSTANTANEOUS power (beam_P_beam in the model, Fig. 34's trace in the test).
+  DOE numbers are read from studies/p2_21_loss_table/doe/FIG34_FULL.txt (power, pick-off) and FIG34_TOP.txt (137 GHz).
+  b1  [gate] RUN_DIR (M0): the phase table's jump H(fus_hi) - H(fus_lo) printed by the run (run.log beside RUN_DIR)
+      equals rho L_m + rho int c_p dT over the band (the Grimsel c_p law and the melt keys from the run's metadata;
+      bar rel 1e-6); a step row with a finite bc_z_melt exists; a row with 0 < bc_f_L_peak < 1 exists
+  b1r [report] the first row with bc_f_L_peak > 0 (the solidus) and the onset, vs P2-23 B0's first row with
+      bc_T_peak > 1410.5 K and its first finite bc_z_melt; the dwell (consecutive rows with 0 < bc_f_L_peak < 1 from the
+      first)
+  b2  [gate] beam_col_err_max <= 1e-12 on every row        b2r [report] beam_closure_err over the lit rows
+  m1  [report, --alt DIR = M100] beam_P_trans / beam_P_beam / (its value at onset): the time after onset it falls below
+      the DOE's 70 s factor (pick-off 0.1320 -> 0.0196 V, x0.148), its value at onset + 70 s; the cold value vs P2-21
+  m2  [report] beam_P_dep / beam_P_beam at onset + 70 s and over the post-onset rows at 1.9-2.1 kW; bc_R_col
+  m3  [report] bc_T_rad at onset + 20 / + 100 s vs 1195 / 1649 C; binned by power (1.9-2.1, 3.2-3.4 kW; rows >= onset
+      + 100 s) vs the DOE binned the same way; just before onset vs the DOE's pre-melt 153 C mean / 272 C max
+  m4  [report] the melt spot 2 sqrt(bc_A_melt / pi) at the end of heating vs ~38 mm, and against beam_P_beam
+  m5  [report] after beam-off (the model's 1,580 s): bc_T_rad at +5 / +55 / +205 s (the packet) and +15 / +65 / +215 s
+      (the DOE's beam-off at 1,790 s from the power trace) vs 1011 / 627 / 349 C
+  m6  [report, --alt, --flat DIR = M0F] bc_n_vapor, bc_n_vapor_int against time; the first surface void and the power
+      then; ledger_E_vapor; fr_n_molten, fr_n_lid, bk_n_eval after onset; P2-25: the final bc_n_vapor as MASS
+      (cells x V_cell from the metadata's geometry and n_cell x microstructure.phase0.grimsel.rho)
+  m7  [report, --fine DIR = M1] M1 vs M0 over onset .. onset + 120 s: m1's collapse, bc_f_L_peak, bc_z_liq
+Usage (P2-24): test RUN_DIR --onset [--alt DIR] [--flat DIR] [--fine DIR]   (exit 1 on b1 or b2)
+"""
+import csv
+import math
+import os
+import sys
+
+FAIL = []
+WINDOW, LIMIT = 0.015, 2.4e-3
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def meta(run):
+    kv = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            kv[k.strip()] = v.strip()
+    return kv
+
+
+def thermo(run):
+    L = open(os.path.join(run, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    rows = [dict(zip(h, [float(x) for x in r.split("\t")])) for r in L[1:] if r.strip()]
+    return h, [r for r in rows if r["time"] > 0.0]
+
+
+def csvrows(path):
+    if not os.path.exists(path):
+        return []
+    return [{k: float(v) for k, v in r.items()} for r in csv.DictReader(open(path))]
+
+
+def removals(r):
+    return r["fr_n_floor"] + r["fr_n_wall"] + r["fr_n_roof"]
+
+
+def mm(x):
+    return "%.2f mm" % (1e3 * x) if x is not None and math.isfinite(x) else ("inf" if x == math.inf else "undefined")
+
+
+class Leg:
+    def __init__(self, run):
+        self.run = run
+        self.m = meta(run)
+        self.h, self.rows = thermo(run)
+        self.dt = self.rows[1]["time"] - self.rows[0]["time"] if len(self.rows) > 1 else self.rows[0]["time"]
+        self.log = csvrows(run + "_buckle_log.csv")
+        self.ev = csvrows(run + "_removal_events.csv")
+        self.Tm = float(self.m.get("phase.T_m", self.m.get("microstructure.phase0.T_m", "1e30")))
+        hb = "bc_z_melt" in self.h
+        self.melt_row = next((r for r in self.rows if hb and math.isfinite(r["bc_z_melt"])), None)
+        self.t_melt = self.melt_row["time"] if self.melt_row else math.inf
+        self.fire_row = next((r for r in self.rows if r.get("bk_n_eval", 0) > 0), None)
+        self.t_fire = self.fire_row["time"] if self.fire_row else None
+        self.pre = [r for r in self.rows if r["time"] < self.t_melt]
+        # a log row (step START s) belongs to the thermo row stamped s + dt
+        self.log_pre = [r for r in self.log if r["time"] + self.dt < self.t_melt - 1e-9]
+
+    def b2(self):
+        rem = sum(removals(r) for r in self.pre)
+        passed = sum(r["bk_n_eval"] - r["bk_n_block"] for r in self.pre)
+        lb = min((r["bk_lb"] for r in self.log_pre), default=float("nan"))
+        return rem, passed, lb
+
+    def split(self, rows):
+        n = len(rows)
+        if not n:
+            return "no logged evaluation"
+        fb = sum(r["fb"] for r in rows) / n
+        nd = sum(r["nodepth"] for r in rows) / n
+        fin = [r["ell_eff"] for r in rows if math.isfinite(r["ell_eff"])]
+        return ("%d logged rows: fb = 1 %.3f, nodepth = 1 %.3f, finite ell_eff %.3f (max %s); blocked %.3f; bk_lb min "
+                "%.3f" % (n, fb, nd, len(fin) / n, mm(max(fin)) if fin else "-",
+                          sum(r["blocked"] for r in rows) / n, min(r["bk_lb"] for r in rows)))
+
+    def at(self, t):
+        return min(self.rows, key=lambda r: abs(r["time"] - t)) if t is not None and math.isfinite(t) else None
+
+    def log_near(self, t):
+        if t is None or not self.log:
+            return []
+        ts = sorted({r["time"] for r in self.log}, key=lambda s: abs(s + self.dt - t))
+        return [r for r in self.log if r["time"] == ts[0]] if ts else []
+
+
+def describe(lab, L):
+    rem, passed, lb = L.b2()
+    print("   %-4s first fire %s, first melt %s (bc_z_melt vs phase.T_m %.1f K), bc_z_peak at melt %s; pre-melt: "
+          "removals %d, passed (eval - block) %d, min bk_lb %.3f over %d logged rows" % (
+              lab, "%.1f s" % L.t_fire if L.t_fire else "never", "%.1f s" % L.t_melt if math.isfinite(L.t_melt)
+              else "never", L.Tm, mm(L.melt_row["bc_z_peak"]) if L.melt_row else "-", rem, passed, lb,
+              len(L.log_pre)))
+
+
+def c4(lab, L):
+    for what, t in (("first fire", L.t_fire), ("first melt", L.t_melt if math.isfinite(L.t_melt) else None)):
+        r = L.at(t)
+        if r is None:
+            print("   %-4s %s: none" % (lab, what))
+            continue
+        near = L.log_near(t)
+        lp = [x["ell_p"] for x in near]
+        print("   %-4s %s (t %.1f s): bc_ell_p %s, bc_ell_pk %s (the full central column), bc_z_peak %s; the buckle "
+              "log's ell_p on the nearest logged step: %s; window %s, layer limit %s" % (
+                  lab, what, r["time"], mm(r["bc_ell_p"]), mm(r["bc_ell_pk"]), mm(r["bc_z_peak"]),
+                  ("%d rows, %s .. %s" % (len(lp), mm(min(lp)), mm(max(lp))) if lp and all(map(math.isfinite, lp))
+                   else "%d rows, %d undefined" % (len(lp), sum(not math.isfinite(x) for x in lp))),
+                  mm(WINDOW), mm(LIMIT)))
+
+
+def main(argv):
+    if "--onset" in argv:
+        return main_p2_24(argv)
+    pos = [a for i, a in enumerate(argv) if not a.startswith("--") and (i == 0 or not argv[i - 1].startswith("--"))]
+    opt = {k: argv[argv.index(k) + 1] for k in ("--control", "--flat", "--fine") if k in argv}
+    B0 = Leg(pos[0])
+    print("P2-23 #19 on the production rock and the one rule (units: s, m printed mm, K, W)")
+    print("  %s: dt %.3g s, %d step rows, %d buckle-log rows, %d removal events; phase.T_m %s; surface_patch.enabled "
+          "%s; the loss table %s" % (pos[0], B0.dt, len(B0.rows), len(B0.log), len(B0.ev), B0.m.get("phase.T_m"),
+                                     B0.m.get("surface_patch.enabled"),
+                                     "varies" if "bc_z_melt" in B0.h else "flat (no bc_* columns)"))
+    print("=" * 100)
+    need(B0.t_fire is not None and B0.t_fire <= 40.0, "b1 B0's first step row with bk_n_eval > 0: %s (bar <= 40 s)" % (
+        "%.1f s (bk_n_eval %d)" % (B0.t_fire, B0.fire_row["bk_n_eval"]) if B0.t_fire else "never"))
+    rem, passed, lb = B0.b2()
+    print("\nb2 (the result, P1): pre-melt rows %d (melt at %s): removals %d; passed lines (bk_n_eval - bk_n_block) %d; "
+          "min bk_lb %.3f over %d logged pre-melt rows  => %s" % (
+              len(B0.pre), "%.1f s" % B0.t_melt if math.isfinite(B0.t_melt) else "never", rem, passed, lb,
+              len(B0.log_pre), "P1 HOLDS" if rem == 0 and passed == 0 and lb >= 2 else "P1 does NOT hold"))
+    print("b2r (report) B0 pre-melt: %s" % B0.split(B0.log_pre))
+    if "--control" in opt:
+        P = Leg(opt["--control"])
+        first = P.rows[0]
+        print("\nb3 (report, P2) %s: the first step row beam_P_inc %.4g W, beam_P_dep/beam_P_inc %.5f (bar 150 W, ~1)" % (
+            opt["--control"], first["beam_P_inc"], first["beam_P_dep"] / first["beam_P_inc"]))
+        tot = sum(removals(r) for r in P.rows)
+        t_rem = next((r["time"] for r in P.rows if removals(r) > 0), None)
+        ok_lines = [r for r in P.log if r["blocked"] == 0]
+        dz = (float(P.m["geometry.prob_hi"].split()[2]) - float(P.m["geometry.prob_lo"].split()[2])) / \
+            int(P.m["amr.n_cell"].split()[2])
+        deep = min(((ev["k"] - ev["n_voided"] + 1) * dz for ev in P.ev), default=None)
+        print("   removals %d by %.0f s, first at %s; logged evaluations %d (passed %d, blocked %d): passed lines fb %s, "
+              "bk %s; blocked lines bk %s; fired events %d: h_f %s, ell_eff %s; the deepest removed cell %s above the "
+              "bottom (bar >= 25 mm)" % (
+                  tot, P.rows[-1]["time"], "%.2f s" % t_rem if t_rem else "never", len(P.log), len(ok_lines),
+                  len(P.log) - len(ok_lines),
+                  sorted({int(r["fb"]) for r in ok_lines}) if ok_lines else "-",
+                  "%.3f..%.3f" % (min(r["bk"] for r in ok_lines), max(r["bk"] for r in ok_lines)) if ok_lines else "-",
+                  "%.3f..%.3f" % (min(r["bk"] for r in P.log if r["blocked"]), max(r["bk"] for r in P.log if r["blocked"]))
+                  if any(r["blocked"] for r in P.log) else "-", len(P.ev),
+                  "%s..%s" % (mm(min(e["h_f"] for e in P.ev)), mm(max(e["h_f"] for e in P.ev))) if P.ev else "-",
+                  "%s..%s" % (mm(min(e["ell_eff"] for e in P.ev)), mm(max(e["ell_eff"] for e in P.ev))) if P.ev else "-",
+                  mm(deep) if deep is not None else "-"))
+        print("   P's log: %s" % P.split(P.log))
+        print("   => P2 %s" % ("HOLDS (the same rule removes under a shallow beam)" if tot > 0 and ok_lines else
+                               "does NOT hold (no removal under the shallow beam)"))
+    legs = [("B0", B0)]
+    if "--flat" in opt:
+        legs.append(("B0F", Leg(opt["--flat"])))
+    if "--fine" in opt:
+        legs.append(("B1", Leg(opt["--fine"])))
+    print("\nc1 / c2 (report; P3, P4):")
+    for lab, L in legs:
+        describe(lab, L)
+        if lab != "B0":
+            print("        %s branch split pre-melt: %s" % (lab, L.split(L.log_pre)))
+    print("\nc3 (report; P5, post-melt rows are a record):")
+    for lab, L in legs:
+        post = [r for r in L.rows if r["time"] >= L.t_melt]
+        lpost = [r for r in L.log if r["time"] + L.dt >= L.t_melt - 1e-9]
+        print("   %-4s %d post-melt rows: bk_n_eval max %d, removals %d; logged lines with T_surf >= T_m %d of %d" % (
+            lab, len(post), max((r["bk_n_eval"] for r in post), default=0), sum(removals(r) for r in post),
+            sum(r["T_surf"] >= L.Tm for r in lpost), len(lpost)))
+    print("\nc4 (report; P6):")
+    for lab, L in legs:
+        c4(lab, L)
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+# ============================================================== P2-24 (--onset) ====
+DOE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "studies", "p2_21_loss_table", "doe")
+B0_REF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "studies", "p2_23_beam_port", "legs", "B0",
+                      "run")
+SHIFT, DOE_ON, DOE_OFF = 210.0, 495.0, 1790.0      # Fig. 34's clock: beam-on, onset (last pre-jump window), beam-off
+
+
+def doe_tables():
+    P, V, Tt = {}, {}, {}
+    for ln in open(os.path.join(DOE_DIR, "FIG34_FULL.txt")):
+        q = ln.split()
+        if len(q) == 4 and q[0].isdigit():
+            P[int(q[0])], V[int(q[0])] = float(q[1]), float(q[2])
+    for ln in open(os.path.join(DOE_DIR, "FIG34_TOP.txt")):
+        q = ln.split()
+        if len(q) >= 2 and q[0].isdigit():
+            try:
+                Tt[int(q[0])] = float(q[1])
+            except ValueError:
+                pass
+    return P, V, Tt
+
+
+class MLeg:
+    """a P2-24 leg: every thermo row (t > 0), the onset, the solidus row"""
+    def __init__(self, run):
+        self.run = run
+        self.m = meta(run)
+        self.h, self.rows = thermo(run)
+        self.dt = self.rows[1]["time"] - self.rows[0]["time"]
+        self.ev = csvrows(run + "_removal_events.csv")
+        self.onset_row = next((r for r in self.rows if math.isfinite(r["bc_z_melt"])), None)
+        self.t_on = self.onset_row["time"] if self.onset_row else math.nan
+        self.sol_row = next((r for r in self.rows if math.isfinite(r["bc_f_L_peak"]) and r["bc_f_L_peak"] > 0), None)
+        self.lit = [r for r in self.rows if r["beam_P_beam"] > 0]
+        self.t_off = max(r["time"] for r in self.lit) if self.lit else math.nan
+
+    def at(self, t):
+        if not math.isfinite(t):
+            return None
+        r = min(self.rows, key=lambda x: abs(x["time"] - t))
+        return r if abs(r["time"] - t) <= self.dt * 0.51 + 1e-9 else None
+
+    def trans(self, r):
+        return r["beam_P_trans"] / r["beam_P_beam"] if r["beam_P_beam"] > 0 else math.nan
+
+    def collapse(self, factor):
+        """the time after onset at which P_trans/P_beam first falls below factor x its onset value"""
+        if self.onset_row is None:
+            return math.nan, math.nan
+        r0 = self.trans(self.onset_row)
+        for r in self.rows:
+            if r["time"] >= self.t_on and r["beam_P_beam"] > 0 and self.trans(r) < factor * r0:
+                return r["time"] - self.t_on, r0
+        return math.inf, r0
+
+
+def vcell(m):
+    """the cell volume [m3] from a run's metadata: (prob_hi - prob_lo) / n_cell, the product of the three"""
+    lo = [float(x) for x in m["geometry.prob_lo"].split()]
+    hi = [float(x) for x in m["geometry.prob_hi"].split()]
+    n = [int(x) for x in m["amr.n_cell"].split()]
+    return math.prod((h - l) / k for l, h, k in zip(lo, hi, n))
+
+
+def C(TK):
+    return TK - 273.15 if TK is not None and math.isfinite(TK) else math.nan
+
+
+def binned(rows, key, lo, hi, val):
+    v = [val(r) for r in rows if lo <= key(r) <= hi and math.isfinite(val(r))]
+    return (sum(v) / len(v), len(v)) if v else (math.nan, 0)
+
+
+def table_jump(L):
+    log = os.path.join(os.path.dirname(L.run), "run.log")
+    txt = open(log, errors="replace").read().replace("\0", "") if os.path.exists(log) else ""
+    import re
+    m = re.search(r"H\(fus_lo ([0-9.]+) K\) = ([0-9.eE+-]+), H\(fus_hi ([0-9.]+) K\) = ([0-9.eE+-]+)", txt)
+    if not m:
+        return None
+    T1, H1, T2, H2 = (float(x) for x in m.groups())
+    g = lambda k, d: float(L.m.get("microstructure.phase0.grimsel." + k, d))
+    a, b, th0, rho = g("cp.a", 1370), g("cp.b", 178000), g("cp.th0", 271), g("rho", 2650)
+    Lm = float(L.m["microstructure.phase0.L_m"])
+    x1, x2 = T1 - 273.15, T2 - 273.15
+    inv = rho * Lm + rho * (a * (x2 - x1) - b * math.log((x2 + th0) / (x1 + th0)))
+    return T1, T2, H2 - H1, inv, rho * Lm
+
+
+def main_p2_24(argv):
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("run")
+    ap.add_argument("--onset", action="store_true")
+    ap.add_argument("--alt")
+    ap.add_argument("--flat")
+    ap.add_argument("--fine")
+    a = ap.parse_args(argv)
+    M0 = MLeg(a.run)
+    P, V, TT = doe_tables()
+    print("P2-24 #19 through its 26 minutes, the melt a state (units: s, m printed mm, K and C, W)")
+    print("  %s: dt %.3g s, %d step rows, the beam lit to %.1f s, %d removal-event rows; phase0 T_m %s, fus_width %s, "
+          "beam.melt_factor %s, beam.R_melt %s, vapor.enabled %s" % (
+              a.run, M0.dt, len(M0.rows), M0.t_off, len(M0.ev), M0.m.get("microstructure.phase0.T_m"),
+              M0.m.get("microstructure.phase0.fus_width"), M0.m.get("beam.melt_factor"), M0.m.get("beam.R_melt"),
+              M0.m.get("vapor.enabled")))
+    print("=" * 110)
+    tj = table_jump(M0)
+    if tj:
+        T1, T2, jump, inv, lat = tj
+        need(abs(jump / inv - 1.0) <= 1e-6, "b1 (i) the run's table jump H(%.1f) - H(%.1f) = %.10e J/m3 vs rho L_m + rho "
+             "int c_p dT = %.10e (rel %.1e; bar 1e-6; the latent share %.3f)" % (T2, T1, jump, inv, jump / inv - 1.0,
+                                                                                lat / inv))
+    else:
+        need(False, "b1 (i) the run's table print not found in %s" % os.path.join(os.path.dirname(a.run), "run.log"))
+    need(M0.onset_row is not None, "b1 (ii) the first step row with a finite bc_z_melt: %s" % (
+        "%.1f s (bc_z_melt %s, bc_T_peak %.1f K)" % (M0.t_on, mm(M0.onset_row["bc_z_melt"]), M0.onset_row["bc_T_peak"])
+        if M0.onset_row else "never"))
+    mush = [r for r in M0.rows if math.isfinite(r["bc_f_L_peak"]) and 0.0 < r["bc_f_L_peak"] < 1.0]
+    need(len(mush) > 0, "b1 (iii) rows with 0 < bc_f_L_peak < 1: %d" % len(mush))
+    # b1r
+    ref_sol = ref_on = None
+    if os.path.isdir(B0_REF):
+        _, rb = thermo(B0_REF)
+        ref_sol = next((r["time"] for r in rb if r["bc_T_peak"] > 1410.5), None)
+        ref_on = next((r["time"] for r in rb if math.isfinite(r["bc_z_melt"])), None)
+    dwell, i0 = 0, None
+    for i, r in enumerate(M0.rows):
+        f = r["bc_f_L_peak"]
+        if i0 is None and math.isfinite(f) and f > 0:
+            i0 = i
+        if i0 is not None:
+            if math.isfinite(f) and 0 < f < 1:
+                dwell += 1
+            else:
+                break
+    print("\nb1r (report) the solidus (first bc_f_L_peak > 0) at %s vs P2-23 B0's first bc_T_peak > 1410.5 K at %s "
+          "(%s); the onset (bc_z_melt, T_m 1510.5 K) at %.1f s vs B0's %s (%+.1f s: the latent heat); the dwell: %d "
+          "consecutive rows (%.1f s) with the peak inside the band" % (
+              "%.1f s" % M0.sol_row["time"] if M0.sol_row else "never", "%.1f s" % ref_sol if ref_sol else "-",
+              ("same row" if ref_sol and M0.sol_row and abs(M0.sol_row["time"] - ref_sol) < 1e-9 else
+               "%+.1f s" % (M0.sol_row["time"] - ref_sol) if ref_sol and M0.sol_row else "-"),
+              M0.t_on, "%.1f s" % ref_on if ref_on else "-", M0.t_on - ref_on if ref_on else math.nan, dwell,
+              dwell * M0.dt))
+    # b2
+    ce = [r["beam_col_err_max"] for r in M0.rows if "beam_col_err_max" in r]
+    cef = [x for x in ce if math.isfinite(x)]
+    need(len(cef) == len(ce) and max(cef) <= 1e-12, "b2 beam_col_err_max over %d rows: max %.2e (bar 1e-12; %d NaN)" % (
+        len(ce), max(cef) if cef else math.nan, len(ce) - len(cef)))
+    cl = [r["beam_closure_err"] for r in M0.lit]
+    pre = [r["beam_closure_err"] for r in M0.lit if r["time"] < M0.t_on]
+    post = [r["beam_closure_err"] for r in M0.lit if r["time"] >= M0.t_on]
+    print("b2r (report) beam_closure_err over %d lit rows: %.3e .. %.3e (pre-onset %.3e .. %.3e, post %.3e .. %.3e); "
+          "inside -1e-5 .. +3e-2: %s" % (len(cl), min(cl), max(cl), min(pre), max(pre), min(post) if post else math.nan,
+                                         max(post) if post else math.nan, min(cl) >= -1e-5 and max(cl) <= 3e-2))
+    legs = [("M0", M0)]
+    if a.alt:
+        legs.append(("M100", MLeg(a.alt)))
+    if a.flat:
+        legs.append(("M0F", MLeg(a.flat)))
+    F = MLeg(a.fine) if a.fine else None
+
+    # m1
+    doe_f = V[565] / V[495] if 565 in V and 495 in V else math.nan
+    doe_f_kw = (V[565] / P[565]) / (V[495] / P[495]) if all(k in P and k in V for k in (495, 565)) else math.nan
+    print("\nm1 (report; P1) the transmission per BEAM power, onset-aligned. DOE: pick-off %.4f V at 495 s -> %.4f V at 565 "
+          "s = x%.3f in 70 s (per kW x%.3f); the DOE onset is %.0f s after beam-on" % (
+              V.get(495, math.nan), V.get(565, math.nan), doe_f, doe_f_kw, DOE_ON - SHIFT))
+    for lab, L in legs[:2]:
+        tc, r0 = L.collapse(0.148)
+        r70 = L.at(L.t_on + 70.0)
+        first = L.lit[0]
+        print("   %-5s onset %.1f s: P_trans/P_beam %.4f (the first lit row %.4f; P_trans/P_inc there %.4f vs P2-21's cold "
+              "0.4966 x 0.76 = 0.377); below x0.148 of it %s after onset; at onset + 70 s x%.3f" % (
+                  lab, L.t_on, r0, L.trans(first), first["beam_P_trans"] / first["beam_P_inc"],
+                  "%.1f s" % tc if math.isfinite(tc) else "NEVER", L.trans(r70) / r0 if r70 else math.nan))
+    # m2
+    print("\nm2 (report; P2) the absorbed fraction per beam power, and the central column's R")
+    for lab, L in legs:
+        r70 = L.at(L.t_on + 70.0)
+        post = [r for r in L.lit if r["time"] >= L.t_on]
+        b2kw = binned(post, lambda r: r["beam_P_beam"], 1900, 2100, lambda r: r["beam_P_dep"] / r["beam_P_beam"])
+        Rb = binned(post, lambda r: r["beam_P_beam"], 1900, 2100, lambda r: r["bc_R_col"])
+        print("   %-5s at onset + 70 s: P_dep/P_beam %.4f, P_inc/P_beam %.4f, bc_R_col %.4f; over %d post-onset rows at "
+              "1.9-2.1 kW: P_dep/P_beam %.4f, bc_R_col %.4f" % (
+                  lab, r70["beam_P_dep"] / r70["beam_P_beam"] if r70 else math.nan,
+                  r70["beam_P_inc"] / r70["beam_P_beam"] if r70 else math.nan, r70["bc_R_col"] if r70 else math.nan,
+                  b2kw[1], b2kw[0], Rb[0]))
+    # m3
+    print("\nm3 (report; P3) the synthetic 137 GHz radiometer (bc_T_rad = the view mean of eps_137 T_top over r <= 16.25 "
+          "mm), C")
+    doe_post = [t for t in sorted(TT) if t >= DOE_ON + 100 and t in P and math.isfinite(P[t])]
+    d19 = binned(doe_post, lambda t: P[t], 1.9, 2.1, lambda t: TT[t])
+    d33 = binned(doe_post, lambda t: P[t], 3.2, 3.4, lambda t: TT[t])
+    pre_doe = [TT[t] for t in sorted(TT) if SHIFT <= t <= DOE_ON]
+    print("   DOE: onset + 20 s %.0f C, + 100 s %.0f C; post-onset (>= +100 s) binned by power: 1.9-2.1 kW %.0f C (%d "
+          "windows), 3.2-3.4 kW %.0f C (%d); pre-melt mean %.0f C, max %.0f C" % (
+              TT.get(515, math.nan), TT.get(595, math.nan), d19[0], d19[1], d33[0], d33[1],
+              sum(pre_doe) / len(pre_doe), max(pre_doe)))
+    for lab, L in legs:
+        post = [r for r in L.lit if r["time"] >= L.t_on + 100.0]
+        m19 = binned(post, lambda r: r["beam_P_beam"], 1900, 2100, lambda r: C(r["bc_T_rad"]))
+        m33 = binned(post, lambda r: r["beam_P_beam"], 3200, 3400, lambda r: C(r["bc_T_rad"]))
+        before = [r for r in L.rows if r["time"] < L.t_on]
+        rb = before[-1] if before else None
+        r20, r100 = L.at(L.t_on + 20.0), L.at(L.t_on + 100.0)
+        print("   %-5s onset + 20 s %.0f C, + 100 s %.0f C (view mean T %.0f / %.0f C); binned: 1.9-2.1 kW %.0f C (%d rows), "
+              "3.2-3.4 kW %.0f C (%d) => %+.1f %% (DOE %+.1f %%); just before onset %.0f C (view mean %.0f C)" % (
+                  lab, C(r20["bc_T_rad"]) if r20 else math.nan, C(r100["bc_T_rad"]) if r100 else math.nan,
+                  C(r20["bc_T_view"]) if r20 else math.nan, C(r100["bc_T_view"]) if r100 else math.nan,
+                  m19[0], m19[1], m33[0], m33[1], 100 * (m33[0] / m19[0] - 1), 100 * (d33[0] / d19[0] - 1),
+                  C(rb["bc_T_rad"]) if rb else math.nan, C(rb["bc_T_view"]) if rb else math.nan))
+    # m4
+    print("\nm4 (report; P4) the melt spot 2 sqrt(bc_A_melt / pi) (top solid cells with f_L > 0)")
+    for lab, L in legs:
+        end = L.at(L.t_off)
+        grow = " ".join("%.0fs/%.2fkW/%.1fmm" % (r["time"], r["beam_P_beam"] / 1e3, 2e3 * math.sqrt(r["bc_A_melt"] / math.pi))
+                        for r in L.lit if abs(r["time"] / 200.0 - round(r["time"] / 200.0)) < 1e-9)
+        print("   %-5s at the end of heating (%.1f s, %.2f kW): %.1f mm vs ~38 mm (DOE '~1 1/2\"'); against time/power: %s"
+              % (lab, end["time"], end["beam_P_beam"] / 1e3, 2e3 * math.sqrt(end["bc_A_melt"] / math.pi), grow))
+    # m5
+    print("\nm5 (report; P5) after beam-off: DOE 1805 / 1855 / 2005 s = %.0f / %.0f / %.0f C" % (
+        TT.get(1805, math.nan), TT.get(1855, math.nan), TT.get(2005, math.nan)))
+    for lab, L in legs:
+        plat = L.at(L.t_off)
+        v = {d: L.at(L.t_off + d) for d in (5, 15, 55, 65, 205, 215)}
+        txt = " ".join("+%d:%.0f" % (d, C(v[d]["bc_T_rad"]) if v[d] else math.nan) for d in sorted(v))
+        p55, p65 = (C(v[d]["bc_T_rad"]) / C(plat["bc_T_rad"]) if v[d] else math.nan for d in (55, 65))
+        print("   %-5s at beam-off (%.1f s) %.0f C; %s C; +55 s = %.0f %% of the plateau's C (+65 s: %.0f %%; DOE "
+              "627/2281 = %.0f %%)" % (lab, L.t_off, C(plat["bc_T_rad"]), txt, 100 * p55, 100 * p65,
+                                       100 * 627 / 2281))
+    # m6
+    print("\nm6 (report; P6) vapour and the exclusions")
+    for lab, L in legs:
+        prog = " ".join("%.0fs:%d/%d" % (r["time"], r.get("bc_n_vapor", 0), r.get("bc_n_vapor_int", 0))
+                        for r in L.rows if r["time"] in (300.0, 600.0, 900.0, 1200.0, 1580.0, 1800.0))
+        fv = next((r for r in L.rows if r.get("fr_n_vapor", 0) > 0), None)
+        fi = next((r for r in L.rows if r.get("fr_n_vapor_int", 0) > 0), None)
+        post = [r for r in L.rows if r["time"] >= L.t_on]
+        n2 = sum(1 for e in L.ev if e["regime"] == 2)
+        # P2-25 (DR-3): the vapour as MASS -- a cell count is mesh-dependent, the mass is not
+        nv, vc, rho = L.rows[-1].get("bc_n_vapor", 0.0), vcell(L.m), float(L.m["microstructure.phase0.grimsel.rho"])
+        print("   %-5s vapour mass %.3g g = %d cells x V_cell %.4e m3 x rho %.0f kg/m3" % (lab, 1e3 * nv * vc * rho, nv, vc,
+                                                                                    rho))
+        print("   %-5s bc_n_vapor/bc_n_vapor_int %s; the first surface void %s; the first buried count %s; "
+              "ledger_E_vapor %.4g J; events regime 2: %d; after onset: fr_n_molten max %d, fr_n_lid max %d, bk_n_eval "
+              "max %d (sum %d), removals %d" % (
+                  lab, prog, "%.1f s at %.0f W" % (fv["time"], fv["beam_P_beam"]) if fv else "none",
+                  "%.1f s at %.0f W" % (fi["time"], fi["beam_P_beam"]) if fi else "none",
+                  L.rows[-1].get("ledger_E_vapor", math.nan), n2, max((r["fr_n_molten"] for r in post), default=0),
+                  max((r["fr_n_lid"] for r in post), default=0), max((r["bk_n_eval"] for r in post), default=0),
+                  sum(r["bk_n_eval"] for r in post), sum(removals(r) for r in post)))
+    # m7
+    if F is not None:
+        print("\nm7 (report; P7) M1 (0.78 mm) vs M0 over onset .. onset + 120 s")
+        for lab, L in (("M0", M0), ("M1", F)):
+            tc, r0 = L.collapse(0.148)
+            pts = " ".join("+%d: f_L %.3f z_liq %s" % (
+                d, L.at(L.t_on + d)["bc_f_L_peak"] if L.at(L.t_on + d) else math.nan,
+                mm(L.at(L.t_on + d)["bc_z_liq"]) if L.at(L.t_on + d) else "-") for d in (30, 60, 120))
+            print("   %-3s onset %.1f s; the collapse to x0.148 %s after onset; %s" % (
+                lab, L.t_on, "%.1f s" % tc if math.isfinite(tc) else "NEVER (in %.0f s)" % (L.rows[-1]["time"] - L.t_on),
+                pts))
+    print("=" * 110)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

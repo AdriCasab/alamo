@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/oglesby/input 'amr.n_cell=32 32 16' amr.max_grid_size=16 weibull.V0=3.0517578125e-8 timestep=0.5 amr.plot_int=100000 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_24_melt_vapour/legs/SMOKE_M0/run

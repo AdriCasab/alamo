@@ -120,9 +120,12 @@ MUTATIONS = [
 
 def main():
     pre = sys.argv[sys.argv.index("--pre") + 1] if "--pre" in sys.argv else None
+    # P2-18 A3: the helpers both paths call moved from Removal.H into Shared.H; `rem` is the
+    # UNION of the two, so B2's "nothing else defines or calls / never reads" covers both files
     mmw, frm, rem = read(SRC) if False else (open(os.path.join(SRC, "MMWSpalling.H")).read(),
                                             open(os.path.join(SRC, "MMWSpalling", "FaceRemoval.H")).read(),
-                                            open(os.path.join(SRC, "MMWSpalling", "Removal.H")).read())
+                                            open(os.path.join(SRC, "MMWSpalling", "Removal.H")).read() + "\n"
+                                            + open(os.path.join(SRC, "MMWSpalling", "Shared.H")).read())
     bad = 0
     print("P2-15 (a0) -- THE BUCKLING-CONDITION LOCK")
     print("=" * 84)

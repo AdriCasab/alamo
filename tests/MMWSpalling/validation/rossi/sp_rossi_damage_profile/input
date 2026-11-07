@@ -76,7 +76,6 @@ microstructure.number_of_grains = 250
 microstructure.seed             = 11
 microstructure.nphases          = 1
 
-microstructure.phase0.name              = central_aare
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 2.50
 microstructure.phase0.beta              = 8.0e-6
@@ -84,11 +83,9 @@ microstructure.phase0.E                 = 35.0e9
 microstructure.phase0.mu                = 13.8888888889e9
 microstructure.phase0.rho               = 2630.0
 microstructure.phase0.Cp                = 800.0
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # Spallation toggle: LEFM Sp branch with material removal wired.
@@ -124,8 +121,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.025
 beam.y0     = 0.025
 beam.z0     = 0.050
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 losses.epsilon       = 0.0
 losses.epsilon_high  = 0.0
@@ -149,12 +144,10 @@ losses.T_amb         = 293.15
 # exactly and lets the Step 16 mechanics fire.
 surface_patch.enabled = 1
 surface_patch.mode    = prescribed_T
-surface_patch.face    = zhi
 surface_patch.x0      = 0.025
 surface_patch.y0      = 0.025
 surface_patch.radius  = 0.050
 surface_patch.T_expr  = 293.15+5.0*t
-surface_patch.T_ext   = 293.15
 surface_patch.h_conv  = 0.0
 
 hc.heat.alpha = 1.1882129e-6
@@ -205,4 +198,3 @@ el.model1.nu = 0.26
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
 
-solver = explicit

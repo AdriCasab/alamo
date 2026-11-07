@@ -41,6 +41,15 @@ H_ROBIN = 1.0e4
 DZ_ALL = [2.0, 1.0, 0.5, 0.25, 0.125, 0.0625]   # mm
 
 # name: (source dict, dz list [mm], hand ROP [mm/s])
+# P2-20: beam.alpha_expr is retired. Each beam case's alpha is reproduced BIT-FOR-BIT by eps_r = 1
+# (=> R 0) and this tan_delta at the s1 deck's default lambda 1.0e-3 (MMWBeam.H: alpha =
+# 2 pi sqrt(eps_r) * (tan_delta / lambda); studies/p2_20_beam_deposition/Z0.txt).
+TD_FIXTURE = {
+    100.0: '0.015915494309189534',
+    2000.0: '0.3183098861837907',
+    32000.0: '5.092958178940651',
+}
+
 CASES = {
     "F1":          (dict(kind="beam", q=2.06e6, alpha=2000.0),   DZ_ALL[:5], 1.83),
     "F1s":         (dict(kind="beam", q=2.06e6, alpha=32000.0),  DZ_ALL,     1.83),
@@ -91,12 +100,12 @@ def overrides(case, dz_mm, stop, plot_file, max_grid_size=None):
         P0 = src["q"] * math.pi * BEAM_RADIUS ** 2
         ov += [f"beam.P0={P0!r}", f"beam.radius={BEAM_RADIUS!r}",
                f"beam.x0={c!r}", f"beam.y0={c!r}", f"beam.z0={DEPTH!r}",
-               f"beam.alpha_expr={src['alpha']!r}",
+               "beam.eps_r=1.0", f"beam.tan_delta={TD_FIXTURE[src['alpha']]}",
                f"microstructure.phase0.alpha_attenuation={src['alpha']!r}"]
     else:
         ov += ["beam.P0=0.0",
                "surface_patch.enabled=1", "surface_patch.mode=convective_flame",
-               "surface_patch.face=zhi", f"surface_patch.robin_form={src['form']}",
+               f"surface_patch.robin_form={src["form"]}",
                f"surface_patch.x0={c!r}", f"surface_patch.y0={c!r}",
                f"surface_patch.radius={BEAM_RADIUS!r}",
                f"surface_patch.h_conv={H_ROBIN!r}",

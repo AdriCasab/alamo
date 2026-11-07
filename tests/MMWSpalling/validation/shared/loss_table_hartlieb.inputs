@@ -1,0 +1,20 @@
+# THE LOSS TABLE (P2-21, 2026-11-06): the TEMPERATURE DEPENDENCE of the loss tangent, as a dimensionless RATIO
+# on the declared cold value beam.tan_delta (MMWBeam.H: alpha_at(T) = alpha x r(T), linear between pairs, clamped
+# at both ends). One file, included by FILE = from rock_grimsel.inputs and from the Zhang/Oglesby deck:
+#     FILE = tests/MMWSpalling/validation/shared/loss_table_hartlieb.inputs
+#
+# ⚠⚠ LIT, ANOTHER ROCK AND ANOTHER FREQUENCY -- never fitted, never edited to land a result:
+#   * Hartlieb / Microwave Properties North (Zenodo 4835664): a granite (not Barre, not Grimsel), cavity
+#     perturbation at 2467 MHz, the HEATING branch, 22 -> 995 C; tan_delta / tan_delta(22 C) as listed below
+#     (Claude_markdowns/research_notes/Granite spallation and melt physics/microwave_absorption.md:34-58).
+#   * the TRANSFER of this 2.467 GHz SHAPE to 28 GHz is the declared ASSUMPTION P2-21 tests (the same file:
+#     eps'' falls as f^-0.41 inside 0.9-3 GHz, a conduction/relaxation-type loss, so the shape need not transfer).
+#   * NOT modelled: the cooling branch (9x lower at room temperature), the irreversible transformation at
+#     675-875 C, the absent quartz transition; eps' is flat (5.45 +- 0.3 in the source) and stays beam.eps_r.
+#   * T in KELVIN (22 C = 295.15 K); above 995 C the last ratio is held (the clamp), below 22 C the first.
+# A deck that does not deposit (no positive beam power) parses the table and does nothing with it: the column
+# optical-depth sum and its thermo columns exist only when the table varies AND the beam can deposit.
+# One line (check_shared.py reads one key per line):
+#   22 C 1.00; 201 0.98; 300 1.15; 401 1.39; 451 1.62; 500 2.01; 550 2.42; 575 2.73; 600 3.15; 649 4.27;
+#   699 5.58; 748 5.72; 797 4.74; 847 3.79; 896 3.86; 945 6.02; 995 8.88
+beam.tan_delta_T = 295.15 1.00  474.15 0.98  573.15 1.15  674.15 1.39  724.15 1.62  773.15 2.01  823.15 2.42  848.15 2.73  873.15 3.15  922.15 4.27  972.15 5.58  1021.15 5.72  1070.15 4.74  1120.15 3.79  1169.15 3.86  1218.15 6.02  1268.15 8.88

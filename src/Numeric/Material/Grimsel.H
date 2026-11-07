@@ -18,6 +18,9 @@
 //   c_p(theta)    = 1370 - 178000/(theta + 271)          J/(kg K)      [43]
 //   H(theta)      = 1370(theta-20) - 178000 ln((theta+271)/291)        [48]
 //   lambda(theta) = 2000/(theta + 563)                   W/(m K)       [89]
+//     `lambda.cap_theta` (default -1 = off) holds lambda at its value at that
+//     theta and above: the P2-24 melt heat-transport SENSITIVITY (Zhang's
+//     kappa cap at 1273 K is the recorded alternative to the extrapolated fit).
 //   rho           = 2650                                 kg/m^3       [141]
 //
 // ⚠ kappa is NEVER set independently of lambda/(rho c_p) [112]: this class
@@ -99,6 +102,9 @@ public:
         // lambda [89], first heating, intact rock.
         pp.query_default("lambda.a",   v.lam_a,   2000.0);
         pp.query_default("lambda.th0", v.lam_th0, 563.0);
+        // hold lambda at its value at this theta and above. -1 = off (the fit
+        // extrapolated through the melt; P2-24's production setting).
+        pp.query_default("lambda.cap_theta", v.lam_cap_theta, -1.0);
         // rho [141].
         pp.query_default("rho",   v.rho_0,  2650.0);
         // E_0 and nu [180, 195]. ⚠ mu moves with E: mu = E/(2(1+nu)).
@@ -112,7 +118,6 @@ public:
         // the low side near T_s because part of the expansion opens
         // microcracks instead of loading the flake.
         pp.query_default("alpha_cap_theta", v.alpha_cap_theta, -1.0);
-        pp.query_default("T_ref", v.T_ref, 293.15);
         v.BuildTables();
     }
 
@@ -134,7 +139,8 @@ public:
     // ---- the laws the criterion and the stress need ----------------------
     Set::Scalar lambda(Set::Scalar T) const       // W/(m K) [89]
     {
-        const Set::Scalar th = T - 273.15;
+        Set::Scalar th = T - 273.15;
+        if (lam_cap_theta > 0.0 && th > lam_cap_theta) th = lam_cap_theta;
         return lam_a / (th + lam_th0);
     }
 
@@ -244,7 +250,7 @@ public:
 
     // Parsed constants, all defaulted to the reference's recommendations.
     Set::Scalar cp_a = 1370.0, cp_b = 178000.0, cp_th0 = 271.0;
-    Set::Scalar lam_a = 2000.0, lam_th0 = 563.0;
+    Set::Scalar lam_a = 2000.0, lam_th0 = 563.0, lam_cap_theta = -1.0;
     Set::Scalar rho_0 = 2650.0;
     Set::Scalar E_0 = 53.3e9, nu = 0.30;
     Set::Scalar K_Ic0 = 1.5;

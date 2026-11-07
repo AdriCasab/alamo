@@ -59,7 +59,6 @@ microstructure.number_of_grains = 200
 microstructure.seed             = 1
 microstructure.nphases          = 3
 
-microstructure.phase0.name              = quartz
 microstructure.phase0.fraction          = 0.474
 microstructure.phase0.kappa             = 4.94
 microstructure.phase0.beta              = 1.6e-5
@@ -67,7 +66,6 @@ microstructure.phase0.E                 = 75.0e9
 microstructure.phase0.mu                = 34.7e9
 microstructure.phase0.rho               = 2630.0
 microstructure.phase0.Cp                = 750.0
-microstructure.phase0.alpha_attenuation = 100.0
 microstructure.phase0.A_D               = 0.0003
 microstructure.phase0.T_ref             = 280.15
 microstructure.phase0.T_m               = 1510.5
@@ -77,7 +75,6 @@ microstructure.phase0.T_vap_lo          = 3233.0
 microstructure.phase0.T_vap_hi          = 3503.0
 microstructure.phase0.L_v               = 4.8e6
 
-microstructure.phase1.name              = kfeldspar
 microstructure.phase1.fraction          = 0.320
 microstructure.phase1.kappa             = 2.34
 microstructure.phase1.beta              = 0.75e-5
@@ -85,7 +82,6 @@ microstructure.phase1.E                 = 53.0e9
 microstructure.phase1.mu                = 23.5e9
 microstructure.phase1.rho               = 2630.0
 microstructure.phase1.Cp                = 711.0
-microstructure.phase1.alpha_attenuation = 100.0
 microstructure.phase1.A_D               = 0.0003
 microstructure.phase1.T_ref             = 280.15
 microstructure.phase1.T_m               = 1510.5
@@ -95,7 +91,6 @@ microstructure.phase1.T_vap_lo          = 3233.0
 microstructure.phase1.T_vap_hi          = 3503.0
 microstructure.phase1.L_v               = 4.8e6
 
-microstructure.phase2.name              = plagioclase
 microstructure.phase2.fraction          = 0.206
 microstructure.phase2.kappa             = 3.26
 microstructure.phase2.beta              = 1.067e-5
@@ -103,7 +98,6 @@ microstructure.phase2.E                 = 55.0e9
 microstructure.phase2.mu                = 24.6e9
 microstructure.phase2.rho               = 2540.0
 microstructure.phase2.Cp                = 711.0
-microstructure.phase2.alpha_attenuation = 100.0
 microstructure.phase2.A_D               = 0.0003
 microstructure.phase2.T_ref             = 280.15
 microstructure.phase2.T_m               = 1510.5
@@ -113,10 +107,8 @@ microstructure.phase2.T_vap_lo          = 3233.0
 microstructure.phase2.T_vap_hi          = 3503.0
 microstructure.phase2.L_v               = 4.8e6
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
-damage.enabled         = 0
 
 spallation.model         = sp_weibull
 spall.stress_source       = local_thermoelastic
@@ -132,7 +124,6 @@ weibull.m       = 15.0
 weibull.seed    = 12345
 
 spall.enabled          = 1
-spall.sample           = top_cell
 spall.h_spall_max      = 0.004
 
 vapor.enabled          = 1
@@ -143,8 +134,8 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.025
 beam.y0     = 0.0015625
 beam.z0     = 0.05
-beam.alpha_expr = 100.0
-beam.R      = 0.2
+beam.eps_r     = 5.02      # P2-20: Barre granite (DOE DE-EE0005504 p. 52: n 2.24); typed alpha 100 / R 0.2 replaced -- unscored, not run
+beam.tan_delta = 0.01065   # P2-20: Barre, 30 % single-pass absorption in 25 mm at 28 GHz (DOE p. 44) => alpha 68.5 1/m, R 0.147 at lambda 2.19 mm
 beam.schedule.t_end = 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30
 beam.schedule.P     = 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200 0 1200
 
@@ -183,4 +174,3 @@ el.model1.E  = 29.98e9
 el.model1.nu = 0.19
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
-solver = explicit

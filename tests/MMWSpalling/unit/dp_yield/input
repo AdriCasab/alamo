@@ -45,7 +45,6 @@ microstructure.mode       = expression
 microstructure.phase_expr = floor(4*x)
 microstructure.nphases    = 4
 
-microstructure.phase0.name              = below_tension
 microstructure.phase0.fraction          = 0.25
 microstructure.phase0.kappa             = 2.0
 microstructure.phase0.beta              = 0.0
@@ -53,10 +52,8 @@ microstructure.phase0.E                 = 10.0
 microstructure.phase0.mu                = 4.0
 microstructure.phase0.rho               = 1.0
 microstructure.phase0.Cp                = 1.0
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 1.0
 
-microstructure.phase1.name              = clamp_tension
 microstructure.phase1.fraction          = 0.25
 microstructure.phase1.kappa             = 2.0
 microstructure.phase1.beta              = 0.0
@@ -64,10 +61,8 @@ microstructure.phase1.E                 = 10.0
 microstructure.phase1.mu                = 4.0
 microstructure.phase1.rho               = 1.0
 microstructure.phase1.Cp                = 1.0
-microstructure.phase1.alpha_attenuation = 0.0
 microstructure.phase1.A_D               = 1.0
 
-microstructure.phase2.name              = unload_compression
 microstructure.phase2.fraction          = 0.25
 microstructure.phase2.kappa             = 2.0
 microstructure.phase2.beta              = 0.0
@@ -75,10 +70,8 @@ microstructure.phase2.E                 = 10.0
 microstructure.phase2.mu                = 4.0
 microstructure.phase2.rho               = 1.0
 microstructure.phase2.Cp                = 1.0
-microstructure.phase2.alpha_attenuation = 0.0
 microstructure.phase2.A_D               = 0.5
 
-microstructure.phase3.name              = hydro_compression
 microstructure.phase3.fraction          = 0.25
 microstructure.phase3.kappa             = 2.0
 microstructure.phase3.beta              = 0.0
@@ -86,7 +79,6 @@ microstructure.phase3.E                 = 10.0
 microstructure.phase3.mu                = 4.0
 microstructure.phase3.rho               = 1.0
 microstructure.phase3.Cp                = 1.0
-microstructure.phase3.alpha_attenuation = 0.0
 microstructure.phase3.A_D               = 1.0
 
 conductivity.kappa_damage_alpha = 0.6931471805599453
@@ -114,8 +106,6 @@ beam.lambda     = 1.0e-3
 beam.x0         = 0.5
 beam.y0         = 0.5
 beam.z0         = 1.0
-beam.alpha_expr = 1
-beam.R          = 0.0
 beam.P0         = 0.0
 
 losses.epsilon       = 0.0

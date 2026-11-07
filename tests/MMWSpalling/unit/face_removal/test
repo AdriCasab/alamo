@@ -313,8 +313,10 @@ def check_source():
     print("\n(a3 i) one reconstruction, one scan, one remap -- the column path and the line path")
     rd = lambda *q: open(os.path.join(ROOT, "src", "Integrator", *q)).read()
     code = lambda t: "\n".join(l.split("//")[0] for l in t.split("\n"))
-    rem, frm, mmw = code(rd("MMWSpalling", "Removal.H")), code(rd("MMWSpalling", "FaceRemoval.H")), \
-        code(rd("MMWSpalling.H"))
+    # P2-18 A3: the shared helpers moved from the top of Removal.H to Shared.H; the
+    # declaration count runs over all four fragments
+    rem, frm, mmw, shr = code(rd("MMWSpalling", "Removal.H")), code(rd("MMWSpalling", "FaceRemoval.H")), \
+        code(rd("MMWSpalling.H")), code(rd("MMWSpalling", "Shared.H"))
     col = rem[rem.index("void UpdateRemovalAfterCohesive("):]           # the column path
     col_recon = mmw[mmw.index("void BuildSurfaceTColumns("):mmw.index("bool SharedSurfaceRecon(")]
     line = frm[frm.index("void RecedeAlongLines("):]                     # the line path
@@ -325,7 +327,7 @@ def check_source():
                               ("ScanSigmaT(", "Set::Scalar ScanSigmaT(", col),
                               ("DepthScanH(", "static Set::Scalar DepthScanH(", col),
                               ("RemapProfile(", "static Set::Scalar RemapProfile(", col)):
-        n_decl = len(re.findall(re.escape(decl), rem + frm + mmw))
+        n_decl = len(re.findall(re.escape(decl), rem + frm + mmw + shr))
         in_col, in_line = fn in col_txt, fn in line_all
         need(n_decl == 1 and in_col and in_line,
              "`%s` declared once (%d), called by the column path (%s) AND the line path (%s)"

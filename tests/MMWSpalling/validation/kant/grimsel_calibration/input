@@ -55,7 +55,6 @@ geometry.prob_lo     = 0.0   0.0   0.0
 geometry.prob_hi     = 0.024 0.024 0.064
 geometry.is_periodic = 0 0 0
 alpha = 0.0 0.0
-solver = explicit
 
 # The Weibull size reference = the cell volume (the user's 09-16 choice): moves with the mesh.
 weibull.V0 = 1.0e-9
@@ -78,7 +77,6 @@ hc.bc.temp.constant.val.ylo  = 0.0
 hc.bc.temp.constant.val.yhi  = 0.0
 hc.bc.temp.constant.val.zlo  = 0.0
 hc.bc.temp.constant.val.zhi  = 0.0
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # --- Kant's rig ---------------------------------------------------------------
@@ -92,7 +90,6 @@ losses.T_amb  = 293.15
 surface_patch.enabled                 = 1
 surface_patch.mode                    = convective_flame
 surface_patch.pinned_idle_cycles      = 1.0e9
-surface_patch.face                    = zhi
 surface_patch.x0                      = 0.012
 surface_patch.y0                      = 0.012
 surface_patch.radius                  = 1.0
@@ -113,8 +110,6 @@ beam.lambda     = 2.19e-3
 beam.x0         = 0.0
 beam.y0         = 0.0
 beam.z0         = 0.10
-beam.alpha_expr = 2000.0
-beam.R          = 0.0
 el.type      = disable
 el.nmodels   = 1
 el.model1.E  = 30.0e9

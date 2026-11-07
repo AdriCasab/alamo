@@ -1,0 +1,370 @@
+<title>Three Skin Shortcuts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f3f5f7; --panel:#ffffff; --ink:#1d2430; --ink-2:#4a5563; --muted:#6f7a88; --line:#d6dce3;
+  --accent:#0f6e73; --accent-soft:#dcefef; --typed:#b4542a; --typed-soft:#f6e4da; --good:#2f7d4f; --good-soft:#deefe3;
+  --code:#eef1f4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#141a20; --panel:#1b222a; --ink:#e6e9ec; --ink-2:#c3cad2; --muted:#8f9aa7; --line:#2f3942;
+    --accent:#4fb3b8; --accent-soft:#17383a; --typed:#e0875f; --typed-soft:#3d2a20; --good:#6fc48f; --good-soft:#1f3a2a;
+    --code:#222b34;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#141a20; --panel:#1b222a; --ink:#e6e9ec; --ink-2:#c3cad2; --muted:#8f9aa7; --line:#2f3942;
+  --accent:#4fb3b8; --accent-soft:#17383a; --typed:#e0875f; --typed-soft:#3d2a20; --good:#6fc48f; --good-soft:#1f3a2a;
+  --code:#222b34;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif;padding-block:0 4rem}
+.wrap{max-width:76ch;margin:0 auto;padding-inline:clamp(16px,4vw,32px)}
+h1,h2,h3{font-family:"IBM Plex Serif",Georgia,serif;text-wrap:balance;line-height:1.2}
+h1{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:600;margin:2.5rem 0 .5rem}
+h2{font-size:1.55rem;font-weight:600;margin:3.2rem 0 .6rem;padding-top:1.4rem;border-top:2px solid var(--ink)}
+h3{font-size:1.1rem;font-weight:600;margin:1.8rem 0 .4rem}
+p{margin:.7rem 0;max-width:68ch}
+.lede{font-size:1.1rem;color:var(--ink-2);max-width:66ch}
+.eyebrow{font:500 .72rem/1 "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.92em}
+code{background:var(--code);padding:.08em .35em;border-radius:3px}
+.eq{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.95rem;background:var(--code);padding:.75rem 1rem;border-radius:4px;overflow-x:auto;margin:.8rem 0;white-space:pre}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:1.2rem 0}
+.strip > div{background:var(--panel);padding:.75rem .9rem}
+.strip .k{font:500 .7rem/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.strip .v{font-size:.95rem}
+.tag{display:inline-block;font:500 .7rem/1 "IBM Plex Mono",monospace;letter-spacing:.06em;padding:.3em .5em;border-radius:3px;vertical-align:middle}
+.tag.typed{background:var(--typed-soft);color:var(--typed)}
+.tag.phys{background:var(--good-soft);color:var(--good)}
+.tag.rock{background:var(--accent-soft);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+.tscroll{overflow-x:auto;margin:1rem 0}
+th,td{text-align:left;vertical-align:top;padding:.55rem .6rem;border-bottom:1px solid var(--line)}
+th{font:500 .72rem/1.3 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-weight:500}
+.fig{background:var(--panel);border:1px solid var(--line);padding:1rem 1rem 1.1rem;margin:1.4rem 0}
+.fig svg{width:100%;height:auto;display:block}
+.fig .cap{font-size:.86rem;color:var(--ink-2);margin:.6rem 0 0}
+.ctl{display:flex;flex-wrap:wrap;gap:1rem 1.6rem;align-items:center;margin:.6rem 0 .2rem}
+.ctl label{display:flex;flex-direction:column;gap:.25rem;font:500 .78rem "IBM Plex Mono",monospace;color:var(--ink-2);min-width:150px}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl output{color:var(--ink);font-variant-numeric:tabular-nums}
+.read{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-top:.8rem}
+.read div{background:var(--code);padding:.55rem .7rem;border-radius:4px}
+.read .k{font:500 .68rem/1 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.read .v{font:500 1.05rem/1.3 "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;margin-top:.2rem}
+.rec{border-left:3px solid var(--accent);padding:.6rem 1rem;margin:1.2rem 0;background:var(--panel)}
+.rec .eyebrow{color:var(--accent)}
+.pushback{border-left:3px solid var(--typed);padding:.6rem 1rem;margin:1.2rem 0;background:var(--panel)}
+.pushback .eyebrow{color:var(--typed)}
+ul,ol{padding-left:1.3rem}
+li{margin:.3rem 0}
+.tree{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.86rem;line-height:1.5;background:var(--code);padding:.9rem 1rem;border-radius:4px;overflow-x:auto;white-space:pre}
+.small{font-size:.86rem;color:var(--ink-2)}
+hr{border:0;border-top:1px solid var(--line);margin:2rem 0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<p class="eyebrow" style="margin-top:2.5rem">ALAMO · MMWSpalling · design note for the beam port · 2026-11-05</p>
+<h1>Three skin shortcuts, and what replaces them</h1>
+<p class="lede">The removal chain runs heat → temperature → stress → onset → flake thickness → buckling check → removal. Three links were written for a flame, where the heated region is a thin skin. A beam heats a volume. This page shows each link as the code computes it today, the number it depends on, where the assumption fails, the alternatives, and which alternative removes a typed parameter rather than moving it.</p>
+
+<div class="strip">
+  <div><div class="k">Shortcut 1</div><div class="v">Flake thickness = <span class="tag typed">0.4</span> × thermal skin depth</div></div>
+  <div><div class="k">Shortcut 2</div><div class="v">Surface temperature extrapolated from the top two cells</div></div>
+  <div><div class="k">Shortcut 3</div><div class="v">Stress = <span class="tag typed">0.531</span> × fully-constrained thermal stress</div></div>
+</div>
+
+<p>Reading the tags: <span class="tag typed">typed</span> a number set by hand or fitted once, <span class="tag rock">rock</span> a measured material property, <span class="tag phys">derived</span> follows from the fields and the properties with nothing left to set.</p>
+
+<!-- ============================================================ 1 -->
+<h2>1 · The flake thickness and the 0.4</h2>
+
+<h3>What the code computes</h3>
+<p>Each surface cell carries a line into the rock. From the top two cells' temperature rise above the initial state the code fits one exponential and reads its decay length ℓ, the thermal skin depth. The flake that leaves when the onset criterion fires has thickness</p>
+<div class="eq">h_f = c_f · ℓ          c_f = 0.4   (spall.flake_c_f)
+ℓ   = dz / ln[(T_top − T0)/(T_1 − T0)]</div>
+<p>The buckling check uses the same product as its plate thickness: a fired line is withdrawn unless <code>C_L · c_f · ℓ ≤ L_span</code>.</p>
+
+<h3>Where the 0.4 came from</h3>
+<p>The model card records it as a choice informed by literature, not a derivation: Wilkinson measured flakes of 0.1 to 1 mm, Rauenzahn's skin depths were 0.8 to 1.6 mm, so a ratio of 0.3 to 0.5 lands flakes in the observed range. It was then held fixed. Two things follow. It is a free parameter whose only justification is that the output looks right. And it is not independent: the buckling span was derived with it in place, so the pair (c_f, L_span) is one calibration. Change one and the other moves.</p>
+
+<h3>Why the depth scan cannot replace it</h3>
+<p>There is a depth scan that walks the line and finds how deep the fracture criterion holds. On every flame leg it returns the bisection floor, 3.9 µm on a 1 mm mesh, in 100 % of the uniform fixture's events and 61 % of the calibration deck's. The reason is physical, not a bug: the onset criterion fires at the instant the surface flaw just reaches critical, and at that instant the stress one step down is already below critical. The scan is an onset detector. Thickness is post-onset physics, how far the crack runs parallel to the surface before the flake frees itself, and no quasi-static scan at the onset instant can see it.</p>
+
+<h3>Where the shortcut fails under a beam</h3>
+<p>A beam at 28 GHz deposits over centimetres and a 10 GHz beam over tens of centimetres. The top two cells read nearly the same temperature, the fitted ℓ is huge or the code flags the column as flat, and the flake has no defined thickness. More deeply: ℓ was standing in for the depth of the compressed layer, and under volumetric heating that depth is not a temperature-gradient quantity.</p>
+
+<h3>Alternatives</h3>
+<div class="tscroll"><table>
+<tr><th>form</th><th>thickness</th><th>free numbers</th><th>flame</th><th>beam</th></tr>
+<tr><td>A · current</td><td>c_f · ℓ, ℓ from two cells</td><td><span class="tag typed">c_f</span></td><td>calibrated; mesh-independent rate</td><td>undefined (flat columns)</td></tr>
+<tr><td>B · stress-weighted depth</td><td>x_σ = ∫σ(z) dz / σ(0)</td><td>none, but reproduces ℓ only up to the same factor</td><td>equals ℓ exactly for an exponential skin, so c_f is still needed to match flakes</td><td>defined: the stressed-layer depth</td></tr>
+<tr><td>C · energy release</td><td>the thinnest layer whose stored elastic energy pays for its own delamination</td><td><span class="tag phys">none</span>; uses <span class="tag rock">K_Ic(T), ν</span></td><td>0.05–0.15 mm at onset stress; falls as stress rises, which is Rauenzahn's observed trend</td><td>defined; thick or impossible when stress is low, which is the no-spall record</td></tr>
+<tr><td>D · buckling-selected</td><td>the thickest layer the span can buckle, L_span / C_L</td><td><span class="tag rock">L_span</span> (already present)</td><td>≈0.9 mm at onset; an upper bound, not a selection</td><td>defined</td></tr>
+</table></div>
+
+<p>C is the Hutchinson–Suo film argument. A layer of thickness t under in-plane compression σ stores elastic energy per unit area, and a delamination crack at depth t releases it. When the released energy reaches the fracture energy G_c the crack can run. With a stress that varies along the line:</p>
+<div class="eq">G(t) = ∫₀ᵗ (1 − ν) σ(z)² / E(z) dz        G_c = K_Ic² (1 − ν²) / E
+thickness = smallest t with G(t) ≥ G_c
+uniform σ, uniform E:   t_min = K_Ic² (1 + ν) / σ²        (E cancels)</div>
+<p>Nothing in it is set by hand: the toughness and Poisson ratio are rock properties, the stress is the field. The buckling span then gives the other end: a layer thicker than L_span / C_L cannot buckle. Spall is possible only when the window is open, t_min ≤ L_span / C_L, which is the two-condition picture with both conditions derived.</p>
+
+<div class="fig">
+<p class="eyebrow">Figure 1 · the thickness window at the Grimsel onset</p>
+<div class="ctl">
+  <label>surface stress σ [MPa] <input id="s1_sig" type="range" min="60" max="400" step="5" value="169"><output id="s1_sig_o">169</output></label>
+  <label>K_Ic hot [MPa√m] <input id="s1_k" type="range" min="0.5" max="2.0" step="0.05" value="1.2"><output id="s1_k_o">1.20</output></label>
+  <label>thermal strain ε_th [‰] <input id="s1_e" type="range" min="2" max="14" step="0.5" value="8"><output id="s1_e_o">8.0</output></label>
+  <label>skin depth ℓ [mm] <input id="s1_l" type="range" min="0.5" max="4" step="0.1" value="1.4"><output id="s1_l_o">1.4</output></label>
+</div>
+<svg id="s1_svg" viewBox="0 0 720 150" role="img" aria-label="thickness window"></svg>
+<div class="read">
+  <div><div class="k">C · energy thickness t_min</div><div class="v" id="s1_tmin">—</div></div>
+  <div><div class="k">A · current c_f·ℓ</div><div class="v" id="s1_cur">—</div></div>
+  <div><div class="k">D · buckling max L/C_L</div><div class="v" id="s1_max">—</div></div>
+  <div><div class="k">window</div><div class="v" id="s1_win">—</div></div>
+</div>
+<p class="cap">ν = 0.30, L_span = 12.0 mm (the rock file). The default stress 169 MPa is the Grimsel UCS, which is what the calibrated criterion fires at; 318 MPa is the fully constrained value with the relief factor removed. The current flake sits inside the window; the energy thickness is the thin edge of it.</p>
+</div>
+
+<div class="rec"><p class="eyebrow">Recommendation</p>
+<p>Adopt C as the thickness and keep the buckling check as the upper bound. It deletes <code>spall.flake_c_f</code>, it is the same rule under a flame and a beam, and it predicts the two observed trends: thinner flakes at higher flux, and no flakes when the stress is low. The cost is honest: the flakes come out thinner than today's 0.4 ℓ by a factor of 3 to 5, so the removal rate per firing falls and the span calibration, which was tied to c_f, must be re-derived once. Whether the rate still closes Kant, Höser and Meier is then a test of the physics, not a knob. If it fails, that failure is a finding about the onset stress (section 3), because t_min scales as 1/σ².</p></div>
+
+<!-- ============================================================ 2 -->
+<h2>2 · The surface temperature</h2>
+
+<h3>What the code computes</h3>
+<p>The criterion fires on the surface temperature, but the mesh stores cell averages. From the top two cells the code fits the same exponential as above and extrapolates to the face:</p>
+<div class="eq">x      = ln[(T_top − T0)/(T_1 − T0)]  = dz/ℓ
+T_s    = T0 + (T_top − T0) · x / (1 − e^(−x))
+flat   : if the pair does not decay, x = 0, T_s = T_top</div>
+<p>There is already a second route in the face list, used as the fallback when the pair is flat: the face temperature is solved from the face heat balance, flame heating in, radiation and convection out, conduction into the half-cell. That root is sign-agnostic and needs no profile shape.</p>
+
+<h3>Why it exists, and the question of not extrapolating</h3>
+<p>You asked whether it is better not to extrapolate. Figure 2 is the answer. The cell average under-reads the surface rise by the factor (1 − e<sup>−x</sup>)/x. At the production mesh, 1 mm cells on a 1.4 mm skin, that factor is 0.72: a 550 K surface rise reads as 396 K at the cell centre, 150 K low. Worse, the under-read depends on the mesh, so without a face value the onset temperature would move every time the mesh changed. P0 made the firing temperature mesh-independent to 0.1 to 0.4 % and that is what the extrapolation buys. Not extrapolating is only correct if the mesh resolves the skin, roughly ten cells across ℓ, which is 0.1 mm cells at the surface.</p>
+
+<div class="fig">
+<p class="eyebrow">Figure 2 · what the top cell reads</p>
+<div class="ctl">
+  <label>cell size dz / skin depth ℓ <input id="s2_x" type="range" min="0.1" max="3" step="0.05" value="0.71"><output id="s2_x_o">0.71</output></label>
+  <label>profile <select id="s2_mode" style="font:inherit"><option value="skin">flame: exponential skin</option><option value="beam">beam: interior peak</option></select></label>
+</div>
+<svg id="s2_svg" viewBox="0 0 720 260" role="img" aria-label="cell reading of a skin profile"></svg>
+<div class="read">
+  <div><div class="k">cell reads</div><div class="v" id="s2_read">—</div></div>
+  <div><div class="k">two-cell exponential</div><div class="v" id="s2_exp">—</div></div>
+  <div><div class="k">face-flux extrapolation</div><div class="v" id="s2_lin">—</div></div>
+</div>
+<p class="cap">Surface rise normalised to 1. The exponential fit recovers the surface exactly when the profile is exponential. Under the beam profile the ratio inverts, the fit reports "flat", and the face is set equal to the cell, slightly hot; the flux-based value is right in both cases but misses the curvature when the skin is thinner than the cell.</p>
+</div>
+
+<h3>Alternatives</h3>
+<div class="tscroll"><table>
+<tr><th>form</th><th>assumes</th><th>flame, dz ≈ ℓ</th><th>beam</th><th>free numbers</th></tr>
+<tr><td>A · two-cell exponential (current)</td><td>heating from above; exponential profile</td><td>exact for a true skin; 12.8 % of Meier firings are flat and hold the last x</td><td>reads flat → face = cell, slightly hot</td><td>none; a cap of x ≤ 4</td></tr>
+<tr><td>B · face heat balance (today's fallback)</td><td>a half-cell linear gradient at the face</td><td>misses the sub-cell curvature: over-corrects by ~10 % of the rise at dz = 0.7 ℓ</td><td>correct sign and magnitude; surface cooling appears</td><td>none</td></tr>
+<tr><td>C · no extrapolation, resolve the skin</td><td>dz ≤ ℓ/10 at the surface</td><td>exact by brute force</td><td>exact</td><td>none; cost: the surface band at 0.1 mm in three dimensions</td></tr>
+<tr><td>D · B with the exponential as the sub-cell shape</td><td>heating from above when the net face flux is into the rock, else linear</td><td>as A</td><td>as B</td><td>none; the switch is the sign of a computed flux</td></tr>
+</table></div>
+
+<div class="pushback"><p class="eyebrow">Push-back</p>
+<p>Dropping the extrapolation outright would reintroduce a mesh-dependent onset of order 100 K at the production mesh, so I would not. But the two-cell fit is the weakest of the options because it infers the profile from two noisy numbers. The face heat balance is not a fit: it is the same energy balance the boundary condition already enforces, solved for the face temperature, and it is right for either direction of heat flow. D makes it primary and uses the exponential only as the sub-cell shape when heat is entering the rock. One refined-mesh twin at 0.1 mm settles which of A, B, D is closest, once, and that twin is the honest arbiter of mesh convergence for the whole chain.</p></div>
+
+<!-- ============================================================ 3 -->
+<h2>3 · The stress and the 0.531</h2>
+
+<h3>What the code computes</h3>
+<p>The one-dimensional law gives the surface stress as the fully constrained thermal stress times a relief factor:</p>
+<div class="eq">σ = R · E(T_s) · [ε_th(T_s) − ε_th(T0)] / (1 − ν)        R = 0.531294
+R = UCS / σ_full(850 K) ,  UCS = 169 MPa  →  the criterion fires when σ_full reaches 318 MPa</div>
+<p>R was set so that the fully constrained stress at a target onset of 850 K equals the rock's compressive strength; the 8 µm flaw then puts K_I at K_Ic at that stress. The model card already notes that R sits about 25 % below any physical relief estimate, "absorbing something that is not relief". It is a level knob with a physical name.</p>
+
+<h3>What the law assumes</h3>
+<p>Full in-plane constraint: a thin hot layer on a cold half-space cannot expand sideways, so all of its thermal strain becomes biaxial compression. That is a good description of a flame skin on a wide hot area. R then says only 53 % of that constraint is realised, and nothing in the law says why.</p>
+
+<div class="fig">
+<p class="eyebrow">Figure 3 · constraint under a skin and under a hot spot</p>
+<svg viewBox="0 0 720 230" role="img" aria-label="skin versus hot spot constraint">
+  <defs>
+    <linearGradient id="g_skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--typed)" stop-opacity=".85"/><stop offset=".25" stop-color="var(--typed)" stop-opacity=".15"/><stop offset="1" stop-color="var(--typed)" stop-opacity="0"/></linearGradient>
+    <radialGradient id="g_spot" cx=".5" cy=".05" r=".8"><stop offset="0" stop-color="var(--typed)" stop-opacity=".85"/><stop offset=".6" stop-color="var(--typed)" stop-opacity=".2"/><stop offset="1" stop-color="var(--typed)" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g font-family="IBM Plex Sans, sans-serif" font-size="12" fill="var(--ink-2)">
+    <rect x="20" y="40" width="320" height="160" fill="var(--code)" stroke="var(--line)"/>
+    <rect x="20" y="40" width="320" height="160" fill="url(#g_skin)"/>
+    <text x="20" y="28" font-weight="600" fill="var(--ink)">flame: skin on a half-space</text>
+    <text x="24" y="60" font-size="11">heated 1–2 mm, hot area ≫ depth</text>
+    <g stroke="var(--accent)" stroke-width="2" fill="none">
+      <path d="M60 52 h40 M100 52 l-6 -4 M100 52 l-6 4"/><path d="M300 52 h-40 M260 52 l6 -4 M260 52 l6 4"/>
+    </g>
+    <text x="110" y="78" fill="var(--accent)" font-size="11">in-plane compression, full constraint: σ = E ε_th/(1−ν)</text>
+    <text x="24" y="190" font-size="11">cold rock below and beside: nothing yields</text>
+
+    <rect x="380" y="40" width="320" height="160" fill="var(--code)" stroke="var(--line)"/>
+    <rect x="380" y="40" width="320" height="160" fill="url(#g_spot)"/>
+    <text x="380" y="28" font-weight="600" fill="var(--ink)">beam: hot spot in a block</text>
+    <text x="384" y="60" font-size="11">heated as deep as it is wide</text>
+    <g stroke="var(--accent)" stroke-width="2" fill="none">
+      <path d="M470 56 h30 M500 56 l-6 -4 M500 56 l-6 4"/><path d="M610 56 h-30 M580 56 l6 -4 M580 56 l6 4"/>
+    </g>
+    <text x="500" y="85" fill="var(--accent)" font-size="11" text-anchor="middle">partial constraint: σ &lt; E ε_th/(1−ν)</text>
+    <g stroke="var(--typed)" stroke-width="2" fill="none">
+      <path d="M420 120 h-24 M396 120 l6 -4 M396 120 l6 4"/><path d="M660 120 h24 M684 120 l-6 -4 M684 120 l-6 4"/>
+    </g>
+    <text x="384" y="150" fill="var(--typed)" font-size="11">rim in tension → radial cracking (Woskov banded his samples)</text>
+    <text x="384" y="190" font-size="11">the surrounding cold rock yields a little; the constraint is a geometry result</text>
+  </g>
+</svg>
+<p class="cap">The one-dimensional law computes the left case and multiplies by R. The mechanics operator computes whichever case the geometry actually is.</p>
+</div>
+
+<h3>Alternatives</h3>
+<div class="tscroll"><table>
+<tr><th>form</th><th>what fixes the level</th><th>free numbers</th><th>flame</th><th>beam</th></tr>
+<tr><td>A · 1-D law with R (current)</td><td>R and the flaw, fitted together on Kant</td><td><span class="tag typed">R</span> <span class="tag typed">a = 8 µm</span></td><td>calibrated</td><td>wrong constraint, no rim tension</td></tr>
+<tr><td>B · 1-D law, R = 1, re-derive the flaw</td><td>the flaw alone</td><td><span class="tag typed">a ≈ 2 µm</span></td><td>reproduces the onset with an unphysically small flaw: the 47 % relief is real and something must carry it</td><td>as A</td></tr>
+<tr><td>C · mechanics operator</td><td>equilibrium with the thermal eigenstrain; the constraint comes out of the geometry</td><td><span class="tag phys">none</span> for the stress; <span class="tag rock">a</span> stays measurable</td><td>on a wide skin returns ≈ full constraint, so it will show whether R was constraint at all</td><td>partial constraint and rim tension computed</td></tr>
+<tr><td>D · operator + an explicit relief mechanism</td><td>what R was hiding, made a model: stiffness loss from thermal microcracking, or grain-scale expansion mismatch (the Voronoi study)</td><td>the mechanism's measured inputs</td><td>the physical replacement for R</td><td>same</td></tr>
+</table></div>
+
+<h3>How to retire R without re-fitting it</h3>
+<div class="tree">run the calibration deck with the operator as the stress source, R = 1, a = 8 µm
+│
+├─ onset lands within the Grimsel band (826–873 K) ──► R retires. The missing 47 % was
+│                                                      constraint the half-space law assumed and
+│                                                      the block does not provide.
+│
+├─ onset lands too cold (operator stress ≈ full) ────► the relief is real and not geometric.
+│     │                                                 Candidates, in order of evidence:
+│     ├─ E(T) already halves by 600 °C: check the table is applied at T_s, not T0
+│     ├─ thermal microcracking: stiffness loss vs T measured on Grimsel? (gap)
+│     └─ grain mismatch (quartz vs feldspar): the Voronoi study you kept as future work
+│     ──► R is replaced by whichever is measured; until then it stays DECLARED as
+│         "unexplained level factor", never re-fitted on a beam case.
+│
+└─ onset lands too hot ───────────────────────────────► the flaw scale is wrong, not R:
+                                                       a measured flaw distribution replaces a.</div>
+
+<div class="rec"><p class="eyebrow">Recommendation</p>
+<p>C first, as a diagnostic beside the law on the flame calibration deck. It costs one elastic solve every few steps and answers a question the project has carried since P2-2b: is the relief geometric or material? Only the answer decides whether R simply retires or is replaced by D. Either way it is not re-fitted, and under the beam the operator is the only form that sees the hot-spot geometry at all.</p></div>
+
+<!-- ============================================================ 4 -->
+<h2>4 · How the three couple, and the order</h2>
+<p>The three are not independent, which is why they have to be decided together before the port:</p>
+<ul>
+<li>The energy thickness in section 1 scales as 1/σ², so it inherits whatever section 3 decides about the stress level. With R in place the flakes come out 3 to 5 times thinner than today; with full constraint, 10 times thinner. The thickness question cannot be closed before the stress question.</li>
+<li>The onset reads the surface temperature from section 2, and the stress law reads it too. A different face value moves the banked onset by a few kelvin.</li>
+<li>The buckling span was derived with c_f in place. Deleting c_f re-derives the span once, from the same Kant brackets, with one fewer unknown.</li>
+</ul>
+<p>Parameters before and after, if all three recommendations are taken:</p>
+<div class="tscroll"><table>
+<tr><th>quantity</th><th>today</th><th>after</th></tr>
+<tr><td>flake thickness</td><td><span class="tag typed">c_f = 0.4</span> × ℓ</td><td><span class="tag phys">derived</span> from K_Ic, ν, σ(z)</td></tr>
+<tr><td>surface temperature</td><td>two-cell exponential fit</td><td>face energy balance; exponential only as sub-cell shape when heat enters</td></tr>
+<tr><td>stress</td><td><span class="tag typed">R = 0.531</span> × 1-D law</td><td>operator; R retired or replaced by a measured mechanism</td></tr>
+<tr><td>flaw scale</td><td><span class="tag typed">8 µm</span> fitted with R</td><td><span class="tag rock">measured</span> or declared</td></tr>
+<tr><td>buckling span</td><td><span class="tag rock">12 mm</span>, coupled to c_f</td><td><span class="tag rock">re-derived once</span>, alone</td></tr>
+</table></div>
+
+<p>Order of work: stress diagnostic first (section 3), because its answer sets the stress the thickness depends on; then the thickness and the face temperature together on the flame path, with the span re-derived and Kant, Höser and Meier re-scored; then the beam port, where every one of these is a prediction. One refined-mesh twin accompanies the flame step as the arbiter of convergence.</p>
+
+<hr>
+<p class="small">Sources read for this page: <code>FaceRemoval.H</code> (the line loop, the reconstruction fallback from the face heat balance, the buckling ratio), <code>MMWSpalling.H</code> (<code>ReconFromX</code>, <code>LawSigma</code>), <code>Grimsel.H</code> (E(T), K_Ic(T)), <code>rock_grimsel.inputs</code> and <code>model_form_flame.inputs</code>, the model card rows 13, 18, 20 and 28, the P2-18 face-gate event logs (h_scan at the bisection floor), Hutchinson &amp; Suo 1992 for the film delamination energy, Rauenzahn &amp; Tester 1989 for the buckling condition.</p>
+</div>
+
+<script>
+(function(){
+  // ---------- Figure 1: thickness window
+  var nu = 0.30, L = 12.0; // mm
+  function f1(){
+    var sig = +document.getElementById('s1_sig').value;      // MPa
+    var K   = +document.getElementById('s1_k').value;        // MPa sqrt(m)
+    var eps = +document.getElementById('s1_e').value / 1000;
+    var ell = +document.getElementById('s1_l').value;        // mm
+    document.getElementById('s1_sig_o').value = sig;
+    document.getElementById('s1_k_o').value = K.toFixed(2);
+    document.getElementById('s1_e_o').value = (eps*1000).toFixed(1);
+    document.getElementById('s1_l_o').value = ell.toFixed(1);
+    var tmin = K*K*(1+nu)/(sig*sig) * 1000;                  // m -> mm  (K^2[MPa^2 m] / sig^2[MPa^2])
+    var cur  = 0.4*ell;
+    var CL   = Math.PI/Math.sqrt(6*(1+nu)*eps);
+    var tmax = L/CL;
+    document.getElementById('s1_tmin').textContent = (tmin*1000).toFixed(0)+' µm';
+    document.getElementById('s1_cur').textContent  = (cur*1000).toFixed(0)+' µm';
+    document.getElementById('s1_max').textContent  = (tmax*1000).toFixed(0)+' µm  (C_L '+CL.toFixed(1)+')';
+    document.getElementById('s1_win').textContent  = tmin<=tmax ? 'open' : 'CLOSED: no flake can both detach and buckle';
+    // log axis 10 um .. 10 mm
+    var svg = document.getElementById('s1_svg');
+    var x0=40, x1=680, lo=Math.log10(0.01), hi=Math.log10(10);
+    function X(mm){ return x0 + (Math.log10(Math.max(mm,0.01))-lo)/(hi-lo)*(x1-x0); }
+    var s = '';
+    s += '<line x1="'+x0+'" y1="90" x2="'+x1+'" y2="90" stroke="var(--line)" stroke-width="2"/>';
+    [0.01,0.03,0.1,0.3,1,3,10].forEach(function(v){
+      s += '<line x1="'+X(v)+'" y1="86" x2="'+X(v)+'" y2="94" stroke="var(--muted)"/>';
+      s += '<text x="'+X(v)+'" y="112" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+(v<1?(v*1000)+' µm':v+' mm')+'</text>';
+    });
+    var a=Math.min(X(tmin),X(tmax)), b=Math.max(X(tmin),X(tmax));
+    s += '<rect x="'+a+'" y="60" width="'+Math.max(b-a,1)+'" height="30" fill="'+(tmin<=tmax?'var(--good-soft)':'var(--typed-soft)')+'"/>';
+    function mark(mm,label,col,y){ s += '<line x1="'+X(mm)+'" y1="'+(y)+'" x2="'+X(mm)+'" y2="96" stroke="'+col+'" stroke-width="2"/>'
+      + '<text x="'+X(mm)+'" y="'+(y-6)+'" text-anchor="middle" font-size="11" font-family="IBM Plex Sans, sans-serif" fill="'+col+'">'+label+'</text>'; }
+    mark(tmin,'C · energy t_min','var(--good)',40);
+    mark(cur,'A · 0.4 ℓ','var(--typed)',22);
+    mark(tmax,'D · L/C_L','var(--accent)',40);
+    s += '<text x="'+x0+'" y="140" font-size="11" font-family="IBM Plex Sans, sans-serif" fill="var(--ink-2)">flake thickness, log scale. Shaded: the window in which a flake can both free itself (C) and buckle (D).</text>';
+    svg.innerHTML = s;
+  }
+  ['s1_sig','s1_k','s1_e','s1_l'].forEach(function(id){ document.getElementById(id).addEventListener('input', f1); });
+  f1();
+
+  // ---------- Figure 2: cell reading
+  function f2(){
+    var x = +document.getElementById('s2_x').value;      // dz / ell
+    var mode = document.getElementById('s2_mode').value;
+    document.getElementById('s2_x_o').value = x.toFixed(2);
+    var svg = document.getElementById('s2_svg');
+    var W=720, H=260, px0=60, px1=700, py0=20, py1=220;
+    // profile in units of ell: z from 0 to 4 ell; theta(z) normalised rise
+    function theta(z){
+      if(mode==='skin') return Math.exp(-z);
+      // beam: volumetric deposition, surface loss: peak below the face
+      var zp=0.6; return Math.exp(-(z-zp)*(z-zp)/(2*0.9*0.9)) * (0.85 + 0.15*Math.min(z/zp,1)) ;
+    }
+    var zmax=4;
+    function PX(z){ return px0 + z/zmax*(px1-px0); }
+    function PY(t){ return py1 - t*(py1-py0); }
+    // cell averages
+    var cells=[]; for(var k=0;k<Math.ceil(zmax/x);k++){ var a=k*x, b=Math.min((k+1)*x,zmax); var n=40, s=0; for(var i=0;i<n;i++){ s+=theta(a+(b-a)*(i+0.5)/n); } cells.push({a:a,b:b,v:s/n}); }
+    var Ttop=cells[0].v, T1=cells[1]?cells[1].v:Ttop;
+    var surf=theta(0);
+    var expo = (T1>0 && Ttop>T1) ? Ttop*Math.log(Ttop/T1)/(1-T1/Ttop) : Ttop;   // x/(1-e^-x) with x=ln ratio
+    // face-flux: T_s = T_top + q*dz/(2k); q/k = -dtheta/dz at the face (into rock positive)
+    var h=1e-4, grad=-(theta(h)-theta(0))/h;  // = 1 for exp skin
+    var lin = Ttop + grad*x/2;
+    var s='';
+    s+='<rect x="'+px0+'" y="'+py0+'" width="'+(px1-px0)+'" height="'+(py1-py0)+'" fill="var(--code)"/>';
+    cells.forEach(function(c,i){ s+='<rect x="'+PX(c.a)+'" y="'+PY(c.v)+'" width="'+(PX(c.b)-PX(c.a))+'" height="'+(py1-PY(c.v))+'" fill="var(--accent)" fill-opacity="'+(i<2?0.35:0.15)+'" stroke="var(--panel)"/>'; });
+    var d=''; for(var i=0;i<=200;i++){ var z=zmax*i/200; d+=(i?'L':'M')+PX(z).toFixed(1)+' '+PY(theta(z)).toFixed(1)+' '; }
+    s+='<path d="'+d+'" fill="none" stroke="var(--ink)" stroke-width="2"/>';
+    s+='<line x1="'+px0+'" y1="'+PY(surf)+'" x2="'+px1+'" y2="'+PY(surf)+'" stroke="var(--muted)" stroke-dasharray="4 4"/>';
+    s+='<text x="'+(px1-4)+'" y="'+(PY(surf)-5)+'" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">true surface value '+surf.toFixed(2)+'</text>';
+    s+='<circle cx="'+PX(0)+'" cy="'+PY(expo)+'" r="5" fill="var(--typed)"/>';
+    s+='<circle cx="'+PX(0)+'" cy="'+PY(lin)+'" r="5" fill="none" stroke="var(--good)" stroke-width="2"/>';
+    s+='<text x="'+(px0+8)+'" y="'+(py1+16)+'" font-size="11" font-family="IBM Plex Sans, sans-serif" fill="var(--ink-2)">depth into the rock →  (cell width = dz; bars = what each cell stores; top two bars feed the fit)</text>';
+    s+='<text x="'+(px0-6)+'" y="'+(py0+10)+'" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">1</text>';
+    s+='<text x="'+(px0-6)+'" y="'+(py1)+'" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">0</text>';
+    svg.innerHTML=s;
+    document.getElementById('s2_read').textContent = Ttop.toFixed(2)+' of '+surf.toFixed(2)+'  ('+((Ttop/surf-1)*100).toFixed(0)+' %)';
+    document.getElementById('s2_exp').textContent = (Ttop>T1? expo.toFixed(2)+'  ('+((expo/surf-1)*100).toFixed(0)+' %)' : 'flat → '+Ttop.toFixed(2)+'  ('+((Ttop/surf-1)*100).toFixed(0)+' %)');
+    document.getElementById('s2_lin').textContent = lin.toFixed(2)+'  ('+((lin/surf-1)*100).toFixed(0)+' %)';
+  }
+  document.getElementById('s2_x').addEventListener('input', f2);
+  document.getElementById('s2_mode').addEventListener('change', f2);
+  f2();
+})();
+</script>

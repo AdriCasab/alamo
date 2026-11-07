@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/kant/grimsel_calibration/input surface_patch.h_expr=150.0 stop_time=200.0 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_19_flake_depth/legs/C0H150/run

@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""Zhang/Oglesby MMW heating of Barre granite (P2-20 rewrite, 2026-11-06): a RECORDED PREDICTION.
+
+The model's surface-centre temperature is scored RAW and as a BRIGHTNESS temperature (1 - R) T, against Oglesby's
+test #28c as the radiometer saw it (the digitised experiment x 0.7, i.e. uncorrected) and as printed (the
+digitised values, which the DOE report divided by 0.7, the MELT emissivity). Nothing is multiplied by a fitted
+emissivity any more. ⚠ #28c is the THIRD exposure of an already-melted disc (DOE DE-EE0005504 p. 53): its glassed
+surface heats > 10x faster than virgin rock, so this cold volumetric model is EXPECTED to fall short in the first
+minute, and that gap measures the glass, not the virgin loss tangent. It is never a tuning target.
+
+  b1 [gate] thermo.dat: beam_P_inc > 0 on every row after t = 0 (that row is written before the first step), beam_invariant_viol = 0, max |beam_closure_err| <= 1e-3
+     (the deposition closure is computed on this deck's implicit material path; P2-20)
+  b2 [gate] at the first thermo row: P_dep / P_inc = 1 - exp(-alpha L) = 0.2953 +- 0.002 and P_trans / P_inc
+     = 0.7047 -+ 0.002 (alpha 14.0 1/m over L = 25 mm)
+  b3 [gate, only with --explicit DIR] the explicit twin's raw surface-centre T at 50 s within 2 % of this run's
+  c1 [report] raw and brightness T at 25 / 50 / 100 / 150 s vs #28c uncorrected (x 0.7) and as printed
+  c4 [report] the axial profile under the beam at the last plotfile: peak T and its depth
+
+Usage: test [RUN_DIR] [--explicit DIR]   (RUN_DIR = the deck's plot_file directory; exit 1 on a failed gate)
+"""
+import glob
+import math
+import os
+import sys
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+
+# Digitised from Zhang (2023) Fig. 6 / 7 (zhang_oglesby_mmw_validation_summary.txt): t [s], the experiment AS PRINTED
+# (already divided by 0.7), Zhang's simulation [K]. Kept whole; this deck runs the first 150 s.
+REFERENCE = [
+    (   0,  300,  300), (  50, 1410,  989), ( 100, 1630, 1400), ( 150, 1716, 1678),
+    ( 200, 2100, 2138), ( 250, 2320, 2215), ( 300, 2272, 2253), ( 350, 2291, 2282),
+    ( 400, 2392, 2387), ( 450, 2406, 2507), ( 500, 2435, 2540), ( 550, 2617, 2703),
+    ( 600, 2713, 2741), ( 650, 2646, 2761), ( 700, 2655, 2770), ( 750, 2559, 2636),
+    ( 800, 2339, 2416), ( 850, 2358, 2387), ( 900, 2521, 2646), ( 950, 2713, 2741),
+    (1000, 2693, 2780), (1050, 2808, 2641), (1100, 2559, 2440), (1150, 2502, 2397),
+    (1200, 2478, 2579), (1250, 2866, 2850), (1300, 1400, 1621), (1350, 1123, 1381),
+    (1400, 1027, 1238), (1450,  950, 1161), (1500,  893, 1084), (1550,  854, 1017),
+    (1600,  807,  989), (1650,  778,  969), (1700,  768,  950), (1750,  740,  926),
+]
+E_MELT = 0.7          # the DOE's correction factor (the melt emissivity)
+HERE = os.path.dirname(os.path.abspath(__file__))
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def meta(run):
+    d = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            d[k.strip()] = v.strip()
+    return d
+
+
+def thermo(run):
+    L = open(os.path.join(run, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    return h, [[float(x) for x in r.split("\t")] for r in L[1:] if r.strip()]
+
+
+def axial(run, m):
+    """[(t, T_top_centre, z_centres(top first), T column)] for every cell plotfile: the column of cells nearest the
+    beam axis (x0, y0), read with yt; the top cell is the highest cell centre."""
+    x0, y0 = float(m["beam.x0"]), float(m["beam.y0"])
+    out = []
+    for pf in sorted(glob.glob(os.path.join(run, "*cell"))):
+        ds = yt.load(pf)
+        ad = ds.all_data()
+        x, y, z = ad["x"].to_value(), ad["y"].to_value(), ad["z"].to_value()
+        T = ad["Temp"].to_value()
+        rr = (x - x0) ** 2 + (y - y0) ** 2
+        col = np.where(rr <= rr.min() * (1 + 1e-9) + 1e-30)[0]
+        xs, ys = x[col[0]], y[col[0]]
+        col = col[(x[col] == xs) & (y[col] == ys)]
+        o = np.argsort(-z[col])
+        out.append((float(ds.current_time), z[col][o], T[col][o]))
+    return out
+
+
+def at(series, t):
+    ts = np.array([s[0] for s in series])
+    vs = np.array([s[1] for s in series])
+    return float(np.interp(t, ts, vs)) if ts.min() - 1e-9 <= t <= ts.max() + 1e-9 else float("nan")
+
+
+def main(argv):
+    pos = [a for a in argv if not a.startswith("--")]
+    run = pos[0] if pos else os.path.join(HERE, "output")
+    exp_dir = argv[argv.index("--explicit") + 1] if "--explicit" in argv else None
+    if exp_dir in pos:
+        pos.remove(exp_dir)
+    m = meta(run)
+    lam, er, td = float(m["beam.lambda"]), float(m["beam.eps_r"]), float(m["beam.tan_delta"])
+    alpha = 2.0 * math.pi * math.sqrt(er) * (td / lam)
+    n = math.sqrt(er)
+    R = ((n - 1) / (n + 1)) ** 2
+    print("Zhang/Oglesby (P2-20) on %s" % run)
+    print("  from the run's metadata: lambda %s m, eps_r %s, tan_delta %s => alpha %.4f 1/m (POWER), R %.4f; omega0 "
+          "%s m" % (m["beam.lambda"], m["beam.eps_r"], m["beam.tan_delta"], alpha, R, m["beam.omega0"]))
+    print("  ⚠ #28c = the THIRD exposure of an already-melted Barre disc (DOE p. 53): a glassed surface heats > 10x "
+          "faster than virgin rock, so a short fall here measures the glass, not the virgin loss tangent.")
+    print("=" * 100)
+    h, rows = thermo(run)
+    # the t = 0 row is written before the first step (every beam column 0); the rows scored are the steps
+    rows = [r for r in rows if r[h.index("time")] > 0.0]
+    c = lambda k: [r[h.index(k)] for r in rows]
+    pinc, pdep, ptr, cl, nv = c("beam_P_inc"), c("beam_P_dep"), c("beam_P_trans"), c("beam_closure_err"), \
+        c("beam_invariant_viol")
+    need(min(pinc) > 0 and max(nv) == 0 and max(abs(x) for x in cl) <= 1e-3,
+         "b1 closure on the implicit path: %d rows, min P_inc %.4g W, invariant violations %g, max |closure| %.2e "
+         "(bar 1e-3)" % (len(rows), min(pinc), max(nv), max(abs(x) for x in cl)))
+    L = float(m["geometry.prob_hi"].split()[2]) - float(m["geometry.prob_lo"].split()[2])
+    want = 1 - math.exp(-alpha * L)
+    fd, ft = pdep[0] / pinc[0], ptr[0] / pinc[0]
+    need(abs(fd - 0.2953) <= 0.002 and abs(ft - 0.7047) <= 0.002,
+         "b2 first row: P_dep/P_inc %.4f (1 - exp(-alpha L) = %.4f; bar 0.2953 +- 0.002), P_trans/P_inc %.4f (bar "
+         "0.7047 -+ 0.002)" % (fd, want, ft))
+    ax = axial(run, m)
+    top = [(t, Tc[0]) for t, z, Tc in ax]
+    if exp_dir:
+        axe = axial(exp_dir, meta(exp_dir))
+        # the explicit leg plots every 333 steps of 0.03 s: its last plotfile at or before 50 s (49.95 s) is the
+        # comparison time, and this run is interpolated to it
+        te_t, te = max((t, Tc[0]) for t, z, Tc in axe if t <= 50.0 + 1e-6)
+        ti = at(top, te_t)
+        need(abs(te / ti - 1) <= 0.02, "b3 explicit vs implicit raw surface-centre T at %.2f s: %.1f vs %.1f K "
+             "(rel %+.2f %%, bar 2 %%)" % (te_t, te, ti, 100 * (te / ti - 1)))
+    print("\nc1 (report): surface-centre T, raw and brightness (1 - R) T, vs #28c")
+    print("   %5s  %8s  %10s  %12s  %10s  %8s" % ("t [s]", "raw [K]", "bright [K]", "#28c x0.7", "#28c /0.7",
+                                                 "Zhang"))
+    ref = {t: (e, zz) for t, e, zz in REFERENCE}
+    for t in (25, 50, 100, 150):
+        Tr = at(top, t)
+        e, zz = ref.get(t, (None, None))
+        print("   %5d  %8.1f  %10.1f  %12s  %10s  %8s" % (t, Tr, (1 - R) * Tr,
+              "%.0f" % (E_MELT * e) if e else "-", "%d" % e if e else "-", "%d" % zz if zz else "-"))
+    t_end, z, Tc = ax[-1]
+    ip = int(np.argmax(Tc))
+    zt = z[0] + 0.5 * (z[0] - z[1])
+    print("\nc4 (report): at t %.1f s the axial peak is %.1f K at %.2f mm below the top face (top cell %.1f K)" % (
+        t_end, Tc[ip], 1e3 * (zt - z[ip]), Tc[0]))
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

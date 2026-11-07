@@ -1,0 +1,136 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P2-25 (2026-11-07): THE REGIME DECK -- the #19 deck (validation/oglesby/input, P2-24 state) with EXACTLY these changes:
+#   (1) beam.tan_delta_T = 295.15 1.0 1268.15 1.0 (two equal pairs: a flat alpha on the sum path the melt keys require;
+#       M0F's form), declared to check_shared by the directive line below;
+#   (2) a ONE-WINDOW schedule (beam.schedule.t_end, beam.schedule.P), stop_time and timestep, each set per leg on the
+#       argv (the values here are placeholders); the Fig. 34 schedule lines are removed;
+#   (3) amr.plot_int 100000 (thermo every step and the events CSV carry the map; the first and last plotfiles remain);
+#   (4) plot_file under the study.
+# beam.tan_delta (the deposition depth axis) is set on each leg's argv as a declared override of the rock file
+# (check_shared.py --allow beam.tan_delta); the deepest ladder point is the rock's own value and sets nothing.
+# Everything else -- the rock, the model form, the melt set, x4, R_melt, vapour on, B on, patch off, w 12.88 mm, z0, the
+# losses, V0 -- is the #19 deck's, copied below unchanged (its own header follows).
+#
+
+# P2-23 (2026-11-06): THE BEAM PORT -- DOE test #19 on the PRODUCTION rock and the ONE breaking rule.
+#
+# Oglesby, Woskov et al., DOE final report DE-EE0005504 (Dec 2014, OSTI 1169951), test #19: virgin Barre granite,
+# two 4" discs stacked (50 mm), HE11 28 GHz beam; melt starts 2-4 mm below the surface (p. 53), onset ~295 s after
+# beam-on (Fig. 34). What this deck asks: does the face list, with the buckling condition B, spall a THIN FLAKE under
+# this beam? (Pre-registered: no -- the heated layer e-folds at ~20 mm, B blocks every fired line; P2-23 ACTIVE_STEP.)
+#
+# ⚠⚠ DECLARED, NOT TUNED:
+#   * ONE ROCK: this is GRIMSEL (rock_grimsel.inputs: the Grimsel laws, the 8 um flaw, R = 0.531, the 12 mm span)
+#     on BARRE's test, with Barre's dielectric pair (eps' 5.02, tan_delta 0.01065) and Hartlieb's loss table, both
+#     from the rock file. The melt depth and onset times will differ from P2-21/22 (the Zhang material) -- REPORTS.
+#   * THE STRESS is the 1-D confined estimate x R on every line. Under a ~20 mm heated layer below a 13 mm spot it
+#     OVER-estimates (a hot lump pushes sideways and up), which fires the onset MORE -- the useful direction for a
+#     test that B blocks. The elastic-operator stress is LEFT OUT (the user's decision, 2026-11-06).
+#   * c_f = 0.4 and the 12 mm span were calibrated on Grimsel under flames and are applied to a beam here; with the
+#     margin this packet expects (the layer 6-16x the 2.4 mm limit) they decide nothing.
+#   * THE GRIMSEL LAW ABOVE ~600 C IS AN EXTRAPOLATION: Table 3 (alpha, E/E0, K_Ic) is flat above 650 C (923 K; the
+#     600 and 650 C rows are nearly equal), the strain table integrates that held alpha up to 1000 C (1273 K) and
+#     holds it above; lambda(T) and c_p(T) are the analytic fits beyond their measured range (Grimsel.H).
+#   * P2-24: THE MELT IS A STATE. The rock file's melt set (Zhang's, LIT, another rock: solidus band 1410.5-1610.5 K,
+#     L_m 3.4e5 J/kg; vaporisation 3233-3503 K, L_v 4.8e6 J/kg) is in the phase table the run inverts; the beam sees
+#     the liquid (beam.melt_factor x4, R_melt 0.3, rock file); the crack rule is not run in or over a liquid; a
+#     listed cell past H_vap_hi vaporises ONCE (vapor.enabled below). bc_z_melt reads the phase's T_m (1510.5 K).
+#     The Grimsel laws are EXTRAPOLATED through the melt. The 42 s vs 295 s onset gap is carried, not addressed:
+#     post-melt comparisons are aligned on the melt onset.
+#   * the surface losses: losses.h_conv 56 W/m2K (the DOE chamber's forward air purge, as the Zhang deck), the rock
+#     file's emissivity 0.8. weibull.V0 is THIS deck's cell volume (check_shared.py (iv): the flaw scale is per cell).
+# The patch is OFF (no flame): every listed face is billed at h = 0, its losses only (MMWSpalling.H, P2-23).
+#
+# check_shared.py: this deck SETS surface_patch.enabled / radius / x0 / y0 (the shared files do not) and overrides one
+# shared key, the model form's vapor.enabled = 0 (P2-24: the vapour rule is on for the beam):
+# check_shared: allow vapor.enabled
+
+FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
+
+surface_patch.enabled = 0          # NO flame: the face list runs on the beam's heating alone (P2-23)
+surface_patch.radius  = 1.0        # the listing mask covers the whole top
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+spall.buckle_log_csv  = 0          # P2-24: off (9,000 steps; the counts are in thermo). P2-23's B0 had it on
+vapor.enabled         = 1          # P2-24: the face list's vapour rule (a LISTED cell past H_vap_hi leaves, once)
+
+alamo.program = mmwspalling
+
+
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.max_grid_size   = 32
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+amr.n_cell           = 64 64 32     # 1.5625 mm cubes: COARSE (the question is a ~20 mm layer against 2.4 mm)
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.10 0.10 0.05
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+weibull.V0 = 3.814697265625e-9     # the cell volume (1.5625 mm)^3
+
+microstructure.phase0.T_ref = 297.5          # = the IC (check_shared (iii))
+hc.ic.type           = constant
+hc.ic.constant.value = 297.5
+hc.heat.alpha        = 6.9022e-7             # inert under law = grimsel; required
+hc.heat.refinement_threshold = 1.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+conductivity.h_gb0 = 0.0
+confining.p = 0.0                            # the lab test: no confinement
+
+losses.h_conv = 56.0               # LIT: the DOE chamber's forward air purge (the Zhang deck's h)
+losses.T_amb  = 297.5
+
+# THE BEAM ON #19 (P2-22): the spot at the rock w0 = 12.7 sqrt(1 + (7.9/47.3)^2) = 12.88 mm (HE11 1/e^2 diameter
+# 25.4 mm at the aperture, standoff 7.9 mm); 28 GHz; centred on the top face. The dielectric pair and the loss table
+# are the rock file's. The incident power is Fig. 34's DIGITISED trace (the user's decision 2026-11-06): P2-24 reads
+# the WHOLE trace (studies/p2_21_loss_table/doe/fig34_digitise.py --full -> FIG34_FULL.txt), 158 x 10 s from beam-on
+# (210 s on Fig. 34's clock; the first 40 equal P2-22/23's), the beam OFF from 1,580 s, P = 0 to the end.
+beam.omega0 = 0.01288
+beam.lambda = 1.070687e-2
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.05
+beam.P0     = 0.0
+
+el.type      = disable
+el.nmodels   = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+# P2-25: the #19 deck with a FLAT loss on the sum path, a one-window schedule and the mesh/dt set per leg (argv)
+# check_shared: allow beam.tan_delta_T
+beam.tan_delta_T    = 295.15 1.0 1268.15 1.0   # check_shared: allow beam.tan_delta_T  (two equal pairs: flat alpha,
+                                               #   the sum path the melt keys require; M0F's form)
+beam.schedule.t_end = 60.0                     # per leg
+beam.schedule.P     = 0.0                      # per leg
+stop_time           = 60.0                     # per leg
+timestep            = 0.2                      # per leg (the 6 K/step rule below)
+amr.plot_int        = 100000                   # thermo (every step) and the events CSV carry the map
+plot_file           = tests/MMWSpalling/studies/p2_25_regime_map/output/run

@@ -16,15 +16,11 @@ spallation.model     = sp_weibull              # CHOICE (form): LEFM Sp = K_I/K_
 spall.enabled        = 1
 spall.stress_source  = local_thermoelastic     # CHOICE (form): stress from the local temperature
 spall.surface_T      = reconstructed           # CHOICE (form): P0, mesh-independent firing T
-spall.surface_normal = 0
-spall.sample         = top_cell                # column path only; inert on the face list
 spallation.sp.n_segments       = 128           # NUM: the K_I quadrature
-spall.melt_aware     = 0                       # the face list refuses it
 spall.h_spall_max    = 0.015                   # NUM / CHOICE: the depth-scan limit
 
 # --- the flaw draw ----------------------------------------------------------
 weibull.enabled     = 1                        # CHOICE (form): random flaws, scale/modulus in the rock file
-weibull.size_volume = cell                     # with weibull.V0 = V_cell (the DECK's): volume factor 1
 weibull.detach_mode = per_face
 weibull.seed        = 12345                    # NUM
 
@@ -36,9 +32,6 @@ spall.flake_h_max            = 0.0015          # NUM (P2-17): DEAD as a flake bo
                                                #   (FaceRemoval.H:368-380): a NUM role, to decouple and retire
                                                #   with the column path. Was TUNED (P0b rev 7 on Meier);
                                                #   MODEL_CARD §6 row 21
-spall.flake_length           = twocell         # CHOICE (form); the face list refuses flux
-spall.flake_fraction         = cf
-spall.flake_coherence_length = 0.0             # the face list refuses > 0
 
 # --- the surface and the removal path ---------------------------------------
 surface.follow_mask        = 1
@@ -46,9 +39,8 @@ surface_patch.robin_form   = surface           # CHOICE (form): P0b; the face li
 surface_patch.face_list    = 1                 # the removal rule (P2-8)
 
 # --- physics off in flame decks ---------------------------------------------
-vapor.enabled  = 0                             # the face list refuses it
-bit.enabled    = 0
-damage.enabled = 0
+vapor.enabled  = 0                             # P2-24: the face list's vapour rule; off in flame decks (no
+                                               #   flame cell nears H_vap_hi), set to 1 by a beam deck (allow)
 
 # --- constants and records --------------------------------------------------
 losses.sigma_SB          = 5.670374e-8         # Stefan-Boltzmann

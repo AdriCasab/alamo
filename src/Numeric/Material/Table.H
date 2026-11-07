@@ -99,6 +99,13 @@ public:
     }
 
     bool built() const { return m_N > 0; }
+    // P2-24: the cached latent-band enthalpies [J/m^3, per volume, H(T_ref) = 0] -- read by the face list's
+    // vapour rule (a cell at H >= H_vap_hi() has received its whole vaporisation enthalpy) and printed once
+    // per run as the table the run inverts (its enthalpy jump across the fusion band).
+    Set::Scalar H_fus_lo() const { return m_H_fus_lo; }
+    Set::Scalar H_fus_hi() const { return m_H_fus_hi; }
+    Set::Scalar H_vap_lo() const { return m_H_vap_lo; }
+    Set::Scalar H_vap_hi() const { return m_H_vap_hi; }
 
     Set::Scalar H_of_T(Set::Scalar T) const
     {

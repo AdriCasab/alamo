@@ -154,143 +154,155 @@ steps can never be merged under a shared label.
 ⚠ Regenerate with `python3 docs/project/tools/roadmap_status.py` after any archive
   append, and run `archive_index.py` first so the line numbers agree.
 
-- Step 1 - Skeleton Integrator And Build Registration — `ARCHIVE_DONE.md` L196
-- Step 2 - Enthalpy Heat Formulation — `ARCHIVE_DONE.md` L208
-- Step 3 - MMW Beam Source — `ARCHIVE_DONE.md` L222
-- Step 4 - Surface Losses — `ARCHIVE_DONE.md` L233
-- Step 4b - Zhang/Oglesby Granite Heating Validation — `ARCHIVE_DONE.md` L244
-- Step 5 - Voronoi Microstructure With Mineral Phases — `ARCHIVE_DONE.md` L269
-- Step 6 - Heterogeneous And Damage-Modified Conductivity — `ARCHIVE_DONE.md` L314
-- Step 6b - H/T Consistency For Heterogeneous Microstructure — `ARCHIVE_DONE.md` L358
-- Step 6c - Grain Topology Correction — `ARCHIVE_DONE.md` L398
-- Step 6d - Hu Prescribed-Surface-Temperature Conduction — `ARCHIVE_DONE.md` L441
-- Step 7 - Heterogeneous Thermoelastic Mechanics — `ARCHIVE_DONE.md` L497
-- Step 7b - Hu Thermoelastic Stress Validation, Single-Level — `ARCHIVE_DONE.md` L555
-- Step 7c - Early AMR Correctness For Microstructure Regrid — `ARCHIVE_DONE.md` L630
-- Step 7d - Hu Thermoelastic Stress Validation With AMR — `ARCHIVE_DONE.md` L679
-- Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution — `ARCHIVE_DONE.md` L748
-- Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution — `ARCHIVE_DONE.md` L819
-- Step 9 - Grain-Boundary Cohesive-Zone Unit Test — `ARCHIVE_DONE.md` L893
-- Step 10 - Surface Advancement And Spall Detachment — `ARCHIVE_DONE.md` L947
-- Step 11 - Vaporisation Removal And Unified RoP — `ARCHIVE_DONE.md` L1012
-- Step 11b - Hu LRST And Onset-Spallation With DP Damage — `ARCHIVE_DONE.md` L1080
-- Step 12 - Spallation-Model Toggle + Sp Onset Criterion — `ARCHIVE_DONE.md` L1155
-- Step 14 - Hu Flame-Jet End-to-End Validation (damage_law) — `ARCHIVE_DONE.md` L1336
-- Step 14b - Damage-Law Spall Sampling Knob — `ARCHIVE_DONE.md` L1417
-- Step 15a - Convective Robin Surface-Patch BC — `ARCHIVE_DONE.md` L1491
-- Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling — `ARCHIVE_DONE.md` L1580
-- Step 15b - Kant Onset Validation (sp_kant_onset) — `ARCHIVE_DONE.md` L1695
-- Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring) — `ARCHIVE_DONE.md` L1784
-- Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b) — `ARCHIVE_DONE.md` L1908
-- Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh) — `ARCHIVE_DONE.md` L2010
-- Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope — `ARCHIVE_DONE.md` L2117
-- Step 16d - T-derived σ_xx with prescribed-T face BC (option (a)) — `ARCHIVE_DONE.md` L2157
-- Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half) — `ARCHIVE_DONE.md` L2267
-- Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact) — `ARCHIVE_DONE.md` L2390
-- Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5) — `ARCHIVE_DONE.md` L2545
-- Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate) — `ARCHIVE_DONE.md` L2650
-- Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed) — `ARCHIVE_DONE.md` L2718
-- P1 — Melt-aware spallation (completed, review-accepted) — `ARCHIVE_DONE.md` L2771
-- P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15) — `ARCHIVE_DONE.md` L2838
-- E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted) — `ARCHIVE_DONE.md` L2861
-- S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted) — `ARCHIVE_DONE.md` L3292
-- A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (completed, review-accepted) — `ARCHIVE_DONE.md` L3859
-- C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted) — `ARCHIVE_DONE.md` L4422
-- D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, review-accepted) — `ARCHIVE_DONE.md` L5011
-- D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (completed, review-accepted) — `ARCHIVE_DONE.md` L5650
-- D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted) — `ARCHIVE_DONE.md` L6390
-- D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted) — `ARCHIVE_DONE.md` L7335
-- D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh check (completed, review-accepted) — `ARCHIVE_DONE.md` L8300
-- D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed) — `ARCHIVE_DONE.md` L8974
-- D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-accepted) — `ARCHIVE_DONE.md` L9615
-- D2e — retroactive review (2026-09-19; attaches to the D2e entry above) — `ARCHIVE_DONE.md` L10111
-- D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-accepted; GATE FAILED) — `ARCHIVE_DONE.md` L10216
-- D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet) — `ARCHIVE_DONE.md` L10529
-- D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED) — `ARCHIVE_DONE.md` L10566
-- D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same evening by D2j-0b) — `ARCHIVE_DONE.md` L10646
-- D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet) — `ARCHIVE_DONE.md` L10698
-- D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier gate FAIL and inconclusive) — `ARCHIVE_DONE.md` L10766
-- D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered STOP, no code written) — `ARCHIVE_DONE.md` L10859
-- D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported as mixed) — `ARCHIVE_DONE.md` L10934
-- D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accepted; NEGATIVE, and the field had a defect found afterwards) — `ARCHIVE_DONE.md` L11012
-- D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by review as incomplete; Q1 FAILS; **closes the prescribed-field line**) — `ARCHIVE_DONE.md` L11229
-- D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise refuted, pre-registered fallback triggered) — `ARCHIVE_DONE.md` L11387
-- D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by arithmetic) — `ARCHIVE_DONE.md` L11498
-- D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, review-accepted; GATE PASSED 2639/2639) — `ARCHIVE_DONE.md` L11609
-- D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberately not launched) — `ARCHIVE_DONE.md` L11707
-- D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted) — `ARCHIVE_DONE.md` L11794
-- D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23) — `ARCHIVE_DONE.md` L11939
-- D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23) — `ARCHIVE_DONE.md` L12061
-- D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23) — `ARCHIVE_DONE.md` L12145
-- D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES) — `ARCHIVE_DONE.md` L12218
-- D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES) — `ARCHIVE_DONE.md` L12401
-- D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by data on disk) — `ARCHIVE_DONE.md` L12503
-- D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — planner error) — `ARCHIVE_DONE.md` L12600
-- D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, review-accepted) — `ARCHIVE_DONE.md` L12684
-- D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24) — `ARCHIVE_DONE.md` L12820
-- D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code) — `ARCHIVE_DONE.md` L12909
-- D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code) — `ARCHIVE_DONE.md` L12973
-- D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held) — `ARCHIVE_DONE.md` L13042
-- D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted) — `ARCHIVE_DONE.md` L13103
-- P4 REFUTED, in the informative direction — `ARCHIVE_DONE.md` L13269
-- P3a REFUTED — the planner's crater-wall assumption — `ARCHIVE_DONE.md` L13469
-- P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF — `ARCHIVE_DONE.md` L13634
-- P7 CONFIRMED — `PD` jammed, and it was pre-registered — `ARCHIVE_DONE.md` L13667
-- P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accepted 2026-09-30 — `ARCHIVE_DONE.md` L14061
-- P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01 — `ARCHIVE_DONE.md` L14191
-- P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid artefact** — `ARCHIVE_DONE.md` L14335
-- P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the cause was found and P1d is WITHDRAWN** — `ARCHIVE_DONE.md` L14450
-- P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both shape gates FAILED; the attribution then CONFIRMED by field diagnostic** — `ARCHIVE_DONE.md` L14538
-- P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate green; the mode is CORRECT and nearly INCONSEQUENTIAL in scope** — `ARCHIVE_DONE.md` L15924
-- P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mechanism CONFIRMED, deep deficit only PARTLY closed, and a SECOND mismatch found** — `ARCHIVE_DONE.md` L16157
-- P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-10-02, **ACCEPTED (revision 2); the third instance of one bug family closed, and (d1) REVERSED** — `ARCHIVE_DONE.md` L16456
-- P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEEPING; PHYSICALLY INERT — the recession RATE is identical to whole-cell** — `ARCHIVE_DONE.md` L17968
-- P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real and attributable — it delays the ONSET, and the long-run recession converges back toward whole-cell** — `ARCHIVE_DONE.md` L18239
-- P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics findings are reviewer-verified and load-bearing. Closure carried as ord 0 of P2-0** — `ARCHIVE_DONE.md` L18497
-- P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the premise was a duct law applied where the flow is a jet. ord 0 and ord 1 are KEPT; the source work was never built** — `ARCHIVE_DONE.md` L18558
-- P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the thermal leg; three measurements nobody had made, and the widening attributed to the right cause at last** — `ARCHIVE_DONE.md` L18639
-- P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06) — `ARCHIVE_DONE.md` L18706
-- P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limits (review-accepted 10-07) — `ARCHIVE_DONE.md` L18851
-- P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, rev 7, ACCEPTED — all 11 criteria PASS) — `ARCHIVE_DONE.md` L19003
-- P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complete, `(c2)` failed as a gate, ord 4 NEVER RUN and deferred) — `ARCHIVE_DONE.md` L19107
-- P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not validated, and four misattributed targets retired (2026-10-12, rev 6, ACCEPTED) — `ARCHIVE_DONE.md` L19170
-- P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the rock half, the residual is DELIVERY (2026-10-12, rev 2, ACCEPTED; archived 2026-10-13) — `ARCHIVE_DONE.md` L19275
-- P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by review on the `b3` gate — a physics negative with the mechanism measured; must-fixes carried into P2-4; archived 2026-10-13) — `ARCHIVE_DONE.md` L19663
-- P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archived 2026-10-14 with two advisor corrections carried) — `ARCHIVE_DONE.md` L20076
-- P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found offline at zero compute; revised as rev 2 the same day) — `ARCHIVE_DONE.md` L20482
-- P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; archived 2026-10-19) — `ARCHIVE_DONE.md` L20982
-- P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at the pads (2026-10-24, COMPLETED, NOT reviewed; archived 2026-10-24) — `ARCHIVE_DONE.md` L21585
-- P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maximum (2026-10-24, ACCEPTED by review 2026-10-25; archived 2026-10-26) — `ARCHIVE_DONE.md` L21987
-- P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (2026-10-26, rev 3, ACCEPTED by review 2026-10-26 — d2's negative PROVISIONAL; archived 2026-10-26) — `ARCHIVE_DONE.md` L22382
-- P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built, a2 i–v PASS, no long leg; archived 2026-10-27) — `ARCHIVE_DONE.md` L22833
-- P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (2026-10-27, rev 2.1, ACCEPTED by review 2026-10-27 — a5 a recorded FINDING; archived 2026-10-28) — `ARCHIVE_DONE.md` L23220
-- P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-28, ACCEPTED by review 2026-10-28 — a1 failed as written, exact on substance; archived 2026-10-28) — `ARCHIVE_DONE.md` L23783
-- P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by review 2026-10-29; archived 2026-10-29) — `ARCHIVE_DONE.md` L24205
-- P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the bounded check closes (2026-10-29, ACCEPTED by review 2026-10-29; archived 2026-10-30) — `ARCHIVE_DONE.md` L24468
-- P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at the user's instruction, no /implement; archived 2026-10-30) — `ARCHIVE_DONE.md` L24861
-- P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the production form; the constants stand (2026-10-31, ACCEPTED by review 2026-11-02; archived 2026-11-02) — `ARCHIVE_DONE.md` L24892
-- P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port is faithful; d = 2 mm puts a −122 K onset-vs-flux trend into the production form (2026-11-02, ACCEPTED by review 2026-11-02; archived 2026-11-02) — `ARCHIVE_DONE.md` L25306
-- P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both of Kant's rocks under a conductivity-only transfer (2026-11-02, ACCEPTED by review 2026-11-03; archived 2026-11-03) — `ARCHIVE_DONE.md` L25800
-- P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, but Kant's two granites cannot separate it from one span (2026-11-03, ACCEPTED by review 2026-11-03; archived 2026-11-03) — `ARCHIVE_DONE.md` L26286
-- D2z-2 — witness repair, derived conductance, Meier (COMPLETED 2026-09-28) — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
-- D2aa — heat delivery under the burner body (COMPLETED 2026-09-28) — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
-- D2ab — the face assignment and the gap-derived coefficient (COMPLETED — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
-- D2ac — Meier at Meier's kinematics: THE FLOOR-FLUX EXCESS (COMPLETED — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
-- D2ad — calibrate the floor flux on Fig. 8.8's standoff: THE WINDOW IS EMPTY — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
-- P0 — a real surface temperature, and a mesh-independent anchor (COMPLETED — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
-- D2s — WITHDRAWN BEFORE LAUNCH (2026-09-23); premise and arithmetic both — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+- Step 1 - Skeleton Integrator And Build Registration — `ARCHIVE_DONE.md` L213
+- Step 2 - Enthalpy Heat Formulation — `ARCHIVE_DONE.md` L225
+- Step 3 - MMW Beam Source — `ARCHIVE_DONE.md` L239
+- Step 4 - Surface Losses — `ARCHIVE_DONE.md` L250
+- Step 4b - Zhang/Oglesby Granite Heating Validation — `ARCHIVE_DONE.md` L261
+- Step 5 - Voronoi Microstructure With Mineral Phases — `ARCHIVE_DONE.md` L286
+- Step 6 - Heterogeneous And Damage-Modified Conductivity — `ARCHIVE_DONE.md` L331
+- Step 6b - H/T Consistency For Heterogeneous Microstructure — `ARCHIVE_DONE.md` L375
+- Step 6c - Grain Topology Correction — `ARCHIVE_DONE.md` L415
+- Step 6d - Hu Prescribed-Surface-Temperature Conduction — `ARCHIVE_DONE.md` L458
+- Step 7 - Heterogeneous Thermoelastic Mechanics — `ARCHIVE_DONE.md` L514
+- Step 7b - Hu Thermoelastic Stress Validation, Single-Level — `ARCHIVE_DONE.md` L572
+- Step 7c - Early AMR Correctness For Microstructure Regrid — `ARCHIVE_DONE.md` L647
+- Step 7d - Hu Thermoelastic Stress Validation With AMR — `ARCHIVE_DONE.md` L696
+- Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution — `ARCHIVE_DONE.md` L765
+- Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution — `ARCHIVE_DONE.md` L836
+- Step 9 - Grain-Boundary Cohesive-Zone Unit Test — `ARCHIVE_DONE.md` L910
+- Step 10 - Surface Advancement And Spall Detachment — `ARCHIVE_DONE.md` L964
+- Step 11 - Vaporisation Removal And Unified RoP — `ARCHIVE_DONE.md` L1029
+- Step 11b - Hu LRST And Onset-Spallation With DP Damage — `ARCHIVE_DONE.md` L1097
+- Step 12 - Spallation-Model Toggle + Sp Onset Criterion — `ARCHIVE_DONE.md` L1172
+- Step 14 - Hu Flame-Jet End-to-End Validation (damage_law) — `ARCHIVE_DONE.md` L1353
+- Step 14b - Damage-Law Spall Sampling Knob — `ARCHIVE_DONE.md` L1434
+- Step 15a - Convective Robin Surface-Patch BC — `ARCHIVE_DONE.md` L1508
+- Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling — `ARCHIVE_DONE.md` L1597
+- Step 15b - Kant Onset Validation (sp_kant_onset) — `ARCHIVE_DONE.md` L1712
+- Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring) — `ARCHIVE_DONE.md` L1801
+- Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b) — `ARCHIVE_DONE.md` L1925
+- Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh) — `ARCHIVE_DONE.md` L2027
+- Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope — `ARCHIVE_DONE.md` L2134
+- Step 16d - T-derived σ_xx with prescribed-T face BC (option (a)) — `ARCHIVE_DONE.md` L2174
+- Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half) — `ARCHIVE_DONE.md` L2284
+- Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact) — `ARCHIVE_DONE.md` L2407
+- Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5) — `ARCHIVE_DONE.md` L2562
+- Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate) — `ARCHIVE_DONE.md` L2667
+- Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed) — `ARCHIVE_DONE.md` L2735
+- P1 — Melt-aware spallation (completed, review-accepted) — `ARCHIVE_DONE.md` L2788
+- P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15) — `ARCHIVE_DONE.md` L2855
+- E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted) — `ARCHIVE_DONE.md` L2878
+- S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted) — `ARCHIVE_DONE.md` L3309
+- A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (completed, review-accepted) — `ARCHIVE_DONE.md` L3876
+- C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted) — `ARCHIVE_DONE.md` L4439
+- D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, review-accepted) — `ARCHIVE_DONE.md` L5028
+- D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (completed, review-accepted) — `ARCHIVE_DONE.md` L5667
+- D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted) — `ARCHIVE_DONE.md` L6407
+- D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted) — `ARCHIVE_DONE.md` L7352
+- D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh check (completed, review-accepted) — `ARCHIVE_DONE.md` L8317
+- D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed) — `ARCHIVE_DONE.md` L8991
+- D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-accepted) — `ARCHIVE_DONE.md` L9632
+- D2e — retroactive review (2026-09-19; attaches to the D2e entry above) — `ARCHIVE_DONE.md` L10128
+- D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-accepted; GATE FAILED) — `ARCHIVE_DONE.md` L10233
+- D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet) — `ARCHIVE_DONE.md` L10546
+- D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED) — `ARCHIVE_DONE.md` L10583
+- D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same evening by D2j-0b) — `ARCHIVE_DONE.md` L10663
+- D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet) — `ARCHIVE_DONE.md` L10715
+- D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier gate FAIL and inconclusive) — `ARCHIVE_DONE.md` L10783
+- D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered STOP, no code written) — `ARCHIVE_DONE.md` L10876
+- D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported as mixed) — `ARCHIVE_DONE.md` L10951
+- D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accepted; NEGATIVE, and the field had a defect found afterwards) — `ARCHIVE_DONE.md` L11029
+- D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by review as incomplete; Q1 FAILS; **closes the prescribed-field line**) — `ARCHIVE_DONE.md` L11246
+- D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise refuted, pre-registered fallback triggered) — `ARCHIVE_DONE.md` L11404
+- D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by arithmetic) — `ARCHIVE_DONE.md` L11515
+- D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, review-accepted; GATE PASSED 2639/2639) — `ARCHIVE_DONE.md` L11626
+- D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberately not launched) — `ARCHIVE_DONE.md` L11724
+- D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted) — `ARCHIVE_DONE.md` L11811
+- D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23) — `ARCHIVE_DONE.md` L11956
+- D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23) — `ARCHIVE_DONE.md` L12078
+- D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23) — `ARCHIVE_DONE.md` L12162
+- D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES) — `ARCHIVE_DONE.md` L12235
+- D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES) — `ARCHIVE_DONE.md` L12418
+- D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by data on disk) — `ARCHIVE_DONE.md` L12520
+- D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — planner error) — `ARCHIVE_DONE.md` L12617
+- D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, review-accepted) — `ARCHIVE_DONE.md` L12701
+- D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24) — `ARCHIVE_DONE.md` L12837
+- D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code) — `ARCHIVE_DONE.md` L12926
+- D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code) — `ARCHIVE_DONE.md` L12990
+- D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held) — `ARCHIVE_DONE.md` L13059
+- D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted) — `ARCHIVE_DONE.md` L13120
+- P4 REFUTED, in the informative direction — `ARCHIVE_DONE.md` L13286
+- P3a REFUTED — the planner's crater-wall assumption — `ARCHIVE_DONE.md` L13486
+- P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF — `ARCHIVE_DONE.md` L13651
+- P7 CONFIRMED — `PD` jammed, and it was pre-registered — `ARCHIVE_DONE.md` L13684
+- P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accepted 2026-09-30 — `ARCHIVE_DONE.md` L14078
+- P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01 — `ARCHIVE_DONE.md` L14208
+- P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid artefact** — `ARCHIVE_DONE.md` L14352
+- P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the cause was found and P1d is WITHDRAWN** — `ARCHIVE_DONE.md` L14467
+- P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both shape gates FAILED; the attribution then CONFIRMED by field diagnostic** — `ARCHIVE_DONE.md` L14555
+- P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate green; the mode is CORRECT and nearly INCONSEQUENTIAL in scope** — `ARCHIVE_DONE.md` L15941
+- P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mechanism CONFIRMED, deep deficit only PARTLY closed, and a SECOND mismatch found** — `ARCHIVE_DONE.md` L16174
+- P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-10-02, **ACCEPTED (revision 2); the third instance of one bug family closed, and (d1) REVERSED** — `ARCHIVE_DONE.md` L16473
+- P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEEPING; PHYSICALLY INERT — the recession RATE is identical to whole-cell** — `ARCHIVE_DONE.md` L17985
+- P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real and attributable — it delays the ONSET, and the long-run recession converges back toward whole-cell** — `ARCHIVE_DONE.md` L18256
+- P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics findings are reviewer-verified and load-bearing. Closure carried as ord 0 of P2-0** — `ARCHIVE_DONE.md` L18514
+- P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the premise was a duct law applied where the flow is a jet. ord 0 and ord 1 are KEPT; the source work was never built** — `ARCHIVE_DONE.md` L18575
+- P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the thermal leg; three measurements nobody had made, and the widening attributed to the right cause at last** — `ARCHIVE_DONE.md` L18656
+- P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06) — `ARCHIVE_DONE.md` L18723
+- P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limits (review-accepted 10-07) — `ARCHIVE_DONE.md` L18868
+- P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, rev 7, ACCEPTED — all 11 criteria PASS) — `ARCHIVE_DONE.md` L19020
+- P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complete, `(c2)` failed as a gate, ord 4 NEVER RUN and deferred) — `ARCHIVE_DONE.md` L19124
+- P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not validated, and four misattributed targets retired (2026-10-12, rev 6, ACCEPTED) — `ARCHIVE_DONE.md` L19187
+- P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the rock half, the residual is DELIVERY (2026-10-12, rev 2, ACCEPTED; archived 2026-10-13) — `ARCHIVE_DONE.md` L19292
+- P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by review on the `b3` gate — a physics negative with the mechanism measured; must-fixes carried into P2-4; archived 2026-10-13) — `ARCHIVE_DONE.md` L19680
+- P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archived 2026-10-14 with two advisor corrections carried) — `ARCHIVE_DONE.md` L20093
+- P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found offline at zero compute; revised as rev 2 the same day) — `ARCHIVE_DONE.md` L20499
+- P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; archived 2026-10-19) — `ARCHIVE_DONE.md` L20999
+- P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at the pads (2026-10-24, COMPLETED, NOT reviewed; archived 2026-10-24) — `ARCHIVE_DONE.md` L21602
+- P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maximum (2026-10-24, ACCEPTED by review 2026-10-25; archived 2026-10-26) — `ARCHIVE_DONE.md` L22004
+- P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (2026-10-26, rev 3, ACCEPTED by review 2026-10-26 — d2's negative PROVISIONAL; archived 2026-10-26) — `ARCHIVE_DONE.md` L22399
+- P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built, a2 i–v PASS, no long leg; archived 2026-10-27) — `ARCHIVE_DONE.md` L22850
+- P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (2026-10-27, rev 2.1, ACCEPTED by review 2026-10-27 — a5 a recorded FINDING; archived 2026-10-28) — `ARCHIVE_DONE.md` L23237
+- P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-28, ACCEPTED by review 2026-10-28 — a1 failed as written, exact on substance; archived 2026-10-28) — `ARCHIVE_DONE.md` L23800
+- P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by review 2026-10-29; archived 2026-10-29) — `ARCHIVE_DONE.md` L24222
+- P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the bounded check closes (2026-10-29, ACCEPTED by review 2026-10-29; archived 2026-10-30) — `ARCHIVE_DONE.md` L24485
+- P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at the user's instruction, no /implement; archived 2026-10-30) — `ARCHIVE_DONE.md` L24878
+- P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the production form; the constants stand (2026-10-31, ACCEPTED by review 2026-11-02; archived 2026-11-02) — `ARCHIVE_DONE.md` L24909
+- P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port is faithful; d = 2 mm puts a −122 K onset-vs-flux trend into the production form (2026-11-02, ACCEPTED by review 2026-11-02; archived 2026-11-02) — `ARCHIVE_DONE.md` L25323
+- P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both of Kant's rocks under a conductivity-only transfer (2026-11-02, ACCEPTED by review 2026-11-03; archived 2026-11-03) — `ARCHIVE_DONE.md` L25817
+- P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, but Kant's two granites cannot separate it from one span (2026-11-03, ACCEPTED by review 2026-11-03; archived 2026-11-03) — `ARCHIVE_DONE.md` L26303
+- P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder (2026-11-03, ACCEPTED by review 2026-11-03; archived 2026-11-05) — `ARCHIVE_DONE.md` L26733
+- P2-19 — The flake depth from the line's own profile: the fallback reads the e-fold depth, the no-skin refusal retires, the energy thin limit is logged (2026-11-05, ACCEPTED by review 2026-11-05; archived 2026-11-05) — `ARCHIVE_DONE.md` L27507
+- P2-20 — Beam deposition from one dielectric description: permittivity declared once, absorption and reflection computed, the typed α and R retired, closure gated, Zhang/Oglesby re-run as a recorded prediction (2026-11-06, ACCEPTED by review 2026-11-06; archived 2026-11-06) — `ARCHIVE_DONE.md` L28022
+- P2-21 — Temperature-dependent loss as a rock property, with the optical-depth sum: Hartlieb's measured shape on the declared cold value, one Beer–Lambert integral per column, scored on test #19's melt depth, onset time and transmission (2026-11-06, ACCEPTED by review 2026-11-06; archived 2026-11-06) — `ARCHIVE_DONE.md` L28578
+- P2-22 — The in-rock beam spread (Rayleigh range n·z_R inside the dielectric) and test #19 at its true spot (2026-11-06, advisor-run at the user's request, NOT reviewed; archived 2026-11-06) — `ARCHIVE_DONE.md` L29147
+- P2-23 — The beam port: the face list runs without a flame, test #19 on the production rock, and the no-thin-flake prediction scored two-sidedly (2026-11-06, ACCEPTED by review 2026-11-06; the robust control P400 added as an advisor addendum the same day; archived 2026-11-06) — `ARCHIVE_DONE.md` L29282
+- P2-24 — Melt and vapour on the enthalpy path: latent heat on the production rock, the melt's absorption and reflection on the liquid fraction, no fracture in a melt, a vapour rule that spends the beam once, and test #19 run through its 26 minutes (2026-11-06; ACCEPTED by review 2026-11-07; addendum 2026-11-07: the melt's heat transport is not λ or ε — PARKED by the user as a stated limit) — `ARCHIVE_DONE.md` L29841
+- P2-25 — The regime check: spall or melt under a beam, over deposition depth and net flux, from the validated pieces alone (2026-11-07; ACCEPTED by review 2026-11-07) — `ARCHIVE_DONE.md` L30467
+- D2z-2 — witness repair, derived conductance, Meier (COMPLETED 2026-09-28) — `ARCHIVE_DONE.md` L14641 (no record of its own; in the verbatim Current Status)
+- D2aa — heat delivery under the burner body (COMPLETED 2026-09-28) — `ARCHIVE_DONE.md` L14641 (no record of its own; in the verbatim Current Status)
+- D2ab — the face assignment and the gap-derived coefficient (COMPLETED — `ARCHIVE_DONE.md` L14641 (no record of its own; in the verbatim Current Status)
+- D2ac — Meier at Meier's kinematics: THE FLOOR-FLUX EXCESS (COMPLETED — `ARCHIVE_DONE.md` L14641 (no record of its own; in the verbatim Current Status)
+- D2ad — calibrate the floor flux on Fig. 8.8's standoff: THE WINDOW IS EMPTY — `ARCHIVE_DONE.md` L14641 (no record of its own; in the verbatim Current Status)
+- P0 — a real surface temperature, and a mesh-independent anchor (COMPLETED — `ARCHIVE_DONE.md` L14641 (no record of its own; in the verbatim Current Status)
+- D2s — WITHDRAWN BEFORE LAUNCH (2026-09-23); premise and arithmetic both — `ARCHIVE_DONE.md` L14641 (no record of its own; in the verbatim Current Status)
 
 Active step:
-- **P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder**
-  (`ACTIVE_STEP.md`; 2026-11-03; the form is settled before the merge slices, advisor's recommendation, user's /plan).
-  - Archived: P2-16 ACCEPTED (`ARCHIVE_DONE.md` *"P2-16"*): d retired; Kant's two granites cannot separate one span
-    from span ∝ 1/UCS (DR-1, onsets undetermined); on a flat deck B is a net-flux condition (L_req ≈ k/q_net).
-  - `spall.buckle_span = 0.012` goes into `rock_grimsel.inputs` (one span for both Kant granites; 13.2 mm, ∝ 1/UCS,
-    runs as the alternative). The onset deck keeps B off by a declared override (a `check_shared` directive).
-  - The 1.5 mm cap is dead as a bound under B (both act on μ·c_f·ℓ; crossover T_s* 1273 K at 12 mm), but it also
-    sets each line's gather/remap window, so it stays at 0.0015, relabelled; decoupling is a later src change.
-  - Höser face-list ladder (form × S, 19 legs of 30 s): does B move the uptake factor? Predicted S*(N)/S*(O) ≈ 1.05,
-    a trim of the gap, not a closure.
+- **P2-26 — The closed-switch sweep: census B1–B3 + C2 + C3 — delete every removal switch the record closed, fix two
+  parse defects, re-pin the gate for the three switches gate decks still set** (`ACTIVE_STEP.md`; 2026-11-07; user:
+  the MERGE and the code cut come next, the stress solver deferred — the regime map's depth boundary is geometric).
+  - Archived: P2-25 ACCEPTED (`ARCHIVE_DONE.md` *"P2-25"*): the depth × flux map on the validated pieces — spall only
+    at 1/α ≤ 1 mm (2 mm mesh-dependent) AND q ≥ 1 MW/m² absorbed (threshold 0.48); nothing removed at ≥ 4 mm (9 B +
+    7 M decided cells); K_Ic ×0.5/×2 moves the onset T 620 → 1,140 K and no regime letter; P400R = P400 to the event;
+    volumes quantitative to ≈ 40 % across meshes. Granite at 28 GHz is melt-mode at any power.
+  - This step: two builds. Stage 1 (B1 parse-order fix + `side_power_interval`, B2 text, B3 pad shield / above-plane
+    pair / rec_fixed / flake_length=flux / size_volume=flux) must read 0/2639 + face IDENTICAL. Stage 2 (C2
+    `surface_normal` + coherence, C3 `melt_aware`) is a declared re-pin: movers `beam_void_closure` 169 + `dev2d` 64
+    + the s1 smoke legs z0 names (the five melt-aware unit legs never fired above 655 K).
+  - Next in the merge: C1 DAMAGE (two packets, 2,466-hash re-pin) → G feet port (Meier kept as a regression — user to
+    confirm) → H delete `Removal.H` + column-top state (the 2,639 gate retires to a record; the face gate is THE gate;
+    Q5's Hu re-expression deferred to a record — user to confirm) → D Zhang merge/delete (explicit re-run, hours).
 Next milestones after the active step:
 ⚠⚠ **FIVE ABSORPTION PATHS STAND MEASURED** — firing rate, energy budget, wall surface temperature,
 wall coefficient, standoff (the last only under `nozzle_descent = prescribed`, a modelling choice).
@@ -309,7 +321,17 @@ lever, five ways**; P2-0's premise is **inverted** — typed 169.3 too low near 
   unseen MMW tests; same rock ⇒ same properties, calibrated once (`docs/project/MODEL_CARD.md` §1, §12). In order:
   1. P2-13: one rock, plus the calibration deck — DONE (accepted 2026-11-02).
   2. **The law form first (inserted 2026-11-02):** P2-15 buckling condition B — DONE (accepted 2026-11-03) → P2-16
-     retire `constraint_depth` and the span-rule test — DONE (accepted 2026-11-03) → P2-17 B on (active; items 3–4).
+     retire `constraint_depth` and the span-rule test — DONE (accepted 2026-11-03) → P2-17 B on — DONE (accepted
+     2026-11-03) → P2-18 prerequisites (face-list gate, `Shared.H`, retired-at-default, deck cleanup) — DONE 2026-11-05
+     (advisor) → P2-19 flake depth — DONE (11-05) → P2-20 one dielectric pair, closure, #19 record — DONE (11-06) →
+     P2-21 loss table + optical-depth sum — DONE (11-06) → P2-22 in-rock spread + #19 at its true spot — DONE ad hoc
+     (11-06) → P2-23 the beam port — DONE (accepted 11-06; no thin flakes under the beam, the pair robust) →
+     P2-24 melt and vapour on the enthalpy path — DONE (accepted 11-07; the melt's heat transport PARKED as a stated
+     limit, `MODEL_CARD.md` §11 item 6) → P2-25 the regime check — DONE (accepted 11-07: L-shaped boundary, geometric,
+     1 mm firm / 0.48 MW/m² absorbed) → **P2-26 the closed-switch sweep (active; census B1–B3, C2, C3)** → C1 → G → H
+     → D (the merge; user 11-07) → the operator stress as its OWN packet, beam legs only,
+     on a time interval, when a prediction depends on the stress's size (ℓ/dx AND ℓ/ω). The 28 GHz loss magnitude:
+     PARKED (user 11-06; calibration, later).
      **Then merge the two
      removal paths onto the face list, in slices:** P2-14b Meier's feet (`foot_body_clearance`) → P2-14c MMW (beam,
      vapour, melt, with the four MMW checks below, and the layer depth under an interior peak, which B needs) → retire
@@ -319,9 +341,8 @@ lever, five ways**; P2-0's premise is **inverted** — typed 169.3 too low near 
   3. The span L_span is a rock property. P2-16: Kant cannot separate one span (≈ 12.0 mm) from ∝ 1/UCS (Grimsel
      13.2 mm); P2-17 declares 12.0 mm in `rock_grimsel.inputs`, 13.2 the alternative. ⚠ span and c_f are ONE
      calibration (B sees L/c_f).
-  4. The flake rule BEFORE 5, or the uptake factor absorbs its error (advisor 2026-11-02 §4) = **P2-17**: B ON before
-     the uptake fit (user, 2026-11-03; in the rock file, not the form file); the 1.5 mm cap dead as a bound under B;
-     c_f needs no separate fit (B sees L/c_f; rate lever ±5 %). The onset deck stays B-off by a declared override.
+  4. The flake rule BEFORE 5 — DONE (P2-17: B on, cap dead as a bound, onset deck B-off by a declared override).
+     2026-11-05: the flake rule KEEPS c_f (design note); P2-19 makes it beam-capable on the fallback branch.
   5. Flame heat source from rig inputs by one rule (X1's structure; confined-hole standoff and decay; fix the Höser
      double count), plus ONE uptake factor calibrated on Höser 0 MPa.
   6. Check Höser and Meier with B on after 5 (Meier needs the feet slice; d's stall and −60 % sat where delivery was
@@ -375,13 +396,30 @@ lever, five ways**; P2-0's premise is **inverted** — typed 169.3 too low near 
 Full prior text: `ARCHIVE_DONE.md`, heading *"ROADMAP `Known Stale/Important Notes` as it stood
 before P1g-1"*. ⚠⚠ A compressed bullet is a **pointer**; read the archive before acting on one.
 
-- ⚠⚠ **THE MODEL CARD (2026-10-30), `docs/project/MODEL_CARD.md`:** there are two removal paths (the face list refuses
-  beam, vapour, melt, d_ref and the feet clearance); the Kant calibration decks are not the production form; P2-2f
-  Meier and P2-7 Höser 0 MPa no longer run (§1, §5, §9). Read §12 before planning a validation step.
+- ⚠⚠ **THE MODEL CARD (2026-10-30), `docs/project/MODEL_CARD.md`:** two removal paths; since P2-23 the face list accepts
+  BEAM decks (flameless), still refuses the column path's vapour/melt-aware/feet clearance (P2-24 brings its own vapour
+  regime); the Kant calibration decks are not the production form; P2-2f Meier and P2-7 Höser no longer run. Read §12.
 - ⚠⚠ **THE LITERATURE STUDY (2026-11-02), `Claude_markdowns/reports/Granite spallation and melt physics.md`:** H1 quartz-pinned
   onset, H2 fixed reference depth, H4 solid-state dielectric runaway, H5 surface tension under an interior peak are
-  EXCLUDED; H3 two conditions and H6 absorptive melt SUPPORTED. α = 300 m⁻¹ has no measurement at 90–140 GHz; the user's
-  rig is ~10 GHz (penetration ~100 mm cold ⇒ a lab block is a FINITE body: the stress references the mean temperature).
+  EXCLUDED; H3 two conditions and H6 absorptive melt SUPPORTED. The only mm-wave granite measurement is Woskov's Barre
+  at 28 GHz: n 2.24 and 30 % single-pass POWER absorption in 25 mm (DOE p. 44/52) ⇒ α 14 m⁻¹, tan δ 0.0107, R 0.15
+  (our note's 28 was a ×2 misreading of "0.14 nepers/cm"; main.tex's low-loss formula is the FIELD coefficient, ×½). ⚠ The
+  user's rig is OUT OF SCOPE (11-05: no data); a finite lab block still references the mean temperature (keep for the port).
+- ⚠⚠ **TEST #19 (DOE p. 53–54, Appendix Table 2) — THE SPOT IS NOT FREE:** standoff 0.31" = 7.9 mm ⇒ ω 12.9 mm; power
+  1.46 → 1.96 kW (Fig. 34, digitised in `p2_21_loss_table/doe/`); melt starts 2–4 mm down (one sentence); pool at ≈ 295 s;
+  transmission is a BOUND (disc Fabry-Perot, DOE L1804). At that spot BOTH flat (194 s) and table (50 s) melt early (P2-22).
+- ⚠⚠ **THE MELT'S HEAT TRANSPORT IS PARKED AS A STATED LIMIT (user, 2026-11-07; `MODEL_CARD.md` §10 row "melting", §11 item 6, §12 item 11):**
+  post-melt surface 300–700 °C cold and the interior boils; λ ×2 and ε 0.5 EXCLUDED (`studies/p2_24_melt_vapour/RESULTS_SENS.txt`);
+  instrument checks first, then radiative transfer. Quote no post-melt surface T or vapour mass without the caveat. Key `lambda.cap_theta` ungated.
+- ⚠⚠ **THE FLAKE THICKNESS KEEPS ITS FRACTION c_f = 0.4 (design note 2026-11-05, `docs/project/DESIGN_2026-11-05_onset_and_thickness.md`):**
+  a parameter-free thickness (energy-release or buckling-selected) is flux-independent at onset and DELETES the
+  minimum flux. The onset stays gradient-blind (data flat with flux; P1 and P2-2e refuted). Never put a slope in the onset.
+- ⚠⚠ **THE ELASTIC OPERATOR CANNOT RESOLVE A 1 mm SKIN** (`studies/relief_diag/README.md`): 0.26 / 0.49 / 0.65 of the
+  exact stress at 2 / 1 / 0.5 mm. A beam stress source needs TWO conditions, ℓ/dx (resolution) AND ℓ/ω (a 20 mm layer under
+  a 13 mm spot is a lump, not a slab); its own packet, beam legs only, on a time interval. R = 0.531 is NOT geometry.
+- ⚠⚠ **P2-17 DR-6: the production form removes nothing on the onset-calibration deck** (needs 0.432 MW/m², deck delivers
+  0.401). 0.432 MW/m² is the sharpest untested Grimsel prediction. B is a pure withdrawal on FLAT decks only (N/O 1.0028 on
+  Höser). `unit/face_list/input` and `unit/face_removal/input` are generated from the shared files and are stale (row 18).
 - ⚠⚠ **THE FLAT FLOOR ITSELF DRIFTS 10.4 % OVER 2 / 1 / 0.5 mm, on both keys** (P2-9 review DR-21; ℓ ≈ 1.6–1.9 mm
   under-resolved at 2 mm). No cross-mesh claim is cleaner than that; compare a tilt or a shape at the SAME mesh.
 - ⚠ **ONE VOLUME ESTIMATOR PER COMPARISON** (P2-9 DR-15/16): face-list legs score V(f); P2-8 and key-off legs scored
@@ -391,41 +429,16 @@ before P1g-1"*. ⚠⚠ A compressed bullet is a **pointer**; read the archive be
 - ⚠⚠ **ONSET vs STEADY-STATE spall temperature are different observables** (Wilkinson 1993): the
   ONSET is flat with flux (0.2–7.4 MW/m², five rocks); the steady-state surface MEAN rises (Barre 500 →
   930 °C). Score a flux exponent on the model's time-mean floor T, never on the firing T.
-- ⚠⚠ **THE EXHAUST RECIRCULATION HOLDS THE FLOOR POWER UP.** Under `jet_T_ent_mode = exhaust` the
-  floor map ×0.743 cut `jet_P_face` only 7 % (1,870 → 1,743 W): entrained mass 2.07 → 3.23 g/s, cap
-  +17 %. A floor-coefficient change is not a delivered-power change — read the budget (`2026-10-13.md` §13).
-- ⚠⚠ **THE MEIER FLOOR GAS NEVER CAME FROM THE JET CLOSURE'S DECAY.** Under `exhaust` T_mix 1,504 K ⇒
-  D_e 8.05 mm, core 8.6 D, T_stag 1,742–1,804 K at 85–107 mm; the SAME deck in `fixed` mode reads 720–831 K.
-  P2-5 validates the decay first (bracketed `jet_core_length`); P2-5b must choose Meier's mode and core explicitly (`2026-10-14.md` §6).
-- ⚠⚠ **NEITHER BREAKING RULE IS FORMULATED FOR VOLUMETRIC HEATING.** `absolute` is local in
-  temperature at one point; `differential` needs a thickness. With MMW the peak is interior
-  (planner estimate ≈0.15 mm at 300 m⁻¹, ≈0.46 mm at 100 m⁻¹ — both at or beyond the flake), so the
-  surface value is not the most-stressed value. The flame-jet literature cannot settle this: those
-  experiments are surface-heated.
+- ⚠⚠ **UNDER A BEAM THE RULE READS THE WINDOW, NOT THE LAYER (P2-23):** the line scan sees ≤ `h_spall_max` 15 mm; a
+  layer deeper than that is `nodepth` ⇒ x = ∞ ⇒ B blocks; `bk_lb` (the window as the layer) is the logged lower bound.
+  The limit is L/(C_L(T_s)·μ·c_f): 2.35 mm at 850 K → 3.75 at 1400 K. A steady shallow beam presents the CONDUCTION length.
 - ⚠ **REDUCE WHAT A PER-BOX LOOP ACCUMULATED, NEVER WHAT A PER-COLUMN LOOP DID.** Two steps in a row
   booked a per-column sum `rank_count` times (`lat_bank`, then `E_shift`); the second read
   `ledger_err_solid` = **0.0898** against a 5e-3 bar. The energy invariant is what caught both.
 
-**The sub-cell removal group — these four decide P1g-1.**
 
-- ⚠⚠ **`phi` IS NEVER READ BY THE CONDUCTION KERNEL** (`MMWSpalling.H:1699-1700`, absent from the
-  `ParallelFor` at `:1701-1835`) ⇒ a receded cell is still a full `dz` of rock thermally, and a naive
-  enthalpy subtraction reads `ell` back **1.32× / 3.81× too long** at `dz/ell` = 2 / 1, and **flat** at 0.5.
-- ⚠⚠ **PARTIAL RECESSION IS THE CONSISTENT SCHEME, and the machinery exists** —
-  `phi_new = phi_old − h_c` (`Removal.H:1475`), with `h_c` forced to `dz` at `:1387`. Voiding a whole
-  cell and pushing the remainder's enthalpy to the neighbour **cascades one cell per time step**.
-- ⚠⚠ **THE STATE CANNOT EXPRESS LATERAL RECESSION.** Per-column floor from one scalar
-  (`phi = base − (k−klo)·dz`, `Removal.H:2818-2821`); a lagging column can only be removed from its
-  top, so no sharp floor/wall edge can be rounded. A lateral accumulator must be a **new field**.
-- ⚠⚠ **AN UNDERCUT MAKES `surface_mf` WRONG, NOT STALE** — it is still phi-derived, and
-  `UpdateSurfaceMaskFromPhi` could not be converted identity-preservingly. Any packet creating one
-  runs `surface.follow_mask = 1` or fixes the mask under its own gate; restate beam-closure contiguity.
+**The criterion and the flake.**
 
-**The per-cell path.**
-
-- ⚠⚠ **THE FLUX-ANCHORED ESTIMATOR CANCELS THE FLAKE-SCALE CRITERION.** The map **peaks at the pad
-  ring** (1.19 MW/m² at 38–42 mm against 0.80 on axis), so anchoring `ell` to flux gives the wall band
-  `ell` ≈ 1.1 mm, the cap stops binding and every wall column fires again. **Land one at a time.**
 - ⚠⚠ **P1's ROUGHNESS INSTABILITY — the P1g-3 witness.** Aborted t = **177.616 s** at **r = 26.4 mm,
   inside the floor**; **152 of 316** columns stopped firing before 120 s (rev 7: zero), median depth
   **48 vs 180 mm**, **78 %** with ≥ 2 exposed sides. The gradient physics is right, its geometry wrong.
@@ -435,9 +448,6 @@ before P1g-1"*. ⚠⚠ A compressed bullet is a **pointer**; read the archive be
 - ⚠ **THE THREE `robin_form`s EACH DEFINE "THE SURFACE" DIFFERENTLY, AND NONE IS THE CRITERION'S.**
   `cell` (default) is the raw average; `face` Newton-solves a linear half-cell; `pinned` clamps it.
   Score the form the target configuration actually runs.
-- ⚠⚠ **THE KANT ANCHOR RUNS THE WRONG BC.** `sp_kant_onset_meiercfg/test:113-120` never passes
-  `surface_patch.robin_form`, so it defaults to `Cell` while Meier runs `surface`. ≈19 of the 21.6 %
-  firing-time spread is that BC artefact, **not** the estimator.
 - ⚠ **THE WEIBULL ONSET MOVES ~3.7 % WITH MESH BY CONSTRUCTION** — flaws drawn **per cell**
   (`MMWSpalling.H:6589`), `weibull.V0` is `V_cell` at 2 mm only. ⇒ a Weibull leg **cannot** measure
   whether the criterion is mesh-independent; use a deterministic flaw.
@@ -467,6 +477,9 @@ before P1g-1"*. ⚠⚠ A compressed bullet is a **pointer**; read the archive be
 - ⚠⚠ **NEVER PUT A STOP RULE FROM AN OPEN-LOOP PREDICTION ON A CLOSED-LOOP LEG.** Meier absorbs a
   rise through two feedbacks the 1-D column lacks (`jet_closure = enthalpy` depletes `T_gas`; `h_expr`
   falls off with a standoff a faster descent opens). **Predict direction on Meier, magnitude on 1-D.**
+- ⚠⚠ **TWO GATES SINCE P2-18 (2026-11-05): the tree list `p2_18.md5` AND the face-list list `face_p2_18.md5`**
+  (`witness/face_gate.py run|cmp|rankcheck`; the tree gate never runs the face list). Shared helpers now in
+  `MMWSpalling/Shared.H`; dead keys deleted, 602 default lines cleaned from 91 decks — `studies/p2_18_prereq/README.md`.
 - ⚠ **THE TREE SWEEP HAS NO RUNNER** — no `run.py --check`/`--repin`. It swaps the binary into place
   and diffs an md5 list against a **declared reference**; the re-pinning procedure must be written
   down before anyone runs it. `witness/{hash.sh,wit.sh,post_all.sh,guarded_post_all.sh}`.

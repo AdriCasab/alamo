@@ -7,6 +7,124 @@ reference, not a script flag.
 
 ## Current reference
 
+**Tree gate: `p2_18.md5`** (P2-18, 2026-11-05), byte-identical to `p2_16.md5`, which was
+byte-identical to every list back to `p2_2a_r7.md5` (P2-2a was the last re-pin that moved a
+hash: 26 `jet_enthalpy` strip files). The two fixed controls that prove the comparator is live:
+`d2aa.md5` differs in exactly **26** files, `d2t.md5` in **863**. The D2z-1 declaration below is
+history; its re-pin procedure ("How to re-pin") still applies.
+
+**Face-list gate: `face_p2_19.md5`** since P2-19 (declared below); before it **`face_p2_18.md5`** (P2-18 A1, 1,172 files), produced by
+`face_gate.py run p2_18` and byte-identical (but the three wall-clock timer columns) to
+`face_p2_18_pre.md5`, the same legs on the pre-P2-18 binary. ⚠ The tree gate never runs the
+face list (no gate deck sets `surface_patch.face_list = 1`; census 2026-11-05 finding 1), so a
+packet that touches removal passes **both** lists: `guarded_post_all_par.sh <label>` against
+`p2_18.md5` and `face_gate.py run <label>` + `face_gate.py cmp p2_18 <label>`. The face legs are
+short on purpose (13 legs, ~2.5 min at -np 4): five `unit/face_removal` fixtures to 8 s, the two
+`unit/face_list` builders, `unit/face_buckle` F_S to 8 s, two `unit/face_heat` path legs, and
+three production decks truncated by `stop_time` (P2-9's Höser leg M0 minus the P2-10 tokens to
+3 s, P2-16's HOS_R to 2 s, `kant/grimsel_calibration` to 10 s), every one past its first firing.
+Hashes are **-np 4 hashes**: plotfile bytes depend on the box-to-rank layout, so
+`face_gate.py rankcheck <label>` compares the physics (thermo columns numerically, CSVs byte
+for byte) at -np 1 vs -np 4; on P2-18 the legs agree to round-off (`face_p2_18_RANKCHECK.txt`,
+ledger closure columns differ at 1e-15). To re-pin the face list: run, `cmp`, classify every
+differing path, declare it here, keep the old list.
+
+Both lists were taken on binary `sha256 5561de02089a0e97…` recorded in
+`studies/p2_18_prereq/BINARY_a2.txt`; the pre-change binary is kept at
+`studies/p2_18_prereq/bin_pre_mmwspalling-3d-g++`.
+
+**P2-19 re-pin of the face list: `face_p2_19.md5`** (2026-11-05, binary `sha256 c34e428b8eba6b9a…`,
+`studies/p2_19_flake_depth/BINARY.txt`; tree gate `p2_19.md5` 0 of 2639 vs `p2_18.md5`, so the tree reference does
+not move). `face_gate.py cmp p2_18 p2_19`: 1,172 files each side, **26 differ, 0 only on one side, and no `Cell_D`,
+`Cell_H`, `Header` or `Checkpoint` differs** (the audit, `studies/p2_19_flake_depth/A1.txt`). Every differing path is
+one of two declared classes:
+- **(i) the 13 `thermo.dat`:** the header changes only by `fr_noskin_{floor,wall,roof}` → `fr_nodepth_{floor,wall,roof}`
+  (the P2-19 refusal replaces the no-skin refusal, same site and position), and every other non-timer column is
+  identical on every row. The renamed columns' values differ where the two refusals differ: `CAL_S` 0 → 1,111 (wall),
+  `fr/BORE_1` 862,051 → 928,106 (+4 roof), `fr/SPH_1` 1,067,053 → 2,147,217 (floor); 0 → 0 on the rest.
+- **(ii) the 13 `*_removal_events.csv`:** the header gains `,ell_p,z_peak,ell_pk,h_E` at the end, and the pre-existing
+  columns of every row are byte-identical (row counts equal on every leg).
+The fallback branch fires on no gate leg, so the removal and the field are untouched. The old list `face_p2_18.md5`
+is kept. **From P2-19 on, a face-touching packet compares against `face_p2_19.md5`.**
+
+**P2-23 (2026-11-06, binary `sha256 42a115a0004ea460…`, `studies/p2_23_beam_port/BINARY.txt`): tree NOT re-pinned;
+the face gate GAINS a leg.** Tree gate `p2_23.md5` vs `p2_18.md5`: **0 of 2639** (controls d2aa 26, d2t 863): with the
+surface patch on, the new face-list switch equals the old one, and no gate deck sets `spall.buckle_log_csv`. Face gate
+`cmp p2_22 p2_23`: the 13 existing legs **identical** (0 substantive differences, thermo timers only), 0 paths only in
+p2_22, and 45 paths only in p2_23, all under `BEAM_S/` (the new flameless leg, `unit/face_beam/input` to 1 s;
+`studies/p2_23_beam_port/A1.txt`). ⇒ the tree reference stays `p2_18.md5`; **the face reference becomes
+`face_p2_23.md5`** (the 13 legs byte-identical to `face_p2_19.md5`'s substance plus `BEAM_S`). The next packet runs
+`face_gate.py cmp p2_23 <label>`.
+
+**P2-25 (2026-11-07, binary `sha256 c052c348876d515b…` = the P2-24 addendum build with `grimsel.lambda.cap_theta`,
+`studies/p2_25_regime_map/BINARY.txt`): NOT re-pinned.** Tree gate `p2_25.md5` vs `p2_18.md5`: **0 of 2639** (controls
+d2aa 26, d2t 863); face gate `cmp p2_24 p2_25`: **IDENTICAL** (timers only), so the addendum key's default (−1) is inert
+on both lists. ⚠ `face_gate.py cmp` now compares thermo columns with NaN EQUAL to NaN (`col_moved`, P2-25 DR-1): under
+the old list `!=`, two parses of the same file disagreed on every NaN-holding column (BEAM_S: 11), so a1 could not read
+IDENTICAL once a timer moved the file's md5 (`studies/p2_25_regime_map/Z1.txt`). `rankcheck` keeps the old test
+(unchanged by the packet). ⚠ This sweep took 57 min instead of ~6: three 4-rank lanes plus Spotlight indexing on 5
+performance cores tipped MPI's busy-waiting ranks into stalls (the long legs 5–128× slower, the short ones normal); the
+hashes are unaffected (GUARD: binary unchanged). The references stay `p2_18.md5` and `face_p2_24.md5`.
+
+**P2-24 (2026-11-06, binary `sha256 98a261d39bf217a3…`, `studies/p2_24_melt_vapour/BINARY.txt`): tree NOT re-pinned;
+the face reference RE-PINNED to `face_p2_24.md5`.** Tree gate `p2_24.md5` vs `p2_18.md5`: **0 of 2639** (controls d2aa
+26, d2t 863): the melt set now in the rock file changes the phase table only above 1410.5 K, and no gate deck gets there
+(the hottest face-gate leg is CAL_S at 818 K; `studies/p2_24_melt_vapour/Z0.txt` §2). Face gate `cmp p2_23 p2_24`:
+1,217 files each side, 0 on one side only, **32 differ**, every one in a declared class (`studies/p2_24_melt_vapour/A1.txt`,
+scored by `a1.py`):
+- **(i) the 13 flame legs' `thermo.dat`:** two appended columns `fr_n_molten`, `fr_n_lid` (registered on every face-list
+  deck), 0 on every row; every other non-timer column identical on every row. Nothing else of theirs differs.
+- **(ii) BEAM_S (`unit/face_beam/input`, which includes the #19 deck and so now carries the beam's melt keys and
+  `vapor.enabled = 1`):** its `thermo.dat` keeps all 91 common columns identical and appends 14 (`beam_P_beam`, the
+  `bc_*` melt record, the four counts, `ledger_E_vapor`; the counts and the vapour book 0); its three plotfiles' `Header`
+  and `Cell_D_*` differ because they gain the vapour fields `RoP_vap`, `vapor_event`, `vapor_thickness`, while all 43
+  common fields are identical in double precision. Its buckle log is byte-identical: the #19 deck turned the log off
+  (P2-24 Goal 7) and the fixture turns it back on, because BEAM_S is the only gate leg that writes one (the first P2-24
+  chain stopped at a1 on exactly that missing file; `studies/p2_24_melt_vapour/run1_a1stop/`).
+⇒ the tree reference stays `p2_18.md5`; **the face reference becomes `face_p2_24.md5`**. The next packet runs
+`face_gate.py cmp p2_24 <label>`; `face_p2_23.md5` is kept.
+
+**P2-21 (2026-11-06, binary `sha256 650d31436e506203…`, `studies/p2_21_loss_table/BINARY.txt`): NOT re-pinned.**
+Tree gate `p2_21.md5` vs `p2_18.md5`: **0 of 2639** (controls d2aa 26, d2t 863): no gate deck carries a varying
+`beam.tan_delta_T`, so the column optical-depth sum is reached by none and no header gains its nine columns. Face gate
+`face_gate.py cmp p2_20 p2_21`: **IDENTICAL** (timers only) -- HOS_S and CAL_S now read the 17-pair table through
+`rock_grimsel.inputs`' nested `FILE =` but deposit nothing (`beam.can_deposit()` false), so their headers stand.
+Also byte-identical: `unit/beam` against `p2_20_beam_deposition/unit_beam_output_pre/` (28 files, `unit/beam_tau` U3)
+and the Zhang deck with a one-pair table against P2-20's `legs/Z1/run` (112 files + thermo.dat, a3). The references
+stay `p2_18.md5` and `face_p2_19.md5`.
+
+**P2-22 (2026-11-06, binary `sha256 3604d38df733579e…`, `studies/p2_22_inrock_spread/BINARY.txt`): NOT re-pinned.**
+The in-rock beam spread (the waist law now uses the wavelength inside the rock, so it depends on `beam.eps_r`).
+Tree gate `p2_22.md5` vs `p2_18.md5`: **0 of 2639** (controls d2aa 26, d2t 863). Face gate
+`face_gate.py cmp p2_21 p2_22`: **IDENTICAL** (timers only), and `face_p2_19.md5` -- the declared reference -- is
+still identical to `face_p2_22.md5` (13 differing files, every one a `thermo.dat`, timers only). The references
+stay `p2_18.md5` and `face_p2_19.md5`.
+
+⚠⚠ **BYTE IDENTITY ON AN eps_r != 1 DECK DOES NOT CROSS THIS BOUNDARY, BY DESIGN.** Every gate fixture declares
+`beam.eps_r = 1` (the in-rock wavelength then equals the free-space one), which is why both gates are clean. On a
+deck with `eps_r = 5.02` the spread changes: `studies/p2_22_inrock_spread/C1_vs_Z1.txt` records the Zhang deck
+against P2-20's `legs/Z1/run` as **75 of 112 plotfile files differing**, with the largest relative move
+**6.4e-06** (`beam_E_dep`) and 4.3e-06 (`beam_E_trans`); `beam_closure_err` moves 83 % *relative* because it is
+tiny and got better (-6.54e-07 -> -1.08e-07 on the cold first step). ⇒ **P2-20's a3 and P2-21's a3 ("the Zhang deck
+byte-identical to `legs/Z1/run`") are SUPERSEDED from P2-22 on and must not be re-run against `bin/` as regression
+checks** -- they would fail for this declared reason. The binary those rows were taken on is preserved at
+`studies/p2_22_inrock_spread/bin_pre/mmwspalling-3d-g++` (`650d31436e506203…`) for anyone who needs the old bytes.
+
+⚠⚠ **THE eps_r = 1 FIXTURE SET IS A GATE HOLE for anything that reads the refractive index.** Because every unit
+fixture and every gate deck sets `eps_r = 1`, a P2-22 build that computed the incident power with a **0.55 m wide**
+beam passed every unit test and would have passed both gates; only a smoke run on a granite deck caught it. The
+`-1` sentinel for "no void path" had been fed into the spread formula. ⇒ any packet touching an index-dependent
+quantity owes a fixture with `eps_r != 1`; until one exists, neither gate covers that path.
+
+**P2-20 (2026-11-06, binary `sha256 0d071f167acfc08f…`, `studies/p2_20_beam_deposition/BINARY.txt`): NOT re-pinned.**
+Tree gate `p2_20.md5` vs `p2_18.md5`: **0 of 2639** (controls d2aa 26, d2t 863), including the four beam-ON gate tests
+(dev2d, beam_void_closure, scalar_flaw, s1_smoke), whose decks now carry `beam.eps_r = 1.0` and a `beam.tan_delta`
+string that reproduces the old typed α bit for bit (the evaluation order 2π√ε′·(tan δ/λ) makes every gate pair exact;
+`Z0.txt`). Face gate `face_gate.py cmp p2_19 p2_20`: **IDENTICAL** (timers only). The references stay `p2_18.md5` and
+`face_p2_19.md5`.
+
+## D2z-1 declaration (2026-09-25), superseded as the current reference by P2-18
+
 **`d2z1.md5`** — pinned by **D2z-1** (2026-09-25), whole-cell removal made
 unconditional and `spall.removal_increment` deleted.
 

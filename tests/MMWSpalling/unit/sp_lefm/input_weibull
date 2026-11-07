@@ -56,7 +56,6 @@ microstructure.number_of_grains = 50
 microstructure.seed             = 42
 microstructure.nphases          = 1
 
-microstructure.phase0.name              = central_aare
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 2.50
 microstructure.phase0.beta              = 8.0e-6
@@ -64,11 +63,9 @@ microstructure.phase0.E                 = 35.0e9
 microstructure.phase0.mu                = 14.7058823529e9
 microstructure.phase0.rho               = 2700.0
 microstructure.phase0.Cp                = 820.0
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 298.15
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # Spallation toggle: LEFM Sp branch with the Weibull flaw distribution on.
@@ -101,8 +98,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.005
 beam.y0     = 0.005
 beam.z0     = 0.01
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 losses.epsilon       = 0.0
 losses.epsilon_high  = 0.0
@@ -136,4 +131,3 @@ el.model1.nu = 0.19
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
 
-solver = explicit

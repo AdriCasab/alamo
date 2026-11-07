@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/oglesby/input plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_24_melt_vapour/legs/M0/run

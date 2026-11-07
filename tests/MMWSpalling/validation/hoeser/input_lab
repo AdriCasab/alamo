@@ -102,7 +102,6 @@ FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
 # must equal the initial condition below (check_shared (iii)).
 microstructure.phase0.T_ref             = 293.15
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # Her 0 MPa leg: no axial load, and no lateral confinement either (the flange
@@ -119,8 +118,6 @@ beam.lambda     = 2.19e-3
 beam.x0         = 0.0
 beam.y0         = 0.0
 beam.z0         = 0.10
-beam.alpha_expr = 2000.0
-beam.R          = 0.0
 
 # --- Surface losses to lab air (emissivity: rock_grimsel.inputs) ----------
 losses.h_conv        = 10.0
@@ -153,4 +150,3 @@ el.model1.E  = 30.0e9
 el.model1.nu = 0.3
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
-solver = explicit

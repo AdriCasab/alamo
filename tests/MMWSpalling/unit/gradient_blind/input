@@ -72,7 +72,6 @@ microstructure.mode       = expression
 microstructure.phase_expr = 0
 microstructure.nphases    = 1
 
-microstructure.phase0.name              = grimsel
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 1.5
 microstructure.phase0.beta              = 8.0e-6
@@ -80,13 +79,10 @@ microstructure.phase0.E                 = 30.0e9
 microstructure.phase0.mu                = 11.538461538e9
 microstructure.phase0.rho               = 2750.0
 microstructure.phase0.Cp                = 790.0
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
-damage.enabled = 0
 
 spallation.model         = sp_weibull
 spall.stress_source      = local_thermoelastic
@@ -98,7 +94,6 @@ spallation.sp.kic.scale  = 1.0
 weibull.enabled = 0
 
 spall.enabled                = 1
-spall.sample                 = top_cell
 spall.h_spall_max            = 0.015
 spall.flake_coherence_length = 0.004
 spall.removal_events_csv     = 1
@@ -109,7 +104,6 @@ spall.removal_events_csv     = 1
 # cools for the rest of the run. Measured on this case before the key was set:
 # the new top cell sat at 295.9 K after 59 s of nominal 0.55 MW/m^2.
 surface.follow_mask = 1
-spall.surface_normal         = 0
 
 spall.surface_T      = reconstructed
 spall.removal_energy = cell
@@ -123,8 +117,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.004
 beam.y0     = 0.004
 beam.z0     = 0.120
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 losses.epsilon       = 0.0
 losses.epsilon_high  = 0.0
@@ -135,13 +127,11 @@ losses.T_amb         = 293.15
 
 surface_patch.enabled = 1
 surface_patch.mode    = convective_flame
-surface_patch.face    = zhi
 surface_patch.x0      = 0.004
 surface_patch.y0      = 0.004
 surface_patch.radius  = 0.05
 surface_patch.h_conv  = 1.0
 surface_patch.T_flame = 820.0
-surface_patch.T_ext   = 293.15
 
 hc.heat.alpha = 6.9045e-7
 hc.heat.refinement_threshold = 1.0
@@ -166,4 +156,3 @@ el.model1.E  = 30.0e9
 el.model1.nu = 0.3
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
-solver = explicit

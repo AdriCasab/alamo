@@ -1,0 +1,113 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P2-23 (2026-11-06): THE BEAM PORT -- DOE test #19 on the PRODUCTION rock and the ONE breaking rule.
+#
+# Oglesby, Woskov et al., DOE final report DE-EE0005504 (Dec 2014, OSTI 1169951), test #19: virgin Barre granite,
+# two 4" discs stacked (50 mm), HE11 28 GHz beam; melt starts 2-4 mm below the surface (p. 53), onset ~295 s after
+# beam-on (Fig. 34). What this deck asks: does the face list, with the buckling condition B, spall a THIN FLAKE under
+# this beam? (Pre-registered: no -- the heated layer e-folds at ~20 mm, B blocks every fired line; P2-23 ACTIVE_STEP.)
+#
+# ⚠⚠ DECLARED, NOT TUNED:
+#   * ONE ROCK: this is GRIMSEL (rock_grimsel.inputs: the Grimsel laws, the 8 um flaw, R = 0.531, the 12 mm span)
+#     on BARRE's test, with Barre's dielectric pair (eps' 5.02, tan_delta 0.01065) and Hartlieb's loss table, both
+#     from the rock file. The melt depth and onset times will differ from P2-21/22 (the Zhang material) -- REPORTS.
+#   * THE STRESS is the 1-D confined estimate x R on every line. Under a ~20 mm heated layer below a 13 mm spot it
+#     OVER-estimates (a hot lump pushes sideways and up), which fires the onset MORE -- the useful direction for a
+#     test that B blocks. The elastic-operator stress is LEFT OUT (the user's decision, 2026-11-06).
+#   * c_f = 0.4 and the 12 mm span were calibrated on Grimsel under flames and are applied to a beam here; with the
+#     margin this packet expects (the layer 6-16x the 2.4 mm limit) they decide nothing.
+#   * THE GRIMSEL LAW ABOVE ~600 C IS AN EXTRAPOLATION: Table 3 (alpha, E/E0, K_Ic) is flat above 650 C (923 K; the
+#     600 and 650 C rows are nearly equal), the strain table integrates that held alpha up to 1000 C (1273 K) and
+#     holds it above; lambda(T) and c_p(T) are the analytic fits beyond their measured range (Grimsel.H).
+#   * phase.T_m = 1510.5 K is the Zhang solidus (P2-21), read ONLY by the central-column melt column bc_z_melt on
+#     this path (the latent-heat readers of phase.T_m are the constant-alpha branches; the Grimsel phase table has
+#     no melt). No melt physics runs.
+#   * the surface losses: losses.h_conv 56 W/m2K (the DOE chamber's forward air purge, as the Zhang deck), the rock
+#     file's emissivity 0.8. weibull.V0 is THIS deck's cell volume (check_shared.py (iv): the flaw scale is per cell).
+# The patch is OFF (no flame): every listed face is billed at h = 0, its losses only (MMWSpalling.H, P2-23).
+#
+# check_shared.py: this deck overrides no shared key (it SETS surface_patch.enabled / radius / x0 / y0, which the
+# shared files do not), so it carries no allow directive.
+
+FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
+
+surface_patch.enabled = 0          # NO flame: the face list runs on the beam's heating alone (P2-23)
+surface_patch.radius  = 1.0        # the listing mask covers the whole top
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+spall.buckle_log_csv  = 1          # <plot_file>_buckle_log.csv: every line B evaluates, on thermo steps
+phase.T_m             = 1510.5     # K, the solidus bc_z_melt compares with (P2-21's)
+
+alamo.program = mmwspalling
+plot_file = tests/MMWSpalling/validation/oglesby/output/run
+
+timestep  = 0.2                    # explicit limit dx^2/(6 kappa_max) = 0.24 s at 1.56 mm (kappa_max 1.68e-6 at RT)
+stop_time = 80.0
+
+amr.plot_int        = 100
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.max_grid_size   = 32
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+amr.n_cell           = 64 64 32     # 1.5625 mm cubes: COARSE (the question is a ~20 mm layer against 2.4 mm)
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.10 0.10 0.05
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+weibull.V0 = 3.814697265625e-9     # the cell volume (1.5625 mm)^3
+
+microstructure.phase0.T_ref = 297.5          # = the IC (check_shared (iii))
+hc.ic.type           = constant
+hc.ic.constant.value = 297.5
+hc.heat.alpha        = 6.9022e-7             # inert under law = grimsel; required
+hc.heat.refinement_threshold = 1.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+conductivity.h_gb0 = 0.0
+confining.p = 0.0                            # the lab test: no confinement
+
+losses.h_conv = 56.0               # LIT: the DOE chamber's forward air purge (the Zhang deck's h)
+losses.T_amb  = 297.5
+
+# THE BEAM ON #19 (P2-22): the spot at the rock w0 = 12.7 sqrt(1 + (7.9/47.3)^2) = 12.88 mm (HE11 1/e^2 diameter
+# 25.4 mm at the aperture, standoff 7.9 mm); 28 GHz; centred on the top face. The dielectric pair and the loss table
+# are the rock file's. The incident power is Fig. 34's DIGITISED ramp (p2_21_loss_table/run.py ramp_schedule, the
+# user's decision 2026-11-06), copied from studies/p2_22_inrock_spread/legs/A/argv.sh.
+beam.omega0 = 0.01288
+beam.lambda = 1.070687e-2
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.05
+beam.P0     = 0.0
+beam.schedule.t_end = 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290 300 310 320 330 340 350 360 370 380 390 400
+beam.schedule.P     = 1460 1460 1440 1430 1480 1500 1520 1510 1570 1570 1570 1600 1600 1580 1620 1630 1570 1580 1600 1630 1690 1700 1710 1730 1730 1790 1820 1880 1960 2030 2120 2130 2160 2170 2150 2180 2140 2150 2130 2100
+
+el.type      = disable
+el.nmodels   = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

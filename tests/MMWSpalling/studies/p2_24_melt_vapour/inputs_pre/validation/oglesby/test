@@ -1,0 +1,207 @@
+#!/usr/bin/env python3
+"""P2-23 -- DOE test #19 on the production rock and the ONE breaking rule (validation/oglesby/input). No plotfile is
+read: thermo.dat, <run>_buckle_log.csv and <run>_removal_events.csv only.
+
+  b1 [gate] RUN_DIR (B0): the first step row with bk_n_eval > 0 (the onset fires on some line) exists, at t <= 40 s
+  b2 [report, the result] every PRE-MELT step row (before the first finite bc_z_melt): removals fr_n_floor + wall +
+     roof = 0; bk_n_block = bk_n_eval; the minimum bk_lb over the buckle log's pre-melt rows >= 2
+  b2r [report] the buckle log's branch split: fractions of evaluated rows with fb = 1, nodepth = 1, finite ell_eff;
+     the largest finite ell_eff
+  b3 [report, with --control DIR] (P: alpha 2000, 150 W): removals summed and the first-removal time; on PASSED
+     lines (blocked 0) fb and bk; on fired events h_f and ell_eff; the deepest removed cell above the block's bottom
+  c1 [report, --flat DIR] B0F vs B0: b2's quantities; bc_z_peak, first-fire and first-melt times
+  c2 [report, --fine DIR] B1 vs B0: the same, and bc_z_peak at first melt
+  c3 [report] B0 (and B1): rows at and after first melt -- bk_n_eval, removals, logged lines with T_surf >= phase.T_m
+  c4 [report] B0 (and B1) at first fire and first melt: bc_ell_p, bc_ell_pk (the FULL central column) beside the
+     15 mm window and the 2.4 mm layer limit; the buckle log's ell_p on the nearest logged step
+Units: times s; depths, lengths, x m (printed mm); T K; bk, bk_lb, score dimensionless; powers W.
+The thermo row stamped t reports the step that ENDED at t; the buckle log and the event log stamp the step's START.
+
+Usage: test RUN_DIR [--control DIR] [--flat DIR] [--fine DIR]   (RUN_DIR = B0's plot_file; exit 1 on b1)
+"""
+import csv
+import math
+import os
+import sys
+
+FAIL = []
+WINDOW, LIMIT = 0.015, 2.4e-3
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def meta(run):
+    kv = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            kv[k.strip()] = v.strip()
+    return kv
+
+
+def thermo(run):
+    L = open(os.path.join(run, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    rows = [dict(zip(h, [float(x) for x in r.split("\t")])) for r in L[1:] if r.strip()]
+    return h, [r for r in rows if r["time"] > 0.0]
+
+
+def csvrows(path):
+    if not os.path.exists(path):
+        return []
+    return [{k: float(v) for k, v in r.items()} for r in csv.DictReader(open(path))]
+
+
+def removals(r):
+    return r["fr_n_floor"] + r["fr_n_wall"] + r["fr_n_roof"]
+
+
+def mm(x):
+    return "%.2f mm" % (1e3 * x) if x is not None and math.isfinite(x) else ("inf" if x == math.inf else "undefined")
+
+
+class Leg:
+    def __init__(self, run):
+        self.run = run
+        self.m = meta(run)
+        self.h, self.rows = thermo(run)
+        self.dt = self.rows[1]["time"] - self.rows[0]["time"] if len(self.rows) > 1 else self.rows[0]["time"]
+        self.log = csvrows(run + "_buckle_log.csv")
+        self.ev = csvrows(run + "_removal_events.csv")
+        self.Tm = float(self.m.get("phase.T_m", "1e30"))
+        hb = "bc_z_melt" in self.h
+        self.melt_row = next((r for r in self.rows if hb and math.isfinite(r["bc_z_melt"])), None)
+        self.t_melt = self.melt_row["time"] if self.melt_row else math.inf
+        self.fire_row = next((r for r in self.rows if r.get("bk_n_eval", 0) > 0), None)
+        self.t_fire = self.fire_row["time"] if self.fire_row else None
+        self.pre = [r for r in self.rows if r["time"] < self.t_melt]
+        # a log row (step START s) belongs to the thermo row stamped s + dt
+        self.log_pre = [r for r in self.log if r["time"] + self.dt < self.t_melt - 1e-9]
+
+    def b2(self):
+        rem = sum(removals(r) for r in self.pre)
+        passed = sum(r["bk_n_eval"] - r["bk_n_block"] for r in self.pre)
+        lb = min((r["bk_lb"] for r in self.log_pre), default=float("nan"))
+        return rem, passed, lb
+
+    def split(self, rows):
+        n = len(rows)
+        if not n:
+            return "no logged evaluation"
+        fb = sum(r["fb"] for r in rows) / n
+        nd = sum(r["nodepth"] for r in rows) / n
+        fin = [r["ell_eff"] for r in rows if math.isfinite(r["ell_eff"])]
+        return ("%d logged rows: fb = 1 %.3f, nodepth = 1 %.3f, finite ell_eff %.3f (max %s); blocked %.3f; bk_lb min "
+                "%.3f" % (n, fb, nd, len(fin) / n, mm(max(fin)) if fin else "-",
+                          sum(r["blocked"] for r in rows) / n, min(r["bk_lb"] for r in rows)))
+
+    def at(self, t):
+        return min(self.rows, key=lambda r: abs(r["time"] - t)) if t is not None and math.isfinite(t) else None
+
+    def log_near(self, t):
+        if t is None or not self.log:
+            return []
+        ts = sorted({r["time"] for r in self.log}, key=lambda s: abs(s + self.dt - t))
+        return [r for r in self.log if r["time"] == ts[0]] if ts else []
+
+
+def describe(lab, L):
+    rem, passed, lb = L.b2()
+    print("   %-4s first fire %s, first melt %s (bc_z_melt vs phase.T_m %.1f K), bc_z_peak at melt %s; pre-melt: "
+          "removals %d, passed (eval - block) %d, min bk_lb %.3f over %d logged rows" % (
+              lab, "%.1f s" % L.t_fire if L.t_fire else "never", "%.1f s" % L.t_melt if math.isfinite(L.t_melt)
+              else "never", L.Tm, mm(L.melt_row["bc_z_peak"]) if L.melt_row else "-", rem, passed, lb,
+              len(L.log_pre)))
+
+
+def c4(lab, L):
+    for what, t in (("first fire", L.t_fire), ("first melt", L.t_melt if math.isfinite(L.t_melt) else None)):
+        r = L.at(t)
+        if r is None:
+            print("   %-4s %s: none" % (lab, what))
+            continue
+        near = L.log_near(t)
+        lp = [x["ell_p"] for x in near]
+        print("   %-4s %s (t %.1f s): bc_ell_p %s, bc_ell_pk %s (the full central column), bc_z_peak %s; the buckle "
+              "log's ell_p on the nearest logged step: %s; window %s, layer limit %s" % (
+                  lab, what, r["time"], mm(r["bc_ell_p"]), mm(r["bc_ell_pk"]), mm(r["bc_z_peak"]),
+                  ("%d rows, %s .. %s" % (len(lp), mm(min(lp)), mm(max(lp))) if lp and all(map(math.isfinite, lp))
+                   else "%d rows, %d undefined" % (len(lp), sum(not math.isfinite(x) for x in lp))),
+                  mm(WINDOW), mm(LIMIT)))
+
+
+def main(argv):
+    pos = [a for i, a in enumerate(argv) if not a.startswith("--") and (i == 0 or not argv[i - 1].startswith("--"))]
+    opt = {k: argv[argv.index(k) + 1] for k in ("--control", "--flat", "--fine") if k in argv}
+    B0 = Leg(pos[0])
+    print("P2-23 #19 on the production rock and the one rule (units: s, m printed mm, K, W)")
+    print("  %s: dt %.3g s, %d step rows, %d buckle-log rows, %d removal events; phase.T_m %s; surface_patch.enabled "
+          "%s; the loss table %s" % (pos[0], B0.dt, len(B0.rows), len(B0.log), len(B0.ev), B0.m.get("phase.T_m"),
+                                     B0.m.get("surface_patch.enabled"),
+                                     "varies" if "bc_z_melt" in B0.h else "flat (no bc_* columns)"))
+    print("=" * 100)
+    need(B0.t_fire is not None and B0.t_fire <= 40.0, "b1 B0's first step row with bk_n_eval > 0: %s (bar <= 40 s)" % (
+        "%.1f s (bk_n_eval %d)" % (B0.t_fire, B0.fire_row["bk_n_eval"]) if B0.t_fire else "never"))
+    rem, passed, lb = B0.b2()
+    print("\nb2 (the result, P1): pre-melt rows %d (melt at %s): removals %d; passed lines (bk_n_eval - bk_n_block) %d; "
+          "min bk_lb %.3f over %d logged pre-melt rows  => %s" % (
+              len(B0.pre), "%.1f s" % B0.t_melt if math.isfinite(B0.t_melt) else "never", rem, passed, lb,
+              len(B0.log_pre), "P1 HOLDS" if rem == 0 and passed == 0 and lb >= 2 else "P1 does NOT hold"))
+    print("b2r (report) B0 pre-melt: %s" % B0.split(B0.log_pre))
+    if "--control" in opt:
+        P = Leg(opt["--control"])
+        first = P.rows[0]
+        print("\nb3 (report, P2) %s: the first step row beam_P_inc %.4g W, beam_P_dep/beam_P_inc %.5f (bar 150 W, ~1)" % (
+            opt["--control"], first["beam_P_inc"], first["beam_P_dep"] / first["beam_P_inc"]))
+        tot = sum(removals(r) for r in P.rows)
+        t_rem = next((r["time"] for r in P.rows if removals(r) > 0), None)
+        ok_lines = [r for r in P.log if r["blocked"] == 0]
+        dz = (float(P.m["geometry.prob_hi"].split()[2]) - float(P.m["geometry.prob_lo"].split()[2])) / \
+            int(P.m["amr.n_cell"].split()[2])
+        deep = min(((ev["k"] - ev["n_voided"] + 1) * dz for ev in P.ev), default=None)
+        print("   removals %d by %.0f s, first at %s; logged evaluations %d (passed %d, blocked %d): passed lines fb %s, "
+              "bk %s; blocked lines bk %s; fired events %d: h_f %s, ell_eff %s; the deepest removed cell %s above the "
+              "bottom (bar >= 25 mm)" % (
+                  tot, P.rows[-1]["time"], "%.2f s" % t_rem if t_rem else "never", len(P.log), len(ok_lines),
+                  len(P.log) - len(ok_lines),
+                  sorted({int(r["fb"]) for r in ok_lines}) if ok_lines else "-",
+                  "%.3f..%.3f" % (min(r["bk"] for r in ok_lines), max(r["bk"] for r in ok_lines)) if ok_lines else "-",
+                  "%.3f..%.3f" % (min(r["bk"] for r in P.log if r["blocked"]), max(r["bk"] for r in P.log if r["blocked"]))
+                  if any(r["blocked"] for r in P.log) else "-", len(P.ev),
+                  "%s..%s" % (mm(min(e["h_f"] for e in P.ev)), mm(max(e["h_f"] for e in P.ev))) if P.ev else "-",
+                  "%s..%s" % (mm(min(e["ell_eff"] for e in P.ev)), mm(max(e["ell_eff"] for e in P.ev))) if P.ev else "-",
+                  mm(deep) if deep is not None else "-"))
+        print("   P's log: %s" % P.split(P.log))
+        print("   => P2 %s" % ("HOLDS (the same rule removes under a shallow beam)" if tot > 0 and ok_lines else
+                               "does NOT hold (no removal under the shallow beam)"))
+    legs = [("B0", B0)]
+    if "--flat" in opt:
+        legs.append(("B0F", Leg(opt["--flat"])))
+    if "--fine" in opt:
+        legs.append(("B1", Leg(opt["--fine"])))
+    print("\nc1 / c2 (report; P3, P4):")
+    for lab, L in legs:
+        describe(lab, L)
+        if lab != "B0":
+            print("        %s branch split pre-melt: %s" % (lab, L.split(L.log_pre)))
+    print("\nc3 (report; P5, post-melt rows are a record):")
+    for lab, L in legs:
+        post = [r for r in L.rows if r["time"] >= L.t_melt]
+        lpost = [r for r in L.log if r["time"] + L.dt >= L.t_melt - 1e-9]
+        print("   %-4s %d post-melt rows: bk_n_eval max %d, removals %d; logged lines with T_surf >= T_m %d of %d" % (
+            lab, len(post), max((r["bk_n_eval"] for r in post), default=0), sum(removals(r) for r in post),
+            sum(r["T_surf"] >= L.Tm for r in lpost), len(lpost)))
+    print("\nc4 (report; P6):")
+    for lab, L in legs:
+        c4(lab, L)
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

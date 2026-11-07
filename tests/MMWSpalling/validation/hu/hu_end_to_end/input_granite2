@@ -39,7 +39,6 @@ microstructure.mode       = expression
 microstructure.phase_expr = 0
 microstructure.nphases    = 1
 
-microstructure.phase0.name              = granite2
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 2.50
 microstructure.phase0.beta              = 8.0e-6
@@ -47,11 +46,9 @@ microstructure.phase0.E                 = 29.98e9
 microstructure.phase0.mu                = 12.5966386555e9
 microstructure.phase0.rho               = 2640.0
 microstructure.phase0.Cp                = 827.20
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 0.034
 microstructure.phase0.T_ref             = 280.15
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # Step 11b damage calibration — do not retune (per Step 14 guardrails).
@@ -102,8 +99,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.05
 beam.y0     = 0.05
 beam.z0     = 0.1
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 losses.epsilon       = 0.0
 losses.epsilon_high  = 0.0
@@ -114,13 +109,10 @@ losses.T_amb         = 280.15
 
 # Hu Granite 2 prescribed-T trendline (primary case).
 surface_patch.enabled = 1
-surface_patch.type    = prescribed_temperature
-surface_patch.face    = zhi
 surface_patch.x0      = 0.05
 surface_patch.y0      = 0.05
 surface_patch.radius  = 0.015
 surface_patch.T_expr  = 638.22+3.74*t
-surface_patch.T_ext   = 280.15
 surface_patch.h_conv  = 0.0
 
 hc.heat.alpha = 1.143e-6
@@ -163,4 +155,3 @@ el.eta_ref_threshold     = 1.0
 el.zero_out_displacement = 1
 el.max_coarsening_level  = 2
 
-solver = explicit

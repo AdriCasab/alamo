@@ -19,7 +19,6 @@
 microstructure.mode       = expression        # CHOICE: grain-free rock (SR 13)
 microstructure.phase_expr = 0
 microstructure.nphases    = 1
-microstructure.phase0.name     = grimsel
 microstructure.phase0.fraction = 1.0
 microstructure.phase0.law      = grimsel      # CHOICE (form): the measured laws below
 
@@ -35,7 +34,6 @@ microstructure.phase0.E                 = 30.0e9          # inert (see above)
 microstructure.phase0.mu                = 11.538461538e9
 microstructure.phase0.rho               = 2750.0
 microstructure.phase0.Cp                = 790.0
-microstructure.phase0.alpha_attenuation = 2000.0          # beam only; never read (MODEL_CARD §12 item 11)
 microstructure.phase0.A_D               = 0.0
 
 # Grimsel laws (src/Numeric/Material/Grimsel.H; validation/grimsel_properties/
@@ -51,6 +49,20 @@ microstructure.phase0.grimsel.E0              = 53.3e9    # MEAS-MAT (Hoeser 47.
 microstructure.phase0.grimsel.nu              = 0.30      # MEAS-MAT (reference: 0.25-0.30)
 microstructure.phase0.grimsel.K_Ic0           = 1.5       # MEAS-MAT, MPa sqrt(m)
 microstructure.phase0.grimsel.alpha_cap_theta = -1        # CHOICE: Table 3's alpha uncapped
+
+# --- the melt and the vapour (P2-24): LIT, ANOTHER ROCK -- no Grimsel melt data exist on disk -------------
+#   Zhang, Millmore & Nikiforakis (arXiv 2211.00681), a Barre-like granite, as carried in Numeric/Material/Zhang.H:
+#   the solidus band T_m +- fus_width/2 = 1410.5-1610.5 K with L_m smeared over it, vaporisation 3233-3503 K with L_v.
+#   The phase table (Table::Build) integrates rho c_p plus these boxcars; H(T) below 1410.5 K is UNCHANGED, so a
+#   deck that never reaches the band runs byte for byte as before. The Grimsel lambda(T), c_p(T) are EXTRAPOLATED
+#   through the melt (Zhang's kappa cap at 1273 K is the recorded alternative). The liquid fraction f_L(T) of this
+#   phase is what the beam's melt keys below and the face list's molten / lid exclusions read (MeltFraction).
+microstructure.phase0.T_m       = 1510.5     # K, LIT (Zhang)
+microstructure.phase0.fus_width = 200.0      # K, LIT (Zhang)
+microstructure.phase0.L_m       = 3.4e5      # J/kg, LIT (Zhang)
+microstructure.phase0.T_vap_lo  = 3233.0     # K, LIT (Zhang)
+microstructure.phase0.T_vap_hi  = 3503.0     # K, LIT (Zhang)
+microstructure.phase0.L_v       = 4.8e6      # J/kg, LIT (Zhang)
 
 # --- the failure criterion and the flaw: ONE calibration (SR 1) ------------
 spall.stress_law              = grimsel        # CHOICE (form): 1-D confined stress from the law
@@ -81,6 +93,23 @@ spall.buckle_span = 0.012                      # DERIVED-ON-KANT (P2-17): one sp
                                                #   overrides this to 0 (studies/p2_17_buckle_on/Z2.txt).
                                                # Read on the face list only; any deck including this file with
                                                #   surface_patch.face_list = 0 aborts naming the key.
+
+# --- the dielectric description (P2-20): the beam's absorption and reflection ---------
+beam.eps_r     = 5.02       # LIT (another rock: Barre granite): eps' = n^2, n = 2.24 (Oglesby, Woskov et al.,
+                            #   DOE final report DE-EE0005504, Dec 2014, OSTI 1169951, p. 52)
+beam.tan_delta = 0.01065    # LIT (Barre): 30 % single-pass absorption through 25 mm of solid granite at 28 GHz
+                            #   (DOE p. 44/52) => POWER alpha = -ln(0.7)/0.025 ~ 14 1/m; tan_delta = alpha lambda/(2 pi n)
+                            # The code computes alpha = 2 pi sqrt(eps_r) tan_delta / lambda (the POWER coefficient)
+                            #   and R = ((sqrt eps_r - 1)/(sqrt eps_r + 1))^2 = 0.147 (the DOE's Fresnel 0.14) with
+                            #   each deck's own beam.lambda (MMWBeam.H). To be replaced by a Grimsel measurement.
+# P2-21: the temperature dependence of the loss, a ratio table on the cold value above (LIT: Hartlieb, another
+#   granite, 2.467 GHz heating branch; the transfer to 28 GHz is ASSUMED). Used only where the beam deposits.
+FILE = tests/MMWSpalling/validation/shared/loss_table_hartlieb.inputs
+# P2-24: THE MELT, SEEN BY THE BEAM (both through the column optical-depth sum, MMWBeam.H):
+beam.melt_factor = 4.0       # LIT (Zhang eq. 12: alpha_lambda 14 Np/m solid, 56 liquid => x4) -- ADOPTED by the
+                             #   user (2026-11-06); the DOE's "about two orders of magnitude" (DE-EE0005504 L2168-2171,
+                             #   their MODEL's assumption, not a measurement) is the recorded alternative (x100)
+beam.R_melt      = 0.3       # LIT (DOE L2172-2174: "0.3 after melting as observed"); the solid's R is computed
 
 # --- the surface's emissivity (radiation to the surroundings) --------------
 losses.epsilon      = 0.8                      # LIT: granite emissivity

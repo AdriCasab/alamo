@@ -68,7 +68,6 @@ microstructure.number_of_grains = 250
 microstructure.seed             = 11
 microstructure.nphases          = 1
 
-microstructure.phase0.name              = central_aare
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 2.50
 microstructure.phase0.beta              = 8.0e-6
@@ -76,7 +75,6 @@ microstructure.phase0.E                 = 35.0e9
 microstructure.phase0.mu                = 13.8888888889e9
 microstructure.phase0.rho               = 2630.0
 microstructure.phase0.Cp                = 800.0
-microstructure.phase0.alpha_attenuation = 0.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 # Granite fusion: builds the melt plateau in the per-phase enthalpy table so
@@ -85,7 +83,6 @@ microstructure.phase0.T_m               = 1473.0
 microstructure.phase0.fus_width         = 50.0
 microstructure.phase0.L_m               = 335000.0
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
 # LEFM Sp branch + material removal.
@@ -106,7 +103,6 @@ spall.stress_source = local_thermoelastic
 
 # P1 default-off; the test python overrides spall.melt_aware on the command
 # line (1 = ON, 0 = OFF). lambda_crit = 0.4 (rigidity percolation).
-spall.melt_aware = 0
 melt.lambda_crit = 0.4
 
 beam.P0     = 0.0
@@ -115,8 +111,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.025
 beam.y0     = 0.025
 beam.z0     = 0.050
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 losses.epsilon       = 0.0
 losses.epsilon_high  = 0.0
@@ -155,4 +149,3 @@ el.model1.E  = 35.0e9
 el.model1.nu = 0.26
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
-solver = explicit

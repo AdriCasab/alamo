@@ -55,7 +55,8 @@ beam.lambda     = 1.0e-3
 beam.x0         = 0.5
 beam.y0         = 0.5
 beam.z0         = 1.0
-beam.alpha_expr = 10
+beam.eps_r     = 1.0
+beam.tan_delta = 0.0015915494309189536   # fixture: alpha = 10 1/m by construction (eps_r 1 => R 0); lambda 1.0e-3
 
 #
 # HEAT CONDUCTION (kappa = 0 -> source-only test)

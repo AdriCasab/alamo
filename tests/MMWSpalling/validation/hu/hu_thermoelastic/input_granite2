@@ -62,8 +62,6 @@ beam.lambda = 2.19e-3
 beam.x0     = 0.05
 beam.y0     = 0.05
 beam.z0     = 0.1
-beam.alpha_expr = 1.0
-beam.R      = 0.0
 
 # Surface losses off (Hu prescribes T on the patch only).
 losses.epsilon  = 0.0
@@ -76,13 +74,10 @@ losses.T_amb    = 280.15
 # Single ParmParse token, no whitespace.
 #
 surface_patch.enabled = 1
-surface_patch.type    = prescribed_temperature
-surface_patch.face    = zhi
 surface_patch.x0      = 0.05
 surface_patch.y0      = 0.05
 surface_patch.radius  = 0.015
 surface_patch.T_expr  = 638.22+3.74*t
-surface_patch.T_ext   = 280.15
 surface_patch.h_conv  = 0.0
 
 #
@@ -139,4 +134,3 @@ el.eta_ref_threshold = 1.0
 # and u_y/u_z pinned at xhiyhizlo. Bottom zlo traction components use the
 # physical zlo normal on faces, edges, and corners.
 
-solver = explicit

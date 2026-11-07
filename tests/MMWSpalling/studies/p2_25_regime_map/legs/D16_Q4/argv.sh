@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_25_regime_map/input beam.tan_delta=0.0475347 beam.schedule.P=1221.3 beam.schedule.t_end=22.0 stop_time=22.0 timestep=0.05 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_25_regime_map/legs/D16_Q4/run

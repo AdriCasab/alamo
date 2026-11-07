@@ -50,7 +50,6 @@ microstructure.mode       = expression
 microstructure.phase_expr = 0
 microstructure.nphases    = 1
 
-microstructure.phase0.name              = grimsel
 microstructure.phase0.fraction          = 1.0
 microstructure.phase0.kappa             = 1.5
 microstructure.phase0.beta              = 8.0e-6
@@ -58,14 +57,11 @@ microstructure.phase0.E                 = 30.0e9
 microstructure.phase0.mu                = 11.538461538e9
 microstructure.phase0.rho               = 2750.0
 microstructure.phase0.Cp                = 790.0
-microstructure.phase0.alpha_attenuation = 2000.0
 microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 
-conductivity.kappa_damage_alpha = 0.0
 conductivity.h_gb0              = 0.0
 
-damage.enabled = 0
 
 # --- LEFM Sp = K_I/K_Ic spallation, scalar flaw (weibull off) ---
 spallation.model         = sp_weibull
@@ -78,10 +74,7 @@ spallation.sp.kic.scale  = 1.0
 weibull.enabled = 0
 
 spall.enabled                = 1
-spall.sample                 = top_cell
 spall.h_spall_max            = 0.015
-spall.flake_coherence_length = 0.0
-spall.surface_normal         = 0
 spall.removal_events_csv     = 1
 
 vapor.enabled = 0
@@ -95,10 +88,7 @@ beam.lambda     = 2.19e-3
 beam.x0         = 0.0
 beam.y0         = 0.0
 beam.z0         = 0.12
-beam.alpha_expr = 2000.0
-beam.R          = 0.0
 
-bit.enabled = 0
 
 # --- Surface losses to lab air ---
 losses.epsilon       = 0.8
@@ -115,12 +105,10 @@ losses.T_amb         = 293.15
 # that is exactly what the PRESC/PRESCF pair checks.
 surface_patch.enabled = 1
 surface_patch.mode    = prescribed_T
-surface_patch.face    = zhi
 surface_patch.x0      = 0.0
 surface_patch.y0      = 0.0
 surface_patch.radius  = 0.010
 surface_patch.T_expr  = 293.15+60.0*t
-surface_patch.T_ext   = 293.15
 surface_patch.h_conv  = 0.0
 
 # prescribed_T does not support the rem-based surface mask (MMWSpalling.H:504)
@@ -150,4 +138,3 @@ el.model1.E  = 30.0e9
 el.model1.nu = 0.3
 el.model1.F0 = 0 0 0 0 0 0 0 0 0
 
-solver = explicit

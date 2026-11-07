@@ -183,3 +183,22 @@ Read in full (primary): Woskov & Michael PSFC/JA-11-24 (PSFC PDF); Woskov, Einst
 Abstract/snippet only: Ulaby et al. 1990; Hartlieb & Grafe 2017; Hassani et al. 2016; Hartlieb et al. 2018; Kahraman et al. 2020; Zeng et al. 2019; Zheng et al. 2020 (both); Lu et al. 2017; Peinsitt et al. 2010; Helhel et al. 2020; Campbell & Ulrichs 1969; the quartz α-β dielectric paper; Woskov et al. IRMMW-THz 2014; arXiv 2211.00681 (via extraction).
 
 Not reachable: Oglesby MIT thesis (not found); Church, Webb & Salsman 1988 tables; Zheng et al. 2005 values; Zhou et al. 2011 quartz ε(T); Satish 2005; Kingman/Jones papers; Nekoovaght thesis PDF (download failed); Toifl et al. 2016/2017 texts; Springer/Nature/ScienceDirect/ResearchGate/MDPI full texts (403 or login redirect); Semantic Scholar and Crossref abstract APIs (rate-limited / no abstract).
+
+## CORRECTION 2026-11-05 (planner, P2-20): Woskov's 0.14 Np/cm is the POWER coefficient, and Oglesby's validation test was a re-melted disc
+
+- The DOE final report DE-EE0005504 (read in full by the planner; p. 44, 52–55) states "0.14 nepers/cm, corresponding to
+  about 30 % absorption in a 1″ thick sample" AND measured, with the 28 GHz pick-off detector, that "this 2.5 cm thick
+  granite sample absorbs only 30 % of the 28 GHz power on a single pass while a solid". −ln(0.7)/0.025 m = 14.3 m⁻¹.
+  ⇒ the **power** Beer–Lambert coefficient of solid Barre granite at 28 GHz, 20 °C is **14 m⁻¹** (1/e power depth
+  7.1 cm, as Woskov wrote), NOT 28: lines 8, 23 and 27 above doubled it. tan δ = αλ/(2π n) = **0.0107**. The report's
+  own reflection, "0.14 before melting calculated by the Fresnel equations from the measured index of refraction of
+  2.24", equals ((n−1)/(n+1))² = 0.147 ⇒ R is derived from n, not typed. Zhang 2023's α_λ = 14 Np/m is this value.
+- The experiment Zhang et al. 2023 reproduce (their Fig. 6, our `zhang_oglesby` deck) is **Rock Test #28c**: the THIRD
+  exposure (6/18/2014) of the same 4″ × 1″ Barre disc, with a melt crater and black glass already on its surface
+  (p. 44 Fig. 25; p. 53: "a previously melted sample and does not have the beginning dynamics of virgin granite").
+  Woskov 2011 measured the second heating of a glassed surface at 110 °C/s vs 7.4 °C/s for virgin rock. ⇒ its first
+  minute cannot test a cold volumetric absorption; the radiometer signal is view-averaged and corrected by the MELT
+  emissivity 0.7. The **virgin** record is **Test #19** (p. 54 Fig. 34: 1/8/2014, HE11 from a 32.5 mm aperture, 1.5–3.4 kW,
+  two stacked discs): transmission cut off ≈ 300 s after beam-on at ≈ 2 kW; Oglesby: "the melt initially starts 2–4 mm
+  below the surface and breaks through to the surface from below"; their own model (Fig. 36) used a 20 mm 1/e POWER
+  diameter Gaussian (ω = 14.1 mm), not Zhang's ω₀ = 20 mm (Zhang Table III prints 0.20 m).

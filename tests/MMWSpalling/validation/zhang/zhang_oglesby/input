@@ -5,16 +5,23 @@
 #@ exe=mmwspalling
 #@
 
-# Step 4b: Zhang/Oglesby end-to-end thermal validation.
+# Step 4b, rewritten at P2-20 (2026-11-06): Zhang/Oglesby MMW heating of Barre granite -- a RECORDED
+# PREDICTION, not a calibration. Nothing here is tuned to the experiment or to Zhang's curve.
 #
-# Setup follows zhang_oglesby_mmw_validation_summary.txt:
-#   Granite block 0.10 x 0.10 x 0.025 m, T_amb = 297.5 K, beam centred on
-#   the top face with omega_0 = 0.02 m, lambda corresponding to a 137 GHz
-#   gyrotron, time-varying power schedule from 0 -> 1750 s, surface losses
-#   on the top face only, sides and bottom adiabatic.
-#
-# Reference: zhang_oglesby_mmw_validation_summary.txt for material and
-# loss parameters.
+# ⚠⚠ PROVENANCE (DOE final report DE-EE0005504, Oglesby, Woskov et al., Dec 2014, OSTI 1169951):
+#   * the test Zhang reproduced (Fig. 6) is ROCK TEST #28c, the THIRD exposure (6/18/2014) of a 4" x 1" Barre
+#     disc that had ALREADY MELTED: "a previously melted sample [that] does not have the beginning dynamics of
+#     virgin granite" (p. 53). A glassed surface heats > 10x faster than virgin rock (Woskov & Michael 2011), so
+#     this cold volumetric model MUST under-predict its first minute; that gap measures the glass, not the
+#     virgin rock's loss tangent. The virgin record is test #19 (the study's Z3 legs).
+#   * heating is at 28 GHz (lambda = c/28 GHz = 1.070687e-2 m); 137 GHz was the RADIOMETER, not the beam.
+#   * the radiometer signal is "uncorrected for emissivity ... an average across the whole aperture"; the
+#     published temperatures are divided by 0.7, the MELT emissivity (the test scores both, and the raw T).
+#   * Zhang's Table III omega_0 = 0.20 m is a misprint for 0.02 (local reference file).
+# Setup (zhang_oglesby_mmw_validation_summary.txt): block 0.10 x 0.10 x 0.025 m, T_amb 297.5 K, beam centred
+# on the top face, omega_0 = 0.02 m, zero standoff, Zhang's Table II power schedule; losses on the top face
+# only (eps 0.7 below T_m, 0.3 above; h 56 W/m2K, Zhang Table 1); sides and bottom adiabatic. 150 s: the
+# first schedule interval (800 W), the window the reference digitises at 50 / 100 / 150 s.
 
 alamo.program = mmwspalling
 
@@ -25,10 +32,11 @@ plot_file = tests/MMWSpalling/validation/zhang/zhang_oglesby/output
 # 0.1 s gives a healthy margin and resolves the radiative transient at the
 # surface.
 timestep  = 2.0
-#stop_time = 1750.0
-stop_time = 1750.0
+stop_time = 150.0
 
-amr.plot_int        = 10    # plot every 25 s -> 70 cell-plotfiles
+amr.plot_int        = 5     # every 10 s
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1     # the beam closure columns on every step (b1)
 amr.max_level       = 0
 amr.n_cell          = 128 128 32
 amr.blocking_factor = 2
@@ -50,17 +58,24 @@ alpha = 0.0 0.0
 material.type = zhang
 
 #
-# BEAM: Beer-Lambert + Gaussian with a piecewise-constant power schedule.
-# alpha_lambda chosen at 300 m^-1, the 137 GHz / granite figure cited in
-# main.tex Sec. 2.1 (between the 94 GHz and 140 GHz tabulated values).
+# BEAM: Beer-Lambert + Gaussian with a piecewise-constant power schedule. P2-20: the absorption and the
+# reflection are COMPUTED from Barre granite's dielectric description (MMWBeam.H):
+#   alpha = 2 pi sqrt(eps_r) tan_delta / lambda = 14.0 1/m (POWER coefficient; DOE p. 44/52: 30 % single-pass
+#   absorption in 25 mm); R = ((sqrt eps_r - 1)/(sqrt eps_r + 1))^2 = 0.147 (DOE's Fresnel 0.14 from n 2.24).
+# The old typed alpha 300 (a 137 GHz figure) and R 0.2 were tuned on this deck and are retired.
 #
 beam.omega0     = 0.02
-beam.lambda     = 2.19e-3            # c / 137 GHz
+beam.lambda     = 1.070687e-2        # c / 28 GHz (the heating gyrotron)
 beam.x0         = 0.05
 beam.y0         = 0.05
 beam.z0         = 0.025
-beam.alpha_expr = 300
-beam.R          = 0.2
+beam.eps_r      = 5.02               # Barre: n 2.24 (DOE p. 52); flat with T (user, 2026-11-05)
+beam.tan_delta  = 0.01065            # Barre at 28 GHz (DOE p. 44/52)
+# P2-21: the loss's temperature dependence, a RATIO table on the cold tan_delta above (LIT: Hartlieb, another
+# granite, 2.467 GHz heating branch; the transfer to 28 GHz is the ASSUMPTION P2-21 tests). With it the deposition
+# is the column optical-depth sum (MMWSpalling::ColumnOpticalDepth). A one-pair override on the argv
+# (beam.tan_delta_T="295.15 1.0") is flat and reproduces the P2-20 deck byte for byte.
+FILE = tests/MMWSpalling/validation/shared/loss_table_hartlieb.inputs
 
 # Power schedule from the summary file (W). schedule.t_end[i] is the END of
 # interval i in seconds; schedule.P[i] is the active power on that interval.
@@ -72,11 +87,11 @@ beam.schedule.P     = 800.0  1800.0 2300.0 2800.0 1700.0 2800.0  1700.0  3200.0 
 # SURFACE LOSSES (Zhang Table 1):
 #   eps = 0.7 below T_m, 0.3 above; h = 56 W/(m^2 K); T_amb = 297.5 K.
 #
-losses.epsilon       = 0.8
-losses.epsilon_high  = 0.8
+losses.epsilon       = 0.7
+losses.epsilon_high  = 0.3
 losses.T_eps_break   = 1510.5
 losses.sigma_SB      = 5.670374419e-8
-losses.h_conv        = 51.0
+losses.h_conv        = 56.0
 losses.T_amb         = 297.5
 
 #

@@ -51,7 +51,7 @@ BASE = [  # G1's argv (studies/p2_11_heat/legs/G1/argv.sh) without plot_file, st
     "weibull.a0_ig=8.0e-6", "weibull.a0_gb=40.0e-6", "spall.flake_h_max=0.0015",
     "surface_patch.side_power_interval=10.0", "microstructure.phase0.law=grimsel", "spall.stress_law=grimsel",
     "spallation.sp.kic.law=grimsel_table", "spallation.sp.kic.scale=1.0", "spallation.sp.stress_relief=0.531294",
-    "weibull.m=13", "surface_patch.enabled=1", "surface_patch.face=zhi", "surface_patch.x0=0.0",
+    "weibull.m=13", "surface_patch.enabled=1", "surface_patch.x0=0.0",
     "surface_patch.y0=0.0", "surface_patch.radius=0.08", "surface_patch.nozzle_descent=prescribed",
     "surface_patch.nozzle_feed=0.0", "surface_patch.nozzle_collision_radius=0.004",
     "surface_patch.jet_closure=enthalpy", "surface_patch.jet_stagnation=decay", "surface_patch.jet_entrained_mass=1",

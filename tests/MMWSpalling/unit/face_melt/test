@@ -1,0 +1,130 @@
+#!/usr/bin/env python3
+"""P2-24 unit/face_melt -- THE BEAM SEES THE MELT; THE CRACK RULE STOPS IN AND OVER IT. Runs four decks -np 4.
+
+  z1 [gate]
+    U1 (input: the top half liquid): the deposition per unit BEAM power from the plotfiles (H after step 1 minus
+       the IC H, x dV / dt / P0, double precision) in the top and bottom halves, the transmitted fraction as
+       (1 - R_melt)(1 + closure) - top - bottom (thermo's closure); against the analytic, COMPUTED here:
+         top (1 - R_melt)(1 - e^-(m alpha L/2)), bottom (1 - R_melt) e^-(m alpha L/2)(1 - e^-(alpha L/2)),
+         transmitted (1 - R_melt) e^-((m + 1) alpha L/2), m 4, alpha 1, L 1, R_melt 0.3   (bar 1e-9 each;
+         ⚠ the packet printed the top as 0.605298 -- the formula gives 0.605265, and P_dep 0.642541 = 0.605265 + 0.037275)
+       closure <= 1e-9; on the step-2 row (the first with a face list): fr_n_molten 4096, fr_n_lid 0, bk_n_eval 0
+    U1b (the IC inverted: a solid top over a liquid bottom): fr_n_lid 4096, fr_n_molten 0, bk_n_eval 0
+    U2 (U1, melt_factor 1, R_melt 0 = R): the FLAT fractions 1 - e^-0.5, e^-0.5(1 - e^-0.5), e^-1 (bar 1e-9), and the
+       per-cell deposition BIT-IDENTICAL to U2x (U2 without the melt band: phase0.T_m 1e30, L_m 0) -- the no-op
+       keys do not see f_L. (The packet's "R_melt absent" cannot be set from an argv once the rock file sets it.)
+Usage: test [--bin_pre PATH, ignored]   (exit 1 on a failed bar)
+"""
+import argparse
+import math
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input")
+OUT = os.path.join(HERE, "output")
+MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+P0 = 1000.0                     # the deck's beam.P0 (1 kW: at 1 W the 800 K top's H rounding is 7.6e-8 of the beam)
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def run(name, extra):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    argv = MPI + [BIN, DECK] + extra + ["plot_file=" + os.path.join(d, "run")]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    open(os.path.join(d, "run.log"), "w").write((r.stdout or "") + (r.stderr or ""))
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join(argv) + "\n")
+    return r.returncode, os.path.join(d, "run")
+
+
+def row(run_dir, t):
+    L = open(os.path.join(run_dir, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    for r in L[1:]:
+        v = [x.strip() for x in r.split("\t")]
+        if abs(float(v[0]) - t) < 1e-9:
+            return dict(zip(h, v))
+    raise KeyError(t)
+
+
+def dep(run_dir):
+    """per-cell deposition rate after step 1 per W of beam power, and the cell-centre z"""
+    dsa = yt.load(os.path.join(run_dir, "00000cell"))
+    dsb = yt.load(os.path.join(run_dir, "00001cell"))
+    a, b = dsa.all_data(), dsb.all_data()
+    o = np.lexsort((a["x"].to_value(), a["y"].to_value(), a["z"].to_value()))
+    ob = np.lexsort((b["x"].to_value(), b["y"].to_value(), b["z"].to_value()))
+    q = (b["H"].to_value()[ob] - a["H"].to_value()[o]) * a["cell_volume"].to_value()[o] / 0.01 / P0
+    return q, a["z"].to_value()[o]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--bin_pre", default=None, help="accepted for the packet's command line; z1 has no bin_pre row "
+                    "(the deck's beam.melt_factor stops the P2-23 build at parse)")
+    ap.parse_args()
+    print("P2-24 unit/face_melt (units: W per W of beam power; counts per step)")
+    print("=" * 100)
+    m, al, Lz, Rm = 4.0, 1.0, 1.0, 0.3
+    rc, d1 = run("U1", [])
+    need(rc == 0, "U1 runs (rc %d)" % rc)
+    q, z = dep(d1)
+    top, bot = float(q[z >= 0.5].sum()), float(q[z < 0.5].sum())
+    r1, r2 = row(d1, 0.01), row(d1, 0.02)
+    clo = float(r1["beam_closure_err"])
+    trans = (1.0 - Rm) * (1.0 + clo) - top - bot          # P_inc (1 + closure) = P_dep + P_trans, per W
+    want = ((1 - Rm) * (1 - math.exp(-m * al * Lz / 2)),
+            (1 - Rm) * math.exp(-m * al * Lz / 2) * (1 - math.exp(-al * Lz / 2)),
+            (1 - Rm) * math.exp(-(m + 1) * al * Lz / 2))
+    for nm, got, w in (("top", top, want[0]), ("bottom", bot, want[1]), ("transmitted", trans, want[2])):
+        need(abs(got - w) <= 1e-9, "z1 U1 %-11s %.12f vs %.12f (|d| %.1e; bar 1e-9)" % (nm, got, w, abs(got - w)))
+    need(abs(clo) <= 1e-9 and r1["beam_P_inc"] == "%g" % ((1 - Rm) * P0),
+         "z1 U1 closure %s (bar 1e-9); P_inc %s = (1 - R_melt) P0 (the column's R at a liquid top); P_trans %s" % (
+             r1["beam_closure_err"], r1["beam_P_inc"], r1["beam_P_trans"]))
+    need(r2["fr_n_molten"] == "4096" and r2["fr_n_lid"] == "0" and r2["bk_n_eval"] == "0",
+         "z1 U1 step 2: fr_n_molten %s (4096), fr_n_lid %s (0), bk_n_eval %s (0)" % (
+             r2["fr_n_molten"], r2["fr_n_lid"], r2["bk_n_eval"]))
+    rc, d1b = run("U1b", ['hc.ic.expression.region0="800.0-500.0*(z>=0.5)"'])   # the quotes reach ParmParse
+    need(rc == 0, "U1b runs (rc %d)" % rc)
+    rb = row(d1b, 0.02)
+    need(rb["fr_n_lid"] == "4096" and rb["fr_n_molten"] == "0" and rb["bk_n_eval"] == "0",
+         "z1 U1b step 2: fr_n_lid %s (4096), fr_n_molten %s (0), bk_n_eval %s (0)" % (
+             rb["fr_n_lid"], rb["fr_n_molten"], rb["bk_n_eval"]))
+    noop = ["beam.melt_factor=1.0", "beam.R_melt=0.0"]
+    rc, d2 = run("U2", noop)
+    rc2, d2x = run("U2x", noop + ["microstructure.phase0.T_m=1.0e30", "microstructure.phase0.L_m=0.0"])
+    need(rc == 0 and rc2 == 0, "U2 / U2x run (rc %d, %d)" % (rc, rc2))
+    q2, z2 = dep(d2)
+    q2x, _ = dep(d2x)
+    t2, b2 = float(q2[z2 >= 0.5].sum()), float(q2[z2 < 0.5].sum())
+    wf = (1 - math.exp(-al * Lz / 2), math.exp(-al * Lz / 2) * (1 - math.exp(-al * Lz / 2)))
+    need(abs(t2 - wf[0]) <= 1e-9 and abs(b2 - wf[1]) <= 1e-9,
+         "z1 U2 (no-op keys) flat fractions top %.12f vs %.12f, bottom %.12f vs %.12f (bar 1e-9)" % (
+             t2, wf[0], b2, wf[1]))
+    need(np.array_equal(q2, q2x), "z1 U2 per-cell deposition bit-identical to U2x (no melt band): %s (max |d| %.1e)" % (
+        np.array_equal(q2, q2x), float(np.max(np.abs(q2 - q2x)))))
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

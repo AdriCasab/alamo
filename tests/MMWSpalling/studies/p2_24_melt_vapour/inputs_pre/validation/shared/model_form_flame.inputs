@@ -1,0 +1,47 @@
+# ============================================================================
+# THE MODEL FORM FOR FLAME DECKS -- one file, included by every flame deck on the face
+# list (P2-13, 2026-10-30).
+# ============================================================================
+# How the criterion is evaluated and how a fired cell leaves: the SAME in calibration and
+# production (MODEL_CARD §9 listed the differences this file removes). Include it with
+#     FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
+# after rock_grimsel.inputs. ⚠ A deck must not set any key below (check_shared.py).
+# The heat source (surface_patch.mode, the h map, the jet closure) is the DECK's.
+# Classes (MODEL_CARD §6): CHOICE chosen, no measured source; NUM numerical;
+# TUNED set on a test's own removal (not allowed in a prediction; stated, to replace).
+# Values: Hoeser G1's resolved values (studies/p2_11_heat/legs/G1/run/metadata).
+
+# --- the criterion ----------------------------------------------------------
+spallation.model     = sp_weibull              # CHOICE (form): LEFM Sp = K_I/K_Ic
+spall.enabled        = 1
+spall.stress_source  = local_thermoelastic     # CHOICE (form): stress from the local temperature
+spall.surface_T      = reconstructed           # CHOICE (form): P0, mesh-independent firing T
+spallation.sp.n_segments       = 128           # NUM: the K_I quadrature
+spall.h_spall_max    = 0.015                   # NUM / CHOICE: the depth-scan limit
+
+# --- the flaw draw ----------------------------------------------------------
+weibull.enabled     = 1                        # CHOICE (form): random flaws, scale/modulus in the rock file
+weibull.detach_mode = per_face
+weibull.seed        = 12345                    # NUM
+
+# --- how a fired cell leaves: the flake rule --------------------------------
+spall.removal_energy         = flake           # CHOICE (form): P0b; the face list requires it
+spall.flake_c_f              = 0.4             # CHOICE (literature-informed): h = c_f ell, Wilkinson/Rauenzahn
+spall.flake_h_max            = 0.0015          # NUM (P2-17): DEAD as a flake bound under B (P2-17 e0);
+                                               #   still sets each line's gather/remap window
+                                               #   (FaceRemoval.H:368-380): a NUM role, to decouple and retire
+                                               #   with the column path. Was TUNED (P0b rev 7 on Meier);
+                                               #   MODEL_CARD §6 row 21
+
+# --- the surface and the removal path ---------------------------------------
+surface.follow_mask        = 1
+surface_patch.robin_form   = surface           # CHOICE (form): P0b; the face list requires it
+surface_patch.face_list    = 1                 # the removal rule (P2-8)
+
+# --- physics off in flame decks ---------------------------------------------
+vapor.enabled  = 0                             # the face list refuses it
+
+# --- constants and records --------------------------------------------------
+losses.sigma_SB          = 5.670374e-8         # Stefan-Boltzmann
+energy_ledger.enabled    = 1
+spall.removal_events_csv = 1

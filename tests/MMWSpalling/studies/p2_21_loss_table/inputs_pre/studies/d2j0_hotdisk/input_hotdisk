@@ -1,0 +1,162 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# D2j-0: the hot-disk edge test. Open loop, no jet, no feet, no descent.
+# ============================================================================
+# A fixed Robin disk on flat rock in a quarter domain, axis at the xlo/ylo
+# corner. h and T_gas are constants (sharp set) or a radial ramp in r only
+# (tapered set); the patch never moves and nothing descends, so the only
+# thing under test is how a removal threshold behaves at a lateral hot/cold
+# edge, and how that scales with dx.
+#
+# Everything below the patch block is the D2i/D2c scored basis unchanged:
+# Grimsel granite one-phase, sp_weibull LEFM onset with V0 = V_cell (set per
+# mesh by run.py), pinned Robin closure, surface losses to lab air,
+# mechanics inert, beam and bit off.
+#
+# run.py supplies per case: stop_time, timestep, amr.plot_int, amr.n_cell,
+# geometry.prob_hi, amr.max_grid_size, weibull.V0, surface_patch.radius and
+# EITHER surface_patch.h_conv + T_flame (sharp) OR surface_patch.h_expr +
+# T_flame_expr + nozzle_z0 (tapered). h_conv / T_flame must NOT appear here:
+# the parser aborts if they are combined with the expressions.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/studies/d2j0_hotdisk/output/hotdisk
+
+amr.max_level       = 0
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+amr.thermo.int      = 1
+amr.thermo.plot_int = 25
+
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- Grimsel granite, homogeneous one-phase (D2c scored, unchanged) ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.name              = grimsel
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.alpha_attenuation = 2000.0
+microstructure.phase0.A_D               = 0.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.kappa_damage_alpha = 0.0
+conductivity.h_gb0              = 0.0
+
+damage.enabled = 0
+
+# --- LEFM Sp = K_I/K_Ic spallation, Kant-template defaults (unchanged) ---
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 20.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 1
+weibull.a0_gb   = 20.0e-6
+weibull.a0_ig   = 4.0e-6
+weibull.m       = 20.0
+weibull.seed    = 12345
+
+# Moving boundary + detachment.
+spall.enabled                = 1
+spall.sample                 = top_cell
+spall.h_spall_max            = 0.015
+spall.flake_coherence_length = 0.0
+spall.surface_normal         = 0
+spall.removal_events_csv     = 1
+
+vapor.enabled = 0
+
+# Lateral confinement as scored.
+confining.p = 1.0e6
+
+# Beam and bit off.
+beam.P0 = 0.0
+beam.profile    = uniform
+beam.radius     = 0.042
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.0
+beam.y0         = 0.0
+beam.z0         = 0.10
+beam.alpha_expr = 2000.0
+beam.R          = 0.0
+
+bit.enabled = 0
+bit.feed_rate  = 4.166667e-4
+bit.radius     = 0.042
+bit.x0         = 0.0
+bit.y0         = 0.0
+bit.z0         = 0.10
+bit.start_time = 0.0
+
+# --- Surface losses to lab air (unchanged) ---
+losses.epsilon       = 0.8
+losses.epsilon_high  = 0.8
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 5.670374e-8
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+# --- The patch: fixed disk, pinned closure, idle clock OFF ---
+# (D2i: pinned_idle_cycles = 20 is byte-identical to 1e9 at 1 mm; the clock
+# is a settled artefact and is kept out of this measurement.)
+surface_patch.enabled            = 1
+surface_patch.mode               = convective_flame
+surface_patch.robin_form         = pinned
+surface_patch.pinned_idle_cycles = 1.0e9
+surface_patch.face               = zhi
+surface_patch.x0                 = 0.0
+surface_patch.y0                 = 0.0
+surface_patch.T_ext              = 293.15
+
+surface.follow_mask   = 1
+energy_ledger.enabled = 1
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# Mechanics inert: local_thermoelastic stress source needs no global solve.
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+
+solver = explicit

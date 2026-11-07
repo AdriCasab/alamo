@@ -1,141 +1,158 @@
 <!-- INDEX:BEGIN  regenerate: python3 docs/project/tools/archive_index.py -->
 # Archive index
 
-118 completed-step records + 10 roadmap snapshots. Line numbers are exact as of the last
+126 completed-step records + 10 roadmap snapshots. Line numbers are exact as of the last
 regeneration and are verified by the generator; re-run it after any append.
-(154 sub-headings inside records -- Goal, Guardrails, Commands, takeaways,
+(161 sub-headings inside records -- Goal, Guardrails, Commands, takeaways,
 review findings -- are deliberately not indexed; find them inside their record.)
 
-- L196: Step 1 - Skeleton Integrator And Build Registration
-- L208: Step 2 - Enthalpy Heat Formulation
-- L222: Step 3 - MMW Beam Source
-- L233: Step 4 - Surface Losses
-- L244: Step 4b - Zhang/Oglesby Granite Heating Validation
-- L269: Step 5 - Voronoi Microstructure With Mineral Phases
-- L314: Step 6 - Heterogeneous And Damage-Modified Conductivity
-- L358: Step 6b - H/T Consistency For Heterogeneous Microstructure
-- L398: Step 6c - Grain Topology Correction
-- L441: Step 6d - Hu Prescribed-Surface-Temperature Conduction
-- L497: Step 7 - Heterogeneous Thermoelastic Mechanics
-- L555: Step 7b - Hu Thermoelastic Stress Validation, Single-Level
-- L630: Step 7c - Early AMR Correctness For Microstructure Regrid
-- L679: Step 7d - Hu Thermoelastic Stress Validation With AMR
-- L748: Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution
-- L819: Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution
-- L893: Step 9 - Grain-Boundary Cohesive-Zone Unit Test
-- L947: Step 10 - Surface Advancement And Spall Detachment
-- L1012: Step 11 - Vaporisation Removal And Unified RoP
-- L1080: Step 11b - Hu LRST And Onset-Spallation With DP Damage
-- L1155: Step 12 - Spallation-Model Toggle + Sp Onset Criterion
-- L1336: Step 14 - Hu Flame-Jet End-to-End Validation (damage_law)
-- L1417: Step 14b - Damage-Law Spall Sampling Knob
-- L1491: Step 15a - Convective Robin Surface-Patch BC
-- L1580: Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling
-- L1695: Step 15b - Kant Onset Validation (sp_kant_onset)
-- L1784: Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring)
-- L1908: Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b)
-- L2010: Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh)
-- L2117: Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope
-- L2157: Step 16d - T-derived σ_xx with prescribed-T face BC (option (a))
-- L2267: Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half)
-- L2390: Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact)
-- L2545: Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5)
-- L2650: Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate)
-- L2718: Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed)
-- L2771: P1 — Melt-aware spallation (completed, review-accepted)
-- L2838: P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15)
-- L2861: E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted)
-- L3292: S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted)
-- L3859: A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (comp...
-- L4422: C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted)
-- L5011: D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, ...
-- L5650: D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (complete...
-- L6390: D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted)
-- L7335: D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted)
-- L8300: D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh che...
-- L8974: D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed)
-- L9615: D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-a...
-- L10111: D2e — retroactive review (2026-09-19; attaches to the D2e entry above)
-- L10216: D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-acce...
-- L10529: D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet)
-- L10566: D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED)
-- L10646: D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same...
-- L10698: D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet)
-- L10766: D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier ...
-- L10859: D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered ...
-- L10934: D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported a...
-- L11012: D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accept...
-- L11229: D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by ...
-- L11387: D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise r...
-- L11498: D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by a...
-- L11609: D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, revi...
-- L11707: D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberat...
-- L11794: D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted)
-- L11939: D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23)
-- L12061: D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23)
-- L12145: D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23)
-- L12218: D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES)
-- L12401: D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES)
-- L12503: D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by d...
-- L12600: D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — pla...
-- L12684: D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, revi...
-- L12820: D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24)
-- L12909: D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code)
-- L12973: D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code)
-- L13042: D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held)
-- L13103: D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted)
-- L13269: P4 REFUTED, in the informative direction
-- L13469: P3a REFUTED — the planner's crater-wall assumption
-- L13634: P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF
-- L13667: P7 CONFIRMED — `PD` jammed, and it was pre-registered
-- L14061: P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accep...
-- L14191: P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01
-- L14335: P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid ...
-- L14450: P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the...
-- L14538: P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both sh...
-- L14624: ROADMAP `## Current Status` as it stood on 2026-10-02, before the collapse
-- L15661: ROADMAP `Active step:` region — the 14 COMPLETED blocks that had accumulated there, 2026-10-02
-- L15924: P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate ...
-- L16157: P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mec...
-- L16456: P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-...
-- L16673: ROADMAP `Next milestones` block as it stood before P1g-1 — collapsed 2026-10-03
-- L17171: ROADMAP `Known Stale/Important Notes` as it stood before P1g-1 — compressed 2026-10-03
-- L17968: P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEE...
-- L18239: P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real...
-- L18497: P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics f...
-- L18558: P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the...
-- L18639: P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the th...
-- L18706: P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06)
-- L18851: P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limit...
-- L18949: ROADMAP notes released 2026-10-07 — superseded by P2-1 and P2-2
-- L19003: P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, r...
-- L19107: P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complet...
-- L19170: P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not valid...
-- L19275: P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the ro...
-- L19641: ROADMAP notes released 2026-10-13 — superseded by P2-2f (feet descent) and P2-3
-- L19663: P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by rev...
-- L20076: P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archi...
-- L20482: P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found...
-- L20982: P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; ...
-- L21585: P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at t...
-- L21987: P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maxi...
-- L22382: P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (20...
-- L22833: P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built...
-- L23220: P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (...
-- L23758: ROADMAP notes released 2026-10-28 — superseded by P2-10 (the code they describe is deleted) and the new pla...
-- L23783: P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-...
-- L24196: ROADMAP notes released 2026-10-28 (b) — plan of record superseded at P2-11 planning
-- L24205: P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by ...
-- L24468: P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the b...
-- L24861: P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at ...
-- L24885: ROADMAP notes released 2026-10-30 — the 2026-10-28 plan of record, superseded by the 2026-10-30 plan
-- L24892: P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the produ...
-- L25290: ROADMAP notes released 2026-11-02 — the property-table clamp bullet (replaced by standing rule 18)
-- L25306: P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port...
-- L25800: P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both ...
-- L26286: P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, bu...
+- L213: Step 1 - Skeleton Integrator And Build Registration
+- L225: Step 2 - Enthalpy Heat Formulation
+- L239: Step 3 - MMW Beam Source
+- L250: Step 4 - Surface Losses
+- L261: Step 4b - Zhang/Oglesby Granite Heating Validation
+- L286: Step 5 - Voronoi Microstructure With Mineral Phases
+- L331: Step 6 - Heterogeneous And Damage-Modified Conductivity
+- L375: Step 6b - H/T Consistency For Heterogeneous Microstructure
+- L415: Step 6c - Grain Topology Correction
+- L458: Step 6d - Hu Prescribed-Surface-Temperature Conduction
+- L514: Step 7 - Heterogeneous Thermoelastic Mechanics
+- L572: Step 7b - Hu Thermoelastic Stress Validation, Single-Level
+- L647: Step 7c - Early AMR Correctness For Microstructure Regrid
+- L696: Step 7d - Hu Thermoelastic Stress Validation With AMR
+- L765: Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution
+- L836: Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution
+- L910: Step 9 - Grain-Boundary Cohesive-Zone Unit Test
+- L964: Step 10 - Surface Advancement And Spall Detachment
+- L1029: Step 11 - Vaporisation Removal And Unified RoP
+- L1097: Step 11b - Hu LRST And Onset-Spallation With DP Damage
+- L1172: Step 12 - Spallation-Model Toggle + Sp Onset Criterion
+- L1353: Step 14 - Hu Flame-Jet End-to-End Validation (damage_law)
+- L1434: Step 14b - Damage-Law Spall Sampling Knob
+- L1508: Step 15a - Convective Robin Surface-Patch BC
+- L1597: Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling
+- L1712: Step 15b - Kant Onset Validation (sp_kant_onset)
+- L1801: Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring)
+- L1925: Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b)
+- L2027: Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh)
+- L2134: Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope
+- L2174: Step 16d - T-derived σ_xx with prescribed-T face BC (option (a))
+- L2284: Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half)
+- L2407: Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact)
+- L2562: Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5)
+- L2667: Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate)
+- L2735: Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed)
+- L2788: P1 — Melt-aware spallation (completed, review-accepted)
+- L2855: P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15)
+- L2878: E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted)
+- L3309: S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted)
+- L3876: A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (comp...
+- L4439: C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted)
+- L5028: D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, ...
+- L5667: D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (complete...
+- L6407: D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted)
+- L7352: D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted)
+- L8317: D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh che...
+- L8991: D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed)
+- L9632: D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-a...
+- L10128: D2e — retroactive review (2026-09-19; attaches to the D2e entry above)
+- L10233: D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-acce...
+- L10546: D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet)
+- L10583: D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED)
+- L10663: D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same...
+- L10715: D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet)
+- L10783: D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier ...
+- L10876: D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered ...
+- L10951: D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported a...
+- L11029: D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accept...
+- L11246: D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by ...
+- L11404: D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise r...
+- L11515: D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by a...
+- L11626: D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, revi...
+- L11724: D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberat...
+- L11811: D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted)
+- L11956: D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23)
+- L12078: D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23)
+- L12162: D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23)
+- L12235: D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES)
+- L12418: D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES)
+- L12520: D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by d...
+- L12617: D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — pla...
+- L12701: D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, revi...
+- L12837: D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24)
+- L12926: D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code)
+- L12990: D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code)
+- L13059: D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held)
+- L13120: D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted)
+- L13286: P4 REFUTED, in the informative direction
+- L13486: P3a REFUTED — the planner's crater-wall assumption
+- L13651: P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF
+- L13684: P7 CONFIRMED — `PD` jammed, and it was pre-registered
+- L14078: P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accep...
+- L14208: P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01
+- L14352: P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid ...
+- L14467: P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the...
+- L14555: P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both sh...
+- L14641: ROADMAP `## Current Status` as it stood on 2026-10-02, before the collapse
+- L15678: ROADMAP `Active step:` region — the 14 COMPLETED blocks that had accumulated there, 2026-10-02
+- L15941: P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate ...
+- L16174: P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mec...
+- L16473: P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-...
+- L16690: ROADMAP `Next milestones` block as it stood before P1g-1 — collapsed 2026-10-03
+- L17188: ROADMAP `Known Stale/Important Notes` as it stood before P1g-1 — compressed 2026-10-03
+- L17985: P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEE...
+- L18256: P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real...
+- L18514: P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics f...
+- L18575: P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the...
+- L18656: P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the th...
+- L18723: P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06)
+- L18868: P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limit...
+- L18966: ROADMAP notes released 2026-10-07 — superseded by P2-1 and P2-2
+- L19020: P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, r...
+- L19124: P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complet...
+- L19187: P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not valid...
+- L19292: P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the ro...
+- L19658: ROADMAP notes released 2026-10-13 — superseded by P2-2f (feet descent) and P2-3
+- L19680: P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by rev...
+- L20093: P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archi...
+- L20499: P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found...
+- L20999: P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; ...
+- L21602: P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at t...
+- L22004: P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maxi...
+- L22399: P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (20...
+- L22850: P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built...
+- L23237: P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (...
+- L23775: ROADMAP notes released 2026-10-28 — superseded by P2-10 (the code they describe is deleted) and the new pla...
+- L23800: P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-...
+- L24213: ROADMAP notes released 2026-10-28 (b) — plan of record superseded at P2-11 planning
+- L24222: P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by ...
+- L24485: P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the b...
+- L24878: P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at ...
+- L24902: ROADMAP notes released 2026-10-30 — the 2026-10-28 plan of record, superseded by the 2026-10-30 plan
+- L24909: P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the produ...
+- L25307: ROADMAP notes released 2026-11-02 — the property-table clamp bullet (replaced by standing rule 18)
+- L25323: P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port...
+- L25817: P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both ...
+- L26303: P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, bu...
+- L26733: P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder (2026-1...
+- L27507: P2-19 — The flake depth from the line's own profile: the fallback reads the e-fold depth, the no-skin refus...
+- L28022: P2-20 — Beam deposition from one dielectric description: permittivity declared once, absorption and reflect...
+- L28578: P2-21 — Temperature-dependent loss as a rock property, with the optical-depth sum: Hartlieb's measured shap...
+- L29147: P2-22 — The in-rock beam spread (Rayleigh range n·z_R inside the dielectric) and test #19 at its true spot ...
+- L29282: P2-23 — The beam port: the face list runs without a flame, test #19 on the production rock, and the no-thin...
+- L29841: P2-24 — Melt and vapour on the enthalpy path: latent heat on the production rock, the melt's absorption and...
+- L30467: P2-25 — The regime check: spall or melt under a beam, over deposition depth and net flux, from the validate...
 
 <!-- INDEX:END -->
+
+
+
+
+
+
+
+
+
 
 
 
@@ -26711,3 +26728,4304 @@ records. SR 1 (the span/`c_f` coupling still declared), SR 8, SR 9 (DR-9) and SR
 unquotable number is quoted:** c0b is labelled one-sided and non-discriminating, c1 is labelled
 sensitivity rather than evidence, R1's Grimsel span is given with its UCS band, and the twin's
 842.389 K is corrected against the packet's mis-cited 843.757 K.
+
+
+## P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder (2026-11-03, ACCEPTED by review 2026-11-03; archived 2026-11-05)
+
+**Status:** ACCEPTED by review; all six gating rows (z0, a1–a5) reproduce from the reviewer's own reductions; no
+diff-review row tagged `bug` (22 rows: 0 bug, 6 risk, 6 nit, 10 ok). No `src/` change; binary `38c8623885c5b8b6`.
+Study `tests/MMWSpalling/studies/p2_17_buckle_on/` (`RESULTS.txt`, `Z0–Z2`, `A1–A5`, 20 legs, 4.9 GB).
+
+### What the step established
+- **B is ON in production:** `spall.buckle_span = 0.012` lives in `rock_grimsel.inputs` (one span for both Kant
+  granites; 13.2 mm ∝ 1/UCS runs as the alternative). The onset-calibration deck keeps B off by a declared override
+  (`# check_shared: allow spall.buckle_span` + `spall.buckle_span = 0.0` after the FILE lines; `check_shared.py`
+  gained the directive, two-sided in z0). CAL1 reproduces P2-16's CAL byte for byte (a1).
+- **The 1.5 mm flake cap is DEAD as a bound under B** (e0: Σ `fr_cap` = 0 and event-log bit 16 = 0 on all 12 N/A legs;
+  positive control 1–3 cap events on O_S070–O_S100): B and the cap act on the same normal flake μ·c_f·ℓ, and the cap can
+  bind a passing line only above T_s*(L) = 1272.7 K at 12.0 mm (z1). It stays at 0.0015 as each line's gather/remap
+  WINDOW (a NUM role; switching it off is not a no-op).
+- **⚠⚠ DR-6 — the production form removes NOTHING on the deck the onset was calibrated on:** the declared span needs
+  q_net,min **0.432 MW/m²** (h_min 535.5 W/m²K) and the onset deck delivers 0.401 (z2). The onset level and the span
+  are resolved on mutually exclusive configurations by construction; 0.432 MW/m² is the production form's sharpest
+  untested prediction for Grimsel (13.2 mm would give 0.391, below h 500).
+- **Höser uptake ladder (19 legs × 30 s):** S*(O) 0.0994, S*(N) 0.1014, S*(A) 0.1003; S*(N)/S*(O) **1.019** —
+  B trims the ~10× uptake gap by 2 % (branch (b), robust to the estimator: 1.018–1.019 on matched brackets).
+  Blocked fraction is EVALUATION-weighted (79 % at S 0.10) while removals lost are 2.9 % (per firing N/O 0.971).
+- **⚠⚠ B is NOT a pure withdrawal on a drilling deck:** N/O = 1.0028 at S 0.20 — withdrawals reshape the face and
+  later firings elsewhere outnumber them. P2-15 DR-3's "pure withdrawal" holds on a FLAT deck only.
+- **Flux exponent** n(N) 2.05 ≥ n(O) 1.83 (matched brackets +0.15 / +0.46); isotropy spread N − O +0.038 (< 0.05).
+- Harness lesson (a3): a truncated run is compared by STEP INDEX (start < stop − dt/2), never by `time ≤ stop`.
+
+### Carry-forwards (review)
+1. **DR-6 (row 20):** state which measured minimum flux the production form's 0.432 MW/m² is held to.
+2. **Row 3:** the cap's "DEAD" claim is rock-dependent and sits in the rock-independent form file; move it or its condition.
+3. **Row 17:** qualify "B is a pure withdrawal" to flat decks before reuse.
+4. **Row 18:** `unit/face_list/input` and `unit/face_removal/input` are generated from the shared files and are stale
+   with respect to them (regenerating switches B on in both).
+5. **Row 12:** e0 should read `bk_span` from the thermo/metadata instead of a module constant.
+
+### Superseded 2026-11-05 (advisor, before this record was written)
+P2-18 (`studies/p2_18_prereq/`, no packet) built the face-list gate, moved the shared helpers to `Shared.H`,
+deleted six dead keys and cleaned 602 default lines from 91 decks; the relief diagnostic (`studies/relief_diag/`)
+showed R = 0.531 is not geometry; the design note `docs/project/DESIGN_2026-11-05_onset_and_thickness.md`
+records why the flake thickness keeps its fraction c_f (a parameter-free thickness deletes the minimum flux).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-05)
+
+Active step:/{g=0} !g{n++} END{print n}' ROADMAP.md`);
+`Active step:` + `Next milestones` ≤ 100 lines (58 on 2026-10-28); standing rules 10–20 bullets (raised 2026-10-12); notes
+≤ 40 × 3 lines; total alarm **600**. ⚠ Release rule exercised 2026-10-07 — 11 notes bullets
+plus `## Context Files` (which duplicated `CLAUDE.md`'s own list) went to `ARCHIVE_DONE.md`
+**verbatim** first, heading *"ROADMAP notes released 2026-10-07"*, and the index and status
+list were regenerated in the same pass.
+
+## Standing rules
+
+⚠⚠ **Programme invariants, NEVER archived. Hard cap: 20 bullets** (raised 15 -> 20 by the user
+2026-10-12). These are not step
+caveats — they are traps that will fire again on steps not yet named, so the release rule
+governing `## Known Stale/Important Notes` does not apply to them. ⚠ If this block needs a
+**21st** bullet, one of these has stopped being an invariant; retire it explicitly.
+
+1. ⚠⚠ **A FLAW SIZE AND THE DRIVE IT WAS FITTED AGAINST ARE ONE CALIBRATION, AND SEPARATING THEM
+   IS SILENT.** Three instances: the 80 µm refit alone multiplies the column rate by **2.46×**;
+   `spall.support_rule`'s 80 µm fired **240 K early** against full stress (retired, P2-2a); and the
+   Kant harness carried a **×10** refit for a whole campaign, reading **520.68 K** once its partner
+   was deleted. ⚠ `differential` is **gone** — the rule is about the *pairing*, not that form. Any
+   step changing the drive must **refit the flaw against Kant in the same step**, and ⚠⚠ **only a
+   run can retire a key: ALAMO does not abort on an unused top-level key.**
+2. ⚠⚠ **Never score hole diameter at 100 mm depth** — that is the pause underream (Meier
+   p. 223). The calibrated section is **150–450 mm**.
+3. ⚠⚠ **Quarter domain.** Event-log volumes are one quadrant; **×4** for any Meier volume.
+   ⚠⚠ **But a RATIO of two quadrant quantities needs BOTH sides scaled or NEITHER.** P2-2f rev 1
+   scaled the volume and not the energy and read the price **0.309** instead of **1.237 GJ/m³** —
+   a 4x error produced by obeying the first sentence alone.
+4. ⚠⚠ **The event log's `k_top` is the top BEFORE that removal.** The current top is
+   `k_top − n_voided`. Reading it as the post-removal state makes recently-fired columns
+   read one cell too tall, and has already made a published figure wrong.
+5. ⚠⚠ **THE LZ TRAP: imported analyzers hard-code `LZ = 0.4` at module level** and will
+   silently mis-reduce a run on a different domain height. Check it in any reduction that
+   imports an older analyzer.
+6. ⚠⚠ **`surface_patch.nozzle_collision_radius` defaults to `radius` = 0.2 m under
+   `prescribed`** — effectively no guard. Set it explicitly on any prescribed-feed leg.
+7. ⚠⚠ **READING A LOGGED OUTPUT: FOUR TRAPS, and the planner walked into (i) and (ii) this week.**
+   (i) **NEVER SUM ANY per-step `thermo` column for a total.** `amr.thermo.plot_int` is **not 1** —
+   it is **6** on the Meier legs — so a sum under-counts by that factor. Integrate from the **event
+   log**, or read a **state** variable (a cumulative column). Recover the factor from the log when
+   in doubt: `sum(lat_bank) x 6.03 = 39,795 firings`. This put a 15.2 % leak at 92 % and produced an
+   inferred second bug that did not exist (10-06 §11). ⚠⚠ **And establish the column's KIND before
+   reading it at all — the two errors are OPPOSITES.** `lat_bank_hf` is **per-step** and was read
+   at its FINAL value, making a wall charge identically **zero**; `foot_mech_vol` is **cumulative**
+   and was **summed**. Obeying "never sum" alone produces the first (P2-2f rev 1, instances 3 and 4).
+   (ii) **CHECK WHETHER THE QUANTITY IS DIMENSIONLESS.** `ledger_err_solid` is divided by
+   `ledger_E_src` (`MMWSpalling.H:4587`), so 9e-3 is **not** 9 mJ — it was **7.6 kJ, 0.89 % of the
+   budget**. And a *constant relative* error over a *linearly growing* source **is** a steady leak,
+   so "it saturates" inverts (10-06 §10).
+   (iii) **The event log stamps a step's START and `thermo` its END**, so matching the two by equal
+   timestamp pairs unrelated steps. Aggregates are unaffected; per-step labelling needs a one-step
+   offset.
+   (iv) **`thermo.dat` is written with `%g` — six significant digits.** Compare the **printed**
+   value, not a recomputed one, or a pass turns red on formatting alone.
+8. ⚠⚠ **A NUMBER IS BACKED ONLY IF BOTH THE FILE IT WAS READ FROM AND THE CODE THAT REDUCED
+   IT ARE IN THE REPOSITORY.** A scratchpad log is working material; a **cited** artefact is
+   evidence. P1g-0b cited three files that were never committed — seven citations resolving
+   to nothing — and that is how a hard-coded `T_gas` = 1200 K against a logged 1604–1634 K
+   survived into two interpretations and reversed a conclusion.
+   ⚠⚠ **A LEG'S `argv` IS PART OF ITS PROVENANCE, NOT ONLY ITS BINARY HASH.** `PROVENANCE.txt`
+   carries hashes and compilation stamps; `metadata` is a *resolved* dump including every
+   default, so rebuilding a command line from it is **reconstruction, not replay**. P1g-2c's
+   `(c1b)` was unscoreable for exactly this, and Leg B was unattributable in P1g-2b. ⇒ **record
+   the argv beside the hash, or the comparison is not available later.**
+9. ⚠ **RE-VALIDATING AN ANCHOR: archive first, then re-run — never `--check`.** `--check`
+   re-reduces output written by the **old** binary, so it cannot validate a source change;
+   re-run the cheapest leg and compare **bytes**. And archive the output directory first
+   whenever a harness `rmtree`s its own legs and their hashes live in an earlier manifest —
+   the toolchain is **not byte-reproducible**, so that provenance is otherwise
+   unrecoverable, and never `rm` what a manifest cites.
+10. ⚠⚠ **A Meier number is quotable only from a leg that passed its own gates and whose
+    results file says so.** Nothing else is quotable, however often it is repeated. And a
+    bore is reported **per azimuth sector**, never as a single diameter — the maximum
+    radius over all azimuths picks the grid diagonal, which produced one retracted claim.
+    *(Which legs currently qualify is a step caveat and lives in the notes, not here.)*
+11. ⚠ **Every long leg under `caffeinate -dis`.** Runs are not checkpointed; host sleep
+    loses them. Harnesses assert it themselves.
+12. **[standing INSTRUCTION, not a trap — kept here for visibility]** Parked at the
+    user's instruction: AMR, the third mesh, the 1 mm run. Remove when they un-park it.
+13. ⚠⚠ **THE ROCK IS GRAIN-FREE IN EVERY INPUT.** `is_grain_boundary` reads 0 on all cells
+    (1,080,000 checked), so `weibull.a0_gb` is **never drawn** and the max flaw anywhere is
+    **8.99 µm**. The 8 µm calibration was made on this same rock, so the threshold is
+    self-consistent — nothing is firing 170 K too hot. ⚠ **No packet may claim
+    grain-boundary flaws lead the firing**, and enabling Voronoi multiplies the drive by
+    **√5 = 2.24×** and reopens `a0` together with the drive fraction (rule 1).
+14. ⚠⚠ **ONE CRITERION, ONE KERNEL — AND A COMMENT IS NOT A BAR.** Three times now a decision
+    site has disagreed with the flux site it is supposed to mirror, each documented in a nearby
+    comment and each shipped anyway: **Pa vs MPa** (`K_Ic` unconverted), **the Newton length**
+    (`d_n` vs `DX[0]`), **the coefficient cap** (unconditional vs conditional). ⚠ When a quantity
+    has several consumers, the bar is a **source assertion that they resolve it identically**,
+    with every by-configuration equality **named and its condition stated**.
+    ⚠⚠ **AND CHECKING THE SITE YOU WERE POINTED AT IS NOT CHECKING THE CLAIM.** 2026-10-07: the
+    planner wrote "`weibull.m` is inert, and `MMWSpalling.H:8379` proves it". The implementer
+    checked that line, confirmed the volume factor is exactly 1 — and inherited the conclusion.
+    But `m` appears **twice** on that line, and the second use (`(-log u)^(1/m)`, the draw's own
+    shape) does **not** cancel, so `m` had always set the flaw scatter. The pointer was right and
+    the claim was false. ⇒ **resolve the claim against the code, not the citation.**
+15. ⚠⚠ **A QUANTITY BOUNDED BY THE MECHANISM'S OWN ACTION CANNOT BE ITS DISCRIMINATOR.**
+    `lat_Tface_max` is pinned at the firing threshold on any leg that fires, because removal
+    consumes every face above it — so a window drawn around it passed by **1.8 K** on a
+    window that had itself moved **1,253 K**. Before writing a bar, ask whether the
+    mechanism's action bounds the quantity.
+16. ⚠⚠ **A PER-LOCATION VALUE THAT IS ZERO IN A PATTERN IS A DECOMPOSITION SIGNATURE BEFORE
+    IT IS PHYSICS.** `ell_q` read zero on every scored onset and both a reviewer and the
+    planner diagnosed a mechanism for it — one inventing a "needs recession first" rule not
+    in the source. It was positive **iff `col_j <= 11` AND `k_top <= 11`**, 100.00 % of rows
+    over four legs: rank 0's box, because the log vector was the one of seven not in the
+    `ReduceRealSum` block. Physics cannot depend on the **y index**. Check whether the
+    pattern matches the domain split before reasoning about cause. *(Two findings in three
+    days; log 2026-10-12.)*
+17. ⚠⚠ **BEFORE A NUMBER BECOMES A TARGET, STATE WHAT ITS COLUMN PHYSICALLY MEASURES.** Two
+    misattributions in five revisions of one packet: `0.229/0.306` was quoted as *"Kant
+    MEASURED"* but is **Wilkinson's**, on **Barre/Westerly**, already the output of a Weibull
+    fit — and its citation `[258]` resolved **past the end** of a 151-line file. The planner
+    then replaced it with a fit to `theta_s,sens`, which is a **calibration sensor plate that
+    replaced the rock** — in the very session that caught the first. ⚠ A citation that cannot
+    be opened is not a source, and a suffix (`_sens`) is often the only warning.
+    ⚠ Third instance (P2-3, 2026-10-13): the SAME table's `h_fl` was then used as "the measured
+    coefficient" of Meier's flame — it is a 3–10 kW threshold burner's ("where at least a single
+    spall could be detected", Kant 2016 §1.1); the drilling flame was measured by Höser (7.1 kW/m²K).
+
+18. ⚠⚠ **THE GRIMSEL PROPERTY TABLES STOP AT 873.15 K** and repeat their last value above it, and **about a fifth of
+    every calibrating population fires above it** (P2-2f Meier 22.6 %, G1 20.1 %, P2-13 CAL 20.7 %). Report the share
+    beside any level a step sets; an offline port moved the mean firing T only ~1 K (parked by the user 2026-10-13;
+    the full note: `ARCHIVE_DONE.md` *"ROADMAP notes released 2026-11-02"*).
+19. ⚠⚠ **"FIRST FIRING" MUST NAME ITS DIRECTION FILTER.** First top-face (dir 5) and first in any direction differ by
+    **7.5 K** on a drilling deck (84 % of G1's columns are first hit from the side, a weakest-of-several selection)
+    and not at all on a flat deck (P2-13 DR-2). A packet's refuting-evidence line once compared the two.
+
+20. ⚠⚠ **NAME THE μ: ALONG-LINE OR NORMAL.** On the face list a line runs along a grid axis; its lengths are
+    along-line, and a material length (d, a flake thickness, a span) is NORMAL, so the two differ by μ = n·e\*. Twice
+    in a row a packet compared them without the μ (P2-14a d/μ, P2-15 x = μ·c_f·ℓ_eff). Every packet row that compares a
+    length with a material property states which kind each side is.
+
+⚠ **Seeded 2026-10-02 during the mechanical document pass**, from invariants already in
+daily use plus two (5 and 6) that lost prominence in the `Current Status` collapse. The
+full triage of the 339-bullet notes section is the **two-reader pass** and is NOT done.
+
+## Current Status
+
+Completed and passing — **one bullet per archive record**, generated so two different
+steps can never be merged under a shared label.
+⚠ Regenerate with `python3 docs/project/tools/roadmap_status.py` after any archive
+  append, and run `archive_index.py` first so the line numbers agree.
+
+- Step 1 - Skeleton Integrator And Build Registration — `ARCHIVE_DONE.md` L196
+- Step 2 - Enthalpy Heat Formulation — `ARCHIVE_DONE.md` L208
+- Step 3 - MMW Beam Source — `ARCHIVE_DONE.md` L222
+- Step 4 - Surface Losses — `ARCHIVE_DONE.md` L233
+- Step 4b - Zhang/Oglesby Granite Heating Validation — `ARCHIVE_DONE.md` L244
+- Step 5 - Voronoi Microstructure With Mineral Phases — `ARCHIVE_DONE.md` L269
+- Step 6 - Heterogeneous And Damage-Modified Conductivity — `ARCHIVE_DONE.md` L314
+- Step 6b - H/T Consistency For Heterogeneous Microstructure — `ARCHIVE_DONE.md` L358
+- Step 6c - Grain Topology Correction — `ARCHIVE_DONE.md` L398
+- Step 6d - Hu Prescribed-Surface-Temperature Conduction — `ARCHIVE_DONE.md` L441
+- Step 7 - Heterogeneous Thermoelastic Mechanics — `ARCHIVE_DONE.md` L497
+- Step 7b - Hu Thermoelastic Stress Validation, Single-Level — `ARCHIVE_DONE.md` L555
+- Step 7c - Early AMR Correctness For Microstructure Regrid — `ARCHIVE_DONE.md` L630
+- Step 7d - Hu Thermoelastic Stress Validation With AMR — `ARCHIVE_DONE.md` L679
+- Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution — `ARCHIVE_DONE.md` L748
+- Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution — `ARCHIVE_DONE.md` L819
+- Step 9 - Grain-Boundary Cohesive-Zone Unit Test — `ARCHIVE_DONE.md` L893
+- Step 10 - Surface Advancement And Spall Detachment — `ARCHIVE_DONE.md` L947
+- Step 11 - Vaporisation Removal And Unified RoP — `ARCHIVE_DONE.md` L1012
+- Step 11b - Hu LRST And Onset-Spallation With DP Damage — `ARCHIVE_DONE.md` L1080
+- Step 12 - Spallation-Model Toggle + Sp Onset Criterion — `ARCHIVE_DONE.md` L1155
+- Step 14 - Hu Flame-Jet End-to-End Validation (damage_law) — `ARCHIVE_DONE.md` L1336
+- Step 14b - Damage-Law Spall Sampling Knob — `ARCHIVE_DONE.md` L1417
+- Step 15a - Convective Robin Surface-Patch BC — `ARCHIVE_DONE.md` L1491
+- Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling — `ARCHIVE_DONE.md` L1580
+- Step 15b - Kant Onset Validation (sp_kant_onset) — `ARCHIVE_DONE.md` L1695
+- Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring) — `ARCHIVE_DONE.md` L1784
+- Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b) — `ARCHIVE_DONE.md` L1908
+- Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh) — `ARCHIVE_DONE.md` L2010
+- Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope — `ARCHIVE_DONE.md` L2117
+- Step 16d - T-derived σ_xx with prescribed-T face BC (option (a)) — `ARCHIVE_DONE.md` L2157
+- Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half) — `ARCHIVE_DONE.md` L2267
+- Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact) — `ARCHIVE_DONE.md` L2390
+- Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5) — `ARCHIVE_DONE.md` L2545
+- Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate) — `ARCHIVE_DONE.md` L2650
+- Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed) — `ARCHIVE_DONE.md` L2718
+- P1 — Melt-aware spallation (completed, review-accepted) — `ARCHIVE_DONE.md` L2771
+- P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15) — `ARCHIVE_DONE.md` L2838
+- E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted) — `ARCHIVE_DONE.md` L2861
+- S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted) — `ARCHIVE_DONE.md` L3292
+- A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (completed, review-accepted) — `ARCHIVE_DONE.md` L3859
+- C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted) — `ARCHIVE_DONE.md` L4422
+- D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, review-accepted) — `ARCHIVE_DONE.md` L5011
+- D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (completed, review-accepted) — `ARCHIVE_DONE.md` L5650
+- D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted) — `ARCHIVE_DONE.md` L6390
+- D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted) — `ARCHIVE_DONE.md` L7335
+- D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh check (completed, review-accepted) — `ARCHIVE_DONE.md` L8300
+- D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed) — `ARCHIVE_DONE.md` L8974
+- D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-accepted) — `ARCHIVE_DONE.md` L9615
+- D2e — retroactive review (2026-09-19; attaches to the D2e entry above) — `ARCHIVE_DONE.md` L10111
+- D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-accepted; GATE FAILED) — `ARCHIVE_DONE.md` L10216
+- D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet) — `ARCHIVE_DONE.md` L10529
+- D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED) — `ARCHIVE_DONE.md` L10566
+- D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same evening by D2j-0b) — `ARCHIVE_DONE.md` L10646
+- D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet) — `ARCHIVE_DONE.md` L10698
+- D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier gate FAIL and inconclusive) — `ARCHIVE_DONE.md` L10766
+- D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered STOP, no code written) — `ARCHIVE_DONE.md` L10859
+- D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported as mixed) — `ARCHIVE_DONE.md` L10934
+- D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accepted; NEGATIVE, and the field had a defect found afterwards) — `ARCHIVE_DONE.md` L11012
+- D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by review as incomplete; Q1 FAILS; **closes the prescribed-field line**) — `ARCHIVE_DONE.md` L11229
+- D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise refuted, pre-registered fallback triggered) — `ARCHIVE_DONE.md` L11387
+- D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by arithmetic) — `ARCHIVE_DONE.md` L11498
+- D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, review-accepted; GATE PASSED 2639/2639) — `ARCHIVE_DONE.md` L11609
+- D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberately not launched) — `ARCHIVE_DONE.md` L11707
+- D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted) — `ARCHIVE_DONE.md` L11794
+- D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23) — `ARCHIVE_DONE.md` L11939
+- D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23) — `ARCHIVE_DONE.md` L12061
+- D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23) — `ARCHIVE_DONE.md` L12145
+- D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES) — `ARCHIVE_DONE.md` L12218
+- D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES) — `ARCHIVE_DONE.md` L12401
+- D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by data on disk) — `ARCHIVE_DONE.md` L12503
+- D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — planner error) — `ARCHIVE_DONE.md` L12600
+- D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, review-accepted) — `ARCHIVE_DONE.md` L12684
+- D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24) — `ARCHIVE_DONE.md` L12820
+- D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code) — `ARCHIVE_DONE.md` L12909
+- D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code) — `ARCHIVE_DONE.md` L12973
+- D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held) — `ARCHIVE_DONE.md` L13042
+- D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted) — `ARCHIVE_DONE.md` L13103
+- P4 REFUTED, in the informative direction — `ARCHIVE_DONE.md` L13269
+- P3a REFUTED — the planner's crater-wall assumption — `ARCHIVE_DONE.md` L13469
+- P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF — `ARCHIVE_DONE.md` L13634
+- P7 CONFIRMED — `PD` jammed, and it was pre-registered — `ARCHIVE_DONE.md` L13667
+- P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accepted 2026-09-30 — `ARCHIVE_DONE.md` L14061
+- P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01 — `ARCHIVE_DONE.md` L14191
+- P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid artefact** — `ARCHIVE_DONE.md` L14335
+- P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the cause was found and P1d is WITHDRAWN** — `ARCHIVE_DONE.md` L14450
+- P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both shape gates FAILED; the attribution then CONFIRMED by field diagnostic** — `ARCHIVE_DONE.md` L14538
+- P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate green; the mode is CORRECT and nearly INCONSEQUENTIAL in scope** — `ARCHIVE_DONE.md` L15924
+- P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mechanism CONFIRMED, deep deficit only PARTLY closed, and a SECOND mismatch found** — `ARCHIVE_DONE.md` L16157
+- P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-10-02, **ACCEPTED (revision 2); the third instance of one bug family closed, and (d1) REVERSED** — `ARCHIVE_DONE.md` L16456
+- P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEEPING; PHYSICALLY INERT — the recession RATE is identical to whole-cell** — `ARCHIVE_DONE.md` L17968
+- P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real and attributable — it delays the ONSET, and the long-run recession converges back toward whole-cell** — `ARCHIVE_DONE.md` L18239
+- P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics findings are reviewer-verified and load-bearing. Closure carried as ord 0 of P2-0** — `ARCHIVE_DONE.md` L18497
+- P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the premise was a duct law applied where the flow is a jet. ord 0 and ord 1 are KEPT; the source work was never built** — `ARCHIVE_DONE.md` L18558
+- P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the thermal leg; three measurements nobody had made, and the widening attributed to the right cause at last** — `ARCHIVE_DONE.md` L18639
+- P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06) — `ARCHIVE_DONE.md` L18706
+- P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limits (review-accepted 10-07) — `ARCHIVE_DONE.md` L18851
+- P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, rev 7, ACCEPTED — all 11 criteria PASS) — `ARCHIVE_DONE.md` L19003
+- P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complete, `(c2)` failed as a gate, ord 4 NEVER RUN and deferred) — `ARCHIVE_DONE.md` L19107
+- P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not validated, and four misattributed targets retired (2026-10-12, rev 6, ACCEPTED) — `ARCHIVE_DONE.md` L19170
+- P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the rock half, the residual is DELIVERY (2026-10-12, rev 2, ACCEPTED; archived 2026-10-13) — `ARCHIVE_DONE.md` L19275
+- P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by review on the `b3` gate — a physics negative with the mechanism measured; must-fixes carried into P2-4; archived 2026-10-13) — `ARCHIVE_DONE.md` L19663
+- P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archived 2026-10-14 with two advisor corrections carried) — `ARCHIVE_DONE.md` L20076
+- P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found offline at zero compute; revised as rev 2 the same day) — `ARCHIVE_DONE.md` L20482
+- P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; archived 2026-10-19) — `ARCHIVE_DONE.md` L20982
+- P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at the pads (2026-10-24, COMPLETED, NOT reviewed; archived 2026-10-24) — `ARCHIVE_DONE.md` L21585
+- P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maximum (2026-10-24, ACCEPTED by review 2026-10-25; archived 2026-10-26) — `ARCHIVE_DONE.md` L21987
+- P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (2026-10-26, rev 3, ACCEPTED by review 2026-10-26 — d2's negative PROVISIONAL; archived 2026-10-26) — `ARCHIVE_DONE.md` L22382
+- P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built, a2 i–v PASS, no long leg; archived 2026-10-27) — `ARCHIVE_DONE.md` L22833
+- P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (2026-10-27, rev 2.1, ACCEPTED by review 2026-10-27 — a5 a recorded FINDING; archived 2026-10-28) — `ARCHIVE_DONE.md` L23220
+- P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-28, ACCEPTED by review 2026-10-28 — a1 failed as written, exact on substance; archived 2026-10-28) — `ARCHIVE_DONE.md` L23783
+- P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by review 2026-10-29; archived 2026-10-29) — `ARCHIVE_DONE.md` L24205
+- P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the bounded check closes (2026-10-29, ACCEPTED by review 2026-10-29; archived 2026-10-30) — `ARCHIVE_DONE.md` L24468
+- P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at the user's instruction, no /implement; archived 2026-10-30) — `ARCHIVE_DONE.md` L24861
+- P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the production form; the constants stand (2026-10-31, ACCEPTED by review 2026-11-02; archived 2026-11-02) — `ARCHIVE_DONE.md` L24892
+- P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port is faithful; d = 2 mm puts a −122 K onset-vs-flux trend into the production form (2026-11-02, ACCEPTED by review 2026-11-02; archived 2026-11-02) — `ARCHIVE_DONE.md` L25306
+- P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both of Kant's rocks under a conductivity-only transfer (2026-11-02, ACCEPTED by review 2026-11-03; archived 2026-11-03) — `ARCHIVE_DONE.md` L25800
+- P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, but Kant's two granites cannot separate it from one span (2026-11-03, ACCEPTED by review 2026-11-03; archived 2026-11-03) — `ARCHIVE_DONE.md` L26286
+- D2z-2 — witness repair, derived conductance, Meier (COMPLETED 2026-09-28) — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+- D2aa — heat delivery under the burner body (COMPLETED 2026-09-28) — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+- D2ab — the face assignment and the gap-derived coefficient (COMPLETED — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+- D2ac — Meier at Meier's kinematics: THE FLOOR-FLUX EXCESS (COMPLETED — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+- D2ad — calibrate the floor flux on Fig. 8.8's standoff: THE WINDOW IS EMPTY — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+- P0 — a real surface temperature, and a mesh-independent anchor (COMPLETED — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+- D2s — WITHDRAWN BEFORE LAUNCH (2026-09-23); premise and arithmetic both — `ARCHIVE_DONE.md` L14624 (no record of its own; in the verbatim Current Status)
+
+Active step:
+- **P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder**
+  (`ACTIVE_STEP.md`; 2026-11-03; the form is settled before the merge slices, advisor's recommendation, user's /plan).
+  - Archived: P2-16 ACCEPTED (`ARCHIVE_DONE.md` *"P2-16"*): d retired; Kant's two granites cannot separate one span
+    from span ∝ 1/UCS (DR-1, onsets undetermined); on a flat deck B is a net-flux condition (L_req ≈ k/q_net).
+  - `spall.buckle_span = 0.012` goes into `rock_grimsel.inputs` (one span for both Kant granites; 13.2 mm, ∝ 1/UCS,
+    runs as the alternative). The onset deck keeps B off by a declared override (a `check_shared` directive).
+  - The 1.5 mm cap is dead as a bound under B (both act on μ·c_f·ℓ; crossover T_s* 1273 K at 12 mm), but it also
+    sets each line's gather/remap window, so it stays at 0.0015, relabelled; decoupling is a later src change.
+  - Höser face-list ladder (form × S, 19 legs of 30 s): does B move the uptake factor? Predicted S*(N)/S*(O) ≈ 1.05,
+    a trim of the gap, not a closure.
+
+### The P2-17 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder
+
+Status: **accepted by review** (2026-11-03; all six gating rows reproduce independently, no diff-review row tagged `bug`). ⚠⚠ The declared 12.0 mm span needs **0.432 MW/m²** and the onset deck delivers **0.401** ⇒ with B on, the deck the onset level was calibrated on removes NOTHING; the two calibrations are now resolved on different configurations by construction (declared onset-only; DR-6).
+
+### Context
+
+1. **P2-16 (accepted, archived)** retired the constraint depth. Kant's two granites cannot separate "one span for
+   all rocks" (R0) from "span ∝ 1/UCS" (R1): R1-over-R0 holds only if Bethel's onset equals Gotthard's (review
+   DR-1). Grimsel's span is 11.7–13.2 mm under either rule. On a flat deck buckling is a net-flux condition
+   (L_req ≈ const·μ·c_f·k/q_net).
+2. **The plan of record switches B on BEFORE the uptake factor is fitted** (user, 2026-11-03), so the factor is
+   calibrated on the final form once. The form is settled before the merge slices (Meier's feet → MMW), so they port
+   it once.
+3. **The declared span is 12.0 mm**: one span for both Kant granites, inside R0's window under both onset readings
+   (Δ 0: [11.992, 12.010) mm; Δ −30 K: [11.683, 12.010) mm). It is chosen on parsimony: P2-16's formal verdict
+   favoured R1 (Grimsel 13.20 mm), which is run here as the alternative span. The span is a rock property, so it goes
+   in `rock_grimsel.inputs`.
+4. **The 1.5 mm flake cap is dead as a flake bound under B.** Both act on the normal flake thickness μ·c_f·ℓ, and B
+   withdraws a line whose flake exceeds L/C_L(T_s) < 1.5 mm below a crossover T_s* (z1). ⚠ It is NOT a no-op to
+   switch off: the same value sets every line's gather and remap length (ledger L4). P2-17 keeps the value, proves the
+   bound inert with a counter, and relabels it. Decoupling the window is a later source change.
+5. **The calibration deck is onset-only** (P2-16): it keeps B off through a declared override.
+6. **The ladder asks whether B moves the uptake factor.** It runs the Höser face-list deck (P2-16 `HOS_R` = `input_lab`
+   + G1's argv) with the flame coefficient scaled by S. S is a study lever in argv only, never a model setting. It
+   compares the pre-P2-17 form, the production form and the alternative span against Höser's 0 MPa volume. The
+   direction is known in advance (B only removes firings, so S* can only rise); the size is the finding.
+
+Carry-forwards: P2-16 DR-4 → z2; DR-12 → the rock file's comment and the model card; DR-11 → no width bar here.
+
+### Sources (opened 2026-11-03)
+
+- **B:**
+  - `FaceRemoval.H:488` sets `bk_on = sp_buckle_span > 0`, and :607 evaluates it only for a fired line.
+  - :617–620 computes x = `L.mu * sp_flake_c_f * ell_eff` (through lines: `L.mu * L_av`).
+  - :315–325 gives `BuckleRatio` bk = C_L·x/L with C_L = π/√(6(1+ν)ε_th); B withdraws the line iff !(bk ≤ 1).
+- **The cap:**
+  - :505 `ReconFromX(…, spall_h_spall_max / L.mu, sp_flake_h_max / L.mu)`;
+  - fallback :536–538 `h_bnd = sp_flake_h_max / L.mu; if (h_bnd > 0 && hf > h_bnd)`;
+  - counter `fr_cap += 1` for a fired non-through line with `h_f_capped || h_f_bounded` (:704, thermo `fr_cap`).
+- **The cap's window role:**
+  - :368–380 `hcap = flake_h_max > 0 ? min(flake_h_max, h_spall_max) : h_spall_max`;
+  - `L.Dmax = ⌊h_spall_max/(μ dx)⌋`; `L.Lg = Dmax + 2 + ⌈hcap/(μ dx)⌉`;
+  - consumers of `L.Lg`: `o.run` (:497, logged), `L_av` (:695), `RecedeAlongLine(o.run, …)` remap (:716), the gather
+    (:438);
+  - `nprof = min(Dmax, run − 1)` (:552), so the depth scan itself does not depend on Lg.
+- **C_L(T_s)**, from `studies/p2_15_buckle/derive_span.py` `C_L()`: 12.75 / 12.26 / 10.26 / 9.23 at 850 / 873 / 1000 /
+  1100 K.
+- **On-disk firings** (event logs in `studies/p2_16_span_rule/legs/`):
+  - max T_surf: CAL 962.5 K (p99 913.9), HOS_R 1021.4 K (p99 919.0);
+  - normal flake μ·c_f·ℓ_eff on HOS_R: median 0.557, p99 0.681, max 0.926 mm;
+  - cap binding 0.00 % on both legs.
+- **Column-path what-if** (`studies/whatif_uptake/legs/*/run_removal_events.csv`; B off, cap 1.5). Flake c_f·ℓ
+  median / p90 in mm:
+
+  | S | median / p90 | capped |
+  |---|---|---|
+  | 0.15 | 0.66 / 0.85 | — |
+  | 0.10 | 0.84 / 1.04 | — |
+  | 0.087 | 0.91 / 1.12 | 4.1 % |
+  | 0.058 | 1.17 / 1.70 | 13.7 % |
+
+- **The heat scale** (`studies/p2_11_heat/run_p2_11.py` `h_expr(S)`):
+  - the G1 formula with leading constant C = S × 7272.3958, formatted `%.6f`;
+  - G1 = S 0.1636 (C 1189.763953, = HOS_R's);
+  - `SSTAR.txt`: G1_S14 (S 0.14) V(f) 30 s **24.922 cm³**; G1_S20 47.430 cm³;
+  - S* rule: log V vs log S between the bracketing legs;
+  - volume `reduce_p2_11.py` `fr_volume`: (cells − Σ fr_f)·dx²·dz·4 [cm³].
+- **Höser 0 MPa** (`validation/hoeser/hoeser_2016_drilling_series.csv`, row `load,38,8,7.9,0,30,7.4,26,5.12`; read off
+  Fig. 5.12 to ±5 % of axis span): 26 cm³/min ⇒ **13.0 cm³ at 30 s**.
+- **P2-16:**
+  - CAL (h 500) needs 12.84 mm at its earliest top firing (t 6.184 s, T_s 819.61 K);
+  - span-off CAL flux legs `studies/p2_14a_cref_face/legs/{C0_h150, CAL, C0_h1000, CAL_h2000}` need
+    49.4 / 12.84 / 6.50 / 3.61 mm;
+  - R1's Grimsel band is 10.30–17.77 mm.
+- **CAL deck keys:** `surface_patch.h_expr = 500.0`, `T_flame_expr = 1673.15`, `losses.T_amb = 293.15`,
+  `losses.h_conv = 10.0`; ε = 0.8 (rock file).
+- **AMReX `query` reads the LAST occurrence** (`ext/amrex/Src/Base/AMReX_ParmParse.cpp:1397`).
+- **`check_shared.py`:** (i) accepts a deck-set shared key only via `--allow` (:104–111); (ii) resolves an allowed key
+  to the deck's value (:117–119).
+- **Runtime readers of the shared files:** only `unit/face_heat/test` reads `input_lab` at run time (its argv sets
+  `spall.flake_h_max=0.0015`, no span). The other unit inputs are self-contained.
+
+### Goal
+
+1. **`validation/shared/rock_grimsel.inputs`:** a new block, "the buckling span (P2-15 condition B)", containing
+   `spall.buckle_span = 0.012`. Its comment carries:
+   - the class DERIVED-ON-KANT;
+   - "one span for both Kant granites", with both R0 windows from Context 3;
+   - the alternative 13.2 mm (∝ 1/UCS) and the band 10.30–17.77 mm;
+   - "⚠ one calibration with `spall.flake_c_f`: B sees only L/c_f (SR 1)";
+   - the minimum net flux from z2, and its side of h 500.
+2. **`validation/shared/model_form_flame.inputs`:**
+   - delete the `spall.buckle_span` line and its comment (moved to the rock file);
+   - keep `spall.flake_h_max = 0.0015`, with the comment rewritten: "DEAD as a flake bound under B (P2-17 e0); still
+     sets each line's gather/remap window (`FaceRemoval.H:368–380`): a NUM role, to decouple and retire with the
+     column path".
+3. **`validation/kant/grimsel_calibration/input`:**
+   - directly after the two FILE lines: `# check_shared: allow spall.buckle_span` and
+     `spall.buckle_span = 0.0   # ONSET-ONLY: B off by definition (P2-16); overrides the rock file`;
+   - the header's onset-only paragraph and `README.md` say the override is declared.
+4. **`validation/shared/check_shared.py`:** a deck line matching `^#\s*check_shared:\s*allow\s+(\S+)` adds that key to
+   `allow`. Read it by its own scan, since `parse()` strips comments. Update the docstring.
+5. **Study `tests/MMWSpalling/studies/p2_17_buckle_on/`:**
+   - `run.py` (the legs below; per leg: `argv.sh`, `ALLOW.txt`, `BINARY.txt`, `.done`);
+   - `offline.py` (z1, z2);
+   - `chk_directive.py` (z0);
+   - `reduce.py` (c-rows, e0, e1) and `chain.sh`;
+   - `inputs_pre/` (cp -p of the three edited inputs and `check_shared.py`).
+6. **`docs/project/MODEL_CARD.md`:**
+   - §6 row 21: the cap is dead as a bound under B; its remaining role is the NUM window; no longer TUNED in effect;
+   - row 28: 12.0 mm declared, the band, the alternative, q_net,min and the side of h 500;
+   - §9: the onset deck's declared override;
+   - the uptake-gap entry: the ladder's S*(O) and S*(N) and the gap on both S and absorbed energy.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | key / quantity | site and guard | units |
+|---|---|---|---|
+| L1 | `spall.buckle_span = 0.012` in the rock file | Parse → `sp_buckle_span`; `bk_on` :488; evaluated `if (bk_on && o.fire)`. The column path refuses > 0. **Step zero greps that only `grimsel_calibration/input` and `hoeser/input_lab` include the rock file**, and that no tree input does | m |
+| L2 | CAL's `spall.buckle_span = 0.0` after the FILE lines | AMReX LAST occurrence (:1397) ⇒ `bk_on` false | m |
+| L3 | **THE CONJUNCTION: is the cap dead under B?** | the cap compares along-line h_f with `flake_h_max / L.mu`, i.e. the normal μ·h_f with 1.5 mm. B compares C_L(T_s)·μ·c_f·ℓ_eff with L. Both act on μ·c_f·ℓ, so obliquity cancels. The cap can act on a passing line only if L/C_L(T_s) > 1.5 mm, i.e. T_s > T_s*(L). Witness: thermo `fr_cap` (:704) | m; K |
+| L4 | ⚠ the cap's window role | `hcap` → `L.Lg` → `o.run` / `L_av` / remap length (:368–380, :497, :695, :716). Off ⇒ every line goes from 19 to 32 cells at 1 mm and the deep enthalpy remap moves. **Kept at 0.0015**; the step zero records each consumer | cells |
+| L5 | the heat scale | only `surface_patch.h_expr`'s leading constant, C = S × 7272.3958 (`h_expr(S)`); S 0.1636 reproduces the base's 1189.763953 | W/m²K |
+| L6 | B's counters | thermo `bk_n_eval`, `bk_n_block`, `_floor/_wall/_roof`, `bk_max_pass`; present only under `bk_on`. **Step zero states whether they and `fr_cap` are per-step or cumulative** (SR 7(i): a fraction is two sums) | counts |
+| L7 | volume and target | `fr_volume` at the 30 s plotfile, quarter domain ×4; target 13.0 cm³ | cm³ |
+| L8 | the directive | `# check_shared: allow KEY` in the DECK file ⇒ KEY ∈ allow | — |
+
+### Legs (exact argv tokens)
+
+**Base (B0):** `studies/p2_16_span_rule/legs/HOS_R/argv.sh` token for token, with these changes:
+- `stop_time=30.0`;
+- `plot_file=…/p2_17_buckle_on/legs/<leg>/run`;
+- `surface_patch.h_expr=<h_expr(S)>` replacing the base's (the only heat change).
+
+`amr.plot_int=1875` stays, giving plotfiles at 15 s and 30 s.
+
+| form | added tokens | `check_shared` |
+|---|---|---|
+| **O** (the pre-P2-17 form) | `spall.buckle_span=0.0` | `--allow spall.buckle_span` |
+| **N** (production) | none | — |
+| **A** (alternative span) | `spall.buckle_span=0.0132` | `--allow spall.buckle_span` |
+
+**S grid:**
+- O and N at S ∈ {0.20, 0.1636, 0.14, 0.12, 0.10, 0.087, 0.07};
+- A at S ∈ {0.14, 0.12, 0.10, 0.087, 0.07};
+- names `<form>_S<round(1000·S)>`: O_S200, O_S164, O_S140, O_S120, O_S100, O_S087, O_S070, and likewise for N and A
+  (19 legs).
+
+**Other runs:**
+- **CAL1:** `studies/p2_16_span_rule/legs/CAL/argv.sh` verbatim (only `plot_file` re-pointed), on the edited deck.
+- **face_heat:** `tests/MMWSpalling/unit/face_heat/test` as is.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | `chk_directive.py`, two-sided: the edited CAL deck; a scratch copy without the directive; a copy whose directive names an unset key | CAL (i) PASS, 1 declared; no-directive copy (i) FAIL naming `spall.buckle_span (deck)`; unset-key copy (i) FAIL | **gate** | the override is not declared, so the onset deck's B-off status is unchecked |
+| z1 | 1 | cap-dead crossover T_s*(L), where C_L(T_s*) = L / 1.5 mm, for L = 12.0, 13.2 and 17.77 mm; beside it the on-disk max firing T_s | report | report | P1 |
+| z2 | 1 | **DR-4, minimum flux at a span:** h_min(L) by log-log interpolation of L_req vs h between the two span-off CAL flux legs bracketing L (L_req recomputed by P2-15's discriminant as P2-16 `reduce.py` imports it, not copied); q_net,min = h_min·(T_g − T_s,e) − εσ(T_s,e⁴ − T_amb⁴) at that leg's earliest firing [MW/m²] (step zero confirms against `SurfaceCellFlux`). For L = 10.30, 12.0, 13.2, 17.77 mm; which side of the CAL deck's own q_net | report | report | P2 |
+| a1 | 2 | CAL1 vs P2-16 `legs/CAL` (= P2-13) | event log byte-identical; kept plotfiles identical; thermo non-timer columns identical; `check_shared` PASS with 1 declared; metadata `spall.buckle_span` 0 | **gate** | the shared-file edit moved the onset deck; nothing below is attributable |
+| a2 | 2 | face_heat on the edited files | rc 0, verdict PASS (a moved number is declared together with that run's Σ `bk_n_block`) | **gate** | B reaches the face-heat accounting; stop and declare |
+| a3 | 2 | O_S164's event-log rows with time ≤ 15.0 vs P2-16 HOS_R's whole event log; its 15 s plotfile vs HOS_R's | identical | **gate** | the O tokens do not restore the pre-P2-17 form |
+| a4 | 2 | O_S140 V(f) at 30 s vs P2-11 G1_S14 | 24.922 ± 0.001 cm³ | **gate** | the heat-scale path or the volume instrument moved since P2-11; S* would not compare |
+| a5 | 2 | N_S070 reaches B: `check_shared` (ii) resolves `spall.buckle_span` 0.012; Σ `bk_n_eval` > 0 | yes | **gate** | the span never reached the binary; the ladder would be inert |
+| c1 | 3 | blocked fraction Σ `bk_n_block` / Σ `bk_n_eval` per N and A leg, with n_eval beside it (counts only if n_eval < 100), and the floor/wall/roof split | report | report | P4 |
+| c2 | 3 | **S\*(O), S\*(N), S\*(A)** (V(f) 30 s vs 13.0 cm³, P2-11's rule); S\*(N)/S\*(O), S\*(A)/S\*(N); the gap 1/S\*; `ledger_E_src` ×4 at 30 s, interpolated to S\* the same way [kJ] | report | report | P3, P4, P5 |
+| c3 | 3 | flux exponent n = Δln V / Δln S on the pair bracketing each S\*, O vs N | report | report | P6 |
+| c4 | 3 | isotropy witness: removed volume per 11.25° sector (8 sectors, quarter domain, r ≤ 25 mm) at 30 s, divided by each sector's cell census; spread = max/min − 1; N vs O at S 0.10 and 0.07 | report | report | N's spread above O's by > 0.05 ⇒ B introduces a grid-direction bias |
+| e0 | 4 | **the cap is dead as a bound:** Σ `fr_cap` = 0 on every N and A leg; positive control Σ `fr_cap` > 0 on O_S070 and O_S087; max firing T_s on every N/A leg vs T_s*(its span) | all three | **verdict** | a cap count on N/A ⇒ the bound still acts and the relabel is wrong. A zero positive control ⇒ the cap never acted on Höser, and its deadness rests on z1 alone |
+| e1 | 4 | **verdict** | — | **verdict** | B on is the production form (a1–a5); the cap's status (e0); P4's branch; the span choice's effect on S\* (P5); the declared span's q_net,min and side of h 500 (z2) |
+
+### Pre-registered predictions
+
+- **P0 (a rows, z0):** every identity holds; a5 reads `bk_n_eval` > 0.
+- **P1 (z1):** T_s* = 1273 K (12.0 mm), 1152 K (13.2 mm), **893 K (17.77 mm)**. The on-disk maxima are 962.5 / 1021.4 K,
+  so the bound is dead at 12.0 and 13.2 mm, but not across R1's whole band.
+- **P2 (z2):**
+
+  | span | h_min | q_net,min |
+  |---|---|---|
+  | 12.0 mm | ≈ 536 W/m²K | **≈ 0.44 MW/m²**, above the CAL deck's ≈ 0.41 |
+  | 13.2 mm | ≈ 488 W/m²K | ≈ 0.40 MW/m², below |
+  | 10.30 / 17.77 mm | — | ≈ 0.51 / 0.30 MW/m² |
+
+  Bars are ±5 %. ⇒ At the declared span, Grimsel's minimum flux sits ABOVE h 500: the onset deck would not spall with B
+  on, which is why it is onset-only.
+- **P3 (c2, O):** S*(O) = 0.097 (0.088–0.106). This extrapolates G1_S14's 24.922 cm³ with n 1.5–2.2; P2-11's
+  0.14/0.20 pair gives n 1.80.
+- **P4 (c1, c2, N vs O):**
+  - **Direction:** S*(N) ≥ S*(O), because B is a pure withdrawal (P2-15 DR-3). S*(N) < S*(O) by more than 1 % is a
+    finding: B's withdrawals raised removal elsewhere.
+  - **Blocked fraction:** < 1 % at S 0.20 and 0.1636 (P2-15 HOS_S: 0.12 % at 11 mm); 2–15 % at 0.10; 25–75 % at 0.07.
+    The face list's flakes run ≈ 0.85× the column path's at equal S (HOS_R 0.557 vs what-if 0.66 mm).
+  - **Size:** S*(N)/S*(O) **1.01–1.25, central ≈ 1.05**; the gap 1/S* narrows from ≈ 10× to ≈ 9×.
+  - **Branches, pre-written:**
+    - **(a)** 1.02–1.5: B trims the uptake gap but leaves it open (> 6×). The open problem stands; item 5 fits S with
+      B on.
+    - **(b)** < 1.02: B is inert at Höser's uptake level, and B's role on Höser is the minimum flux only.
+    - **(c)** > 1.5: B carries a large part of the uptake story, or the declared span is too short for Höser. Before
+      item 5, check the span against Höser's own flux.
+- **P5 (c2, A vs N):** S*(A)/S*(N) ∈ [0.95, 1.00]. A longer span blocks less; for Höser's calibration the span choice
+  is immaterial.
+- **P6 (c3):** n(N) ≥ n(O) on the S* bracket, with n(O) 1.5–2.2.
+- **Refuting evidence on disk:** none. B has never run on the face list below S 0.1636; P2-15 HOS_S is consistent with
+  P4's < 1 %.
+
+### Guardrails
+
+- **No `src/` change, no build.** The tree is not re-run (L1's grep).
+- **`spall.flake_h_max` keeps 0.0015** (L4). Only its comment changes, and no code is deleted.
+- **S lives in leg argv only.** S* is not written into any input. The span is never tuned on Höser; A is the declared
+  alternative, not a fit.
+- **Edits are limited to Goal 1–4, Goal 6 and the study.** `input_lab` is untouched. `inputs_pre/` is copied before the
+  first edit.
+- **Plotfiles:** keep 15 s and 30 s on every ladder leg; CAL1 keeps P2-16 CAL's set.
+
+### Commands
+
+```bash
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_17_buckle_on
+# before editing: cp -p rock_grimsel.inputs model_form_flame.inputs grimsel_calibration/input check_shared.py -> $S/inputs_pre/
+# ord 1 (zero compute): z0, z1, z2
+$PY $S/chk_directive.py && $PY $S/offline.py
+# ord 2: CAL1, face_heat, O_S164, O_S140, N_S070 -> a1-a5 (stop on a failed gate)
+# ord 3: the remaining 16 ladder legs (serial, -np 4) | ord 4: reduce.py -> RESULTS.txt (c1-c4, e0, e1)
+caffeinate -dis bash $S/chain.sh
+```
+
+### Claude completion notes
+
+**Files changed (no `src/` change, no build):**
+- `validation/shared/rock_grimsel.inputs`: a new block "the buckling span (P2-15 condition B)", setting
+  `spall.buckle_span = 0.012` (Goal 1, plus DR-12 and z2's numbers).
+- `validation/shared/model_form_flame.inputs`: the span line removed; `spall.flake_h_max` relabelled NUM (dead as a
+  bound; the window role kept).
+- `validation/kant/grimsel_calibration/input` and `README.md`: the directive and the `spall.buckle_span = 0.0`
+  override after the FILE lines, declared in both.
+- `validation/shared/check_shared.py`: the `# check_shared: allow KEY` directive, scanned on its own, deck file only;
+  docstring updated.
+- `docs/project/MODEL_CARD.md`: §6 rows 21 and 28, §9's B row, and §11 item 1 (the uptake gap). The old card is
+  archived as `MODEL_CARD.pre_p2_17.md`.
+- Study `tests/MMWSpalling/studies/p2_17_buckle_on/`: `run.py`, `offline.py`, `chk_directive.py`, `reduce.py`,
+  `chain.sh`, `chain_resume.sh`, `inputs_pre/`, `Z0–Z2`/`A1–A5`/`A3.first`/`RESULTS`/`RESULTS.first.txt`,
+  `face_heat_output_pre/` (SR 9), and `legs/` (20 legs, 4.9 GB with the 15 s and 30 s plotfiles).
+
+| # | measured | verdict | output |
+|---|---|---|---|
+| z0 | D1 the edited CAL deck: (i) PASS, 1 declared. D2 no directive: (i) FAIL, `UNDECLARED: spall.buckle_span (deck)`. D3 an extra directive for the unset key `weibull.m`: (i) FAIL, `nobody sets: weibull.m` | **PASS** | `Z0.txt` |
+| z1 | T_s* 1272.7 K (12.0 mm; C_L at the table's end 7.997 against 8.000), 1151.9 K (13.2 mm), 894.0 K (17.77 mm). On-disk max firing T_s: CAL 962.5 K, HOS_R 1021.4 K (p99 913.9 / 918.8) | report | `Z1.txt` |
+| z2 | 12.0 mm: h_min 535.5 W/m²K, **q_net,min 0.4316 MW/m², ABOVE** the CAL deck's 0.4014. 13.2 mm: 487.7, 0.3909, below. 10.30 mm: 0.5081. 17.77 mm: 0.2940. All with the code's h_conv term; the packet's form reads +0.005 MW/m² | report | `Z2.txt` |
+| a1 | CAL1 vs P2-16 CAL: event log identical; 98 plotfile files, 0 differ; thermo 7500 rows × 77, 0 differ; `check_shared` PASS (1 declared, all 64 keys resolved); metadata `spall.buckle_span` 0.0 | **PASS** | `A1.txt` |
+| a2 | face_heat rc 0, PASS; log identical to UNIT_p2_16 (masked). B evaluated 0 lines on its one-step legs (Σ `bk_n_block` 0 / Σ `bk_n_eval` 0) | **PASS** | `A2.txt` |
+| a3 | **first scoring FAIL** (5070 vs 5066 rows with time ≤ 15.0; `A3.first.txt`). Restated: the rows of the steps HOS_R ran (start < 15.0 − dt/2) are 5066 / 5066, byte-identical; the 4 excluded rows belong to the step starting at t = 15 s, stamped 14.999999999999234. 15 s plotfile: 14 files, 0 differ | **PASS** (restated) | `A3.txt` |
+| a4 | O_S140 V(f) 30 s **24.9222 cm³** against 24.922 | **PASS** | `A4.txt` |
+| a5 | N_S070: `check_shared` PASS, metadata `spall.buckle_span` 0.012, Σ `bk_n_eval` 27,740 (sampled) | **PASS** | `A5.txt` |
+| c1 | blocked fraction (evaluation-weighted), N: 0.0070 / 0.0316 / 0.178 / 0.609 / 0.789 / 0.956 / 0.993 at S 0.20 … 0.07; A: 0.035 / 0.282 / 0.472 / 0.906 / 0.985 at S 0.14 … 0.07. **Per firing (removals N/O):** 1.003 / 0.998 / 0.997 / 0.991 / 0.971 / 0.924 / 0.673. Roofs 0 everywhere; walls take most blocks at S 0.12–0.087, floors at 0.07 | report | `RESULTS.txt` c1 |
+| c2 | **S\*(O) 0.09944** (bracket O_S087–O_S100), **S\*(N) 0.10135** (N_S100–N_S120), **S\*(A) 0.10028**. S\*(N)/S\*(O) **1.0192**, S\*(A)/S\*(N) 0.9894. Gap 1/S\* 10.06× → 9.87×. `ledger_E_src` ×4 at S\*: 24.71 / 25.18 / 24.89 kJ (N/O 1.019) | report | `RESULTS.txt` c2 |
+| c3 | n(O) 1.832 (on 0.087–0.10), n(N) 2.046 (on 0.10–0.12), so n(N) − n(O) = +0.214. ⚠ The two brackets are different pairs | report | `RESULTS.txt` c3 |
+| c4 | spread O / N: 0.1067 / 0.1447 at S 0.10, 0.2177 / 0.2551 at S 0.07; N − O +0.038 / +0.037 (under the 0.05 bar) | report | `RESULTS.txt` c4 |
+| e0 | Σ `fr_cap` = 0 and event-log cap flags = 0 on all 12 N/A legs. Positive control: O_S087 3 and O_S070 1 cap events (thermo, sampled: 0 and 1); O_S100 also 2. Every N/A max T_s (≤ 1057.9 K) is below its T_s* | **verdict: the cap is DEAD as a bound under B** | `RESULTS.txt` e0 |
+| e1 | B on is the production form (z0, a1–a5 PASS). Cap dead (e0). **P4 branch (b): 1.0192 < 1.02, by 0.0008, so at the (a)/(b) edge.** The span choice is immaterial (P5). Declared span: q_net,min 0.432 MW/m², above h 500 | **verdict** | `RESULTS.txt` e1 |
+
+**Prediction scores.**
+- **P0** held. a3 needed one comparator restatement; the identity itself held byte-for-byte.
+- **P1** held: 1272.7 / 1151.9 / 894.0 K against 1273 / 1152 / 893.
+- **P2** held: 535.5 / 0.432 (against ≈ 536 / 0.44), 487.7 / 0.391, 0.508 / 0.294, all inside ±5 %.
+- **P3** held: S\*(O) 0.0994 in [0.088, 0.106].
+- **P4:**
+  - direction held (1.019 ≥ 1);
+  - size in range (1.01–1.25) but under the 1.05 central;
+  - **blocked-fraction bands MISSED** (3.2 % at 0.1636 against < 1 %; 79 % at 0.10 against 2–15 %; 99.3 % at 0.07
+    against 25–75 %), because they were written per firing and the counter is per evaluation (takeaways);
+  - branch (b) by 0.0008.
+- **P5** held: 0.989 in [0.95, 1.00].
+- **P6** held: n(N) 2.046 ≥ n(O) 1.832, and n(O) is in 1.5–2.2.
+
+### Implementation takeaways
+
+- **Deviation: a3's filter.** The packet's "time ≤ 15.0" also admits the step that STARTS at t = 15 s. The event log
+  stamps a step's start (SR 7(iii)), and the time accumulated in floating point to 14.999999999999234, while HOS_R
+  (stop 15.0) never ran that step. Restated by step (start < 15.0 − dt/2); first scoring kept in `A3.first.txt`. The
+  chain resumed from a4 (`chain_resume.sh`); O_S164 was not re-run. ⇒ **A packet that truncates a longer run to a
+  shorter one's horizon must cut by step index (or start < stop − dt/2), never by `time ≤ stop`.**
+- **`bk_n_eval` / `bk_n_block` count evaluations, not lines.** A fired line is evaluated once per step. A line whose
+  onset keeps passing while B blocks it is re-counted every step, so the blocked fraction is evaluation-weighted. At
+  S 0.10, 79 % of evaluations are blocked but only 2.9 % of removals are lost. The per-firing measure is the removal
+  count N/O (c1's second block). Any later bar on "how much B blocks" should name which of the two it means.
+- **Every B and cap thermo column is PER-STEP, and the Höser deck samples thermo 1 in 6** (`amr.thermo.plot_int = 6`;
+  `FaceRemoval.H:341` resets `fr_*` each step, as P2-15 does `bk_*`). Ratios are fine; counts are samples. e0 needed
+  the event log: O_S087's sampled Σ `fr_cap` read 0 while its event log carries 3 cap events (rc_flag bit 16).
+- **The positive control is tiny:** 1–3 cap events in about 1,700–3,800 removals on O_S070–O_S100, and 0 above
+  S 0.10. On Höser the 1.5 mm cap barely ever bound even with B off; its "deadness as a bound" is real but cheap. Its
+  window role (L4) is the one that matters, and it is untouched.
+- **B at S 0.20 adds removals** (N/O 1.003, V +0.28 %): withdrawals reshape the face, and later firings elsewhere
+  slightly outnumber them. That is below P4's "> 1 %" finding threshold, but it is the sign P2-15 DR-3's "pure
+  withdrawal" does not guarantee on a drilling deck.
+- **c3's exponents come from different S pairs.** S\*(N) moved across the S 0.10 grid point, so n(O) is read on
+  0.087–0.10 and n(N) on 0.10–0.12. Part of the +0.214 is the curvature of V(S), not B.
+- **z2 uses the code's balance:** `SurfaceCellFlux` subtracts h_conv (T_s − T_amb) with h_conv 10 W/m²K, which the
+  packet's formula omits (−0.005 MW/m², about 1.2 %). T_s at h_min is linear in ln h between the bracketing legs
+  (819.6–821.6 K; immaterial).
+- **The directive is read from the DECK file only.** An included file cannot declare its own override; that is
+  deliberate, so a shared file cannot launder a change to itself.
+- **`face_heat` stays rc 0 with the span in `input_lab`.** Its one-step legs never fire a line (Σ `bk_n_eval` 0).
+  `R_nolist` (face_list = 0) still aborts naming `face_heat`, because the `surface_patch` parser's check
+  (`MMWSpalling.H:7914`, parsed at :190) runs before B's face-list abort (:950). ⚠ Any future deck that includes
+  `input_lab` or the rock file with `face_list = 0` and no `face_heat` key will now abort on `spall.buckle_span > 0`.
+- Nothing is committed. `legs/` is 4.9 GB (15 s and 30 s plotfiles on every ladder leg, per the guardrail).
+
+
+### Review findings
+
+Reviewer, 2026-11-03. Independent reduction throughout: my own `cmp` / `diff -rq` / per-column byte comparisons, my
+own volume, thermo, event-log and sector reducers, my own log-log solves, my own 1 mK scan of `C_L`, my own mutation
+copies of the CAL deck, and the source read of the cap-vs-B conjunction. No test, simulation or build was re-run —
+every artefact cited below was already on disk with the binary's hash (`38c8623885c5b8b6…`) beside it, and I
+re-verified that hash against the live binary and that **no file under `src/` is newer than it**. The only zero-compute
+scripts I executed were `check_shared.py` (on five scratch copies of the CAL deck) and my own reducers.
+
+| # | test | bar | **derived independently** | **read from** | row |
+|---|---|---|---|---|---|
+| z0 | the directive, two-sided | D1 PASS/1 declared; D2 FAIL naming the key; D3 FAIL naming the unset key | D1 `(i) PASS … (1 declared)`; D2 `(i) FAIL … UNDECLARED: spall.buckle_span (deck)` **and (ii) FAIL** (the directive is load-bearing for the resolution too); D3 `(i) FAIL … nobody sets: weibull.m`. **My two extra mutations:** directive kept, override line deleted → `(i) FAIL … nobody sets: spall.buckle_span`; directive with collapsed whitespace → PASS | my own 5 scratch copies of `validation/kant/grimsel_calibration/input` through `validation/shared/check_shared.py` | **reproduces (gate)** |
+| z1 | T_s\*(L) with C_L(T_s\*) = L/1.5 mm | report | **1272.7 / 1151.9 / 894.0 K** at 12.0 / 13.2 / 17.77 mm; C_L at the table's end **7.9973** and **flat above it** (C_L(1500 K) = 7.9973); at R1's 10.30 mm band edge **T_s\* does not exist**. On disk max T_surf 962.5 K / p99 913.9 (CAL, 10,804 firings), 1021.4 / 918.8 (HOS_R, 5,066) | my own 1 mK monotone scan of `studies/p2_15_buckle/derive_span.py` `C_L`; my own `T_surf` reduction of `p2_16_span_rule/legs/{CAL,HOS_R}/run_removal_events.csv` | reproduces |
+| z2 | h_min(L) and q_net,min | report | 12.0 mm: **h_min 535.53, q_net,min 0.43156 MW/m², ABOVE** CAL's **0.40137**; 13.2 mm: 487.78 / 0.39092, below; 10.30 mm 0.5081; 17.77 mm 0.2940. ⚠ The verdict reduces to **L vs CAL's own L_req 12.837 mm** (6.5 % margin at 12.0 mm) — the interpolation lands at f = 0.099 and f = 0.979, i.e. next to the CAL leg both times | my own log-log interpolation and my own hand evaluation of the face balance over Z2's L_req / T_s table | reproduces |
+| a1 | CAL1 vs P2-16 CAL | event log, plotfiles, non-timer thermo identical; `check_shared` PASS 1 declared; metadata 0 | event log **byte-identical, 10,805 lines** (`cmp`); **98 plotfile files, 0 differ** (103 files − metadata/thermo/diff.patch/2 visit); thermo **7,500 rows × 79 cols, 0 of the 77 non-timer columns differ**; metadata differs **only** in `plot_file`, one added line `spall.buckle_span = 0.012`, `HASH` and 3 timestamps — the resolved last value is 0.0 in **both** runs, which is why the bytes match; `check_shared` PASS, 1 declared, 64/64 keys | my own `cmp`, `diff -rq`, column-by-column string diff, `diff` of `metadata` | **reproduces (gate)** |
+| a2 | face_heat on the edited files | rc 0, PASS, Σ `bk_n_block` declared | rc 0; my masked **line-by-line** diff against `p2_16_span_rule/UNIT_p2_16/face_heat.log`: **52 lines, 0 differ**; my own Σ over all six running legs: **bk_n_eval = bk_n_block = 0** — and the `bk_*` columns **are present**, so the span did reach the binary and the gate is not vacuous | `unit/face_heat/output/*/run/thermo.dat`, `studies/p2_17_buckle_on/face_heat.{log,rc}` | **reproduces (gate)** |
+| a3 | O_S164 vs HOS_R to 15 s | identical | **5,066 rows byte-identical** to HOS_R's whole log under **my own step-index filter** `round(t/dt) < 1875` (not the implementer's `start < 15 − dt/2`); the packet's `time ≤ 15.0` admits **exactly 4** extra rows, all of step 1875 stamped `1.4999999999999234e+01`; 15 s **cell + node** plotfiles identical (14 files). Argv differs from HOS_R in **exactly three tokens** (`plot_file`, `stop_time`, `+spall.buckle_span=0.0`): `h_expr` is **byte-equal**, and 0.1636 × 7272.3958 = 1189.763953 reproduces it | my own filter + `diff -rq` + token-by-token argv comparison | **reproduces (gate)** |
+| a4 | O_S140 V(f) 30 s | 24.922 ± 0.001 | **24.9222 cm³** | my own `(size − Σ fr_f)·dx²·dz·4` over `legs/O_S140/run/03750cell`, geometry from that leg's own argv | **reproduces (gate)** |
+| a5 | N_S070 reaches B | metadata 0.012, Σ `bk_n_eval` > 0 | metadata's **last** `spall.buckle_span` = **0.012**; Σ `bk_n_eval` = **27,740**; `check_shared` PASS 64/64. My `bk_span` thermo read confirms **every N leg ran 0.012 and every A leg 0.0132**, and O/CAL1 carry **no** `bk_*` columns at all | my own metadata grep, thermo sums and `bk_span` census | **reproduces (gate)** |
+| c1 | blocked fraction, split | report | N **0.0070 / 0.0316 / 0.1782 / 0.6086 / 0.7888 / 0.9563 / 0.9930**; A **0.0349 / 0.2816 / 0.4722 / 0.9062 / 0.9853**; **roofs 0 on every leg**; walls the majority at S 0.12–0.087 (1670/2495 at 0.10), floors **85 %** at 0.07. Per firing N/O **1.0028 / 0.9978 / 0.9971 / 0.9906 / 0.9712 / 0.9244 / 0.6734** | my own thermo sums and event-log row counts | reproduces |
+| c2 | S\*, the gap, E_src | report | S\*(O) **0.099435**, S\*(N) **0.101354**, S\*(A) **0.100285**; N/O **1.0192**, A/N **0.9894**; gap **10.057× → 9.866×**; E_src ×4 at S\* **24.706 / 25.180 / 24.886 kJ** (N/O 1.019) | my own log-log solve over my own V(f) and the last thermo row of `ledger_E_src` | reproduces |
+| c3 | n on the bracket | report | n(O) **1.8321**, n(N) **2.0483**, Δ **+0.216**. ⚠ The implementer's caveat ("part of the +0.214 is curvature") resolves **in their favour**: on **matched** brackets Δ is **+0.149** (0.10–0.12) and **+0.457** (0.087–0.10), both positive, so P6 holds without the bracket mismatch | my own paired fits | reproduces |
+| c4 | isotropy spread | report | **0.1067 / 0.1447** at S 0.10, **0.2177 / 0.2551** at S 0.07; N − O **+0.0380 / +0.0374**, both under 0.05 | my own 11.25° sector census (Σ(1−fr_f) over r ≤ 25 mm per sector ÷ that sector's cell count) | reproduces |
+| e0 | the cap is dead as a bound | all three | Σ `fr_cap` = 0 **and** event-log bit 16 = 0 on **all 12** N/A legs; controls **O_S087 3, O_S100 2, O_S070 1** bit-16 events (thermo sampled Σ `fr_cap`: 0 and 1); **bit 8 (the 15 mm search depth) = 0 everywhere**; max N/A T_s **1057.9 K** (N_S120) against T_s\* 1272.7 (N) / 1151.9 (A) | my own `rc_flag` bit census over all 19 ladder event logs + my own thermo sums | **reproduces (verdict)** |
+| e1 | verdict | — | gates z0, a1–a5 all reproduce; the cap is dead as a bound; P4 **branch (b)**, which I confirm is **robust to the estimator** (see DR-2); P5 immaterial; q_net,min 0.432 MW/m² above h 500 | — | **reproduces** |
+
+⚠ The packet marks **nothing** unquotable (no "unquotable" / "do not quote" string anywhere in it), so there is
+nothing to violate. Checked against both `ROADMAP.md` `## Standing rules` and `## Known Stale/Important Notes`: the
+notes engaged here are SR 1 (the rock file's comment names the `c_f` pairing itself), SR 3 (V and E_src both ×4, and
+the ratio uses both sides), SR 5 (the reducer takes geometry from each leg's own argv — no `LZ`), SR 7(i) (every
+`bk_*`/`fr_cap` column is per-step and is read as a ratio or declared "sampled"; `ledger_E_src` is cumulative and read
+at a row, not summed), SR 7(iii) (this is exactly what a3 hit), SR 8 (argv + deck + allow + binary hash per leg),
+SR 9 (`face_heat_output_pre/`, `inputs_pre/`, `MODEL_CARD.pre_p2_17.md`; no leg was re-run — no `.old*` exists), SR 10
+(c4 is per sector), SR 11 (`caffeinate -dis -w $$`), SR 14 (L3 is a source assertion, verified below), SR 20 (L3 names
+the μ on both sides). The column-path caveats in the notes are untouched: no `src/` change, and no column-path deck was
+edited. SR 18's share is unchanged — I measure **20.7 %** of CAL's and **21.5 %** of O_S164/N_S164's firings above
+873.15 K, in line with the rule's own figures.
+
+#### Diff review
+
+Scope: the four edited input/script files (diffed against `inputs_pre/`, which `cp -p` preserved — Nov 2 10:03 and
+Nov 3 09:33/09:34 mtimes), the model card (against `MODEL_CARD.pre_p2_17.md`), the five study scripts, and the two
+source sites the relabel rests on. All four edited files are **untracked**, so `git diff` shows nothing — the
+`inputs_pre/` copies are the only diff basis, and their mtimes support the claim that they predate the edits.
+
+| # | hunk / call / test | class | finding | tag |
+|---|---|---|---|---|
+| 1 | `rock_grimsel.inputs` +16, `spall.buckle_span = 0.012` | 7 duplication/readers | reader at `MMWSpalling.H:9160` (`query_default`, default **0.0**), `bk_on` at `FaceRemoval.H:488`, evaluated under `bk_on && o.fire` at :607. Metadata on all 19 legs resolves it as expected. Duplication: **none** — one declaration, one reader | ok |
+| 2 | `model_form_flame.inputs` − the `spall.buckle_span = 0.0` line | 9 removed check | authorised by Goal 2. Behaviour-neutral: the parse default is 0.0, so a deck including only this file is unchanged. Verified that **exactly two live decks** include either shared file (`validation/hoeser/input_lab`, `validation/kant/grimsel_calibration/input`) and **no tree-sweep input does** — L1 holds, so the 2,639-file gate genuinely does not need re-running | ok |
+| 3 | `spall.flake_h_max` comment: TUNED → "NUM … DEAD as a flake bound under B" | 2 consistency | **The "DEAD" label is a rock-dependent fact written in the rock-independent file.** Deadness holds because T_s\*(L) = 1272.7 K at the *rock file's* 12.0 mm; at R1's 13.2 mm T_s\* falls to 1151.9 K and at 17.77 mm to 894 K, **below** HOS_R's own 1021.4 K max. A second rock with a shorter span revives the cap, and `model_form_flame.inputs` would then be lying. The condition is stated in the rock file's comment but not in the form file's | **risk** |
+| 4 | CAL deck: directive + `spall.buckle_span = 0.0` after the two FILE lines | 2 consistency | AMReX last-wins (`AMReX_ParmParse.cpp:1397`) — and `a1`'s `metadata` is the proof, carrying **both** occurrences in order with 0.0 last, in both CAL1 and the P2-16 reference. `reduce.py`'s own metadata read also takes the **last** match, mirroring the parser | ok |
+| 5 | `check_shared.py`: `directives()` + `allow \|= set(declared)` | 1 duplication / 2 consistency | Duplication: **none** — a separate scan is *required* because `parse()` strips comments, and the docstring says so. Consistency: `declared` is merged into `allow` **before** anything downstream, so the directive and `--allow` take the identical path through both (i) and (ii). I verified this by running O_S100 (`--allow`) and the CAL deck (directive) and getting the same resolution behaviour | ok |
+| 6 | the directive is read from the **deck file only** | 4 scope vs source | Deliberate and documented: an included file cannot launder a change to itself. The one place it could bite — a future shared-file-level override — would fail loudly on (i) | ok |
+| 7 | `run.py` `leg_argv`: token replacement with `assert seen == set(rep)` | 2 consistency | The assert is the right guard: a base argv missing `stop_time`/`plot_file`/`h_expr` aborts instead of silently shipping the base's value. Proven live — O_S164's argv differs from HOS_R in exactly the three intended tokens | ok |
+| 8 | `run.py` `FORMS` ↔ `ALLOW.txt` coupling | 7 readers | `["spall.buckle_span"] if FORMS[form] else []` — O and A declare, N does not, which is exactly what `check_shared` needs. Verified by running it myself on N_S100 (0 declared), A_S100 and O_S100 (1 declared), all PASS, 64/64 | ok |
+| 9 | `reduce.py` a3: `float(t) < 15.0 - 0.004` | 5 hard-coded | `dt` is in each leg's argv (`timestep=0.008`) and in `metadata`; the comparator hard-codes half of it. A leg at another `dt` would silently shift the cut. My own filter derives the step index from `dt` and lands on the same 5,066 rows | nit |
+| 10 | `reduce.py` `E_src`: docstring "at the last thermo row (t = 30 s)" | 11 false comment | The last thermo row is at **29.952 s** (625 rows at `thermo.plot_int = 6`), so c2 pairs a 30.000 s volume with a 29.952 s energy — 0.16 % and identical on both forms, so the N/O ratio is unaffected, but the label is wrong | nit |
+| 11 | `reduce.py` a2: `moved = [x for x in nl if x not in rl]` | 10 test strength | One-sided set membership, order-insensitive — it would not see a line **removed** from the reference, and it is not part of a2's `o`. The packet's bar only requires a moved number to be *declared*, so this is in scope; my own masked line-by-line diff gives 0 differing over 52 lines | nit |
+| 12 | `reduce.py` `SPAN = {"N": 0.012, "A": 0.0132}` feeding e0's T_s\* | 5 hard-coded | The span is logged — `bk_span` is a thermo column and `metadata` carries the resolved value — yet e0 computes T_s\* from a module constant, so a leg that ran a different span would be scored against the wrong T_s\*. a1/a5 check metadata for CAL1 and N only; the **A legs' 0.0132 is never checked by the script**. I closed it by reading `bk_span` on all 19 legs: every N leg 0.012, every A leg 0.0132 | **risk** |
+| 13 | `reduce.py` e1: gate roll-up re-reads `Z0.txt`/`A*.txt` from disk | 10 test strength | A stale `A*.txt` would pass the roll-up silently. Mitigated in fact: `CHAIN.log` records the order, the a3 FAIL, the resume reason, and `A3.first.txt` is kept; `RESULTS.first.txt` → `RESULTS.txt` differs **only** by the added per-firing block, so nothing was re-scored | nit |
+| 14 | `offline.py` `t_star` at L = 12.0 mm | 6 boundary / 12 discriminator | `want = 8.000` against `C_L(table end) = 7.9973`: T_s\* = **1272.7 K** is a **0.45 K sliver** at the end of the strain table, above which C_L is flat forever. The honest statement at the declared span is "the cap can never bind", not "above 1272.7 K"; the implementer does flag the 7.997-vs-8.000, and the conclusion is **strengthened**, not weakened. At 10.30 mm `t_star` correctly returns `None` and e0 treats it as dead | **risk** |
+| 15 | the L3 conjunction, read in source | 14 / 20 one criterion one kernel | **Verified and correct.** The cap compares along-line `h_f` with `sp_flake_h_max / L.mu` (`FaceRemoval.H:504` through `ReconFromX`, and the fallback at :536–538) ⟺ normal μ·c_f·ℓ vs 1.5 mm; B compares `x = L.mu * sp_flake_c_f * ell_eff` (:617–620) with L/C_L. Same normal quantity, μ cancels. **And it is not circular:** `ReconFromX` caps only `r.h_f` and **never** `r.ell_eff` (`MMWSpalling.H:9020`+), so B sees the **uncapped** flake. `fr_cap` increments only for a fired **non-through** line (:704) and resets every step (:341); `rc_flag` bit 16 is `h_f_bounded` (:893) | ok |
+| 16 | e0's evidence scope | 12 discriminator | Σ `fr_cap` / bit 16 count only **removed** flakes, so the claim proven is "no removed flake was capped" — which **is** the claim the relabel makes. A line B blocks is never logged and never counted; that is correctly out of scope. Separately, max firing T_s is partly self-limited (SR 15), but here B pushes it **up** (N_S120 1057.9 K against HOS_R's 1021.4 K), so the T_s margin is conservative, not flattering | ok |
+| 17 | N/O = **1.0028** and V +0.28 % at S 0.20 | 12 carried threshold | P2-15 DR-3's "B is a pure withdrawal" was established on a **flat** deck (576/576 survivors identical). On a drilling deck it is false: withdrawals reshape the face and later firings elsewhere **outnumber** them. The implementer says so plainly. The standing claim now needs the qualifier "on a flat deck", or the next packet will reuse it to argue a direction it does not license | **risk** |
+| 18 | `unit/face_list/input`, `unit/face_removal/input` | 7 readers | Both are **generated** by `make_input.py`, which flattens `input_lab` **plus the shared files** into a self-contained input. Neither carries `spall.buckle_span` today (both predate it, Oct 27–28), so the takeaway's "only `face_heat/test` reads `input_lab` at run time" is correct — but **regenerating either now switches B on** in two unit tests whose assertions have never seen it, and nothing in the tree gate covers them | **risk** |
+| 19 | the RUNNABLE registry | 7 readers | Four of its entries run the shared files (`HOSER input_lab`, `HOSER_47 G1`, `HOSER_0 HG`, `HOSER_0_S s100`) and now resolve span 0.012 — with B **on** — while `KANT_cal` resolves 0. The pass was not re-run (outside Goal 6), and at its `stop_time = 1e-9` B cannot fire, so `RUNNABLE.txt` is almost certainly still accurate. ⚠ Any bare re-run of G1/HG/s100 no longer reproduces its banked numbers; the `O` token is what restores them, and a3 proves it does so byte-for-byte | nit |
+| 20 | the production form vs the onset deck | 2 consistency | q_net,min(12.0 mm) = 0.432 MW/m² against the onset deck's 0.401 ⇒ **with B on that deck removes nothing**, so the onset level (850.43 K) and the span are resolved on **mutually exclusive configurations**. This is declared (deck header, README, rock file, model card §9, pre-registered as P2) and is physically coherent — B is what supplies Kant's minimum flux, and the fixture deliberately sits below it. But it is the fact the next packet most needs in front of it | **risk** |
+| 21 | MODEL_CARD rows 21 / 28, §9, §11 item 1 | 5 hard-coded / 3 units | Checked against my own numbers: row 21's `L.Lg = Dmax + 2 + ⌈min(cap, h_spall_max)/(μ dx)⌉` matches the source (it omits only the harmless `min(span+1, ·)` clamp), and 19 → 32 cells at μ = 1, dx = 1 mm is right. §11's "2.9 % of firings at S 0.10 and 0.2 % at S 0.1636" matches my event-log counts (2.885 %, 0.220 %). `TARGET_V = 13.0` traces to `hoeser_2016_drilling_series.csv:12` (`load,38,8,7.9,0,30,7.4,26,5.12`): 26 × 30/60 = 13.0 | ok |
+| 22 | c4's 0.05 bar | 12 discriminator | Both forms' spread roughly **doubles** from S 0.10 to 0.07 (0.107 → 0.218 for O), so a fixed 0.05 bar on N − O sits on a moving baseline; the measured Δ is flat (+0.038, +0.037) across that doubling, which is the reassuring reading and the one worth keeping | nit |
+
+**Tally: 22 rows — 0 bug, 6 risk, 6 nit, 10 ok.** No row touches a gating row or a standing rule as a `bug`.
+
+#### What I credit
+
+- **DR-1 — the retirement of `d` holds and the directive is a real mechanism, not a label.** z0's two sides plus my
+  two extra mutations (directive without the override; whitespace-collapsed directive) show the check discriminates in
+  both directions, and D2 fails **(ii) as well as (i)** — so the directive is load-bearing for the *resolution*, not
+  only the declaration. a1 then proves the whole shared-file edit moved the onset deck by **zero bytes** over 10,805
+  event-log lines, 98 plotfile files and 77 thermo columns, with `metadata` carrying both span occurrences and
+  resolving the last.
+- **DR-2 — branch (b) is robust to the estimator, which the packet did not claim.** The implementer flagged that
+  S\*(O) and S\*(N) come from **different** brackets and that the 1.0192 sits 0.0008 under the 1.02 cut. I tested
+  whether the branch survives that: taking both forms on 0.10–0.12 gives **1.0190**, both on 0.087–0.10 gives
+  **1.0178**, and a 3-point log-log quadratic through each form gives **1.0186**. Every estimator lands **below 1.02**.
+  So branch (b) is the right call, and the same check turns the c3 caveat around — n(N) > n(O) on **matched** brackets
+  too (+0.149 and +0.457).
+- **DR-3 — the one honest negative.** `N/O = 1.0028` at S 0.20: B **adds** removals. The implementer could have
+  rounded it into the noise and instead named it as the sign that P2-15's "pure withdrawal" does not survive a
+  drilling deck. That is the single most useful line in the takeaways.
+- **DR-4 — the counter's meaning is pinned before any bar is read off it.** `bk_n_eval` is per **evaluation**, so
+  79 % blocked at S 0.10 coexists with 2.9 % of firings lost. The notes say which measure each number is, and c1
+  reports both. P4's blocked-fraction bands are scored **MISSED** rather than quietly re-interpreted.
+- **DR-5 — the a3 stop was taken rather than argued around.** `CHAIN.log` shows the chain stopping at a3, the
+  restatement, the resume point and that O_S164 was **not** re-run; `A3.first.txt` keeps the failed scoring. My own
+  step-index filter independently lands on the same 5,066 rows and the same 4 excluded rows.
+- **The source argument for the relabel is the right kind of argument** (SR 14/20): a stated conjunction on one normal
+  quantity with μ named on both sides, which I could check at the three sites and which turns out to be non-circular
+  because `ReconFromX` caps `h_f` but never `ell_eff`.
+
+#### For the planner
+
+- **DR-6 (row 20) is the carry-forward.** The production form cannot reproduce the deck the onset was calibrated on.
+  It is declared everywhere it should be, but the next packet should state which *measured* minimum flux 0.432 MW/m²
+  is being held to, since that is now the production form's sharpest prediction.
+- **Row 3** — move the cap's "DEAD" claim, or its condition, out of the rock-independent file.
+- **Row 17** — qualify "B is a pure withdrawal" to flat decks before it is reused.
+- **Row 18** — `unit/face_list` and `unit/face_removal` are generated from the shared files and are now stale with
+  respect to them.
+- **Row 12** — e0 should read `bk_span` instead of a module constant; the A legs' span is otherwise unchecked.
+
+### Verdict: accepted
+
+- **Gating rows.** z0, a1, a2, a3, a4, a5 all reproduce from my own reductions (table above). No diff-review row is
+  tagged `bug`.
+- **Guardrails.** No `src/` change (binary sha256 unchanged from P2-16's recorded `38c86238…`, and nothing under
+  `src/` is newer than it); `spall.flake_h_max` still `0.0015` with only its comment changed; S appears in leg argv
+  only and in no input; `input_lab` untouched; `inputs_pre/` predates the edits by mtime; 15 s and 30 s plotfiles
+  present on every ladder leg; nothing in `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure` or
+  `LICENSE` touched; nothing committed.
+- **Reruns.** None. No test, simulation or build was re-run — every number above came from artefacts already on disk.
+  The only things I executed were `check_shared.py` on five scratch copies of the CAL deck and my own reducers, all
+  zero-compute.
+- **Files inspected.** `ACTIVE_STEP.md`; `ROADMAP.md` (`## Standing rules`, `## Known Stale/Important Notes`);
+  `validation/shared/{rock_grimsel.inputs, model_form_flame.inputs, check_shared.py}` against
+  `studies/p2_17_buckle_on/inputs_pre/`; `validation/kant/grimsel_calibration/{input, README.md}`;
+  `docs/project/MODEL_CARD.md` against `MODEL_CARD.pre_p2_17.md`; `studies/p2_17_buckle_on/{run.py, offline.py,
+  chk_directive.py, reduce.py, chain.sh, chain_resume.sh, CHAIN.log, Z0–Z2, A1–A5, A3.first, RESULTS.first, RESULTS}`;
+  all 20 `legs/*/{argv.sh, ALLOW.txt, DECK.txt, BINARY.txt, rc, .done, run/metadata, run/thermo.dat,
+  run_removal_events.csv, run/0{1875,3750}cell}`; `p2_16_span_rule/legs/{CAL,HOS_R}` and `UNIT_p2_16/face_heat.log`;
+  `p2_15_buckle/derive_span.py`; `p2_8_face_list/reduce_p2_8.py` and `p2_11_heat/reduce_p2_11.py` (the imported
+  instruments); `unit/face_heat/output/*/run/thermo.dat`; `unit/face_{list,removal}/{input, make_input.py}`;
+  `docs/project/model_card/runnable.py`; `src/Integrator/MMWSpalling/FaceRemoval.H` (:336–384, :484–545, :600–632,
+  :698–712, :876–893) and `src/Integrator/MMWSpalling.H` (:947–955, :9020+, :9160–9163).
+- The user should run `/plan` next; the planner will archive this step.
+
+
+## P2-19 — The flake depth from the line's own profile: the fallback reads the e-fold depth, the no-skin refusal retires, the energy thin limit is logged (2026-11-05, ACCEPTED by review 2026-11-05; archived 2026-11-05)
+
+**Status:** ACCEPTED by review; all eight gating rows (z0a–d, a0–a3) reproduce from the reviewer's own reductions and
+the reviewer's own compile of the helpers; no diff-review row tagged `bug` (28 rows: 0 bug, 4 risk, 8 nit, 16 ok).
+Binary `c34e428b8eba6b9a…`; pre-step `5561de02…` (P2-18). Study `tests/MMWSpalling/studies/p2_19_flake_depth/`
+(`RESULTS.txt`, `Z0.txt`, `A1–A3.txt`, `GATE_*.txt`, six legs, 1.6 GB); new `unit/profile_depth`; `witness/face_p2_19.md5`
+declared (`REFERENCE.md`).
+
+### What the step established
+- **`Shared.H` gained three pure helpers** (`ProfileFallDepth`, `ProfileEFoldDepth`, `ProfilePeak`): the depth at
+  which a rise has fallen to 1/e of its face value, interpolated in ln (exact on an exponential at any cell size:
+  z0b 1.000000000000000 at dz 1.0 and 2.0 mm), NaN on a flat rise, readable under an interior peak (z0d 5.594 vs
+  analytic 5.61 mm). `unit/profile_depth` compiles the helpers' own text out of `Shared.H` and runs them.
+- **The face list's fallback branch** takes h_f = c_f·ℓ_p from the measured e-fold depth instead of c_f·k·ΔT/q_net; the
+  "no skin" (q_net ≤ 0) refusal is gone and a line is refused only when its rise never e-folds inside the window
+  (`fr_nodepth_*` replaces `fr_noskin_*`). Four columns appended to every event row: `ell_p, z_peak, ell_pk, h_E`.
+  `h_E = K_Ic²(1+ν)/σ_s²` (circular blister, relieved σ_s) is **write-only** — a parameter-free thickness applied
+  would delete the minimum flux (design note 2026-11-05).
+- **Identity held everywhere it was claimed:** tree 0/2639 (`p2_18.md5`), face gate 26 differing paths all the
+  declared header/column change and **0 `Cell_D`/`Cell_H`/`Header`**, T00 at 2/1/0.5 mm and CAL byte-identical in the
+  pre-existing columns (reviewer: identical as STRINGS); no comparator and no lock touched.
+- **⚠⚠ DR-1 — on today's decks what shipped is a WIDENED REFUSAL, not a new thickness.** Every fallback firing on a
+  flame deck is a thin-ledge THROUGH firing (run ≤ 2 ⇒ ≤ 1 profile sample ⇒ ℓ_p NaN by construction): ℓ_p finite on
+  **0 of 114** (113 C0H150 + 1 HOS). The only behavioural change: 2 non-through run-2 ledges on the B-off C0H150 deck
+  are now refused (V(f) 200 s new/old 1.00177; trajectory identical to 150 s). P2's thickness ratio is NOT SCOREABLE
+  on any flame deck; the first deck where the fallback meets a real profile is the beam port.
+- **⚠⚠ DR-2 — an undeclared μ (SR 20):** ℓ_q was a NORMAL depth, ℓ_p is ALONG-LINE, and the main branch was along-line
+  all along (`h_n/(μ·h_f)` = 1.000000 on 3,270 rows), so B's `x = μ·c_f·ell_eff` carried one μ too many on fallback
+  lines. P2-19 made the two branches consistent — a real fix, unstated in the packet. P2's band is 0.857/μ (median μ
+  0.874, down to 0.038): a median statement only. Every packet comparing a length with a material property states
+  which kind each side is.
+- **DR-4 — the strongest evidence was logged, not reduced (advisor reduced it):** on MAIN-branch firings
+  ℓ_p/ℓ_eff median **1.049 / 1.023 / 1.041 (T00 at 2 / 1 / 0.5 mm), 1.024 (HOS, p10–p90 1.020–1.034), 1.074 (CAL),
+  1.143 (C0H150, 0.886–1.532, soaked)**. The e-fold depth and the two-cell fit agree to 2–7 % on flame skins, with
+  no drift across the mesh ladder; together with z0e (ℓ_p = 0.857 × the tangent depth) the e-fold depth sits BETWEEN
+  the two established estimates. No thickness jump at a branch switch; ℓ_p could replace the two-cell fit, but c_f,
+  the relief R and the span were calibrated with the two-cell fit (SR 1) ⇒ a calibration-coupled packet, after the port.
+- **DR-3 — z0d proves readability at a peak 4–13× deeper than a beam's.** At a 0.15 mm peak (α 300 m⁻¹) on a 1 mm
+  mesh `z_peak = 0, ell_pk = NaN`, indistinguishable from a monotone profile; the peak appears at 0.5 mm and converges
+  by 0.25 mm. The "which depth under a beam" question cannot be POSED at 1 mm.
+- **`fr_nodepth` counts a different population from `fr_noskin`:** the cold rim (q_net ≤ 0) now has a depth and is not
+  refused (HOS 11 vs 9,614); lines with heat but no e-fold inside the 15 mm window are (C0H150 0 → 44,257; CAL_S
+  walls 0 → 1,111). None fire. Harmless wherever B is on (B blocks ℓ > L/(C_L·μ·c_f) ≈ 2.4 mm, 6× inside the window).
+- **h_E ≈ 39–40 µm, flat with deck** (p10–p90 33–44 µm; onset T flat). h_f/h_E 15.6 (HOS at 0.16 of the calorimeter
+  heat), 25.6 (CAL), 40 (C0H150). c_f·ℓ = h_E at a NET CONDUCTED flux ≈ 0.4·1.8·557/39e-6 ≈ 10 MW/m²: a computed
+  candidate for the UPPER edge of flame spallation (above every flame datum in absorbed terms; Höser's 7.4 MW/m² is a
+  calorimeter number and her uptake gap is ~5×).
+- **c2's reference was corrected:** HOS_R ran B off; the rock file now sets the span, so the like-for-like leg is
+  P2-17's N_S164 (B on). Both identical to 14.416 s ⇒ B withdrew nothing removal-visible at S 0.1636 before then.
+- **Deviation:** `o.fb` stays set on every fallback evaluation (keeps `fr_fb_*` identity). The accessors moved above
+  the branch (a0–a3 witness). `ell_pk` is an absolute depth from the face. `reduce.py` reads geometry from each run's
+  `metadata` (the CAL deck sets its mesh in the input file; P2-8's `geom_of` reads argv only — SR 5).
+
+### Carry-forwards (review + advisor)
+1. **DR-1:** under the beam port, where the fallback is the main path, the `fr_nodepth` population is the thing to watch;
+   decide whether a non-through line too short to e-fold falls back to its run or stays refused (advisor: keep the refusal;
+   a 2-cell ledge has no thermal depth, and the through rule handles the rest).
+2. **DR-2:** state the μ convention in every length comparison; the P2 band is a median statement.
+3. **DR-3:** the beam's peak needs ≈ 0.25 mm cells to be read; the flat floor drifts 10.4 % over 2/1/0.5 mm.
+4. **DR-4:** one depth definition (ℓ_p replacing the two-cell fit) is a calibration-coupled packet (c_f, R, span).
+5. **Row 4:** `ProfilePeak` returns `z_peak = 0, ell_pk = NaN` for both "the face is the peak" and "an unresolved
+   interior peak" — add a resolution witness before reading it under a beam.
+6. **Row 12:** with B on, a `nodepth` line that fires is withdrawn by B with non-finite x and booked as `bk_n_inf`
+   (attribution wrong, outcome identical; dormant: HOS Σ `bk_n_inf` = 0).
+7. **Row 19 / 23:** `ProfileEFoldDepth` is called twice on a fallback line (`:562` used, `:627` logged; the local
+   shadows the member); no z0 case brackets on the face sample and none runs at nmax = 0, the path every flame
+   fallback takes (correct on the probe: 0.300 mm for ℓ 0.3 mm, NaN for ℓ 2 mm).
+8. **Port predictions pre-registered by the advisors (11-05):** with B on, no THIN-FLAKE spallation under uniform deep
+   heating for any α below ~400 m⁻¹ (B is a thin-plate rule; the model has no failure mode for deep heating); log
+   peak T, its depth and time to solidus; "size of a failure" = the α at which the model first spalls; the operator on
+   beam legs by a computed resolution condition. h_E's crossing flux is NET CONDUCTED flux.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-05)
+
+- **P2-19 — The flake depth from the line's own profile: the fallback reads the e-fold depth, the no-skin refusal
+  retires, the energy thin limit is logged** (`ACTIVE_STEP.md`; 2026-11-05; design note option A).
+  - Archived: P2-17 ACCEPTED (`ARCHIVE_DONE.md` *"P2-17"*): B on in production (span 0.012 in the rock file), cap dead
+    as a bound, DR-6 (the onset deck removes nothing under B), uptake gap trimmed 2 %. P2-18 (advisor, no packet):
+    two gates, `Shared.H`, dead keys and 602 default lines gone (`studies/p2_18_prereq/`).
+  - The main branch (two-cell fit valid) is untouched byte for byte; only the fallback branch changes: its thickness
+    becomes c_f × the measured e-fold depth of the line's rise (defined under an interior peak) instead of c_f × k·ΔT/q_net,
+    and a line is refused only when its rise never e-folds within the window (`fr_nodepth`), not when q_net ≤ 0.
+  - The energy thin limit h_E = K_Ic²(1+ν)/σ_s² is logged per event, never applied (design note T3).
+  - Expected on flame legs: identity everywhere but on fallback firings; the physics content arrives with the beam port.
+
+### The P2-19 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-19 — The flake depth from the line's own profile: the fallback reads the e-fold depth, the no-skin refusal retires, the energy thin limit is logged
+
+Status: **accepted by review** (2026-11-05; all eight gating rows reproduce independently, no diff-review row tagged `bug`). ⚠⚠ On today's decks what shipped is a WIDENED REFUSAL, not a new thickness: ℓ_p is finite on **0 of 114** fallback firings, so the only behavioural change is that 2 run-2 ledges are now refused (DR-1). ⚠⚠ And ℓ_q was NORMAL while ℓ_p is ALONG-LINE — an unstated SR 20 correction that makes P2's band a median statement only (ratio is 0.857/μ, μ down to 0.038; DR-2).
+
+### Context
+
+The flake thickness is h_f = c_f·ℓ with c_f = 0.4 and ℓ the heated-layer depth. The design note
+(`docs/project/DESIGN_2026-11-05_onset_and_thickness.md` §4) settled that c_f stays: it carries the gradient physics
+the minimum flux rests on (a parameter-free thickness is flux-independent at onset and deletes the floor), and the
+onset stays gradient-blind (§2). What the beam needs is only that ℓ be **defined on any profile**. Today the face
+list has two ways to get ℓ: the two-cell exponential fit (the main branch, valid when the top two cells decay) and,
+when the fit is flat, a fallback that takes the face temperature from the face heat balance and sets ℓ_q = k(T_f −
+T0)/q_net — which is undefined, and refuses the line as "no skin", whenever the net face flux is not into the rock.
+Under volumetric heating the face loses heat, so every line would be refused. P2-19 replaces the fallback's ℓ_q by
+the e-fold depth of the line's own temperature rise, read off the profile the depth scan already walks, and retires
+the no-skin refusal. The main branch is untouched byte for byte. On flame legs the change can only act on fallback
+firings, which are rare (on-disk counts below); the physics content arrives with the beam port, which this packet
+does not do (the face list keeps refusing beam decks). Carried: P2-17 DR-6 (the onset deck removes nothing under B);
+P2-18's two gates (tree `p2_18.md5`, face `face_p2_18.md5`); R = 0.531 declared and untouched.
+
+### Sources (opened 2026-11-05)
+
+- `src/Integrator/MMWSpalling/FaceRemoval.H`: main branch `:500–506` (`RawSurfaceX` → `ReconFromX(... sp_flake_c_f ...)`);
+  fallback `:507–550` (`SurfaceCellFlux(... &Tf)` Newton root; `q_net = a3 − a4`; `ell_q = k_c (Tf − T0r)/q_net`;
+  `hf = sp_flake_c_f * ell_q` with the two caps `/ L.mu`; else `h_f = 0, noskin = 1`); the line profile accessors
+  `:553–565` (`T_at_d(d) = Gl[d*NF]`, `T0_at_d(d) = Gl[d*NF+1]` or `T0r`; `nprof = min(L.Dmax, run − 1)`); the scan's
+  `sigma_at_depth` / `kic_pa_at_z` lambdas `:570–585`; B's thickness `:607–621` (`x = L.mu * sp_flake_c_f * ell`, `ell =
+  o.rec.ell_eff`); removal `:705–709` (`h = o.through ? L_av : o.rec.h_f`); counters `:79–84`, reset `:340–344`, accumulate
+  `:676–677` (`o.fb` → `fr_fb_c`, `o.noskin` → `fr_noskin_c`); CSV header `:868–882` and row writer below it.
+- `src/Integrator/MMWSpalling.H` `:1096–1111`: `RegisterIntegratedVariable` of `fr_fb_*`, `fr_noskin_*`. `ReconFromX`
+  (`MMWSpalling.H`, search `static SurfaceRecon ReconFromX`): `r.h_f = frac_use * ell_used`; `r.ell_eff = dz/x`.
+- `src/Integrator/MMWSpalling/Shared.H` (P2-18): the home of pure helpers both paths call (`ScanTAtZv`, `DepthScanH`, ...).
+- Constants consumed: `spall.flake_c_f = 0.4` (`validation/shared/model_form_flame.inputs:29`); `grimsel.nu = 0.30`,
+  `grimsel.K_Ic0 = 1.5` MPa√m (`validation/shared/rock_grimsel.inputs:49–50`); `spallation.sp.stress_relief = 0.531294` (`:57`).
+  `ScanKIcPa(T)` returns Pa√m; `ScanSigmaT(...)` returns Pa, compression-positive.
+- **Fallback FIRINGS on disk, from the event logs** (`rc_flag` bit 1 = `o.rec.flat`, set only on the fallback branch):
+  P2-16 `legs/HOS_R` 15 s: **1 of 5,066** (t 14.42 s, q_net > 0); P2-17 `legs/N_S070`: 1 of 1,126; P2-16 `legs/CAL`: 0 of
+  10,804; **P2-14a `studies/p2_14a_cref_face/legs/C0_h150`** (the calibration deck at h 150, 200 s, d off): **118 of
+  3,379, from t 120.3 s**, all q_net > 0, ℓ_eff median 11.3 mm, h_f median 1.73 mm. Fallback EVALUATIONS (thermo, per
+  step, Höser legs sampled 1 in 6) are far larger: HOS_R `fr_fb_floor` 11,940 with `fr_noskin_floor` 9,614 — the cold rim.
+  ⚠ A line that fires while `noskin` removes nothing and WRITES NO ROW (`FaceRemoval.H:679`: `if (o.fire && o.noskin &&
+  !o.through) continue;`), so the old logs cannot count no-skin firings; the eight P2-18 face-gate legs have fb = 0.
+- Design note §4 (T1/T2, why c_f stays; T3 = h_E = K_Ic²(1+ν)/σ_s² as a logged lower bound), §5 (the face balance is
+  the sign-agnostic surface temperature; it is already the fallback's T_f).
+- Gates: `studies/tree_sweep_0922/witness/{guarded_post_all_par.sh, face_gate.py, REFERENCE.md}` (P2-18).
+
+### Goal
+
+1. **`Shared.H`: one pure helper**
+   `template <class RISE> static Set::Scalar ProfileEFoldDepth(RISE&& rise_at_d, Set::Scalar rise_s, Set::Scalar dz, int nmax)`:
+   samples are the face (z = 0, value `rise_s`) and the cell centres z_d = (d + ½)dz, d = 0..nmax, value `rise_at_d(d)`.
+   Returns the first depth z* at which the rise falls to `rise_s/e`, interpolating **ln(rise)** linearly between the
+   bracketing samples (exact for an exponential at any dz); linear interpolation of the rise only when the lower
+   bracketing sample's rise is ≤ 0. Returns NaN when `rise_s ≤ 0` or the rise never reaches `rise_s/e` for d ≤ nmax.
+   A second helper (or a flag) returns the peak: `z_peak` = the depth of the largest sample and `ell_pk` = the e-fold
+   depth measured from that peak downward (NaN when the peak is the face). No state, no fields.
+2. **`FaceRemoval.H` fallback (`:507–550`)**: keep `Tf` from the face balance and `o.rec.T_surf = T_bar = Tf`; replace
+   the `q_net > 0 && Tf > T0r` block by: `ell_p = ProfileEFoldDepth(d ↦ T_at_d(d) − T0_at_d(d), Tf − T0r, dx, nprof)`;
+   if finite: `hf = sp_flake_c_f * ell_p` with the two existing caps, `o.rec.h_f = hf`, `o.rec.ell_eff = ell_p`, `o.fb = 1`;
+   else `o.rec.h_f = 0`, `o.nodepth = 1`. Keep `o.q_net = q_net` and `o.rec.ell_q = ell_q` (when q_net > 0) for the log
+   only. Delete the `noskin` member and its three counters; add `nodepth` and `fr_nodepth_c[3]` (register as
+   `fr_nodepth_floor/wall/roof` in place of `fr_noskin_*`, same site, same reset). **The removal-loop branch at `:679`
+   becomes `if (o.fire && o.nodepth && !o.through) continue;`** — a line that fires with a finite ℓ_p while its face
+   is losing heat now REMOVES material and writes a row. The packet's two behavioural changes on flame runs are this
+   and the fallback thickness itself (ℓ_q → ℓ_p); everything else is identity.
+   ⚠ The main branch `:500–506` and B's site `:607–621` are not edited: B reads `o.rec.ell_eff`, so on fallback lines
+   x = μ·c_f·ell_p by the existing expression.
+3. **Diagnostics logged for EVERY fired line, main branch included** (pure reads; the main branch's behaviour is not
+   touched): `ell_p` = `ProfileEFoldDepth` on the line's rise from `Ts` (so a line that later switches branch can be
+   checked for a thickness jump), `z_peak`, `ell_pk`, and the energy thin limit `h_E = K_Ic(T_s)² (1 + ν) / σ_s²` [m]
+   (the circular-blister form; a straight-sided blister gives 2K²/σ², 1.5× larger — state which in the writer's
+   comment). `σ_s = ScanSigmaT(scan_g, T_at_zv(0), T0_at_d(0), 1.0, conf_off, pE, pB, pNu)` [Pa] — the scan's own
+   `sigma_at_depth` is local to the `k_i_at_zcrack` lambda and not reachable; step zero confirms `ScanSigmaT` applies
+   `sp_relief` so σ_s is the relieved stress the criterion reads. `K_Ic(T_s) = ScanKIcPa(Ts)` [Pa√m], ν = `pNu`.
+   Appended CSV columns, in this order: `ell_p`, `z_peak`, `ell_pk`, `h_E` [all m]. No `fb` column: `rc_flag` bit 1
+   already marks the fallback branch. Nothing reads any of them.
+4. **`tests/MMWSpalling/unit/profile_depth/test`** (offline, seconds): rows z0a–z0d must execute the C++ helper — a
+   small probe binary compiled against `Shared.H`'s function is the clean way; if a probe is impractical, mirror
+   `unit/buckle_lock`'s source read for the structure and run the four cases through a Python re-implementation that
+   is asserted textually identical to the C++ (and say so in the notes).
+5. **Study `tests/MMWSpalling/studies/p2_19_flake_depth/`**: `run.py` (legs below, each with `argv.sh`, `BINARY.txt`,
+   `.done`), `reduce.py` (rows a2–e0), `chain.sh`. No deck edits, so no `inputs_pre/`.
+6. **Gates and records**: tree gate `guarded_post_all_par.sh p2_19` vs `p2_18.md5`; face gate `face_gate.py run p2_19`
+   + `cmp p2_18 p2_19`; `REFERENCE.md` declares `face_p2_19.md5` with the audit of every differing path (a1);
+   `docs/project/MODEL_CARD.md` row 20 (c_f's second reader: the fallback's ℓ_p) and §12.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | quantity | site and guard | units |
+|---|---|---|---|
+| L1 | the fallback branch EXECUTES | `x = (run >= 2) ? RawSurfaceX(...) : 0.0; if (x > 0.0) {main} else {fallback}` (`:501–507`); `RawSurfaceX` returns 0 unless both rises are positive and decaying. Witness: `rc_flag` bit 1 rows on C0H150 (118 on disk) and thermo `fr_fb_*` > 0 on HOS | — |
+| L2 | the new refusal | `rise_s = Tf − T0r ≤ 0` or `ell_p` NaN ⇒ `nodepth`; witness `fr_nodepth_*` on HOS's cold rim (old `fr_noskin_floor` 9,614) | K, m |
+| L3 | **the conjunction a fallback FIRING needs**: fit flat AND finite `ell_p` AND `score ≥ 1` on `Ts = Tf` AND B passes with x = μ·c_f·ell_p | `:507` → `:550` → the scan `:566–600` (unchanged) → B `:607–621` (unchanged, reads `ell_eff`) → removal `:705`; witness: CSV rows with `fb = 1`, `h_f > 0`, `bk ≤ 1` | m |
+| L4 | the main branch is untouched | `x > 0` ⇒ `ReconFromX` unchanged; witness a1/a2/a3 byte identity of the pre-existing columns | — |
+| L5 | `h_E` units | `ScanKIcPa` Pa√m, `sigma_at_depth(0)` Pa ⇒ h_E in m; printed beside `h_f` [m] | Pa√m, Pa, m |
+| L6 | no new key | the packet adds no `pp.query*`; `unit/retired_keys` and `lateral_flux_lock` unchanged | — |
+| L7 | the cold rim never fires | lines with `Tf − T0r` small: `ell_p` finite, `score` ≪ 1 ⇒ no firing; witness c1's r > 25 mm count = 0 | — |
+| L8 | **the formerly-no-skin firings** | `:679` now `nodepth`; a firing line with q_net ≤ 0 and finite ℓ_p removes; witness: new-log rows with bit 1 set AND `q_net ≤ 0` (none can exist in the old logs) | W/m², m |
+
+### Legs (exact argv tokens)
+
+- **HOS**: `studies/p2_16_span_rule/legs/HOS_R/argv.sh` token for token, `plot_file` re-pointed; `stop_time=15.0` stays.
+- **C0H150**: `studies/p2_14a_cref_face/legs/C0_h150/argv.sh` verbatim, `plot_file` re-pointed (the calibration deck
+  at `h_expr=150.0`, 200 s, no retired key, B off by the deck's declared override): the one leg on disk with a
+  fallback population worth measuring (118 firings from 120.3 s).
+- **CAL**: `studies/p2_16_span_rule/legs/CAL/argv.sh` verbatim, `plot_file` re-pointed (60 s).
+- **T00_2 / T00_1 / T00_05**: `unit/face_removal` `run_leg` keys for `mesh_keys("2"/"1"/"05")` + `surface_patch.face_list=1`
+  + `stop_time=8.0` (the face gate's T00_1_k1 form, at three meshes).
+- **Face gate**: `face_gate.py run p2_19` (13 legs). **Tree gate**: `guarded_post_all_par.sh p2_19`.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0a | 1 | helper on a piecewise-LINEAR rise (samples lie on the interpolant) | returns the exact e-fold crossing to 1e-12 relative | **gate** | the interpolation is wrong |
+| z0b | 1 | helper on an exponential rise, ℓ = 1.4 mm, dz = 1.0 and 2.0 mm | ℓ_p/ℓ = 1 within 1e-12 at BOTH cell sizes (log interpolation is exact for an exponential) | **gate** | the interpolation is on the rise, not its logarithm, or the face sample is not used |
+| z0c | 1 | helper on a flat rise (rise_at_d = rise_s) and on rise_s = 0 | NaN both | **gate** | a flat profile would be given a thickness |
+| z0e | 1 | offline: the e-fold depth of the erfc profile of constant-flux surface heating vs the tangent depth k·ΔT_s/q (what the old fallback used) | a derived ratio, reported with its derivation (the second agent quotes ≈ 0.85) | report | sets P2's centre |
+| z0d | 1 | helper on an interior-peak rise: rise(z) = A·exp(−((z − 2 mm)/3 mm)²), dz = 1 mm, face value at z = 0 | ℓ_p = 5.61 mm ± 0.10 (analytic: rise_s = 0.641A, rise_s/e at (z − 2)/3 = 1.203); z_peak = 2 mm ± 0.5; ell_pk = 2 + 3 = 5.0 mm ± 0.10 | **gate** | the helper cannot read a profile whose peak is below the face. ⚠ This proves readability only: the e-fold from the FACE deepens as the face cools (0.64/0.3/0.1 of the peak ⇒ 5.6/6.5/7.5 mm); which depth is the layer under a beam is the port's question, which is why both are logged |
+| a0 | 2 | tree gate vs `p2_18.md5` | 0 of 2,639; controls d2aa 26, d2t 863 | **gate** | the column path moved (it must not: `Removal.H` is not edited) |
+| a1 | 2 | face gate `cmp p2_18 p2_19` | every differing path is one of: (i) `thermo.dat` with the header change −`fr_noskin_*` +`fr_nodepth_*` and otherwise identical non-timer columns; (ii) `*_removal_events.csv` whose pre-existing columns are byte-identical and which carries the four appended columns; **no `Cell_D`, `Cell_H` or `Header` differs on any leg** (pre-registered: fb = 0 on all eight legs) | **gate** | a main-branch firing moved, or a fallback firing exists on a gate leg that the on-disk counts did not show |
+| a2 | 2 | T00_2 / T00_1 / T00_05 event logs vs the P2-9 record (`unit/face_removal/output/T00_{2,1,05}_k1`) over 0–8 s and vs `face_p2_18/fr/T00_1_k1` | pre-existing columns byte-identical | **gate** | identity on a flat uniform deck fails ⇒ the main branch was touched |
+| a3 | 3 | CAL vs P2-16 `legs/CAL`: event log (old columns) and the 98 kept plotfiles | identical | **gate** | the onset deck moved (fb 576 at step 0 only, no firing there; 2,695 wall evaluations never fire) |
+| c1 | 3 | C0H150 vs `p2_14a_cref_face/legs/C0_h150`: rows identical (pre-existing columns) up to the first row that differs; the step of that row vs 120.3 s; then the fallback population (bit 1): count, r, h_f and ℓ_eff medians new vs old; **the formerly-no-skin population** (bit 1 AND q_net ≤ 0): count, r, h_f, volume; `fr_nodepth` Σ vs old `fr_noskin` Σ; V(f) at 200 s new/old | report | P1–P4 |
+| c2 | 3 | HOS vs P2-16 `legs/HOS_R`: identical up to its single old fallback firing (t 14.42 s); the formerly-no-skin population on the cold rim (bit 1 AND q_net ≤ 0): count and r; firings at r > 25 mm | report | P3, P6 |
+| c3 | 3 | `h_E` on HOS, CAL and C0H150: median, p10, p90 [µm]; h_f/h_E median | report | P5. ⚠ HOS runs at 0.1636 of the calorimeter heat, so its flakes (~0.5 mm) are several times thicker than at Höser's measured 7.4 MW/m², where c_f·ℓ ≈ 0.07 mm ≈ h_E; a ratio of 5–15 on HOS does not say the limit is far from biting at the real flux |
+| c4 | 3 | isotropy witness on HOS at 15 s: removed volume per 11.25° sector (quarter domain, r ≤ 25 mm) ÷ sector census; spread new vs old | report | new − old > 0.05 ⇒ the fallback thickness introduces a grid-direction bias |
+| e0 | 4 | verdict | — | **verdict** | a0–a3 hold (the change is confined to fallback and formerly-no-skin firings); c1/c2 say how large those populations are and how the thickness moved; the helper reads an interior peak (z0d), with both depth definitions logged for the port to choose on data |
+
+### Pre-registered predictions
+
+- **P1** (c1): C0H150 is byte-identical in the pre-existing columns up to **t = 120.3 s** (its first old fallback firing);
+  the new fallback population is **118 ± 30** firings (the same lines fire; a changed thickness moves later ones).
+- **P2** (c1): h_f(new)/h_f(old) median on the fallback firings in **[0.7, 1.1]**, centre from z0e (the e-fold depth of a
+  surface-heated profile is below its tangent depth k·ΔT/q; the second agent's estimate 0.85).
+- **P3** (c1, c2): `fr_nodepth` Σ ≤ old `fr_noskin` Σ, and **0 formerly-no-skin firings on HOS** (its 9,614 sampled
+  no-skin evaluations are the cold rim, score ≪ 1) and **0 firings at r > 25 mm**. On C0H150: 0 (all its flat rows have
+  q_net > 0 on disk). A non-zero count is a finding: lines the old rule silently refused.
+- **P4** (c1): V(f) at 200 s new/old on C0H150 within **1 ± 0.05** (118 of 3,379 firings carry a changed thickness).
+- **P5** (c3): h_E median **30–80 µm** on HOS (K_Ic(T_s) 1.0–1.4 MPa√m, σ_s ≈ 2.1e8 Pa at the 8 µm flaw), h_f/h_E ≈ 5–15.
+- **P6** (a1): zero `Cell_D` differences on the face gate (bit-1 rows = 0 on every gate leg on disk; HOS_S stops at
+  2 s, before HOS_R's 14.42 s fallback firing).
+
+### Refuting evidence on disk
+- `C0_h150`'s log (118 bit-1 rows from 120.3 s) is the ground for P1; `HOS_R`'s single bit-1 row at 14.42 s for c2.
+- `face_p2_18/*/run/thermo.dat` `fr_fb_*` = 0 on all eight legs is the ground for P6; a1 fails if it was wrong.
+
+### What would make this inert, and the witness for each
+- Only C0H150 has a fallback population; HOS and CAL are identity runs by construction. Witness: z0d reads an interior
+  peak; the run-level beam content waits for the port.
+- `fr_fb_*` and `fr_nodepth_*` are per-step and 1:6-sampled on Höser legs ⇒ ratios only; counts are samples (SR 7(i)).
+
+### Guardrails
+- `FaceRemoval.H` `:500–506` (main branch), `:607–621` (B), `:705–709` (removal) and `Removal.H` are not edited.
+- `spall.flake_c_f` keeps its value and its parse; no key is added, renamed or removed; the retired lists are untouched.
+- The face list's refusals (`fr_abort` block: beam, vapour, feet, `surface_normal`, `max_level`) are untouched: this
+  packet does not port the beam.
+- The thermo header changes only by −`fr_noskin_*` +`fr_nodepth_*`; the CSV only by the four appended columns.
+- `REFERENCE.md`: `face_p2_19.md5` is declared only with a1's audit listing every differing path and its class.
+- Nothing committed; the 15 s and 200 s plotfiles of HOS/C0H150 are kept.
+
+### Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python
+$PY tests/MMWSpalling/unit/profile_depth/test                                   # z0a–z0d
+bash tests/MMWSpalling/studies/tree_sweep_0922/witness/guarded_post_all_par.sh p2_19   # a0
+$PY tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py run p2_19    # a1 (then cmp p2_18 p2_19)
+caffeinate -dis $PY tests/MMWSpalling/studies/p2_19_flake_depth/run.py          # T00 ×3, CAL, HOS, C0H150 (200 s)
+$PY tests/MMWSpalling/studies/p2_19_flake_depth/reduce.py                       # a2, a3, c1–c4, e0
+$PY tests/MMWSpalling/unit/lateral_flux_lock/test; $PY tests/MMWSpalling/unit/buckle_lock/test
+$PY tests/MMWSpalling/unit/retired_keys/test; $PY tests/MMWSpalling/unit/face_removal/test --check
+```
+
+### Claude completion notes
+
+**Files changed.**
+- `src/Integrator/MMWSpalling/Shared.H`: `ProfileFallDepth`, `ProfileEFoldDepth`, `ProfilePeak` (pure templates).
+- `src/Integrator/MMWSpalling/FaceRemoval.H`:
+  - the profile accessors (`nprof`, `T_at_d`, `T0_at_d`) and a `rise_at_d` lambda moved above the branch;
+  - the fallback reads `ell_p`;
+  - `noskin` → `nodepth`, `fr_noskin_c` → `fr_nodepth_c`, and the `:679` guard on `nodepth`;
+  - diagnostics on every fired line;
+  - four CSV columns appended.
+- `src/Integrator/MMWSpalling.H`: the `fr_nodepth_*` registration at the same site.
+- New `tests/MMWSpalling/unit/profile_depth/test`.
+- `witness/REFERENCE.md` (the `face_p2_19.md5` declaration and audit), `witness/WHICH_TESTS.md` (+1 row; face cmp
+  against p2_19).
+- `docs/project/MODEL_CARD.md` row 20 and §12 (old card archived as `MODEL_CARD.pre_p2_19.md`).
+- Study `tests/MMWSpalling/studies/p2_19_flake_depth/`: `run.py`, `reduce.py`, `chain.sh`, `src_pre/`, `bin_pre/`
+  (`5561de02…`), and the logs and txt files; `legs/` is 1.6 GB.
+- Binary `c34e428b8eba6b9a…`; the warning set is identical to P2-18's final build.
+
+| # | measured | verdict | output |
+|---|---|---|---|
+| z0a | linear rise: z* = 0.948180838242837 mm, exact (rel 0) | **PASS** | `Z0.txt` |
+| z0b | exponential ℓ 1.4 mm: ℓ_p/ℓ = 1.000000000000000 at dz 1.0 and 2.0 mm | **PASS** | `Z0.txt` |
+| z0c | flat rise → NaN; rise_s = 0 → NaN | **PASS** | `Z0.txt` |
+| z0d | interior peak: ℓ_p **5.594 mm** (analytic 5.6075), z_peak 1.50 mm (the first of two tied samples 1.5 / 2.5 mm), ell_pk **5.000 mm** | **PASS** | `Z0.txt` |
+| z0e | constant-flux (erfc) profile: ierfc(η\*) = ierfc(0)/e at η\* = 0.483742 ⇒ e-fold / tangent depth = η\*√π = **0.8574** | report | `Z0.txt` |
+| a0 | p2_19 vs p2_18: 0 of 2639; controls d2aa 26, d2t 863 | **PASS** | `GATE_tree.txt` |
+| a1 | 1,172 files each side, 26 differ, 0 one-sided; 13 `thermo.dat` are class (i) (header −noskin +nodepth only, every other non-timer column identical); 13 event CSVs are class (ii) (header +4 columns, pre-existing columns identical on every row); **0 `Cell_D` / `Cell_H` / `Header`** | **PASS** | `A1.txt`, `GATE_face_cmp.txt` |
+| a2 | T00_2 / T00_1 / T00_05 vs the P2-9 record (cut by step at 8 s): 720 / 3,456 / 13,824 rows, pre-existing columns identical; T00_1 vs face_p2_18: identical | **PASS** | `A2.txt` |
+| a3 | CAL vs P2-16 CAL: 10,804 rows identical in the pre-existing columns; 98 plotfile files, 0 differ | **PASS** | `A3.txt` |
+| c1 | C0H150: identical for 641 rows. The first differing row (642) is at **t 120.320 s** and differs only in the logged `h_f`, `ell_eff`, `ell_raw`. Fallback firings **113** (old 118), **all THROUGH firings of run-1 ledges**; ℓ_p finite on **0**. Removal (`h_line`, `n_voided`) identical on 94 of 95 matched rows. The 2 old NON-through fallback firings (run 2) are refused as no depth. Formerly-no-skin firings 0. Σ `fr_nodepth` 44,257 vs Σ `fr_noskin` 0. V(f) 200 s new/old **1.00177** | report | `RESULTS.txt` c1 |
+| c2 | HOS vs **P2-17 N_S164** (same tokens, B on; see takeaways) cut by step at 15 s: identical for 4,834 rows; the first differing row is its single fallback firing (t 14.416 s, run 1, through), differing only in logged `h_f`/`ell_eff`/`ell_raw`; all 231 later rows identical. vs HOS_R (B off): the same. Formerly-no-skin firings 0; firings at r > 25 mm 0. Σ `fr_nodepth` 11 vs the old Σ `fr_noskin` 9,614 over the same 15 s (same sampled rows) | report | `RESULTS.txt` c2 |
+| c3 | h_E median / p10 / p90 [µm] and median h_f/h_E: HOS 39.1 / 33.4 / 42.9, 15.6; CAL 39.5 / 33.7 / 43.3, 25.6; C0H150 40.0 / 34.4 / 43.9, 40.2 | report | `RESULTS.txt` c3 |
+| c4 | HOS vs N_S164 at 15 s: spread 0.0951 vs 0.0951 (+0.0000) | report | `RESULTS.txt` c4 |
+| e0 | The change is confined to fallback and formerly-no-skin firings (z0, a0–a3 PASS). On the flame decks it changed the removal only on C0H150's 2 non-through thin-ledge firings (refused); every through firing removes as before; HOS's removal is identical. The helper reads an interior peak (z0d), and ℓ_p, z_peak, ell_pk and h_E are logged on every firing | **verdict** | `RESULTS.txt` e0 |
+
+**Locks on the shipped binary:**
+- `lateral_flux_lock`, `buckle_lock`, `retired_keys`: rc 0.
+- `face_removal --check`: rc 1 with the same 4 P2-9 tilt-rate FAILs P2-18 recorded (TL20/TL35/TL45/TR, on-disk P2-9
+  outputs; unchanged).
+
+**Prediction scores.**
+- **P1** held: the first moved row is at 120.320 s, and the population is 113 against 118 ± 30.
+- **P2 NOT SCOREABLE:** no fallback firing on any flame deck has a finite ℓ_p (runs of 1–2 cells).
+- **P3** is split:
+  - HOS held: 11 ≤ 9,614, 0 formerly-no-skin firings, 0 firings beyond 25 mm;
+  - C0H150 **MISSED** on Σ `fr_nodepth` ≤ Σ `fr_noskin` (44,257 vs 0), and so did the face gate's SPH_1 / BORE_1 / CAL_S;
+  - formerly-no-skin firings 0 everywhere, as predicted.
+- **P4** held: 1.0018.
+- **P5:** h_E 39.1 µm is inside 30–80 µm, but h_f/h_E 15.6 is just above the 5–15 band.
+- **P6** held: 0 `Cell_D` differences.
+
+### Implementation takeaways
+
+- **The fallback on a flame deck is a thin-ledge path, and a thin ledge has no profile.**
+  - Every fallback firing on C0H150 (118 old, 113 new) and HOS (1) has run ≤ 2. Their window holds 1–2 samples
+    (`nprof = run − 1`), so the rise cannot e-fold and ℓ_p is NaN by construction, not by physics.
+  - Through firings are unaffected, because they remove `L_av` whatever h_f is.
+  - The only behavioural change on flame decks is that a NON-through ledge of run 2 (2 of 118 on C0H150) is now
+    refused. Before, it removed its flake clipped to `L_av` (1.86 and 2.0 mm).
+  - ⇒ The planner should decide whether a line whose window is shorter than one e-fold should fall back to its run
+    (or to the through rule) instead of refusing. P2's thickness ratio needs a deck where the fallback fires on a
+    real profile; the beam port is the first.
+- **`fr_nodepth` counts a different population from `fr_noskin`.**
+  - Under the old rule a line was refused only when q_net ≤ 0 (HOS's cold rim, 9,614 sampled).
+  - Under the new rule the cold rim has a finite depth and is not refused (11). Instead, lines with q_net > 0 but no
+    e-fold inside the window are refused: short runs on block edges and deep soaks, 44,257 on C0H150 and 0 → 1,111 on
+    CAL_S's walls.
+  - None of them fire, except C0H150's 2.
+- **c2's reference was corrected.** HOS_R ran with B off. Since P2-17 the rock file `input_lab` includes sets the span
+  0.012, so the same tokens now run B on. The like-for-like reference is P2-17's N_S164 (same tokens, B on, 30 s), cut
+  by step at 15 s. The packet's HOS_R comparison is also reported. Both are identical up to 14.416 s, so B withdrew
+  nothing removal-visible before then at S 0.1636.
+- **Deviation: `o.fb` stays set on every fallback evaluation.** The packet's listing put `o.fb = 1` only in the finite
+  branch. Keeping it where it was preserves the `fr_fb_*` thermo columns' meaning and their identity (a1: no
+  `fr_fb_*` column moved).
+- **The accessors moved above the branch.** The fallback needs `nprof`, `T_at_d` and `T0_at_d`, which used to be
+  defined after it. They depend only on `L.Dmax` and `run`, and a0–a3 confirm the main branch is unchanged.
+- **`ell_pk` is an absolute depth from the face, not a distance from the peak** (z0d's bar: 2 + 3 = 5 mm). On z0d's
+  Gaussian the ln-linear interpolation lands at exactly 5.000 mm by symmetry (the samples at 4.5 and 5.5 mm bracket
+  the target at the midpoint in ln), against an analytic 5.04.
+- **h_E is the circular-blister form**, K²(1+ν)/σ_s², with σ_s = `ScanSigmaT` at the face, the relieved stress
+  (`sp_relief` applied inside; the literal 1.0 is `f_skel`). The straight-sided form is 1.5× larger. Its spread is
+  narrow (33–44 µm) because T_s at onset is.
+- **`unit/profile_depth` runs the real C++.** `Shared.H` is a class-body fragment, so the test cuts the helpers' text
+  between two marker comments and compiles it into a probe. Renaming either comment breaks the cut, and the test says
+  so.
+- **The CAL deck sets its mesh in the input file**, and P2-8's `geom_of` reads the argv only. `reduce.py` reads the
+  geometry from each run's resolved `metadata` (`geom_meta`).
+- Nothing is committed.
+
+
+### Review findings
+
+Reviewer, 2026-11-05. Independent throughout: my own manifest parser, my own md5 tree walks and column/row
+comparators, my own volume / sector / event-log reducers, my own bisection on `ierfc`, and **my own probe compiled
+from the live `Shared.H` text** (`c++ -std=c++17`) to re-run the four helper cases and four cases the packet does not
+cover. No simulation and no rebuild: the shipped binary `c34e428b…` is on disk and `src_pre/` + `bin_pre/`
+(`5561de02…`, which I confirmed is P2-18's recorded binary) are the diff basis. I did recompile the **helper probe**
+alone — a few hundred bytes, no ALAMO link — because a gate that claims "the real C++" has to be run by the reviewer
+to mean anything, and because I wanted the uncovered paths.
+
+| # | test | bar | **derived independently** | **read from** | row |
+|---|---|---|---|---|---|
+| z0a | piecewise-linear rise | exact crossing to 1e-12 rel | **0.9481808382428365 mm**, bit-for-bit equal to 1.5 mm·(1 − 1/e) = 0.9481808382428365 — rel 0, not 1e-12 | my own probe over `Shared.H`'s text | **reproduces (gate)** |
+| z0b | exponential ℓ 1.4 mm, dz 1.0 and 2.0 mm | ℓ_p/ℓ = 1 to 1e-12 at both | **1.0000000000000002** at dz 1.0 mm (2 ulp) and **exactly 1** at dz 2.0 mm. ⚠ Neither case puts the FACE sample in the crossing bracket, so the bar's "or the face sample is not used" clause is not what discriminates here (DR-5) | my own probe | **reproduces (gate)** |
+| z0c | flat rise; rise_s = 0 | NaN both | **NaN** and **NaN**; the `!(rise_s > 0.0)` guard also covers negative and NaN | my own probe | **reproduces (gate)** |
+| z0d | interior Gaussian peak at 2 mm | ℓ_p 5.61 ± 0.10; z_peak 2 ± 0.5; ell_pk 5.0 ± 0.10 | ℓ_p **5.59375 mm** (my analytic 5.6056), z_peak **1.500 mm**, ell_pk **5.000 mm**. The 1.5/2.5 mm tie is **exact in double** (I printed both: equal bit-for-bit), so z_peak = 1.5 mm is deterministic — but it sits exactly on the bar's endpoint 2 − 0.5 (DR-6) | my own probe | **reproduces (gate)** |
+| z0e | e-fold vs tangent depth of the erfc profile | report, with derivation | ierfc(0) = 0.564189583548, target /e = 0.207553748710, **η\* = 0.483742**, ratio **η\*√π = 0.857410** | my own bisection on ierfc(η) = e^{−η²}/√π − η·erfc(η) | reproduces |
+| a0 | tree gate vs `p2_18.md5` | 0 of 2,639; controls 26 / 863 | **0 of 2,639** changed, 0 one-sided (2,639 common); **d2aa 26**, **d2t 863** | my own parse of `witness/p2_19.md5` against `p2_18/d2aa/d2t.md5` | **reproduces (gate)** |
+| a1 | face gate `cmp p2_18 p2_19` | every differing path class (i) or (ii); **no `Cell_D`/`Cell_H`/`Header`** | My own md5 walk: **1,280 files each side** (1,172 after the gate's `SKIP`), **0 one-sided**, **26 substantive differences = 13 `thermo.dat` + 13 event CSVs**, and **zero `Cell_D`, `Cell_H`, `Header` or `Checkpoint`**. (i) on all 13 thermo: the header changes only `fr_noskin_{floor,wall,roof}` → `fr_nodepth_*`, equal row counts, and **every other column identical as a STRING** — stricter than the gate's float compare — once `fl_t_path` is counted as the wall-clock timer it is. (ii) on all 13 CSVs: exactly `,ell_p,z_peak,ell_pk,h_E` appended, the pre-existing prefix byte-identical on **every** row, no row with an all-NaN tail. Renamed-column values: CAL_S 0 → 1,111 (wall), BORE_1 862,051 → 928,106 (+4 roof), SPH_1 1.067e6 → 2.147e6 (floor), 0 → 0 on the rest | my own tree walk + per-column string diff over `witness/face_p2_1{8,9}/` | **reproduces (gate)** |
+| a2 | T00 ×3 vs the P2-9 record and vs `face_p2_18` | pre-existing columns byte-identical | Cutting **both** sides by step at 8 s: **720 / 3,456 / 13,824** rows each side, pre-existing columns byte-identical at all three meshes (the P2-9 records run on to 2,160 / 9,792 / 41,472 rows). T00_1 vs `face_p2_18/fr/T00_1_k1`: 3,456 vs 3,456, 0 differ | my own step-index cut, `dt` taken from each leg's own argv | **reproduces (gate)** |
+| a3 | CAL vs P2-16 `legs/CAL` | event log + 98 plotfiles identical | **10,804 rows**, pre-existing columns identical on every row; **98 plotfile files, 0 differ, 0 one-sided**; `fr_fb` Σ 3,271 = 3,271 and `ledger_err_solid` max 1.11e-14 on both | my own comparators | **reproduces (gate)** |
+| c1 | C0H150 vs `p2_14a/legs/C0_h150` | report | Identical for **641 rows**; row **642** at **t = 120.320 s** differs **only** in `ell_eff`, `h_f`, `ell_raw` (9.426 mm → 0, 3.770 mm → 0). Fallback firings **118 → 113**, **all 113 through** (runs = {1}); the old set had runs {1, 2} with exactly **2 non-through** (run 2) — those are the refusals. **ℓ_p finite on 0 of 113.** Formerly-no-skin firings **0** (q_net ≤ 0 on 0 rows either side). Σ `fr_nodepth` **44,257** vs Σ `fr_noskin` **0**. V(f) 200 s **21.2540 / 21.2164 = 1.00177**, and I add: the volumes are **identical through step 18,750 (150 s)** and diverge only from 160 s (+0.029 %, −0.012 %, +0.177 %) | my own row walk; my own `(size − Σ fr_f)·dx²·dz·4` with geometry from each run's `metadata` | reproduces |
+| c2 | HOS vs P2-17 N_S164 and P2-16 HOS_R | report | Cut by step at 15 s: **5,066 rows each**, exactly **one** differing row — index 4,834 at **t = 14.416 s**, run 1, **through**, differing only in `ell_eff`/`h_f`/`ell_raw` — against **both** references, so B withdrew nothing removal-visible before then. 15 s **cell and node** plotfiles byte-identical (7 files each). Formerly-no-skin firings 0; firings at r > 25 mm 0. Σ `fr_nodepth` **11** vs N_S164's full-30 s Σ `fr_noskin` 39,193 | my own comparators | reproduces |
+| c3 | h_E on HOS, CAL, C0H150 | report | h_E [µm] median / p10 / p90 and median h_f/h_E: HOS **39.1 / 33.4 / 42.9, 15.6**; CAL **39.5 / 33.7 / 43.3, 25.6**; C0H150 **40.0 / 34.4 / 43.9, 40.4** (notes 40.2; quantile convention). h_E finite on **every** firing | my own reduction of the new `h_E` column | reproduces |
+| c4 | isotropy on HOS at 15 s | report | spread **0.0951** vs N_S164's **0.0951**, Δ **+0.0000** | my own 11.25° sector census (r ≤ 25 mm, ÷ sector cell count) | reproduces |
+| e0 | verdict | — | z0, a0–a3 reproduce; the change is confined as claimed, with the one correction that **C0H150's trajectory does diverge** after 160 s (not only its logged columns); the helper reads an interior peak **when the mesh resolves it** (DR-3) | — | **reproduces** |
+
+⚠ The packet marks **nothing** unquotable, so there is nothing to violate. Against `ROADMAP.md`: the decisive caveat
+here is "**the flake thickness keeps its fraction c_f = 0.4 … a parameter-free thickness is flux-independent at onset
+and DELETES the minimum flux**". `h_E` **is** a parameter-free thickness, and I grepped every use of it in `src/`: it
+is assigned at `FaceRemoval.H:632` and written at `:949` and **read nowhere**. `spall.flake_c_f` keeps its value and
+its parse. ✓ Also honoured: "a new removal regime owes a new ledger term" (no regime added; `|ledger_err_solid|` max
+**1.19e-14** on C0H150 — identical to its reference — 1.11e-14 on CAL, 1.55e-15 on HOS, 4.84e-15 on T00_1); SR 7(i)
+(every `fr_*`/`bk_*` column is per-step and is read as a ratio or declared sampled); SR 8 (argv + binary hash per leg,
+`src_pre/` and `bin_pre/` kept); SR 9 (the gate archives its own legs; no leg re-run); SR 10 (c4 per sector); SR 11
+(`caffeinate`); SR 20 — see **DR-2**, which is where this packet engages it and does not say so. The "neither breaking
+rule is formulated for volumetric heating" note is what **DR-3** measures against.
+
+#### Diff review
+
+Scope: `Shared.H`, `FaceRemoval.H` and `MMWSpalling.H` against `src_pre/` (`Removal.H` diff is **empty**, as the
+guardrail requires); the new `unit/profile_depth/test`; `run.py` / `reduce.py`; `REFERENCE.md`, `WHICH_TESTS.md`,
+`MODEL_CARD.md`. I also checked by mtime that the P2-19 window (15:42–16:03) touched **only** those files plus the
+study and the gate's own re-run legs — `face_gate.py`, `unit/{face_removal,lateral_flux_lock,buckle_lock,retired_keys}/test`
+are all P2-18's or older, so **no comparator and no lock was adjusted to accommodate this change**.
+
+| # | hunk / call / test | class | finding | tag |
+|---|---|---|---|---|
+| 1 | `Shared.H` `ProfileFallDepth` | 1 duplication / 13 guards | Duplication: **none** — it is the shared core that `ProfileEFoldDepth` and `ProfilePeak` both call, so the walk exists once rather than twice. The `std::log(r_a/r_b)` divisor cannot be zero: the loop only returns when `r_b <= target`, and `r_a > target` holds on entry (target = r_a/e) and is re-established at every step, so `r_a > target >= r_b` strictly. The linear branch's `(r_a − r_b)` is guarded by the same invariant with `r_b <= 0 < target` | ok |
+| 2 | `ProfileEFoldDepth` entry guard | 13 guards | `!(rise_s > 0.0)` rejects 0, negative **and** NaN before any division | ok |
+| 3 | NaN inside the profile | 13 guards | A NaN sample makes `r_b <= target` false, so the walk continues with `r_a = NaN` and the function returns NaN — "no depth", silently. `T0_at_d` guards a non-finite T0 (`isfinite(v) ? v : T0r`); `T_at_d` does not. Benign today (a NaN temperature would abort elsewhere) but it converts a corrupt profile into a refusal rather than a failure | nit |
+| 4 | `ProfilePeak`: `d_pk < 0 ⇒ z_peak = 0, ell_pk = NaN` | 4 scope vs source | **The output for "the face is the peak" is indistinguishable from the output for "an interior peak the mesh cannot resolve".** My probe: a Gaussian peaked at 0.15 mm (the ROADMAP's α = 300 m⁻¹ estimate) on a 1 mm mesh returns exactly `z_peak = 0, ell_pk = NaN` — the same as a monotone flame profile. See DR-3 | **risk** |
+| 5 | `ProfilePeak` tie-break ("the first, on a tie") | 6 fp equality | `if (r > r_pk)` keeps the first of equal samples. On z0d the tie is **exact in double**, so the result is deterministic, not compiler-dependent — but it lands z_peak on the bar's endpoint (DR-6) | nit |
+| 6 | `LineOut` + 4 NaN-initialised members | 7 readers | Each has a writer (`:627–632`) and a logged column (`:948`); initialised to NaN so an unfired line cannot log a stale value | ok |
+| 7 | the accessors / `rise_at_d` moved above the branch | 2 consistency | `nprof`, `T_at_d`, `T0_at_d` depend only on `L.Dmax`, `run`, `Gl`, `have_T0`, `T0r`, all in scope earlier; the `run < 1` `continue` still precedes them. a0–a3 byte identity is the witness, and the four `unit/face_removal` tilt rates are **unchanged to 7 digits** | ok |
+| 8 | `o.q_net = q_net` hoisted out of both branches | 2 consistency | It was assigned in **both** arms before, so this is identical behaviour with one statement instead of two | ok |
+| 9 | `o.rec.ell_q` kept for the log under the **old** guard | 13 guards / 11 comments | `q_net > 0 && Tf > T0r && k_c > 0` still guards the division, and the comment says "the old depth (log only)" — accurate | ok |
+| 10 | `ell_p = ProfileEFoldDepth(rise_at_d, Tf − T0r, dx, nprof)` | **20 name the μ** | **ℓ_q was a NORMAL depth; ℓ_p is an ALONG-LINE length.** I confirmed the convention from the log itself: on 3,270 main-branch rows `h_n / (μ·h_f)` = 1.000000, so `h_f` is along-line and `h_n` is normal, and `ReconFromX` is handed `dx` as its `dz`, so the **main branch's** ℓ_eff was along-line all along. The fallback's ℓ_q was the only normal one, and B's `x = μ·c_f·ell_eff` therefore carried one μ too many on fallback lines. P2-19 makes the two branches consistent — a real fix, and **nothing in the goal, the comment, the takeaways or the model card says so**. See DR-2 | **risk** |
+| 11 | `dx` as the sample spacing | 3 units | `dx = DX[0]` (`:335`), the same scalar every other face-list length already uses (`L.Dmax`, `L_av`, `ScanTAtZv`), so the new call is consistent with its siblings and inherits the isotropic-cell assumption rather than adding one | nit |
+| 12 | the `nodepth` arm leaves `o.rec.ell_eff = infinity()` | 2 consistency | With B **on**, a `nodepth` line that fires is withdrawn by B with non-finite x and books as `bk_n_block` + `bk_n_inf`, so the `:708` `nodepth` `continue` is never reached and the refusal is attributed to buckling. Outcome identical (no removal); attribution wrong. Pre-existing — `noskin` behaved the same — and dormant: HOS's Σ `bk_n_inf` = **0** | nit |
+| 13 | `:708` `if (o.fire && o.nodepth && !o.through) continue;` | 9 removed checks | The one removed check is the `noskin` refusal, authorised by Goal 2 and named in L2/L8. No other check is relaxed or deleted anywhere in the diff | ok |
+| 14 | accounting on the new refusal | 8 accounting | The refusal removes nothing and books nothing, and the invariant confirms it: `|ledger_err_solid|` max 1.19e-14 / 1.11e-14 / 1.55e-15 / 4.84e-15, **identical to the reference** on the two legs that have one | ok |
+| 15 | the diagnostics block, `if (o.fire)`, placed before B | 4 scope vs source | A line B later blocks computes the diagnostics and writes no row, so the logged population is exactly the removed one. Consistent with every other logged column | ok |
+| 16 | `ScanSigmaT(scan_g, T_at_zv(0.0), T0_at_d(0), 1.0, conf_off, pE, pB, pNu)` | 1 duplication / 2 consistency | Argument-for-argument **identical** to the sibling inside `k_i_at_zcrack` at z_v = 0 (`:591`), including the literal `f_skel = 1.0`, and `sp_relief` is applied inside `ScanSigmaT` — so σ_s is the relieved stress the criterion's own s = 0 score uses, as step zero claimed. Not a copy of arithmetic: the same helper, same arguments | ok |
+| 17 | `o.h_E = (sig_s != 0.0) ? K²(1+ν)/σ² : inf` | 6 fp equality / 3 units | An exact float equality as a division guard. It does guard it (only ±0.0 fails) but `!(std::abs(sig_s) > 0.0)` is the idiom used elsewhere. Units check: (Pa√m)²/Pa² = m ✓ (L5), and 39 µm on disk is the right order | nit |
+| 18 | `h_E` has no reader | 7 readers / 12 discriminator | Verified by grep over all of `src/`: assigned `:632`, written `:949`, **read nowhere**. This is what keeps the `c_f = 0.4` caveat intact — an applied h_E would delete the minimum flux. The comment says "Logged, never applied" | ok |
+| 19 | `ProfileEFoldDepth` called twice on a fallback line | 1 duplication | `:562` (used) and `:627` (logged) with arguments equal only because the fallback sets `o.rec.T_surf = Tf`, and the local `ell_p` **shadows** the member `o.ell_p`. A pure function, so no behavioural risk, but one name for two separately computed quantities is how a later edit silently separates them | nit |
+| 20 | CSV header and row writer | 2 consistency | Both append the four columns after the conditional `,bk`, and both unconditionally — verified on 16 logs: every row gains exactly 4 fields, the prefix is byte-identical, and no log has an all-NaN tail | ok |
+| 21 | `MMWSpalling.H` | 9 removed checks | **Exactly** the three `RegisterIntegratedVariable` renames in a 520 kB file; nothing else. The thermo-header guardrail is therefore structural, not just observed | ok |
+| 22 | `unit/profile_depth/test` | 10 RED on the pre-fix binary | It cuts the helpers' real text and asserts the cut holds **exactly three** definitions, then compiles and runs them — no re-implementation. RED on the pre-fix source: `src_pre/Shared.H` contains neither the marker comment nor `ProfileEFoldDepth`, so the cut fails and the first row FAILs. The test says the marker rename breaks it | ok |
+| 23 | z0a–z0d coverage | 10 test strength | **No case puts the face in the crossing bracket** (ℓ < dz/2) and **none runs at nmax = 0** — yet nmax = 0 is the path *every* flame fallback firing takes. I ran both on the real C++: ℓ = 0.3 mm at dz = 1 mm returns 0.29999999999999999 mm, and at nmax = 0 returns 0.300 mm (NaN for ℓ = 2 mm). Correct, but untested, and the nmax = 0 case is the one the packet's own result turns on | nit |
+| 24 | z0d's `ell_pk = 2 + 3 = 5.0 ± 0.10` bar | 6 boundary | The packet's "analytic" 5.0 is the e-fold from the **continuum** peak; the code measures from the nearest **sample** (1.5 mm), whose analytic answer is 5.0414 mm. The code returns **exactly 5.000** because the samples at 4.5 and 5.5 mm bracket the target at the ln midpoint — a grid coincidence, not exactness. The implementer named the discrepancy | nit |
+| 25 | the four new columns as data | 7 readers | `z_peak ≡ 0` and `ell_pk` finite on **0** of 19,253 firings across HOS/CAL/C0H150 — two of the four are presently constant, because no flame profile has a resolved interior peak. Declared in "what would make this inert", but it means the peak machinery is exercised only by z0d | **risk** |
+| 26 | `reduce.py` `geom_meta` | 5 hard-coded | Correctly reads geometry from each run's resolved `metadata` instead of P2-8's argv-only `geom_of`, because the CAL deck sets its mesh in the input file — the SR 5 trap, caught and named. I used the same source and got the same volumes | ok |
+| 27 | `face_removal --check` rc 1 | 9 removed checks | The 4 TL20/TL35/TL45/TR tilt-rate FAILs are **byte-identical** to P2-18's (same rates to 7 digits; the whole 147-line log identical after masking line numbers). Carried, not newly broken. ⚠ TL20 fails at rel −0.0400 against a 0.04 bar — a pre-existing boundary case, P2-9's, not this packet's | ok |
+| 28 | `REFERENCE.md` / `WHICH_TESTS.md` / `MODEL_CARD.md` | 5 hard-coded / 11 comments | The `face_p2_19.md5` declaration states every differing class and the per-leg renamed-column values, and all of them match my own audit; the old list is kept. Model card row 20 carries the 0.857 ratio and "logged, never applied"; §12 item 1 states the port is still to do. No other card row touched | ok |
+
+**Tally: 28 rows — 0 bug, 4 risk, 8 nit, 16 ok.** No row touches a gating row or a standing rule as a `bug`.
+
+#### What the planner needs
+
+- **DR-1 — on today's decks this is a widened refusal, not a new thickness.** ℓ_p is finite on **0 of 114** fallback
+  firings (113 on C0H150, 1 on HOS), because every one has run ≤ 2 and `nprof = run − 1` gives at most one
+  cell-centre sample. I confirmed the mechanism at the helper level rather than taking it on trust: at `nmax = 0` the
+  probe returns a depth only if the skin is thinner than ≈dz/2 (0.300 mm for ℓ = 0.3 mm; NaN for ℓ = 2 mm). So the
+  packet's central change has never executed, and what did change is that **2 run-2 ledges that used to remove are now
+  refused** — the opposite direction from Goal 2's stated intent ("now REMOVES material and writes a row"), which
+  measured **0** cases. Σ `fr_nodepth` 0 → 44,257 on C0H150 and 0 → 1,111 on CAL_S's walls: the new refusal is a far
+  broader population than the old one, harmless only because none of them fire. Under the beam port, where the
+  fallback is the main path, that population is the thing to watch.
+- **DR-2 — the undeclared μ, and what it does to P2's band.** ℓ_q was normal, ℓ_p is along-line, and the main branch
+  was along-line already (`h_n/(μ·h_f)` = 1.000000 on 3,270 rows). The fix is right and it is SR 20's exact trap, but
+  it is unstated — and it changes the pre-registration: the fallback thickness ratio is **0.857/μ**, not 0.857. On the
+  fallback population μ has median **0.874** (so ≈0.98, inside P2's [0.7, 1.1]) but ranges down to **0.0379**, where
+  the factor is ≈23. **P2's band is a median statement only**, and the packet that finally scores P2 must state which
+  kind of length each side is.
+- **DR-3 — z0d proves readability at a peak 4–13× deeper than the one the port needs.** The ROADMAP's own estimate
+  puts the MMW interior peak at ≈0.15 mm (α = 300 m⁻¹) or ≈0.46 mm (α = 100 m⁻¹). My probe on the real helper: at a
+  0.15 mm peak on a **1 mm** mesh, `z_peak = 0` and `ell_pk = NaN` — the peak is invisible and the output is
+  indistinguishable from a monotone profile; it appears at dz = 0.5 mm (ell_pk 0.379 mm) and converges by dz = 0.25 mm
+  (0.432 mm against 0.450 mm at 0.1 mm). At a 0.46 mm peak a 1 mm mesh finds it but reads ell_pk 7 % low. ⇒ the
+  packet's "which depth is the layer under a beam is the port's question" cannot be **posed** at 1 mm; it needs
+  ≈0.25 mm cells, where the notes separately warn the flat floor itself drifts 10.4 % over 2/1/0.5 mm.
+- **DR-4 — the strongest evidence in the packet is a number it logged but did not reduce.** On main-branch firings the
+  new ℓ_p can be compared with the established two-cell fit: **ℓ_p/ℓ_eff median 1.024 (HOS, n 5,065), 1.074 (CAL,
+  n 10,804), 1.143 (C0H150, n 3,264)**. So where the two definitions can be compared at all they agree to 2–14 %,
+  tightening with flux — and together with z0e (ℓ_p = 0.857 × the tangent depth) the e-fold depth sits **between** the
+  two established estimates rather than outside them. That is the case for the new definition being sound, and it is
+  available on 19,139 firings today.
+- **DR-5 / DR-6** are the two bars that do not discriminate what they say: z0b's "the face sample is not used" clause
+  (no z0 case brackets on the face) and z0d's `z_peak` bar, met exactly at its endpoint by an exact tie.
+
+#### What I credit
+
+- **The identity work is unusually thorough and it holds under a stricter comparator than the gate's.** a1 compared by
+  float column; I compared by **string** and still got only the renamed trio. Zero `Cell_D`/`Cell_H`/`Header` across
+  13 legs, 0 of 2,639 on the tree, 10,804 identical CAL rows, 720/3,456/13,824 identical T00 rows at three meshes, and
+  the four tilt rates unchanged to 7 digits — that is a genuinely confined change.
+- **No comparator and no lock was touched.** `face_gate.py` (with its `SKIP` and `TIMERS` sets),
+  `unit/face_removal/test`, `lateral_flux_lock`, `buckle_lock` and `retired_keys` are all P2-18's or older by mtime.
+  The pre-existing `face_removal` rc 1 is carried with its log byte-identical rather than quietly re-baselined.
+- **`unit/profile_depth` runs the real C++ and says how it can break.** Cutting the text between marker comments and
+  asserting the cut holds exactly three definitions is the right shape for a header that is a class-body fragment, and
+  the test names the fragility it buys.
+- **`h_E` is the one thing in this packet that could have deleted the minimum flux, and it is write-only.** A
+  parameter-free thickness logged beside h_f, with the blister form stated in the comment and the 1.5× straight-sided
+  alternative named — exactly what the design note asked for and nothing more.
+- **The takeaways are durable and they volunteer the awkward parts**: the thin-ledge structural reason P2 is
+  unscoreable, the `fr_nodepth` ≠ `fr_noskin` population change with the P3 miss scored as a miss, the `o.fb`
+  deviation from the packet's listing, the `ell_pk`-is-absolute semantics, the corrected c2 reference (HOS_R ran B off;
+  N_S164 is the like-for-like leg), and the `geom_meta` gotcha. The planner can write the port packet from them.
+
+### Verdict: accepted
+
+- **Gating rows.** z0a, z0b, z0c, z0d, a0, a1, a2, a3 all reproduce from my own reductions and my own compile of the
+  helper. No diff-review row is tagged `bug`.
+- **Guardrails.** `Removal.H` diff **empty**; the main branch (`ReconFromX` call), B's `x = L.mu * sp_flake_c_f * ell`
+  site and the removal line `h = o.through ? L_av : o.rec.h_f` are all unchanged in the diff; `spall.flake_c_f` keeps
+  its value and parse; **no new `pp.query*`** anywhere (L6); the face list's refusal block is untouched; the thermo
+  header changes only by the renamed trio and the CSV only by the four appended columns, both verified on 13 gate legs
+  plus the 3 study legs; `REFERENCE.md` declares `face_p2_19.md5` with the full audit and keeps the old list; nothing
+  in `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure` or `LICENSE` touched; nothing committed.
+- **Reruns.** No simulation, no ALAMO rebuild. I did compile and run a **standalone probe** of the three helpers from
+  the live `Shared.H` text, because z0a–z0d claim to run the real C++ and a reviewer who does not run it is quoting
+  the implementer; the same probe gave me the four uncovered cases in DR-1, DR-3 and row 23. I also re-ran nothing
+  else: the locks, gates and legs were read as they stood.
+- **Files inspected.** `ACTIVE_STEP.md`; `ROADMAP.md` (`## Standing rules`, `## Known Stale/Important Notes`);
+  `src/Integrator/MMWSpalling/{Shared.H, FaceRemoval.H, Removal.H}` and `src/Integrator/MMWSpalling.H` against
+  `studies/p2_19_flake_depth/src_pre/`; `FaceRemoval.H:335, 474–485, 500–572, 580–600, 612–632, 700–712, 905–950` and
+  `MMWSpalling.H:1111–1116, 9020+` read directly; `tests/MMWSpalling/unit/profile_depth/test`;
+  `studies/p2_19_flake_depth/{run.py, reduce.py, chain.sh, CHAIN.log, Z0.txt, A1–A3.txt, GATE_tree.txt,
+  GATE_face_cmp.txt, RESULTS.txt, RESULTS.first.txt, BINARY.txt, BINARY_pre.txt, lock_*.log}`; all six `legs/*`
+  (`argv.sh`, `BINARY.txt`, `.done`, `run/metadata`, `run/thermo.dat`, `run_removal_events.csv`, plotfiles);
+  `witness/{face_gate.py, p2_19.md5, p2_18.md5, d2aa.md5, d2t.md5, face_p2_18/, face_p2_19/, REFERENCE.md,
+  WHICH_TESTS.md}`; `studies/p2_18_prereq/{BINARY_a2.txt, lock_face_removal_a3.log}`;
+  `p2_14a_cref_face/legs/C0_h150`, `p2_16_span_rule/legs/{CAL,HOS_R}`, `p2_17_buckle_on/legs/N_S164`,
+  `unit/face_removal/output/T00_{2,1,05}_k1`; `docs/project/MODEL_CARD.md` against `MODEL_CARD.pre_p2_19.md`.
+- The user should run `/plan` next; the planner will archive this step.
+
+## P2-20 — Beam deposition from one dielectric description: permittivity declared once, absorption and reflection computed, the typed α and R retired, closure gated, Zhang/Oglesby re-run as a recorded prediction (2026-11-06, ACCEPTED by review 2026-11-06; archived 2026-11-06)
+
+**Status:** ACCEPTED by review; all nine gating rows (z1–z3, a0–a2, b1–b3) reproduce from the reviewer's own reductions;
+one `bug` (DR-1) on no gating row. Binary `0d071f16…`; pre-step `c34e428b…` (P2-19). Study
+`tests/MMWSpalling/studies/p2_20_beam_deposition/` (`Z0.txt`, `RESULTS.txt`, nine legs; node plotfiles pruned).
+Tree gate 0/2639 and face gate identical: NOT re-pinned.
+
+### What the step established
+- **One dielectric description.** `beam.eps_r` and `beam.tan_delta` (rock file, LIT: Barre granite, DOE report
+  DE-EE0005504 p. 44/52: n 2.24, 30 % single-pass POWER absorption in 25 mm at 28 GHz) give α = 2π√ε′·(tan δ/λ)
+  = 14.00 m⁻¹ and R = ((√ε′−1)/(√ε′+1))² = 0.1465 (the DOE's own Fresnel 0.14) per deck. `beam.alpha_expr` and
+  `beam.R` abort on presence; the α(T) parser machinery is deleted; `BeamSource` takes a scalar.
+- **⚠ The evaluation order of α is load-bearing:** `2π·√ε′·(tan δ/λ)` is the one order in which every beam-ON fixture's
+  tan δ string (ε′ = 1 ⇒ R = 0 exactly) reproduces its old typed α bit-for-bit; the packet's left-to-right order fails
+  on (2000, 2.19e-3) and (100, 1e-3). Three places must agree (`MMWBeam.H`, `z0.py`, the deck strings) and only
+  comments tie them (DR-2).
+- **The closure counter runs on all four advance paths** (it was microstructure-only: the Zhang path had never had
+  one); Zhang implicit closure 6.5e-7, absorbed fraction of the 25 mm block 0.2954 = 1 − exp(−αL).
+- **91 decks edited, 235 lines removed**; 12 fixtures carry ε′ 1 + exact tan δ; 12 Hu extensions the Barre pair
+  (unscored). ⚠⚠ DR-1: `apply.py` swept only `unit/validation/extensions`; `studies/relief_diag/U/input_cell` and
+  `studies/d2j0_hotdisk/input_hotdisk` still carry the retired keys and ABORT (four lines to delete; carried to P2-21).
+- **Zhang/Oglesby (#28c) scored RAW and in brightness, no tuning:** the cold model reaches 0.47–0.61 of the
+  uncorrected radiometer signal over 25–150 s (Z1 468 K, Z1w 565 K at 50 s vs 987 K). ⚠⚠ #28c is the THIRD exposure
+  of an already-melted disc (DOE p. 44/53): the shortfall measures the glassed surface (Woskov: >10× faster second
+  heating), NOT the virgin loss tangent. The planner's α(T) reading from this test was withdrawn before the run.
+- **Zhang's own curve is not reproducible from the paper's stated inputs** (Z2: α 14, R 0, ε 0.7, h 56, ω₀ 0.02 ⇒
+  496 K at 50 s vs their 989; 0.39 of theirs at 150 s). Material laws are theirs digit for digit; the source term
+  (waist: Oglesby's own model used a 20 mm 1/e POWER diameter ⇒ ω 14.1 mm; Zhang Table III prints 0.20 m) is the
+  suspect. A question for the authors (the user's group).
+- **⚠⚠ Test #19 (virgin Barre, 2 kW, HE11 32.5 mm aperture): the first virgin-granite statement.** Onset of melt
+  (axial peak ≥ T_m) 160 s / 318 s / none by 400 s at ω₀ 15 / 20 / 25 mm against the DOE's ≈ 300 ± 50 s — the time is
+  spot-degenerate (the DOE's standoff ½–2 apertures ⇒ ω 13–20 mm at the rock); but the SHALLOWEST melting depth is
+  **5.9 mm (15 mm) / 9.0 mm (20 mm)** (argmax 8–11 mm; the melt zone is a 5–6 mm plateau, DR-3) against the DOE's
+  "melt initially starts 2–4 mm below the surface". With a flat cold α the peak depth is the surface-cooling diffusion
+  length and NO spot or loss moves it to 2–4 mm (advisor 1-D: weaker cooling 7.9–8.6 mm; α 50 flat 3.4 mm but
+  contradicts the 30 % transmission; Hartlieb's T-shape on the cold value 1.6–2.1 mm). ⚠ Half the beam leaves the
+  50 mm Z3 block through the bottom (DR-4). The depth, not the time, is the discriminating observable.
+- **Decision (user, 2026-11-06): lift "flat with temperature"** — P2-21 brings a temperature-dependent loss table in
+  as a rock property with the cell-by-cell optical-depth sum, keeping the cost in view.
+- Housekeeping: 1-D column estimates bound the 3-D runs from above (Z1 −13 % at 50 s; Z3 onsets ≈2× later); Z1x
+  explicit twin +0.12 %; beam runs at 10 s plotting cost 26 GB per 400 s leg (node files pruned).
+
+### Carry-forwards (review)
+1. **DR-1:** delete `beam.alpha_expr`/`beam.R` from the two `studies/` decks; deck sweeps walk `studies/` too.
+2. **DR-2:** lock the association of α (a clause in `unit/retired_keys` R5, or a fixture assertion `α == 10` exactly).
+3. **DR-3:** quote the SHALLOWEST melting depth (plateau), not the argmax.
+4. **DR-4:** deepen the #19 block or model the holder; the onset time carries a 50 %-of-power boundary artefact.
+5. **DR-5:** state the `void_aware ⇒ non-empty k_top_col` invariant at the three new closure call sites.
+6. **DR-6:** "every row" bars must say "every step row" (the t = 0 thermo row precedes the first step).
+7. Hu extensions' `visualize` script has a stale `beam.R` fallback of 0.2.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-06)
+
+- **P2-20 — Beam deposition from one dielectric description: permittivity declared once, absorption and reflection
+  computed, the typed α and R retired, closure gated, Zhang/Oglesby scored as a pre-melt prediction** (`ACTIVE_STEP.md`;
+  2026-11-05; user decisions of the same day).
+  - Archived: P2-19 ACCEPTED (`ARCHIVE_DONE.md` *"P2-19"*): on flame decks the new fallback thickness is a WIDENED
+    REFUSAL (ℓ_p finite on 0 of 114 fallback firings, all thin ledges); the e-fold depth agrees with the two-cell fit
+    to 2–7 % on the main branch at three meshes; the old fallback depth was NORMAL, the new one ALONG-LINE (SR 20).
+  - The rock file declares ONE permittivity and loss tangent (Woskov 2011 Barre: ε′ 5.02, tan δ 0.0213, FLAT with T by
+    the user's decision); α = 2π√ε′ tan δ/λ (POWER coefficient) and R = ((√ε′−1)/(√ε′+1))² are computed per deck;
+    `beam.alpha_expr` and `beam.R` abort on presence; the α(T) expression machinery is deleted (the optical-depth
+    tally returns only with a T-table as a rock property). Closure counter on every advance path, gated.
+  - Zhang/Oglesby corrected to 28 GHz heating (137 GHz was the radiometer), R and losses from the reference, scored
+    RAW and in brightness T. ⚠⚠ DOE report (planner read it): the test Zhang reproduced, #28c, is the THIRD exposure of
+    an already-melted disc (glass heats >10× faster) ⇒ the cold model's 2–3.5× shortfall there measures the glass, not
+    the virgin rock's loss tangent; the virgin record is test #19 (melt onset ≈300 s at 2 kW, 2–4 mm BELOW the surface),
+    run as a bracketed order-of-magnitude leg. Zhang's own curve is not reproducible from the paper's inputs (Z2).
+  - The user's 10 GHz rig is OUT OF SCOPE (no data to share, 2026-11-05); no rig number enters any packet.
+
+### The P2-20 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-20 — Beam deposition from one dielectric description: permittivity declared once, absorption and reflection computed, the typed α and R retired, closure gated, Zhang/Oglesby re-run as a recorded prediction
+
+Status: **accepted by review** (2026-11-06; all nine gating rows reproduce independently; the one `bug` is on no gating row and no standing rule). ⚠⚠ `apply.py` sweeps only `tests/MMWSpalling/{unit,validation,extensions}`, never `studies/`, so TWO live beam-OFF decks still carry the retired keys and now ABORT — `studies/relief_diag/U/input_cell` (named as `DECK` by `relief_diag/run_uniform.py:12`, and the ROADMAP cites that study as live evidence) and `studies/d2j0_hotdisk/input_hotdisk`. Four lines to delete (DR-1).
+
+### Context
+
+The beam deposits power by Beer–Lambert down each column with an analytic cell integral (`BeamSource`,
+`MMWSpalling.H:4946–4975`), energy-exact for a constant coefficient. The coefficient is a typed per-deck expression
+in temperature (`beam.alpha_expr`, `MMWBeam.H:72–77`) and the reflection a typed per-deck number (`beam.R`,
+`MMWBeam.H:52`): two numbers for one material property, both tuned on the only MMW validation deck. A
+temperature-dependent expression is accepted but is not energy-conserving (census 5.6). The user decided
+(2026-11-05): permittivity and loss tangent FLAT with temperature for now; one declared dielectric description per
+rock; the user's own rig is out of scope. So this packet declares one permittivity and one loss tangent in the rock
+file, computes the absorption coefficient and the normal-incidence reflection from them and the deck's wavelength,
+deletes the expression machinery and the two typed keys (abort on presence), puts the closure counter on every
+advance path and gates it, and re-runs Zhang/Oglesby with the measured Barre-granite values and no tuning.
+⚠⚠ Two facts from the DOE report (read by the planner) bound what that re-run can say: the test Zhang reproduced
+(#28c) was the THIRD exposure of an already-melted disc, whose glassed surface heats more than ten times faster
+than virgin rock (Woskov 2011), so a cold volumetric model MUST under-predict its first minute and that says
+nothing about virgin granite; and the same report measured 30 % single-pass absorption through 25 mm of solid Barre
+granite, which fixes the POWER coefficient at 14 m⁻¹ (our literature note's 28 was a factor-2 misreading of
+"0.14 nepers/cm"). The virgin-granite record is test #19 (Fig. 34): melt onset ≈ 300 s after beam-on at ≈ 2 kW,
+with the melt starting 2–4 mm BELOW the surface — an interior-peak observable. No removal under the beam (the port
+is the next step), no α(T), no melt step. Carried: P2-19 DR-1/DR-3; R = 0.531 declared; the two gates.
+
+### Sources (opened 2026-11-05)
+
+- **Oglesby, Woskov, Einstein, Livesay, DOE final report DE-EE0005504 (Dec 2014), OSTI 1169951** (planner's copy
+  `scratchpad/doe.pdf`, 206 pp.; mirror URL in `research_notes/…/microwave_absorption.md:25`):
+  p. 52: "measured the absorption coefficient at room temperature to be 0.14 nepers/cm, corresponding to about 30 %
+  absorption in a 1″ (2.54 cm) thick sample"; "the surface reflection … 0.14 before melting calculated by the Fresnel
+  equations from the measured index of refraction of 2.24"; p. 44: "this 2.5 cm thick granite sample absorbs only 30 %
+  of the 28 GHz power on a single pass while a solid" (28 GHz pick-off transmission) ⇒ **POWER α = −ln 0.7/0.025 =
+  14.3 ≈ 14 m⁻¹**, **n = 2.24 ⇒ ε′ = 5.02, R = 0.1465**, **tan δ = αλ/(2π n) = 0.01065**. p. 44 Fig. 25 and the test
+  log (p. 6802 of the text dump): **#28c = third exposure (6/18/2014) of the 4″ × 1″ Barre disc, 0.7–3.0 kW, TE11 from
+  a 20 mm aperture, 20 m 54 s**; the radiometer signal is "uncorrected for emissivity … an average across the whole
+  aperture of view"; they correct by 1/0.7 (the MELT emissivity). p. 53: "Rock Test #28c is a previously melted sample
+  and does not have the beginning dynamics of virgin granite that is modeled and shown for Rock Test #19"; Oglesby's
+  own model: Gaussian "1/e power diameter of 0.80″ (20 mm)" (⇒ 1/e² radius ω = 14.1 mm); "the melt initially starts
+  2–4 mm below the surface and breaks through to the surface from below". p. 54 Fig. 34: **#19 (1/8/2014, 4″ × 1″ Barre,
+  two samples stacked, HE11 from a 32.5 mm aperture, 1.5–3.4 kW)**: beam on ≈ 200 s at ≈ 2 kW, 28 GHz transmission cut
+  off and the 137 GHz signal jumps at ≈ 500–520 s ⇒ **melt onset ≈ 300 ± 50 s after beam-on**; melt spot ≈ 38 mm.
+- **Woskov & Michael 2011** (`microwave_absorption.md:24`): first heating of virgin granite 7.4 °C/s below 100 °C at
+  1.3 kW absorbed; the second heating of the glassed surface **110 ± 5 °C/s, "more than an order of magnitude faster"**.
+- **Zhang, Millmore, Nikiforakis, arXiv 2211.00681 / Comput. Geotech. 2023** (planner's copy `scratchpad/zhang2211.pdf`):
+  eq. (3) Q = P α exp(−α(z0−z)) with **α_λ = 14 Np/m solid, 56 liquid** (p. 7) — the POWER coefficient (eq. 12 is the
+  2ω form); Table III ω₀ = 0.20 m (the local reference flags this as a misprint for 0.02); ε 0.7/0.3, h 56; R not
+  applied; "an emissivity correction … 0.7 is used" (p. 7); Fig. 6 = test #28c with Zhang's Table II power schedule.
+- **Local reference** `tests/MMWSpalling/validation/zhang/zhang_oglesby_mmw_validation_summary.txt`: block
+  0.1 × 0.1 × 0.025 m, T0 297.5 K, ω₀ 0.02 m, zero standoff, 800 W for 0–150 s (:60–70); digitised Fig. 6: experiment
+  **1410 / 1630 / 1716 K at 50 / 100 / 150 s** (already ÷0.7), Zhang's simulation 989 / 1400 / 1678 K (:160–200);
+  T_m = 1510.5 K (`Zhang.H:59`). ⚠ The present test multiplies the model's T by ε = 0.8 (`test:8–15, 122–130`).
+- **`main.tex:302–317`**: eq. `alpha_def` (2ω/c …) is the power coefficient; the "low-loss" eq. `alpha_approx`
+  π tan δ √ε′/λ is the FIELD coefficient, a factor 2 short of its parent. The code's α is the power coefficient:
+  **α = 2π √ε′ tan δ / λ**; **R = ((√ε′ − 1)/(√ε′ + 1))²**.
+- **Code:** `MMWBeam.H` (parse :35–89, `alpha_expr` :72–77, `R` :52, `lambda` :43, unused member `Q()` :96–118);
+  `BeamSource` `M:4946–4975`; call sites `M:1529` (ConstAlpha), `:1649` (Material), `:1725` (MaterialImplicit),
+  `:2077` (Microstructure), `:4868` (closure); `alpha_f(Tc)` at `:4877`; `beam.R` at `:1508/:1549/:1681/:1875` (bR),
+  `:4869/:4873/:4878`, `Removal.H:79`; `BeamEnergyBalance` `M:4776–4925`, called ONLY from the microstructure path
+  (`:2105`); thermo columns `:174–181`; abort lists `M:90–131`; retired-at-default table `:146–153`; dispatch
+  `:1485–1488` (Zhang: `material` + `solver = implicit` ⇒ `AdvanceMaterialImplicit`); `AdvanceMaterial` ends `:1661`,
+  `AdvanceMaterialImplicit` `:1799`.
+- **Decks carrying the two keys** (live, 87 files): 25 with the beam ON (`unit/beam` α 10 @ λ 1e-3; `unit/equilibrium`
+  2 @ 1e-3; `regime_low_high_power/input_high_power` 0; `beam_void_closure` and `seed_void` 2000 @ 2.19e-3;
+  `scalar_flaw` 2000 @ default 1e-3; `sp_v_n_regime` 300 @ 2.19e-3; five `meier/sp_meier_pilot/input_*` 2000 @ 2.19e-3;
+  13 `extensions/hu_spall_onset_mmwbeam*` 100 @ 2.19e-3 with R 0.2; `zhang_oglesby` 300 @ 2.19e-3, R 0.2) and the rest
+  OFF (P0 = 0: inert lines). `studies/s1_surface_resolution/run_sweep.py:92–95` passes `beam.alpha_expr=` on argv for
+  its beam cases (λ default 1e-3; the tree gate's `s1_smoke` runs them). The three argvs the face gate replays carry
+  only `beam.P0=0.0`.
+- **Gates:** tree `witness/p2_18.md5` (`hash.sh`: dev2d, beam_void_closure, scalar_flaw, s1_smoke are beam-ON); face
+  `witness/face_p2_19.md5` (all legs beam-off); `unit/beam_void_closure` T1 |closure| ≤ 1e-9 (rc 1 by design on T3);
+  `unit/retired_keys` (K-probes on the `gradient_blind` fixture). Census 5.6, §3.3, D1, Q1; model card §8 (:252–260), §12.
+
+### Goal
+
+1. **One dielectric description (`src/Numeric/MMWBeam.H`).** Parse `beam.eps_r` (ε′, default 1.0) and
+   `beam.tan_delta` (default 0.0) AFTER `lambda`; set members `alpha = 2π·√eps_r·tan_delta/lambda` and
+   `R = ((√eps_r − 1)/(√eps_r + 1))²` (⚠ ParmParse order trap: both derived after every input they need). Delete the
+   `alpha_expr` parse, `alpha_parser`, `alpha_f`, `registerVariables`, the `R` parse and the unused `Q()` member. `R` and
+   `alpha` stay members so every consumer keeps its name. Abort if `eps_r < 1` or `tan_delta < 0`.
+2. **Consumers (`src/Integrator/MMWSpalling.H`).** `BeamSource` takes `Set::Scalar a` in place of
+   `amrex::ParserExecutor<1> alpha_f` and drops its `T` argument; the five call sites and `:4877` pass `beam.alpha`
+   (`const Set::Scalar ba = beam.alpha;` replaces `auto alpha_f = beam.alpha_f;` at `:1511/:1552/:1684/:1878/:4791`).
+   Arithmetic inside `BeamSource` and `BeamIncidentIntensity` unchanged.
+3. **Retire the keys.** A P2-20 abort-on-presence loop beside `M:99–131` for `beam.alpha_expr` and `beam.R` (message
+   names the key, P2-20 and the two replacements), before `pp.queryclass<MMWBeam>("beam", …)` (`:170`).
+4. **Closure on every path.** Call `BeamEnergyBalance(lev, time, dt, {})` under `if (P_now > 0.0)` after the H update
+   in `AdvanceConstAlpha`, `AdvanceMaterial` and `AdvanceMaterialImplicit` (pattern: `:2105`). The loop no longer reads
+   temperature, so `temp_old_mf` is not required there; `removal_enabled()` is false on these paths and `surface_mf`
+   is the placeholder (registered `:315`).
+5. **Decks.** A script `studies/p2_20_beam_deposition/apply.py` (pattern `studies/p2_18_prereq/a2_apply.py`) that
+   (a) deletes every `beam.alpha_expr` / `beam.R` line from the beam-OFF decks; (b) gives each beam-ON FIXTURE
+   `beam.eps_r = 1.0` and `beam.tan_delta = <string>` with a comment `# fixture: alpha = <old> 1/m by construction
+   (eps_r 1 => R 0)`, the string chosen by a ±64-ulp search so the computed α reproduces the old value BIT-FOR-BIT
+   where such a double exists (report which); (c) rewrites `s1_surface_resolution/run_sweep.py:92–95` the same way;
+   (d) gives the 13 Hu beam extensions the Barre pair (⇒ α 68.5 m⁻¹, R 0.147 at their 2.19 mm) with a comment that
+   their old 100 / 0.2 were typed and that they are unscored and not run here; (e) declares in
+   `validation/shared/rock_grimsel.inputs` (new block, class LIT — another rock): `beam.eps_r = 5.02` and
+   `beam.tan_delta = 0.01065`, sourced to the DOE report p. 44/52 (Barre: n 2.24, 30 % single-pass absorption in
+   25 mm), flat with temperature by the user's decision, "to be replaced by a Grimsel measurement". Writes
+   `DECK_EDITS.txt` (every line removed/added).
+6. **Zhang/Oglesby deck and test.** Deck: `beam.lambda = 1.070687e-2` (c/28 GHz), `beam.eps_r = 5.02`,
+   `beam.tan_delta = 0.01065`, `losses.epsilon = 0.7`, `epsilon_high = 0.3`, `T_eps_break = 1510.5`, `h_conv = 56`,
+   `amr.thermo.int = 1`, `amr.thermo.plot_int = 1`, `stop_time = 150.0`, `amr.plot_int = 5` (every 10 s); the solver
+   line stays; a header comment stating #28c's provenance (third exposure, glassed surface). Test: scores the RAW
+   surface-centre T and the BRIGHTNESS temperature (1−R)·T against the digitised values ×0.7 (the uncorrected
+   radiometer signal) and against the ÷0.7 values as printed; rows b1–b3 decide its rc; c1–c4 are reports. Keep the
+   REFERENCE table.
+7. **Tests.** `unit/retired_keys`: source clause R5 (none of `alpha_expr`, `alpha_parser`, `alpha_f`,
+   `registerVariables` in `MMWBeam.H`, `MMWSpalling.H`, `Removal.H`, `FaceRemoval.H`; the two key strings each exactly
+   once, in the P2-20 list) and run probes K3 (`beam.alpha_expr=10` ⇒ abort naming P2-20) and K4 (`beam.R=0.0` ⇒ abort),
+   with K0 still rc 0; each clause with a mutation. `unit/beam` unchanged (its ALPHA 10 constant and 5 % bar).
+8. **Records.** `witness/REFERENCE.md`: `p2_20.md5` declared with a0's audit, or "not re-pinned, 0/2639";
+   `WHICH_TESTS.md` beam row adds `unit/beam`, `unit/retired_keys`; the Zhang reference file gains a dated provenance
+   block (the DOE facts above: #28c third exposure; 28 GHz; α 14 power; R 0.14 Fresnel; ÷0.7 is the melt emissivity;
+   Table III ω₀ misprint; #19 as the virgin record); `docs/project/MODEL_CARD.md` §8 table rows (λ, α, R, ε, h: new
+   values, classes MEAS-RIG / MEAS-MAT / DERIVED / as reference) and §12 item 11 bullets; §6 gains `beam.eps_r`,
+   `beam.tan_delta` (MEAS-MAT, Barre, another rock). Old card copied to `studies/p2_20_beam_deposition/
+   MODEL_CARD.pre_p2_20.md`; `src_pre/`, `bin_pre/`, `BINARY*.txt` kept.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | key / change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | `beam.eps_r`, `beam.tan_delta` → `alpha`, `R` | `MMWBeam.H` parse, after `lambda` | α: five `BeamSource` sites + `:4877`; R: `bR` ×4, `:4869/4873/4878`, `Removal.H:79` | `P_now > 0` (`BeamSource` returns at `P == 0` before α is used) ⇒ beam-OFF decks byte-identical | a0 beam-off files 0 diffs |
+| L2 | the P2-20 abort list | `MMWSpalling::Parse` before `:170` | — | `pp.contains` ⇒ aborts even with `P0 = 0` | K3, K4 |
+| L3 | closure on the material paths | `AdvanceMaterial` / `AdvanceMaterialImplicit` / `AdvanceConstAlpha` end | thermo columns `:174–181` | `P_now > 0`; Zhang dispatches to `AdvanceMaterialImplicit` (`:1486`) | b1: `beam_P_inc` > 0 on every Z1 row |
+| L4 | units: α [m⁻¹] is the POWER coefficient 2π√ε′ tan δ/λ (main.tex's low-loss form is the FIELD coefficient, ×½); the DOE's 30 % in 25 mm is a POWER transmission ⇒ 14 m⁻¹; n = 2.24 ⇒ R 0.1465 = the DOE's own Fresnel 0.14 | — | `exp(−a·s)` on the power | — | z0; b2 absorbed fraction 0.2953 |
+| L5 | fixtures: `eps_r = 1` ⇒ `sqrt(1.0) == 1.0` ⇒ R = 0 exactly; α = tan_delta·(2π/λ) reproduces the old value only if the search finds a string | — | the four beam-ON gate tests | — | a0 (exact ⇒ 0 diffs; else audited round-off) |
+| L6 | the conjunction a Zhang record needs: closure column present (L3) AND raw/brightness T compared (test rewritten) AND α from the Barre pair at 28 GHz (deck) AND the #28c caveat printed | — | — | — | b1 + c1's printed α, R, λ from the run's `metadata` |
+
+### Legs (exact argv tokens)
+
+Binary `bin/mmwspalling-3d-g++` after the build; `RUN = mpirun --oversubscribe --bind-to none -np 4`; each leg records
+`argv.sh`, `BINARY.txt`, `rc`; every run under `caffeinate -dis`. Study root `tests/MMWSpalling/studies/p2_20_beam_deposition/`.
+Z = the edited Zhang deck; every Z-leg adds `plot_file=<study>/legs/<leg>/run`.
+
+| leg | argv | cost |
+|---|---|---|
+| Z1 | `RUN bin/mmwspalling-3d-g++ Z` (#28c schedule, implicit, dt 2 s, 150 s, ω₀ 0.02 as Zhang) | ~2 min |
+| Z1w | Z1 + `beam.omega0=0.01414` (Oglesby's own spot: 1/e power diameter 20 mm) | ~2 min |
+| Z2 | Z1 + `beam.eps_r=1.0 beam.tan_delta=<fixture string for 14 m⁻¹ at 1.070687e-2>` (Zhang's recorded inputs: α 14, R 0) | ~2 min |
+| Z1x | Z1 + `solver=explicit timestep=0.03 stop_time=50.0 amr.plot_int=333` (explicit dt witness; limit dx²/(6D) ≈ 0.07 s) | ~5–10 min |
+| Z3a / Z3b / Z3c | Z1 + `geometry.prob_hi=0.10 0.10 0.05 amr.n_cell=128 128 64 beam.z0=0.05 beam.schedule.t_end=400.0 beam.schedule.P=2000.0 beam.omega0=<0.015 / 0.020 / 0.025> stop_time=400.0 amr.plot_int=5` (test #19: virgin, 2 kW, two stacked discs = 50 mm; the spot is unknown: 32.5 mm HE11 aperture, 38 mm melt spot ⇒ bracket) | ~4 min each |
+| CAL_S | `RUN bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/kant/grimsel_calibration/input stop_time=0.016 plot_file=<study>/legs/CAL_S/run` then `check_shared.py <deck> --run …` | 20 s |
+| HOS_S | the face gate's `HOS_S` tokens (`face_gate.py` `from_record(HOS_R, …)`) + `check_shared.py tests/MMWSpalling/validation/hoeser/input_lab <argv.sh> --run …` | 30 s |
+| gates | `guarded_post_all_par.sh p2_20`; `face_gate.py run p2_20` then `cmp p2_19 p2_20`; `unit/beam/test`; `unit/beam_void_closure/test`; `unit/retired_keys/test` | ~10 min |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline derivation (`Z0.txt`): λ(28 GHz), ε′ from n, tan δ from the 30 % transmission, R, absorbed fraction of 25 mm, (1−R)·2P/(πω₀²) for ω₀ 0.02 and 0.01414, z_R, Gaussian closure order (dz/z_R)², the fixture strings (bit-exact or nearest, per (α, λ) pair), and the 1-D column (Zhang's laws, adiabatic bottom, ε 0.7, h 56) for Z1 / Z1w / Z2 / Z3a–c (surface T, peak T and depth, melt-onset time) — the planner's numbers below | derived and printed with the formula each came from | report | the implementer and planner disagree on a formula — resolve before any run (L4) |
+| z1 | 1 | `unit/retired_keys` R1–R5, K0, K3, K4 (+ mutations RED) | all PASS; K3/K4 abort naming the key and P2-20 | **gate** | a deck naming the typed keys would run silently with them ignored |
+| z2 | 1 | `unit/beam` on the ε′ = 1 fixture | PASS (integral within 5 %, hot spot on axis) | **gate** | the computed α is not what the fixture declares (L4/L5) |
+| z3 | 1 | `check_shared.py` on CAL_S and HOS_S | all four checks pass with the two new rock-file keys resolved to the file's values | **gate** | the rock file's new keys are not read by every including deck, or a deck overrides them |
+| a0 | 2 | tree gate vs `p2_18.md5` (controls d2aa 26, d2t 863) | every beam-OFF file identical; on the four beam-ON tests (dev2d, beam_void_closure, scalar_flaw, s1_smoke): 0 differing files if the exact strings exist, otherwise every differing path audited: `Cell_D` fields max relative difference ≤ 1e-12, thermo columns identical as printed except round-off-level columns (\|value\| < 1e-12), no `Header`/row-count change | **gate** | the beam-off path moved (a key is consumed at P = 0), or the fixture α is not the old α to round-off |
+| a1 | 2 | face gate `cmp p2_19 p2_20` | 0 differing files (all legs beam-off) | **gate** | removal or the flame path moved |
+| a2 | 2 | `unit/beam_void_closure` | T1 \|closure\| ≤ 1e-9, T2, T4 PASS; T3 rc 1 by design, unchanged | **gate** | the cell integral or the closure counter changed on the uniform profile |
+| b1 | 3 | Z1 thermo: `beam_P_inc` > 0 every row, `beam_invariant_viol` = 0, max \|`beam_closure_err`\| | ≤ 1e-3 (Gaussian O((dz/z_R)²) ≈ 4.4e-5 predicted) | **gate** | the closure is not computed on the implicit path, or the Gaussian leaks |
+| b2 | 3 | Z1 `beam_P_dep/beam_P_inc` at step 1, and `beam_P_trans/beam_P_inc` | 0.2953 ± 0.002 and 0.7047 ∓ 0.002 | **gate** | α is not 14.0 m⁻¹ in the run, or the bottom cell's transmission is miscounted |
+| b3 | 3 | Z1x vs Z1 raw surface-centre T at 50 s | within 2 % | **gate** | the implicit dt 2 s is too coarse for the records |
+| c1 | 3 | Z1 and Z1w: raw and brightness (1−R)·T surface-centre T at 25 / 50 / 100 / 150 s vs #28c (uncorrected 987 / 1141 / 1201 K = digitised ×0.7; ÷0.7 as printed 1410 / 1630 / 1716 K) | P3 | report | — (a record with the glass caveat; P3 says what it means) |
+| c2 | 3 | Z2 raw surface-centre T at 50 / 100 / 150 s vs Zhang's curve 989 / 1400 / 1678 K | P4 | report | — |
+| c3 | 3 | Z3a–c: time the PEAK temperature (anywhere on the axis) first reaches T_m = 1510.5 K; the depth of that peak at onset; the surface T then; vs #19's ≈ 300 ± 50 s after beam-on and "melt starts 2–4 mm below the surface" | P5 | report | — |
+| c4 | 3 | Z1 at 150 s: peak T and its depth; the face-referenced e-fold depth of the axial profile (offline, the P2-19 helper's definition) vs 1/α = 71 mm | P6 | report | the volumetric profile is not what the deposition says |
+| e0 | 4 | verdict | — | **verdict** | z1–z3, a0–a2, b1–b3 hold ⇒ the deposition is permittivity-derived, closed and gated on every path; c1–c4 are recorded predictions with their readings |
+
+### Pre-registered predictions
+
+- **P1** (a0): the exact-string search succeeds for all (α, λ) pairs ⇒ **0 of 2,639**; if it fails for any, the differing
+  files are confined to that test and pass the round-off audit.
+- **P2** (b1, b2): closure ≈ 4e-5, absorbed fraction **0.2953**, transmitted **0.7047** (α 14.0 m⁻¹, R 0.1465,
+  (1−R)·I₀ = 1.087 MW/m² at ω₀ 0.02, 2.174 at 0.01414; z_R 0.117 m, waist +2.2 % over 25 mm).
+- **P3** (c1): the 1-D column gives raw T_s **431 / 536 / 701 / 825 K** (Z1) and **550 / 733 / 987 / 1148 K** (Z1w) at
+  25 / 50 / 100 / 150 s, no surface melt by 150 s. The 3-D block loses heat laterally, so the runs read lower: **Z1
+  T_s(50 s) ∈ [460, 560] K, Z1w ∈ [620, 770] K**. Against #28c (uncorrected 1141 K at 50 s, i.e. a rise of 840 K vs the
+  model's 240–440 K) the cold volumetric model is **2–3.5× short**, **as expected for a glassed re-melted surface**
+  (Woskov: second heating > 10× faster). Reading, written in advance: this gap measures the glass, NOT the virgin
+  rock's loss tangent; it is NOT evidence for α(T) and must not be used to tune anything. A run ABOVE the band means
+  the 1-D estimate missed a deck input (schedule, (1−R), ω₀, the cell integral) — check before any physics claim.
+- **P4** (c2): Z2 (Zhang's recorded inputs) reads **≈ 572 K at 50 s** (1-D; 3-D lower), far below Zhang's published
+  989 K ⇒ Zhang's Fig. 6 curve is NOT reproducible from the paper's stated inputs (ω₀ 0.02, α 14, R 0, h 56, ε 0.7);
+  an input or source convention is missing from the paper. This is a question for the paper's authors (the user's
+  group), not a model defect, and "we are colder than Zhang" is not a finding against the code.
+- **P5** (c3): 1-D melt onset **66 / 123 / 199 s** for ω₀ 15 / 20 / 25 mm with the peak 7–14 mm deep (a 1-D artefact:
+  no lateral loss, so the peak walks down as √t). The 3-D runs: **onset between 100 and 400 s** across the bracket,
+  bracketing #19's ≈ 300 s; **the peak sits BELOW the surface at onset** (prediction 1–5 mm from the surface-loss
+  balance z_peak ≈ q_loss/(I₀ α) ≈ 2 mm; the DOE observed 2–4 mm). An onset outside [100, 400] s at every spot means
+  the virgin coupling is wrong (α 14, R 0.15 or the 2 kW) — the first virgin-granite statement this model can make.
+- **P6** (c4): the axial e-fold depth from the face is undefined or ≫ 25 mm at 150 s (1/α = 71 mm; the face-referenced
+  reader finds no e-fold inside the block) — the port cannot use the face e-fold under this beam; the peak-referenced
+  depth is the one to read (P2-19 DR-3).
+- **P7** (b3): explicit and implicit agree within 1 % at 50 s. **P8** (a1, z3): face gate 0 differences; `check_shared`
+  passes on both including decks.
+
+### Refuting evidence on disk
+- The old Zhang run's metadata (`validation/zhang/zhang_oglesby/output/metadata`, 2026-05-30: α 300, R 0.2, ε 0.8,
+  h 51) is the record of what was tuned; its plotfiles are gone, so no old curve is re-scored.
+- `unit/beam_void_closure/sweep_run.log` (closure 1.00000 at α 2000) is the ground for a2.
+- The DOE report's own model (p. 55 Fig. 36: 1.7 kW, 20 mm 1/e power diameter, α 14 solid, melt in ≈ 200 s) is a
+  second estimate for Z3's order of magnitude; the planner's 1-D agrees with it within the spot bracket.
+
+### What would make this inert, and the witness for each
+- The closure call on the material paths never executes (dispatch or guard): b1's `beam_P_inc` > 0 on every Z1 row.
+- The test still multiplies by ε: c1 prints the raw T, the brightness T and the reference's correction statement.
+- The abort list sits after the beam parse: K3 with `P0 = 0` must abort (z1).
+- Fixture strings "exact" by luck of one compiler: a0 is run on the shipped binary; the strings are recorded with the
+  (α, λ) pair they reproduce in `Z0.txt`.
+- Z3's melt onset is the PEAK reaching T_m, read from the plotfiles' axial column (every 10 s): the surface T alone
+  would miss an interior onset by construction (the DOE's 2–4 mm).
+
+### Guardrails
+- `BeamSource`'s cell-integral arithmetic, `BeamIncidentIntensity`, the Gaussian waist law and the uniform profile are
+  not changed; no running optical-depth tally and no temperature dependence is added (user: flat for now); no melt
+  step in α.
+- `beam.lambda` keeps its parse and meaning; no new key beyond `beam.eps_r` and `beam.tan_delta`; the Zhang material law
+  (`Zhang.H`), the implicit solver and the removal code (`Removal.H`, `FaceRemoval.H`, `Shared.H`) are untouched.
+- The Hu beam extensions are edited, not run; the Meier pilot decks keep their fixture α to round-off.
+- Nothing is tuned to #28c, #19 or Zhang's curve; nothing committed; the old Zhang output directory is archived beside
+  the study if the test overwrites it.
+
+### Commands
+
+```bash
+# Build (from the repo root)
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+# Offline first
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_20_beam_deposition/z0.py   # Z0.txt
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_20_beam_deposition/apply.py # DECK_EDITS.txt
+# z1–z3, a0–a2, then the legs (one script, one approval)
+caffeinate -dis bash tests/MMWSpalling/studies/p2_20_beam_deposition/chain.sh
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/validation/zhang/zhang_oglesby/test <study>/legs/Z1/run
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_20_beam_deposition/reduce.py   # RESULTS.txt
+```
+
+### Claude completion notes
+
+**Files changed.**
+- **Source:**
+  - `src/Numeric/MMWBeam.H`: parses `eps_r` and `tan_delta` after `lambda` (unit-aware strtod path); computes
+    `alpha` and `R`; aborts on `eps_r < 1` or `tan_delta < 0`; the `alpha_expr` parse, `alpha_parser`, `alpha_f`, the
+    `R` parse, `Q()` and the `AMReX_Parser.H` include are deleted.
+  - `src/Integrator/MMWSpalling.H`:
+    - the P2-20 abort list (after P2-16's, before the beam parse);
+    - `b_alpha = beam.alpha` at the five captures;
+    - the `BeamSource` signature (`Set::Scalar a`, no `T`);
+    - `BeamEnergyBalance` reads no temperature;
+    - closure calls at the end of `AdvanceConstAlpha`, `AdvanceMaterial` and `AdvanceMaterialImplicit`.
+  - `Removal.H`, `FaceRemoval.H`, `Shared.H` and `Zhang.H` are untouched.
+- **Decks:** `apply.py` edited 91 files, 235 lines (`DECK_EDITS.txt`; every target archived under `inputs_pre/`):
+  - 12 beam-ON fixtures carry `eps_r 1.0` and an exact `tan_delta`;
+  - 12 Hu extensions carry the Barre pair;
+  - the beam-OFF decks lost their two lines;
+  - `s1_surface_resolution/run_sweep.py` gained `TD_FIXTURE`;
+  - `rock_grimsel.inputs` gained the dielectric block.
+  - The Zhang deck was rewritten by hand (Goal 6).
+- **Tests:**
+  - `validation/zhang/zhang_oglesby/test` rewritten (b1–b3 gates, c1/c4 reports, raw and brightness T, no ε
+    multiplication);
+  - `unit/retired_keys/test`: R5 + mutation, K3, K4, `--pre DIR --red LIST`.
+- **Records:**
+  - `witness/REFERENCE.md` (P2-20: not re-pinned);
+  - `WHICH_TESTS.md` (beam row);
+  - the Zhang reference file (dated provenance block);
+  - `MODEL_CARD.md` §6 row 29, the §8 table, bullets and status, §12 item 11 (old card archived as
+    `MODEL_CARD.pre_p2_20.md`).
+- **Study** `tests/MMWSpalling/studies/p2_20_beam_deposition/`: `z0.py`, `apply.py`, `run.py`, `reduce.py`,
+  `chain.sh`, `src_pre/`, `bin_pre/` (`c34e428b…`), `zhang_pre/`, `zhang_output_pre/`, `unit_beam_output_pre/`,
+  `inputs_pre/`, the logs, `RESULTS.txt`. `legs/` is 50 GB: the 178 node plotfiles were removed (`PRUNED.txt`;
+  nothing reads them) and every cell plotfile is kept.
+
+| # | measured | verdict | output |
+|---|---|---|---|
+| z0 | λ 1.0706874e-2; ε′ = 2.24² = 5.0176 (declared 5.02); α_meas = −ln 0.7/0.025 = 14.27 (DOE rounds to 14); tan δ(α 14) 0.01065; code: **α 14.0029, R 0.1465**; absorbed 0.2954; (1−R)I₀ 1.087 / 2.174 MW/m²; z_R 0.117 / 0.0587 m; closure order 4.4e-5 / 1.8e-4. Fixture strings **bit-exact for every gate pair** (in the code's order), nearest only for Z2's (14, 1.070687e-2). 1-D column: Z1 431 / 537 / 704 / 828 K; Z1w 550 / 734 / 988 / 1149; Z2 574 at 50 s; Z3 peak-melt onset 74 / 137 / 224 s | report | `Z0.txt` |
+| z1 | `retired_keys` R1–R5 GREEN; 5 mutations RED; full revert RED; `--pre src_pre --red R5`: R5 RED, R1–R4 GREEN; K1–K4 rc 6 naming their packets, K0 rc 0 | **PASS** | `Z1_retired_keys.log` |
+| z2 | `unit/beam`: integral 9.999546e-3 vs analytic 9.999546e-3 (0.00 %), hot spot on axis | **PASS** | `Z2_beam.log` |
+| z3 | `check_shared` on CAL_S and HOS_S: incl, (i)–(iv) PASS, 55 shared keys resolved; both metadata read eps_r 5.02, tan_delta 0.01065 | **PASS** | `Z3_check_shared.txt` |
+| a0 | p2_20 vs p2_18 **0 of 2639**; controls 26 / 863 | **PASS** | `GATE_tree.txt` |
+| a1 | face gate cmp p2_19 p2_20: **IDENTICAL** (timers only) | **PASS** | `GATE_face_cmp.txt` |
+| a2 | `beam_void_closure` on the sweep's output: T1a max closure 1.7e-15, T1b–d, T2a–b, T4 PASS; T3 FAIL by design (unchanged) | **PASS** | `A2_beam_void_closure.txt` |
+| b1 | Z1: 74 step rows, min P_inc 682.8 W, 0 violations, max \|closure\| **6.54e-7** | **PASS** | `TEST_Z1.log` |
+| b2 | P_dep/P_inc **0.2954**, P_trans/P_inc **0.7046** | **PASS** | `TEST_Z1.log` |
+| b3 | explicit vs implicit at 49.95 s: 468.2 vs 467.7 K (+0.12 %) | **PASS** | `TEST_Z1x.log` |
+| c1 | raw / brightness at 25 / 50 / 100 / 150 s: **Z1 404 / 468 / 549 / 601 K** (bright 345 / 399 / 468 / 513); **Z1w 474 / 565 / 670 / 734 K**. Against #28c uncorrected 987 / 1141 / 1201 K: raw/uncorr 0.47–0.50 (Z1), 0.57–0.61 (Z1w); against as printed 1410 / 1630 / 1716 K | report | `RESULTS.txt` c1 |
+| c2 | Z2 (α 14, R 0): **496 / 591 / 652 K** at 50 / 100 / 150 s vs Zhang's 989 / 1400 / 1678 K (0.50 / 0.42 / 0.39) | report | `RESULTS.txt` c2 |
+| c3 | #19: peak reaches T_m at **159.5 s (ω₀ 15 mm, 8.2 mm deep, top 1256 K)**, **318.3 s (20 mm, 11.3 mm deep, top 1191 K)**, **never by 400 s (25 mm; peak 1363 K)** | report | `RESULTS.txt` c3 |
+| c4 | Z1 at 150 s: peak 629.8 K at 8.2 mm (top 601.2 K); face-referenced e-fold UNDEFINED in the block; peak-referenced UNDEFINED; 1/α 71.4 mm | report | `RESULTS.txt` c4 |
+| e0 | the deposition is permittivity-derived, closed and gated on every path (z1–z3, a0–a2, b1–b3 PASS); c1–c4 are recorded predictions | **verdict** | `RESULTS.txt` e0 |
+
+**Prediction scores.**
+- **P1** held: 0 of 2,639, after choosing the evaluation order (takeaways).
+- **P2** held: closure 6.5e-7, better than the 4e-5 estimate; absorbed 0.2954.
+- **P3:**
+  - Z1 T_s(50 s) 468 K is **inside** [460, 560].
+  - **Z1w 565 K MISSED** its [620, 770] band, below it: the 3-D lateral loss is larger at the narrow spot.
+  - The shortfall against #28c (rise 170 K vs 690 K at 50 s for Z1, 268 K for Z1w) is 2.6–4×, at or above P3's
+    2–3.5×, as P3's reading pre-wrote.
+- **P4** held: 496 K, below the 1-D 572 K and far below Zhang's 989 K.
+- **P5:**
+  - the onset is in [100, 400] s at 15 and 20 mm (160, 318 s) and outside it at 25 mm (none by 400 s); the bracket
+    contains #19's ≈ 300 s at 20 mm;
+  - **the peak is 8–11 mm deep at onset, MISSING the predicted 1–5 mm and the DOE's 2–4 mm.**
+- **P6:** the face e-fold is undefined, as predicted, but so is the peak-referenced one inside the 25 mm block at 150 s.
+- **P7** held: 0.12 %.
+- **P8** held: face gate identical; `check_shared` passes on both decks.
+
+### Implementation takeaways
+
+- **The evaluation order of α is a design choice made to keep the gates frozen.** The packet's left-to-right
+  `2π·√ε′·tan δ/λ` has no tan δ double that reproduces α = 2000 at λ = 2.19e-3, nor α = 100 at 1e-3: one ulp of tan δ
+  moves α by about 1.8 ulps there, so those values are unreachable. That pair is `dev2d` and `beam_void_closure`, both
+  tree-gate tests with discrete removal, where a one-ulp α can cascade.
+  - `2π·√ε′·(tan δ/λ)`, the same formula pinned by parentheses (no reassociation without fast-math), makes every gate
+    pair exact.
+  - Only Z2's (14, 1.070687e-2), a report leg, stays one ulp off; Z2 reads 13.999999999999998.
+  - z0's `code_alpha` mirrors the C++ order, so a later edit to the expression must update both.
+- **R5 was restated.** The packet's "none of alpha_expr … registerVariables in MMWSpalling.H" cannot be met: seven
+  unrelated parsers there call `registerVariables`, and `"beam.alpha_expr"` must survive in the abort list. R5 now
+  asserts: no `alpha_parser`/`alpha_f` identifier in `src/`; no parser and no `alpha_expr`/`R` query in `MMWBeam.H`;
+  the parse order; each key string exactly once, in the P2-20 list, before the beam parse.
+- **`--pre` is now configurable** (`--red R5`). With P2-16's old `src_pre/`, which has no `MMWBeam.H`, the default red
+  set R1–R3 would now also see R5 RED, because that tree has no P2-20 list. Pass `--red R1,R2,R3,R5` for that copy.
+- **b1/b2 skip the t = 0 thermo row.** It is written before the first step with every beam column 0, so "every row"
+  means every step row, and "step 1" is the first row with t > 0.
+- **b3 compares at 49.95 s.** Z1x plots every 333 steps of 0.03 s, so its last plotfile at or before 50 s is at
+  49.95 s; the implicit run is interpolated there. AMReX also writes a final plotfile at `stop_time`.
+- **P3's "1141 K at 50 s" is the 100 s value** (1630 × 0.7). The uncorrected signal at 50 s is 987 K, as c1's own row
+  lists. Scored against c1.
+- **#19's peak depth is the open question this record raises.** The model's peak sits 8–11 mm deep at onset; the DOE
+  saw melt start 2–4 mm below the surface. With α 14 m⁻¹ the source is nearly flat over the top centimetre, and only
+  the surface losses depress the top, so the peak sits where loss and conduction balance; deeper rock is colder. A
+  2–4 mm peak needs a stronger near-surface source (larger α, or α rising with T, which the user has deferred) or
+  weaker surface loss. The spot bracket moves the onset time strongly (160 → 318 s → none) and the depth weakly. This
+  is the first virgin-granite statement the model makes, and it is a depth mismatch, not a time mismatch.
+- **The 3-D runs read below the 1-D column**: Z1 by 13 % at 50 s, and Z3's onsets about 2× later. That is the
+  block's lateral conduction, which the 1-D column omits. z0's numbers bound from above.
+- **Rows that the new code can produce but this deck never exercised:** the Hu extensions now carry Barre's α
+  68.5 m⁻¹ and R 0.147 at their 2.19 mm (typed 100 / 0.2 before). They were not run. Their `visualize` script reads
+  `beam.R` with a fallback of 0.2, which is now stale. Unscored, as the packet says.
+- **Disk:** a 128 × 128 × 64 Zhang plotfile is about 336 MB (cell) + 316 MB (node). The 400 s legs at 10 s plotting
+  made 26 GB each. The node plotfiles were removed; the cell plotfiles stay (c3 reads every one). A later beam study
+  should plot less often or keep only the cell fields.
+- Nothing is committed.
+
+
+### Review findings
+
+Reviewer, 2026-11-06. Independent throughout: my own derivation of every z0 constant from the DOE numbers, my own
+bit-level check of all nine fixture strings (including the order the packet specified, to test the deviation's
+premise), my own manifest and md5-tree comparators, my own thermo and plotfile reducers, and my own read of the
+186-line source diff against `src_pre/` (whose `bin_pre/` I confirmed is P2-19's recorded binary `c34e428b…`). No
+simulation and no rebuild: the shipped binary `0d071f16…` and every leg were already on disk.
+
+| # | test | bar | **derived independently** | **read from** | row |
+|---|---|---|---|---|---|
+| z0 | offline derivation | every number with its formula | λ = c/28 GHz = **1.07068735e-2** m (deck types 1.070687e-2, rel 3.3e-7); ε′ = 2.24² = **5.0176**; α = −ln 0.7/0.025 = **14.2670**; tan δ(α 14) = **0.010650**; code α(5.02, 0.01065, λ_deck) = **14.002926**; **R = 0.146550** (DOE's Fresnel 0.14); absorbed 25 mm **0.295363**, transmitted 0.704637; (1−R)2P/(πω₀²) at 800 W **1.0866 / 2.1739** MW/m²; z_R **0.1174 / 0.0587** m; (dz/z_R)² at dz = 0.025/32 **4.43e-5 / 1.77e-4**. **All nine fixture strings bit-exact** in the code's order; in the packet's left-to-right order exactly two fail — (2000, 2.19e-3) → 2000.0000000000002 and (100, 1e-3) → 99.99999999999999 — precisely the pair the takeaway names | my own Python replication of the C++ expression with `struct.pack` bit comparison | reproduces |
+| z1 | `retired_keys` R1–R5, K0, K3, K4 + mutations | all PASS; K3/K4 name the key and P2-20 | R1–R5 GREEN; **5 mutations RED** including "plant `amrex::ParserExecutor<1> alpha_f;` back in `MMWBeam.H` ⇒ R5 RED"; full revert RED; `--pre src_pre --red R5` gives R5 RED / R1–R4 GREEN; K1–K4 rc 6 each naming its own packet, K0 rc 0. I confirmed `src_pre/MMWBeam.H` contains neither `alpha_parser` nor `alpha_f`'s replacement, so R5 is RED on the pre-change tree | `Z1_retired_keys.log`; my own grep of `src_pre/` | **reproduces (gate)** |
+| z2 | `unit/beam` on the ε′ = 1 fixture | PASS, integral within 5 % | integral **9.999546e-3** vs analytic 9.999546e-3 (0.00 %), hot spot on axis. The fixture's `tan_delta = 0.0015915494309189536` at λ 1e-3 reproduces α = 10 **exactly** (my bit check), which is what makes the test's hard-coded `ALPHA = 10.0` legitimate | `Z2_beam.log`; `unit/beam/{input,test}` | **reproduces (gate)** |
+| z3 | `check_shared` on CAL_S and HOS_S | four checks pass, new keys resolved | both decks: incl + (i)–(iv) PASS, **55 shared keys** resolved; both `metadata` carry `beam.eps_r = 5.02`, `beam.tan_delta = 0.01065` | `Z3_check_shared.txt`; the two legs' `run/metadata` | **reproduces (gate)** |
+| a0 | tree gate vs `p2_18.md5` | 0 of 2,639; controls 26 / 863 | **0 of 2,639** changed, 0 one-sided (2,639 common); **d2aa 26**, **d2t 863**; also **0 vs `p2_19.md5`**. This covers the four beam-ON gate tests, so the fixture strings reproduce the old α through full runs including discrete removal | my own parse of `witness/p2_20.md5` against `p2_18/p2_19/d2aa/d2t.md5` | **reproduces (gate)** |
+| a1 | face gate `cmp p2_19 p2_20` | 0 differing files | **1,172 files each side, 0 one-sided, 13 differing — all `thermo.dat`, every header identical and ZERO moved non-timer columns.** Wall-clock timers only, so "IDENTICAL" is right | my own md5 tree walk of `face_p2_19/` vs `face_p2_20/` with the gate's `SKIP`/`TIMERS` sets | **reproduces (gate)** |
+| a2 | `unit/beam_void_closure` | T1 ≤ 1e-9, T2/T4 PASS, T3 rc 1 unchanged | T1a max \|closure\| **1.727e-15**, T1b 0.0, T1c viol 0, T1d rel 4.45e-6, T2a/T2b closure **1.00000** (matching the recorded `sweep_run.log` ground), T4 removed 18 layers, T3 FAIL by design. Doubly covered: a0 shows this test's whole output byte-identical to p2_18's | `A2_beam_void_closure.txt`; the a0 manifest | **reproduces (gate)** |
+| b1 | Z1 closure | P_inc > 0 every row, viol 0, \|err\| ≤ 1e-3 | **74 step rows**, min `beam_P_inc` **682.759 W**, `beam_invariant_viol` Σ **0**, max \|`beam_closure_err`\| **6.5416e-07**. ⚠ The t = 0 row has every beam column 0, so "every row" is met only as "every step row" (DR-6) | my own reduction of `legs/Z1/run/thermo.dat` | **reproduces (gate)** |
+| b2 | Z1 absorbed / transmitted | 0.2953 ± 0.002 / 0.7047 ∓ 0.002 | **P_dep/P_inc = 0.295363**, **P_trans/P_inc = 0.704637** — equal to my own analytic 1 − e^{−α·0.025} to six digits. And P_inc 682.759 W = (1−R)·800 confirms **R = 0.146550** independently of z0 | same | **reproduces (gate)** |
+| b3 | Z1x vs Z1 at 50 s | within 2 % | Z1x at 49.95 s **468.25 K**; Z1 interpolated from 40 s (445.33 K) and 50 s (467.81 K) to 49.95 s = **467.70 K** ⇒ **+0.118 %** | my own axial reduction of both legs' plotfiles | **reproduces (gate)** |
+| c1 | Z1/Z1w raw and brightness T | report | Z1 raw **403.7 / 467.8 / 548.5 / 601.2 K**, Z1w **474.3 / 565.0 / 669.6 / 733.9 K** at 25 / 50 / 100 / 150 s (25 s linearly interpolated between the 20 s and 30 s plotfiles, as the reducer does) | my own four-cell axial average at the beam centre | reproduces |
+| c2 | Z2 vs Zhang's curve | report | **496.3 / 590.5 / 652.0 K** at 50 / 100 / 150 s against Zhang's 989 / 1400 / 1678 ⇒ ratios 0.50 / 0.42 / 0.39 | same | reproduces |
+| c3 | Z3a–c melt onset, depth, surface T | report | **Z3a 159.5 s, peak 8.20 mm, top 1256.4 K**; **Z3b 318.3 s, peak 11.33 mm, top 1190.5 K**; **Z3c never by 400 s** (peak 1363.3 K). ⚠ Two readings the notes do not carry: the "peak" is a **plateau** flat to 1 % over 5.9–11.3 mm (Z3a) and 9.0–15.2 mm (Z3b) (DR-3), and the 50 mm block **transmits half the beam** — I measured P_trans/P_inc = 0.4965 = e^{−α·0.05} on Z3b (DR-4) | my own onset search over every Z3 plotfile with time interpolation on the peak | reproduces |
+| c4 | Z1 at 150 s peak, depth, e-fold | report | peak **629.8 K at 8.20 mm**, top **601.2 K**; the axial rise runs 303.7 → 332.3 → 309.8 K, so against a face target of 111.7 K and a peak target of 122.2 K **both e-fold depths are undefined inside the block**; 1/α = **71.4 mm** | my own profile + the P2-19 helper's definition applied by hand | reproduces |
+| e0 | verdict | — | z1–z3, a0–a2, b1–b3 all reproduce; the deposition is permittivity-derived, closed and gated on all four advance paths | — | **reproduces** |
+
+⚠ The packet marks **nothing** unquotable. Against `ROADMAP.md`: the note this step is built on — "the only mm-wave
+granite measurement is Woskov's Barre at 28 GHz: n 2.24 and 30 % single-pass POWER absorption in 25 mm ⇒ α 14 m⁻¹,
+tan δ 0.0107, R 0.15 (our note's 28 was a ×2 misreading; main.tex's low-loss formula is the FIELD coefficient, ×½)" —
+I re-derived every one of those numbers from the quoted DOE text and they hold. The user's rig stays out of scope (no
+rig key appears). "No melt step in α" and "no α(T)" hold: the expression machinery is gone and nothing reads
+temperature in the deposition. SR 7(i) does not bite (Z1 logs every step: `amr.thermo.int = plot_int = 1`, 75 rows for
+75 steps). SR 8: `src_pre/`, `bin_pre/`, `BINARY*.txt`, `inputs_pre/` (91 files), `zhang_pre/` and
+`MODEL_CARD.pre_p2_20.md` are all present. The "α(T) is not energy-conserving" caveat is now retired **by deletion**,
+which the model card records.
+
+#### Diff review
+
+Scope: the 186-line source diff (`MMWBeam.H`, `MMWSpalling.H`) against `src_pre/`; `Removal.H`, `FaceRemoval.H` and
+`Shared.H` I confirmed **byte-identical**; `apply.py`, `z0.py`, the rewritten Zhang test, `unit/retired_keys/test`,
+`unit/beam`, `s1_surface_resolution/run_sweep.py`; `REFERENCE.md`, `WHICH_TESTS.md`, `MODEL_CARD.md`, the Zhang deck
+and reference file.
+
+| # | hunk / call / test | class | finding | tag |
+|---|---|---|---|---|
+| 1 | **the two orphaned beam-OFF decks** | 7 readers / 9 removed checks | `apply.py`'s `decks()` walks only `tests/MMWSpalling/{unit, validation, extensions}` (`apply.py:59`) — it **never walks `studies/`**. So `studies/relief_diag/U/input_cell` and `studies/d2j0_hotdisk/input_hotdisk` still set `beam.alpha_expr = 2000.0` and `beam.R = 0.0`, and because the new abort uses `pp.contains` it fires at `beam.P0 = 0` too: **both decks now abort.** `studies/relief_diag/run_uniform.py:12` names the first as its `DECK`, and `ROADMAP.md:403` cites `studies/relief_diag/README.md` as live evidence for a programme caveat. Goal 5(a) says "every `beam.alpha_expr` / `beam.R` line from the beam-OFF decks". Fix: delete four lines. ⚠ Neither deck is in the tree gate, the face gate or the RUNNABLE registry, and no standing rule covers deck runnability, so this is **not** must-fix under the spec. (The five `p2_2e_cref/legs/*/argv.sh` records also carry the key, but they were already dead after P2-16 retired `constraint_depth`, which the same legs set.) | **bug** |
+| 2 | `MMWBeam.H` header comment, eq. 1 | 11 false comments | Updated from `Q̇(x,T) = P α(T) e^{−α(T)(z₀−z)}` to `Q̇(x) = (1−R) P α e^{−α(z₀−z)}` — which also **fixes** a pre-existing omission: the `(1−R)` was already in the code and missing from the comment | ok |
+| 3 | the `eps_r` / `tan_delta` parse | 2 consistency / 3 units | Parsed at `:58–59`, **after** `lambda` at `:49`, so the ParmParse order trap is honoured and the comment says so. `Unit::Less()` is `{1.0, {0,…}}` — correctly dimensionless for both | ok |
+| 4 | the two aborts | 13 guards | `!(v.eps_r >= 1.0)` and `!(v.tan_delta >= 0.0)`: the negated form rejects NaN as well as out-of-range | ok |
+| 5 | `v.alpha = 2π√ε′·(tanδ/λ)` | 13 guards | **No guard on `lambda > 0`**, and this adds a new parse-time division by it immediately below two new range guards. Default 1e-3, so only a deck typing `beam.lambda = 0` is affected (none does — I grepped), where α would be inf, or NaN with the default tan δ | nit |
+| 6 | the evaluation order is load-bearing | 2 consistency / 5 hard-coded | **Three places must agree and only comments tie them:** the parenthesisation in `MMWBeam.H:72`, `z0.py`'s `code_alpha`, and each deck's `tan_delta` string. I verified the premise independently — the packet's left-to-right order misses exactly 2 of the 9 pairs — so the deviation is necessary and correctly diagnosed. But no lock asserts the order; a future algebraic tidy-up silently breaks a0, and the only warning is a comment | **risk** |
+| 7 | `R`, `alpha` kept as members | 1 duplication | Deliberate and right: every consumer (`bR` ×4, `:4869/4873/4878`, `Removal.H:79`, the five `BeamSource` sites) keeps its name, so the diff touches no consumer arithmetic | ok |
+| 8 | `Q()`, `alpha_parser`, `alpha_f`, the parser include deleted | 9 removed checks | All authorised by Goal 1. I grepped `src/` for each identifier: none survives, and `unit/retired_keys` R5 asserts it with a mutation | ok |
+| 9 | the P2-20 abort loop | 7 readers | Placed inside the retired-key block **before** `pp.queryclass<MMWBeam>` and using `pp.contains`, so it fires with the beam off (L2) and the message names the key, the packet and both replacements. Two-sided by K3/K4 (rc 6) against K0 (rc 0) | ok |
+| 10 | five `alpha_f` → `b_alpha` captures, six `BeamSource` calls | 2 consistency | All five capture sites changed identically and every call drops `T`; the signature change makes a missed site a compile error rather than a silent mismatch | ok |
+| 11 | `BeamEnergyBalance` stops reading `temp_old_mf` | 4 scope vs source | This is what makes Goal 4 legal on paths that do not fill `temp_old`. Behaviour-neutral because no deck used a T-dependent α — and a0's 0/2,639 covers `dev2d`, the one microstructure+beam gate test | ok |
+| 12 | the three new `if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, {})` | 4 scope vs source | `void_aware = removal_enabled()` while `k_top_col` comes from the caller, and `k_top_col[col_b]` is indexed whenever `void_aware` — so an empty vector with `void_aware` true would read out of bounds. **It cannot happen, and the invariant is enforced, not assumed:** `spall.enabled` and `vapor.enabled` each `Util::Abort` without microstructure (`:671`, `:685`), and `microstructure_enabled` dispatches to `AdvanceMicrostructure` (`:1496`). I checked the one deck that looked dangerous (`unit/sp_v_n_regime`: spall + vapour + beam, no `microstructure.mode`) and it does carry a `microstructure.*` phase block. ⚠ Nothing at the call site states the invariant; the beam port will bring removal onto a beam path | nit |
+| 13 | the `{}` argument vs the microstructure site's `k_top_col` | 2 consistency | Correct given row 12, and the microstructure site (`:2128`) is unchanged | ok |
+| 14 | `const Set::Scalar a = b_alpha;` in the bottom-cell transmission | 1 duplication | A redundant local kept so the line below reads unchanged. Harmless | nit |
+| 15 | closure accounting on the new paths | 8 accounting | Verified on the runs, not just in the diff: Z1 (implicit) max \|closure_err\| 6.5e-7 over 74 rows, Z3b 4.2e-6, `beam_invariant_viol` 0 on both, and Z3b's `P_trans/P_inc = 0.4965` equals e^{−α·0.05} exactly. The counter exists and balances wherever the new call runs | ok |
+| 16 | `apply.py`'s fixture search | 5 hard-coded / 6 fp | I re-derived all nine strings bit-for-bit. Z2's (14, 1.070687e-2) is correctly reported as NEAREST (13.999999999999998) and is a report leg only | ok |
+| 17 | the 13 Hu extensions | 7 readers | Given the Barre pair (⇒ α 68.5 m⁻¹, R 0.147 at their 2.19 mm) with a comment saying the old 100 / 0.2 were typed, unscored and not run — as the guardrail allows. ⚠ Their `visualize` script still reads `beam.R` with a 0.2 fallback, now stale; the takeaway names it | **risk** |
+| 18 | provenance class of the new pair | 2 consistency | `rock_grimsel.inputs:84` labels them **LIT**; `MODEL_CARD.md` row 29 and the §8 table label them **MEAS-MAT (Barre, another rock)**. The packet itself says LIT in Goal 5(e) and MEAS-MAT in Goal 8, so the implementer followed both — but one measurement now has two provenance classes in the two places a reader looks. MEAS-MAT is the better label: n = 2.24 and the 30 % transmission are measurements | nit |
+| 19 | the Zhang deck's `beam.lambda = 1.070687e-2` | 5 hard-coded | A 7-digit truncation of c/28 GHz (1.07068735e-2), rel 3.3e-7, which moves α by the same. Immaterial, but it is a derived constant typed rather than computed | nit |
+| 20 | the two scoring scripts' α | 5 hard-coded | The rewritten Zhang test reads λ, ε′, tan δ **from the run's `metadata`** and computes α and R itself (`test:102–108`) — exactly right. `unit/beam` instead hard-codes `ALPHA = 10.0` against a deck that now says `tan_delta = 0.0015915494309189536`. Correct today (I verified the string gives exactly 10), but the coupling is invisible and belongs to row 6's three-place agreement | nit |
+| 21 | b1's "`beam_P_inc` > 0 every row" | 6 boundary | The t = 0 row is written before the first step with every beam column 0, so the bar cannot hold as written; the test restates it to step rows and says why (`test:113`). **Third packet running** with a bar quantified over rows the mechanism cannot produce (P2-17 a3, P2-19 a3, P2-20 b1) | nit |
+| 22 | `unit/retired_keys` R5 restated | 9 removed checks | The packet's clause is unmeetable — seven unrelated parsers in `MMWSpalling.H` call `registerVariables`, and both key strings must survive in the abort list. The restatement is narrower but still two-sided: the mutation that plants `alpha_f` back in `MMWBeam.H` turns R5 RED, and `--pre src_pre --red R5` shows R5 RED on the pre-change tree | ok |
+| 23 | c3's Z3 block transmits half the beam | 12 discriminator | At α 14 m⁻¹ over 50 mm, e^{−0.700} = 0.4965, and I measured P_trans/P_inc = 0.4965 on Z3b. All six faces are zero-flux Neumann, so the only sink is the top surface and the bottom sits at 1133 K at 400 s. The onset times therefore depend on a bottom boundary the stacked-disc experiment did not have, and half the delivered power is booked out of the domain | **risk** |
+| 24 | c3's peak depth | 12 discriminator | The reported depth is the **argmax of a plateau**: at onset the axial profile is flat to 1 % over **5.9–11.3 mm** (Z3a) and **9.0–15.2 mm** (Z3b). So the shallowest melting point is 5.9 / 9.0 mm against the DOE's 2–4 mm — a factor 1.5–3, not the 2–5 that "8–11 mm" implies. The physics inference drawn from it (a stronger near-surface source or weaker surface loss) still stands, but weaker than stated | **risk** |
+| 25 | `REFERENCE.md`, `WHICH_TESTS.md`, the Zhang deck header and reference block | 11 comments | The P2-20 note correctly says **not re-pinned**, records 0/2,639 with the controls and the beam-ON tests, states the evaluation-order fact, and keeps `p2_18.md5` / `face_p2_19.md5` as the references. The deck header carries #28c's third-exposure provenance, the 28 GHz-vs-137 GHz correction, the ÷0.7 melt-emissivity caveat and the Table III misprint. Every DOE number I re-derived matches | ok |
+
+**Tally: 25 rows — 1 bug, 5 risk, 7 nit, 12 ok.** The one `bug` is on no gating row and no standing rule, so it does
+not block acceptance; it is DR-1 below and it is four deleted lines.
+
+#### What the planner needs
+
+- **DR-1 (row 1) — two live beam-OFF decks now abort.** The sweep's blind spot is `studies/`. One of the two is
+  yesterday's relief diagnostic, whose README the ROADMAP cites as current evidence; the other is D2j-0's hot-disk
+  study. Delete `beam.alpha_expr` and `beam.R` from `studies/relief_diag/U/input_cell` and
+  `studies/d2j0_hotdisk/input_hotdisk`, and give `apply.py`-style sweeps `studies/` as well — this is the second
+  packet to retire a key whose abort reaches decks the census did not enumerate.
+- **DR-2 (row 6) — the floating-point association of α is now gate-critical and unlocked.** Three places must agree
+  and only comments tie them. A one-line clause in `unit/retired_keys` R5 asserting the parenthesised form, or a
+  fixture assertion that `α == 10` exactly, would make a future tidy-up fail loudly instead of moving the tree gate.
+- **DR-3 (row 24) — the #19 depth mismatch is real but smaller than the headline.** The melt zone is a 5–6 mm
+  plateau, so quote the shallowest melting depth (5.9 mm at ω₀ 15 mm, 9.0 mm at 20 mm) against the DOE's 2–4 mm, not
+  the argmax. The onset *time* bracket (160 / 318 s / none against ≈ 300 ± 50 s) is the sharper statement.
+- **DR-4 (row 23) — half the beam leaves the Z3 block.** Any further #19 work should either deepen the block or model
+  the holder; as it stands the onset time carries a 50 %-of-power boundary artefact.
+- **DR-5 (row 12) — state the `void_aware ⇒ non-empty k_top_col` invariant at the three new call sites** before the
+  beam port brings removal onto a beam path.
+- **DR-6 (row 21)** — the "every row" bar shape has now cost a restatement in three consecutive packets.
+
+#### What I credit
+
+- **α and R are confirmed three independent ways, two of them from the run itself.** My own arithmetic gives α
+  14.002926 and R 0.146550; the run's `beam_P_inc` = 682.759 W is exactly (1−R)·800 W; and `P_dep/P_inc` = 0.295363
+  equals the analytic 1 − e^{−α·0.025} to six digits. The cell integral is not just closed, it is *right*.
+- **0 of 2,639 with the typed coefficient deleted is the hard part of this packet, and it was earned.** Nine fixture
+  strings chosen so the computed α reproduces the typed α bit for bit, through full runs with discrete removal — and
+  the deviation from the packet's stated formula order is not a convenience: I checked, and the specified order
+  genuinely cannot reach two of the nine values.
+- **The closure is now computed on all four advance paths and gated**, and it was the removal of the temperature read
+  from `BeamEnergyBalance` that made that legal — a change whose behavioural neutrality the tree gate proves.
+- **Nothing was tuned, and the record says what it cannot say.** The deck header, the reference file and the model
+  card all carry #28c's third-exposure provenance and state in advance that the shortfall measures the glass, not the
+  loss tangent; P4's "Zhang's curve is not reproducible from the paper's inputs" was written before the run and
+  measured 496 K against 989 K. The one missed band (P3's Z1w) is scored as a miss.
+- **The restatements are honest and bounded.** R5's unmeetable clause, b1's t = 0 row and b3's 49.95 s plotfile are
+  each named with the reason, and R5's replacement kept a two-sided mutation rather than becoming a source grep.
+
+### Verdict: accepted
+
+- **Gating rows.** z1, z2, z3, a0, a1, a2, b1, b2, b3 all reproduce from my own reductions. The single `bug` (DR-1)
+  touches no gating row and no standing rule.
+- **Guardrails.** `Removal.H`, `FaceRemoval.H`, `Shared.H` byte-identical to `src_pre/`; `Zhang.H` untouched;
+  `BeamSource`'s cell integral, `BeamIncidentIntensity`, the waist law and the uniform profile unchanged below the
+  signature; no optical-depth tally and no temperature dependence added; `beam.lambda` keeps its parse and meaning;
+  no key added beyond `beam.eps_r` and `beam.tan_delta`; the Hu extensions edited and not run; nothing in `ext/`,
+  `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure` or `LICENSE` touched; nothing committed.
+- **Reruns.** None — no simulation and no rebuild. Everything above came from artefacts on disk plus my own
+  arithmetic and reducers.
+- **Files inspected.** `ACTIVE_STEP.md`; `ROADMAP.md` (`## Standing rules`, `## Known Stale/Important Notes`);
+  `src/Numeric/MMWBeam.H` and `src/Integrator/MMWSpalling.H` against `studies/p2_20_beam_deposition/src_pre/`, plus
+  `MMWSpalling.H:455–465, 665–692, 1490–1512, 1519–1560, 1662–1680, 1700–1750, 1815–1822, 2098–2130, 4799–4900,
+  4969–4990` read directly; `studies/p2_20_beam_deposition/{z0.py, apply.py, run.py, reduce.py, chain.sh, Z0.txt,
+  Z1_retired_keys.log, Z2_beam.log, Z3_check_shared.txt, GATE_tree.txt, GATE_face_cmp.txt, A2_beam_void_closure.txt,
+  TEST_Z1.log, TEST_Z1x.log, DECK_EDITS.txt, BINARY.txt, BINARY_pre.txt, inputs_pre/ (91 files), zhang_pre/,
+  MODEL_CARD.pre_p2_20.md}`; all nine `legs/*` (`argv.sh`, `rc`, `run/metadata`, `run/thermo.dat`, every cell
+  plotfile on Z1/Z1w/Z2/Z1x/Z3a–c); `witness/{p2_20.md5, p2_18.md5, p2_19.md5, d2aa.md5, d2t.md5, face_p2_19/,
+  face_p2_20/, face_gate.py, REFERENCE.md, WHICH_TESTS.md}`; `validation/zhang/zhang_oglesby/{input, test}`;
+  `validation/shared/rock_grimsel.inputs`; `unit/{beam/input, beam/test, retired_keys/test, sp_v_n_regime/input}`;
+  `studies/s1_surface_resolution/run_sweep.py`; `studies/relief_diag/{U/input_cell, run_uniform.py}`;
+  `studies/d2j0_hotdisk/input_hotdisk`; `docs/project/{MODEL_CARD.md, model_card/runnable.py}`.
+- The user should run `/plan` next; the planner will archive this step. DR-1's four lines are a planner or implementer
+  chore, not a re-run: no gate or record moves when they go.
+
+## P2-21 — Temperature-dependent loss as a rock property, with the optical-depth sum: Hartlieb's measured shape on the declared cold value, one Beer–Lambert integral per column, scored on test #19's melt depth, onset time and transmission (2026-11-06, ACCEPTED by review 2026-11-06; archived 2026-11-06)
+
+**Status:** ACCEPTED by review; all eleven gating rows (z1–z4, a0–a3, b1–b3) reproduce from the reviewer's own
+reductions; 0 `bug`, 5 `risk`. Binary `650d3143…`; pre-step `0d071f16…` (P2-20). Study
+`tests/MMWSpalling/studies/p2_21_loss_table/` (`Z0.txt`, `RESULTS.txt`, `doe/` with the DOE report, Fig. 34 crops,
+the digitiser and `FIG34.txt`; ten legs, pruned to the onset and last plotfiles). Tree gate 0/2639 and face gate
+identical: NOT re-pinned. ⚠ Followed the same day by the ad hoc P2-22 (next record), which moves every ε′ > 1 deck;
+P2-21's own binary is preserved at `studies/p2_22_inrock_spread/bin_pre/`.
+
+### What the step established
+- **The loss table as a rock property.** `beam.tan_delta_T` = 17 (T [K], ratio) pairs in ONE file
+  (`validation/shared/loss_table_hartlieb.inputs`, LIT: Hartlieb granite, 2.467 GHz heating branch, transfer to
+  28 GHz DECLARED), included by the rock file and the Zhang deck through a nested `FILE =` (AMReX follows it).
+  Absent or one pair ⇒ the closed form, byte for byte (U3, a0 0/2639, a1 identical, a3 C1 ≡ P2-20 Z1).
+- **The per-column optical-depth sum is exact.** `ColumnOpticalDepth` mirrors the solid-count gather; U1's two-layer
+  column reproduces 0.864665 / 0.053250 / 0.082085 to 1.8e-14 (the OLD per-cell kernel would read 0.2387 / 1.10:
+  a 10 % over-deposition on that fixture); U2 (two equal pairs) is bit-identical to the one-pair closed form.
+  `P_trans` is taken at each column's last solid cell from the gathered τ. Cost: one (ncols·nz) allreduce per
+  step on table decks only; a 128×128×64 implicit #19 leg runs 200 steps in ≈ 17 s (P2-20's "10 min" was plotfile I/O).
+- **⚠⚠ The column sum is NOT conservative under a spreading Gaussian once α varies sideways** (planner's F1 at step
+  zero; the implementer's takeaway 1): +2.1–7.3 % of P_inc at onset, up to +12.2 % late, ordered by the beam's spread
+  across the block (L/z_R)². The whole-block transmitted fraction carried that error (DR-1). Cured in P2-22 (×0.30).
+- **Test #19, scored on three observables at Fig. 34's MEASURED power** (the user's decision: the trace reads
+  1.46 kW at beam-on, 1.96 kW just before the collapse, NOT the packet's 2 kW): with the table the melt INITIATES at
+  the peak, 1.95 / 1.95 / 2.73 mm at ω 13 / 16.5 / 20 mm (cell 0.78 mm), inside the DOE's 2–4 mm, and breaks through
+  to the surface (T1x at dt 0.03 s: first melt AT the peak cell) — the DOE's own description; onset 52 / 84 / 122 s
+  against ≈ 295 s (2.4–5.7× early; flat α at ω 20 mm reads 384 s, 30 % LATE, so P2-20's "flat lands the time" no
+  longer stands); the CENTRAL column goes opaque (transmission ÷ cold 0.20–0.28) while the WHOLE-BLOCK fraction drops
+  only 15–28 % (the hot zone is narrower than the beam). c5 at dt 2 s reads a plateau's upper edge (0.39–1.95 mm):
+  quote the initiation depth = the peak at onset, ± 0.39 mm.
+- **The m-scan (ratio column scaled to m = 1 / 2 / 3.5 / 8.88 at ω 20 mm):** depth 10.55 / 7.42 / 4.30 / 1.95 mm,
+  onset 384 / 274 / 200 / 122 s, whole-block transmission 1.00 / 0.84 / 0.77 / 0.72 ⇒ NO single scaling of Hartlieb's
+  shape lands depth and time together (reading (D)); m 8.88 misses narrowly on depth-and-transmission, widely on time.
+- **Fig. 34's transmitted fraction DIPS 21 % then RISES 17 % above its beam-on value before the collapse** (DR-2): no
+  monotone α(T) produces a rise. Explained after the fact by the DOE report itself (the disc Fabry-Perot, next record).
+- **#28c (the re-melted disc) with the table reads 400 K LOW** at 50 s (572 K raw vs 987 K): the glass; record only.
+- **Buckling under the beam compares the E-FOLD depth** (`bc_ell_p` 18.7–25.8 mm, `bc_ell_pk` 18.2–23.5 mm) with the
+  2.4 mm buckling depth L/(C_L μ c_f): 7.6–10.7× ⇒ the port's no-thin-flake prediction stands strongly.
+- Housekeeping: nine per-step thermo deciders on table decks (`beam_tau_max`, `beam_alpha_max`, `beam_col_err_max`,
+  `bc_T_peak`, `bc_z_peak`, `bc_z_melt`, `bc_tau`, `bc_ell_p`, `bc_ell_pk`), registered only when the table varies AND
+  the deck can deposit (HOS_S/CAL_S keep their headers); R6 locks α's floating-point ASSOCIATION; P2-20's chores done.
+
+### Carry-forwards (review and planner)
+1. **DR-1 (resolved by P2-22):** the whole-block transmission carried the closure residual; read it with ± the residual.
+2. **DR-2 (resolved by the DOE re-read):** the pre-melt rise is interference between the disc faces, not a loss.
+3. **DR-3:** `beam_col_err_max` measures round-off only (it is built from the arrays the kernel reads); U1/U2 are the
+   real gates. Keep it as a report.
+4. **DR-4:** c5 is dt-limited at its own resolution; quote the initiation depth (the peak at onset) ± half a cell.
+5. **DR-5:** keep an md5 manifest when a byte-identity gate's output is pruned after scoring (a3's 112 files are gone).
+6. **Planner:** the packet reached 393 lines before review; the two mandated tables are 82 on their own — the 500-line
+   cap now binds the reviewer. Keep the next packets under 300.
+7. **Planner:** the spot was taken from the report's "typical" standoff range; the per-test table gives 0.31" (P2-22).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-06)
+
+- **P2-21 — Temperature-dependent loss as a rock property, with the optical-depth sum** (`ACTIVE_STEP.md`; 2026-11-06;
+  user: lift "flat with temperature", keep the computational cost in view).
+  - Archived: P2-20 ACCEPTED (`ARCHIVE_DONE.md` *"P2-20"*): one dielectric pair ⇒ α 14 m⁻¹ (POWER; DOE 30 % through
+    25 mm) and R 0.147; typed α/R retired; closure on every path; Zhang/Oglesby #28c is a RE-MELTED disc (record only);
+    Zhang's curve irreproducible from their inputs; ⚠⚠ test #19 (virgin): onset time lands at the admissible spot but the
+    melt starts 5.9–9 mm deep against the DOE's 2–4 mm — no spot or loss moves it with a flat coefficient.
+  - Hartlieb's measured loss shape (0.4–3 GHz) enters as a ratio table on the declared cold value (`beam.tan_delta_T`,
+    LIT, transfer to 28 GHz DECLARED); the deposition becomes the Beer–Lambert integral per column (a gathered optical
+    depth, mirroring the solid-count gather) — built only when the beam is on AND the table has ≥ 2 entries, so every
+    frozen deck stays byte-identical and flame decks pay nothing. Two thermo deciders (`beam_tau_max`, `beam_alpha_max`).
+  - ⚠⚠ Pre-registered: the table lands #19's melt DEPTH (1.5–3.5 mm) but melts 3–7× too EARLY and absorbs 3–6× too much
+    (Fig. 34's 28 GHz transmission is flat to ≤ 25 % before melt) ⇒ the 28 GHz rise is BOUNDED from data (m ≈ 2–3.5), not
+    fitted; the port's heated layer is then 3–5 mm, above the 2.4 mm buckling limit. Then the port, then melt/vapour.
+
+### The P2-21 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+## Active Step: P2-21 — Temperature-dependent loss as a rock property, with the optical-depth sum: Hartlieb's measured shape on the declared cold value, one Beer–Lambert integral per column, scored on test #19's melt depth, onset time and transmission
+
+Status: **accepted by review** (2026-11-06; all eleven gating rows reproduce independently; 0 `bug`). ⚠⚠ The verdict's TOTAL-transmission branch is NOT resolved: the column sum loses **2.1–7.3 % of P_inc at onset and up to 12.2 % late**, which is ±0.04 (T1c) to ±0.30 (T1d) on c7's TOTAL ratio — comparable to its distance from the 0.75 envelope (DR-1). ⚠⚠ And Fig. 34's transmitted fraction **RISES to 1.16× before melt** (my own re-reduction of `doe/FIG34.txt`), which no monotone α(T) can produce ⇒ reading (D) is stronger than the numeric comparison shows (DR-2). The central-column branch, the depth and the onset are all clean.
+
+### Context
+
+P2-20 made the beam's absorption a computed property of one declared permittivity pair, flat with temperature, and
+scored it on the only virgin-granite record on disk, Oglesby's test #19: the model's melt onset lands inside the
+observed window at a spot the report's own standoff allows, but the melt starts **5.9–9 mm** below the surface where
+the report says **2–4 mm**, and no spot size or surface loss moves it (the peak depth is the surface-cooling diffusion
+length when the source is flat over the top centimetre). The user lifted "flat with temperature" (2026-11-06). The
+only temperature-resolved granite loss data on disk is Hartlieb's cavity measurement at 0.4–3 GHz; it enters as a
+dimensionless ratio table on the declared cold value, declared LIT (another rock, another frequency), never fitted.
+A coefficient that varies down the column makes the current kernel wrong — each cell applies its own coefficient to
+the whole path above it, so the block absorbs more than arrives (census 5.6; ≈25 % over-deposition for a 2 mm skin at
+20× the cold value) and the bias is toward depth, the very observable scored. So the deposition becomes the
+Beer–Lambert integral of the coefficient along each column's solid path. Cost is kept in view three ways: the sum
+runs only when the beam is on AND the table has ≥ 2 entries (a one-entry table keeps today's closed form and byte
+identity on every frozen deck); the column gather mirrors the solid-count gather that already exists; nothing is
+gathered on a flame deck. ⚠⚠ The planner's own 1-D column with Hartlieb's shape lands the depth (1.3–2.1 mm) but
+melts in 21–52 s and absorbs 90 % of the beam by onset, while Fig. 34 of the DOE report shows the 28 GHz
+transmission through the sample essentially FLAT until melt. Three observables are therefore scored together, and the
+pre-registered outcome is that the 0.4–3 GHz shape over-absorbs at 28 GHz. Whether ANY smaller rise of the same shape
+lands depth and transmission together is measured, not assumed: two scan legs scale the table by a declared formula
+(the second agent's 1-D says no single multiplier does it in 1-D; 3-D confines the hot zone laterally and may differ). Carried: P2-20 DR-1–DR-6; R = 0.531 declared; the two gates; no melt step, no R(T).
+
+### Sources (opened 2026-11-05/06)
+
+- **Hartlieb / Microwave Properties North** (Zenodo 4835664; `Claude_markdowns/research_notes/Granite spallation and
+  melt physics/microwave_absorption.md:34–58`): granite, 2467 MHz, heating branch, cavity perturbation, 22 → 995 °C.
+  tan δ / tan δ(22 °C): **22 °C 1.00; 201 0.98; 300 1.15; 401 1.39; 451 1.62; 500 2.01; 550 2.42; 575 2.73; 600 3.15;
+  649 4.27; 699 5.58; 748 5.72; 797 4.74; 847 3.79; 896 3.86; 945 6.02; 995 8.88**. ε′ 5.45 ± 0.3 throughout (flat).
+  ⚠ Same file: ε″ ∝ f^−0.41 inside 0.9–3 GHz (conduction/relaxation-type loss), the quartz transition absent, an
+  irreversible transformation 675–875 °C, and the cooling branch 9× lower at RT — NONE of which is modelled here; the
+  transfer of the heating-branch SHAPE to 28 GHz is the declared assumption this packet tests.
+- **DOE report DE-EE0005504** (OSTI 1169951; mirror URL `microwave_absorption.md:25`; re-fetch, the planner's
+  scratchpad copy is not durable): p. 54 Fig. 34, test #19 (virgin Barre, 4″ discs ×2 stacked = 50 mm, HE11 from a
+  32.5 mm aperture, 1.5–3.4 kW): beam on ≈ 200 s at ≈ 2 kW rising to ≈ 2.3 kW; the **28 GHz pick-off transmission
+  (red) holds within ≈ 20 % of its beam-on value until it collapses at ≈ 500–520 s** when the 137 GHz signal jumps
+  (melt onset ≈ **300 ± 50 s** after beam-on; the detector is "the 28 GHz pick off detector in the test chamber", p. 2166
+  of the text dump — a CHAMBER pick-off, so the TOTAL transmitted power is the closer analogue, the central column the
+  sharper one; both are reported); p. 53: "the melt initially starts **2–4 mm below the surface** and
+  breaks through to the surface from below"; p. 44: 30 % single-pass absorption in 25 mm ⇒ cold transmission through
+  50 mm = e^{−0.70} = **0.50**; p. 52: Fresnel R 0.14 from n 2.24. Spot at the rock: HE11 1/e² diameter 25.4 mm at the
+  aperture (p. 976 of the text dump), standoff ½–2 aperture diameters (p. 1134), z_R = π(0.0127)²/0.01071 = 47 mm ⇒
+  **ω 13–20 mm**; #28c (TE11 20 mm aperture, Oglesby's model 1/e POWER diameter 20 mm ⇒ ω 14.1 mm; z_R 58 mm) ⇒ ω
+  14–17 mm. ⚠ #28c is a re-melted disc (P2-20): record only.
+- **Rock file** `tests/MMWSpalling/validation/shared/rock_grimsel.inputs:83–91` (`beam.eps_r 5.02`, `beam.tan_delta
+  0.01065`). **Code:** `MMWBeam.H:44–72` (parse order: `lambda` → `eps_r` → `tan_delta` → `alpha`, `R`; ⚠ the α
+  expression `2π·√ε′·(tan δ/λ)` is bit-exact for every fixture ONLY in that association — P2-20 DR-2);
+  `BeamSource` `M:4969–4998` (closed form: `(1−R)·Pi·(e^{−a·s_top} − e^{−a·s_bot})/dz`, `s_top` clamped at 0);
+  the four cell loops `M:1522–1560` (ConstAlpha), `:1567–1680` (Material), `:1703–1760` (MaterialImplicit; the
+  source is built from `T_old` into the rhs), `:1901–2130` (Microstructure; void-aware `path = SolidFacePath(n_above,
+  dz)` with `sab` from `ColumnSolidAboveCount`); `BeamEnergyBalance` `M:4799–4925` (same per-cell call; `P_trans` at
+  the domain bottom `:4878`); `ColumnSolidAboveCount` `M:4678–4716` (the gather pattern: a `ncols·nz` vector,
+  `ReduceIntSum`, then a per-column walk from `k_top` down); `SolidFacePath` `M:4379`; thermo registrations
+  `M:183–192` (after the beam parse at `:181`, so a registration may be conditional on a parsed beam member);
+  the four `BeamSource` sites `M:1540, 1664, 1744, 2100`, the closure's `M:4891`, `P_trans` at `k == klo_dom` `M:4897–4902`;
+  `removal_enabled()` `M:8723`; IC `hc.ic.type = expression` (`unit/amr_microstructure_regrid/input`:
+  `hc.ic.expression.region0 = "300.0+20.0*(x>=0.25)*(x<0.75)"`); plotfile keys `amr.node.any`, `amr.cell.any`
+  (`Integrator.cpp:66–69`).
+- **Box layouts of the beam-on decks** (a column spans several boxes on most): Zhang 128×128×32, bf 2, default
+  max_grid_size (full z); `beam_void_closure`/`seed_void` 40×4×30 mgs 20 (z split 20+10); `scalar_flaw` 1×1×125 mgs 32
+  (4 z-boxes "on purpose"); `dev2d` 70×4×60 mgs 20; s1 1×1×N mgs max(32, N/4). ⇒ a per-box z-sweep is NOT available;
+  the gather is.
+- **On disk for identity:** `studies/p2_20_beam_deposition/legs/Z1/run` (the Zhang deck, one-entry table ≡ flat, cell
+  plotfiles kept), `unit_beam_output_pre/`; gates `witness/p2_18.md5` (tree), `witness/face_p2_20/` (face).
+- **Planner's 1-D column with the table** (Zhang's laws, 0.2 mm cells, adiabatic bottom, ε 0.7, h 56, 2 kW, 50 mm;
+  `z0.py` reproduces it): onset **21 / 34 / 52 s** at ω 13 / 16.5 / 20 mm, shallowest melt **1.3 / 1.7 / 2.1 mm**,
+  transmitted fraction at onset **0.12 / 0.11 / 0.10**; flat control 101 s. α(T) at 28 GHz: 14 (cold), 28 (500 °C),
+  78 (700 °C), 124 (995 °C). #28c 800 W with the table: T_s(50 s) 874 / 636 / 538 K at ω 14.1 / 17 / 20 mm.
+  P2-20 measured the 3-D runs ≈ 2× later than the 1-D column (lateral loss).
+- **⚠⚠ The column sum is NOT conservative under a Gaussian once α varies sideways** (implementer, step zero,
+  `studies/p2_21_loss_table/step0/CLOSURE_STEP0.txt`): `BeamIncidentIntensity` is evaluated at each cell's own depth and
+  a Gaussian's Pi changes with depth by ≈ (d/z_R)²(2r²/ω₀² − 1) — down on the axis, up beyond ω₀/√2. With a laterally
+  uniform α the lateral sum of Pi is P at every depth and the changes cancel (P2-20 b1 6.5e-7); with the centre hotter
+  than the edge they do not: on T1b's grid the closure reads −2.8e-7 / −4.7e-5 / +2.4e-4 / +2.9e-3 / **+1.4e-2** at a
+  peak rise of 0 / 100 / 400 / 700 / 1213 K. Taking Pi once per column (at the top) closes exactly but breaks the
+  identity with the closed form (≈ (d/z_R)²; U2, T0). Decision: keep Pi per cell (one formula, identity kept), gate on
+  the per-column fraction sum, which IS exact, and REPORT the closure residual as the lateral power a column sum cannot
+  follow (≈ 1 % near onset). Even flat, the ω 20 mm spot reads −4.2e-6 on the 0.1 m block (the Gaussian tail past the
+  side walls grows with depth), so no closure bar below ≈ 1e-5 holds cold on that leg.
+- **The scan's scaling (declared, applied to the ratio column only):** r_m(T) = 1 + (r(T) − 1)·(m − 1)/(r_max − 1),
+  r_max = 8.88, so m is the table's maximum ratio; m = 8.88 is the table itself, m = 1 is flat. The second agent's 1-D
+  (spot and read time unstated; z0 recomputes it with stated inputs): first melt 8.1 / 6.6 / 5.6 / 3.9 / 1.9 mm and
+  transmission vs cold 1.00 / 0.77 / 0.63 / 0.43 / 0.22 at m = 1 / 1.5 / 2 / 3.5 / 8.88 ⇒ in 1-D no m lands both.
+- **Buckling tests the e-fold depth, not the peak depth** (P2-15/P2-19): under this beam the face-referenced e-fold is
+  undefined inside the block and the peak-referenced one is 18–38 mm (second agent's 1-D; P2-20 c4 found neither inside
+  25 mm). The P2-19 helpers (`ProfileEFoldDepth`, `ProfilePeak`, `Shared.H`) read both off a column.
+
+### Goal
+
+0. **Chores from the P2-20 review.** Delete `beam.alpha_expr`/`beam.R` from `studies/relief_diag/U/input_cell` and
+   `studies/d2j0_hotdisk/input_hotdisk`; extend the deck sweep to `studies/` (DR-1); fix the `visualize` fallback in
+   `extensions/hu_spall_onset_mmwbeam*` (reads `beam.R`, default 0.2); write the `void_aware ⇒ non-empty k_top_col`
+   invariant at the three closure call sites (DR-5); prune `studies/p2_20_beam_deposition/legs/{Z1w,Z2,Z3a,Z3b,Z3c}`
+   cell plotfiles to the onset plotfiles the records cite (Z1 and Z1x stay whole).
+1. **The table (`src/Numeric/MMWBeam.H`).** One new key `beam.tan_delta_T` = pairs `T r` (K, dimensionless ratio),
+   parsed AFTER `tan_delta`: strictly increasing T, every r > 0, even count; absent or ONE pair ⇒ `alpha_varies() =
+   false` and nothing else changes. `alpha_at(T) = alpha × interp(T)`, linear, clamped at both ends. The 17 Hartlieb
+   pairs live in ONE file, `validation/shared/loss_table_hartlieb.inputs` (block comment: LIT, another rock, 2.467 GHz
+   heating branch, transfer to 28 GHz assumed, cooling branch and transformation not modelled), included by
+   `rock_grimsel.inputs` and by the Zhang deck with a `FILE =` line (⚠ verify that a nested FILE include is honoured by
+   AMReX's ParmParse on a one-step run; if not, the Zhang deck includes the file directly and `check_shared.py` gains
+   the equality check). The association of `alpha` stays as it is.
+2. **The column optical depth (`MMWSpalling.H`).** `ColumnOpticalDepth(lev, k_top, solid_above)` mirrors
+   `ColumnSolidAboveCount`: per solid cell `a_k·dz` with `a_k = beam.alpha_at(T_old(i,j,k))` into a `ncols·nz`
+   vector (0 for void), `ReduceRealSum`, then per column from the top solid cell downward `tau_top[k]` (running sum
+   of the cells above; 0 for the top solid cell) and `tau_bot[k] = tau_top[k] + a_k·dz`. Returned as two vectors (or
+   one interleaved), built ONCE per step per path, only when `P_now > 0 && beam.alpha_varies()`; on the material
+   paths every column's top is the domain top and `solid_above = k_top − k`. ⚠ `tau_bot` must use the SAME `a_k`
+   the gather used (gather `a_k·dz` itself, never recompute from a different T). Cost: one `ncols·nz` double
+   allreduce per step on table decks only (8 MB on the 128×128×64 block); no cost when the beam is off or the table
+   is flat.
+3. **The kernel.** `BeamSource` gains `tau_top, tau_bot` (both < 0 ⇒ closed form with `a`, unchanged byte for byte);
+   with τ supplied the cell receives `(1−R)·Pi·(e^{−tau_top} − e^{−tau_bot})/dz` and `BeamEnergyBalance` counts
+   `P_trans = (1−R)·Pi·e^{−tau_bot}` at the last solid cell of each column (the gathered value, not the domain
+   bottom's own α). The four cell loops pass the column's pair from the vectors (index `col·nz + (k − klo)`, the
+   `sab` pattern). One formula per regime; no shortcut inside the sum path.
+4. **Logged deciders, every step, registered ONLY when `beam.alpha_varies() && beam.can_deposit()`** —
+   `can_deposit()` = `P0 > 0` or any `schedule.P > 0`, known at parse time — so every flat deck AND every beam-OFF deck
+   that includes the rock file (the face gate's HOS_S and CAL_S) keeps its header; the τ gather is guarded by the same
+   conjunction plus `P_now > 0`. Columns: `beam_tau_max` (max over lit columns of `tau_bot` at the last solid cell),
+   `beam_alpha_max` (max `a_k` over lit solid cells, m⁻¹), **`beam_col_err_max`** (max over lit columns of
+   |Σ_k (e^{−τ_top,k} − e^{−τ_bot,k}) + e^{−τ_N} − 1|, computed where the τ vector is built: the invariant that IS exact),
+   and on the CENTRAL column (the column containing (x0, y0); it spans two z-boxes on 128×128×64 at the 3-D default
+   `max_grid_size` 32, so its nz temperatures are gathered exactly as τ is — never assume one rank owns it):
+   `bc_T_peak` [K] and `bc_z_peak` [m below the top face] FROM THE SAME `T_old` THE GATHER USED (a post-step T leads
+   by one step), `bc_z_melt` (the SHALLOWEST cell with T ≥ T_m, NaN if none; T_m from the material), `bc_tau` (that
+   column's `tau_bot` at its last solid cell), `bc_ell_p` and `bc_ell_pk` (the P2-19 helpers on that column's rise,
+   NaN when undefined). These replace plotfile reads for c5–c7 and c10 and remove the read-late bias on the melt
+   depth; beam legs then plot every 100 s. The Zhang test prints them at onset.
+5. **Unit test `unit/beam_tau`** (new; the `unit/beam` fixture: 1 m cube, 64×64×16, κ 0, P0 1 W, ω₀ 0.1, λ 1e-3,
+   ε′ 1, one step 0.01 s): base `tan_delta = 0.00015915494309189536` (α 1 m⁻¹ exactly in the code's order), IC
+   `hc.ic.type = expression`, `region0 = "300.0+700.0*(z>=0.5)"` (the top half hot; the beam enters at z0 = 1),
+   table `beam.tan_delta_T = 300.0 1.0 1000.0 4.0` ⇒ α 4 above, 1 below. Analytic deposition: top half
+   1 − e^{−2} = 0.86466, bottom e^{−2}(1 − e^{−0.5}) = 0.05325, transmitted e^{−2.5} = 0.08208 (the Gaussian is
+   captured to e^{−200}). U2: U1's deck with `beam.tan_delta_T = 300.0 1.0 1000.0 1.0` (two EQUAL entries ⇒ the
+   sum path on a uniform column) against U1's deck with the one-entry table `300.0 1.0`. U3: `unit/beam`'s OWN deck
+   (unchanged, no table) against `unit_beam_output_pre/` (byte identity: the closed form untouched). ⚠ The P2-20 binary ABORTS on the new key
+   (`beam.*` is a strict scope), so U1's "RED on bin_pre" is that abort; the old formula's wrong split (bottom
+   e^{−0.5}(1 − e^{−0.5}) = 0.2387, total 1.10) is an offline number in z0, not a run.
+6. **The Zhang/Oglesby deck and test.** Deck unchanged except one `FILE =` line including
+   `loss_table_hartlieb.inputs` (Goal 1; AMReX follows a nested include — verified at step zero). Test gains rows c5 (shallowest melting depth from `bc_z_melt`, DR-3), c6 (onset = the first step row with finite
+   `bc_z_melt`), c7 (transmitted fraction at onset vs the first step row: TOTAL `beam_P_trans/beam_P_inc` AND central
+   e^{−bc_tau}), c10 (`bc_ell_p`, `bc_ell_pk` at onset), and the scan summary c8; `--explicit DIR` keeps b3's meaning.
+7. **`unit/retired_keys`** gains R6 (DR-2): the α expression appears in `MMWBeam.H` verbatim as
+   `2.0 * M_PI * std::sqrt(v.eps_r) * (v.tan_delta / v.lambda)`, with a mutation that reassociates it ⇒ RED.
+8. **Records.** `REFERENCE.md` (tree: "P2-21 not re-pinned, 0/2639" or the audit), `WHICH_TESTS.md` (beam row +
+   `unit/beam_tau`), the Zhang reference file (Fig. 34's three observables with the planner's readings), model card
+   §6 row for `beam.tan_delta_T` (LIT, Hartlieb granite, 2.467 GHz, transfer assumed) and §12 item 11 ("α(T)
+   conservative" → done); study `studies/p2_21_loss_table/` with `z0.py`, `run.py`, `reduce.py`, `chain.sh`,
+   `src_pre/`, `bin_pre/`, `MODEL_CARD.pre_p2_21.md`, `inputs_pre/`.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | key / change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | `beam.tan_delta_T` → `alpha_varies()`, `alpha_at(T)` | `MMWBeam.H` after `tan_delta` | `ColumnOpticalDepth` only | `P_now > 0 && alpha_varies()` ⇒ beam-off decks and one-entry decks never build τ | U3, C1, a0, a1 |
+| L2 | τ pair into `BeamSource` | the four loops + `BeamEnergyBalance` | the exponential pair | `tau_top < 0` ⇒ closed form | U1 (sum), U2 (sum on uniform = closed form) |
+| L3 | the conjunction a #19 record needs: table parsed AND τ built on the implicit path AND `P_trans` from the gathered `tau_bot` AND the two logged columns present | — | thermo + plotfiles | `solver = implicit` ⇒ `AdvanceMaterialImplicit` | b1 `beam_col_err_max` ≤ 1e-12 with `beam_alpha_max` > 14 on T-rows past 486 K |
+| L4 | units: `tan_delta_T` T in K (the deck writes 295.15 for 22 °C), r dimensionless; `tau` dimensionless (m⁻¹·m); `beam_alpha_max` m⁻¹; the transmitted FRACTION is `P_trans/P_inc` (both W) | — | — | — | z0; c7 |
+| L5 | the gather's `a_k` and the kernel's `tau_bot` are the same number (DR-2's lesson: one value, one place) | `ColumnOpticalDepth` | `tau_bot = tau_top + a_k dz` inside the gather | — | U1 to 1e-9 (a second α would break the bottom-half fraction) |
+| L6 | the header of every flat deck's AND every beam-OFF deck's `thermo.dat` is unchanged (HOS_S and CAL_S include the rock file with the beam off) | registration conditional on `alpha_varies() && can_deposit()` | gates | — | a0, a1 byte identity |
+
+### Legs (exact argv tokens)
+
+`RUN = mpirun --oversubscribe --bind-to none -np 4`; every leg records `argv.sh`, `BINARY.txt`, `rc`; long legs under
+`caffeinate -dis`. Study root `tests/MMWSpalling/studies/p2_21_loss_table/`; `Z` = the Zhang deck as edited (table in).
+Every beam leg adds `amr.node.any=0 amr.plot_int=50` (plot every 100 s; the per-step columns carry the records; ≈ 336 MB per 128×128×64 cell plotfile) unless stated. Run order: T1b before T1x.
+
+| leg | argv | cost |
+|---|---|---|
+| U1 / U2 / U3 | `unit/beam_tau/test` (runs its three decks, -np 4) | 1 min |
+| C1 | `RUN bin/mmwspalling-3d-g++ Z beam.tan_delta_T="295.15 1.0" plot_file=<study>/legs/C1/run amr.node.any=1 amr.plot_int=5` (one-entry ⇒ flat; must be byte-identical to `p2_20_beam_deposition/legs/Z1/run`) | 2 min |
+| T1a / T1b / T1c | `RUN bin/mmwspalling-3d-g++ Z geometry.prob_hi=0.10 0.10 0.05 amr.n_cell=128 128 64 beam.z0=0.05 beam.schedule.t_end=400.0 beam.schedule.P=2000.0 beam.omega0=<0.013 / 0.0165 / 0.020> stop_time=400.0 plot_file=<study>/legs/T1x/run` (test #19 with the table) | ~10 min each |
+| T0 | T1c (ω 0.020) + `beam.tan_delta_T="295.15 1.0 1268.15 1.0"` (two EQUAL entries ⇒ the sum path on a FLAT coefficient, columns registered: the like-for-like flat control at per-step cadence; U2 proves it equals the closed form) | ~10 min |
+| M2 / M3.5 | T1c with the table scaled by the declared formula to m = 2 and m = 3.5 (the 17 pairs rewritten on the argv; a SCAN, none adopted) | ~10 min each |
+| T1d | T1b + `geometry.prob_hi=0.10 0.10 0.10 amr.n_cell=128 128 128 beam.z0=0.10` (DR-4: the 100 mm block) | ~25 min |
+| T1x | T1b + `solver=explicit timestep=0.03 amr.plot_int=333 stop_time=<1.25 × T1b's onset time, at least 60 s>` (the dt witness for a strongly non-linear α: onset within 10 % of T1b's; read T1b's onset from its thermo first) | ~40–80 min |
+| T2 | Z + `beam.omega0=0.0141 plot_file=<study>/legs/T2/run` (#28c at Oglesby's spot, with the table; record) | 2 min |
+| gates | `guarded_post_all_par.sh p2_21`; `face_gate.py run p2_21` then `cmp p2_20 p2_21`; `unit/beam_void_closure/test`; `unit/retired_keys/test`; `unit/beam/test` | ~12 min |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline (`Z0.txt`): the 17 pairs as parsed (K), α(T) at 28 GHz at 22 / 500 / 700 / 995 °C (14.0 / 28.1 / 78.1 / 124), the U1 fractions with their formulas, the 1-D column for T1a–c/T1d/T2 and for the m-scan (m = 1, 1.5, 2, 3.5, 8.88 at ω 20 mm: onset, shallowest melt, transmitted fraction, both with stated inputs, reconciling the two agents' 1-D tables), the old kernel's two-layer split (0.2387 / 1.10) by hand, the spot range from the standoff, and Fig. 34 re-read from the re-fetched PDF: the 28 GHz pick-off at beam-on and just before the collapse, and the incident power at both times ⇒ the observed transmitted-FRACTION ratio (planner's reading ≥ 0.75) | every number with its formula or its figure reading | report | the implementer and planner disagree on a formula or a reading — resolve before any run |
+| z1 | 1 | U1 (two-layer column) | top, bottom and transmitted fractions within 1e-9 of 0.86466 / 0.05325 / 0.08208; closure ≤ 1e-9; `bin_pre` aborts on the key (rc ≠ 0) | **gate** | the sum is not the Beer–Lambert integral, or τ_bot is not the gathered value |
+| z2 | 1 | U2 (two equal entries) vs the one-entry deck | `Cell_D` max relative difference ≤ 1e-12; closure identical to 1e-15 | **gate** | the sum path and the closed form disagree on a uniform column |
+| z3 | 1 | U3: the one-entry deck vs `unit_beam_output_pre/` | byte-identical plotfiles | **gate** | the closed-form path moved |
+| z4 | 1 | `unit/retired_keys` R1–R6, K0–K4, mutations | all PASS; the R6 mutation RED | **gate** | the association lock is not in place |
+| a0 | 2 | tree gate vs `p2_18.md5` (controls d2aa 26, d2t 863) | **0 of 2,639** (every beam-on gate deck has a one-entry or absent table) | **gate** | a flat deck reached the sum path, or a header moved (L6) |
+| a1 | 2 | face gate `cmp p2_20 p2_21` | identical | **gate** | the flame path moved |
+| a2 | 2 | `unit/beam_void_closure`, `unit/beam` | T1 ≤ 1e-9 and the rest as P2-20; `unit/beam` 0.00 % | **gate** | the void-aware closed form moved |
+| a3 | 2 | C1 vs `p2_20/legs/Z1/run` | byte-identical plotfiles and thermo (the two new columns absent) | **gate** | a one-entry table is not "flat" |
+| b1 | 3 | T1b thermo: `beam_P_inc` > 0 on every step row, `beam_invariant_viol` 0, max `beam_col_err_max`; `beam_alpha_max` ≥ 13.9 on every step row and > 14.0 from the first row at which `bc_T_peak` > 486 K (the table's 0.98 dip) | `beam_col_err_max` ≤ 1e-12 on every step row | **gate** | the per-column sum is not the Beer–Lambert integral, or τ is built from a constant α |
+| b1r | 3 | T1b, T1c, T0: `beam_closure_err` per step row (the lateral residual) | report: −1e-5 … +1.5e-2, cold rows within 1e-5 (T1c −4.2e-6 flat), growing with the centre-to-edge contrast; T0 ≤ 1e-5 throughout | report | — (a measured limit of a column sum under a spreading beam; > 3 % at onset would say the hot zone is wider than the spot and the records must be read with that caveat) |
+| b2 | 3 | T1b first step row: `P_dep/P_inc` with every cell cold | 0.5034 ± 0.002 (= 1 − e^{−14·0.05}; the table reads 1.0 at 297.5 K) | **gate** | the cold limit of the table is not the declared cold value |
+| b3 | 3 | T1x vs T1b: onset time of the axial peak reaching T_m | within 10 % | **gate** (for c5–c8) | dt 2 s is too coarse for α(T_old) near onset; the records are then read from T1x |
+| c5 | 3 | T0, T1a–c, T1d, M2, M3.5: `bc_z_melt` on the onset step row (the first with a finite value; DR-3) [mm] | P3 | report | — |
+| c6 | 3 | the same legs: onset step time [s] after beam-on | P4 | report | — |
+| c7 | 3 | the same legs at onset: TOTAL `P_trans/P_inc` ÷ its first-step value and CENTRAL e^{−bc_tau} ÷ e^{−bc_tau(first step)}; `beam_tau_max`, `beam_alpha_max` | P5 | report | — |
+| c8 | 3 | the scan read together: for m = 1 (T0), 2, 3.5, 8.88 (T1c) at ω 20 mm, depth (c5) and total transmission ratio (c7) in one table against the DOE's 2–4 mm and Fig. 34's ratio (z0) — does ANY m land both? | P6 | report | — (a scan of declared values; none is adopted) |
+| c10 | 3 | T1a–c at onset: `bc_ell_p`, `bc_ell_pk` [mm] and `bc_z_peak` [mm] beside the 2.4 mm buckling depth L/(C_L·μ·c_f) (P2-19 record) | P9 | report | — |
+| c9 | 3 | T2: raw and brightness T_s at 50 / 100 / 150 s vs #28c (987 / 1141 / 1201 K uncorrected) | P7 | report | — (record; glass) |
+| e0 | 4 | verdict | — | **verdict** | z1–z4, a0–a3, b1–b3 hold ⇒ the deposition integrates a varying coefficient exactly and every flat deck is untouched; c5–c8 decide which of P8's four readings holds; c10 states the buckling comparison in its own terms |
+
+### Pre-registered predictions
+
+- **P1** (a0, a1, a3, z3): byte identity everywhere the table is flat — the sum path is reached by no frozen deck.
+- **P2** (z1, b1, b1r): U1 exact to 1e-9 (α laterally uniform there); `beam_col_err_max` ≤ 1e-12 everywhere (the
+  per-column pair telescopes by construction); `beam_closure_err` on T1b runs from ≈ −1e-5 cold to **≈ +1 % at onset**
+  (the step-zero table), T0 stays ≤ 1e-5.
+- **P3** (c5): shallowest melting depth **1.5–3.5 mm** on all four T1 legs (1-D 1.3–2.1 mm; the 3-D plateau reads
+  slightly deeper) — inside the DOE's 2–4 mm.
+- **P4** (c6): onset **40–110 s** across ω 13–20 mm (1-D 21–52 s, ×≈2 for lateral loss): **3–7× EARLIER than the
+  observed 300 ± 50 s at every admissible spot**. T1d (100 mm) moves it < 10 % (the hot skin absorbs the beam).
+- **P5** (c7): transmitted fraction at onset **0.08–0.15**, a **3–6× drop** from the cold 0.50, with `beam_alpha_max`
+  ≈ 100–125 m⁻¹ and `beam_tau_max` ≈ 2–2.5; Fig. 34 shows a drop of **≤ 25 %** before onset.
+- **P6** (c8): in 3-D as in 1-D, depth and transmission move TOGETHER along m: m = 2 reads ≈ 5–6 mm and a 30–40 %
+  drop, m = 3.5 ≈ 3.5–4.5 mm and a 50–60 % drop; the window that lands 2–4 mm AND ≤ 25 % is EMPTY unless lateral
+  confinement in 3-D separates the two by more than ≈ 2× (the central-column ratio in c7 says how much it does).
+- **P7** (c9): T2 raw T_s(50 s) ≈ 700–870 K (1-D 874), brightness ≈ 600–740 K vs the uncorrected 987 K — still short:
+  the glass (record only).
+- **P8 — the reading, written in advance.** (A) **P3 lands, P4 and P5 miss** ⇒ near-surface concentration is the
+  mechanism in kind (the depth cannot be reached without it) but Hartlieb's 0.4–3 GHz magnitude does not transfer to
+  28 GHz (its losses fall as f^−0.41 and are conduction-type); the admissible rise at 28 GHz is BOUNDED by the
+  transmission trace at m ≈ 2–3.5 (P6). Next: a 28 GHz-admissible table is a MEASUREMENT, decided by the user — never a fit. (B) all three land ⇒ the
+  table stands as declared. (C) the depth misses too ⇒ the temperature dependence is not the mechanism; look at the
+  surface losses and the holder. (D) **no m lands both** (c8's window empty in 3-D as in 1-D) ⇒ a temperature rise of
+  Hartlieb's shape is not sufficient on its own: the melt depth asks for absorption concentrated in a thinner layer than
+  bulk heating produces (a surface or skin absorber — moisture, surface damage, biotite at grain scale — or a loss
+  shape steeper than Hartlieb's); none is added here; the reading names the hypotheses for a later measurement.
+- **P9** (c10): on every T1 leg `bc_ell_p` is undefined (no face e-fold inside the block) and `bc_ell_pk` reads
+  **15–40 mm**, i.e. 6–16× the 2.4 mm buckling depth, whatever m does to the peak depth. ⇒ the port's no-thin-flake
+  prediction for Barre at 28 GHz is far stronger than P2-20's peak-depth comparison suggested (which compared the wrong
+  quantity: buckling tests the e-fold depth, not the peak depth), and agrees with every 28–45 GHz granite test (all
+  melted). ⚠ Which depth B should use under an interior peak is still the port's design question (P2-19 DR-3).
+
+### Refuting evidence on disk
+- `p2_20_beam_deposition/legs/Z3b` (flat, ω 20 mm: onset 318 s, shallowest melt 9.0 mm, transmission 0.50) is the
+  control every T1 row is read against; `legs/Z1` is a3's byte reference; `unit_beam_output_pre/` is z3's.
+- The 1-D column (`z0.py`) bounds c5–c7 from above/below as P2-20 established (3-D ≈ 2× later, ≈ 13 % cooler at 50 s).
+
+### What would make this inert, and the witness for each
+- The table parsed but τ never built (guard or dispatch): b1's `beam_alpha_max` > 14 on every T1 step row after the
+  first; a one-entry run must show the columns ABSENT (a3).
+- τ built from a different temperature than the gather's (L5): U1's bottom fraction.
+- `P_trans` taken at the domain bottom's own α instead of the gathered `tau_bot` (the old `:4878` form): b1 closure
+  fails on T1 while U1 passes — the two together locate it.
+- The implicit path reading τ from `T_old` while the explicit twin reads the same: b3 is the witness that the lag
+  does not move the onset by more than 10 %.
+- An onset read from the surface cell instead of the axial peak: c5 reads the first plotfile with ANY axial cell
+  ≥ T_m (P2-20's reducer), and quotes the shallowest such cell.
+
+### Guardrails
+- The closed-form kernel, `BeamIncidentIntensity`, the waist law and the uniform profile are untouched; a one-entry
+  or absent table must leave every output byte-identical (that is a0/a1/a3/z3, not a hope).
+- No melt-phase step, no R(T), no ε′(T), no cooling-branch hysteresis, no per-mineral absorption; `beam.tan_delta_T`
+  is the only new key; `beam.eps_r`, `beam.tan_delta`, `beam.lambda` keep their parse and meaning; the association of
+  `alpha` is not touched (R6).
+- The table is never edited to land a row; the m-scan values (2, 3.5) are declared here and none is adopted; the Hu extensions are
+  not run; `Removal.H`, `FaceRemoval.H`, `Shared.H`, `Zhang.H` untouched; nothing committed.
+- Beam legs write cell plotfiles only, every 100 s (C1 keeps P2-20 Z1's cadence for a3 and is pruned after it); the
+  study must stay under 25 GB after pruning, each leg pruned to the onset plotfile and the last.
+
+### Commands
+
+```bash
+# Build (from the repo root)
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+# Offline first
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_21_loss_table/z0.py     # Z0.txt
+# z1–z4, a0–a3, then the legs in run order (one script, one approval)
+caffeinate -dis bash tests/MMWSpalling/studies/p2_21_loss_table/chain.sh
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/validation/zhang/zhang_oglesby/test <study>/legs/T1b/run --explicit <study>/legs/T1x/run
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_21_loss_table/reduce.py # RESULTS.txt
+```
+
+
+### Claude completion notes
+
+Binary `650d31436e506203…` (`studies/p2_21_loss_table/BINARY.txt`; P2-20's is in `bin_pre/`). Warning set unchanged (19).
+Study `tests/MMWSpalling/studies/p2_21_loss_table/` (7.7 GB after pruning): `RESULTS.txt`, `Z0.txt`, `CHAIN.log`, `doe/`
+(the re-fetched report, `fig34_digitise.py`, `FIG34.txt`), `step0/`, `src_pre/`, `bin_pre/`, `inputs_pre/`,
+`MODEL_CARD.pre_p2_21.md`, `GOAL0_SWEEP.txt`, `legs/` (argv.sh + BINARY.txt + rc each).
+
+**Files changed.**
+- **Source:** `src/Numeric/MMWBeam.H` (`beam.tan_delta_T`, `alpha_varies()`, `can_deposit()`, `alpha_at()`);
+  `src/Integrator/MMWSpalling.H` (`BeamTau`/`TauView`, `ColumnOpticalDepth`, `BuildBeamTau`, the τ pair in
+  `BeamSource` and the four loops, `BeamEnergyBalance` with `P_trans` at `k_last`, nine thermo columns, the DR-5
+  `Util::Assert` at the three closure sites).
+- **Decks:**
+  - `validation/shared/loss_table_hartlieb.inputs` (new);
+  - `FILE =` lines in `rock_grimsel.inputs` and in the Zhang deck;
+  - `studies/relief_diag/U/input_cell` and `studies/d2j0_hotdisk/input_hotdisk` (the retired keys deleted).
+- **Tests and tools:**
+  - `unit/beam_tau/{input,test}` (new);
+  - `unit/retired_keys/test` (R6);
+  - `validation/zhang/zhang_oglesby/test` (table-run b1, b1r and b3; computed b2; c5–c8, c10);
+  - `validation/shared/check_shared.py` (follows a nested `FILE`);
+  - `extensions/hu_spall_onset_mmwbeam/visualize` (R from ε′);
+  - `studies/p2_20_beam_deposition/apply.py` (its sweep walks `studies/`); P2-20's report legs pruned (`PRUNED.txt`).
+- **Records:**
+  - `witness/REFERENCE.md` (P2-21 not re-pinned);
+  - `witness/WHICH_TESTS.md` (the beam row);
+  - `zhang_oglesby_mmw_validation_summary.txt` (#19's three observables, digitised);
+  - `MODEL_CARD.md` (§6 row 30, §8 rows and bullets, §12 item 11).
+
+**Deviations (declared).**
+1. **THE POWER (the user's decision, asked 2026-11-06: "Ramp only").** z0 disagreed with a reading. The Sources'
+   "≈ 2 kW rising to ≈ 2.3 kW" is the level AFTER onset. Fig. 34's trace reads **1.46 kW at beam-on and 1.96 kW
+   just before the collapse (mean 1.62 kW)**. Every T-leg (T1a–d, T0, M2, M3.5, T1x) runs the digitised ramp
+   (`run.py ramp_schedule`: 40 intervals of 10 s), not 2 kW.
+2. **T2 uses `amr.plot_int=25`, not 50.** c9 reads 50 / 100 / 150 s, which plot_int 50 at dt 2 s does not write.
+3. **U1's deck runs TWO steps.** The integrator writes no thermo row for the final step; step 1 is scored.
+4. **`can_deposit()` follows the schedule's powers when a schedule exists** (`power_at` ignores P0 then), else P0.
+   It agrees with "P0 > 0 or any schedule.P > 0" on every deck in the tree.
+5. **On a non-void-aware path the τ sum aborts unless `beam.z0` is the domain top.** Every table deck satisfies this.
+6. **Zhang test:** b2's bar is computed as 1 − e^{−αL} ± 0.002 rather than the typed 0.2953 (the same on the Zhang
+   deck; T1 needs 0.5034). c8 is the test's `--scan`.
+7. **Goal 0:** `studies/p1b_support_rule/retired_unit/support_rule/input` still sets the retired keys and is
+   deliberately NOT edited. It archives a fixture retired with its own key in P2-2a (`check=false`; nothing runs it).
+8. **Line drift:** the beam parse is now `M:181`; the cited lines otherwise resolve.
+
+| # | measured | result | output |
+|---|---|---|---|
+| z0 | 17 pairs as parsed; α(22/500/700/995 °C) 14.00 / 28.15 / 78.18 / 124.35 m⁻¹; r = 1 again at 485.8 K; U1 0.864665 / 0.053250 / 0.082085; old kernel 0.2387 / 1.1033; spot ω 13.4–21.6 mm. 1-D column: planner's 21.5 / 35.8 / 54.2 s reproduced (their "shallowest melt" 1.3 / 1.7 / 2.1 mm is the PEAK depth; first melt 1.1 / 1.1 / 1.5 mm). Second agent's m-scan reproduced at ω 20 mm, 2 kW: melt 8.9 / 7.5 / 6.1 / 4.1 / 1.5 mm, transmission 1.00 / 0.76 / 0.62 / 0.41 / 0.19. Fig. 34: power 1.46 → 1.96 kW; fraction min 0.79 at ~95 s, max 1.17, 1.05 just before the collapse | report; **disagreement on the power, resolved by the user** (deviation 1) | `Z0.txt`, `doe/FIG34.txt` |
+| z1 | U1 top 0.864664716763, bottom 0.053250284613, transmitted 0.082084998624 (each \|Δ\| ≤ 1.8e-14); closure −3.55e-15; `beam_col_err_max` 1.1e-16; `bin_pre` rc 6 naming `beam.tan_delta_T` | **PASS** | `Z1_beam_tau.log` |
+| z2 | U2: every Cell_D field's max relative difference **0.00** (bit-identical); per-cell deposition 0.00 over 30,784 cells; closures −3.44169e-15 on both | **PASS** | `Z1_beam_tau.log` |
+| z3 | U3: 28 plotfile files byte-identical to `unit_beam_output_pre/` | **PASS** | `Z1_beam_tau.log` |
+| z4 | R1–R6, K0–K4 ok; each mutation RED, including R6's left-to-right reassociation; full revert all RED | **PASS** | `Z4_retired_keys.log` |
+| a0 | 0 of 2639 vs `p2_18`; d2aa 26, d2t 863 | **PASS** | `GATE_tree.txt` |
+| a1 | `cmp p2_20 p2_21`: IDENTICAL (timers only); HOS_S and CAL_S read the table (metadata) and keep their 79-column header | **PASS** | `GATE_face_cmp.txt` |
+| a2 | beam_void_closure T1a 1.727e-15, T1b–d, T2a–b, T4 PASS, T3 FAIL by design; `unit/beam` 0.00 % | **PASS** | `A2_beam_void_closure.txt`, `A2_beam.log` |
+| a3 | C1 vs P2-20 Z1: 16 cell plotfiles (112 files) + thermo.dat byte-identical; new columns absent. Z1's node plotfiles were pruned in P2-20 and are not compared | **PASS** | `A3.txt` |
+| b1 | T1b: 199 step rows, P_inc ≥ 1220 W, violations 0, `beam_col_err_max` ≤ **1.11e-15**; α_max min 13.9992, and from the first row with `bc_T_peak` > 486 K (18 s) min 14.0131 | **PASS** | `TEST_T1b.log` |
+| b1r | at onset: T1b **+3.88e-2**, T1c +2.07e-2, T1a +6.90e-2, T1d +7.29e-2, M2 +0.84e-2, M3.5 +1.44e-2; max over a run +12.2 % (T1a, T1d); cold rows ≤ 4.2e-6 (T1d 8.5e-5); T0 −4.18e-6 throughout | report: **above the packet's expected ≤ +1.5e-2 and its 3 % caveat line** on T1a, T1b and T1d (takeaway 1) | `RESULTS.txt` b1r |
+| b2 | T1b first step P_dep/P_inc 0.5034, P_trans/P_inc 0.4966 | **PASS** | `TEST_T1b.log` |
+| b3 | onset T1x 77.70 s vs T1b 84.00 s (−7.5 %) | **PASS** | `TEST_T1x.log` |
+| c5 | first finite `bc_z_melt`: T1a 0.39, T1b 1.17, T1c 1.95, T1d 1.17, T1x 1.95; T0 10.55, M2 7.42, M3.5 4.30 mm. INITIATION depth (the peak at onset): 1.95 / 1.95 / 2.73 mm (T1a–c), T1x 1.95 | P3 (1.5–3.5 mm): **lands on the initiation depth**; c5 as defined reads shallower at dt 2 s (takeaway 2) | `RESULTS.txt` c5–c7 |
+| c6 | onset T1a 52, T1b 84, T1c 122, T1d 84, T1x 77.7, T0 384, M2 274, M3.5 200 s | P4 (40–110 s, 3–7× early): T1a, T1b in, T1c 122 s just past; 2.4–5.7× early vs ≈ 295 s; T1d moves it 0 % | same |
+| c7 | TOTAL ratio 0.847 / 0.763 / 0.721 (T1a–c), T1d 0.863; CENTRAL e^{−τ} ratio 0.282 / 0.226 / 0.196; τ_max 1.97 / 2.19 / 2.33; α_max 124.3 | P5: **the CENTRAL column drops 3.5–5× as predicted; the TOTAL does not** (15–28 %); α_max and τ_max in band | same |
+| c8 | m 1 / 2 / 3.5 / 8.88 at ω 20 mm: z_melt 10.55 / 7.42 / 4.30 / 1.95 mm, TOTAL 1.000 / 0.836 / 0.765 / 0.721 (central 1.0 / 0.62 / 0.42 / 0.20); onset 384 / 274 / 200 / 122 s | P6: **no declared m lands both**, but narrowly: m 3.5 misses depth by 0.3 mm (cell 0.78 mm), m 8.88 by 0.05 mm and 0.03 in transmission. P6's numbers match the CENTRAL column | `RESULTS.txt` c8, `TEST_scan.log` |
+| c10 | T1a–c: `bc_ell_p` 18.7 / 22.3 / 25.8 mm, `bc_ell_pk` 18.2 / 20.7 / 23.5 mm, `bc_z_peak` 1.95 / 1.95 / 2.73 mm vs 2.4 mm | P9 holds: e-fold 7.6–10.7× the buckling depth while the peak sits at it | same |
+| c9 | T2 raw 572.5 / 744.4 / 1142.1 K, brightness 488.6 / 635.3 / 974.7 K vs #28c 987 / 1141 / 1201 K; no melt in 150 s | P7 (raw 700–870 K at 50 s): **missed low** (record; glass) | `TEST_T2.log` |
+| e0 | gates z1–z4, a0–a3, b1–b3 all PASS ⇒ the sum integrates a varying α exactly per column and every flat deck is untouched. P8: the reducer's mechanical "C" comes from c5's dt artefact. On the initiation depth the reading is **(A)**: the depth lands near 2 mm, the onset misses (2.4–5.7× early). Transmission splits: the chamber-analogue TOTAL sits on the envelope, the central column drops 4–5×, and neither shows Fig. 34's RISE before melt. **(D) holds on the declared points** but cannot be closed at this grid and residual | verdict | `RESULTS.txt` e0 |
+
+### Implementation takeaways
+
+1. **The closure residual is much larger than the step-zero estimate: +2–7 % of P_inc at onset, up to +12 % late.**
+   - **Cause:** it is the column sum's lateral inconsistency. The Gaussian's Pi is evaluated at each cell's depth.
+     Once the centre turns opaque, the cold edges' depth-growing Pi is no longer balanced by the centre's shrinking
+     Pi.
+   - **Ordering:** T1a > T1b > T1c, and T1d > T1b. It follows the beam's spread across the block
+     ((L/z_R)² = 1.0 / 0.39 / 0.18) and the opaque fraction, not the hot zone's width.
+   - **Consequence:** the TOTAL transmitted fraction carries an error as large as its distance from the 0.75
+     envelope. Read c7's TOTAL as ± the residual. The CENTRAL column has no such error.
+   - **Options for the planner:**
+     - (i) take Pi once per column (in-rock collimated: exact, but it departs from the closed form by (d/z_R)²);
+     - (ii) integrate τ along the diverging ray;
+     - (iii) keep the column sum and bound the records by the residual.
+2. **At dt 2 s, c5 ("the shallowest cell ≥ T_m at the first such row") reads a plateau's upper edge.**
+   - At onset the top ~2 mm is near-isothermal and crosses T_m within one step: T1b reads 1.17 mm at 84 s and the
+     top cell (0.39 mm) at 86 s.
+   - T1x at dt 0.03 s shows the melt starting AT the peak cell, 1.95 mm, then reaching the surface. That matches
+     the DOE's "starts below and breaks through".
+   - Score the initiation depth with the peak at onset, or with a dt resolving the plateau's crossing; the onset
+     time is robust (b3 −7.5 %).
+   - The 0.78 mm cell is the depth resolution: 1.95 mm means 1.56–2.34 mm.
+3. **At the measured power the table's onset is 2.4–5.7× early and the flat coefficient's is ~30 % late.** Flat
+   at ω 20 mm reads 384 s, against P2-20's 318 s at 2 kW, which no longer stands as "the flat α lands the time".
+   - At ω 20 mm, m = 2 lands the TIME (274 s) and the transmission (0.84) but not the depth (7.4 mm).
+   - The depth wants m ≳ 6–8.88, where the onset is 122–150 s.
+   - No single scaling of Hartlieb's shape lands all three. The scan points to P8 (D)'s hypotheses: a thinner
+     absorber than bulk heating, or a steeper shape.
+4. **Fig. 34's transmitted fraction RISES before melt** (0.79 → 1.17 → 1.05, `doe/FIG34.txt`). No loss that grows
+   with temperature produces that. It is a fourth observable and is unexplained: the detector geometry, thermal
+   lensing and the holder are untested.
+5. **Parser and harness facts the diff hides:**
+   - AMReX follows a nested `FILE =` (a one-step CAL run's metadata lists the table).
+   - A multi-value key needs `\` to span lines, and `check_shared.py` reads one key per line, so the table is
+     ONE line.
+   - The integrator writes no thermo row for the last step.
+   - A key in the rock file reaches every includer, beam on or off, hence `can_deposit()`.
+6. **Cost:**
+   - The τ gather is one (ncols·nz + nz)-double allreduce per step on table decks with the beam on, nothing
+     elsewhere.
+   - A 128×128×64 implicit #19 leg runs 200 steps in ~17 s (the MLMG solve 0.04 s) on this machine.
+   - P2-20's "~10 min" legs were dominated by writing 26 GB of plotfiles, not by the solve.
+
+### Review findings
+
+Reviewer, 2026-11-06. Independent throughout: my own derivation of every z0 constant and of U1's analytic fractions, my own bit check of the fixture α, my own transcription audit of all 17 table pairs, my own manifest and md5-tree comparators, my own thermo and plotfile reducers for b1–b3 and every c-row, my own re-reduction of the digitised Fig. 34, and my own read of the 471-line diff against `src_pre/` (whose `bin_pre/` I confirmed is P2-20's `0d071f16…`). No simulation, no rebuild.
+
+| # | test | bar | **derived independently** | **read from** | row |
+|---|---|---|---|---|---|
+| z0 | offline derivation | every number with its formula | All **17 pairs transcribed exactly** from the Sources (°C + 273.15 and the ratios, checked pair by pair). α_cold **14.002926**; α(22 / 500 / 700 / 995 °C) = **14.0029 / 28.1459 / 78.1763 / 124.3460** m⁻¹; **r = 1 again at 485.80 K**. U1 analytic **0.864664716763 / 0.053250284613 / 0.082084998624**, summing to 1 exactly; the old per-cell kernel's bottom **0.238651** and total **1.103316** (a 10.3 % over-deposition on this fixture). Fig. 34 re-reduced from `doe/FIG34.txt`: beam-on 215 s at **1.46 kW**, pre-collapse mean **1.65 kW**; fraction ratio **min 0.783 at 90 s after beam-on, max 1.155** | my own Python; `validation/shared/loss_table_hartlieb.inputs`; `doe/FIG34.txt` | reproduces |
+| z1 | U1 two-layer column | fractions within 1e-9; closure ≤ 1e-9; `bin_pre` aborts | My analytic matches the run's printed values to **≤ 4e-13** (the run itself is within 1.8e-14 of analytic); closure −3.55e-15; `beam_col_err_max` 1.11e-16; `beam_tau_max` **2.5** and `beam_alpha_max` **4** are the fixture's design values; **U1 on `bin_pre` rc 6 naming `beam.tan_delta_T`**. The fixture's α is **bit-exactly 1.0** in the code's association, and its IC `300.0+700.0*(z>=0.5)` is the two-layer column | `Z1_beam_tau.log`; `unit/beam_tau/input`; my own bit check | **reproduces (gate)** |
+| z2 | U2 two equal entries vs one entry | `Cell_D` ≤ 1e-12; closure to 1e-15 | max relative difference **0.00e+00** (bit-identical) on every field; per-cell deposition 0.00 over 30,784 cells and **declared non-vacuous** (sum 0.632121 W both sides); closures −3.44169e-15 both; sum-path columns present / one-pair columns absent | `Z1_beam_tau.log` | **reproduces (gate)** |
+| z3 | U3 vs `unit_beam_output_pre/` | byte-identical | 28 plotfile files byte-identical | same | **reproduces (gate)** |
+| z4 | `retired_keys` R1–R6, K0–K4 | all PASS; R6's mutation RED | R1–R6 GREEN; every mutation RED **including "reassociate α to left-to-right (algebraically equal) ⇒ R6 RED"** — the lock the P2-20 review asked for; K0–K4 as P2-20 | `Z4_retired_keys.log` | **reproduces (gate)** |
+| a0 | tree gate vs `p2_18.md5` | 0 of 2,639; controls 26 / 863 | **0 of 2,639** changed, 0 one-sided, against **both `p2_18` and `p2_20`**; d2aa **26**, d2t **863** | my own parse of `witness/p2_21.md5` | **reproduces (gate)** |
+| a1 | face gate `cmp p2_20 p2_21` | identical | **1,172 files each side, 0 one-sided, 13 differing — all `thermo.dat`, every header identical, ZERO moved non-timer columns** (timers only). L6 proven **two-sidedly by my own reads**: CAL_S and HOS_S both resolve `beam.tan_delta_T` in `metadata` *and* keep their unchanged 79- and 97-column headers | my own md5 tree walk with the gate's SKIP/TIMERS; both legs' `run/metadata` | **reproduces (gate)** |
+| a2 | `beam_void_closure`, `unit/beam` | as P2-20 | T1a 1.727e-15, T1b–d, T2a–b, T4 PASS, T3 FAIL by design — **identical to P2-20's numbers**; `unit/beam` integral 0.00 % | `A2_*.txt`, `A2_beam.log` | **reproduces (gate)** |
+| a3 | C1 vs P2-20 `legs/Z1` | byte-identical, new columns absent | Of what survives: **15 files, 0 differing, 0 one-sided; `thermo.dat` byte-equal, 17 columns, the nine new columns ABSENT**. ⚠ C1 was pruned to 2 plotfiles after a3 PASSED (authorised, recorded in `legs/C1/PRUNED.txt`), so the other 97 files `A3.txt` cites no longer exist — see DR-5 | my own md5 walk of both run trees | **reproduces (gate), partially re-derivable** |
+| b1 | T1b closure and α | `beam_col_err_max` ≤ 1e-12 | **199 step rows**, min `beam_P_inc` **1220.43 W**, `beam_invariant_viol` Σ **0**, max `beam_col_err_max` **1.110e-15**; min `beam_alpha_max` **13.9992**; first `bc_T_peak` > 486 K at **t = 18 s**, min α_max from there **14.0131**. ⚠ The bar is an arithmetic identity — see DR-3 | my own reduction of `legs/T1b/run/thermo.dat` | **reproduces (gate)** |
+| b1r | the lateral residual | report | At onset **T1a +6.90e-2, T1b +3.88e-2, T1c +2.07e-2, T1d +7.29e-2, M2 +0.84e-2, M3.5 +1.44e-2**; max over a run **+1.217e-1 on T1a and T1d**; cold first rows ≤ 4.2e-6 (T1d −8.5e-5); **T0 −4.183e-6 throughout**. Sign: `beam_closure_err = (P_dep + P_trans − P_inc)/P_inc`, so positive = the block books MORE than arrives | my own per-row reduction of all seven legs; the definition at `MMWSpalling.H:5176` | reproduces |
+| b2 | T1b cold absorbed fraction | 0.5034 ± 0.002 | **P_dep/P_inc = 0.5034**, P_trans/P_inc = 0.4966, against my analytic 1 − e^{−14.002926×0.05} = **0.5035** | same | **reproduces (gate)** |
+| b3 | T1x vs T1b onset | within 10 % | **77.70 s vs 84.00 s = −7.5 %** | both legs' `bc_z_melt` columns | **reproduces (gate)** |
+| c5 | shallowest `bc_z_melt` at onset | report | **T1a 0.39, T1b 1.17, T1c 1.95, T1d 1.17, T1x 1.95; T0 10.55, M2 7.42, M3.5 4.30 mm**. Initiation depth (`bc_z_peak` at onset) **1.95 / 1.95 / 2.73 mm**. ⚠ dt-dependent — see DR-4 | my own reduction | reproduces |
+| c6 | onset time | report | **52 / 84 / 122 / 84 / 77.7 / 384 / 274 / 200 s** (T1a–c, T1d, T1x, T0, M2, M3.5) | same | reproduces |
+| c7 | transmission at onset | report | TOTAL ratio **0.847 / 0.763 / 0.721** (T1a–c), T1d **0.863**; CENTRAL e^{−τ} ratio **0.282 / 0.226 / 0.196**; τ_max **1.96 / 2.19 / 2.33**; α_max **124.3**. ⚠ The TOTAL carries ±0.139 / ±0.078 / ±0.042 / ±0.296 from the residual (DR-1) | same | reproduces |
+| c8 | the scan read together | report | m 1 / 2 / 3.5 / 8.88 at ω 20 mm: z_melt **10.55 / 7.42 / 4.30 / 1.95** mm, TOTAL **1.000 / 0.836 / 0.765 / 0.721**, CENTRAL **1.000 / 0.617 / 0.415 / 0.196**, onset **384 / 274 / 200 / 122** s. The residual on the m-legs is only 2.0 % (M2) and 3.8 % (M3.5) of their transmitted power, so **the scan rows ARE resolved where the T1 rows are not** | same | reproduces |
+| c10 | the e-fold depths at onset | report | `bc_ell_p` **18.7 / 22.3 / 25.8** mm, `bc_ell_pk` **18.2 / 20.7 / 23.5** mm, `bc_z_peak` **1.95 / 1.95 / 2.73** mm against the 2.4 mm buckling depth ⇒ **7.6–10.7×** | same | reproduces |
+| c9 | T2 vs #28c | report | raw **572.5 / 744.4 / 1142.1 K**, brightness (1−R)·T **488.6 / 635.3 / 974.7 K** at 50 / 100 / 150 s; peak 584 / 776 / 1206 K at 4.30 / 4.30 / 2.73 mm; no melt by 150 s | my own four-cell axial average of `legs/T2`'s plotfiles, R recomputed from the run's ε′ | reproduces |
+| e0 | verdict | — | z1–z4, a0–a3, b1–b3 all reproduce; the sum integrates a varying α exactly per column and every flat deck is untouched. Reading **(A)** on the initiation depth and the onset; **(D)** on the declared m points — and on the TOTAL branch it is not resolved (DR-1) while on the shape it is **stronger** than stated (DR-2) | — | **reproduces** |
+
+⚠ The packet marks **nothing** unquotable. Against `ROADMAP.md`: this step **retires** the "α(T) is not energy-conserving" caveat by deletion (§12 item 11 struck through); the mm-wave note (α 14, tan δ 0.0107, R 0.15 at 28 GHz) is untouched and b2 measures exactly it; SR 7(i) — all nine new columns are per-step non-extensive deciders registered `false`, read per row, never summed; SR 8 is met unusually well (the 13 MB report, two figure crops, the digitiser and the table all in `doe/`, the only reason I could re-reduce Fig. 34); SR 9 — `src_pre/`, `bin_pre/`, `inputs_pre/`, `unit_beam_output_pre/`, `MODEL_CARD.pre_p2_21.md`, `SMOKE_T1b.old1`; SR 14/20 not engaged.
+
+#### Diff review
+
+Scope: the 471-line diff (21 hunks) against `src_pre/`; `Removal.H`, `FaceRemoval.H`, `Shared.H`, `Zhang.H` all carry pre-P2-21 mtimes; the tests, scoring scripts, table file, two decks and four records.
+
+| # | hunk / call / test | class | finding | tag |
+|---|---|---|---|---|
+| 1–2 | `MMWBeam.H`: the header comment and the `tan_delta_T` parse | 11 comments / 2 consistency | The comment now names the table and says absent-or-one-pair is P2-20's flat behaviour — accurate. The parse sits **after** `tan_delta` and after `alpha`/`R` are formed, so the α association is untouched (and R6 locks it); even count, every r > 0, strictly increasing T, each with its own abort in the negated NaN-safe form | ok |
+| 3 | `pp.queryarr` with no `Unit` | 3 units | A mixed-unit array cannot carry one, so the deck must write Kelvin. I audited all **17 pairs**: every T is exactly the Sources' °C + 273.15 and every ratio matches. The file's comment says "T in KELVIN (22 C = 295.15 K)" | ok |
+| 4 | `alpha_at(T)` | 1 duplication / 13 guards | Duplication: **none** — no scalar linear-interp helper exists in `Numeric/` or `Shared.H` (P2-14a's `CrefInterp` went with d at P2-16). The `while (tdT_T[i] < T) ++i` cannot overrun because the high clamp guarantees T < back, and `i ≥ 1` because the low clamp guarantees T > front; the divisor `tdT_T[i] − tdT_T[i−1]` is > 0 by the strictly-increasing parse check. A NaN T clamps to the first ratio | ok |
+| 5 | `alpha_varies()`, `can_deposit()` | 4 scope vs source | `alpha_varies()` is `size() >= 2`. `can_deposit()` mirrors `power_at` **exactly** — I read both: `power_at` returns P0 only when `sched_t` is empty, and `can_deposit()` branches on the same emptiness. Deviation 4's claim is correct | ok |
+| 6 | the nine conditional registrations | 7 readers | Guarded by `alpha_varies() && can_deposit()`, and a1 proves it two-sidedly on the two beam-OFF legs that now parse the table. Every new field has a writer (`ColumnOpticalDepth`) and a logged column | ok |
+| 7 | `BeamTau` / `TauView` | 2 consistency | `TauView::at` is `((j−jlo)·nx + (i−ilo))·nz + (k−klo)`, the gather's `c·NZ + (k−klo)` with the same `c` — consistent. Unbuilt ⇒ nullptr ⇒ `t()/b()` return −1 ⇒ the closed form. It inherits `ColumnSolidAboveCount`'s host-pointer-captured-in-a-kernel pattern (fine on this CPU build, as `sab` already is) | nit |
+| 8 | `ColumnOpticalDepth` mirrors `ColumnSolidAboveCount` | 1 duplication | Named, with a stated reason the packet established: a column spans several z-boxes on every beam deck, so a per-box z-sweep is unavailable and the gather is the only option | ok |
+| 9–10 | the `−1.0` void sentinel under `ReduceRealSum`, and the central column's T in the same vector | 4 scope vs source | Sound: every cell is owned by exactly one box and `a_k·dz ≥ 0` always (α ≥ 0 from the parse guards), so −1 is an exact void test. The central T is written before the void test but `Tcol` is built only over the **contiguous solid run**, so those entries are never read; it rides in the reduced vector precisely because the column spans several z-boxes, as the comment says | ok |
+| 11 | `lit[c]` from `BeamIncidentIntensity` at the column's top cell | 4 scope vs source | For a Gaussian "lit" means "Pi has not underflowed", a precision-dependent predicate. It bounds only the **reported** maxima (`beam_tau_max`, `beam_alpha_max`, `beam_col_err_max`), never the deposition | nit |
+| 12 | `tau_bot = tau_top + g[p]` | 2 consistency | L5 satisfied by construction — `g[p]` *is* the gathered `a_k·dz`, never recomputed. The real witness is U1's bottom fraction e^{−2}(1 − e^{−0.5}), which a single α could not produce; my analytic confirms it | ok |
+| 13 | `beam_col_err_max` as b1's gate | 10 test strength | It is computed **inside the gather** from `out.top`/`out.bot`, and the kernel reads those same arrays. So the bar is an arithmetic identity on a telescoping sum: it cannot detect a kernel/gather mismatch, a wrong `P_trans`, or a τ built from the wrong temperature. Measured 1.11e-15 — i.e. it only ever reports summation round-off. The genuine checks are z1 and z2, both gates, so nothing is unguarded; but b1's headline bar carries less than it reads | **risk** |
+| 14 | the τ branch's `/ dz_cell` | 13 guards | **Unguarded division**, and `dz_cell`'s default is `0.0`, while the closed form below uses it only inside `if (dz_cell > 0.0)`. I checked all five live call sites (the four cell loops pass `DX[2]`, `BeamEnergyBalance` passes `dz`), so nothing is wrong today — a future caller omitting it gets ±inf silently | nit |
+| 15 | `tau_top >= 0.0` as the regime switch | 6 fp / 4 scope | A sentinel, and `tau_top == 0.0` (the column's top solid cell) correctly selects the sum path. `tau_bot` is not separately validated, but the gather always sets the pair together. A void cell's −1 would select the closed form, but void cells are zeroed by `self_void` before the call on the only void-aware path | ok |
+| 16 | `P_trans` at `btau.k_last[col_b]` | 2 consistency | Goal 3 exactly: the gathered `tau_bot` at the column's exit cell, with the old `k == klo_dom` branch preserved byte for byte in the `else`. A column with no solid cells contributes nothing, which is right | ok |
+| 17 | the new z0-vs-domain-top abort | 13 guards / 4 scope | A real guard for the non-void-aware paths (deviation 5), but it fires inside `ColumnOpticalDepth`, i.e. on the first beam-on **step**, not at parse time — so a mis-set table deck runs and then aborts mid-run. A cross-key parse check would be the house pattern | nit |
+| 18 | `material ? material->T_m : T_m` in `bc_z_melt` | 2 consistency | Two sources for one threshold. The Zhang decks are `material` decks so `material->T_m` is used and `bc_z_melt`'s onsets reproduce; but a second definition of T_m in the same expression is the shape SR 14 warns about | nit |
+| 19–20 | the three DR-5 `Util::Assert(INFO, TEST(!removal_enabled()))` and the four loops' wiring | 9 removed checks / 2 consistency | Exactly the P2-20 review's ask, at all three non-void-aware sites and placed before the closure call so they also cover its empty `k_top_col` — the invariant is now local. Each loop builds `btau` once per step and passes `tv.t/tv.b`; the microstructure site passes the real `k_top_col` and the other three `{}`, matching the gather's `void_aware = !k_top_col.empty()` | ok |
+| 21 | `unit/beam_tau` | 10 RED on the pre-fix binary | U1 is **rc 6 on `bin_pre`, naming `beam.tan_delta_T`** (a strict `beam.*` scope), so the new test cannot pass on the old binary. U2 declares itself **non-vacuous** (sum 0.632121 W both sides) — the right instinct for a 0.00-difference bar. The old kernel's 0.2387/1.1033 is explicitly offline, not a run, as the packet said | ok |
+| 22 | R6 | 10 test strength | The mutation reassociates α left-to-right — algebraically identical, bit-different — and R6 goes RED. This is the first lock in the series on a floating-point **association** | ok |
+| 23 | the Zhang test's b2 | 5 hard-coded | Computes the bar as 1 − e^{−αL} with α from the run's `metadata` rather than typing 0.2953 (deviation 6), so the same test serves the Zhang block and T1's 50 mm. The right pattern, and the one P2-20 already used for α and R | ok |
+| 24 | b1r's residual vs c7's TOTAL | 12 discriminator | At onset the surplus is 2.1–7.3 % of P_inc against a transmitted fraction of 0.21–0.42, i.e. **5.8 % (T1c), 10.2 % (T1b), 16.4 % (T1a), 34.3 % (T1d)** of the transmitted power ⇒ c7's TOTAL ratio is 0.721 ± 0.042, 0.763 ± 0.078, 0.847 ± 0.139, 0.863 ± 0.296. See DR-1 | **risk** |
+| 25 | c5's dt dependence | 6 boundary | T1b's `bc_z_melt` reads **1.17 mm at dt 2 s and 1.95 mm at dt 0.03 s** — one cell (0.78 mm) apart — while the onset time moves only 7.5 %. The initiation depth 1.95 ± 0.39 mm only **touches** the DOE's 2–4 mm window; T1a reads 1.95 and T1c 2.73. The takeaway states the ±0.39 mm resolution | **risk** |
+| 26 | Goal 0 (the P2-20 chores) | 9 removed checks | All verified by my own greps: both orphaned decks now carry **0** retired-key lines; `apply.py`'s `decks()` walks `("unit","validation","extensions","studies")`; `visualize` computes R from `beam.eps_r` by Fresnel instead of reading the retired key with a 0.2 fallback; the DR-5 asserts are in; P2-20's report legs pruned. `GOAL0_SWEEP.txt` names the single remaining file, its disposition, **and the singular/plural `retired_unit(s)` SKIP mismatch** — the implementer found that before I did | ok |
+| 27 | SR 8 on the figure readings | 5 hard-coded | The report PDF, both figure crops, `fig34_digitise.py` and `FIG34.txt` are all in the repository, so the three observables are backed by file **and** reducing code. My own re-reduction gives min 0.783 and max 1.155 against the notes' 0.79 and 1.17 | ok |
+| 28 | a3's pruned evidence | 9 removed checks | C1 was cut from 113 files to 15 **after** a3 passed — authorised by the guardrail, logged in `chain_a.sh:59–61` and `legs/C1/PRUNED.txt`. I re-derived 15/15 identical plus a byte-equal `thermo.dat`; the other 97 files `A3.txt` cites are gone. The guardrail bought disk at the price of the gate's later re-derivability | **risk** |
+
+**Tally: 28 hunks/tests in 25 rows (three pairs merged) — 0 bug, 5 risk, 6 nit, 17 ok.**
+
+#### What the planner needs
+
+- **DR-1 — the TOTAL-transmission branch is not resolved, and the fix is scoped.** The column sum books 2.1–7.3 % of P_inc too much at onset and up to **12.2 %** late (T1a, T1d); the sign says surplus. Against the transmitted power that is **±0.04 (T1c) to ±0.30 (T1d)** on c7's TOTAL ratio, so only **T1c (0.721 ± 0.042)** is resolved below the 0.75 envelope. The **m-scan rows ARE resolved** (2.0 % M2, 3.8 % M3.5) ⇒ c8's "no declared m lands both" stands on the scan and the central column, not the T1 TOTALs. Only option (i) makes the sum exact, at a (d/z_R)² departure from the closed form that a0/a3 would no longer protect.
+- **DR-2 — the shape evidence is stronger than the numbers.** My re-reduction of `doe/FIG34.txt`: the fraction dips
+  to **0.783** by 90 s after beam-on then **rises to 1.155**, above its beam-on value, before collapsing at melt. No
+  monotone α(T) gives a non-monotone transmission at any m ⇒ (D) does not rest on the envelope comparison. Promote
+  the fourth observable from a takeaway to a stated observable: it excludes the family, not just the magnitude.
+- **DR-3/4/5 —** `beam_col_err_max` is built from the arrays the kernel reads, so b1's gate measures round-off
+  only: keep it as a report, since L5's real gates are z1 and z2. c5 is dt-limited at its own resolution (1.17 mm at
+  dt 2 s vs 1.95 at dt 0.03, on a 0.78 mm cell, against a 2–4 mm window) ⇒ quote the initiation depth with ±0.39 mm;
+  only T1c is clearly inside. And a3's artefacts were pruned after scoring, so `A3.txt` cites 112 files that no
+  longer exist — keep an `md5` manifest when a byte-identity gate's output is pruned.
+- **Carry forward:** P2-20's c3 headline ("flat α onset 318 s brackets ≈ 300 s") **no longer stands** — at the
+  measured ramp the flat control reads **384 s** (T0). ⚠ Also: this packet is 393 lines before the review, and the two
+  tables `/verify` mandates are 82 on their own, so the 500-line cap now binds the reviewer, not the planner.
+
+#### What I credit
+
+- **Both P2-20 review findings are fixed and one is now locked**: the orphaned decks are clean, the sweep walks
+  `studies/`, DR-5's invariant is a `Util::Assert` at all three sites, and α's floating-point **association** is a
+  lock whose mutation reassociates it and goes RED — the first association lock in the series.
+- **The unit test is the real check and it knows it.** U1 is the only thing that could catch `tau_bot` built from a second α, and it is exact to 1.8e-14 against an analytic I derived independently; U2 declares its own non-vacuity (0.632121 W both sides); U3 pins the closed form byte for byte; U1 is rc 6 on the old binary. And the conditional registration is proven two-sidedly: CAL_S and HOS_S parse a 17-pair table through a nested `FILE =` and still give byte-identical 79- and 97-column output, on top of 0/2,639 and a timers-only face gate.
+- **SR 8 beaten, not just met** — the planner flagged its DOE copy as not durable and the implementer committed the report, the crops, the digitiser and the table; that is the only reason DR-2 was findable. The power disagreement was escalated rather than absorbed, and every awkward result is declared: the residual above its own expectation, c5's dt artefact, P7 low, P2-20's superseded onset, the unexplained fourth observable.
+
+### Verdict: accepted
+
+- **Gating rows.** z1–z4, a0–a3 and b1–b3 all reproduce from my own reductions; no diff-review row is tagged `bug`.
+- **Guardrails.** `Removal.H`, `FaceRemoval.H`, `Shared.H`, `Zhang.H` untouched (pre-P2-21 mtimes); the closed-form kernel, `BeamIncidentIntensity`, the waist law and the uniform profile unchanged — a0/a1/a3/z3 prove it rather than assert it; `beam.tan_delta_T` is the only new key; `eps_r`/`tan_delta`/`lambda` keep their parse and α its association (R6); no melt step, no R(T), no ε′(T), no hysteresis, no per-mineral absorption; the table never edited and no m adopted; the Hu extensions not run; nothing in the do-not-touch list; nothing committed.
+- **Reruns.** None — no simulation, no rebuild; every number came from artefacts on disk plus my own reducers.
+- **Files inspected** (named row by row in the two tables above): the full `MMWBeam.H` / `MMWSpalling.H` diff against `src_pre/` plus ten sites read directly; `loss_table_hartlieb.inputs` (all 17 pairs audited against the Sources); `rock_grimsel.inputs`; `zhang_oglesby/{input,test}`; `unit/{beam_tau,retired_keys,beam}`; the study's `Z0`, `Z1_beam_tau`, `Z4_retired_keys`, `A2_*`, `A3`, `GATE_*`, `GOAL0_SWEEP`, `RESULTS`, `CHAIN`, `chain_{a,b}.sh`, `run.py`, `reduce.py`, `BINARY*`, `doe/*`; every leg's argv/rc/metadata/thermo and surviving plotfiles; the five witness manifests and both face trees; P2-20's `apply.py`, `legs/Z1/run`, `unit_beam_output_pre/`; the two Goal-0 decks; `visualize`; `MODEL_CARD.md` vs its pre-copy.
+- The user should run `/plan` next; the planner will archive this step.
+
+#### ⚠⚠ Post-acceptance note (2026-11-06, after this review was taken)
+The user then landed the **in-rock beam spread** (P2-22, `studies/p2_22_inrock_spread/`: the waist law uses the
+wavelength inside the rock, so it now depends on `beam.eps_r`) and **rebuilt**. `bin/` is therefore
+`3604d38df733579e…`, not the `650d31436e506203…` every row above was taken on; that binary is preserved at
+`studies/p2_22_inrock_spread/bin_pre/`. Both gates stay clean (tree 0/2639, face timers-only, `eps_r = 1` on every
+fixture), but **a3 and z3's byte identity on an `eps_r != 1` deck does NOT cross that boundary**: the Zhang deck now
+differs from `p2_20/legs/Z1/run` in 75 of 112 files, ≤ 6.4e-06 relative (`C1_vs_Z1.txt`). ⇒ **do not re-run a3 or z3
+against `bin/` as a regression check** — they fail for that declared reason. Declared in `witness/REFERENCE.md`'s
+P2-22 block, with the `eps_r = 1` gate hole P2-22 exposed (a 0.55 m-wide beam passed every unit test and both gates).
+
+## P2-22 — The in-rock beam spread (Rayleigh range n·z_R inside the dielectric) and test #19 at its true spot (2026-11-06, advisor-run at the user's request, NOT reviewed; archived 2026-11-06)
+
+**Status:** DONE 2026-11-06 13:50, ad hoc ("just run these two yourself now"); no `/implement`, no `/verify`. Binary
+`3604d38d…`; pre-step `650d3143…` (P2-21) preserved at `studies/p2_22_inrock_spread/bin_pre/` with `src_pre/`. Study
+`tests/MMWSpalling/studies/p2_22_inrock_spread/` (`RESULTS.txt`, `CHAIN.log`, `chain.sh` + `chain3.sh`, `run.py`,
+`reduce.py`, `c1_compare.py`, legs C1 / A / X / F, 2.3 GB). Tree gate 0/2639 and face gate identical: NOT re-pinned.
+The record below is the daily log's §5 (the DOE re-read that motivated it) and §6 verbatim.
+
+### 5. DOE report DE-EE0005504 re-read (user asked: "make sure everything you have been basing this work on is correct")
+
+Source: `tests/MMWSpalling/studies/p2_21_loss_table/doe/DE-EE0005504_final_report.pdf` (pdftotext line numbers below).
+
+**Confirmed verbatim**
+- α cold: "measured the absorption coefficient at room temperature to be 0.14 nepers/cm, corresponding to about 30 %
+  absorption in a 1" (2.54 cm) thick sample" (L2163–2165) and "absorbs only 30 % of the 28 GHz power on a single pass
+  while a solid" (L1806). 1 − e^{−0.14·2.54} = 0.30 ⇒ the 0.14 Np/cm IS the power coefficient ⇒ α = 14 m⁻¹. ✓
+- n = 2.24 measured, Fresnel R 0.14 before melt, 0.3 after melt "as observed"; melt absorbs ≈ 70 % (L1673, L2172–2174). ✓
+- "the melt initially starts 2 – 4 mm (0.08 – 0.16") below the surface and breaks through to the surface from below"
+  (L2200–2201): ONE sentence in the modelling discussion of #19, no method, no error bar. ✓
+- Fig. 34 (p. 54) re-checked against the image: beam-on ≈ 215 s at ≈ 1.5 kW, ≈ 2 kW just before the transmission
+  collapse at ≈ 505 s; the pick-off DIPS then RISES above its start before the collapse. The digitisation stands. ✓
+- #19: "direct surface exposure, two samples stacked, ~1 1/2" dia. melt spot" (Appendix Table 3 note, L7031);
+  Table 1: 4" dia. × 1" Barre, 1.5–3.4 kW, HE11, 32.5 mm aperture, 26 min 20 s (L6769). The 50 mm block is right. ✓
+- #28c = third exposure of Rock #28 (L1661–1668), "a previously melted sample and does not have the beginning dynamics
+  of virgin granite" (L2209–2210). ✓
+
+**⚠⚠ WRONG in the packet: the spot.** Appendix Table 2 (L6878 header "Standoff Distance"; row L6898): #19 standoff
+**0.31" = 7.9 mm**, not the "½–2 aperture diameters" (16–65 mm) the packet's spot range was built on. With the HE11
+Gaussian 1/e² radius 12.7 mm (L978) and z_R 47 mm, ω at the rock = 12.7·√(1 + (7.9/47.3)²) = **12.9 mm**. ⇒ the ω
+13 mm leg (T1a) is THE comparison; T1b (16.5) and T1c (20) are off-spot. At ω 13 mm: onset 52 s (5.7× early), initiation
+depth 1.95 mm (in 2–4), TOTAL transmission 0.85 (but with the +6.9 % closure residual, the largest of the legs),
+CENTRAL 0.28. A flat-α leg at ω 13 mm was never run (flat at 20 mm: 384 s).
+
+**NEW, from the authors themselves (supports the second agent's etalon reading):** "The stalactite from the bottom
+surface is not a melt through from the top, but is due to a Fabry-Perot resonance at 28 GHz between the top and bottom
+surfaces" (L1804–1806). The two-face interference is documented in the report; for #19 (two stacked discs, four faces
++ an air gap) a ±15–20 % transmission wobble with temperature is expected and the dip-then-rise in Fig. 34 is its
+signature, not a loss signature.
+
+**Other facts to carry**
+- The pick-off "is mostly due to transmission through the sample" (Fig. 34 caption, L2229–2230) ⇒ WHOLE-BLOCK
+  transmission is the comparable quantity; the central column is not observable.
+- The 137 GHz radiometer view is COLLINEAR through the launch waveguide (L898, L7275), uncorrected, view-averaged; it
+  reads ≤ ≈ 250 °C for the whole 290 s before the jump (Fig. 34 top). Not usable as a discriminator without the view
+  size and the solid's 137 GHz emissivity (a 32 mm view over a ~15 mm hot zone dilutes a 1500 K centre to ≈ 400 K).
+- #19 late observable: melt spot ≈ 1.5" (38 mm) after 26 min at up to 3.4 kW — needs melt physics; record.
+- The DOE's own model (Figs 35–36): 1" thick, 1/e POWER diameter 20 mm, 1.7 kW for 380 s then 2.7 kW, two-step α
+  (×100 at melt), no phase change. Its power schedule does NOT match its own Fig. 34 trace (1.46 → 1.96 kW).
+  Zhang inherited that model.
+- Standoff rule in the text ("½ to 2 waveguide diameters", L1134) is the TYPICAL range; Table 2 gives the per-test value
+  and #19 is below it.
+
+**Consequence for /plan:** (1) score #19 on ω 13 mm only, with a flat-α ω 13 mm control; (2) the closure residual on
+that leg (6.9 % at onset, 12 % late) must be cured (in-rock Rayleigh range n·z_R, or a collimated column) before any
+whole-block transmission statement; (3) the etalon is the declared explanation of the pre-melt wobble (no model term).
+
+### 6. P2-22 (advisor, ad hoc at the user's request: "just run these two yourself now") — the in-rock beam spread and test #19 at its true spot
+
+**Status:** DONE 2026-11-06 13:50. Study `tests/MMWSpalling/studies/p2_22_inrock_spread/` (RESULTS.txt, CHAIN.log, chain.sh +
+chain3.sh, run.py, reduce.py, c1_compare.py, BINARY.txt, bin_pre/ + src_pre/ + BINARY_pre.txt = the P2-21 build, which
+P2-21's `/verify` must use if it re-runs anything: this binary moves every eps_r > 1 deck). Binary `3604d38d…`, 19 warnings.
+⚠ NOT a /plan–/implement–/verify packet; P2-21 is still unverified. Record here for the next /plan to archive.
+
+**Source (two files).** `MMWBeam.H`: `n_idx = sqrt(eps_r)` formed beside R. `MMWSpalling.H`: `BeamIncidentIntensity`
+gains `(n_rock = 1, s_rock = 0)` and evaluates the waist law at the REDUCED distance `dz − s_rock·(1 − 1/n)` (a Gaussian
+entering a dielectric keeps its waist and propagates with Rayleigh range n·z_R; n = 1 reproduces the geometric dz BIT
+FOR BIT since s·0.0 = 0.0). `BeamSource` computes the solid path before Pi and passes it; the four deposition loops and
+the energy balance pass `beam.n_idx`. No new number: the index is the declared permittivity.
+- ⚠⚠ **Bug caught by the smoke run, not by any unit test:** in `BeamEnergyBalance` the variable `path` is a −1 sentinel
+  off the void-aware path. Passed as s_rock it put the incident intensity 0.55 m "deeper" than the deposit: P_inc read
+  314 W for 1246 W and the closure 1.43. Every eps_r 1 unit test is blind to it (n = 1 ⇒ s·0 = 0). Fixed with
+  `s_rock = path >= 0 ? path : z0 − z`. Lesson: a change gated to n ≠ 1 needs an n ≠ 1 smoke before the chain.
+- A runner recursion (my `extra` shadowing P2-21's for C1) stopped the first chain after the gates; chain3.sh reran ord 3–4.
+
+**Gates (all on the new binary):** unit/beam_tau U1–U3 PASS (byte-identical to pre), retired_keys PASS, tree **0 of
+2,639** vs p2_18 (controls 26/863), face gate cmp p2_21 **IDENTICAL**, beam_void_closure 7 PASS + T3 by design, unit/beam
+0.00 %. C1 (Zhang deck, eps_r 5.02) vs P2-20 Z1: plotfiles differ as expected; thermo energies move ≤ 6.4e-6 relative
+(the 25 mm Zhang block barely spreads).
+
+**Legs at the TRUE spot** (ω 12.88 mm computed from the 12.7 mm HE11 waist and the 7.9 mm standoff; Fig. 34's ramp):
+| leg | onset s | first-melt cell | peak at onset | whole-block tr ÷ cold | central | closure at onset / max | e-fold ℓ_pk |
+|---|---|---|---|---|---|---|---|
+| P2-21 T1a (ω 13, vacuum spread) | 52.0 | 0.39 | 1.95 mm | 0.847 | 0.282 | +6.9e-2 / +1.2e-1 | 18.2 mm |
+| **A** (table, in-rock spread) | 50.0 | 1.17 | **1.95 mm** | **0.764** | 0.257 | **+2.1e-2 / +3.2e-2** | 20.8 mm |
+| X (A at dt 0.03 s) | 45.6 | 1.95 | 1.95 mm | 0.774 | 0.276 | +2.0e-2 / +3.1e-2 | 19.5 mm |
+| **F** (flat α 14, in-rock spread) | **194** | 8.20 | 8.98 mm | 1.000 | 1.000 | −1.8e-12 | undefined |
+Observed: first melt 2–4 mm; pool at ≈ 295 ± 50 s; whole-block transmission 0.79–1.17 of beam-on (etalon envelope, a bound).
+
+**Reading.**
+1. The closure residual fell ×0.30 at onset and ×0.26 at its maximum (pre-registered ≈ ×0.2): the spread was the cause,
+   and what remains (2–3 %) is the per-cell intensity variation the in-rock law still has. The whole-block transmission
+   it inflated drops from 0.847 to 0.764, and now sits AT the 0.79 envelope within its own ±2 % residual.
+2. Depth and onset did not move (1.95 mm, 50 s): the top 2 mm spreads by (2/47)² ≈ 0.2 % either way. Depth at 1.95 ±
+   0.39 mm (cell 0.78 mm) brackets 2 mm, the lower edge of the DOE's 2–4 mm; the reducer's strict bar reads it OUT.
+3. ⚠⚠ **At the true spot the FLAT coefficient is ALSO early: 194 s vs ≈ 295 s (×0.66)**, where at ω 20 mm it read 384 s
+   (late). So no scaling m of Hartlieb's shape between 1 and 8.88 lands the time at the true spot: m = 1 is already 1.5×
+   early and the full table 5.9× early. The time now points at something other than the loss shape: the coupling
+   between the gyrotron meter and the rock, the event definition (a pool forms after first melt), or surface losses —
+   each a measurement question. ⚠ P2-20's "flat lands the time" stood only because the spot was wrong twice (2 kW and
+   ω 20 mm).
+4. X at dt 0.03 s: first melt AT the peak cell (1.95 mm) at 45.6 s, −8.9 % vs A: the 2 s step is adequate for the onset.
+5. e-fold depth 19–21 mm against the 2.4 mm buckling depth (8–9×): the no-thin-flake prediction for the port is unchanged.
+
+**For /plan (the port, step 4; step 3 PARKED by the user — "if step 3 is a matter of calibration I would rather focus on
+that later"):** (a) the face list is built only under `fl_on = face_list && sp_on && void_aware && !sp_presc`
+(MMWSpalling.H ≈ 2023) and the interlocks (≈ 1026–1090) require `surface_patch.mode = ConvectiveFlame` with an
+expression: a beam-only deck cannot reach the face list today — decoupling fl_on from the flame patch is the port's
+step-zero blocker; (b) the layer depth under an interior peak: B must test the e-fold (ℓ_pk, peak-referenced) — the
+P2-19 helpers already log ℓ_p/ℓ_pk per line; (c) the elastic operator by a computed resolution condition (one more
+rung); (d) the Hu beam extension decks (eps_r 5.02, λ 2.19 mm, typed-era comments) are rebuilt at the port; (e) the
+transmission record is read as a bound only (etalon); (f) MODEL_CARD §8 rows for n_idx and the standoff/spot.
+
+### Advisor review of the beam-port proposal (another agent's write-up, daily log 2026-11-06; carried into P2-23)
+
+Agree with the direction and the headline prediction (no thin flakes at 28 GHz). Verified against code:
+- 1. **#19 cannot reach the face list as written.** The P2-22 legs run the Zhang deck (`material.type = zhang`,
+  `solver = implicit` ⇒ `AdvanceMaterialImplicit`, M:1552); `fl_on` (M:2023) lives in `AdvanceMicrostructure` (M:1921),
+  which is explicit (implicit + microstructure silently ignored, census 5.7). ⇒ needs census D1 (Zhang as a phase law)
+  or Grimsel's laws (which move P2-21/22's numbers); explicit at 0.78 mm ≈ an hour per 400 s leg (T1x 40–80 min), not seconds.
+- 2. **Window too short:** face list reads ≤ h_spall_max = 15 mm (`model_form_flame.inputs:20`, 19 cells at 0.78 mm);
+  ℓ_pk 19–21 mm came from the P2-21 central-column diagnostic over the FULL 50 mm column (M:4925–4943). Inside the face list
+  the e-fold is NaN ⇒ nodepth, B never evaluated, zero for the wrong reason. Fix: "no e-fold in the window" ⇒ ℓ ≥ window,
+  a lower bound sufficient for B (blocks when ℓ > 2.4 mm); log the ratio as ≥. Don't enlarge the shared key.
+- 3. **A null needs a positive control:** two-sided counts on #19 (criterion firings > 0, B blocks = all, nodepth 0,
+  removals 0) + a beam that SHOULD spall (absorption depth ≪ 2.4 mm, e.g. the α 2000 fixtures) ⇒ also the advisor's
+  regime pair; boundary α ≳ 1/(2.4 mm) ≈ 400 m⁻¹.
+- 4. **Defer the elastic operator:** doesn't affect the prediction; riskiest/most expensive; dx/ℓ measures RESOLUTION,
+  not whether the 1-D law is WRONG (ℓ/ω: 20 mm under a 13 mm spot ⇒ invalid); needs two conditions; own packet.
+- 5. **Score pre-melt only** (no melt removal; vapour refused; K_Ic near melt uncalibrated) or count firings above the
+  solidus separately.
+- 6. Wording/declarations: switch triggers on 0 FIRED flame lines (cold rim has interior peaks, non-firing); 2.4 mm is
+  the LAYER limit (flake ≈ c_f × that ≈ 1 mm); c_f 0.4 and the 12 mm Grimsel span applied to Barre (8× margin makes
+  them non-decisive); "no THIN-FLAKE spallation" (no deep failure mode; MIT's 30 mm weakened zone); run both table (A)
+  and flat (F) so "every table" is measured; deleting the old path needs the user's permission; Hu decks low value.
+
+## P2-23 — The beam port: the face list runs without a flame, test #19 on the production rock, and the no-thin-flake prediction scored two-sidedly (2026-11-06, ACCEPTED by review 2026-11-06; the robust control P400 added as an advisor addendum the same day; archived 2026-11-06)
+
+**Status:** ACCEPTED by review; all seven gating rows (z1–z3, a0–a2, b1) reproduce from the reviewer's own reductions;
+0 `bug`. Binary `42a115a0…`; pre-step `3604d38d…` (P2-22). Study `tests/MMWSpalling/studies/p2_23_beam_port/`
+(`Z0.txt`, `RESULTS.txt`, `RESULTS_P400.txt`, legs B0 / P / P400 / B0F / B1 with `MANIFEST.md5`). Tree gate 0/2639 (NOT
+re-pinned); the face gate reference becomes `face_p2_23` (the new `BEAM_S` leg).
+
+### What the step established
+- **The face list runs without a flame.** `SurfacePatch::Parse` reads `face_list`, `robin_form`, `x0`, `y0`, `radius`
+  before its `enabled` return; the switch is `face_list && owner && void_aware && !(enabled && sp_presc)`; the list's
+  heat / T_s / T_gas calls (which lived inside `BuildFlameColumns`) run from `AdvanceMicrostructure` with the patch
+  off, at h = 0; three readers of the empty `flame_h` are guarded. A flameless listed face bills exactly the losses at
+  its own T_s (U1: `ledger_P_loss` 0.237696 W vs analytic 0.237696295; ⚠ `fl_P_*` are the flame GAIN, zero at h = 0).
+  Every flame deck byte-identical (0/2639; 13 face legs identical); `BEAM_S` joins the face gate.
+- **Test #19 on the production rock (Grimsel, one rock; ω 12.88 mm; Fig. 34's ramp; 1.56 and 0.78 mm cells):** the
+  onset criterion fires from 31 s; first melt 42 s at the peak (2.34 / 1.95 mm); **zero removals before melt**; EVERY
+  evaluation withdrawn by B; 100 % of 61,587 logged evaluations are fallback lines with NO e-fold inside the 15 mm
+  window (x = ∞), and the window taken AS the layer still blocks by `bk_lb` 3.75–6.7; the full column's e-fold at
+  melt is 19–21 mm. The flat coefficient fires at 48 s and does not melt by 80 s. ⇒ **no THIN-FLAKE spallation under
+  this 28 GHz beam on this rule**; the rock melts first, as every published granite test at this frequency.
+- **The positive control (the same deck, α 2000 m⁻¹, R 0):** at 150 W (0.51 MW/m² net, 1.18× B's minimum flux at the
+  12 mm span) it passes B only AT the threshold (bk 0.9994–1.0000, 6 removals, a stall after 11 s); ⚠⚠ a shallow
+  STEADY beam presents the CONDUCTION length (2.4–2.8 mm) to B, not the 0.5 mm absorption depth, so the spall/melt
+  boundary is minimum-flux + layer growth, not absorption depth alone (P2's ℓ 0.5–1.5 mm / bk 0.2–0.5 was wrong in
+  kind). **P400 (400 W, addendum): first removal 0.95 s, 1,008 removals in 20 s at ≈ 40 s⁻¹ over 96 columns, bk
+  0.44–1.00, median layer 1.9 mm, floor 17 mm at 20 s** — the pair is robust: the same rule refuses flakes under the
+  deep beam and drills steadily under a shallow one above the minimum flux.
+- **Records:** the layer limit is L/(C_L(T_s)·μ·c_f) = 2.35 mm at 850 K rising to 3.75 mm at 1400 K (not one 2.4 mm);
+  post-melt, lines above the solidus keep firing (up to 686 per step on B1) and B withdraws them all — a melt-zone
+  artefact with no melt physics (P2-24); the two surface forms differ by 2.2 % in loss power on a flat top under a
+  beam; thermo rows report the step that ENDED at t; `weibull.V0` must be each deck's cell volume; a coarse beam leg
+  costs 9 s per 80 s simulated — the regime map is cheap.
+
+### Carry-forwards (review and planner)
+1. **DR-1 (closed by P400):** score a control on removal count and flux margin, never on bk (a pass reads bk ≈ 1 by
+   construction, SR 15).
+2. **DR-2:** quote the layer limit as a function of T_s; the null survives because the window is ≥ 4× the largest limit.
+3. **DR-3/4/5:** bar printed digits, not 1e-6 (SR 7(iv)); `spall.buckle_log_csv` is a top-level key the old binary
+   ignores silently — a strict-scope key or a one-step probe closes z2; the ledger's `fl_on_l` should share the
+   kernel's predicate.
+4. **Planner:** the control's physics (conduction length, minimum flux) was mispredicted in kind; a steady shallow beam
+   is a flame as far as B is concerned.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-06)
+
+- **P2-23 — The beam port: the face list runs without a flame, test #19 on the production rock, the no-thin-flake
+  prediction scored two-sidedly** (`ACTIVE_STEP.md`; 2026-11-06; user: the elastic operator LEFT OUT, the loss-table
+  magnitude PARKED).
+  - Archived: P2-21 ACCEPTED (`ARCHIVE_DONE.md` *"P2-21"*): the table lands #19's melt DEPTH (initiation at the peak,
+    ≈ 2 mm) and the "starts below, breaks through" sequence; onset 2.4–5.7× early; no scaling of Hartlieb's shape lands
+    depth and time together. P2-22 ad hoc (*"P2-22"*): in-rock spread n·z_R cut the column sum's residual ×0.30; the
+    DOE re-read put #19's standoff at 7.9 mm ⇒ ω 12.9 mm is THE spot; there, FLAT α is ALSO early (194 s vs ≈ 295) ⇒
+    the time is not the loss shape (coupling, event definition, losses); the pre-melt transmission wobble is the
+    disc Fabry-Perot the report itself describes ⇒ the transmission record is a BOUND.
+  - The port: `fl_on` without the flame patch; a blocked-line log with the window lower bound `bk_lb` (default-off
+    key); #19 on Grimsel at 1.56 mm cells (B0), flat twin, and the α 2000 POSITIVE control that must spall; B1 at
+    0.78 mm last. Inside the 15 mm window the beam's layer never e-folds ⇒ `nodepth`, x = ∞, B blocks: the EXPECTED
+    branch, logged as "ℓ ≥ window ≥ 6 × the 2.4 mm limit".
+  - ⚠⚠ Pre-registered: zero removals before melt on B0/B0F/B1 with every fired line withdrawn by B (bk_lb 3–6);
+    removals on P. Declared: the 1-D stress overestimates under a 20 mm lump (fires MORE); c_f and the span borrowed.
+
+### The P2-23 file verbatim (packet, completion notes, takeaways, addendum, review; headings demoted, code fences untouched)
+
+## Active Step: P2-23 — The beam port: the face list runs without a flame, test #19 on the production rock, and the no-thin-flake prediction scored two-sidedly
+
+Status: **accepted by review** (2026-11-06; all seven gating rows reproduce independently; 0 `bug`). ⚠⚠ The positive control is a knife-edge: **6 of 22,230 evaluations pass B, every one with bk ∈ [0.99944, 0.99999]** — within 0.06 % of the threshold — and after 11 s every line is blocked again. b3's `bk ≤ 1` bar is **self-limited** (SR 15: a line passes on the first step bk drops below 1), so the control's information is the 6 removals and the 1.18× flux margin over B's minimum, not the bk value (DR-1). ✅ The null is the strong half and does not rest on x = ∞: `bk_lb` (the 15 mm window AS the layer) is **3.75–6.66** across B0/B0F/B1, which I re-derived from C_L myself, against a layer limit of 2.35–3.75 mm over the T_s range actually reached (DR-2).
+
+### Context
+
+The model has one breaking rule — the face list (P2-8/P2-9), the buckling condition B (P2-15/P2-17) and the
+profile-read flake depth (P2-19) — and it has only ever run under a flame. The beam's heating is now settled on its
+own (P2-20 one dielectric pair, P2-21 the loss table and the per-column optical-depth sum, P2-22 the in-rock
+spread and test #19 at its true 12.9 mm spot). The port connects the two: a beam deck reaches the face list, and
+the rule's answer on the only virgin-granite test on disk is recorded. ⚠⚠ Three things the second agent's review
+established against the code (daily log 2026-11-06, last section; the user's paste of the same) shape this packet:
+(i) the face list lives in the explicit microstructure path, so #19 runs on the production rock (Grimsel laws, one
+rock) and not on the Zhang material deck P2-21/22 used — its depth and onset numbers will move and are REPORTS, and
+the port's legs use COARSE cells (the question is whether a 20 mm layer exceeds 2.4 mm; the fine mesh was for the
+melt depth, already answered); (ii) the line scan reads at most `spall.h_spall_max` = 15 mm, while the heated layer
+under this beam e-folds at 19–26 mm, so inside the window the rise never e-folds: the fallback returns NO depth
+(`fr_nodepth`), h_f = 0, and B sees x = ∞ — the line is blocked for a reason that must be LOGGED as the lower bound
+it is (ℓ ≥ window), never silently, and that refusal is the EXPECTED branch here, not a defect; (iii) a null needs a
+positive control: a beam whose absorption depth is far below the 2.4 mm layer limit MUST spall on the same rule.
+⚠⚠ Second review (the user's paste, 2026-11-06, verified against the code): the surface-patch parse RETURNS before
+reading any key when `enabled = 0` (:8254), so a flameless deck lists no faces and reads mode = prescribed_T — the
+port's first deliverable is that parse; the explicit limit is set by Grimsel's ROOM-temperature diffusivity
+κ = 3.41/(2650·767) = 1.68e-6 m²/s (`hc.heat.alpha` is inert under the law); `bc_z_melt` compares with `phase.T_m`,
+default 1e30 on this path; the positive control at 1.46 kW would heat its top cell at ≈ 1,700 K/s and drill the
+block, so it runs at a flame-like 150 W; and a loss comparison at the IC temperature compares two zeros.
+Declared limitations: the criterion's stress is the 1-D confined estimate × R on every beam line — under a 20 mm
+layer below a 26 mm spot it is an overestimate (a hot lump pushes sideways and up), which fires the onset MORE, the
+useful direction for showing that B blocks; the flake fraction c_f 0.4 and the 12 mm span were calibrated on
+Grimsel under flames and are applied to Barre under a beam — with the margin here they decide nothing, and the
+packet says so. The loss-table magnitude is PARKED (user: calibration, later). Carried: P2-21 DR-3/4/5; R = 0.531
+declared; the two gates; no melt step; nothing fitted.
+
+### Sources (opened 2026-11-06)
+
+- **The dispatch and its lock.** `MMWSpalling.H:2023` `fl_on = surface_patch.face_list && sp_on && void_aware &&
+  !sp_presc`, `sp_on = surface_patch.enabled && owner` (:2011); `BuildFaceList(lev, k_top_col)` :3835 (reads
+  `surface_patch.radius` as the listing mask, :3851; `ColumnTopSolid` when the vector is empty); `FaceListHeat` :3989
+  (`e.h = FaceH(...)`, the flame map); `FaceListTg` :2384 (`e.Tg = flame_Tg[e.col]`); the kernel's listed-face loop
+  :2160–2172 (`FrFaceFlux(flp[q], fTg ? flp[q].Tg : 0, …)`, with `q_in = q_out = 0` on a listed cell, :2158) and
+  `q_loss = q_out` :2204; `FrFaceFlux` `FaceRemoval.H:138` → `SurfaceCellFlux(true, true, 1.0, e.h, Tg, …)`
+  (`MMWSpalling.H:4069`); the parse interlocks :1026–1095 (`requires mode = convective_flame with an h_expr map`
+  :1049, `robin_form = surface` :1053, microstructure :1055, `follow_mask` :1059, the `fr_abort` list :1085–1095 incl.
+  `stress_source != local_thermoelastic`); `RecedeAlongLines` is the dispatch under the key (`Removal.H:244`).
+- **The depth and B on a line.** `FaceRemoval.H:523` `x = RawSurfaceX(Tc, Gl[NF], T0r)` (`MMWSpalling.H:9336`:
+  0 unless `dT0 > dT1 > 0`, i.e. an INTERIOR peak sends the line to the fallback); the fallback :531–577
+  (`ell_p = ProfileEFoldDepth(rise_at_d, Tf − T0r, dx, nprof)`, NaN ⇒ `h_f = 0`, `o.nodepth = 1`, `ell_eff = ∞`);
+  the diagnostics on a fired line :616–632 (`ell_p`, `ProfilePeak` → `z_peak`, `ell_pk`, `h_E`); B :636–669
+  (`x = μ c_f ell_eff`, ∞ when `ell_eff` is not finite ⇒ `bk = ∞` ⇒ blocked, `bk_cnt[2]`); `BuckleRatio` :316–326
+  (`C_L = π/√(6(1+ν)ε_th)`, `ε_th = strain_of(T_s) − strain_of(T0)` under the Grimsel law); the recession reads
+  `h = o.rec.h_f` and `continue`s on h ≤ 0 (:740–745). `nprof` = the window `h_spall_max/dx` cells
+  (`model_form_flame.inputs`: 0.015). Helpers `Shared.H:105` (e-fold from the face: the FIRST z where the rise falls
+  to rise_s/e) and :117 (peak and its e-fold below). Thermo columns: `fr_n_*`, `fr_fb_*`, `fr_nodepth_*`
+  (`MMWSpalling.H:1116–1142`), `bk_n_eval/block/inf`, `bk_max_pass` (:1011–1018); the event log is one row per
+  FIRING (`FaceRemoval.H:898`) — a blocked line writes nothing.
+- **The production rock and form.** `validation/shared/rock_grimsel.inputs` (Grimsel laws, `spall.buckle_span =
+  0.012`, `spallation.sp.stress_relief = 0.531294`, `weibull.a0_ig = 8e-6`, the Barre dielectric pair ε′ 5.02 /
+  tan δ 0.01065 and the Hartlieb table include); `validation/shared/model_form_flame.inputs` (face list, B,
+  `spall.flake_c_f = 0.4`, `h_spall_max = 0.015`, `flake_h_max = 0.0015`, `removal_energy = flake`, `robin_form =
+  surface`, `vapor.enabled = 0`, events CSV); the deck pattern `validation/kant/grimsel_calibration/input`
+  (24×24×64, `weibull.V0 = 1e-9`, `el.type = disable`, `surface_patch.radius = 1.0`).
+- **The beam on #19 (P2-22, `studies/p2_22_inrock_spread/{run.py,RESULTS.txt}`):** spot ω₀ = 12.7·√(1 + (7.9/47.3)²)
+  = **12.88 mm** (HE11 1/e² diameter 25.4 mm, DOE L978; standoff 0.31" = 7.9 mm, Appendix Table 2; z_R 47.3 mm); the
+  power = Fig. 34's digitised ramp (`p2_21_loss_table/run.py: ramp_schedule`, 40 × 10 s from 1.46 kW; the first
+  80 s: 1460 1460 1440 1430 1480 1500 1520 1510 W); on the Zhang material at ω 12.88 mm with the table: first melt
+  50 s at the peak 1.95 mm, `bc_ell_p` 22.0 mm, `bc_ell_pk` 20.8 mm, whole-block transmission 0.764; flat α: 194 s,
+  peak 9.0 mm. `losses.h_conv = 56`, `T_amb = 297.5` (the Zhang deck; the DOE's forward air purge).
+- **The positive control's absorption.** `unit/beam_void_closure/input`: `beam.eps_r = 1.0`, `beam.tan_delta =
+  0.6970986507425017`, `beam.lambda = 2.19e-3` ⇒ α = 2000 m⁻¹ EXACTLY in the code's association (P2-20 Z0), R = 0;
+  absorption depth 0.5 mm ≪ 2.4 mm.
+- **The layer limit.** P2-19 record: B blocks when the e-fold LAYER ℓ > L/(C_L μ c_f) ≈ 2.4 mm (span 12 mm, c_f 0.4;
+  the FLAKE is c_f ℓ ≈ 1 mm there). The window 15 mm = 6.25 × 2.4 mm.
+- **Left out, with its reason:** `studies/relief_diag/README.md` (the operator reads 0.26–0.65 of the exact stress
+  at ℓ/dx ≤ 2; 0.5 s per solve at 48³, 3.9 s at 96³); the review's point 4 (ℓ/ω is the second condition: a 20 mm
+  layer under a 13 mm spot is not a 1-D slab at any mesh). It returns as its own packet when a prediction depends on
+  the stress's size (the regime boundary), beam legs only, solved on a time interval.
+
+### Goal
+
+1. **The face list without a flame (`MMWSpalling.H`).** (a) `SurfacePatch::Parse` :8252: read `face_list`,
+   `robin_form`, `radius`, `x0`, `y0` BEFORE the `if (!v.enabled) return;` so a flameless deck's shared keys are read
+   (strict scope: an unread `surface_patch.face_list = 1` from the model form aborts today); everything else stays
+   behind the return. (b) The switch :2023 becomes `face_list && owner && void_aware && !(surface_patch.enabled &&
+   sp_presc)` — `owner` KEPT (the finest level owns the surface; dropping it double-bills on refined meshes),
+   `sp_presc` itself NOT redefined (read at :1290, :1660, :4225). (c) With the patch off: `FaceListHeat` sets
+   `e.h = 0` on every face and skips `FaceH`; `FaceListTg` sets `e.Tg = 0` (⚠ `flame_Tg` is empty — no indexing);
+   `BuildFlameColumns` unreached; `FaceListDiagnostics` guards `jet_P_face`; the kernel's `fh/fTg` are null already,
+   so a listed face bills `FrFaceFlux` with h = 0 — the radiative + convective losses only. (d) The parse interlock
+   :1026–1095: the `mode = convective_flame with an h_expr map` requirement applies only when `enabled`;
+   `robin_form = surface`, microstructure, `follow_mask` and the `fr_abort` list stay. Every flame deck is
+   byte-identical (a0, a1): `enabled` is true there, so the new switch equals the old one on every flame line, and the
+   cold rim's interior peaks never fire (pre-registered: the fallback-on-interior-peak branch is taken on ZERO fired
+   flame lines; the gates confirm).
+2. **The blocked-line record (`FaceRemoval.H`), one default-off key `spall.buckle_log_csv` (0).** Under it, ONE CSV
+   `<plot_file>_buckle_log.csv`, written on thermo-output steps only (`amr.thermo.plot_int`; a blocked line re-fires
+   every step and B1 would otherwise write ≈ 4 M rows), one row per line B evaluated on that step (blocked or passed):
+   `time, col_i, col_j, class, fire, through, fb, nodepth, score, h_col, T_surf, ell_p, z_peak, ell_pk, ell_eff, x, bk,
+   bk_lb, blocked`, where **`bk_lb` is the lower bound B would read if ℓ were the window**: `bk_lb = BuckleRatio(…,
+   x = μ c_f · nprof·dx, L_span)` — computed and LOGGED only; `x`, `bk` and the withdrawal are untouched (a nodepth
+   line still reads x = ∞). Off by default ⇒ every frozen output unchanged.
+3. **The deck `validation/oglesby/input` (new) and its test.** The production rock and form plus the beam on #19:
+   `FILE = …/rock_grimsel.inputs`, `FILE = …/model_form_flame.inputs`, then (literal) `surface_patch.enabled = 0`,
+   `surface_patch.radius = 1.0`, `surface_patch.x0 = 0.05`, `surface_patch.y0 = 0.05`, `spall.buckle_log_csv = 1`,
+   `phase.T_m = 1510.5` (the solidus `bc_z_melt` reads on this path; L10), `geometry.prob_hi = 0.10 0.10 0.05`,
+   `amr.n_cell = 64 64 32`, `amr.max_grid_size = 32`, `timestep = 0.2` (limit 0.24 s at 1.56 mm), `stop_time = 80.0`,
+   `amr.plot_int = 100`, `amr.thermo.int = 1`, `amr.thermo.plot_int = 1`, `weibull.V0 = 1.0e-9`,
+   `microstructure.phase0.T_ref = 297.5`, `hc.ic.constant.value = 297.5`, `losses.h_conv = 56.0`, `losses.T_amb =
+   297.5`, `confining.p = 0.0`, `beam.omega0 = 0.01288`, `beam.lambda = 1.070687e-2`, `beam.x0 = 0.05`, `beam.y0 =
+   0.05`, `beam.z0 = 0.05`, `beam.P0 = 0.0`, the 40-pair schedule copied from `p2_22/legs/A/argv.sh`, `el.type =
+   disable` + the CAL deck's `el.*` lines, `hc.heat.alpha = 6.9022e-7` (inert; required), the six Neumann BCs,
+   `conductivity.h_gb0 = 0`. Every shared-key override carries a `# check_shared: allow KEY` directive and
+   `check_shared.py` passes on the deck (the first beam deck on the shared rule). The header declares: Grimsel on
+   Barre's test (one rock), the 1-D stress limitation under a thick layer, c_f and the span as borrowed, the Grimsel
+   law above 873 K as a clamped extrapolation. `validation/oglesby/test RUN_DIR [--control DIR] [--flat DIR] [--fine
+   DIR]` scores the Criteria rows from `thermo.dat`, `_buckle_log.csv` and `_removal_events.csv`; no plotfile read.
+4. **`unit/face_beam` (new).** The deck above at `amr.n_cell = 32 32 16`, `amr.max_grid_size = 16`, `timestep = 0.5`
+   (limit 0.97 s), `stop_time = 1.0`, `amr.plot_int = 2`, `losses.epsilon = 0.0`, `losses.epsilon_high = 0.0` (a LINEAR
+   loss, so the surface-form root is closed-form): U1 = as is; U2 = U1 + `surface_patch.face_list = 0`; U3 = U1 on
+   `bin_pre`. The test reads both `00002cell` plotfiles (t = 1 s: the top cell is ≈ 30 K above the IC — the loss is
+   NON-zero; at t = 0 it is zero on both, which compares nothing) and both thermo files.
+5. **The face gate gains `BEAM_S`** (`face_gate.py`: `unit/face_beam/input`, `stop_time = 1.0`, -np 4) so a flameless
+   list is in the gate from here on; `cmp p2_22 p2_23` must be identical on the 13 existing legs with `BEAM_S` only
+   in new. `WHICH_TESTS.md` gains the row; `REFERENCE.md` the audit line.
+6. **Records.** `MODEL_CARD.md`: §5 (the face list now accepts beam decks; the operator left out, with the two
+   conditions), §8 rows for the spot (12.88 mm, DERIVED from the DOE's waist and standoff), `h_conv` 56 (LIT, the
+   chamber purge) and `phase.T_m` 1510.5 (the Zhang solidus, as P2-21), §12 item for the port; study
+   `studies/p2_23_beam_port/` with `z0.py`, `run.py`, `reduce.py`, `chain.sh`, `src_pre/`, `bin_pre/`, `BINARY.txt`,
+   `RESULTS.txt`. The Hu extension decks are NOT touched (low value; the damage-lineage retire packet owns them) and
+   the column path is NOT deleted (the user's explicit go-ahead).
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | key / change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | `face_list`, `robin_form`, `radius`, `x0`, `y0` read BEFORE the `enabled` return; `fl_on = face_list && owner && void_aware && !(enabled && sp_presc)` | `MMWSpalling.H:8252–8262`, :2023 | `BuildFaceList`, `flp` in the kernel, `RecedeAlongLines` | `enabled` true on every flame deck ⇒ the old condition | a0, a1 (13 legs identical); U1 `fl_n_top` = 1024 on step 1 |
+| L2 | the CONJUNCTION a beam line needs: listed (L1) AND billed at h = 0 with losses AND its T_s from the fallback root with h = 0 AND the scan reaches it | `FaceListHeat`, `FrFaceFlux`, `FaceRemoval.H:541–556` | the kernel and the line's `Tf` | `fl_ready` | z1 (the analytic loss); B0 `bk_n_eval` > 0 (b1) |
+| L3 | `flame_Tg` empty when the patch is off | `FaceListTg` :2389, `FrFaceFlux` callers | `e.Tg` | `surface_patch.enabled` | U1 runs (no out-of-range read: once under `-fsanitize=address`, or assert `flame_Tg.size() == ncols` before indexing); the gas-temperature ceiling returns 0 with the patch off (checked by the reviewer) |
+| L4 | interior peak ⇒ fallback ⇒ `nodepth` ⇒ `h_f = 0` ⇒ no recession, AND B reads x = ∞ (`bk_cnt[2]`); ⚠ at 1.56 mm the first two cell centres (0.78, 2.34 mm) straddle a ≈ 2 mm peak, so SOME lines may take the main branch with a huge finite ℓ — blocked all the same | `FaceRemoval.H:523, 562–577, 648–665` | `fr_fb_*`, `fr_nodepth_*`, `bk_n_inf`, the buckle log | `bk_on` (span 0.012 from the rock file) | B0: every evaluated line blocked; `fr_n_*` = 0 (b2); the branch split is a REPORT |
+| L5 | `bk_lb` uses the SAME `BuckleRatio`, `T_surf`, `T0`, μ, c_f as `bk`, with x replaced by μ c_f nprof dx | `FaceRemoval.H` beside :657 | the buckle log only | `spall.buckle_log_csv` and the thermo-output step | U1's log: `bk_lb` finite on every nodepth row; on a finite-ℓ row `bk_lb/bk = nprof·dx/ell_eff` to 1e-12 |
+| L6 | the positive control P takes the MAIN branch (`x > 0` at :523, `fb = 0`), h_f finite, B passes (bk ≤ 1), recedes | the same sites | `fr_n_*` > 0, events CSV rows | — | P (b3): `fb = 0` on fired lines, `bk ≤ 1`, `fr_n_floor` > 0 |
+| L7 | the P2-21 central-column columns (`bc_*`) exist on the microstructure path with the rock-file table | `ColumnOpticalDepth` at the microstructure site | thermo | `alpha_varies() && can_deposit()` | B0 header carries `bc_z_peak`, `bc_ell_p`, `bc_z_melt` (c2, c4) |
+| L8 | units: `ell_p`, `z_peak`, `ell_pk`, `ell_eff`, `x` [m]; `bk`, `bk_lb` dimensionless; `score` = K_I/K_Ic (Pa√m over Pa√m); `h_col` [m]; the window `nprof·dx` [m]; `T_surf` [K]; `phase.T_m` [K] | — | — | — | z0; the test prints units in its header |
+| L9 | the deck parses with `surface_patch.enabled = 0` AND the model form's `surface_patch.robin_form = surface` AND `radius`/`x0`/`y0` (strict scope) | the surface-patch parse (L1a) | — | — | U1 runs (rc 0); `check_shared.py` passes with the deck's `allow` directives |
+| L10 | `phase.T_m = 1510.5` is read by `bc_z_melt` (:4924) AND by :6978 / :7021 / :7073 — do any of those three EXECUTE on the microstructure + Grimsel path (latent heat in the enthalpy relation)? | :216 | — | the three sites' guards | step zero: grep the guards; U1 with and without the key byte-identical at 1 s is NOT sufficient (nothing is near 1510 K) — the guard reading decides; if a reader executes, `bc_z_melt` falls back to `phases[0].T_m` instead and the deck sets `microstructure.phase0.T_m` — declared either way |
+
+### Legs (exact argv tokens)
+
+`RUN = mpirun --oversubscribe --bind-to none -np 4`; `D` = `tests/MMWSpalling/validation/oglesby/input`; study root
+`tests/MMWSpalling/studies/p2_23_beam_port/`; every leg records `argv.sh`, `BINARY.txt`, `rc`; long legs under
+`caffeinate -dis`. Run order: U, gates, B0, P, B0F, B1 (last; the one fine leg). Each leg is pruned after its test to
+its first-fire and last plotfiles (keep an md5 manifest, P2-21 DR-5).
+
+| leg | argv | cost |
+|---|---|---|
+| U1 / U2 / U3 | `unit/face_beam/test --bin_pre studies/p2_22_inrock_spread/bin_pre/mmwspalling-3d-g++` | 1 min |
+| B0 | `RUN bin/mmwspalling-3d-g++ D plot_file=<study>/legs/B0/run` (the deck as written: table, B on, 1.56 mm, dt 0.2, 400 steps) | ≈ 3 min |
+| P | B0 + `beam.eps_r=1.0 beam.tan_delta=0.6970986507425017 beam.lambda=2.19e-3 "beam.tan_delta_T=295.15 1.0" beam.schedule.t_end=20.0 beam.schedule.P=150.0 timestep=0.016 stop_time=20.0 amr.plot_int=250` (α 2000 m⁻¹ exactly, R 0, flat; a FLAME-LIKE flux: 150 W on the 12.88 mm spot ⇒ peak 0.58 MW/m², ≈ 180 K/s in the top cell; the dt ladder's 16 ms; 1,250 steps) | ≈ 5 min |
+| B0F | B0 + `"beam.tan_delta_T=295.15 1.0 1268.15 1.0"` (two equal pairs: flat α 14 on the sum path) | ≈ 3 min |
+| B1 | B0 + `amr.n_cell=128 128 64 amr.max_grid_size=32 timestep=0.05 amr.plot_int=400 amr.thermo.plot_int=10` (the peak resolved: cell 0.78 mm; limit 0.061 s; 1,600 steps; the buckle log every 0.5 s) | 20–60 min |
+| gates | `guarded_post_all_par.sh p2_23`; `face_gate.py run p2_23` then `cmp p2_22 p2_23`; `unit/beam_void_closure/test`; `unit/beam/test`; `unit/beam_tau/test`; `unit/retired_keys/test` | ≈ 12 min |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline (`Z0.txt`): ω₀ 12.88 mm from the DOE waist and standoff; κ(T) = λ(T)/(ρ c_p(T)) from the Grimsel law over 297–1600 K with its MAXIMUM (room temperature, 1.68e-6) and the explicit bounds dx²/(6κ) at 3.125 / 1.56 / 0.78 mm (0.97 / 0.24 / 0.061 s) beside the decks' dt; α = 2000.0 exactly for P in the code's association; P's peak absorbed flux and top-cell heating rate at 150 W; the window in cells at each mesh (4.8 / 9.6 / 19.2); `bk_lb` by hand at T_s 850 and 1200 K from the Grimsel strain table (C_L, x = 0.4 × 0.015 m, L 0.012 m — ⚠ the table clamps at 873 K, so 900 K and above read the SAME strain: say so); the 1-D column (`p2_21/z0.py` machinery) with Grimsel's λ(T), c_p(T) at ω 12.88 mm: first melt time and peak depth, beside the Zhang-material 50 s / 1.95 mm | every number with its formula | report | a disagreement to resolve before any run |
+| z1 | 1 | U1 at t = 1 s: the listed faces' loss power (`fl_P_top`, negative = loss) against the ANALYTIC Σ_faces A · h (T_s − T_amb) with T_s the surface-form root the test computes from the plotfile's top-cell T (`SurfaceRobinT`'s algebra, k from the law at that T; ε = 0 so the root is closed-form); `fl_n_top` and `fl_n_side` | relative difference ≤ 1e-6 (the root's own tolerance); the loss NON-zero (top cell ≥ 310 K); `fl_n_top` = 1024, `fl_n_side` = 0 | **gate** | a flameless listed face does not bill the losses at its own T_s, or lists the wrong faces |
+| z1r | 1 | U1 vs U2 at t = 1 s: max relative difference of the `H` field and of the total loss power (two code paths, two T_s constructions) | report: expected ≈ 1e-3 or better | report | — (a measured difference between the column-top form and the face form; > 1e-2 says the two forms disagree on a flat top and the flame decks' own gate is the authority) |
+| z2 | 1 | U3: U1's deck on `bin_pre` | exits with an error (rc ≠ 0); the message printed in the log (it may name `spall.buckle_log_csv` or `surface_patch.face_list` first) | **gate** | the port is not what the P2-22 binary refuses |
+| z3 | 1 | `unit/retired_keys` R1–R6, K0–K4 | all PASS, mutations RED | **gate** | a retired key reads again |
+| a0 | 2 | tree gate vs `p2_18.md5` (controls d2aa 26, d2t 863) | **0 of 2,639** | **gate** | a flame deck moved (L1) |
+| a1 | 2 | face gate `cmp p2_22 p2_23` | the 13 existing legs identical; `BEAM_S` only in new | **gate** | a flame leg moved, or the beam leg did not run |
+| a2 | 2 | `unit/beam_void_closure`, `unit/beam`, `unit/beam_tau` | as P2-22 (T3 FAIL by design) | **gate** | the beam kernel moved |
+| b1 | 3 | B0: the first step row with `bk_n_eval` > 0 (the onset fires on some line) | exists, at t ≤ 40 s | **gate** (for P, B0F, B1) | the scan never reaches a beam line (L2): the port is inert and the long legs would score nothing |
+| b2 | 3 | B0, every PRE-MELT step row (before the first finite `bc_z_melt`): `fr_n_floor + fr_n_wall + fr_n_roof`; `bk_n_eval − bk_n_block`; min `bk_lb` over the buckle log's rows | P1: removals 0 on every row; `bk_n_block` = `bk_n_eval` on every row; min `bk_lb` ≥ 2 | report (the result) | a removal: a thin flake exists under the beam on this rule — the prediction is wrong and the port's first statement changes; a passed line (`bk_n_eval` > `bk_n_block`) without a removal: the withdrawal and the recession disagree |
+| b2r | 3 | B0 (and B1, c2): the buckle log's branch split — fractions of evaluated rows with `fb = 1`, `nodepth = 1`, finite `ell_eff`; max finite `ell_eff` | report (mesh-dependent at 1.56 mm, L4) | report | — |
+| b3 | 3 | P (α 2000, 150 W, 20 s): `fr_n_*` summed; on fired lines `fb`, `bk`, `h_f` from the buckle log and the events CSV; the first-removal time; the deepest removed cell (must stay ≥ 25 mm above the block's bottom) | P2: removals > 0 by 20 s; fired lines `fb = 0`, `bk ≤ 1`, h_f = c_f ℓ_p with ℓ_p ≤ 2.4 mm; the floor above 25 mm | report (the pair) | removals 0 ⇒ the rule cannot remove under ANY beam: B0's null is uninformative (inert); the floor below 25 mm ⇒ the leg drilled the block (a state nothing has tested) — cut the window to the rows before it |
+| c1 | 3 | B0F (flat α 14) vs B0: b2's quantities; `bc_z_peak`, first-fire time, first-melt time | P3 | report | — |
+| c2 | 3 | B1 (0.78 mm) vs B0: b2's quantities; `bc_z_peak` at first melt; first-fire and first-melt times | P4 | report | — |
+| c3 | 3 | B0, B1: rows at and after the first finite `bc_z_melt` — `bk_n_eval`, removals, lines with `T_surf` above `phase.T_m` | P5 (post-melt rows are the record, never the score) | report | — |
+| c4 | 3 | B0, B1 at first fire and at first melt: `bc_ell_p`, `bc_ell_pk` (the FULL column, central) beside the window 15 mm and the 2.4 mm limit; the buckle log's `ell_p` on the same rows | P6 | report | — |
+| e0 | 4 | verdict | — | **verdict** | z1–z3, a0–a2, b1 hold ⇒ the face list runs without a flame and nothing frozen moved; b2 with b3 decides the two-sided reading (P1 + P2 ⇒ the port's first statement stands; P1 without P2 ⇒ inert; P2 without P1 ⇒ a finding) |
+
+### Pre-registered predictions
+
+- **P1 (b2):** on B0 the onset criterion fires from ≈ 15–30 s (the peak passes ≈ 900 K: σ = R·E·ε_th ≈ 300 MPa on
+  an 8 µm flaw), B evaluates every fired line and withdraws ALL of them: zero removals before melt. Most evaluated
+  lines are fallback lines with no e-fold inside the 15 mm window (x = ∞); at 1.56 mm some may take the main branch
+  with a finite ℓ of tens of mm (the straddled peak, L4) — blocked all the same; `bk_lb` reads ≈ 3–6 (C_L ≈ 8 at ε_th
+  ≈ 0.02, x = 6 mm, L 12 mm) — the lower bound alone blocks. The statement is "no THIN-FLAKE spallation": the model
+  has no deep failure mode, and MIT saw a 30 mm weakened zone.
+- **P2 (b3):** P removes rock from ≈ 3–8 s (0.58 MW/m² absorbed in a 0.5 mm skin: ≈ 180 K/s in the top cell, a
+  surface-peaked profile, the main branch, ℓ_p ≈ 0.5–1.5 mm, bk ≈ 0.2–0.5 ≤ 1), then roughly one cell layer every
+  3–5 s: ≤ 10 mm by 20 s; i.e. the same rule spalls thin flakes under a shallow beam and refuses them under a deep
+  one. ⚠ The boundary α ≈ 1/2.4 mm ≈ 400 m⁻¹ is NOT scanned here (cost); it is the next regime question, and the one
+  where the stress's size starts to matter.
+- **P3 (c1):** B0F fires later (the peak is deeper and cooler) and does not melt by 80 s (flat α melted at 194 s on
+  the Zhang material); the same null (zero removals, every line withdrawn); with a flat coefficient the heated depth
+  runs past the bottom of the block (`bc_ell_p` undefined on the full column).
+- **P4 (c2):** B1 reproduces B0's counts in kind; first melt (`bc_z_melt` against `phase.T_m` 1510.5) at the peak
+  ≈ 1.95 ± 0.39 mm, between 40 and 80 s (Grimsel's λ(T) and c_p(T) move the Zhang-material 50 s by < ×1.5).
+- **P5 (c3):** every b2 row holds pre-melt; post-melt rows are reported, not scored (no melt physics; K_Ic near the
+  solidus is uncalibrated; a firing on a line above the solidus is a melt-zone artefact, not a finding).
+- **P6 (c4):** `bc_ell_p` 18–26 mm on the full column while the buckle log's `ell_p` is NaN or ≥ 15 mm on every
+  row: the window, 6.25 × the limit, is what the rule saw, and ℓ ≥ window is the statement the port makes — logged
+  as "at least".
+- **P7 (a0, a1):** byte identity on every flame deck; `BEAM_S` runs green.
+
+### Refuting evidence on disk
+- `studies/p2_22_inrock_spread/legs/A` (Zhang material, ω 12.88 mm): `bc_ell_p` 22.0 mm, `bc_z_peak` 1.95 mm,
+  first melt 50 s — c2/c4 read against it; a B1 `bc_ell_p` < 15 mm would contradict P6 and P2-21 c10.
+- `unit/beam_void_closure` (α 2000, uniform beam): removal fires within 20 s on the column path (T4) — P2's
+  expectation on the face list; a P with zero removals contradicts it and is the inert reading.
+- `studies/p2_19_flake_depth/RESULTS.txt`: ℓ_p finite on 0 of 114 fallback firings (thin ledges) — the fallback's
+  "no depth" is a known refusal on flame decks; here it is the EXPECTED branch, which is why `bk_lb` is logged.
+
+### What would make this inert, and the witness for each
+- The parse never reads `face_list` with the patch off (today's :8254 return): U1 `fl_n_top` = 1024; z2's abort on
+  the old binary is the same fact seen from the other side.
+- The list is built but no line is scanned (a scope test on the beam's footprint, `surface_patch.radius` default
+  0): b1 `bk_n_eval` > 0.
+- The scan fires but B is skipped (span read as 0 on a flameless deck): `bk_n_eval` = 0 with `fr_n_*` > 0 on B0 —
+  b2's counts separate "no firing" from "fired and withdrawn".
+- The losses are double-billed on listed cells (column-top `q_loss` not zeroed): z1's analytic comparison.
+- P's beam deposits nothing (the table override parsed as two pairs, or α not 2000, or the schedule override
+  ignored): the first step row's `beam_P_inc` = 150·(1 − R) = 150 W and `beam_P_dep/beam_P_inc` ≈ 1 — in the test's
+  header.
+- `bc_z_melt` never finite because `phase.T_m` is unread on this path (L10): c3's split is then empty — the test
+  prints the threshold it found in the run's `metadata`.
+- A dt above the explicit limit (z0's table): a NaN in thermo or `ledger_err` — z0 states the bounds.
+
+### Guardrails
+- No change to `h_f`, `nodepth`, the window key, the span, c_f, R, the flaw, the two-cell fit, `BuckleRatio` or the
+  withdrawal: a nodepth line still reads x = ∞ and recedes nothing; `bk_lb` is a log.
+- No operator stress, no melt step, no vapour, no `R(T)`, no ε′(T); the Hu extension decks untouched; the column path
+  untouched (its deletion needs the user's explicit go-ahead).
+- `spall.buckle_log_csv` is the ONLY new key (default 0); every frozen output byte-identical with it off.
+- The Grimsel law above 873 K is an EXTRAPOLATION (the tables clamp at their last node, `Grimsel.H:259–281`): state
+  it in the deck's header and the model card row; never adjust a property to the beam.
+- Nothing committed by this packet.
+
+### Commands
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_23_beam_port
+$PY tests/MMWSpalling/unit/face_beam/test --bin_pre tests/MMWSpalling/studies/p2_22_inrock_spread/bin_pre/mmwspalling-3d-g++
+$PY tests/MMWSpalling/unit/retired_keys/test
+bash tests/MMWSpalling/studies/tree_sweep_0922/witness/guarded_post_all_par.sh p2_23
+$PY tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py p2_23 p2_18 d2aa d2t
+$PY tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py run p2_23
+$PY tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py cmp p2_22 p2_23
+$PY $S/run.py B0 P B0F B1          # serial, under caffeinate; each leg's argv.sh / BINARY.txt / rc
+$PY tests/MMWSpalling/validation/oglesby/test $S/legs/B0/run --control $S/legs/P/run --flat $S/legs/B0F/run --fine $S/legs/B1/run
+$PY $S/reduce.py > $S/RESULTS.txt
+```
+
+### Claude completion notes
+
+Binary `42a115a0004ea460…` (`studies/p2_23_beam_port/BINARY.txt`; P2-22's `3604d38d` in `bin_pre/`). Warning set
+unchanged (19). Study `tests/MMWSpalling/studies/p2_23_beam_port/` (1.1 GB): `RESULTS.txt`, `Z0.txt`, `CHAIN.log`,
+`CHECK_SHARED.txt`, `A1.txt`, `TEST_all.log`, `legs/{B0,P,B0F,B1}` (argv.sh + BINARY.txt + rc; pruned with
+`MANIFEST.md5`), `SMOKE_*`, `src_pre/`, `bin_pre/`, `inputs_pre/`, `MODEL_CARD.pre_p2_23.md`.
+
+**Files changed.**
+- **Source:**
+  - `src/Integrator/MMWSpalling.H`:
+    - the surface-patch parse reads `face_list`, `robin_form`, `x0`, `y0`, `radius` before the `enabled`
+      return;
+    - `fl_on` gains its new condition, in the kernel and in the ledger;
+    - the flameless list half (`FaceListHeat` at h = 0, `FrAssignTs`, `FaceListTg` at T_gas = 0);
+    - three guards on the empty flame vectors;
+    - the `h_expr`-map interlock applies only with the patch on;
+    - `spall.buckle_log_csv`, its parse and its abort without the span.
+  - `src/Integrator/MMWSpalling/FaceRemoval.H`: the blocked-line record with `bk_lb`.
+- **Decks and tests:**
+  - `validation/oglesby/{input,test}` and `unit/face_beam/{input,test}` (new);
+  - `witness/face_gate.py` (the `BEAM_S` leg).
+- **Records:**
+  - `witness/REFERENCE.md` (the tree is not re-pinned; the face reference becomes `face_p2_23`);
+  - `witness/WHICH_TESTS.md`;
+  - `MODEL_CARD.md` §5, §8 (the spot, `phase.T_m`, `h_conv`) and §12 item 11.
+
+**Deviations (declared).**
+1. **The flameless path needed more than Goal 1(c) lists** (step zero):
+   - `FaceListHeat`, `FrAssignTs` and `FaceListTg` are called only from inside `BuildFlameColumns`, which runs only
+     with the patch on. With the patch off, `AdvanceMicrostructure` now runs that list half in the same order.
+   - Three readers index the EMPTY `flame_h`: `FaceListHeat`'s top-face mismatch check, the ledger's P0b witness
+     block, and `fl_id_march` through `jet_P_face`. Each is gated on `surface_patch.enabled`.
+   - The ledger's own `fl_on_l` switch changes in step with the kernel's.
+   - Every change is the old code when the patch is on (a0, a1).
+2. **z1 scores `ledger_P_loss`, not `fl_P_top`.** `fl_P_top` sums `w·q_rob·A`, the flame GAIN h·(T_gas − T_s). It
+   is zero by construction at h = 0, so the row as written compared the analytic loss with 0. `ledger_P_loss` is the
+   logged loss of every listed face, and the ledger mirrors the kernel term for term. `fl_P_top` = 0 is checked
+   alongside it.
+3. **U1 runs `stop_time = 1.5` with `plot_int = 1`.** The thermo row stamped t reports the step that ENDED at t, and
+   the last step's row is never written. At `stop_time = 1.0` the only row is step 1, whose T_old is the IC: zero
+   loss, two zeros. z1 reads the t = 1.0 row against the t = 0.5 plotfile (its T_old); z1r reads 00002cell as
+   specified.
+4. **U2 adds `spall.buckle_span=0 spall.buckle_log_csv=0`.** The rock file's span aborts without the face list.
+5. **U3 runs on P2-22's own build** (`p2_23_beam_port/bin_pre`, `3604d38d`). The packet's path holds the P2-21 build.
+6. **`weibull.V0` is each deck's cell volume:** 3.8147e-9 (the deck), 3.0518e-8 (U) and 4.7684e-10 (B1, on its
+   argv). This follows `check_shared.py` (iv), which the packet requires to pass. The literal 1.0e-9 (the CAL deck's
+   1 mm cell) fails (iv) and would rescale the flaw per cell.
+7. **z0's clamp statement is corrected from the code.** Table 3 (α, E/E0, K_Ic) is flat above 650 °C. The STRAIN
+   integrates the held α to 1000 °C (1273 K), so `bk_lb` keeps falling to 1273 K (z0 (6)). Nothing in a leg
+   depended on the planner's reading.
+8. **a1 is scored from the two md5 lists.** `cmp` prints DIFFERENT whenever a path exists on one side only, so the
+   bar is checked as: 0 substantive, 0 only in p2_22, every new path under `BEAM_S/` (`A1.txt`).
+9. **Unspecified details:**
+   - with the patch OFF, `x0`/`y0`/`radius` default to 0 (they stay required with it on), else every tree deck
+     without a patch would abort;
+   - `spall.buckle_log_csv = 1` aborts without the span, because the log would otherwise be silently empty;
+   - the log's `time` is the step START, as the event log's is.
+
+| # | measured | result | output |
+|---|---|---|---|
+| z0 | ω 12.88 mm; κ_max 1.678e-6 m²/s at RT; explicit limits 0.970 / 0.243 / 0.061 s, with the decks' dt at 52 / 82 / 82 % (P 7 %); P's α = 2000.0 exactly; P's peak 0.576 MW/m², 173 K/s in the top cell; √(κt) 2.2 / 3.4 / 5.0 mm at 3 / 7 / 15 s; window 4.8 / 9.6 / 19.2 cells; `bk_lb` 6.39 / 5.88 / 5.14 / 4.23 / 4.00 at T_s 850 / 900 / 1000 / 1200 / 1400 K; layer limit 2.35 mm at 850 K, 3.55 mm at 1200 K; 1-D Grimsel column: table melts at 27.2 s at 1.30 mm (peak 1.70), flat at 62.8 s at 6.70 mm | report; the clamp reading resolved by the code (deviation 7) | `Z0.txt` |
+| z1 | `fl_n_top` 1024 / 1024, `fl_n_side` 0 / 0; `fl_P_top` 0; `ledger_P_loss` **0.237696 W** against the analytic 0.237696295 W (rel −1.2e-6, within the 6-digit print; 736 main-branch and 288 fallback top cells; `fl_w` 1.0; hottest top cell 312.4 K) | **PASS** (scored on `ledger_P_loss`, deviation 2) | `Z1_face_beam.log` |
+| z1r | H max rel diff 3.24e-4; loss power 0.237696 vs 0.232622 W (**+2.2 %**) | report: > 1e-2 on the power. The face form bills at T_s, about 0.3 K above T_cell on a 15 K rise | same |
+| z2 | U3 rc 6: "specified but not used: surface_patch.x0, surface_patch.radius, surface_patch.face_list" | **PASS** | same |
+| z3 | R1–R6, K0–K4 ok, mutations RED | **PASS** | `Z3_retired_keys.log` |
+| a0 | 0 of 2639 vs `p2_18` (26, 863) | **PASS** | `GATE_tree.txt` |
+| a1 | 0 substantive differences on the 13 legs; 0 only in p2_22; 45 only in p2_23, all under `BEAM_S/` | **PASS** | `A1.txt`, `GATE_face_cmp.txt` |
+| a2 | `beam_void_closure` 7 rows PASS, T3 by design; `unit/beam` 0.00 %; `unit/beam_tau` PASS | **PASS** | `A2_*` |
+| b1 | B0's first step row with `bk_n_eval` > 0: **30.8 s** | **PASS** | `TEST_all.log` |
+| b2 | B0, 212 pre-melt rows (melt at 42.6 s): **removals 0**, passed (eval − block) 0, **min `bk_lb` 3.752** over 1228 logged rows (T_s 825–1340 K, score ≤ 2.65) | **P1 holds** | same |
+| b2r | B0 / B0F / B1 pre-melt: 100 % `fb` = 1 and `nodepth` = 1, no finite ℓ (1228 / 2664 / 1833 rows); x = ∞ on every row | report: L4's "some main-branch lines at 1.56 mm" did not occur | same |
+| b3 | P: **6 removals by 20 s**, the first at 6.93 s, on the 4 central columns (2 cells voided); passed lines `fb` 0, **bk 0.9994–1.0000**; h_f 0.95–1.10 mm = 0.4 ℓ_eff; **ℓ_eff 2.37–2.76 mm**; deepest removed cell 48.44 mm above the bottom; first row P_inc 150 W, P_dep/P_inc 1.00000; after 11 s every line blocked, bk rising 1.01 → 1.05 | **P2 holds in kind** (removals > 0, fb 0, bk ≤ 1, floor ≥ 25 mm). ⚠ ℓ ≤ 2.4 mm misses on 3 of 6 events, whose limit at their T_s (856–944 K) is 2.4–2.8 mm; magnitude far below P2's | same, `legs/P/run_*.csv` |
+| c1 | B0F: first fire 48.0 s, **no melt by 80 s**; the same null (0 removals, all blocked; min `bk_lb` 4.97); `bc_ell_p` undefined | P3 holds | same |
+| c2 | B1 (0.78 mm): first fire 31.0 s, **first melt 42.0 s at the peak 1.95 mm**; the same null (min `bk_lb` 3.96) | P4 holds (40–80 s, 1.95 ± 0.39 mm) | same |
+| c3 | B0: 187 post-melt rows, `bk_n_eval` ≤ 169, removals 0; T_surf ≥ T_m on 7224 of 21039 logged rows. B1: 76 rows, ≤ 686, removals 0, 12568 / 34823 | P5: record only | same |
+| c4 | at first melt: `bc_ell_p` **19.2 mm** (B0) / **20.6 mm** (B1), `bc_ell_pk` 18.9 / 18.9 mm, `bc_z_peak` 2.34 / 1.95 mm; the log's `ell_p` undefined on all 47 / 167 rows; at first fire both e-folds undefined on the full column | P6 holds: 8× the 2.4 mm limit, logged as "at least the window" | same |
+| e0 | z1–z3, a0–a2, b1 PASS. P1 + P2 ⇒ the port's first statement stands: **no thin-flake spallation under this 28 GHz beam on this rule**, while the same rule removes under a shallow, flame-like beam. ⚠ The control is weak: it passes B only at its threshold (deviation of P2's numbers, takeaway 1) | verdict | `RESULTS.txt` |
+
+### Implementation takeaways
+
+1. **On a shallow beam, B is the time-limiting condition, and the layer it reads is the CONDUCTION length.**
+   - Lines fire on the onset criterion from ≈ 6 s, but B blocks them (bk 1.01–1.09) until T_s has risen enough
+     (ε_th up, C_L down). A line then passes on the first step that bk drops below 1, so every pass reads bk ≈ 1.000.
+   - The layer is √(κt) ≈ 2.4–2.8 mm, not the 0.5 mm absorption depth, so P2's ℓ 0.5–1.5 mm and bk 0.2–0.5 were
+     wrong in kind.
+   - At 150 W the absorbed 0.58 MW/m² (≈ 0.51 net) sits just above Grimsel's minimum net flux for B at the 12 mm span
+     (0.432 MW/m², P2-17). The control removes 6 cells and stalls, because ℓ then grows faster than T_s helps.
+   - A ROBUST positive control needs ≳ 2–3× that flux (≈ 300–450 W on 12.88 mm, dt ≲ 8 ms). Not run: it was
+     outside the packet.
+2. **The null does not rest on x = ∞.** Every deep-beam evaluation is a fallback with no e-fold inside the 15 mm
+   window, but `bk_lb` (the window itself as the layer) is 3.75–6.28. A window-thick layer would still be blocked.
+   The full column's e-fold at melt is 19–21 mm.
+3. **The face list's flame dependencies were wider than the packet's list** (deviation 1). `BuildFlameColumns` owns
+   the list's heat, T_s and T_gas calls, and three readers assume a non-empty `flame_h`. A future flameless path
+   (vapour, melt) inherits these guards.
+4. **`fl_P_top` / `fl_P_up` / `fl_P_side` / `fl_P_down` are the flame GAIN**, not the losses. `ledger_P_loss` is the
+   logged surface loss. On any flameless deck, `fl_P_*` ≡ 0 and the `fl_id_*` identities are vacuous.
+5. **`thermo.dat` timing:** `IntegrateVariables` runs BEFORE each advance, so the row stamped t reports the step that
+   ended at t, and the run's last step is never written. A per-step log aligned to thermo rows must test
+   `(istep + 1) % amr.thermo.plot_int` inside `Advance`.
+6. **Every Grimsel deck's `weibull.V0` must be its own cell volume** (`check_shared.py` (iv)). Copying the CAL deck's
+   1e-9 to another mesh rescales the flaw. A leg that changes `amr.n_cell` must also change V0.
+7. **The two surface forms differ by 2.2 % in loss power on a flat top under a beam** (z1r). The face form's T_s is
+   the two-cell extrapolation, above the cell centre where heating falls with depth. Under a flame the same
+   difference exists, and is what the face list was built to resolve.
+8. **Post-melt, lines above T_m keep firing** (`bk_n_eval` up to 686 on B1) and B withdraws them all. No melt physics
+   runs, so this is a melt-zone artefact, a record only.
+9. **Cost:**
+   - B0 (64×64×32, 400 steps) takes 9 s, B1 (128×128×64, 1,600 steps) 3.5 min, P 28 s;
+   - the tree gate 4 min, the face gate 2 min;
+   - the buckle log is 22k rows on B0 and 22k on P (every step), 35k on B1 (every 10th step).
+
+### Addendum (advisor, the user's request 2026-11-06, before /verify): the robust positive control
+
+Takeaway 1 said the 150 W control passes B only at its threshold (bk 0.999–1.000, six removals, a stall after 11 s)
+because 0.51 MW/m² net sits at Grimsel's minimum flux (0.432). The user asked for the stronger control now. `P400` =
+P at `beam.schedule.P=400.0`, `timestep=0.008` (2.7× the flux: 1.54 MW/m² peak absorbed, ≈ 460 K/s in the top cell),
+same binary, scored by the same test (`studies/p2_23_beam_port/{legs/P400, TEST_P400.log, RESULTS_P400.txt}`):
+
+| | P (150 W) | P400 (400 W) |
+|---|---|---|
+| first removal | 6.94 s | **0.95 s** |
+| removals by 20 s | 6, then a stall | **1,008**, steady ≈ 40 s⁻¹ (per 2 s: 62 160 146 128 99 85 88 83 76 81) |
+| passed lines' bk | 0.999–1.000 (the threshold) | **0.44–1.00** |
+| flake h_f / layer ℓ_eff (median) | 1.00 / 2.49 mm | 0.77 / **1.92 mm** (< the 2.4 mm limit) |
+| columns removing | 4 | **96** (the spot's footprint) |
+| floor at 20 s | 2 cells | 17 mm deep, 32.8 mm above the bottom (bound 25 mm) |
+
+⇒ P2 holds ROBUSTLY: the same rule that withdraws every firing under the deep 28 GHz beam (B0/B0F/B1) drills
+steadily under a shallow beam above the minimum flux. The pair no longer rests on a threshold pass. Nothing else in
+the study was touched; `run.py` gained the `P400` entry.
+
+### Review findings
+
+Reviewer, 2026-11-06. Independent throughout: my own derivation of z0's constants (κ, the three explicit limits, P's flux and heating rate, `bk_lb` and the layer limit from P2-15's `C_L`), my own reduction of U1's plotfile for z1, my own manifest and md5-tree comparators, my own reductions of all four legs' thermo, buckle logs and events, and my own read of the 221 + 82-line diff against `src_pre/` (whose `bin_pre/` I confirmed is P2-22's `3604d38d`). No rebuild, no re-run.
+
+| # | test | bar | **derived independently** | **read from** | row |
+|---|---|---|---|---|---|
+| z0 | offline derivation | every number with its formula | κ_max = 3.41/(2650·767) = **1.6777e-6**; limits **0.9701 / 0.2425 / 0.0606 s** at 3.125 / 1.5625 / 0.78125 mm, the decks' dt at **52 / 82 / 82 %** and P at **7 %**; P's peak **0.5756 MW/m²** and **173.3 K/s** in the top cell (α 2000, 1−e^{−3.125}); `bk_lb` = C_L·0.006/0.012 = **6.377 / 5.868 / 5.129 / 4.227 / 3.999** at T_s 850 / 900 / 1000 / 1200 / 1400 K; layer limit **2.352 … 3.751 mm** over the same range. ⚠ My C_L(1400) = C_L(1273.15) = 7.9973 confirms deviation 7: the strain clamps at **1273 K**, not 873 K | my own arithmetic; `p2_15_buckle/derive_span.py` `C_L`; `rock_grimsel.inputs` | reproduces |
+| z1 | U1's listed-face loss vs analytic | rel ≤ 1e-6; loss non-zero; `fl_n_top` 1024, `fl_n_side` 0 | `fl_n_top` **1024 / 1024**, `fl_n_side` **0 / 0**, `fl_P_top` **0**; `ledger_P_loss` **0.237696 W** vs analytic 0.237696295. From U1's **t = 0.5 s** plotfile (the t = 1.0 row's `T_old`, deviation 3) I measure hottest top cell **312.40 K**, mean rise 0.4154 K, and Σ h_conv·A·ΔT_cell = **0.232622 W** — which is U2's number exactly, so the 2.18 % gap to U1 is the face form billing at T_s. ⚠ The 1e-6 bar is finer than `%g` can express (DR-3) | my own plotfile reduction; `Z1_face_beam.log` | **reproduces (gate)** |
+| z1r | U1 vs U2 | report, ≈1e-3 | H max rel diff **3.24e-4**; loss **0.237696 vs 0.232622 W, +2.18 %**. My linearised root (T_s *below* T_cell) had the wrong sign, which confirms takeaway 7's mechanism: the source falls with depth here, so the two-cell extrapolation puts T_s **above** the cell centre — ≈0.33 K on the 14.9 K peak rise | same | reproduces |
+| z2 | U1's deck on `bin_pre` | rc ≠ 0, message printed | rc **6**, naming `surface_patch.x0`, `surface_patch.radius`, `surface_patch.face_list`. ⚠ It does **not** name `spall.buckle_log_csv` — a top-level key the old binary ignores silently (DR-4) | same | **reproduces (gate)** |
+| z3 | `retired_keys` R1–R6, K0–K4 | all PASS, mutations RED | R1–R6 and K0–K4 ok, every mutation RED including R6's reassociation | `Z3_retired_keys.log` | **reproduces (gate)** |
+| a0 | tree gate vs `p2_18.md5` | 0 of 2,639 | **0 of 2,639** changed, 0 one-sided, against **both `p2_18` and `p2_22`**; controls **26 / 863** | my own parse of `witness/p2_23.md5` | **reproduces (gate)** |
+| a1 | face gate `cmp p2_22 p2_23` | 13 legs identical; `BEAM_S` only in new | 1,172 → **1,217** files; **0 only in p2_22**; **45 only in p2_23, every one under `BEAM_S/`**; 13 differing, all `thermo.dat`, headers identical, **zero moved non-timer columns** | my own md5 tree walk with the gate's SKIP/TIMERS | **reproduces (gate)** |
+| a2 | the three beam tests | as P2-22 | `beam_void_closure` 7 rows PASS + T3 FAIL by design; `unit/beam` 0.00 %; `unit/beam_tau` PASS | `A2_*` | **reproduces (gate)** |
+| b1 | B0's first `bk_n_eval` > 0 | exists, ≤ 40 s | **t = 30.8 s** | my own reduction of `legs/B0/run/thermo.dat` | **reproduces (gate)** |
+| b2 | B0 pre-melt | removals 0; block = eval; min `bk_lb` ≥ 2 | **212 pre-melt rows** (melt at 42.6 s): **removals 0**, **eval − block = 0**, and `bk_n_inf` = **1228** over those rows ⇒ every evaluation had non-finite x. Min `bk_lb` over the 22,267 logged rows **3.7522** (T_surf 824–2016 K, score ≤ 2.66) | my own thermo + `run_buckle_log.csv` reduction | reproduces (**P1 holds**) |
+| b2r | the branch split | report | **100 % `fb` = 1 and `nodepth` = 1, zero finite `ell_eff`, x = ∞ on every row** — 22,267 (B0), 2,664 (B0F), 36,656 (B1). L4's "some main-branch lines at 1.56 mm" did not occur | same | reproduces |
+| b3 | P: removals, fb, bk, h_f, the floor | removals > 0; fb 0; bk ≤ 1; ℓ_p ≤ 2.4 mm; floor ≥ 25 mm | **6 removals**, first at **6.928 s**, on the four central columns; `fb` = 0 and `rc_flag` = 0 on every event; **bk 0.99944–0.99999**; h_f **0.949–1.102 mm** = 0.4·ℓ_eff; ℓ_eff **2.372–2.756 mm**; deepest voided cell k = 30 ⇒ its faces at 46.88 / 48.44 mm (the notes quote the upper face) — either way ≫ 25 mm; first step P_inc 150.000 W, P_dep/P_inc **1.000000** (α 2000 over 50 mm). ⚠ Only **6 of 22,230** evaluations pass, all within 0.06 % of bk = 1 (DR-1); the ℓ ≤ 2.4 mm miss is the bar's, not the run's (DR-2) | my own `run_buckle_log.csv` + `run_removal_events.csv` reduction | reproduces (**P2 holds in kind**) |
+| c1 | B0F vs B0 | report | first fire **48.0 s**, **no melt by 80 s**, removals 0, all blocked, min `bk_lb` **4.973**, `bc_ell_p` undefined | my own reduction | reproduces (P3) |
+| c2 | B1 vs B0 | report | first fire **31.0 s**, first melt **42.0 s**, `bc_z_melt` = `bc_z_peak` = **1.95 mm**, min `bk_lb` **3.961**. B0's peak reads **2.34 mm** = its own second cell centre, B1's 1.95 mm = its third: the two agree within resolution | same | reproduces (P4) |
+| c3 | post-melt rows | report | B0 **187** rows, max `bk_n_eval` **169**, removals 0; B1 **76** rows, max **686**, removals 0 | same | reproduces (P5) |
+| c4 | the e-folds at melt | report | `bc_ell_p` **19.2 mm** (B0) / **20.6 mm** (B1); `bc_ell_pk` **18.9 / 18.9 mm**; the log's `ell_p` undefined on every row | same | reproduces (P6) |
+| e0 | verdict | — | z1–z3, a0–a2, b1 all reproduce; P1 and P2 both hold, so the port's first statement stands — with the control's weakness quantified in DR-1 | — | **reproduces** |
+
+⚠ The packet marks **nothing** unquotable. Against `ROADMAP.md`: **SR 15 is the rule DR-1 engages** (a quantity
+bounded by the mechanism's own action cannot be its discriminator). SR 1's second half is what DR-4 engages (ALAMO
+does not abort on an unused top-level key). SR 7(iv) is DR-3. SR 4 holds — the events' `k_top` is read pre-removal
+(`n_voided` 0 then 1 on the repeat columns). The Weibull note is honoured in the right direction: `weibull.V0` is
+**per deck** (the rock file's only mention is a comment, so it is not a shared key and needed no directive — I
+checked), and `check_shared` (iv) PASSES at V0 = V_cell = 3.8147e-9, which is what forced deviation 6. SR 9:
+`src_pre/`, `bin_pre/`, `inputs_pre/`, `MODEL_CARD.pre_p2_23.md`, `unit_beam_output_p2_22/`, and **a `MANIFEST.md5`
+per pruned leg — P2-21 DR-5 acted on.**
+
+#### Diff review
+
+Scope: the 13-hunk `MMWSpalling.H` diff and the 3-hunk `FaceRemoval.H` diff against `src_pre/`; `Removal.H` and
+`Shared.H` carry pre-P2-23 mtimes; `unit/face_beam`, `validation/oglesby`, `face_gate.py` and the four records.
+
+| # | hunk / call / test | class | finding | tag |
+|---|---|---|---|---|
+| 1 | the surface-patch parse reorder (`:8296`) | 9 removed checks | `face_list`, `robin_form`, `x0`, `y0`, `radius` moved ahead of the `enabled` return; `x0`/`y0`/`radius` keep `query_required` **when enabled** and become `query_default(…, 0.0)` when not. Both old sites now carry a comment pointing up, so no comment is made false | ok |
+| 2 | `robin_form` now parsed for DISABLED decks | 4 scope vs source | The reorder's one real regression risk — and it is closed in the code, not just by a0: **all four `robin_form` cross-key abort blocks are gated on `surface_patch.enabled`** (`:755`, `:764`, `:773`, `:799`), which I read individually, so a disabled deck carrying `robin_form = surface` cannot newly trip them | ok |
+| 3 | `fl_on` (`:2026`) | 2 consistency | With the patch on, `sp_on = enabled && owner`, so the old `face_list && sp_on && void_aware && !sp_presc` and the new `face_list && owner && void_aware && !(enabled && sp_presc)` are **identical term for term**; with it off the list can now run. `owner` kept as the packet required | ok |
+| 4 | the ledger's `fl_on_l` (`:4286`) | 2 consistency | **Not textually the kernel's conditional.** Kernel: `… && owner && … && !(enabled && sp_presc)`; ledger: `… && void_aware && !(sp_on && sp_presc) && fl_ready`. They differ exactly when `!owner && enabled && sp_presc`; the comment asserts the ledger is single-level so `owner` is true. Class 2 asks for the *same* conditional, and a shared predicate would remove the argument (DR-5) | **risk** |
+| 5 | the flameless list half (`else if (fl_on) { FaceListHeat(…,0); FrAssignTs; FaceListTg }`) | 1 duplication / 2 consistency | Deviation 1, and necessary: those three are called only from inside `BuildFlameColumns`. It is an `else` on `sp_on`, so it can never double-run, and it preserves their order | ok |
+| 7 | **L3's reviewer-assigned check** | 4 scope vs source | The packet asked me to confirm the gas-temperature ceiling returns 0 with the patch off. `SurfaceGasTempCap()` (`:9517`) opens `if (!surface_patch.enabled) return 0.0;`, so `ReconFromX`'s `if (T_gas_cap > 0.0 …)` clamp is disabled and T_s is never clamped to 0. **Pre-existing** — the diff near there is only the new key's parse | ok |
+| 6, 8 | `FaceListTg`'s patch-off branch, `FaceListHeat`'s `e.h = 0`, and the two gated readers (`fl_id_march`, the P0b witness block) | 13 guards | `FaceListTg` sets `e.Tg = 0` and returns **before** indexing the empty `flame_Tg`, so L3's first half holds by construction. Each of the three readers that index the empty `flame_h` is gated on `enabled`/`sp_on`, and each is the old code when the patch is on; deviation 1 names them and a0/a1 prove it | ok |
+| 9 | `spall.buckle_log_csv` parse (`:9561`) | 7 readers | `query_default(…, 0)`, validated 0/1, default **off**; aborts without the span (deviation 9) so the log can never be silently empty. Demonstrably live: 22,267 rows on B0 | ok |
+| 10 | `bk_log` guard | 13 guards / 6 boundary | `bk_on && sp_buckle_log_csv && thermo.plot_int > 0 && ((istep+1) % thermo.plot_int == 0)` — the modulus is guarded, and the `istep + 1` alignment is takeaway 5's thermo-timing fact, stated in the comment | ok |
+| 11 | `bk_lb` | 2 consistency / 1 duplication | **Same `BuckleRatio`, same `T_surf`, same `T0_at_d(0)`, same ν, μ and c_f, x replaced by `μ c_f nprof dx`** — L5 exactly — and taken **before** the withdrawal, so `br.bk`/`br.x` are the real values while `through` is captured (the withdrawal zeroes it). Logged only; x, bk and the withdrawal untouched | ok |
+| 12 | the CSV writer | 1 duplication | A second CSV writer in the file, copying the event log's open/header/append and `scientific`/`precision(16)` idiom. Different columns and cadence, so a shared helper would be over-engineering, but it is a copy | nit |
+| 13, 14 | `sp_buckle_log_header_written` and the row's deferred fields | 4 scope vs source | The flag is set on every rank (outside the `IOProcessor` guard) so none diverges, and the file is opened `trunc` once then `app` — a restart would re-truncate. `o.fb`, `o.nodepth`, `o.score`, `o.rec.*` are read at write time, after the line loop, and nothing mutates `out[l]` in between (the sheet selection comes after), so the logged values are the line's own | nit |
+| 15 | **b3's `bk ≤ 1` bar** | **12 self-limited discriminator** | A line passes on the first step bk falls below 1, so every pass reads bk ≈ 1.000 **by construction** — SR 15's exact shape. Measured: 6 of 22,230 evaluations pass, bk ∈ [0.99944, 0.99999]. The bar is satisfied necessarily and carries no information; the control's real content is the 6 removals and the flux margin (DR-1). The implementer states the mechanism in takeaway 1 | **risk** |
+| 16 | b3's `ℓ_p ≤ 2.4 mm` sub-bar | 12 carried threshold | 2.4 mm is the limit at **850 K only**; it grows with T_s (I derive 2.35 → 3.75 mm over 850–1400 K). The 6 passes at T_s 856–944 K have ℓ_eff 2.37–2.76 mm, all at or under *their own* limit by construction (bk ≤ 1 ⟺ ℓ ≤ L/(C_L μ c_f)). The "3 of 6 miss" is the bar's single-temperature approximation, not the run | nit |
+| 17 | z1's `rel ≤ 1e-6` bar | 6 below logging precision | Measured −1.24e-6, and half an ulp of `%g`'s last printed digit is 2.1e-6, so the bar is **finer than the column can express**. The printed 0.237696 agrees with the analytic to all six digits — SR 7(iv)'s rule, which the implementer applied (DR-3) | nit |
+| 18 | z2's coverage | 10 RED on the pre-fix binary | U3 on `bin_pre` aborts on three `surface_patch.*` keys (strict scope). `spall.buckle_log_csv` is **top-level**, so the old binary ignores it silently — the row proves the parse reorder, not the log (DR-4). Mitigated by the abort-without-span and by the log's 22k rows | **risk** |
+| 19 | `weibull.V0` per deck (deviation 6) | 5 hard-coded | Forced by the packet's own requirement: `check_shared` (iv) asserts V0 = V_cell, and the packet's literal 1.0e-9 is the CAL deck's 1 mm value. PASSES at 3.8147e-9 (rel 2.2e-16). I confirmed V0 is **not** a shared key, so no directive was needed | ok |
+| 20 | deviation 2 (z1 scores `ledger_P_loss`, not `fl_P_top`) | 9 removed checks | Correct and necessary: `fl_P_top` is the flame **gain**, identically 0 at h = 0, so the row as written compared the analytic loss with zero. `fl_P_top = 0` is checked alongside. Takeaway 4 generalises it | ok |
+| 21 | deviation 3 (U1 runs to 1.5 s) | 6 boundary | The row stamped t reports the step that **ended** at t and the last step's row is never written, so at `stop_time = 1.0` the only row is step 1 whose `T_old` is the IC — two zeros. My reduction confirms it: the t = 0.5 row has `ledger_P_loss` = 0 and the t = 1.0 row 0.237696, read against the t = 0.5 plotfile | ok |
+| 22 | `unit/face_beam`, `validation/oglesby`, `BEAM_S` | 10 test strength | New, and the gate now carries a flameless list from here on (`face_gate.py:187`). `check_shared` passes on the first beam deck under the shared rule, 56 keys, 0 declared | ok |
+| 23 | L10's resolution | 11 comments | The ledger's open question (do the other `phase.T_m` readers execute here?) is answered in the **deck header**, lines 27–28: the latent-heat readers are the constant-α branches and the Grimsel phase table has its own. Traceable, if an unusual place for a ledger resolution | nit |
+| 24 | the records | 5 hard-coded | `REFERENCE.md`'s P2-23 block, `WHICH_TESTS.md`'s row, `face_gate.py`'s leg, and `MODEL_CARD.md`'s oglesby row (:149) and 12.88 mm spot row (:267) are all in place and state the stress limitation and the operator's exclusion with its reason | ok |
+
+**Tally: 24 hunks/tests in 22 rows (two pairs merged) — 0 bug, 3 risk, 5 nit, 16 ok.**
+
+#### What the planner needs
+
+- **DR-1 — the positive control is a knife-edge, and `bk ≤ 1` cannot be its bar (SR 15).** 6 of 22,230 evaluations
+  pass, every one within **0.06 %** of the threshold, at four distinct times, and from 11 s every line is blocked with
+  bk climbing to 1.52. A line passes on the first step bk drops below 1, so bk ≈ 1.000 on a pass is necessary, not
+  evidence. What the control actually shows is 6 removals at a net flux of ≈ 0.51 MW/m² against B's minimum
+  0.432 MW/m² at the 12 mm span — a **1.18× margin**, which is why it stalls. Takeaway 1's "a robust control needs
+  ≳ 2–3× that flux (≈ 300–450 W, dt ≲ 8 ms)" is the right next move, and until it is run the two-sided reading rests
+  on 6 marginal events. Score the control on the removal count and the flux margin, never on bk.
+- **DR-2 — the null is the strong half, and the bound is better than the packet's own number.** `bk_lb` — the 15 mm
+  window taken AS the layer — is **3.75–6.29 (B0), 3.96–6.66 (B1), 4.97–6.31 (B0F)** on every one of 61,587 logged
+  rows, and I re-derived it from `C_L` independently. ⚠ But the layer limit is **not** a single 2.4 mm: it is
+  L/(C_L(T_s)·μ·c_f) = **2.35 mm at 850 K rising to 3.75 mm at 1400 K**, and B0 reaches T_surf 2016 K. Quote the
+  limit as a function of T_s; the null survives either way because the window is ≥ 4× the largest limit.
+- **DR-3 / DR-4 / DR-5 —** z1's `1e-6` bar is finer than `%g` can express (SR 7(iv): bar the printed digits); z2 proves the parse reorder but **not** the new key, because `spall.buckle_log_csv` is top-level and the old binary ignores it silently (SR 1) — a strict-scope key or a one-step probe would close it; and the ledger's `fl_on_l` is not textually the kernel's `fl_on`, which a shared predicate would fix. **Carry forward:** c2's peak depths (2.34 mm at 1.56 mm cells, 1.95 at 0.78) are each their own mesh's cell centre — they agree *within resolution*, which is the honest claim, not 1.95 ± 0.39 mm.
+
+#### What I credit
+
+- **The null is built so it cannot be an artefact of the scan window**, which is the hard part of a negative result:
+  `bk_lb` replaces the one unknown with the most generous value the geometry allows and B still blocks by ≥ 3.75×,
+  and 100 % of 61,587 evaluations are `nodepth` with x = ∞ and **zero** finite `ell_eff` — no mixed population to
+  argue about. L4's "some lines may take the main branch" is reported as not having occurred.
+- **Both reviewer-assigned checks hold.** L3's gas ceiling returns 0 with the patch off (pre-existing, `:9517`), and
+  the reorder's regression risk is closed in the code — all four `robin_form` cross-key aborts are gated on
+  `enabled` — so a0's 0/2,639 confirms rather than carries it.
+- **Three planner slips caught and declared, not absorbed**: `fl_P_top` is the flame gain, so z1 as written compared
+  the analytic loss with zero (dev 2); `stop_time = 1.0` writes only the IC row (dev 3); the literal
+  `weibull.V0 = 1.0e-9` fails the (iv) check the packet itself requires (dev 6). Dev 7 corrects the clamp reading
+  **from the code** — I confirm the strain clamps at 1273 K, not 873 K. And P2-21 DR-5 was acted on: every pruned
+  leg carries a `MANIFEST.md5`.
+
+### Verdict: accepted
+
+- **Gating rows.** z1, z2, z3, a0, a1, a2 and b1 all reproduce from my own reductions; no diff-review row is a `bug`.
+- **Guardrails.** `Removal.H` and `Shared.H` untouched (pre-P2-23 mtimes); `spall.buckle_log_csv` is the only new key
+  and is default-off; `x`, `bk` and the withdrawal are untouched by the log; the Hu decks and the column path are not
+  touched; every flame deck byte-identical (a0, a1); nothing in the do-not-touch list; nothing committed.
+- **Reruns.** None — no simulation, no rebuild. Everything above came from artefacts on disk plus my own arithmetic.
+- **Files inspected** (named row by row above): the full `MMWSpalling.H` / `FaceRemoval.H` diff against `src_pre/` plus eight sites read directly; `validation/oglesby/{input,test}`; `unit/face_beam/{input,test,output}`; `rock_grimsel.inputs`; the study's `Z0`, `Z1_face_beam`, `Z3_retired_keys`, `A1`, `A2_*`, `CHECK_SHARED`, `GATE_*`, `RESULTS`, `CHAIN`, `BINARY*`; all four legs' argv/rc/`MANIFEST.md5`/metadata/thermo/buckle-log/events; the five witness manifests, both face trees, `face_gate.py`, `REFERENCE.md`, `WHICH_TESTS.md`; `p2_15_buckle/derive_span.py`; `MODEL_CARD.md` vs its pre-copy.
+- The user should run `/plan` next; the planner will archive this step.
+
+## P2-24 — Melt and vapour on the enthalpy path: latent heat on the production rock, the melt's absorption and reflection on the liquid fraction, no fracture in a melt, a vapour rule that spends the beam once, and test #19 run through its 26 minutes (2026-11-06; ACCEPTED by review 2026-11-07; addendum 2026-11-07: the melt's heat transport is not λ or ε — PARKED by the user as a stated limit)
+
+**Status:** ACCEPTED by review (2026-11-07); all eight gating rows (z1–z3, a0–a2, b1, b2) reproduce from the reviewer's
+own reductions; 0 `bug`, 3 `risk`, 2 `nit`. Binary `98a261d3…` (kept in `studies/p2_24_melt_vapour/bin_p2_24/`); pre-step
+`42a115a0…` (P2-23, `bin_pre/`). Study `tests/MMWSpalling/studies/p2_24_melt_vapour/` (`Z0.txt`, `RESULTS.txt`,
+`RESULTS_SENS.txt`, legs M0 / M100 / M0F / M1 / M0R / LAM / EPS pruned with `MANIFEST.md5`). Tree gate 0/2639 (NOT re-pinned);
+the face reference re-pinned to `face_p2_24` (13 flame thermo gain two all-zero columns; BEAM_S gains the vapour diagnostics).
+Addendum binary `c052c348…` (adds `grimsel.lambda.cap_theta`, default −1): M0R reproduces M0 on every physics column; NOT gated.
+
+### What the step established
+- **The melt is a state.** Zhang's melt set (LIT, another rock) on the Grimsel phase in the rock file: the phase table
+  carries ρL_m over 1410.5–1610.5 K and ρL_v over 3233–3503 K (jump 1.5644629547e9 J/m³ vs ρL_m + ρ∫c_p dT, rel −7e-10);
+  H(T) below the solidus unchanged ⇒ every flame deck byte-identical (0/2639; hottest gate leg 818 K).
+- **The beam sees it.** `beam.melt_factor` 4 and `beam.R_melt` 0.3 on the liquid fraction f_L(T) through the column
+  optical-depth gather (`MeltFraction`: ONE function, three consumers); defaults are bit-exact no-ops (`rc = nullptr`,
+  `mf != 1.0`). The crack rule is not run in or over a liquid (`fr_n_molten`, `fr_n_lid`). Vapour on the face list: a
+  LISTED cell past H_vap_hi leaves once, booked in `ledger_E_vapor` (9.2e-16 with the term, 0.77 without); buried cells
+  are counted (`fr_n_vapor_int`, cell-steps), not voided.
+- **Test #19 through 26 minutes, onset-aligned (43.2 s model vs 285 s DOE after beam-on — the gap carried).** LAND:
+  absorbed fraction 0.66–0.70 (DOE ≈ 0.70); melt spot 34.9 mm at beam-off (≈ 38, mush-inclusive); cooling after beam-off
+  1009 / 699 / 327 °C at +15 / +65 / +215 s (DOE 1011 / 627 / 349); pre-melt radiometer 248 °C (153 mean / 272 max);
+  melt starts below the surface and breaks through. MISS, one direction: the synthetic radiometer 513 / 1126 °C at
+  +20 / +100 s (DOE 1195 / 1649), plateau 1449 / 1623 °C at 2.0 / 3.3 kW (DOE 1774 / 2389; +12 % vs +35 %); vapour
+  from 92 s at 1.57 kW, 324 cells = 3.28 g in one exposure (DOE: none on #19; 1.3 g over four exposures of #28, a
+  different test). ×100 (M100) never vaporises but reads COLDER (1075 / 1326 °C) with a smaller pool (30.5 mm) ⇒ the
+  absorption factor is not the lever. Transmission collapse: block 198 s, axis 31 s, M100 467 s vs DOE 70 s (pick-off
+  geometry not modelled). The 60 post-melt removals are single-cell THROUGH wall collapses (h_f = 0): P2-23's
+  no-thin-flake statement stands through melting.
+- **Addendum (2026-11-07, `RESULTS_SENS.txt`): the two recorded alternatives are EXCLUDED as the cause.** LAM (λ held
+  at 1.28 W/mK above 1000 °C): surface unchanged (1445 / 1630 °C), vapour halved (1.74 g), pool deeper 3.9 → 7.0 mm, the
+  cooling match LOST (812 / 427 vs DOE 627 / 349 °C) — isotropic conduction cannot warm the surface without breaking the
+  cooling curve. EPS (ε 0.5): +2–6 % on the surface, +21 % vapour (3.96 g), cooling worse. Every removal on every leg
+  is an h_f = 0 wall collapse. The gap needs SURFACE-DIRECTED transport (the radiometer's depth/centre weighting as
+  instrument effects; radiative transfer in the semi-transparent melt; bubbles / surface evaporation for the mass).
+  PARKED by the user as a stated limit: `MODEL_CARD.md` §10 row "melting / vaporisation", §11 item 6, §12 item 11.
+
+### Carry-forwards (review, advisor, planner)
+1. **DR-1 — `face_gate.py` compares NaN ≠ NaN**: BEAM_S has 11 NaN-valued columns; the next cmp on a non-md5-identical
+   leg self-flags DIFFERENT. Fix before the next face packet runs the gate (P2-25 Goal 1).
+2. **DR-3 — report vapour as MASS** (cells × V_cell × ρ), never cells (mesh-dependent: 44 vs 272 cells = 0.168 vs
+   0.130 cm³ before 170 s on M0 / M1). `bc_n_vapor_int` is cell-steps.
+3. **DR-7 — the melt spot counts f_L > 0** (mush-inclusive): an upper bound against glass read after cooling.
+4. **The phase table ends at 5000 K**: T clamps, H does not; M0F's buried core sits there from 396 s — a buried-vapour
+   path or a longer table before any leg that buries the beam is interpreted.
+5. **The addendum key `grimsel.lambda.cap_theta` and binary `c052c348` are ungated** (M0R identity only): a0/a1 on the
+   next packet, or revert.
+6. **The 42 s vs 295 s onset gap** stays parked (user, 2026-11-06).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-07)
+
+- **P2-24 — Melt and vapour on the enthalpy path: latent heat on the production rock, the melt's absorption and
+  reflection on the liquid fraction, no fracture in a melt, a vapour rule that spends the beam once, #19 through its
+  26 minutes** (`ACTIVE_STEP.md`; 2026-11-06; user: the enthalpy vapour front GOES AHEAD, Zhang's ×4 ADOPTED with the
+  DOE's ×100 as the alternative, the operator still out, the loss magnitude parked).
+  - Archived: P2-23 ACCEPTED (`ARCHIVE_DONE.md` *"P2-23"*): the face list runs without a flame (every flame deck
+    byte-identical; `BEAM_S` in the face gate); #19 on Grimsel at the true spot: onset fires 31 s, melt 42 s at ≈ 2 mm,
+    ZERO removals pre-melt, every evaluation withdrawn, the window itself blocks by ≥ 3.75×, full-column e-fold 19–21 mm
+    ⇒ no THIN-FLAKE spallation under this beam on this rule; ⚠⚠ a shallow STEADY beam presents the CONDUCTION length to
+    B (150 W at 1.18× the minimum flux stalled at 6 removals; P400 drills steadily: 1,008 removals, bk 0.44–1.0).
+  - The melt set (Zhang, LIT another rock) in the rock file; `beam.melt_factor` 4 and `beam.R_melt` 0.3 on the liquid
+    fraction through the τ gather; lines with a liquid surface not scanned (`fr_n_molten`); vapour = a cell past
+    H_vap_hi leaves once, booked in `ledger_E_vapor`, regime 2 on the face list (the column-path front untouched).
+  - ⚠⚠ Pre-registered: onset-ALIGNED (42 vs 295 s carried); ×4 is LOW on the collapse rate (100–200 s vs ≈ 70 s), ×100
+    high; absorbed 0.60–0.68 → 0.70; the plateau +25–35 % for 2.0 → 3.3 kW; melt spot 30–45 mm vs 38; no vapour
+    before 800 s, maybe after 1500 s; the cooling after beam-off pre-registered HIGH (ε 0.8, no glass skin).
+
+### The addendum's observables (RESULTS_SENS.txt §2 and §6, verbatim)
+
+```
+2. THE OBSERVABLES (every post-melt row aligned on the leg's own onset)
+   observable                                           M0        LAM        EPS      DOE #19
+   ------------------------------------------------------------------------------------------
+   onset: first finite bc_z_melt [s]                 43.20      43.20      42.60 285 (495 DOE)
+   absorbed P_dep/P_beam at onset + 70 s            0.6573     0.6626     0.6565 0.70 (model)
+   absorbed P_dep/P_beam, 1.9-2.1 kW rows           0.6946     0.6988     0.6932 0.70 (model)
+   transmission to x0.148 after onset [s]              198        166        189 70 (pick-off)
+   radiometer just before onset [C]                    248        248        247 153 mean / 272 max
+   radiometer at onset + 20 s [C]                      513        509        529         1195
+   radiometer at onset + 100 s [C]                    1126       1135       1157         1649
+   plateau at 1.9-2.1 kW (>= onset + 100 s) [C]       1449       1445       1475         1774
+   plateau at 3.2-3.4 kW [C]                          1623       1630       1721         2389
+   plateau rise 2.0 -> 3.3 kW [%]                    11.99      12.84      16.64        +34.7
+   radiometer at beam-off [C]                         1622       1631       1729 ~2281 (last)
+   cooling: beam-off + 15 s [C]                       1009       1020       1058         1011
+   cooling: beam-off + 65 s [C]                        699        812        798          627
+   cooling: beam-off + 215 s [C]                       327        427        378          349
+   melt spot at the end of heating [mm]              34.91      36.65      36.65          ~38
+   first surface vapour void [s]                     92.20        113      91.60 none seen (#28: 1.3 g / 4)
+   first buried vapour count [s]                     92.00        108      91.40            -
+   vapour voided by 1800 s [g] (cells x V x rho)       3.28       1.74       3.96 0 (#19); 1.3/4 exp. (#28)
+   vapour cells voided (mesh-dependent)                324        172        392            -
+   hottest cell over the run [K]                      3602       3731       4183 < 3233 if no vapour
+   liquid depth on the axis at beam-off [mm]          3.91       7.03       5.47            -
+   liquid depth on the axis, max [mm]                 7.03       8.59       7.03            -
+   post-melt removals (single-cell wall collapses)      60.00        136        172     0 flakes
+   beam closure residual, post-onset max            0.0449     0.0453     0.0451 <= 3e-2 (P2-24 b2r)
+
+
+6. THE READING (advisor, 2026-11-07)
+   identity   M0R reproduces M0 on every physics column (only the two wall-clock timers differ): the key at its default
+              moves nothing. The addendum binary c052c348 is otherwise UNVERIFIED (no tree / face gate re-run); the P2-24
+              binary 98a261d3 is kept in bin_p2_24/.
+   LAM        doubling lambda above 1000 degC (1.28 vs the fit's 0.60 W/mK at 3000 K) leaves the surface where it was
+              (plateau 1445 / 1630 vs 1449 / 1623 C; onset + 20 s 509 vs 513 C) and halves the vapour (3.28 -> 1.74 g,
+              first void 92 -> 113 s) -- but the pool deepens (axis liquid 3.9 -> 7.0 mm at beam-off), widens (34.9 -> 36.7
+              mm) and the cooling match M0 HAD is lost (+65 s 812 vs 699 C, DOE 627; +215 s 427 vs 327, DOE 349).
+              Conduction is isotropic: more of it moves the buried heat down and sideways as much as up. A conductivity
+              value, whatever it is, cannot warm the surface without breaking the cooling curve. Its 136 removals are
+              all h_f = 0 wall collapses, every one AFTER beam-off (1585-1605 s, the lid solidifying).
+   EPS        emissivity 0.5 warms the view mean by 2-6 % (1475 / 1721 C; the rise 16.6 % vs the DOE's 34.7 %), still
+              300-670 C short, ADDS vapour (3.96 g, +21 %; the hottest cell 4183 K) and worsens the cooling (1058 / 798 /
+              378 C vs 1011 / 627 / 349). As Z0 item 7 predicted: (0.8/0.5)^(1/4) = 1.125 on a radiation-limited T.
+   common     the onset, the absorbed fraction (0.66-0.70) and the closure residual (4.5 %) do not move: none of them is a
+              thermal-transport quantity, and the residual is the beam's spreading, not the melt's. Every non-vapour
+              removal on all three legs has h_f = 0 (the no-thin-flake null stands through melting, every variant).
+   verdict    BOTH recorded alternatives are EXCLUDED as the explanation. A cold surface over a vaporising interior is not
+              a factor of two in lambda and not the emissivity; it needs a transport that carries heat PREFERENTIALLY to the
+              free surface -- convection in the pool, or radiative transfer through the semi-transparent melt. That is a
+              physics packet with its own evidence, not a knob. The alternative is to carry the two misses as the stated
+              limit of a conduction-only melt and move on to the regime check.
+
+
+```
+
+### The P2-24 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-24 — Melt and vapour on the enthalpy path: latent heat on the production rock, the melt's absorption and reflection on the liquid fraction, no fracture in a melt, a vapour rule that spends the beam once, and test #19 run through its 26 minutes
+
+Status: **accepted by review** (2026-11-07; all eight gating rows reproduce independently; 0 `bug`). ⚠⚠ **An imminent false flag in the gate itself**: I ran `face_gate.py`'s own `thermo_cols` on BEAM_S's thermo against ITSELF and it reports **11 columns as MOVED, every one NaN-valued** (6 are P2-21's, 5 new). The md5 path hides it today, but the next time BEAM_S's thermo differs for any reason — a timer suffices — `cmp` will add 11 spurious MOVED columns and return DIFFERENT on a physically identical leg. One line in `face_gate.py` (DR-1). ✅ The 60 "mush removals" are single-cell THROUGH firings (run 1, h_line = one cell), so P2-23's no-thin-flake statement stands rather than being refuted (DR-2); and the vapour rule voids **3.28 g** in one exposure against the DOE's **1.3 g over four** (DR-3).
+
+### Context
+
+Every beam run on test #19 now ends at the first melt (42 s on the production rock) with nothing behind it: the
+Grimsel phase carries no latent heat, the beam's absorption and reflection do not know a melt exists, lines above the
+solidus keep firing the crack rule and are withdrawn (P2-23 c3: up to 686 evaluations per step), and the only
+vaporisation code lives on the column path, spends the beam power twice (a rate law that heats cold rock to vapour
+with power the enthalpy field has already received), books no ledger term, ignores radiation at 3300 K, and is refused
+by the face list. The DOE report records what happens at melt on #19: the 137 GHz surface signal jumps from 272 °C to
+1195 °C in twenty seconds and 1649 °C in a hundred, the 28 GHz transmission collapses seven-fold in about seventy seconds,
+the surface then sits on a radiation-limited plateau that rises from 1752 °C at ≈ 2.0 kW to 2281 °C at ≈ 3.3 kW, the
+melt spot is ≈ 38 mm across after 26 minutes, and after beam-off the surface cools to 1011 °C in five seconds and
+627 °C in a minute (all uncorrected, averaged over the launcher's 32 mm view). This packet gives the enthalpy path the
+melt as a state, makes the beam see it, stops the crack rule in a liquid, rebuilds vaporisation as "a cell whose
+enthalpy has passed the vaporisation enthalpy leaves, once", and runs #19 through its 1,580 s of heating and 220 s of cooling. ⚠ The 42 s vs 295 s onset gap is
+carried, not addressed: every post-melt comparison is aligned on melt ONSET in model and test, never on the clock.
+⚠ No Grimsel melt data exist on disk: the melt set is Zhang's Barre-like one, LIT (another rock), declared in the rock
+file. ⚠ The old column-path vapour front is NOT deleted (the column path's deletion is a separate decision); under the
+face list `vapor.enabled` now selects the new rule. ⚠⚠ Second review (the user's paste, 2026-11-06, all nine points adopted): the beam ran 1,580 s (Table 1: 26 min 20 s;
+on at 215 s, off ≈ 1,795 s on Fig. 34's clock), not 1,800 s from beam-on; a vapour cell may be BURIED under a solid
+lid (the peak is interior), so only listed cells vaporise and interior ones are counted; the crack scan must not
+integrate through a liquid layer under a solid lid; the melting dwell is a measurement, the table's enthalpy jump is
+the invariant; the vapour unit test must have zero conduction; the vapour prediction is made at the CENTRE flux
+(5.4 MW/m² at 2 kW ⇒ 3,300 K on radiation alone); the transmission ratio divides by the BEAM power (the code's P_inc
+is after reflection, which rises at melt); the plateau and melt spot are compared against the INSTANTANEOUS power, not
+aligned windows; and the radiometer is synthesised over the whole 32 mm view with ε 0.7 on melt and (1 − R) = 0.853
+on solid, so the pre-melt reading becomes comparable (with the semi-transparency caveat).
+Carried: P2-23 DR-2 (the layer limit is a function of T_s), the two
+gates, R = 0.531, c_f and the span borrowed, the 1-D stress limitation, nothing fitted.
+
+### Sources (opened 2026-11-06)
+
+- **DOE DE-EE0005504** (`studies/p2_21_loss_table/doe/`; pdftotext line numbers): melt absorbs ≈ 70 % of incident
+  (L1673, from the water-load and reflected-power balance on #28c); reflection "0.14 before melting … 0.3 after melting
+  as observed" (L2172–2174); the absorption "after melting … is ASSUMED to be increased about two orders of magnitude"
+  (L2168–2171 — their model's assumption, NOT a measurement); the #28c power balance ⇒ IR emissivity ≈ 0.5, "likely
+  lower" (L2271–2290); 1.3 g lost over four exposures of #28 ⇒ no vaporisation at ≤ 2500 °C corrected (L1799–1801);
+  the radiometer: a 1.83 mm guide on the launcher's axis, −12 dB loss calibrated on a LN2 black body, "εT … average
+  across the whole aperture of view" (L992–1002, L1738–1742), ÷0.7 the DOE's own correction. Fig. 34 digitised:
+  `doe/FIG34.txt` (power and pick-off, 155–695 s: beam-on 215 s at 1.46 kW; collapse 0.1320 V at 495 s → 0.0196 V at
+  565 s, ×0.148 in 70 s; 0.0139 at 595 s) and `doe/FIG34_TOP.txt` (radiometer: pre-melt mean 153 °C, max 272; the jump
+  272 → 1195 → 1649 °C at 495 / 515 / 595 s; plateau means 1752 / 2026 / 2171 / 2281 °C over 600–800 / 800–1200 /
+  1200–1500 / 1500–1800 s; beam-off 1011 °C at +5 s, 627 at +55 s, 349 at +205 s). #19's melt spot "~1 1/2" dia."
+  (L7031); Table 2 max 2,422 °C. ⚠ The power trace beyond 700 s is NOT yet digitised (Goal 0).
+- **Zhang, Millmore, Nikiforakis (arXiv 2211.00681)** as carried in `src/Numeric/Material/Zhang.H:59–64`: T_m 1510.5 K,
+  fus_width 200 K, L_m 3.4e5 J/kg, T_vap 3233–3503 K, L_v 4.8e6 J/kg; eq. 12: α_λ 14 Np/m solid, 56 liquid ⇒ **×4**.
+- **The enthalpy path.** `MMWSpalling.H:7410–7447`: each phase's `T_m`, `fus_width`, `L_m`, `T_vap_lo/hi`, `L_v`
+  (`microstructure.phaseN.*`, parsed :442–447) are copied onto the Grimsel object and `Table::Build` integrates
+  `effective_rhocp` with the latent-heat boxcars (`Table.H:30–80`: `m_H_fus_lo/hi`, `m_H_vap_lo/hi` cached; the
+  trapezoid runs upward from 200 K, so H(T) below `fus_lo` = T_m − fus_width/2 is UNCHANGED by the melt keys);
+  `Material.H:33–36` (`cpe += L_m/fus_width` inside the band). `unit/latent_heat` is the only witness today.
+- **The beam.** `MMWBeam.H:alpha_at(T)` (the table ratio on the cold α; P2-21); `BeamSource` :5290–5316 (`(1 − R)`
+  prefactor), `BeamEnergyBalance` :5197 (`P_inc`), :5202/:5208 (`P_trans`); `BuildBeamTau`/`ColumnOpticalDepth` (the
+  per-column gather of `a_k·dz` from `T_old`; P2-21) — the one place a per-cell α and a per-column R can enter.
+- **The face list.** `Removal.H:244` (the dispatch: `RecedeAlongLines` and return); `FaceRemoval.H:331`
+  (`RecedeAlongLines`), the line scan from :520 (`T_at_d`, `Tc = Gl[0]` the surface cell's T), the ONE WRITE :884–905
+  (`rm`, `H`, `ff`, `phi`, `reg`, the event fields), `ledger_E_flake += (E_left_tot + E_drop)·Vcell` :883; the
+  `fr_abort` on `vapor.enabled` `MMWSpalling.H:1093`; `ParseVaporSettings` :6190–6225 (A_beam/T0 default from ω₀,
+  harmless); ledger columns :860–879; `losses.epsilon_high`/`T_eps_break` :228–231 with the step-DOWN abort only
+  under `robin_form = face|pinned` with the patch on (:760–771, :786–790) — ⚠ the SAME Newton residual serves
+  `FrFaceFlux` and the fallback's `Tf` under the surface form, so a step down in ε is a multi-root hazard there too.
+- **The P2-23 deck and legs** (`validation/oglesby/input`; `studies/p2_23_beam_port/{run.py,RESULTS.txt}`): B0 first
+  fire 30.8 s, first melt 42.6 s at 2.34 mm, `bc_ell_p` 19.2 mm at melt; B1 42.0 s at 1.95 mm; post-melt `bk_n_eval`
+  up to 686; B0 400 steps in 9 s. `beam_P_trans/beam_P_inc` cold 0.4966 (P2-21 b2).
+
+### Goal
+
+0. **The full power trace.** Extend `doe/fig34_digitise.py` (a `--full` flag) to 0–2200 s on Fig. 34's clock →
+   `FIG34_FULL.txt`; the deck's schedule is the trace shifted by −215 s: **158 × 10 s intervals from beam-on (1,580 s,
+   DOE Table 1 "26 m 20s"), P = 0 after**; `stop_time = 1800.0` (220 s of cooling). Every DOE window maps by the same
+   shift and the model's beam-off is at 1,580 s.
+1. **The melt set on the production rock (`validation/shared/rock_grimsel.inputs`).** `microstructure.phase0.T_m =
+   1510.5`, `fus_width = 200.0`, `L_m = 3.4e5`, `T_vap_lo = 3233.0`, `T_vap_hi = 3503.0`, `L_v = 4.8e6` — LIT (Zhang,
+   another rock), with the block comment; the Grimsel λ(T), c_p(T) are EXTRAPOLATED through the melt (declared; Zhang's
+   κ cap at 1273 K is the recorded alternative). `phase.T_m` leaves the oglesby deck (`bc_z_melt` reads phase 0's).
+   ⚠ Every Grimsel deck now builds a table with the boxcars; H(T) below 1410.5 K is unchanged, so a0/a1 must be
+   byte-identical UNLESS a flame deck's cell exceeds 1410.5 K — state the hottest cell of each gate leg in z0.
+2. **The beam sees the melt (`MMWBeam.H`, `MMWSpalling.H`).** Two keys in the rock file: `beam.melt_factor = 4.0`
+   (LIT Zhang; default 1.0) and `beam.R_melt = 0.3` (LIT DOE measured; default = R). The liquid fraction f_L(T) =
+   clamp((T − fus_lo)/fus_width, 0, 1) from phase 0's T_m and fus_width (one phase, SR 13); per cell α = `alpha_at(T)` ×
+   (1 + (melt_factor − 1)·f_L(T)); per column R_col = R + (R_melt − R)·f_L(T_top) at the column's top solid cell, gathered
+   with τ and used at `P_inc`, `P_trans` and the prefactor of every cell in that column (the kernel's `(1 − R)` sites).
+   Defaults ⇒ `(1 + 0·f)` and `R + 0·f` exactly: byte identity. The sum path is REQUIRED when the factor ≠ 1 (abort
+   with one table pair). A new thermo column `beam_P_beam` = the schedule's power now [W] (the DOE's denominator).
+   Material-path decks keep the scalar R (declared; the Zhang deck is not run here).
+3. **No fracture in or over a liquid (`FaceRemoval.H`).** A line is not scanned when its surface cell has f_L(T) ≥ 1
+   (`fr_n_molten`) OR when ANY cell inside its window has f_L ≥ 1 (a solid lid over a melt: `fr_n_lid`) — the K_I
+   integral must not run through liquid. Both counts are new columns registered under `spall.enabled` (⚠ NEW header
+   columns on every face-list deck: the face gate's `cmp` must treat appended columns that are 0 on every row as
+   identical, or the reference is re-pinned as `face_p2_24` with the two-column diff recorded). Partially molten
+   cells (0 < f_L < 1) do not trigger either (the mush still carries K_Ic — declared; the alternative is f_L > 0).
+4. **The vapour rule on the face list (`FaceRemoval.H`, before the line scan).** With `vapor.enabled = 1` under the face
+   list: every LISTED solid cell (a cell with at least one listed face, i.e. touching the void) whose enthalpy
+   H ≥ `m_H_vap_hi` of its phase table is voided in the ONE WRITE as regime 2: `rm = 1`, `ff = 0`, the events CSV row
+   (regime 2, h_applied = dz), `ledger_E_vapor += H·V` (new column under `vapor.enabled`), `fr_n_vapor` (per step).
+   An INTERIOR cell past `m_H_vap_hi` (buried under a solid lid: the beam's peak is interior) is NOT voided — a sealed
+   bubble has no physics here — and is counted in `fr_n_vapor_int` (declared; the record of how often the lid would
+   have been blown). Nothing is spent twice: the enthalpy came through deposition and conduction once; losses at the
+   face are the face list's own. The `fr_abort` on `vapor.enabled` is lifted; under the face list `vapor.enabled`
+   ABORTS unless every phase declares `T_vap_lo < 1e30` and `L_v > 0`. The column-path branch (`Removal.H:1366–1440`)
+   is untouched and unreachable under the face list (the dispatch returns first). A vaporised cell's neighbours join
+   the list next step through `BuildFaceList`; the void-aware beam path deposits into the next solid cell.
+5. **Logged (registered under `beam.can_deposit()`, every step):** `bc_T_rad` = the area mean over the top solid cells
+   with r ≤ 16.25 mm (the launcher's view) of ε₁₃₇(T_top)·T_top, with ε₁₃₇ = 0.7·f_L + (1 − R)·(1 − f_L) (0.7 the DOE's
+   28 GHz melt absorptance assumed at 137 GHz, as they do; 1 − R = 0.853 from the declared permittivity — both from the
+   one dielectric description; ⚠ the solid is semi-transparent at 137 GHz, so the real pre-melt reading is a
+   depth-weighted T; declared, direction stated in P3); `bc_T_view` (the plain area mean of T_top over the view);
+   `bc_A_melt` [m²] (top solid cells with f_L(T_top) > 0 — the melt spot, diameter 2√(A/π)); `bc_f_L_peak` (f_L at the
+   central column's peak); `bc_z_liq` [m] (the deepest central-column cell with f_L ≥ 1); `bc_n_vapor` and
+   `bc_n_vapor_int` (cumulative).
+6. **Unit tests.** `unit/face_melt` (new; the `unit/beam_tau` fixture: 1 m cube, 64×64×16, κ 0, ε′ 1, one 0.01 s step)
+   with the melt keys on its phase (T_m 650 K, fus_width 100, L_m small), IC `"300.0+500.0*(z>=0.5)"` (the top half
+   fully liquid: f_L = 1, the bottom solid), `beam.melt_factor = 4.0`, `beam.R_melt = 0.3`, base α = 1 m⁻¹ exactly,
+   face list on with the patch off, `spall.enabled = 1`: analytic deposition top (1 − 0.3)(1 − e^{−4·0.5}) = 0.605298,
+   bottom 0.7·e^{−2}(1 − e^{−0.5}) = 0.037275, transmitted 0.7·e^{−2.5} = 0.057460; `fr_n_molten` = 64 × 64 = 4096,
+   `fr_n_lid` = 0, `bk_n_eval` = 0 on the step; U1b: the IC inverted (`"800.0-500.0*(z>=0.5)"`: a solid top over a
+   liquid bottom): `fr_n_lid` = 4096, `fr_n_molten` = 0, `bk_n_eval` = 0. U2: U1 with `melt_factor = 1.0` and `R_melt`
+   absent ⇒ bit-identical to the fixture without the keys. `unit/face_vapor` (new): 8×8×8 cells of 1 mm, the Grimsel
+   law with `microstructure.phase0.grimsel.lambda.a = 0` (ZERO conduction, so the adiabatic t_v is exact), uniform beam
+   (`profile = uniform`, radius covering the top), α from ε′ 1 and an exact tan δ at λ 2.19e-3 giving α = 2000, no
+   losses (ε 0, h 0), the melt and vapour keys on the phase, `vapor.enabled = 1`, the face list on: the top layer
+   (absorbing 1 − e^{−2}) reaches `m_H_vap_hi` at t_v = dz [H(T_vap_hi) − H(T0)] / (q (1 − e^{−2})) with H per volume
+   from the phase's own table (print them); bars in z2. U4 = `vapor.enabled = 0` (zero voids, T runs past T_vap);
+   U5 = `beam.P0 = 0` (zero voids); U6 (the interior case) = U3 with
+   `beam.P0 = 0` and a two-layer IC that puts the SECOND layer at T_vap_hi + 10 K under a cold top layer:
+   `fr_n_vapor_int` = 64 on step 1, `fr_n_vapor` = 0, no cell voided.
+7. **The deck and test.** `validation/oglesby/input`: the schedule from Goal 0, `stop_time = 1800.0`, `vapor.enabled = 1`,
+   `spall.buckle_log_csv = 0` (9,000 steps; the counts are in thermo), `amr.plot_int = 500` (every 100 s),
+   `losses.epsilon` / `epsilon_high` as the rock file (0.8 — the DOE's melt ε 0.5 is NOT adopted: a step down in ε
+   breaks the face root's monotonicity; recorded as the alternative, its plateau effect in z0). `validation/oglesby/test`
+   gains rows m1–m7 (`--onset` aligns on the first finite `bc_z_melt`; the plateau and melt-spot rows bin by
+   `beam_P_beam`, not by time), reading thermo and the events CSV only. `check_shared.py` passes on the deck.
+8. **Records.** `MODEL_CARD.md` §6 (the melt set, `melt_factor`, `R_melt`: LIT, another rock), §5 (the face list
+   carries the vapour regime, surface cells only; the column-path front is dead under it), §12; `WHICH_TESTS.md` (the
+   two unit tests); `REFERENCE.md`; study `studies/p2_24_melt_vapour/` with `z0.py`, `run.py`, `reduce.py`,
+   `chain.sh`, `src_pre/`, `bin_pre/`, `inputs_pre/`, `BINARY.txt`, `RESULTS.txt`.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | key / change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | the six melt keys on phase 0 → the Grimsel object → `Table::Build` boxcars | `MMWSpalling.H:442–447`, :7430–7447 | `InvertHtoT`, `effective_rhocp` | `phases[p].grimsel_law` | U1 (`unit/face_melt`) runs; z0's hottest-cell table; a0 0/2639 |
+| L2 | the CONJUNCTION a melt column needs: f_L(T) from phase 0 AND the table varies (sum path) AND R_col gathered with τ AND the three `(1 − R)` sites read R_col AND `P_trans` uses the same R_col | `BuildBeamTau`, `BeamSource`, `BeamEnergyBalance` | closure | `alpha_varies() && can_deposit()`; `melt_factor != 1 ⇒ alpha_varies()` else abort at parse | U1 fractions (z1); M0 `beam_col_err_max` ≤ 1e-12 and closure (b2) |
+| L3 | `melt_factor = 1` and `R_melt` absent ⇒ `(1 + 0·f_L)` and `R + 0·f_L` bit-exact | the two sites | — | defaults | U2 bit-identical; a0; a1 |
+| L4 | the molten-line exclusion reads the SAME f_L(T) as the beam, at the line's surface cell `Gl[0]` | `FaceRemoval.H:520–523` | `fr_n_molten`, the scan skipped | `spall.enabled` | U1 `fr_n_molten` 4096, `bk_n_eval` 0; flame legs: `fr_n_molten` = 0 on every row (a1) |
+| L5 | the vapour rule: H ≥ `m_H_vap_hi` of the cell's phase table ⇒ voided in the ONE WRITE with regime 2 and the ledger term | `FaceRemoval.H:884–905` | `ledger_E_vapor`, `fr_n_vapor`, `ledger_err` | `vapor_enabled && surface_patch.face_list` | U3 first void within one step of t_v; `ledger_err` unchanged to 1e-9 after the void (the removed H is booked) |
+| L6 | `vapor.enabled = 1` parses WITHOUT `A_beam`/`T0` and without the column-path abort (:1093 lifted; :1172–1186 defaults from ω₀) | `ParseVaporSettings`, :1093 | — | — | U3 rc 0; `bin_pre` on U3's deck aborts at :1093 naming regime 2 (z2's RED) |
+| L7 | units: H [J/m³] (the table's H_of_T is per volume: check `Table.H:24` and `effective_rhocp` = ρ c_p [J/m³K]); L_m, L_v [J/kg]; `ledger_E_vapor` [J] = H·V; `bc_A_melt` [m²]; `bc_T_view`, `bc_T_rad_melt` [K]; `bc_z_liq` [m]; the transmission ratio dimensionless | — | — | — | z0; the test prints units |
+| L8 | `bc_*` columns on the microstructure path with the beam on; the NEW ones registered in the same conditional | registration | thermo | `alpha_varies() && can_deposit()` | M0's header; HOS_S/CAL_S headers unchanged (a1) |
+| L9 | `fr_n_molten` is a new column on EVERY face-list deck | registration under `spall.enabled` | thermo header | — | a1: decide at step zero whether `cmp` tolerates an appended all-zero column; if not, `face_p2_24` is pinned with the diff recorded in `REFERENCE.md` |
+| L11 | the lid test reads f_L on EVERY cell of the line's window (`T_at_d(d)`, d ≤ nprof), the surface test on `Gl[0]` only; the vapour test reads `fl_index` (listed ⇔ touching void) before the ONE WRITE | `FaceRemoval.H:520–530`, :884 | `fr_n_lid`, `fr_n_molten`, `fr_n_vapor`, `fr_n_vapor_int` | `spall.enabled`; `vapor_enabled && face_list` | U1 / U1b / U6 counts; flame legs: all four columns 0 on every row |
+| L12 | the schedule is the digitised trace shifted by −215 s, 158 intervals, P = 0 after 1,580 s; `beam_P_beam` is the schedule's value (not `P_inc`) | `run.py`, `power_at` | `beam_P_beam`, m1's denominator | — | z0 prints the trace's rows and the last non-zero interval's end (1,580 s); the first thermo row with `beam_P_beam` = 0 is at 1,580 s |
+| L10 | the explicit limit with the boxcar: κ_eff = λ/(ρ c_p,eff) is SMALLER inside the band (c_p,eff = c_p + L_m/fus_width = 767 + 1700) ⇒ dt 0.2 at 1.56 mm stays below the room-temperature limit 0.243 s | `Material.H:33–36` | — | — | z0 |
+
+### Legs (exact argv tokens)
+
+`RUN = mpirun --oversubscribe --bind-to none -np 4`; `D` = `tests/MMWSpalling/validation/oglesby/input` (as edited:
+1,580 s of heating + 220 s cooling, vapour on); study root `tests/MMWSpalling/studies/p2_24_melt_vapour/`; every leg records `argv.sh`,
+`BINARY.txt`, `rc`; long legs under `caffeinate -dis`; each leg pruned after its test to the onset, 600 s, 1,580 s and
+last plotfiles with `MANIFEST.md5`. Run order: U, gates, M0, M100, M0F, M1.
+
+| leg | argv | cost |
+|---|---|---|
+| U1–U6 | `unit/face_melt/test --bin_pre $S/bin_pre/mmwspalling-3d-g++` and `unit/face_vapor/test --bin_pre …` (the P2-23 build, `42a115a0`, copied to `studies/p2_24_melt_vapour/bin_pre/`) | 2 min |
+| M0 | `RUN bin/mmwspalling-3d-g++ D plot_file=<study>/legs/M0/run` (the deck as written: table, melt ×4, R_melt 0.3, vapour on, 1.56 mm, dt 0.2, 9,000 steps) | ≈ 5 min |
+| M100 | M0 + `beam.melt_factor=100.0` (the DOE alternative) | ≈ 5 min |
+| M0F | M0 + `"beam.tan_delta_T=295.15 1.0 1268.15 1.0"` (flat α 14 with the melt ×4 on top: two equal pairs keep the sum path) | ≈ 5 min |
+| M1 | M0 + `amr.n_cell=128 128 64 amr.max_grid_size=32 timestep=0.05 amr.plot_int=400 amr.thermo.plot_int=10 weibull.V0=4.76837158203125e-10 stop_time=170.0` (the melt layer at 0.78 mm through the first 120 s after onset) | ≈ 8 min |
+| gates | `guarded_post_all_par.sh p2_24`; `face_gate.py run p2_24` then `cmp p2_23 p2_24`; `unit/beam_void_closure/test`; `unit/beam/test`; `unit/beam_tau/test`; `unit/face_beam/test`; `unit/latent_heat/test`; `unit/retired_keys/test` | ≈ 14 min |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline (`Z0.txt`): the full power trace (beam-on 215 s → off ≈ 1,795 s on Fig. 34's clock; the shift; the 158 windows; the mean power in the DOE's 600–800 and 1500–1800 s windows); the hottest cell of HOS_S, CAL_S, F_S, M0S and each `fr/` leg from their last plotfiles (< 1410.5 K for a0/a1's identity); the phase table's enthalpy jump across the band, H(1610.5) − H(1410.5), beside ρ L_m + ∫ρ c_p dT (the invariant b1 gates); U1/U1b's analytic fractions; U3's t_v with H per volume from the table; κ_eff and the dt margin inside the band; the radiation-only surface T at the CENTRE flux 0.7·2P/(πω²) for 2.0 and 3.3 kW (5.4 / 8.9 MW/m² ⇒ ≈ 3,300 / 3,740 K at ε 0.8) and over the 38 mm spot (the area average), for ε 0.8 and 0.5; the transmission at full melt for ×4 and ×100 over 1, 2, 4 mm (τ = m·α_table(T_m)·d, α_table(1510 K) = 124) | every number with its formula | report | a disagreement to resolve before any run |
+| z1 | 1 | U1 `unit/face_melt`: top / bottom / transmitted fractions; closure; `fr_n_molten`, `fr_n_lid`, `bk_n_eval`; U1b's counts; U2 vs the keyless fixture | fractions within 1e-9 of 0.605298 / 0.037275 / 0.057460; closure ≤ 1e-9; U1 4096 / 0 / 0; U1b 0 / 4096 / 0; U2 bit-identical | **gate** | the melt branch is not the Beer–Lambert integral with R_col, or the exclusions do not read f_L where stated, or the defaults are not exact |
+| z2 | 1 | U3 `unit/face_vapor` (λ = 0): the step of the first void vs t_v; the number voided at t_v + 1 step; `ledger_E_vapor` vs Σ H·V; `ledger_err` across the void; U4, U5 (zero voids); U6 (`fr_n_vapor_int` 64, no void); U3's deck on `bin_pre` | first void within ±1 step of t_v; 64 cells within 2 steps; `ledger_E_vapor` to the printed digits; `ledger_err` ≤ 1e-9; U4/U5 zero; U6 as stated; `bin_pre` rc ≠ 0 naming regime 2 | **gate** | the vapour rule fires early/late (a second spending), voids without booking, voids a buried cell, or fires without the beam |
+| z3 | 1 | `unit/retired_keys`, `unit/latent_heat` | all PASS | **gate** | a retired key reads again; the boxcar machinery moved |
+| a0 | 2 | tree gate vs `p2_18.md5` (controls 26 / 863) | **0 of 2,639** (⚠ excludes nothing: the melt keys are in the rock file every Grimsel deck includes; identity rests on no cell above 1410.5 K, z0) | **gate** | a flame deck's enthalpy table moved where its cells live — the melt set cannot sit in the rock file as is |
+| a1 | 2 | face gate `cmp p2_23 p2_24` | identical on the 14 legs, OR identical except the appended all-zero `fr_n_molten` / `fr_n_lid` columns (L9), recorded | **gate** | a flame leg moved for another reason |
+| a2 | 2 | `beam_void_closure`, `unit/beam`, `unit/beam_tau`, `unit/face_beam` | as P2-23 (T3 by design) | **gate** | the beam kernel or the flameless list moved |
+| b1 | 3 | M0: the phase table's enthalpy jump across [1410.5, 1610.5] K from the run's own table print equals z0's ρ L_m + ∫ρ c_p dT (the latent heat is IN the table the run inverts); the first step row with finite `bc_z_melt` exists; at least one row with 0 < `bc_f_L_peak` < 1 | all three | **gate** (for M100, M0F, M1) | the latent heat is not in the table the run uses (L1), or melting never starts — nothing after it is interpretable |
+| b1r | 3 | M0: the number of consecutive rows the peak spends inside the band after onset (the dwell), and the onset time vs P2-23 B0's 42.6 s | report (a measurement: the ×4 speeds the heating once melting starts) | report | — |
+| b2 | 3 | M0: `beam_col_err_max` every row | ≤ 1e-12 | **gate** | the melt branch broke the per-column integral |
+| b2r | 3 | M0: `beam_closure_err` every row | report: within −1e-5 … +3e-2 through melt (P2-22's lateral residual grows with the hot zone) | report | beyond 3 % says the hot zone is wide and the transmission is read with that caveat |
+| m1 | 3 | M0, M100 (onset-aligned): `beam_P_trans / beam_P_beam` ÷ its value at onset; the time after onset at which it falls below 1/7 (0.148); its value 70 s after onset | P1 | report | — |
+| m2 | 3 | M0: `beam_P_dep / beam_P_beam` 70 s after onset and at ≈ 2.0 kW; the central column's R_col (log it) | P2 | report | — |
+| m3 | 3 | M0: `bc_T_rad` (the synthetic radiometer over the 32 mm view) at onset + 20 s and + 100 s vs 1195 / 1649 °C; and `bc_T_rad` binned by `beam_P_beam` (1.9–2.1 kW, 3.2–3.4 kW) vs the DOE plateau binned the same way from `FIG34_FULL.txt` (≈ 1752, ≈ 2281 °C); ALSO `bc_T_rad` just before onset vs the DOE's pre-melt 153 °C mean / 272 max | P3 | report | — |
+| m4 | 3 | M0: the melt spot 2√(bc_A_melt/π) at the end of heating (1,580 s, 3.3 kW in both) vs 38 mm; its growth vs `beam_P_beam` | P4 | report | — |
+| m5 | 3 | M0: after beam-off (1,580 s), `bc_T_rad` at +5, +55, +205 s vs 1011 / 627 / 349 °C | P5 | report | — |
+| m6 | 3 | M0, M100, M0F: `bc_n_vapor`, `bc_n_vapor_int` vs time; the first surface void (if any) and `beam_P_beam` then; `ledger_E_vapor`; `fr_n_molten`, `fr_n_lid`, `bk_n_eval` after onset | P6 | report | — |
+| m7 | 3 | M1 vs M0 over onset … onset + 120 s: m1's collapse time, `bc_f_L_peak`, `bc_z_liq` | P7 | report | — |
+| e0 | 4 | verdict | — | **verdict** | z1–z3, a0–a2, b1, b2 hold ⇒ the melt is a state, the beam sees it, the crack rule stops in and over it, vapour spends once at the surface only, and nothing frozen moved; m1–m7 are the first post-melt statements about #19 |
+
+### Pre-registered predictions
+
+- **P1 (m1):** with ×4 the transmission falls to 1/7 only once the fully molten layer is ≈ 4 mm deep (τ = 2 at
+  497 m⁻¹): **≈ 100–200 s after onset**, slower than the observed ≈ 70 s; with ×100 (τ = 2 at 1.4 mm) **≈ 20–40 s**,
+  faster. The observation sits between the two, closer to ×100 ⇒ the adopted ×4 is pre-registered to be LOW on the
+  collapse rate; the DOE's two orders is the recorded alternative, and the collapse time × melt depth is the number a
+  28 GHz melt measurement would settle. Neither is adjusted here. (Dividing by the beam power rather than `P_inc`
+  adds the R rise 0.147 → 0.3, an 18 % effect inside the ×7.)
+- **P2 (m2):** absorbed fraction after melt 0.60–0.68 (= 0.7 × (1 − e^{−τ}) with τ 1–2) rising toward 0.70 as the melt
+  deepens; the DOE's 70 % on #28c at 2.7 kW is the ceiling.
+- **P3 (m3):** the synthetic radiometer reads 1100–1600 °C at onset + 20 s and 1400–1800 °C at + 100 s (observed 1195
+  / 1649: a small pool diluted by solid at first); binned by power, a plateau rising ≈ +25–35 % from 2.0 to 3.3 kW
+  (observed 1752 → 2281, +30 %), its level ε-limited (ε 0.8 radiates; ε 0.5 would put it ≈ 12 % higher, T ∝ ε^{−1/4}).
+  Pre-melt: `bc_T_rad` ≈ 150–250 °C just before onset (the view dilutes a 10 mm hot zone), comparable to the DOE's 153
+  mean / 272 max; ⚠ the real solid reading is depth-weighted through ≈ 14 mm at 137 GHz, so the model's surface-based
+  value is pre-registered to read LOW by the interior-peak excess over the surface (≈ 100 K before melt).
+- **P4 (m4):** the melt spot 30–45 mm at 1,580 s (the beam's 1/e² diameter is 26 mm; conduction widens the pool at
+  3.3 kW); observed ≈ 38 mm.
+- **P5 (m5):** `bc_T_rad` falls from the plateau to 55–65 % of its Celsius value in 55 s (observed 2281 → 627 °C
+  = 27 %); the model's view mean over melt and solid cools slower than a thin glass skin — pre-registered HIGH after
+  beam-off (ε 0.8, no separate glass skin).
+- **P6 (m6):** at the CENTRE the absorbed flux is 5.4 MW/m² at 2 kW and 8.9 at 3.3 kW; radiation alone at ε 0.8 gives
+  3,300 / 3,740 K, AT and ABOVE T_vap_lo (3,233 K), so conduction into the pool decides: surface vaporisation at the
+  centre is pre-registered as POSSIBLE from the first minutes at 2 kW and LIKELY at 3.3 kW — against the DOE's 1.3 g
+  on #28 (no vaporisation at ≤ 2.7 kW, 20 mm aperture). If M0 vaporises before 800 s, that is a finding against the
+  model's surface energy balance (ε 0.8 too low for the loss, or the pool conducts too little), NOT a knob;
+  `bc_n_vapor_int` > 0 before any surface void records how often the lid would have been blown. `fr_n_molten` +
+  `fr_n_lid` > 0 and `bk_n_eval` → 0 over the spot after onset (P2-23's artefact gone).
+- **P7 (m7):** M1 agrees with M0 on the collapse time within 25 % and on `bc_z_liq` within one coarse cell.
+- **P8 (a0, a1):** byte identity on every flame deck (no gate leg reaches 1410.5 K); the four new counts all-zero there.
+
+### Refuting evidence on disk
+- `studies/p2_23_beam_port/legs/B0,B1` (the same deck to 80 s without melt physics): onset 42.0–42.6 s, 2.34 / 1.95 mm;
+  M0's onset must reproduce these to one step (the boxcar begins AT the solidus, so the time to reach it is unchanged).
+- `studies/p2_20_beam_deposition/legs/Z3b` and P2-21 b2: the cold transmission 0.4966 through 50 mm — m1's "value at
+  onset" must read ≈ 0.76 × that (P2-22 A: 0.764).
+- `unit/latent_heat` (T_m 1473, fus 50, L_m 3.35e5): the boxcar's dwell witness the beam legs must reproduce in kind.
+
+### What would make this inert, and the witness for each
+- The melt keys parse but never reach the table (the copy at :7430 reads `phases[p].T_m` and the deck sets a different
+  prefix): b1's dwell and z0's table print of `m_H_fus_lo/hi`.
+- `melt_factor` read but f_L always 0 (fus band from the wrong phase or T in °C): U1's top fraction (0.605 vs 0.864).
+- R_col gathered but the kernel still reads the scalar R: U1's closure (the deposit and `P_inc` disagree by the R
+  mismatch) — the test prints both.
+- The vapour rule placed AFTER the line scan or on the column path: U3's first void (never, or at the rate law's time).
+- The exclusion counts but does not skip: U1 `bk_n_eval` > 0 with `fr_n_molten` 4096.
+- The schedule beyond 700 s typed, not digitised, or not shifted: z0 prints the trace's source file, its 158 rows
+  and the beam-off time (1,580 s); L12.
+- The vapour test reads `rm` instead of `fl_index` (voids everything past H_vap, buried or not): U6.
+
+### Guardrails
+- The column-path vapour front (`Removal.H:1366–1440`, `vapor.*` keys) is untouched; its deletion is the user's
+  decision with the column path. `spall.melt_aware` untouched and still refused by the face list.
+- No change to the crack criterion, B, c_f, the span, R = 0.531, the flaw, the window; the exclusion only skips lines.
+- `beam.melt_factor` and `beam.R_melt` are the only new beam keys (rock file, LIT); their defaults are exact no-ops.
+  No typed α; ×4 is never adjusted; ×100 runs as one declared leg.
+- `losses.epsilon_high` stays 0.8 on the beam deck (the step-down hazard); the DOE's 0.5 is a z0 sensitivity only.
+- Post-melt comparisons are onset-aligned; the 42 s vs 295 s gap is a carried finding, not a knob.
+- The Grimsel law above 1273 K and through the melt is an extrapolation, declared on every record.
+- Nothing committed by this packet.
+
+### Commands
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_24_melt_vapour
+$PY tests/MMWSpalling/studies/p2_21_loss_table/doe/fig34_digitise.py --full > tests/MMWSpalling/studies/p2_21_loss_table/doe/FIG34_FULL.txt
+$PY tests/MMWSpalling/unit/face_melt/test --bin_pre $S/bin_pre/mmwspalling-3d-g++
+$PY tests/MMWSpalling/unit/face_vapor/test --bin_pre $S/bin_pre/mmwspalling-3d-g++
+$PY tests/MMWSpalling/unit/retired_keys/test; $PY tests/MMWSpalling/unit/latent_heat/test
+bash tests/MMWSpalling/studies/tree_sweep_0922/witness/guarded_post_all_par.sh p2_24
+$PY tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py p2_24 p2_18 d2aa d2t
+$PY tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py run p2_24
+$PY tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py cmp p2_23 p2_24
+$PY $S/run.py M0 M100 M0F M1          # serial, under caffeinate
+$PY tests/MMWSpalling/validation/oglesby/test $S/legs/M0/run --onset --alt $S/legs/M100/run --flat $S/legs/M0F/run --fine $S/legs/M1/run
+$PY $S/reduce.py > $S/RESULTS.txt
+```
+
+### Claude completion notes
+
+**Files changed.** Source: `src/Numeric/Material/Table.H` (H_fus/vap_lo/hi accessors); `src/Numeric/MMWBeam.H`
+(`beam.melt_factor`, `beam.R_melt`, `melt_active()`); `src/Integrator/MMWSpalling.H` (`MeltFraction`; α·(1 + (m−1)f_L)
+and `Rcol` in `ColumnOpticalDepth`; `TauView::R` at the four kernel loops, `BeamEnergyBalance`; the `bc_*` melt record
+incl. `bc_R_col`, `beam_P_beam`, `SurfaceMeltRecord` when the beam is off; the parse aborts; `ledger_err_solid` − E_vapor;
+the phase-table print); `src/Integrator/MMWSpalling/FaceRemoval.H` (vapour detection, the interior count, the molten /
+lid exclusions, the vapour books and ONE-WRITE branch, regime-2 event rows). Inputs: `validation/shared/rock_grimsel.inputs`
+(the melt set, the two beam keys), `validation/shared/model_form_flame.inputs` (one comment), `validation/oglesby/input`
+(Goal 0/7 + `# check_shared: allow vapor.enabled`), `unit/face_beam/{input,test}` (buckle log back on; U2 `vapor.enabled=0`).
+New: `unit/face_melt/{input,test}`, `unit/face_vapor/{input,test}`; `validation/oglesby/test` (the `--onset` mode, m1–m7);
+`studies/p2_21_loss_table/doe/{fig34_digitise.py --full, FIG34_FULL.txt}`; study `studies/p2_24_melt_vapour/` (`z0.py`,
+`run.py`, `a1.py`, `reduce.py`, `chain.sh`, `src_pre/`, `bin_pre/`, `inputs_pre/`, `BINARY.txt`, `Z0.txt`, `RESULTS.txt`,
+`run1_a1stop/`, `legs/` pruned, 1.3 GB). Records: `REFERENCE.md` (face reference → `face_p2_24`), `WHICH_TESTS.md`,
+`MODEL_CARD.md` §5, §6 rows 5/31/32, §8, §12. Nothing committed.
+
+| # | measured | verdict | output |
+|---|---|---|---|
+| z0 | beam-on 210 s / off 1790 s on Fig. 34's clock (shift −210, not −215: takeaway 10), 158 windows = the deck's schedule; DOE windows 2.09 / 2.27 / 2.68 / 3.12 kW; hottest flame gate leg 818 K (CAL_S) < 1410.5; table jump 1.5644629547e9 vs ρL_m + ρ∫c_p 1.5644629559e9 J/m³ (rel −7.4e-10); U1 0.605265 / 0.037275 / 0.057459; U3 t_v 2.787 s; κ limit 0.243 s binds at RT (band 2.7–3.0 s); radiation-only centre 3299 / 3739 K at 2.0 / 3.3 kW (ε 0.8); ×4 τ=2 at 4.02 mm, ×100 at 0.16 mm (P1 used the cold α: takeaway 11) | report | `Z0.txt` |
+| z1 | U1 top / bottom / transmitted 0.605265301677 / 0.037275199229 / 0.057459499094 (|d| ≤ 5.7e-11); closure −1.85e-14; P_inc 700 = (1−R_melt)P0; step-2 row 4096 / 0 / 0; U1b 0 / 4096 / 0; U2 flat fractions to 8.6e-11 and per-cell deposition bit-identical to U2x | **PASS** (bar 0.605298 is a typo for 0.605265) | `Z1_face_melt.log` |
+| z2 | U3 first void step 57 (t 2.85 s) vs t_v's step 56, |d| 1; 64 voided in one step, 64 regime-2 CSV rows; ledger_E_vapor 1549.48 J = Σ H·V 1549.48; max |ledger_err|, |ledger_err_solid| 9.2e-16 (0.77 without the term); U4 0 removed, T 4516 K; U5 0; U6 fr_n_vapor_int 64 on every list-reading row, 0 voided, fr_n_lid 64; bin_pre rc 6 (stops on `beam.R_melt`), U3pre rc 6 naming "regime 2 (vapor.enabled)" | **PASS** | `Z2_face_vapor.log` |
+| z3 | retired_keys PASS; latent_heat PASS | **PASS** | `Z3_*.log` |
+| a0 | p2_24 vs p2_18 **0 of 2639**; d2aa 26, d2t 863 | **PASS** | `GATE_tree.txt` |
+| a1 | 1217/1217 files, 32 differ, all classified: 13 flame thermo = two appended all-zero columns; BEAM_S 91 common columns + 43 common fields per plotfile identical, buckle log byte-identical (run 1 stopped here: takeaway 15) | **PASS**, `face_p2_24` pinned | `A1.txt`, `GATE_face_cmp.txt`, `REFERENCE.md` |
+| a2 | beam_void_closure 7 rows PASS (T3 by design); unit/beam 0.00 %; beam_tau PASS; face_beam PASS | **PASS** | `A2_*.log` |
+| b1 | (i) the run's table jump rel −7.4e-10; (ii) first finite bc_z_melt 43.2 s; (iii) 14 rows 0 < f_L < 1 | **PASS** | `TEST_all.log` |
+| b1r | solidus 41.4 s = B0's row exactly; onset 43.2 vs 42.6 s (+0.6 s latent heat); dwell 14 rows (2.8 s) | report | idem |
+| b2 | beam_col_err_max ≤ 9.99e-16 on 8,999 rows | **PASS** | idem |
+| b2r | −2.1e-4 … +4.49e-2 (pre-onset ≤ 1.99e-2; post 3.2e-3 … 4.49e-2) | report: ABOVE the +3e-2 band after onset ⇒ the transmission rows carry that caveat | idem |
+| m1 | whole block ×0.148 at **197.8 s** after onset (×0.341 at +70); central column 31.4 s; M100 whole 467.4 s (×0.383 at +70), centre within one step; DOE ×0.148 at 70 s; P_trans/P_inc at onset 0.783 × cold (P2-22: 0.764) | P1: ×4 inside 100–200 s ✓; ×100 REFUTED (slower over the block) | idem |
+| m2 | P_dep/P_beam 0.657 at +70 s, 0.695 at 1.9–2.1 kW; bc_R_col 0.300 | P2 ✓ | idem |
+| m3 | +20 / +100 s: 513 / 1126 °C (DOE 1195 / 1649); plateau 1449 / 1623 °C at 2.0 / 3.3 kW (+12 %; DOE 1774 / 2389, +35 %); pre-melt 248 °C (DOE 153 mean / 272 max) | P3: pre-melt ✓; post-melt REFUTED LOW | idem |
+| m4 | melt spot 34.9 mm at beam-off (25.9 → 34.9 mm from 200 to 1400 s) vs ≈ 38 | P4 ✓ | idem |
+| m5 | at the DOE's offsets (+15/+65/+215 s) 1009 / 699 / 327 °C vs 1011 / 627 / 349; +55 s = 46 % of the plateau (DOE 27 %) | P5: HIGH ✓ but below its 55–65 % | idem |
+| m6 | M0: first buried count 92.0 s, first surface void **92.2 s at 1570 W**, 324 cells, ledger_E_vapor 2.99e4 J (6.6 % of E_src); M100 none; M0F buried from 324 s (peak at the table's 5000 K end from 396 s), vents 1,300 cells in 7 s at 1250 s; after onset bk_n_eval up to 978/step, fr_n_molten ≤ 808, fr_n_lid ≤ 444, **60 removals, all mush** (0.47 ≤ f_L < 1, pit walls, after the first vapour) | P6: vapour before 800 s ⇒ the finding (not a knob); "bk_n_eval → 0" REFUTED | idem |
+| m7 | M1 vs M0 whole transmission at +30/+60/+70/+120 s 0.544/0.365/0.326/0.218 vs 0.558/0.378/0.341/0.225; z_liq 5.86→4.30 vs 5.47 mm; ×0.148 beyond both windows | P7 ✓ (within 5 %, one coarse cell) | idem |
+| e0 | z1–z3, a0–a2, b1, b2 hold | **the melt is a state, the beam sees it, the crack rule stops in and over a liquid, vapour spends once at listed cells only, nothing frozen moved** | `RESULTS.txt` |
+
+**Declared deviations from the packet** (each in the takeaways): the new columns' registration sites (1); `bc_R_col`
+added (2); U6's "step 1" is step 2 (3); face_melt at P0 1 kW and the typo (6); face_vapor's K_Ic ×1e6 (7); U2 without
+"R_melt absent" (8); U3pre (9); the −210 s clock and the cooling offsets (10); m3's post-onset bins (13); the face_beam
+buckle log and the chain's resume at a1 (15). The ledger's `ledger_err_solid` subtracts `ledger_E_vapor`; the parse
+also aborts on `beam.R_melt ≠ R` without the sum path (the packet named only the factor).
+
+### Implementation takeaways
+
+1. **Where the new columns are registered, and why not where the packet said.** `fr_n_molten` / `fr_n_lid` are
+   registered under the FACE LIST (after `fr_t_step`), not under `spall.enabled`: under `spall.enabled` they would be
+   appended to every column-path spall deck in the tree gate and a0 could not be 0/2639. `beam_P_beam` and the `bc_*`
+   melt record (`bc_T_rad`, `bc_T_view`, `bc_A_melt`, `bc_f_L_peak`, `bc_z_liq`, `bc_R_col`, `bc_n_vapor`,
+   `bc_n_vapor_int`) are registered with the P2-21 `bc_*` block (`alpha_varies() && can_deposit()`), not on every beam
+   deck, for the same reason. `fr_n_vapor`, `fr_n_vapor_int`, `ledger_E_vapor` exist only under face list + vapour.
+2. **`bc_R_col` is new (m2 "log it").** The central column's R_col from its top solid cell, the same expression every
+   `(1 − R)` site reads; NaN when the beam is off.
+3. **The face list's first removal is on step 2.** Step 1's kernel builds the list; the removal reads the previous
+   step's list. Every per-step face-list count (U1's 4096, U1b's lid, U6's buried 64) first appears on the row stamped
+   2·dt. The packet's "U6 on step 1" is that row.
+4. **The vapour rule reads H at the START of a step** (the line gather), so a cell that crosses H_vap_hi during step n
+   leaves on step n + 1: U3 crosses on step 56 (t_v 2.787 s) and leaves on step 57, |d| = 1 step, the packet's bar, and
+   n_v + 1 is the exact expectation. A vapour void's thermal state is frozen (like a spalled void's), so the TOTAL
+   `ledger_err` also stays closed; `ledger_err_solid` closes only because it subtracts `ledger_E_vapor` (without it
+   U3's row would read 0.77).
+5. **`regime` and `regime_field` are PER-STEP fields** (reset every step, `Shared.H`): a vapour void shows regime 2 only
+   in the plotfile of its own step. The durable record is `removed`, the events CSV (regime 2 rows, `h_applied` = the
+   remaining solid thickness) and `ledger_E_vapor`.
+6. **unit/face_melt runs at P0 = 1 kW, not 1 W.** The deposition is an H difference, and at the 800 K liquid top
+   H ≈ 1.3e9 J/m³: one rounding (≈ 3e-7 J/m³ per cell) put the fractions 7.6e-8 off at 1 W. At 1 kW they land to
+   5.7e-11; the top cell warms ~1e-3 K a step and no cell changes state. The packet's printed top fraction 0.605298 is
+   a typo: (1 − 0.3)(1 − e⁻²) = 0.605265 (and P_dep 0.642541 = 0.605265 + 0.037275).
+7. **unit/face_vapor holds the crack rule off** (`spallation.sp.kic.scale = 1e6`): with zero conduction the top layer's
+   1-D stress fires at 0.1 s and the 8 mm cube spalls away layer by layer by 1.75 s, before any cell reaches H_vap_hi.
+   The rule under test is unchanged by it. ONE loss-table pair (the scalar path) forces `melt_factor 1`, `R_melt 0`.
+8. **The packet's U2 ("R_melt absent") cannot be set from an argv** once the rock file sets it; U2 runs R_melt = R = 0
+   and melt_factor 1 (`melt_active()` false: `Rcol` unbuilt, α skips f_L) and is bit-identical per cell to U2x
+   (phase0.T_m 1e30, L_m 0: no band at all).
+9. **bin_pre stops on `beam.R_melt` before it can refuse vapour.** U3pre (a deck and rock-file copy WITHOUT the two beam
+   melt keys, written by the test) reaches the P2-23 build's `fr_abort` and names "regime 2 (vapor.enabled)".
+10. **The DOE clock.** The digitiser (since P2-21) puts beam-on at 210 s on Fig. 34's clock (the first window [210,
+    220]), not 215 s; the last lit window ends 1790 s (1580 s of heating, DOE Table 1). Every DOE time maps by −210 s.
+    The radiometer's cooling readings (1805 / 1855 / 2005 s) are therefore +15 / +65 / +215 s after beam-off, not the
+    packet's +5 / +55 / +205; m5 prints both.
+11. **P1's ×100 number used the cold α.** The code multiplies the TABLE α (124 m⁻¹ above 1268 K): ×4 ⇒ τ = 2 at 4.0 mm
+    (P1's number), ×100 ⇒ 0.16 mm, a tenth of a 1.56 mm cell (P1 wrote 1.4 mm, = 14 × 100). At ×100 the first molten
+    cell takes the whole beam (z0 §8).
+12. **`vapor.enabled` is a shared key now overridden.** `model_form_flame.inputs` keeps 0 (comment rewritten: it no
+    longer says "the face list refuses it"); the #19 deck and unit/face_vapor carry `# check_shared: allow
+    vapor.enabled`. unit/face_beam's U2 (the column-path control) adds `vapor.enabled=0`, else the #19 deck it includes
+    would switch on the OLD column-path front. check_shared (iii) cannot hold on unit/face_melt (a two-temperature IC is
+    the fixture; declared in the deck).
+13. **m3's power bins are post-onset + 100 s** (both model and DOE): the 1.9–2.1 kW bin otherwise mixes pre-melt windows
+    (the DOE reached ~2 kW just before its onset). Declared, not tuned.
+14. **ALAMO aborts write `Backtrace.N` into the cwd (the repo root).** unit/face_vapor moves them into its leg dirs.
+    `Backtrace.4` in the repo root predates this session (2026-11-03) and was left.
+15. **The first chain stopped at a1 on a real coverage loss, not a code move.** Goal 7's `spall.buckle_log_csv = 0` on
+    the #19 deck reached the face gate's BEAM_S leg (unit/face_beam includes that deck), so BEAM_S stopped writing the
+    only buckle log any gate leg writes (`run_buckle_log.csv` only in face_p2_23). The fixture now sets it back to 1, so
+    the gate keeps comparing the log byte for byte. The chain resumed at the face gate (`FROM=a1`); ord 1 and a0 were
+    re-checked from their logs on the same binary rather than re-run (run 1's records: `run1_a1stop/`). ⚠ A deck key
+    changed in a validation deck propagates to every fixture that includes it.
+16. **The mush decides every post-melt removal.** All 60 (M0) / 312 (M0F) crack-rule removals after onset are one-cell
+    flakes whose surface cell is partially molten (T 1504–1610 K, f_L 0.47–0.9995) on the vapour pit's walls and floor
+    (r 3–9 mm), none before the first vapour. They exist only because of the packet's declared "the mush carries K_Ic";
+    the alternative (exclude f_L > 0) removes none of them. The evaluations P6 expected to vanish (bk_n_eval up to 978
+    per step) are those lines.
+17. **The phase table ends at 5000 K** (`Table::Build`'s T_max). M0F's buried core sits there from 396 s on 4,287 rows:
+    T is clamped, H is not (the books still close to 2e-14), so its temperatures and T-dependent properties are
+    meaningless there. M1 reached 4,783 K in 170 s. A leg that buries the beam needs either a vapour path for buried
+    cells or a table that reaches further — the record, not a fix here.
+18. **Two transmissions.** The code's P_trans is the whole block's; the DOE's pick-off geometry is not modelled. The
+    central column, (1 − bc_R_col)·e^(−bc_tau), collapses in 31 s (M0), the block in 198 s, the DOE in 70 s. ×100's
+    block is SLOWER (467 s) because its pool spreads less and the solid annulus keeps transmitting.
+19. **`bc_n_vapor_int` is cumulative CELL-STEPS** (the per-step buried count summed), not distinct cells; `bc_n_vapor`
+    is distinct cells (each leaves once). M0F's 5.0 million is ~2,000 buried cells held for ~2,500 steps.
+20. **Vapour at 92 s is a finding, read as conduction.** At 1.57 kW the centre's radiation-only T is 3105 K (4.22 MW/m² absorbed, ε 0.8) < T_vap_lo,
+    yet the first buried cell passes H_vap_hi one step before the surface: the ×4 melt absorbs over ~4 mm below a
+    radiating face and the extrapolated Grimsel λ (0.6 W/mK at 3000 K) cannot return it. ×100 (absorbed in the top
+    cell) never vaporises. Neither ε nor λ was touched (P6).
+
+### Review findings
+
+Reviewer, 2026-11-07. Independent throughout: my own derivation of z1's three analytic fractions and ρL_m, my own manifest and md5-tree comparators plus a component-by-component array compare of BEAM_S's plotfiles, my own reductions of all four M-legs' thermo and event logs, my own field-count and distinct-cell audits of the regime-2 rows, my own vapour-mass arithmetic, and my own read of the 16-hunk diff over four headers against `src_pre/` (whose `bin_pre/` I confirmed is P2-23's `42a115a0`). No rebuild, no simulation re-run; the one thing I executed was the gate's own comparator on an existing file (DR-1).
+
+| # | test | bar | **derived independently** | **read from** | row |
+|---|---|---|---|---|---|
+| z0 | offline | every number with its formula | ρL_m = 2650 × 3.4e5 = **9.010e8 J/m³**, the latent part of the claimed 1.5645e9 jump (the remaining 6.54e8 over the 200 K band ⇒ mean c_p ≈ 1234 J/kgK, right for Grimsel at 1500 K). z1's analytic (below) confirms the −210 s clock's downstream numbers | my own arithmetic; `Z0.txt` | reproduces |
+| z1 | U1/U1b/U2 melt fractions and counts | within 1e-9 of 0.605298 / 0.037275 / 0.057460; U1 4096/0/0; U1b 0/4096/0; U2 bit-identical | My analytic: **0.605265301734 / 0.037275199229 / 0.057459499037**, summing to **exactly 0.7 = (1 − R_melt)**. Measured 0.605265301677 / … / 0.057459499094 ⇒ **\|d\| 5.7e-11 / 1.0e-13 / 5.7e-11**. ✓ **The packet's 0.605298 is a typo for 0.605265** — confirmed from the formula, as the implementer declared. P_inc 700 W = (1 − R_melt)·P0; counts as stated | my own derivation; `Z1_face_melt.log` | **reproduces (gate)** |
+| z2 | U3–U6 vapour | first void ±1 step of t_v; 64 in 2 steps; `ledger_E_vapor` = Σ H·V; `ledger_err` ≤ 1e-9; U4/U5 zero; U6 64 interior, no void; `bin_pre` rc ≠ 0 | U3's CSV: **64 regime-2 rows, all 38 fields** (header 38), first at t 2.80 s = the step that **starts** at 2.80 and ends 2.85, against t_v 2.787 ⇒ \|d\| = 1 step ✓; T_top 3531 K > T_vap_hi 3503 ✓; `h_applied` = 1e-3 m = dz. U4 and U6 have **zero** event rows ✓. The ledger term is tested **two-sidedly**: \|err\| 9.2e-16 with it, **0.77 without** | my own CSV field/regime audit; `Z2_face_vapor.log` | **reproduces (gate)** |
+| z3 | `retired_keys`, `latent_heat` | PASS | both PASS | `Z3_*.log` | **reproduces (gate)** |
+| a0 | tree gate vs `p2_18.md5` | 0 of 2,639 | **0 of 2,639**, 0 one-sided, against **both `p2_18` and `p2_23`**; controls **26 / 863** | my own parse of `witness/p2_24.md5` | **reproduces (gate)** |
+| a1 | face gate `cmp p2_23 p2_24` | identical, or identical but the appended all-zero columns, recorded | **1,217 files each side, 0 one-sided, 32 differing — and I classified all 32**: **13 flame/list `thermo.dat` gain exactly `fr_n_molten` + `fr_n_lid`, both 0 on every row**, nothing removed, no existing column moved; **BEAM_S's thermo gains 14 columns** (`beam_P_beam` carrying 1,460 W, six reading NaN); **18 BEAM_S plotfile files** = 43 → 46 components, the three added being `vapor_event`, `vapor_thickness`, `RoP_vap`, nothing removed, order preserved, and **all 43 common components bit-identical (`np.array_equal`) on all three plotfiles** | my own md5 walk + per-column string diff + per-component array compare | **reproduces (gate)**; the re-pin is justified |
+| a2 | the four beam/list tests | as P2-23 | `beam_void_closure` PASS (T3 by design), `unit/beam` 0.00 %, `beam_tau` PASS, `face_beam` PASS | `A2_*.log` | **reproduces (gate)** |
+| b1 | the table jump, melt onset, a mush row | all three | ρL_m checked above; **first finite `bc_z_melt` 43.2 s**; **14 rows with 0 < `bc_f_L_peak` < 1** | my own M0 reduction | **reproduces (gate)** |
+| b1r | the dwell and the onset shift | report | 14 mush rows = 2.8 s at dt 0.2; onset 43.2 s vs P2-23 B0's 42.6 s (+0.6 s, the latent heat) | same | reproduces |
+| b2 | `beam_col_err_max` | ≤ 1e-12 | max **9.992e-16** (M0), 8.88e-16 (M100, M0F), 1.11e-15 (M1) | same | **reproduces (gate)** |
+| b2r | `beam_closure_err` | report, −1e-5 … +3e-2 | M0 **−2.11e-4 … +4.49e-2** — above the band, as declared; M100 +4.74e-2; **M0F −7.19e-2 … +3.12e-2** (the flat leg's residual is large and NEGATIVE, which the notes do not mention) | same | reproduces (**MISSED** its band) |
+| m1 | the transmission collapse | P1 | M0 ratio **0.660 / 0.341 / 0.263** at +20 / +70 / +100 s, ×0.148 at **197.8 s**; M100 **467.4 s**; M0F never (min 0.169); M1 never (min 0.209) ⇒ **×100 is slower over the block: P1 refuted for ×100, held for ×4** | same | reproduces |
+| m2 | P_dep/P_beam and R_col | P2 | 0.341 ratio at +70 s confirmed; `bc_R_col` = **0.300** = R_melt exactly (the central top is fully liquid) | same | reproduces |
+| m3 | the synthetic radiometer | P3 | **513 °C at +20 s, 1126 °C at +100 s** (DOE 1195 / 1649) ⇒ refuted low, as stated | same | reproduces |
+| m4 | the melt spot | P4 | **34.9 mm** at beam-off (DOE ≈ 38) ⚠ counting `f_L > 0`, i.e. mush-inclusive (DR-7) | same | reproduces |
+| m5 | the cooling | P5 | At the DOE's **+15 / +65 / +215 s** offsets: **1009 / 699 / 327 °C** (DOE 1011 / 627 / 349) ✓ exactly the notes; at the packet's nominal +5/+55/+205: 1280 / 748 / 340 °C — deviation 10's shift is real and material | same | reproduces |
+| m6 | the vapour and crack counts | P6 | M0 first buried **92.0 s**, first surface void **92.2 s at 1,570 W**, final **324** cells, `ledger_E_vapor` 2.99e4 J = **6.6 % of E_src**; **M100 zero**; M0F buried from 324.4 s, surface from 1,250.2 s, **1,420** cells, **28.4 % of E_src**. Crack removals: **M0 60, M0F 312, M1 0** — all after their leg's first vapour. See DR-2, DR-3, DR-4 | my own thermo + event-log reductions | reproduces |
+| m7 | M1 vs M0 | P7 | M1 onset 42.5 s, ×0.148 never (min 0.209). ⚠ Before 170 s M0 voids **44** cells and M1 **272** (6.2×) but the volumes are **0.168 vs 0.130 cm³** (23 %) — DR-5 | same | reproduces |
+| e0 | verdict | — | z1–z3, a0–a2, b1, b2 all reproduce; the melt is a state, the beam sees it, the crack rule stops in and over a liquid, vapour books its enthalpy once, nothing frozen moved | — | **reproduces** |
+
+⚠ The packet marks **nothing** unquotable. Against `ROADMAP.md`: SR 13 is honoured — `MeltFraction` reads **one**
+phase. SR 7(i) is where DR-4 lands (a cumulative sum of a per-step census). SR 14 is honoured well: `MeltFraction` is
+one function read by the beam, both exclusions and every record. Class 8 is satisfied and *tested two-sidedly*
+(`ledger_E_vapor`: 9.2e-16 with the term, 0.77 without). `check_shared` passes on the deck with (iv) at V_cell.
+SR 9: `src_pre/`, `bin_pre/`, `inputs_pre/`, `MODEL_CARD.pre_p2_24.md`, `run1_a1stop/`, and a `MANIFEST.md5` per
+pruned leg.
+
+#### Diff review
+
+Scope: `Table.H` (1 hunk), `MMWBeam.H` (3), `MMWSpalling.H` (22), `FaceRemoval.H` (8) against `src_pre/`;
+`Removal.H` and `Shared.H` carry pre-P2-24 mtimes; the two new unit tests, the deck, the oglesby test and the records.
+
+| # | hunk / call / test | class | finding | tag |
+|---|---|---|---|---|
+| 1 | `Table.H`: four `H_*` accessors | 1 duplication | Pure getters on members `Build` already cached; nothing recomputed | ok |
+| 3 | `R_melt`: `v.R_melt = v.R` then **`pp.contains` BEFORE the query** | 4 scope vs source | The subtlety that makes "absent ⇒ R_melt = R" work — `query_default` would register the key and install 0.0. The comment says exactly that. Range checked [0, 1) | ok |
+| 2, 4 | `MMWBeam.H`: the `melt_factor` parse and `melt_active()` | 3 units / 6 fp equality | `Unit::Less()` (dimensionless), default "1.0", aborts on ≤ 0. `melt_active()` = `melt_factor != 1.0 \|\| R_melt != R` is bit-exact: 1.0 comes from the literal via strtod and `R_melt = v.R` is an assignment; it is a mode predicate, not a numerical test | ok |
+| 5 | `MeltFraction(T)` | 1 duplication / 13 guards | **One function, three consumers** (the beam's α and R_col, the molten/lid exclusions, every melt record) — SR 14 done right; duplication `none`. The division by `w` is guarded by an early `!(w > 0)` return, and `Tm < 1e29` guards an undeclared band. Its phase-preference order (phases → material) matches `bc_z_melt`'s new three-way fallback | ok |
+| 6, 7 | α × (1 + (mf − 1)·f_L) and the gather's extra `ncols` slot | 2 consistency / 4 scope vs source | The α factor is written `(mf != 1.0) ? … : alpha_at(T)`, so the no-op path is **bit**-identical rather than merely algebraically equal. The top-cell T slot is documented in a comment, written only by the owning box at `k == top_of(c)` (never a void cell, since `top_of` is the top **solid** cell) and gathered by the existing `ReduceRealSum` | ok |
+| 8 | `TauView::R(i,j,R_scalar)` and the four kernel sites | 2 consistency | `rc ? rc[col] : R_scalar`, and `rc` is null whenever `Rcol` is empty — which it is unless `melt_active()`. So L3's byte identity is **structural**, and all four `(1 − R)` sites plus `P_inc`/`P_trans` read the same per-column value | ok |
+| 9 | `SurfaceMeltRecord` | **1 duplication** | A ~20-line **copy** of the radiometer / melt-spot arithmetic in `ColumnOpticalDepth` (`r_view`, ε₁₃₇, `A_m`), acknowledged by its comment but not shared. The only place both run is the beam-off handover, and nothing asserts they agree. I checked it: `bc_T_rad` reads 1894.68 K at 1580.0 s (the α-sum path) and **1894.00 K at 1580.2 s** (the new path) — continuous to 0.04 %. A shared helper taking (Ttop, top_of) would retire the check | **risk** |
+| 10 | the vapour detection loop | 3 units / 2 consistency | `Gl[2]` is `H_mf` straight from the gather (`G[o+2] = H(p)`), the same per-volume field `Table::H_of_T` produces and `H_vap_hi()` returns — so L7's units hold by identity of the object, not by conversion. The `vap_cell[ci]` guard dedupes per cell | ok |
+| 11 | the interior count | 4 scope vs source | `fi(i,j,k,1) == 0` is the listed-face **count** of a 2-component `fl_index` ⇒ "touches no void" = interior ✓. `ReduceRealSum`, then per-step and cumulative. ⚠ A full grid sweep every step on a vapour deck | ok |
+| 12 | **`bc_n_vapor_int += n_int`** | **7 readers / 12 discriminator** | `n_int` is a per-step **census** of buried cells, so the cumulative sum counts **cell-steps, not cells**: M0F reads 5.0e6 for ≈ 556 buried cells over 9,000 steps. Its neighbour `bc_n_vapor` **is** a true cell count — I verified 324 / 1,420 / 272 against the number of **distinct** (i,j,k) in the regime-2 rows. Two adjacent columns with parallel names and different kinds is exactly what SR 7(i) exists to prevent (DR-4) | **risk** |
+| 13 | the molten / lid exclusions | 2 consistency / 6 boundary | Placed after the surface reconstruction (so T_s still carries) and before the depth scan, as the comment states. `MeltFraction(Tc) >= 1.0` on `Gl[0]` only; the lid loop runs `d = 1 … nprof`, skipping the already-tested surface cell — L4 and L11 exactly. `>= 1.0` is exact against a clamped return | ok |
+| 14, 15 | `ledger_E_vapor += vap_H·Vcell` and the vapour `phi` decrement | 8 accounting / 2 consistency | An unconditional term on the new removal path, subtracted by `ledger_err_solid` and tested **both ways** by z2. The `phi` decrement runs over the box's whole k-range, guarded on `vap_top` and the column being in-box — the column-wide convention the spall recession already uses | ok |
+| 16 | the regime-2 event row | 5 hard-coded / 11 comments | A hand-built row of positional literals, which would silently misalign if a column were added. It aligns **today**: I counted 38 fields in the header and **38 in every one of U3's 64 regime-2 rows**, with `dir`, `k`, `h_applied` and the four NaN tails landing in the right columns | nit |
+| 18 | the new columns' registration sites (deviation 1) | 7 readers / 9 removed checks | Moved from the packet's `spall.enabled` to the **face list** (`fr_n_molten`/`fr_n_lid`) and to P2-21's `bc_*` block — because under `spall.enabled` every column-path spall deck in the tree gate would gain them and a0 could not be 0/2,639. The right call, declared, and a0 confirms | ok |
+| 19 | the six NaN columns on BEAM_S | **6 fp / 10 test strength** | `bc_T_rad`, `bc_T_view`, `bc_f_L_peak`, `bc_z_liq`, `bc_R_col` (and P2-21's six) read NaN on every row of a **gate** leg, and the gate's comparator treats NaN ≠ NaN. Running `face_gate.py`'s own `thermo_cols` on that file against itself reports **11 columns MOVED**. a1 was scored from the md5 lists so it is unaffected, but the next `cmp` that enters the column path will self-flag (DR-1) | **risk** |
+| 20 | m4's melt spot | 12 discriminator | `bc_A_melt` counts `f_L > 0`, i.e. **any mush** (T > 1410.5 K), against a DOE number read from solidified glass. Declared in Goal 5, but 34.9 vs 38 mm is then an upper bound on the model side, not a like-for-like (DR-7) | nit |
+| 21 | `unit/face_melt`, `unit/face_vapor` | 10 RED on the pre-fix binary | Both new; `bin_pre` rc 6 on U3's deck (stopping on `beam.R_melt`) and U3pre rc 6 naming "regime 2 (vapor.enabled)", so neither can pass on P2-23's binary. U4/U5/U6 are the three negative controls and all read zero voids | ok |
+| 17, 22 | `beam_P_beam = P_now` and the records | 7 readers / 11 comments | Set before every early return, so it is the schedule's power even with the beam off (L12's denominator): 1,460 W on BEAM_S, 0 from 1,580 s on M0. `REFERENCE.md` re-pins to `face_p2_24` with the audit, `WHICH_TESTS.md` gains both tests, `MODEL_CARD.md` §5/§6/§8/§12 carry the melt set as LIT | ok |
+
+**Tally: 22 hunks/tests in 18 rows (four pairs merged) — 0 bug, 3 risk, 2 nit, 17 ok.**
+
+#### What the planner needs
+
+- **DR-1 — fix `face_gate.py` before the next packet runs it.** The comparator's `ca[h] != cb[h]` treats NaN as
+  unequal, so BEAM_S's eleven NaN columns report as MOVED whenever the column path runs — and a wall-clock timer is
+  enough to make the md5 differ and enter it. The next face-touching packet will see **VERDICT: DIFFERENT** on a
+  byte-identical leg. One line: compare with `x == y or (x != x and y != y)`. ⚠ Six of the eleven are P2-21's and
+  have been on BEAM_S since P2-23 — I accepted that packet without testing the comparator against a NaN column, so
+  this is my miss as much as anyone's.
+- **DR-2 — the 60 "mush removals" strengthen P2-23's null rather than refuting it.** All 60 are `through = 1`,
+  `run = 1`, `h_line = 1.5625 mm` (exactly one cell), `n_voided = 1`, `rc_flag = 1`, and `h_f = 0` — the fallback's
+  logged value that a through line never reads. They are **single-cell wall collapses**, not flakes, and a one-cell
+  solid run has nothing thinner to break off. They pass B legitimately (x ≤ 1.56 mm against a ≈ 3.7 mm limit at their
+  T_s 1355–1425 K). So P6's "`bk_n_eval` → 0 REFUTED" is a statement about wall collapse; "no thin-flake spallation
+  under this beam" still holds. Say which it is.
+- **DR-3 — put the mass on m6's finding.** 324 cells × (1.5625 mm)³ × 2650 = **3.28 g** vaporised in one exposure (M0); M0F **14.4 g**. The DOE measured **1.3 g over four exposures** of #28 and concluded no vaporisation below 2500 °C corrected ⇒ the rule is ≈ 10× (M0) to ≈ 44× (M0F) the entire four-exposure loss: a quantitative refutation, and the sharpest post-melt statement in the packet.
+- **DR-4 / DR-5 / DR-6 / DR-7 —** `bc_n_vapor_int` is cell-steps, not cells (its neighbour `bc_n_vapor` is cells; I verified both against the event log), so it cannot be read as "how often the lid would have been blown". Cell **counts** are mesh-dependent while **volumes** are not: before 170 s M0 voids 44 cells and M1 272 (6.2×) for 0.168 vs 0.130 cm³ (23 %) — quote volume or mass, which is also the DOE's observable. `SurfaceMeltRecord` duplicates the radiometer arithmetic (I verified the one handover row agrees to 0.04 %; a shared helper would retire the check). `bc_A_melt` counts any mush, so m4's 34.9 mm is an upper bound against a glass-based 38 mm. And unremarked: **M0F's closure runs to −7.2 %**, larger and opposite in sign to M0's +4.5 %.
+
+#### What I credit
+
+- **The re-pin is fully auditable and I reproduced all 32 paths**: 13 flame thermo gaining exactly two
+  identically-zero columns; BEAM_S's 43 common plotfile components **bit-identical** on all three plotfiles with only
+  the three vapour diagnostics appended; 0 one-sided files. That is what a re-pin should look like.
+- **The new ledger term is tested two-sidedly** — `|ledger_err|` 9.2e-16 with `ledger_E_vapor` and **0.77 without** —
+  the strongest class-8 check in this series, with U4/U5/U6 as three real negative controls.
+- **`MeltFraction` is one function with three consumers** and the no-op defaults are byte-exact by construction
+  (`rc = nullptr`, `mf != 1.0`), so a0's 0/2,639 and a1's identity are structural rather than lucky. The
+  `pp.contains("R_melt")`-before-query detail is what makes "absent ⇒ R" work at all.
+- **The planner's z1 bar was arithmetically wrong and the implementer caught it from the formula** — my derivation
+  gives 0.605265301734 against the packet's 0.605298, and the three fractions sum to exactly (1 − R_melt). Ten
+  deviations, each declared with its reason, including the registration sites a0 forced and the cooling offsets,
+  which my reduction confirms are the ones that match the DOE.
+
+### Verdict: accepted
+
+- **Gating rows.** z1, z2, z3, a0, a1, a2, b1 and b2 all reproduce from my own reductions; no diff-review row is a
+  `bug`.
+- **Guardrails.** `Removal.H` and `Shared.H` untouched; the melt keys and both beam keys default to exact no-ops;
+  the column-path vapour front is untouched and unreachable under the face list; nothing in the do-not-touch list;
+  nothing committed.
+- **Reruns.** No simulation and no rebuild. I executed only `face_gate.py`'s comparator on an existing file, to test
+  DR-1's hazard, and said so there.
+- **Files inspected** (named row by row above): the full four-header diff against `src_pre/` plus the gather, kernel, `BeamEnergyBalance`, registration and parse sites read directly; `rock_grimsel.inputs`; `validation/oglesby/input`; the `face_melt` / `face_vapor` / `face_beam` outputs; the study's `Z0`, `Z1_face_melt`, `Z2_face_vapor`, `Z3_*`, `A1`, `A2_*`, `CHECK_SHARED`, `GATE_*`, `RESULTS`, `BINARY*`; all four M-legs' thermo and event logs; the five witness manifests, both face trees, `face_gate.py`, `REFERENCE.md`, `WHICH_TESTS.md`; `Table.H`; `MODEL_CARD.md` vs its pre-copy.
+- The user should run `/plan` next; the planner will archive this step.
+
+## P2-25 — The regime check: spall or melt under a beam, over deposition depth and net flux, from the validated pieces alone (2026-11-07; ACCEPTED by review 2026-11-07)
+
+**Status:** ACCEPTED by review (2026-11-07); z0–z2, a0–a2, b0, b1 reproduce from the reviewer's own reductions; 0 `bug`, 4 `risk`,
+1 `nit`. Binary `c052c348…` (P2-24's addendum key `grimsel.lambda.cap_theta` gated here: tree 0/2639, face IDENTICAL, no
+re-pin). No `src/` change. Study `tests/MMWSpalling/studies/p2_25_regime_map/` (`Z0.txt`, `STOPS.json`, `Z1.txt`, `Z2.txt`,
+`RESULTS.txt`, 66 legs pruned with `MANIFEST.md5`, 9.3 GB). Test infrastructure: `face_gate.py` NaN-aware column compare
+(P2-24 DR-1), `validation/oglesby/test` m6 vapour mass (DR-3).
+
+### What the step established
+- **THE MAP** (rows 1/α, columns absorbed centre flux q 0.3 / 0.5 / 1 / 2 / 4 / 8 MW/m²; S spall, St stall, M melt first,
+  B fired-and-withdrawn, C undecided): 0.5 mm `B B S S S S`; 1 mm `B B S S S S`; 2 mm `C B M M S S`; 4 mm `C B B M M M`;
+  8 mm `C C B M M M`; 16 mm `C C B B B M`; 71 mm `C C C C B B`. 42 legs of the #19 deck with a flat two-pair loss, the
+  deposition depth as `beam.tan_delta`, P = q × 3.0533e-4 W per W/m² at ω 12.88 mm, dt = min(0.2, 6 K / heating rate),
+  stop = clamp(3 × t_fire_1D, 60/20 s, 600 s).
+- **The boundary is L-shaped and sits where the pieces put it.** Spall only at 1/α ≤ 1 mm firm (2 mm at q ≥ 4 on the
+  1.56 mm mesh, mesh-dependent) AND q ≥ 1 MW/m² (0.5 fires and is wholly withdrawn: the absorbed threshold is
+  **0.48 MW/m²**, P2-17's q_net 0.4316 + radiation 0.0201 + convection 0.0292 at 819.8 K). **Nothing removes at ≥ 4 mm**
+  on the 16 decided cells (9 B, 7 M). The central column's e-fold at first firing separates S ≤ 3.341 mm from fired
+  non-S ≥ 3.370 mm over 30 legs — inside the 2.35–3.75 mm layer-limit band, a consistency check not a threshold (DR-2).
+- **Geometry, not strength, sets the depth boundary:** K_Ic ×0.5 / ×1 / ×2 moves the onset face T 620 → 850 → 1,140 K
+  and leaves every regime letter on the q 2 cut unchanged (`S S M M M B` at 0.5–16 mm). The rule fired at a face T of
+  826–885 K on every base leg (the Kant band); the logged central-cell peak (492–887 K) is the steep skin, not the face.
+- **The control reproduces to the event:** P400R 1,008 removals, first 0.94 s = P2-23's P400 on the new binary; the
+  removed volume Σ h_applied·dx·dy = Σ(1 − fr_f)·V to 0.00 % (1.94e-6 m³; N × dz³ is 2× it: the median flake is half a cell).
+- **Specific energy** (ledger_E_src / V, GJ/m³): 15.7–24.4 at 1 MW/m², 3.7–5.4 at 2, 2.0–4.7 at 4, 1.7–2.3 at 8; falls
+  with flux, rises toward the 1 mm row (melting ≈ 5, boiling ≈ 25 GJ/m³ for scale). Five high-flux legs drilled through the
+  50 mm block (domain-bounded late rates). Rates 2.4 → 535 events/s from 1 to 8 MW/m²; at ≤ 2 MW/m² the rate decays and
+  D1_Q1 stalls at 40.7 s. Isotropy 1.12 / 1.37 (sector ratio). No vapour on any leg.
+- **Spot cut:** S at ω 6.44 / 12.88 / 19.32 mm at 1 mm, M at 4 mm — a statement about the RULE (fixed 12 mm span). Mesh
+  twin: outcomes agree at 1 and 4 mm; **the 2 mm / 4 MW/m² cell flips (S at 1.56 mm, M at 0.78 mm)**; the removed volume
+  at 1 mm is 0.62× at half the cell while the event count is 2.09× (bar 25 % MISSED): volumes quantitative to ≈ 40 %.
+- **For drilling:** granite at 28 GHz (1/α 71 mm cold, ≈ 8 mm hot) is melt-mode at any power; spall mode needs the loss
+  at onset T ten to twenty times larger (several hundred GHz at fixed tan δ, or a far lossier rock).
+
+### Carry-forwards (review and planner)
+1. **DR-2:** quote `bc_ell_p`'s S/non-S split as a consistency check inside the 2.35–3.75 mm band, never as a threshold
+   (0.029 mm gap = 1.9 % of a cell; the central column, not the per-line ℓ B reads). A buckle log on one S and one B
+   leg would read the per-line layer directly (cheap follow-up).
+2. **DR-3:** the 2 mm row and every removed volume are mesh statements (0.62× volume, 2.09× events at half the cell);
+   report the boundary as 1 mm firm, 2 mm mesh-dependent at q 4; specific energies carry ≈ 40 %.
+3. **DR-4:** archive a `src_pre/` pre-image for EVERY file a build touched, including an addendum's (the addendum's
+   `Grimsel.H` had none; its diff basis mixed four packets' uncommitted edits).
+4. Ten cells ended before firing against one pre-registered (the 1-D clock under-runs 3-D for deep, low-flux
+   deposition); a longer stop on them is the other cheap follow-up. P2's surface-heating t_on is 2–10× short.
+5. Spotlight indexing stalled the three-lane tree sweep to 57 min (`mds_stores`); exclude the repo from Spotlight.
+6. Storage: 9.3 GB after the prune; the t = 0 plotfile is identical on every leg of one mesh (droppable).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-07)
+
+- **P2-25 — The regime check: spall or melt under a beam, over deposition depth (1/α 0.5–71 mm) and net centre flux
+  (0.3–8 MW/m²), from the validated pieces alone** (`ACTIVE_STEP.md`; 2026-11-07; no new physics, no `src/` change;
+  user: the melt's heat transport PARKED as a stated limit, the loss magnitude and the onset gap parked).
+  - Archived: P2-24 ACCEPTED (`ARCHIVE_DONE.md` *"P2-24"*): the melt is a state, the beam sees it, no fracture in or
+    over a liquid, vapour spends once; #19 through 26 min lands absorbed fraction / melt spot / cooling and misses the
+    post-melt surface (300–700 °C cold) while the interior boils (3.3 g vs none) — ONE cause, heat stuck too deep;
+    the addendum EXCLUDED λ ×2 and ε 0.5 (`RESULTS_SENS.txt`). The 60 post-melt removals are wall collapses: the
+    no-thin-flake null stands.
+  - This step: fix the face gate's NaN comparator (DR-1), vapour as mass (DR-3), gate the addendum binary c052c348;
+    then 42 short legs of the #19 deck with a flat loss (two-pair table) over 7 depths × 6 fluxes, classified on the
+    FIRST event (S / St / M / B / C), plus kic ×0.5 / ×2, spot ω 6.4 / 19.3 mm and a 0.78 mm twin on the q 2 cut.
+  - ⚠⚠ Pre-registered: spall only at 1/α ≤ 1 mm (2 mm marginal) AND q ≥ 1 MW/m² (0.5 a stall, 0.3 cold); nothing
+    removed at ≥ 4 mm at any flux; an L-shaped boundary = B's layer limit (2.35–2.4 mm) + the minimum flux (0.43).
+    Specific energy 1–3 GJ/m³ in the spall cells (P400: 2.1).
+
+### The P2-25 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-25 — The regime check: spall or melt under a beam, over deposition depth and net flux, from the validated pieces alone
+
+Status: **accepted by review** (2026-11-07; all eight gating rows reproduce independently; 0 `bug`). ✅ **My P2-24 DR-1 is fixed and the fix does not weaken the comparator** — I measured the old rule at the same 11 columns and `col_moved` at 0, and it still catches a 1e-9 move, a NaN-vs-number column and a row-count change (DR-1). ✅ **The map reproduces cell for cell from my own reduction of the 42 legs**, 10 C cells included, and `bc_ell_p` at first firing separates S ≤ 3.341 mm from fired non-S ≥ 3.370 mm — inside the independently derived 2.35–3.75 mm layer-limit band. ⚠⚠ But the 2 mm row is a MESH statement: F_D2_Q4 is **M** where D2_Q4 is **S**, and D2_Q4 is one of the two cells that make "deepest S = 2 mm" true; the removed volume is 0.620× on the fine mesh while the event count is 2.09× (DR-3).
+
+### Context
+
+Two ends of the beam problem now stand measured on one rule: a shallow steady beam above the minimum flux drills
+(P2-23 P400: α 2000 m⁻¹, 1.5 MW/m², 1,008 removals in 20 s) and the 28 GHz beam on granite spalls nothing and melts
+(P2-23/24 #19: every fired line withdrawn by the buckling condition B, melt at 42 s). The pieces were validated one at a
+time — the onset law on Kant, the span on Kant's two granites, the beam's deposition on Barre, the face list on the
+flames — and have never been run together across the two quantities that decide the outcome: how deep the beam deposits
+and how hard it heats. This packet runs the production deck over a ladder of deposition depths (1/α, 0.5–71 mm) and net
+centre fluxes (0.3–8 MW/m²), classifies each run's first event (a removal, a melt, a withdrawn firing, or nothing),
+and compares the spall/no-spall boundary with the one the pieces predict: the heated layer at onset, max(1/α, the
+conduction length), against B's layer limit (2.35 mm at 850 K), and the minimum net flux 0.432 MW/m² at the 12 mm span.
+The map is scored on the FIRST event, so the parked melt weakness (surface too cold, interior too hot after melting)
+does not enter. Carried: R = 0.531, c_f 0.4 and the 12 mm span borrowed from the flame calibration; the 1-D stress
+(over-estimates under a thick layer: fires MORE, the safe direction for a no-spall claim); properties extrapolated
+above 873 K; the ×4 melt absorption and the vapour rule stay on but act only after a melt. Housekeeping that must come
+first: P2-24 DR-1 (the face gate compares NaN ≠ NaN) and DR-3 (vapour as mass), and the ungated addendum binary.
+
+### Sources (opened 2026-11-07)
+
+- **The rock file** `validation/shared/rock_grimsel.inputs`: `beam.eps_r 5.02` ⇒ n = 2.2405, R = ((n−1)/(n+1))² =
+  0.14655 (computed in `MMWBeam.H`); `beam.tan_delta 0.01065` ⇒ α = 2π n tan δ/λ = 14.003 m⁻¹ at the #19 deck's
+  `beam.lambda 1.070687e-2` (⇒ tan δ = α × 7.6056e-4 per m⁻¹); `beam.melt_factor 4`, `beam.R_melt 0.3`;
+  `spall.buckle_span 0.012`; `spallation.sp.stress_relief 0.531294`; the minimum net flux for B at 12 mm on Grimsel
+  **0.432 MW/m²** (h_min 535.5 W/m²K; `studies/p2_17_buckle_on/Z2.txt` prints it as "q_net,min 0.4316 (without h_conv
+  0.4368)" at T_s 819.8 K — the FLAME's net input at onset; whether radiation ≈ 0.02 MW/m² at 820 K is inside that
+  number is read from `z2.py` in z0, so the beam threshold in ABSORBED terms is 0.43–0.49 MW/m²); `grimsel.rho 2650`,
+  λ(θ) = 2000/(θ + 563) W/mK; the melt set (T_m 1510.5, fus 200; T_vap 3233–3503).
+- **The model form** `validation/shared/model_form_flame.inputs`: `spall.flake_c_f 0.4`, `spall.h_spall_max 0.015`,
+  `surface_patch.robin_form surface`, `surface_patch.face_list 1`, `spall.removal_events_csv 1`, `vapor.enabled 0`
+  (the #19 deck overrides to 1 with `# check_shared: allow vapor.enabled`).
+- **The #19 deck** `validation/oglesby/input` (P2-24 state): patch OFF with `radius 1.0`, `x0 = y0 = 0.05`; 64×64×32 on
+  0.10×0.10×0.05 m (dz 1.5625 mm); `weibull.V0 3.814697265625e-9`; `beam.omega0 0.01288`, `z0 0.05`; `losses.h_conv
+  56`, ε 0.8; `amr.thermo.plot_int 1`; dt 0.2 (the room-T explicit limit 0.243 s at 1.5625 mm, 0.0607 at 0.78125 mm).
+- **The beam** `MMWSpalling.H:5503–5530` `BeamIncidentIntensity`: Pi = 2P/(πw0²)·(w0/w)²·e^{−2r²/w²}, so the net flux
+  at the centre of the surface is **q = (1 − R)·2P/(πω²)** ⇒ **P = q × 3.0533e-4 W per W/m² at ω 12.88 mm** (× (ω/12.88 mm)²
+  at another waist). The in-rock spread (P2-22, `n_idx`) is the rock's at every leg and does not depend on α.
+- **The buckling condition** `FaceRemoval.H:307–325`: bk = C_L x/L_span, C_L = π/√(6(1 + ν)ε_th), ε_th the strain from
+  T0 to T_s; blocked when bk > 1. The layer limit L/(C_L μ c_f) = 2.35 mm at 850 K rising to 3.75 mm at 1400 K
+  (`ARCHIVE_DONE.md` *"P2-23"*, Records). ⚠ SR 20: lengths on a line are along-line, the limit is NORMAL (μ).
+- **The toughness scale** `spallation.sp.kic.scale`: parsed `MMWSpalling.H:9836–9839` (finite, > 0; default 1.0);
+  consumed at the kernel `:6861` and the face list's depth scan `Shared.H:184` (`ScanKIcPa`, "toughness site 1 of 4":
+  one function since P2-2d). ⚠ SR 1: a K_Ic scale is a declared BRACKET on the drive's partner, never adopted.
+- **Properties**: κ 1.67e-6 m²/s at 297.5 K, 4.9e-7 at 1000 K; ρ c_p 2.033e6 J/m³K at room T (`studies/p2_24_melt_vapour/Z0.txt`
+  §6; `studies/p2_23_beam_port/Z0.txt` (4)).
+- **Evidence on disk** (`studies/p2_23_beam_port/RESULTS.txt`, `RESULTS_P400.txt`; `studies/p2_22_inrock_spread/RESULTS.txt`):
+  P (α 2000, ε′ 1 ⇒ R 0, 150 W ⇒ 0.576 MW/m²): 6 removals, the first in the 6–8 s bin, a stall after 11 s; P400
+  (400 W ⇒ 1.535 MW/m²): first removal 0.95 s, 1,008 by 20 s at ≈ 40 s⁻¹ over 96 columns, floor 17 mm; B0 (#19,
+  Hartlieb table, 1.46 kW ⇒ q_net 4.8 MW/m²): first fire 30.8 s, melt 42.6 s at 2.34 mm, 0 removals, every evaluation
+  withdrawn; B0F (flat α 14, 1.46 kW): first fire 48.0 s, no melt by 80 s; P2-22 flat at 12.88 mm: melt 194 s.
+- **Thermo columns** (`studies/p2_24_melt_vapour/legs/M0/run/thermo.dat` header; the row stamped t is the step that
+  ENDED at t): `beam_P_inc`, `beam_P_dep`, `beam_alpha_max`, `bc_T_peak`, `bc_z_melt`, `bc_ell_p`, `bc_ell_pk`,
+  `beam_P_beam`, `ledger_E_src` [J, cumulative], `bk_n_eval`, `bk_n_block`, `fr_n_floor`, `fr_n_wall`, `fr_n_roof`
+  (per step), `fr_n_vapor`, `fr_t_removal`, `fr_t_step` (wall-clock timers). The events CSV
+  (`<plot_file>_removal_events.csv`) stamps the step's START: `time, col_i, col_j, regime (1 crack, 2 vapour), …, h_f,
+  …, through, run, bk, ell_p, …`; `h_applied` [m] is the thickness removed ALONG the line by that event (full cells n_v
+  plus a partial remainder into `phi`; a vapour row has h_applied = the cell's remaining solid, P2-24 takeaway 5), so
+  an event's volume is h_applied × dx·dy and a crack event is NOT one cell (P400: median flake 0.77 mm, half a cell).
+  The plotfile carries `phi` (solid fraction) and `removed` (M0's `09000cell/Header`).
+- **The face gate** `studies/tree_sweep_0922/witness/face_gate.py:236–262` (`cmp`): `thermo_cols` returns float lists
+  (NaN for a non-number) and the loop tests `if ca[h] != cb[h]` on the lists ⇒ NaN ≠ NaN; `TIMERS` excluded. The
+  reference is `face_p2_24` (`witness/REFERENCE.md`); BEAM_S carries 11 NaN-valued columns.
+- **The #19 test** `validation/oglesby/test` m6 block (≈ :450–470) prints `bc_n_vapor` cells; the run's `metadata` has
+  `amr.n_cell`, `geometry.prob_lo`, `geometry.prob_hi`, `microstructure.phase0.grimsel.rho`.
+- **The addendum** `studies/p2_24_melt_vapour/RESULTS_SENS.txt`: binary `c052c348…` adds `grimsel.lambda.cap_theta`
+  (default −1, `Grimsel.H`); M0R reproduces M0 on every non-timer column; a0/a1 NOT run on it; the P2-24 binary
+  `98a261d3…` is `studies/p2_24_melt_vapour/bin_p2_24/`.
+
+### Goal
+
+0. **The face gate's comparator (DR-1).** In `face_gate.py cmp`, compare two thermo columns element-wise with NaN
+   equal to NaN (`x == y or (x != x and y != y)`), and compute max|d| over the pairs where both are finite (report the
+   count of NaN-mismatched rows separately as a move). No other change. Witness in z1.
+1. **Vapour as mass (DR-3).** `validation/oglesby/test` m6 prints, beside each leg's final `bc_n_vapor`, the mass
+   `bc_n_vapor × V_cell × ρ` in g with V_cell from the run's `metadata` (`geometry.prob_hi − prob_lo` / `amr.n_cell`,
+   product of the three) and ρ from `microstructure.phase0.grimsel.rho`; a mesh-independent number beside a
+   mesh-dependent one (P2-24 DR-5).
+2. **The binary.** Confirm `bin/mmwspalling-3d-g++` is `c052c348…` and that `find src -type f -newer
+   studies/p2_24_melt_vapour/bin_p2_24/mmwspalling-3d-g++` lists only `Grimsel.H` (the P2-24 changes are themselves
+   uncommitted, so `git diff` cannot be the check; if a newer file appears, rebuild and record the sha); write `studies/p2_25_regime_map/BINARY.txt`. Run the tree gate, the face gate
+   and the unit tests on it (a0–a2): the addendum key is then gated. No re-pin unless a1 is not IDENTICAL, in which
+   case stop and report (a0/a1 are the finding).
+3. **The regime deck** `studies/p2_25_regime_map/input`: a copy of `validation/oglesby/input` with EXACTLY these
+   changes (the header comment says so and lists them):
+   ```
+   # P2-25: the #19 deck with a FLAT loss on the sum path, a one-window schedule and the mesh/dt set per leg (argv)
+   beam.tan_delta_T    = 295.15 1.0 1268.15 1.0   # check_shared: allow beam.tan_delta_T  (two equal pairs: flat alpha,
+                                                  #   the sum path the melt keys require; M0F's form)
+   beam.schedule.t_end = 60.0                     # per leg
+   beam.schedule.P     = 0.0                      # per leg
+   stop_time           = 60.0                     # per leg
+   timestep            = 0.2                      # per leg (the 6 K/step rule below)
+   amr.plot_int        = 100000                   # thermo (every step) and the events CSV carry the map
+   plot_file           = tests/MMWSpalling/studies/p2_25_regime_map/output/run
+   ```
+   The Fig. 34 schedule lines are removed. `beam.tan_delta` is set on each leg's argv (a declared override of the rock
+   file's loss: `check_shared.py … --allow beam.tan_delta`); the deepest ladder point is the rock's own value and sets
+   nothing. Everything else — rock, model form, melt set, ×4, R_melt, vapour on, B on, patch off, ω 12.88 mm, z0 0.05,
+   losses, V0 — is the #19 deck's. `check_shared.py` passes on one shallow leg and on one D71 leg.
+4. **`studies/p2_25_regime_map/run.py`** with the legs below as literal argv (the P2-24 `run.py` pattern: `argv.sh`,
+   `BINARY.txt`, `rc`, `.done`, `.old<k>`, caffeinate), `z0.py` → `Z0.txt` (the ladders; the P2-17 q_net definition; and a 1-D explicit column per map cell — Beer-Lambert
+   source α e^{−αz} at the cell's absorbed flux, Grimsel λ(T), c_p(T), ρ, radiation ε 0.8 and h 56 at the surface,
+   dz 0.5 mm — run until the surface reaches the onset level 843.76 K or 600 s: **t_fire_1D**, and the leg's stop
+   time from it, below), `chain.sh`
+   in the run order of the Criteria, and `prune.py` (keep the first and last cell plotfile; md5 manifest first — the
+   P2-24 `prune.py` with the kept set reduced).
+5. **`studies/p2_25_regime_map/reduce.py` → `RESULTS.txt`**: per leg, from thermo and the events CSV only:
+   t_fire (first row `bk_n_eval` > 0), t_rem (first row `fr_n_floor + fr_n_wall + fr_n_roof` > 0; cross-check: the
+   first regime-1 CSV row, which is one step earlier), t_melt (first finite `bc_z_melt`), N_rem(t) (regime-1 CSV rows
+   with time < t; thermo's per-step sum must agree — `amr.thermo.plot_int` is 1), N_vap, `bc_ell_p`/`bc_ell_pk` and
+   `bc_T_peak` on the t_fire row, `beam_alpha_max` and `beam_P_inc` on the first lit row, max per-step Δ`bc_T_peak`
+   before t_melt. **Outcome** (declared thresholds): **S** SPALL = t_rem exists, (t_melt absent or t_rem < t_melt),
+   N_rem(stop) ≥ 20; **St** STALL = 1 ≤ N_rem(stop) < 20 with the first removal before any melt (P2-23 P: 6);
+   **M** MELT-FIRST = t_melt exists and no removal before it; **B** BLOCKED = t_fire exists, no removal, no melt by
+   stop; **C** COLD = no firing by stop — **undecided, never "no spall"**: a C cell says only that the run ended before
+   the rule was asked; the claim "nothing removed at ≥ 4 mm" rests on B (and M) cells alone. Removed VOLUME =
+   Σ h_applied × dx·dy over regime-1 CSV rows (never N × dz³); on P400R cross-checked against Σ(1 − phi)·V from the
+   last plotfile. Specific energy TWICE: `ledger_E_src(stop)` / V_rem (absorbed) and P·t_stop / V_rem (beam). The map
+   printed as a 7 × 6 grid of letters with t_rem / t_melt / N_rem / stop in each cell; the boundary rows (m2); the
+   kic, spot and mesh cuts; the rate and specific energy of every S cell (m6); the sector census (m7). The P2-24 `sens_compare.py` shows the import of the test's helpers.
+6. **Records.** `MODEL_CARD.md`: §6 a row for `grimsel.lambda.cap_theta` (default −1; the P2-24 addendum's declared
+   sensitivity, gated here), §8 the map's result in six lines, §10 a row "regime boundary (beam)" with the measured
+   depth and flux limits and the kic/spot/mesh brackets; `witness/REFERENCE.md` (binary; the face reference stays
+   `face_p2_24` if a1 is identical); the daily log. Nothing committed.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | key / change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | `beam.tan_delta=<td>` on the argv (later definition wins over the rock file's) → α = 2π√ε′ tan δ/λ | `MMWBeam.H` Parse | the τ gather (`ColumnOpticalDepth`), `beam_alpha_max` | the sum path (`alpha_varies()`: the two-pair table) | b1: `beam_alpha_max` on the first lit row = α_leg × 1.0 to the printed digits; the leg's `metadata` shows the argv value |
+| L2 | the two-pair flat table ⇒ `alpha_varies()` true ⇒ the sum path AND the `bc_*` block registered (`alpha_varies() && can_deposit()`) | `MMWBeam.H` table parse; registration (P2-24 takeaway 1) | `bc_z_melt`, `bc_ell_p`, `bc_T_peak` exist | — | b1: the header has `bc_z_melt`; M0F ran this form |
+| L3 | `beam.schedule.t_end=<stop> beam.schedule.P=<P>` (one window) and `stop_time=<stop>` on the argv | the schedule parse (`power_at`) | `beam_P_beam` = P on every lit row; `beam_P_inc` = (1 − R)·P·(the Gaussian's share inside the domain) | — | b1: `beam_P_inc`/P = 0.8535 ± 0.002 on the first lit row (ω 12.88 and 19.32 mm: the tail outside 100 mm is < 1e-6) |
+| L4 | the CONJUNCTION a removal needs: the onset fires on a listed line (`bk_n_eval` > 0) AND B passes (bk ≤ 1) AND the ONE WRITE runs (`fr_n_*` > 0, a regime-1 CSV row) — on THIS binary | `FaceRemoval.H` scan :520–; `BuckleRatio` :321; the write :884 | thermo and the CSV | `surface_patch.face_list` (model form), `fl_on` with the patch off (P2-23) | b0: P400R removes (first ≤ 2 s, ≥ 500 by 20 s) |
+| L5 | `spallation.sp.kic.scale=<s>` reaches the face list's scan | `MMWSpalling.H:9836` | `Shared.H:184` (`ScanKIcPa`), `:6861` | `kic_law == GrimselTable` (rock file: `grimsel_table`) | m3: `bc_T_peak` on the t_fire row is LOWER under 0.5 and HIGHER under 2.0 than the base leg's at the same (depth, q); `metadata` shows the value |
+| L6 | `beam.omega0=<ω>` with P scaled by (ω/12.88 mm)² holds q | `MMWBeam.H` Parse | `BeamIncidentIntensity` | — | m4: `beam_P_inc`/P = 0.8535 on both spot legs; the lit-column count scales with ω² |
+| L7 | `grimsel.lambda.cap_theta` at its default −1 is inert on every gate deck | `Grimsel.H` Parse / `lambda()` | the conduction kernel | `lam_cap_theta > 0` | a0 0/2639, a1 IDENTICAL |
+| L8 | units: q [W/m²] net at the centre; P [W]; α [m⁻¹], 1/α [m, printed mm]; tan δ [–]; `bc_ell_p` [m]; `ledger_E_src` [J]; specific energy [J/m³ → GJ/m³ = ÷1e9]; T [K]; times [s]; V_cell = dz³ [m³] | — | — | — | z0 prints every ladder value with its unit; reduce prints units in its header |
+| L10 | removed volume = Σ h_applied × dx·dy over regime-1 rows; `h_applied` is the along-line thickness the ONE WRITE applied (full cells + the partial remainder into `phi`) | `FaceRemoval.H:860–905` (`RecedeAlongLine`, `n_v`, `f_after`) | reduce m5/m6 | — | P400R: the CSV sum vs Σ(1 − phi)·V from the last plotfile within 2 % (the plotfile's phi is the authority); N × dz³ printed beside it as the upper bound |
+| L11 | the stop rule: stop = clamp(3 × t_fire_1D, floor, 600 s), floor 60 s (q ≤ 2) / 20 s (q ≥ 4); a cell whose 1-D column never reaches onset by 600 s runs 600 s and is pre-registered C | z0 | `stop_time`, `beam.schedule.t_end` | — | z0 prints t_fire_1D and stop per cell; the leg's `metadata` stop_time equals it |
+| L9 | the mesh twin: `amr.n_cell=128 128 64`, `amr.max_grid_size=32`, `weibull.V0=4.76837158203125e-10` (= (0.78125 mm)³, check_shared (iv)), dt from the rule at dz/2 | the deck's mesh keys | the flaw per cell; the explicit limit 0.0607 s | — | b1 on the three legs; `metadata` V0 |
+
+### Legs (exact argv tokens)
+
+`RUN = mpirun --oversubscribe --bind-to none -np 4`; `D` = `tests/MMWSpalling/studies/p2_25_regime_map/input`; `D19` =
+`tests/MMWSpalling/validation/oglesby/input` (P400R only); study root `S = tests/MMWSpalling/studies/p2_25_regime_map/`;
+every leg writes `plot_file=S/legs/<leg>/run`. Run order: z0–z2 (offline), a0–a2 (gates), b0 (P400R), the 42 map legs
+(by flux row, shallow to deep), then K (14), W (4), F (5); reduce after each block. Serial, under caffeinate.
+
+**The ladders** (ω 12.88 mm; ε′ 5.02 ⇒ 1 − R 0.85345; dz 1.5625 mm; ρ c_p 2.033e6 J/m³K):
+- depth 1/α [mm] → α [m⁻¹] → `beam.tan_delta` = α × 1.070687e-2/(2π × 2.2405): **0.5 → 2000 → 1.52111; 1 → 1000 →
+  0.760555; 2 → 500 → 0.380278; 4 → 250 → 0.190139; 8 → 125 → 0.0950694; 16 → 62.5 → 0.0475347; 71.4 → 14.003 → the
+  rock file's 0.01065 (no token)**. ⚠ tan δ > 1 is not a physical loss tangent: the axis IS the deposition depth, R and
+  n are held at the rock's (declared).
+- net centre flux q [MW/m²] → `beam.schedule.P` [W] = q × 3.0533e-4 × 1e6: **0.3 → 91.6; 0.5 → 152.7; 1 → 305.3; 2 →
+  610.7; 4 → 1221.3; 8 → 2442.7**. `stop_time` = `beam.schedule.t_end` = **clamp(3 × t_fire_1D, floor, 600 s)**
+  from z0's 1-D column (L11), floor 60 s for q ≤ 2 and 20 s for q ≥ 4 — the dt table below shows the floors; z0's
+  stop table replaces them cell by cell (deep cells at dt 0.2 cost ≤ 3,000 steps ≈ 1 min even at 600 s).
+- `timestep` = min(0.2, 6 K / r) rounded DOWN to one significant figure, r = q(1 − e^{−α dz})/(ρ c_p dz) the top cell's
+  first-step heating rate (P400: 460 K/s ⇒ 0.013 → ran at 0.008). The table (dt in s; steps = stop/dt):
+
+| 1/α \ q (dt; stop ≥ the floor) | 0.3 (≥ 60 s) | 0.5 (≥ 60 s) | 1 (≥ 60 s) | 2 (≥ 60 s) | 4 (≥ 20 s) | 8 (≥ 20 s) |
+|---|---|---|---|---|---|---|
+| 0.5 mm | 0.06 | 0.03 | 0.01 | 0.009 | 0.004 | 0.002 |
+| 1 mm | 0.08 | 0.04 | 0.02 | 0.01 | 0.006 | 0.003 |
+| 2 mm | 0.1 | 0.07 | 0.03 | 0.01 | 0.008 | 0.004 |
+| 4 mm | 0.1 | 0.1 | 0.05 | 0.02 | 0.01 | 0.007 |
+| 8 mm | 0.2 | 0.2 | 0.1 | 0.05 | 0.02 | 0.01 |
+| 16 mm | 0.2 | 0.2 | 0.2 | 0.1 | 0.05 | 0.02 |
+| 71.4 mm | 0.2 | 0.2 | 0.2 | 0.2 | 0.2 | 0.1 |
+
+Leg names `D<depth>_Q<q>` with tokens `0p5 1 2 4 8 16 71` and `0p3 0p5 1 2 4 8`. ≈ 89,000 steps at the floors
+(≈ 35 min at the #19 deck's ≈ 45 steps/s) plus up to 3,000 steps per deep cell that z0 extends (≈ +25 min).
+
+| leg | argv (after `RUN bin/mmwspalling-3d-g++ D`) | cost |
+|---|---|---|
+| D<d>_Q<q> (42) | `beam.tan_delta=<td>` (none for D71) `beam.schedule.P=<P> beam.schedule.t_end=<stop> stop_time=<stop> timestep=<dt>` (stop from z0's table) | ≈ 60 min |
+| P400R | `RUN bin/mmwspalling-3d-g++ D19 beam.eps_r=1.0 beam.tan_delta=0.6970986507425017 beam.lambda=2.19e-3 "beam.tan_delta_T=295.15 1.0 1268.15 1.0" beam.schedule.t_end=20.0 beam.schedule.P=400.0 timestep=0.008 stop_time=20.0 amr.plot_int=500` — P2-23's P400 argv with the one-pair table made two pairs (the melt keys abort on the scalar path) | 1 min |
+| K05_D<d>_Q2, K2_D<d>_Q2 (14) | the D<d>_Q2 argv + `spallation.sp.kic.scale=0.5` / `=2.0` | 10 min |
+| W6_D1_Q2, W6_D4_Q2 | the D1_Q2 / D4_Q2 argv with `beam.omega0=0.00644 beam.schedule.P=152.7` | 3 min |
+| W19_D1_Q2, W19_D4_Q2 | idem with `beam.omega0=0.01932 beam.schedule.P=1374.0` | 3 min |
+| F_D1_Q2, F_D2_Q2, F_D4_Q2 | the D<d>_Q2 argv + `amr.n_cell=128 128 64 amr.max_grid_size=32 weibull.V0=4.76837158203125e-10 stop_time=20.0 beam.schedule.t_end=20.0` and `timestep=0.008 / 0.01 / 0.02` (the rule at dz/2) | 16 min |
+| F_D2_Q1, F_D2_Q4 | the D2_Q1 / D2_Q4 argv + the same mesh keys, `timestep=0.02 / 0.007`, `stop_time=60.0 / 20.0` (the predicted boundary row at the fine mesh, both sides of q 2) | 16 min |
+| gates | `guarded_post_all_par.sh p2_25`; `tree_compare.py p2_25 p2_18 d2aa d2t`; `face_gate.py run p2_25`, `cmp p2_24 p2_25`; `unit/{retired_keys,latent_heat,beam_tau,face_beam,face_vapor}/test`, `unit/face_melt/test --bin_pre studies/p2_24_melt_vapour/bin_p2_24/mmwspalling-3d-g++` | 15 min |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline `Z0.txt`: every ladder value (α, tan δ, P, dt, steps) recomputed from the constants read from the rock file, the deck and `BeamIncidentIntensity`; the predicted boundary (P1) with its arithmetic; the P2-17 `q_net` definition (radiation inside or not) and the beam threshold in absorbed terms; t_fire_1D and the stop per cell (L11); the bin/ sha and the `find -newer` list against the P2-24 binary | ladders equal to this packet's tables to the printed digit; every stop ≥ its floor and ≤ 600 s; sha `c052c348…`; only `Grimsel.H` newer | **gate** | the legs would not run what the packet scores |
+| z1 | 1 | `face_gate.py`: `thermo_cols` cmp of `face_p2_24`'s BEAM_S `thermo.dat` against itself; `cmp p2_24 p2_24` | 0 columns moved; `VERDICT: IDENTICAL` (today: 11 moved) | **gate** | a1 cannot be read |
+| z2 | 1 | `validation/oglesby/test --onset` on P2-24's M0 with `--alt M100 --flat M0F` (offline, the pruned legs) prints the vapour mass | 3.28 / 0 / 14.4 g (324 / 0 / 1420 cells × (1.5625 mm)³ × 2650 kg/m³) | **gate** | the mass arithmetic or the metadata read is wrong |
+| a0 | 2 | tree gate `p2_25` vs `p2_18.md5` (controls d2aa 26, d2t 863) | **0 of 2,639** | **gate** | the addendum key's default is not inert, or the tree moved since P2-24 |
+| a1 | 2 | face gate `cmp p2_24 p2_25` | `IDENTICAL` (timers only) | **gate** | idem on the face list; or z1's fix changed the verdict's meaning |
+| a2 | 2 | `unit/retired_keys`, `latent_heat`, `beam_tau`, `face_beam`, `face_melt --bin_pre`, `face_vapor` | all PASS | **gate** | — |
+| b0 | 3 | P400R (`D19`): the first regime-1 CSV row's time; N_rem(20 s) | first ≤ 2.0 s; N_rem ≥ 500 | **gate** | the rule does not remove on this binary ⇒ no map cell can |
+| b0r | 3 | P400R vs P2-23 P400: N_rem (1,008), first removal (0.95 s), max `bc_T_peak` | report: equal to the step if no cell passed 1410.5 K (the only physics P2-24 changed); else the deviation and the hottest cell | report | — |
+| b1 | 3 | every map / K / W / F leg: rc 0; `beam_alpha_max` on the first lit row = α_leg to the printed digits; `beam_P_inc`/P_leg = 0.8535 ± 0.002 on the first lit row; the header has `bc_z_melt` | all four | **gate** per leg (a failing leg is named and excluded from the map, never re-labelled) | the argv did not reach the beam, or the flat table left the sum path |
+| b2 | 3 | every leg: max per-step Δ`bc_T_peak` over the rows before t_melt | ≤ 12 K (twice the 6 K design); a leg above it is re-run at dt/2 and the re-run scored, the first kept | report | the dt rule under-resolves the heating at that cell |
+| m1 | 3 | THE MAP: the 7 × 6 outcome grid (S / St / M / B / C) with t_fire, t_rem, t_melt, N_rem(stop), stop and `bc_ell_p` at t_fire in each cell; the count of C cells (undecided) | P1; C cells ≤ 6 (the q 0.3 column at most) | report | more C cells: the stop rule under-ran the deep rows and the "nothing at ≥ 4 mm" claim rests on fewer cells than planned — say how many |
+| m2 | 3 | the boundary: per flux row the deepest S cell; per depth row the lowest-q S cell; `bc_ell_pk` at t_fire in the S cells and in the first non-S cell of each row | P1: deepest S at 1 mm (2 mm marginal), never ≥ 4 mm; lowest S flux 1 MW/m² (0.5 a St) | report | an S at ≥ 4 mm: the layer B reads at onset is not the deposition depth, or the limit is not 2.4 mm — a finding about the one rule, named by the logged ℓ |
+| m3 | 3 | the K cuts at q 2: the outcome per depth under kic 0.5 and 2.0, and `bc_T_peak` at t_fire vs the base | P3 | report | — |
+| m4 | 3 | the W cuts: outcome and N_rem at (1 mm, 4 mm; q 2) for ω 6.44 and 19.32 vs 12.88 mm; the lit-column count | P4 | report | ⚠ read with P4's caveat: B's span is FIXED at 12 mm, so an S at ω 6.44 mm (hot zone narrower than the span) describes the rule, not the rock |
+| m5 | 3 | the F twin: outcome, t_rem, t_melt at (1, 2, 4 mm; q 2) and (2 mm; q 1, q 4) at 0.78 vs 1.56 mm; the removed VOLUME Σ h_applied × dx·dy (L10) | P5 | report | a flip at 1 or 4 mm: the boundary is a mesh statement (the 1.56 mm cell holds most of a 0.5–1 mm deposit) |
+| m6 | 3 | every S cell: removal rate over [stop − 10 s, stop] as events/s and m³/s (volume per L10); specific energy in GJ/m³ both as `ledger_E_src(stop)` / V_rem (absorbed) and P·stop / V_rem (beam), with N × dz³ beside V_rem as the upper bound; the floor depth (the deepest removed cell's k) at stop | P6 | report | — |
+| m7 | 3 | isotropy on the S cell with most removals (and P400R): regime-1 events in 8 azimuth sectors about the beam axis, each divided by that sector's column census inside r ≤ ω | max/min ≤ 2 at ≥ 100 events; printed beside the raw counts | report | a grid-direction artefact in the beam's removals |
+| m8 | 3 | vapour on any leg: N_vap (regime-2 rows) and its mass; the first vapour time and the outcome letter of that cell | report (expected 0 except possibly q 8 at 4–16 mm) | report | — |
+| e0 | 4 | verdict | — | **verdict** | z0–z2, a0–a2, b0, b1 hold ⇒ the map is a statement of the validated pieces run together on this binary; m1–m8 are its content, m2 is the test of the one rule's boundary |
+
+### Pre-registered predictions
+
+- **P1 (m1, m2).** (q is the ABSORBED centre flux: after reflection, before the surface's own losses ≈ 0.05 MW/m² at
+  850 K; P2-17's 0.432 is the flame's net input at onset, so the beam's threshold is 0.43–0.49 absorbed — z0 settles
+  which.) The spall region is **1/α ≤ 1 mm AND q ≥ 1 MW/m²** (8 cells S), because the layer B reads at onset
+  is L_on ≈ max(1/α, 1.1√(κ t_on)) against 2.35–2.4 mm at T_s ≈ 850 K, and t_on ≈ (π/4κ)(λΔT/q)² for surface heating
+  (λ 2.2 W/mK, ΔT 550 K, κ 1e-6): 1.15 s at 1 MW/m² (√κt 1.1 mm), 4.6 s at 0.5 (2.1 mm), 12.8 s at 0.3 (3.6 mm).
+  The **2 mm row is marginal** (L_on 2–2.4 mm; St or S at q ≥ 1). The **q 0.5 column is St at 0.5–2 mm** (P2-23 P:
+  6 removals at 0.576 MW/m², 1.2–1.3× the threshold) and **q 0.3 is B or C** (below it). **No cell at 1/α ≥ 4 mm
+  removes anything** at any flux (B withdraws every fired line, as on #19): with the stop rule these cells read B
+  (fired, all withdrawn) or M (melt first), and only a cell whose 1-D column stays below onset for 600 s reads C
+  (expected: the q 0.3 column at 8–71 mm, where the surface warms at ≈ 2 K/s against losses) — a C says nothing
+  about spall. The boundary is therefore an L-shape: horizontal at 1/α ≈ 2 mm for q ≥ 1, turning vertical at q ≈ 0.5.
+- **P2 (m1).** In every S cell the first removal comes within 2 t_on of beam-on (P400: 0.95 s at 1.5 MW/m² against
+  t_on 0.5 s) and the removals continue to the stop (no stall), at a rate that rises with q.
+- **P3 (m3).** B does not read K_Ic, so the DEPTH boundary moves by less than one ladder step under kic 0.5 or 2.0;
+  the FLUX threshold moves: 0.5 lowers the onset T (shorter t_on, thinner conduction layer) and makes the q 0.5
+  column S at 0.5–1 mm; 2.0 raises the onset toward the solidus and may suppress removal at every flux (M or B
+  everywhere). The second outcome records that the map's spall region rests on the K_Ic level (a calibration
+  sensitivity, SR 1), not that the rule is wrong.
+- **P4 (m4).** The outcome at (1 mm, q 2) is S at all three waists and at (4 mm, q 2) not-S at all three. ⚠ This is
+  a statement about the RULE: B's span is fixed at 12 mm whatever the heated width, so at ω 6.44 mm (1/e² diameter
+  12.9 mm, a hot zone narrower than the span) the rule cannot see that a 12 mm flake would reach cold rock — an S
+  there is the rule's answer, not the rock's, and the reading says so. What the cut does test is the rest of the
+  chain (the lit-column count ∝ ω², N_rem with it, the per-line ℓ); a not-S at ω 6.44 says some other part of the
+  rule depends on the spot.
+- **P5 (m5).** The 0.78 mm twin reproduces the 1.56 mm outcome at 1 and 4 mm; at 2 mm (marginal) it may flip, and the
+  volumes removed agree within 25 % (P2-24 DR-5: counts 6×, volumes 23 %).
+- **P6 (m6).** Specific energy 2–5 GJ/m³ (absorbed) in the S cells, falling with q (less conduction loss per
+  removal) and rising toward the 1 mm row. P400 brackets it: 7,320 J absorbed over 1,008 events whose volume lies
+  between 443 full cells (1.69e-6 m³ ⇒ 4.3 GJ/m³) and 1,008 full cells (3.85e-6 m³ ⇒ 1.9 GJ/m³) — the CSV's
+  Σ h_applied × dx·dy (L10) pins it; flame drilling ≈ 1 GJ/m³ for comparison.
+- **P7 (a0, a1, b0r).** Byte identity on every gate leg; P400R equal to P400 unless a cell passed 1410.5 K.
+- **P8 (m7).** Sector ratios within 2 at ≥ 100 events (P400: 1,008 over 96 columns).
+
+### Refuting evidence on disk
+- `studies/p2_23_beam_port/legs/P` (0.576 MW/m², 0.5 mm, ε′ 1, 20 s): 6 removals then a stall ⇒ D0p5_Q0p5 (0.5 MW/m²,
+  60 s, R 0.147) must read St or a late S; an S with N_rem ≫ 20 by 20 s would contradict P.
+- `legs/P400` (1.535 MW/m², 0.5 mm): 1,008 in 20 s ⇒ D0p5_Q1 and D0p5_Q2 bracket it: both S with N_rem(20 s) between
+  ≈ 500 and ≈ 1,500.
+- `legs/B0` / `B0F` (#19 at 4.8 MW/m²: fire 30.8 / 48.0 s; melt 42.6 s / none by 80 s; 0 removals) ⇒ D71_Q4 (1,221 W,
+  stop ≥ 3 × its t_fire_1D) fires later than 48 s and reads B with 0 removals; D71_Q8 (2,443 W) fires earlier than
+  48 s and removes nothing (B or M).
+- `studies/p2_24_melt_vapour/legs/M0` (table α, 1.46–1.57 kW): melt at 43.2 s ⇒ no flat leg at ≤ 2.4 kW melts before
+  ≈ 40 s at 71 mm.
+
+### What would make this inert, and the witness for each
+- The argv's `beam.tan_delta` loses to the rock file's (parse order): `beam_alpha_max` reads 14.003 on a shallow leg (b1).
+- The two-pair table is read as one pair (scalar path): the parse aborts on the melt keys — rc ≠ 0 (b1); or the `bc_*`
+  columns are missing from the header (b1).
+- The one-window schedule leaves `P_now` 0 (a `t_end` before the first step, or `P0` read instead): `beam_P_beam` 0 on
+  the first row (b1's `beam_P_inc` check).
+- The face list is not built because the regime deck lost a patch key in the copy: `bk_n_eval` 0 on every leg including
+  D0p5_Q8 while `bc_T_peak` passes 900 K — b0's P400R on `D19` separates "the binary" from "the deck".
+- dt too large: a per-step jump > 12 K in `bc_T_peak` (b2).
+- The depth scan's window (15 mm) truncates ℓ on deep legs so `bc_ell_p` is undefined at t_fire (P2-23: `nodepth`):
+  expected on D8–D71 and recorded as such; the full-column `bc_ell_pk` is printed beside it (m2).
+- N_rem counted from thermo with `thermo.plot_int` ≠ 1 (SR 7(i)): the CSV is the authority and the two are cross-checked.
+
+### Guardrails
+- No `src/` change. The deck, `run.py`, `z0.py`, `chain.sh`, `prune.py`, `reduce.py`, the two test-infrastructure
+  edits (`face_gate.py`, `validation/oglesby/test`) and the records are the whole change set.
+- No value in `rock_grimsel.inputs` or `model_form_flame.inputs` moves; `beam.tan_delta` is overridden per leg as a
+  DECLARED axis, never written into a shared file; ×4, R_melt 0.3, the span, c_f, R 0.531, the flaw stay.
+- `spallation.sp.kic.scale` 0.5 / 2.0 run as declared brackets on 14 legs and are adopted nowhere (SR 1).
+- The map is scored on the FIRST event; nothing after a melt is interpreted here (the melt's heat transport is parked).
+- The face reference stays `face_p2_24` unless a1 is not IDENTICAL, in which case stop (do not re-pin) and report.
+- Legs are pruned to the first and last plotfile after reduce; `MANIFEST.md5` first; `.old<k>` on re-runs (SR 9).
+- Nothing committed by this packet.
+
+### Commands
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_25_regime_map
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness; U=tests/MMWSpalling/unit
+shasum -a 256 bin/mmwspalling-3d-g++; find src -type f -newer tests/MMWSpalling/studies/p2_24_melt_vapour/bin_p2_24/mmwspalling-3d-g++   # z0: c052c348…, Grimsel.H only
+$PY $S/z0.py > $S/Z0.txt
+$PY $W/face_gate.py cmp p2_24 p2_24                                   # z1 (after Goal 0)
+$PY tests/MMWSpalling/validation/oglesby/test tests/MMWSpalling/studies/p2_24_melt_vapour/legs/M0/run --onset \
+    --alt tests/MMWSpalling/studies/p2_24_melt_vapour/legs/M100/run --flat tests/MMWSpalling/studies/p2_24_melt_vapour/legs/M0F/run   # z2
+bash $W/guarded_post_all_par.sh p2_25; $PY tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py p2_25 p2_18 d2aa d2t
+$PY $W/face_gate.py run p2_25; $PY $W/face_gate.py cmp p2_24 p2_25
+for t in retired_keys latent_heat beam_tau face_beam face_vapor; do $PY $U/$t/test; done
+$PY $U/face_melt/test --bin_pre tests/MMWSpalling/studies/p2_24_melt_vapour/bin_p2_24/mmwspalling-3d-g++
+$PY tests/MMWSpalling/validation/shared/check_shared.py $S/input --allow beam.tan_delta --run $S/legs/D1_Q2/run
+$PY $S/run.py P400R                                                   # b0 before the map
+$PY $S/run.py $(for q in 0p3 0p5 1 2 4 8; do for d in 0p5 1 2 4 8 16 71; do echo D${d}_Q${q}; done; done)
+$PY $S/run.py K05_D0p5_Q2 K05_D1_Q2 K05_D2_Q2 K05_D4_Q2 K05_D8_Q2 K05_D16_Q2 K05_D71_Q2 K2_D0p5_Q2 K2_D1_Q2 K2_D2_Q2 K2_D4_Q2 K2_D8_Q2 K2_D16_Q2 K2_D71_Q2
+$PY $S/run.py W6_D1_Q2 W6_D4_Q2 W19_D1_Q2 W19_D4_Q2 F_D1_Q2 F_D2_Q2 F_D4_Q2 F_D2_Q1 F_D2_Q4
+$PY $S/reduce.py > $S/RESULTS.txt; $PY $S/prune.py <every leg>
+```
+
+### Claude completion notes
+
+**Files changed** (no `src/` change; nothing committed): `studies/tree_sweep_0922/witness/face_gate.py` (`col_moved`, used
+by `cmp` only); `validation/oglesby/test` (m6: the vapour mass, `vcell`); `witness/REFERENCE.md` (P2-25 block);
+`docs/project/MODEL_CARD.md` (§6 row 33, §8, §10 row "regime boundary (beam)"). New study `studies/p2_25_regime_map/`:
+`input` (the regime deck), `z0.py`/`Z0.txt`/`STOPS.json`, `z1.py`/`Z1.txt`, `Z2.txt`, `run.py` (66 literal legs,
+`--check`), `reduce.py`/`RESULTS.txt`, `prune.py`, `chain.sh`/`CHAIN.log`, `BINARY.txt`, `CHECK_SHARED.txt`,
+`GATE_tree.txt`, `GATE_face_cmp.txt`, `A2_*.log`, `inputs_pre/` (the two edited files), `legs/` (66 legs, pruned to the
+first and last plotfile with `MANIFEST.md5`: 9.3 GB).
+
+| # | measured | verdict | output |
+|---|---|---|---|
+| z0 | every α, tan δ, P, dt to the printed digit; P = q × 3.0533e-4; absorbed threshold 0.48 MW/m² (P2-17's q_net subtracts radiation: 0.4316 + 0.0201 + 0.0292); t_fire_1D and stop per cell (all within floor … 600 s; 106,189 steps; D71_Q0p3 pre-registered C); sha `c052c348…`, only `Grimsel.H` newer | **PASS** | `Z0.txt`, `STOPS.json` |
+| z1 | BEAM_S thermo parsed twice: old rule 11 columns moved, `col_moved` 0; `cmp p2_24 p2_24` IDENTICAL (vacuous alone: takeaway 3) | **PASS** | `Z1.txt` |
+| z2 | M0 / M100 / M0F: 3.28 / 0 / 14.4 g | **PASS** | `Z2.txt` |
+| a0 | p2_25 vs p2_18 **0 of 2639**; d2aa 26, d2t 863 | **PASS** | `GATE_tree.txt` |
+| a1 | `cmp p2_24 p2_25`: IDENTICAL (timers only) — face reference stays `face_p2_24` | **PASS** | `GATE_face_cmp.txt` |
+| a2 | retired_keys, latent_heat, beam_tau, face_beam, face_vapor, face_melt --bin_pre: all PASS | **PASS** | `A2_*.log` |
+| b0 | P400R first regime-1 CSV row 0.94 s; N_rem(20 s) 1,008 | **PASS** | `RESULTS.txt` |
+| b0r | P400R = P400 to the event: 1,008 / 1,008, first 0.94 / 0.94 s; max bc_T_peak 706.7 K (< 1410.5); L10 on P400R: Σ h_applied dx dy 1.9412e-6 m³ = Σ(1 − fr_f)V 1.9412e-6 (0.00 %), N dz³ 3.85e-6 | report (P7 ✓) | idem |
+| b1 | 65 legs: rc 0; α at %g = the argv's; P_inc/P 0.8534–0.8535; bc_z_melt in every header | **PASS** | idem |
+| b2 | heating step before the first removal and the melt ≤ 5.84 K on every leg (all rows up to 420 K: removal drops, takeaway 4) | report ✓ (no re-run) | idem |
+| m1 | 0.5 mm `B B S S S S`; 1 mm `B B S S S S`; 2 mm `C B M M S S`; 4 mm `C B B M M M`; 8 mm `C C B M M M`; 16 mm `C C B B B M`; 71 mm `C C C C B B` (q 0.3 … 8); **10 C cells** | P1: spall region exactly the 8 predicted cells + 2 mm at q ≥ 4; q 0.5 B not St; C 10 > 6 | idem |
+| m2 | deepest S: 1 mm at q 1–2, 2 mm at q 4–8; lowest-q S: 1 MW/m² at 0.5–1 mm, 4 at 2 mm; bc_ell_pk NaN at t_fire in every shallow cell (no interior peak); bc_ell_p at t_fire ≤ 3.34 mm in every S cell, ≥ 3.37 mm in every fired non-S cell | P1 ✓ (no S at ≥ 4 mm, 16 decided cells: 9 B, 7 M) | idem |
+| m3 | at q 2, K ×0.5 / ×1 / ×2: S S M M M B at 0.5–16 mm under all three; onset bc_T_peak 428/556/740 K (0.5 mm) … 601/845/1208 K (16 mm); 71 mm B (fires 96 s) / C / C | P3 ✓ (depth boundary unmoved) | idem |
+| m4 | 1 mm: S at ω 6.44/12.88/19.32 (N 240/2049/6084; removal columns 25/87/239 vs r ≤ ω census 52/208/484); 4 mm: M at all three | P4 ✓ | idem |
+| m5 | to 20 s (60 at q 1): 1 mm S/S (N 2114/1010, vol 1.37e-6/2.20e-6 m³, ratio 0.62); 2 mm q 1, 2: M/M; 4 mm: M/M; **2 mm q 4: M (0.78) vs S (1.56)** | P5: outcome ✓ at 1, 4 mm, flip at 2 mm; volume ratio 0.62 ✗ (bar 25 %) | idem |
+| m6 | absorbed GJ/m³ (0.5/1/2 mm): q 1 15.7/24.4; q 2 4.37/6.72; q 4 2.14/2.51/5.26; q 8 1.76/1.90/2.52 (net and beam printed beside); rate 2.4 → 535 ev/s with q; at q ≤ 2 the rate decays in time (D1_Q2 576 → 169 per 10 s), D1_Q1 stops at 40.7 s; 5 S legs reach the 50 mm block bottom | P6: falls with q ✓, rises to the 1 mm row ✓, q 1 above 2–5 | idem |
+| m7 | per-column sector ratio 1.12 (D0p5_Q8, 15,714 events), 1.37 (P400R, 1,008) | P8 ✓ | idem |
+| m8 | no vapour on any leg | ✓ | idem |
+| e0 | z0–z2, a0–a2, b0, b1 hold | **the map is a statement of the validated pieces run together on this binary**; m2: the one rule's boundary sits at 1–2 mm deposition depth and ≈ 1 MW/m², and nothing removes at ≥ 4 mm | `RESULTS.txt` |
+
+**P2 (first removal within 2 t_on; no stall):** 1 of 10 S cells within P1's surface-heating 2 t_on (that t_on is
+2–10× short for volumetric heating; t_fire_1D is closer); rates rise with q, but at q ≤ 2 they decay and D1_Q1 stalls.
+
+**Declared deviations from the packet:** L10's authority is `fr_f`, not `phi` (1); the "lit-column count" is the r ≤ ω
+census (2); z1 parses the file twice (3); b2's window ends at the first removal (4); check_shared takes each leg's
+`argv.sh` and the deck repeats its inline directive on its own line (5); specific energy printed three ways (12).
+
+### Implementation takeaways
+
+1. **`phi` is a level set, not a solid fraction** (`MMWSpalling.H:591`: phi = z_surface − z_cell, metres). The face
+   list's solid fraction is `fr_f` (1 solid, 0 void, `FrInitFraction`), so L10's cross-check is Σ(1 − fr_f)·V. It
+   holds to 0.00 % on P400R: the CSV's Σ h_applied × dx dy IS the volume, because the lines run along grid axes
+   (`L.dir / 2` is the axis; `RecedeAlongLine` takes h along the line from the cells it crosses). Vapour voids also set
+   fr_f 0, so on a vaporising leg the plotfile volume includes them.
+2. **Every column is "lit" under a Gaussian** (`ColumnOpticalDepth`: lit = Pi > 0, and e^{−2r²/w²} never underflows on
+   this block), so a lit-column count is 4,096 at every ω. m4 uses the census of columns inside r ≤ ω (52/208/484) and
+   the distinct removal columns (25/87/239), which do scale with ω².
+3. **The NaN comparator bug only shows across two parses.** Python's list `==` tests identity first, so a parsed list
+   compared with ITSELF reads equal even with NaN inside; `cmp` parses each side separately and `float("nan")` is a fresh
+   object each time. `cmp p2_24 p2_24` cannot witness the fix (identical md5s are never column-compared). `rankcheck`
+   keeps the old test (the packet allowed no other change).
+4. **b2 must stop at the first removal.** A removal takes the central column's hot top cells, so `bc_T_peak` drops by
+   ~95–420 K in one step; read over all rows before the melt, b2 would fail every S leg on a jump dt cannot cause. Before
+   the first removal every leg's heating step is ≤ 5.84 K (the 6 K design holds).
+5. **check_shared needs the leg's argv file** (its second positional argument): without it a key overridden on the argv
+   reads as an undeclared mismatch. Its directive regex is anchored (`^#\s*check_shared:`), so the packet's inline
+   `# check_shared: allow beam.tan_delta_T` after a value is ignored; the deck carries it on its own line as well.
+6. **The absorbed threshold is 0.48 MW/m²**, not 0.43: P2-17's q_net = h(T_g − T_s) − εσ(T_s⁴ − T_amb⁴) − h_conv(T_s −
+   T_amb) is NET of radiation, and the beam deck's own losses at 819.8 K are 0.0201 (radiation) + 0.0292 (h 56). q 0.5
+   is 1.04× it: every q 0.5 cell fired and every fired line was withdrawn (B), none removed.
+7. **The 1-D stop clock under-runs deep absorption.** Ten cells ended before any firing (pre-registered: one). For
+   1/α ≥ 2 mm at low flux the 3-D surface reaches onset later than 3× the 1-D column (lateral conduction and the beam's
+   finite spot spread a deep deposit). The "nothing removes at ≥ 4 mm" claim rests on the 16 decided cells (9 B, 7 M),
+   not on the 8 C cells there.
+8. **`bc_ell_pk` is undefined at first firing in every shallow cell** (no interior peak yet); the central column's
+   e-fold `bc_ell_p` is the one that separates the outcomes (≤ 3.34 mm S, ≥ 3.37 mm not-S at 1.56 mm). It is a proxy:
+   B reads each line's own ℓ, not the central column's.
+9. **Five S legs drilled to the block's bottom** (50 mm: D0p5_Q8, D1_Q8, D2_Q8, K05_D0p5_Q2, W19_D1_Q2), so their
+   late rates and specific energies are bounded by the domain, not the rule.
+10. **The onset's central peak temperature falls with flux and rises with depth** (492 K at 0.5 mm / q 8 to 887 K at
+    71 mm / q 4; under K ×2 up to 1208 K). This is the central column's peak on the first firing row, wherever that
+    line is; not interpreted here.
+11. **The tree sweep took 57 min, not 6:** its three 4-rank lanes plus Spotlight indexing (`mds_stores` 1.2 cores) on
+    5 performance cores stalled MPI's busy-waiting ranks (the long legs 5–128× slower, the short ones normal). The
+    hashes are unaffected; serial legs ran at normal speed. Excluding the repo from Spotlight would prevent it.
+12. **Specific energy three ways:** `beam_E_dep` (absorbed, cumulative), `ledger_E_src` (absorbed MINUS the surface
+    losses: the packet's "absorbed" column is net) and P·stop (beam). They differ by 5–25 %.
+13. **Storage:** 9.3 GB after the prune, almost all plotfiles (46 MB each at 1.56 mm, ~370 MB at 0.78 mm). The t = 0
+    plotfile is the same IC on every leg of one mesh: a candidate to drop. `reduce.py` honours `P2_25_LEGS` (a smoke
+    reduce on another directory).
+
+### Review findings
+
+Reviewer, 2026-11-07. Independent throughout: my own test of the DR-1 fix (three discrimination cases as well as the
+two-parse witness), my own manifest and md5-tree comparators with a string-level thermo audit, **my own reduction of
+the 42 map legs' outcomes from the packet's declared S/St/M/B/C thresholds**, my own `bc_ell_p` separation, my own
+mesh-twin and volume comparisons over a common window, and my own specific-energy arithmetic. No `src/` change to
+review beyond the addendum (below). No rebuild and no simulation re-run; I executed only `face_gate.py`'s comparator
+and my own reducers.
+
+| # | test | bar | **derived independently** | **read from** | row |
+|---|---|---|---|---|---|
+| z0 | the ladders, the stop rule, the binary | ladders exact; stops in range; sha; only `Grimsel.H` newer | `find src -newer` lists **only `Grimsel.H`** ✓; sha **c052c348…** ✓; P = q × 3.0533e-4 confirmed against `BeamIncidentIntensity` (2P/(πω²)·(1 − R) at ω 12.88 mm, R 0.14655). The absorbed threshold 0.48 MW/m² follows from P2-17's `q_net` being net of radiation (0.4316 + 0.0201 + 0.0292) | my own arithmetic; `Z0.txt`, `STOPS.json` | **reproduces (gate)** |
+| z1 | the DR-1 comparator fix | 0 moved under the fix; `cmp` IDENTICAL | Two separate parses of `face_p2_24/BEAM_S/run/thermo.dat`: **old rule 11 moved** — the same eleven columns, by name, that I measured in the P2-24 review — **`col_moved` 0** ✓. And it is **not weakened**: a 1e-9 perturbation of `beam_P_inc` still moves (max\|d\| 1e-9), a NaN column against a real number moves with the NaN-mismatch row counted, a row-count change returns inf. ⚠ `cmp p2_24 p2_24` is vacuous as a witness (takeaway 3) | my own three-case test of `col_moved`; `Z1.txt` | **reproduces (gate)** |
+| z2 | the vapour mass (DR-3) | 3.28 / 0 / 14.4 g | **3.28 / 0 / 14.4 g**, with V_cell 3.8147e-9 m³ and ρ 2650 printed from each run's own `metadata` — exactly the numbers I derived in the P2-24 review | `Z2.txt` | **reproduces (gate)** |
+| a0 | tree gate vs `p2_18.md5` | 0 of 2,639 | **0 of 2,639**, 0 one-sided, against **both `p2_18` and `p2_24`**; controls **26 / 863**. This is the first gate the addendum binary has seen, so it does the real work of Goal 2 | my own parse of `witness/p2_25.md5` | **reproduces (gate)** |
+| a1 | face gate `cmp p2_24 p2_25` | IDENTICAL | **1,217 files each side, 0 one-sided, 14 differing — all `thermo.dat`, and my own string-level audit finds ZERO** moved non-timer columns and no added or removed column ⇒ timers only. No re-pin ✓ | my own md5 walk + per-column string diff | **reproduces (gate)** |
+| a2 | the six unit tests | all PASS | `retired_keys`, `latent_heat`, `beam_tau`, `face_beam`, `face_melt --bin_pre`, `face_vapor`: all PASS | `A2_*.log` | **reproduces (gate)** |
+| b0 | P400R | first ≤ 2.0 s; N ≥ 500 | **1,008 regime-1 rows, first at 0.94 s**, all within 20 s | my own event-log reduction | **reproduces (gate)** |
+| b0r | P400R vs P2-23 P400 | report | **1,008 / 1,008 and 0.94 / 0.94 s — identical to the event.** L10: Σ h_applied·dx·dy = **1.9412e-06 m³**, and N × dz³ = 3.8452e-06 is **2.0×** it (the median flake is half a cell) | same | reproduces |
+| b1 | every map/K/W/F leg | α to the printed digits; P_inc/P 0.8535 ± 0.002; `bc_z_melt` present | **Not one of the 42 map legs fails** either bar: every first-lit `beam_P_inc`/P lies in [0.8515, 0.8555] and every header carries `bc_z_melt` | my own per-leg scan | **reproduces (gate)** |
+| b2 | max per-step Δ`bc_T_peak` before t_melt | ≤ 12 K | ≤ 5.84 K before the first removal on every leg; the window must end there because a removal drops the central peak by 95–420 K in one step (takeaway 4) — a real restatement, declared | `RESULTS.txt` | reproduces |
+| m1 | THE MAP | P1; C ≤ 6 | My own reduction of all 42 legs gives m1's grid **cell for cell**: 0.5 mm `B B S S S S`; 1 mm `B B S S S S`; 2 mm `C B M M S S`; 4 mm `C B B M M M`; 8 mm `C C B M M M`; 16 mm `C C B B B M`; 71 mm `C C C C B B`; **10 C cells** ⇒ the C bar **MISSED** (declared) | my own S/St/M/B/C classifier over thermo | reproduces |
+| m2 | the boundary | P1 | **No S at ≥ 4 mm**; deepest S **2 mm** (q 4–8), lowest-q S **1 MW/m²** (0.5–1 mm); the 16 decided deep cells are **9 B + 7 M**. `bc_ell_p` at first firing: **S ≤ 3.341 mm, fired non-S ≥ 3.370 mm** over 30 fired legs — and that lands inside the layer-limit band 2.35 mm (850 K) … 3.75 mm (1400 K) I derived in the P2-23 review. ⚠ The gap is 0.029 mm = 1.9 % of a cell (DR-2). Also: the two 2 mm S cells have t_rem > t_fire (1.18 vs 0.86 s; 0.46 vs 0.40), while every 0.5/1 mm S cell removes on its firing step — the marginal signature | my own reduction | reproduces |
+| m3 | the K cuts at q 2 | P3 | the depth boundary is unmoved under K ×0.5 and ×2 | `RESULTS.txt` | reproduces |
+| m4 | the W cuts | P4 | S at all three spots at 1 mm, M at all three at 4 mm; the r ≤ ω census 52/208/484 against 25/87/239 removal columns ⇒ scaling with ω², and takeaway 2's correction (every column is "lit" under a Gaussian, so a lit count is 4,096 at every ω) is right | same | reproduces |
+| m5 | the F twin | P5 | **F_D2_Q4 is M where D2_Q4 is S** ✓ the flip; 1 mm and 4 mm hold. Over a **common 20 s window** the volume ratio is **0.620** (bar 25 % ⇒ missed by 38 %) while the **event count ratio is 2.09** | my own common-window volume reduction | reproduces (**volume bar MISSED**) |
+| m6 | every S cell | P6 | `RESULTS.txt` prints all three energies per cell, and the packet's requested `ledger_E_src`/V ("net") column matches my own arithmetic exactly: **3.67 GJ/m³ (D0p5_Q2), 5.38 (D1_Q2), 4.66 (D2_Q4)**. The notes' table leads with `beam_E_dep` ("abs"), 19–25 % higher — declared as deviation 12. D1_Q1's last-10 s rate is **0.0 ev/s** (it stalls) and five legs' floors read 50.00 mm = the block bottom | my own E/V arithmetic; `RESULTS.txt` m6 | reproduces |
+| m7 | isotropy | max/min ≤ 2 | per-column sector ratio 1.12 (D0p5_Q8, 15,714 events) and 1.37 (P400R) | `RESULTS.txt` | reproduces |
+| m8 | vapour | report | none on any leg | same | reproduces |
+| e0 | verdict | — | z0–z2, a0–a2, b0, b1 all reproduce; the map is the validated pieces run together on a now-gated binary | — | **reproduces** |
+
+⚠ The packet marks **nothing** unquotable. Against `ROADMAP.md`: SR 1 is honoured — the K_Ic scale is a declared
+bracket and m3 adopts nothing. SR 20 is respected in m2's reading (the limit is normal, `bc_ell_p` along-line, and
+takeaway 8 says `bc_ell_p` is a proxy for what B actually reads). SR 7(i): every quantity I reduced is either a
+per-step counter summed over rows with `thermo.plot_int = 1` or a cumulative state read at a row. `check_shared`
+passes on the deck (64 shared keys, (iv) at V_cell). SR 9: `inputs_pre/` holds the two edited files and every leg
+carries a `MANIFEST.md5`.
+
+#### Diff review
+
+Scope: **no `src/` change by this packet**; the binary carries P2-24's ungated addendum (`Grimsel.H`), which a0/a1
+gate here for the first time — I read it from `git diff HEAD` (see row 2). Then `face_gate.py`, `validation/oglesby/test`,
+the regime deck, `z0.py`/`z1.py`/`run.py`/`reduce.py`/`prune.py` and the records.
+
+| # | hunk / call / test | class | finding | tag |
+|---|---|---|---|---|
+| 1 | `Grimsel.H`: `lambda.cap_theta` | 7 readers / 13 guards | Parsed `query_default(…, -1.0)`, consumed as `if (lam_cap_theta > 0.0 && th > lam_cap_theta) th = lam_cap_theta` ⇒ **inert at the default** (L7), which a0 0/2,639 and a1 IDENTICAL now prove. It mirrors the pre-existing `alpha_cap_theta` exactly — same default, same guard shape, same comment style — so duplication is a deliberate sibling, not a copy of arithmetic | ok |
+| 2 | the addendum's diff basis | 9 removed checks / SR 8 | **Neither P2-24's `src_pre/` nor this study holds a pre-image of `Grimsel.H`**, so the only basis is `git diff HEAD`, which mixes four packets' uncommitted edits. That diff contains a **deleted parse** — `pp.query_default("T_ref", v.T_ref, 293.15)` — which is **not in this packet's notes**. I dated it to **P2-18** from `studies/p2_18_prereq/a2_apply.py:158` ("delete the parse of `microstructure.phase<i>.grimsel.T_ref` — DEAD: overwritten by `phase<i>.T_ref`") and confirmed from `census_2026-11-05/work/annot.py:77` that it is dead and from a repo-wide grep that no live deck sets it. Authorised — but establishing that took a third packet's script (DR-4) | **risk** |
+| 3 | `face_gate.py` `col_moved` | 2 consistency / 6 fp | `all(x == y or (x != x and y != y))`, with max\|d\| taken over the pairs where **both** are finite and the one-sided-NaN rows counted separately — stronger than the one-liner the review asked for, because a NaN appearing on one side only is still flagged *and* quantified. Used by `cmp` only; `rankcheck` keeps the old test, as the packet required | ok |
+| 4 | the three discrimination cases | 10 test strength | I checked the fix cannot hide a real move: 1e-9 on `beam_P_inc` → moved, max\|d\| 1e-9; a NaN column vs 1.0 → moved, max\|d\| 253, 1 NaN-mismatched row; a dropped row → moved, inf | ok |
+| 5 | z1's witness | 10 test strength | The two-parse test is the **only** real witness: `cmp p2_24 p2_24` never column-compares (identical md5s), so the gate's self-comparison is vacuous. Takeaway 3 says so and z1 does both | ok |
+| 6 | `validation/oglesby/test` m6 mass | 5 hard-coded | V_cell from the run's `metadata` (`prob_hi − prob_lo` / `n_cell`) and ρ from `microstructure.phase0.grimsel.rho` — nothing typed. Reproduces 3.28 / 0 / 14.4 g | ok |
+| 7 | the regime deck | 7 readers / 9 removed checks | A copy of `validation/oglesby/input` with the listed changes only; the Fig. 34 schedule removed; the two-equal-pair flat table keeps the sum path (L2) and the `bc_*` block registered — my b1 scan confirms `bc_z_melt` in all 42 headers | ok |
+| 8 | `beam.tan_delta` on each leg's argv | 2 consistency | A declared override of a shared key, with `check_shared … --allow`; the deepest point sets nothing and takes the rock's own value. `check_shared` PASSES. ⚠ Deviation 5: the directive must sit on its own line because the regex is anchored | ok |
+| 9 | the S/St/M/B/C classifier | 12 discriminator | The thresholds are declared **in the packet, before the runs** (N ≥ 20 for S, 1–19 for St, C explicitly "undecided, never no-spall"), and I reproduced every letter from them. The C-as-undecided convention is what keeps m1's 10 C cells honest rather than silently counted as "no spall" | ok |
+| 10 | `bc_ell_p` as the boundary variable | **12 discriminator** | The separation is real (S ≤ 3.341, fired non-S ≥ 3.370 mm over 30 legs) but the gap is **0.029 mm = 1.9 % of a 1.5625 mm cell**, and `bc_ell_p` is the **central column's** e-fold while B reads each line's own ℓ — takeaway 8 says exactly this. Read it as a consistency check against the 2.35–3.75 mm band, not as a measured threshold (DR-2) | **risk** |
+| 11 | the mesh twin | **12 discriminator** | **F_D2_Q4 M vs D2_Q4 S** — and D2_Q4 is one of the two cells that make "deepest S = 2 mm" true, so at 0.78 mm the deepest S at q 4 is 1 mm. Over a common window the volume is 0.620× and the event count 2.09×: halving the cell doubles the events and removes 62 % of the volume (DR-3) | **risk** |
+| 12 | L10's volume rule | 3 units / 1 duplication | Σ h_applied·dx·dy, never N × dz³, with the authority corrected from `phi` to `fr_f` (deviation 1 — `phi` is a level set in metres, `MMWSpalling.H:591`). It holds to **0.00 %** on P400R, and N × dz³ is printed beside it as the 2× upper bound | ok |
+| 13 | b2's window | 6 boundary | Ends at the first removal, because a removal drops the central peak 95–420 K in one step — read over all pre-melt rows the bar would fail every S leg on a jump dt cannot cause. A correct restatement, declared | ok |
+| 14 | m4's "lit-column count" | 4 scope vs source | Replaced by the r ≤ ω census, because every column is lit under a Gaussian (`Pi > 0` never underflows on this block) so a lit count is 4,096 at every ω. Deviation 2, and the census does scale with ω² | ok |
+| 15 | m6's specific energy | 5 hard-coded / 3 units | Printed three ways and labelled; the packet's requested `ledger_E_src`/V is the "(net)" column and matches my arithmetic exactly. ⚠ The notes' m6 table leads with `beam_E_dep` ("abs"), 19–25 % higher than the column the packet specified — declared as deviation 12, but quote which one | nit |
+| 16 | takeaway 9 and the stop rule | 12 discriminator | **Five S legs reach the 50 mm block bottom** (floor 50.00 mm in m6), so their late rates and specific energies are bounded by the domain, not the rule — stated. And ten cells ended before any firing against one pre-registered, so "nothing at ≥ 4 mm" rests on 16 decided cells, which my count confirms (9 B, 7 M) | ok |
+
+**Tally: 16 rows — 0 bug, 4 risk, 1 nit, 11 ok.**
+
+#### What the planner needs
+
+- **DR-1 is closed and closed well.** My P2-24 finding is fixed, the fix is stronger than prescribed, and z1 tests it
+  by the only route that works. Nothing further.
+- **DR-2 — `bc_ell_p`'s separation is a consistency check, not a threshold.** A 0.029 mm gap on a 1.5625 mm cell, on
+  a quantity that is the central column's e-fold rather than the per-line ℓ that B reads. What it does establish is
+  worth stating in those terms: the empirical S / non-S split lands **inside** the 2.35–3.75 mm layer-limit band
+  derived independently from `C_L(T_s)`, which is the packet's thesis.
+- **DR-3 — the 2 mm row is a mesh statement, and so is every volume.** `F_D2_Q4` melts where `D2_Q4` spalls, and that
+  cell is half the evidence for "deepest S = 2 mm". Report the boundary as **1 mm firm, 2 mm mesh-dependent at q 4**.
+  The removed volume is 0.620× at half the cell while the event count is 2.09× — so volumes are quantitative only to
+  ≈ 40 %, which bounds every specific energy in m6 the same way.
+- **DR-4 — archive a pre-image with the binary, not just the binary.** The addendum shipped inside `98a261d3`'s
+  successor with no `Grimsel.H` pre-copy, so its only diff basis mixes four packets' uncommitted edits; I had to date
+  an unrelated deleted parse to P2-18 from another packet's script to clear it. A `src_pre/` entry for every file the
+  build touched, including an addendum's, costs kilobytes.
+- **Carried honestly already:** 10 C cells against a bar of 6 (so the deep claim rests on 9 B + 7 M), five S legs
+  drilled to the domain floor, and D1_Q1 stalling at 40.7 s.
+
+#### What I credit
+
+- **a0 retroactively gates the addendum**, which is the real work of Goal 2: a key that shipped inside a binary with
+  no tree or face gate now has both, at 0 of 2,639 and IDENTICAL, with its default proven inert by the guard's shape.
+- **b0r reproduces P2-23's P400 to the event** — 1,008 / 1,008 removals and 0.94 / 0.94 s on a different binary — and
+  L10's volume identity holds to 0.00 %, which is what makes every volume in the map trustworthy *within* a mesh.
+- **The outcome letters were defined before the runs**, including C as *undecided, never "no spall"*. That one word
+  is why m1's ten C cells read as a measurement of the stop rule rather than as evidence for the headline, and it is
+  the single best piece of packet design here.
+- **Four planner slips corrected from the code, each declared**: `phi` is a level set not a solid fraction; every
+  column is "lit" under a Gaussian; b2's window must end at the first removal; `check_shared` needs the leg's argv
+  and an anchored directive. None was absorbed silently.
+
+### Verdict: accepted
+
+- **Gating rows.** z0, z1, z2, a0, a1, a2, b0 and b1 all reproduce from my own reductions; no diff-review row is a
+  `bug`.
+- **Guardrails.** No `src/` change by this packet (`find -newer` lists only the addendum's `Grimsel.H`); the K_Ic
+  scale, spot and mesh cuts are declared brackets and none is adopted; the face reference stays `face_p2_24`;
+  nothing in the do-not-touch list; nothing committed.
+- **Reruns.** No rebuild, no simulation. I ran `face_gate.py`'s comparator on existing files (z1's fix, and three
+  discrimination cases of my own) and my own reducers over the legs already on disk.
+- **Files inspected** (named row by row above): `git diff HEAD -- src/Numeric/Material/Grimsel.H` plus its parse and
+  `lambda()` sites; `face_gate.py` (`col_moved`, `cmp`); `validation/oglesby/test` m6; the regime `input`;
+  the study's `Z0.txt`, `STOPS.json`, `Z1.txt`, `Z2.txt`, `GATE_tree.txt`, `GATE_face_cmp.txt`, `CHECK_SHARED.txt`,
+  `A2_*.log`, `RESULTS.txt`, `BINARY.txt`, `reduce.py`, `z0.py`, `z1.py`; all 42 map legs plus P400R and the K/W/F
+  cuts (thermo and events CSV); `witness/{p2_25,p2_24,p2_18,d2aa,d2t}.md5`, `face_p2_2{4,5}/`, `REFERENCE.md`;
+  `studies/p2_18_prereq/a2_apply.py`; `docs/project/census_2026-11-05/work/annot.py`.
+- The user should run `/plan` next; the planner will archive this step.

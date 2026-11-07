@@ -1,0 +1,96 @@
+# ============================================================================
+# THE GRIMSEL ROCK -- one file, included by every Grimsel deck (P2-13, 2026-10-30).
+# ============================================================================
+# Kant 2017, Hoeser and Meier all drilled Grimsel granite (Chuenzentennlen quarry):
+# same rock => same properties, calibrated ONCE and frozen (docs/project/MODEL_CARD.md
+# §1, §12). Include it with a line
+#     FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+# (AMReX ParmParse; the path is relative to the run's cwd, the repo root).
+# ⚠ A deck must NOT set any key below itself (later definitions win, silently);
+#   tests/MMWSpalling/validation/shared/check_shared.py checks that, and that the run's
+#   metadata resolved every key here to this file's value.
+# ⚠ NOT here, by design (they belong to the deck): phase0.T_ref (= the IC), confining.p,
+#   weibull.V0 (= V_cell), the heat source, losses.h_conv / T_amb, the mesh and dt.
+# Classes (MODEL_CARD §6): MEAS-MAT measured rock property; LIT published, maybe another
+# rock; CAL-ONCE fitted once on a named test, then frozen; CHOICE chosen, no source.
+# Values: Hoeser G1's resolved values (studies/p2_11_heat/legs/G1/run/metadata).
+
+# --- one homogeneous phase, the rock law ------------------------------------
+microstructure.mode       = expression        # CHOICE: grain-free rock (SR 13)
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+microstructure.phase0.fraction = 1.0
+microstructure.phase0.law      = grimsel      # CHOICE (form): the measured laws below
+
+# INERT under law = grimsel; required by the parser; to retire (MODEL_CARD §12 item 7).
+# The law rewrites every cell's kappa / beta / E / mu / rho / Cp field each step
+# (UpdatePropertyFields) and the criterion takes its stress from the law (LawSigma).
+# Since P2-14a E and mu are inert too: under the law the confinement term p nu/(1 - nu)
+# takes nu from grimsel.nu below (ElasticConstants, Removal.H), the nu LawSigma uses.
+# (Until P2-14a it read nu = E/(2 mu) - 1, equal to grimsel.nu by value only.)
+microstructure.phase0.kappa             = 1.5             # Meier Table 7.1 (inert, see above)
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9          # inert (see above)
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.A_D               = 0.0
+
+# Grimsel laws (src/Numeric/Material/Grimsel.H; validation/grimsel_properties/
+# grimsel_granite_properties_reference.md). MEAS-MAT. ⚠ Table 3's E/E0 and K_Ic are flat
+# above 600 degC (873.15 K), alpha above 650 degC: the tables' end (MODEL_CARD §6 row 2).
+microstructure.phase0.grimsel.cp.a            = 1370      # MEAS-MAT c_p(T)
+microstructure.phase0.grimsel.cp.b            = 178000
+microstructure.phase0.grimsel.cp.th0          = 271
+microstructure.phase0.grimsel.lambda.a        = 2000      # MEAS-MAT lambda(T)
+microstructure.phase0.grimsel.lambda.th0      = 563
+microstructure.phase0.grimsel.rho             = 2650      # MEAS-MAT
+microstructure.phase0.grimsel.E0              = 53.3e9    # MEAS-MAT (Hoeser 47.3, Kant 30-40 GPa)
+microstructure.phase0.grimsel.nu              = 0.30      # MEAS-MAT (reference: 0.25-0.30)
+microstructure.phase0.grimsel.K_Ic0           = 1.5       # MEAS-MAT, MPa sqrt(m)
+microstructure.phase0.grimsel.alpha_cap_theta = -1        # CHOICE: Table 3's alpha uncapped
+
+# --- the failure criterion and the flaw: ONE calibration (SR 1) ------------
+spall.stress_law              = grimsel        # CHOICE (form): 1-D confined stress from the law
+spallation.sp.kic.law         = grimsel_table  # MEAS-MAT: Grimsel Table 3 K_Ic(T)
+spallation.sp.kic.scale       = 1.0
+spallation.sp.stress_relief   = 0.531294       # CAL-ONCE: R = UCS/sigma(850 K), UCS 169 MPa (P2-2d,
+                                               #   studies/p2_2d_kic/LEVEL.txt); Kant fires 843.757 K
+weibull.a0_ig                 = 8.0e-6         # CAL-ONCE: the flaw SCALE, re-anchored 4 -> 8 um on Kant
+                                               #   (P0); checked in the production form by
+                                               #   validation/kant/grimsel_calibration (P2-13)
+spallation.sp.a0              = 8.0e-6         # the same flaw for a fixed-flaw leg; inert under Weibull
+weibull.m                     = 13             # LIT (another rock): Westerly's modulus via Wilkinson;
+                                               #   no Grimsel value (MODEL_CARD §6 row 10)
+weibull.a0_gb                 = 40.0e-6        # inert: the rock is grain-free (SR 13)
+
+# --- the buckling span (P2-15 condition B) ----------------------------------
+spall.buckle_span = 0.012                      # DERIVED-ON-KANT (P2-17): one span for both Kant granites,
+                                               #   inside one-span's window under both onset readings:
+                                               #   Delta 0 [11.992, 12.010) mm, Delta -30 K [11.683, 12.010) mm
+                                               #   (studies/p2_16_span_rule/RESULTS.txt; chosen on parsimony).
+                                               #   Alternative: 13.2 mm (span ~ 1/UCS, UCS 169 MPa), band
+                                               #   10.30-17.77 mm over UCS +-37 MPa -- one fixed exponent through
+                                               #   two brackets, a hypothesis not a law (P2-16 DR-12).
+                                               # ⚠ one calibration with spall.flake_c_f: B sees only L/c_f (SR 1).
+                                               # Minimum net flux at 12.0 mm on Grimsel: 0.432 MW/m2 (h_min 535.5
+                                               #   W/m2K), ABOVE the onset deck's h 500 (0.401 MW/m2): that deck
+                                               #   would not spall with B on, which is why it is onset-only and
+                                               #   overrides this to 0 (studies/p2_17_buckle_on/Z2.txt).
+                                               # Read on the face list only; any deck including this file with
+                                               #   surface_patch.face_list = 0 aborts naming the key.
+
+# --- the dielectric description (P2-20): the beam's absorption and reflection ---------
+beam.eps_r     = 5.02       # LIT (another rock: Barre granite): eps' = n^2, n = 2.24 (Oglesby, Woskov et al.,
+                            #   DOE final report DE-EE0005504, Dec 2014, OSTI 1169951, p. 52)
+beam.tan_delta = 0.01065    # LIT (Barre): 30 % single-pass absorption through 25 mm of solid granite at 28 GHz
+                            #   (DOE p. 44/52) => POWER alpha = -ln(0.7)/0.025 ~ 14 1/m; tan_delta = alpha lambda/(2 pi n)
+                            # The code computes alpha = 2 pi sqrt(eps_r) tan_delta / lambda (the POWER coefficient)
+                            #   and R = ((sqrt eps_r - 1)/(sqrt eps_r + 1))^2 = 0.147 (the DOE's Fresnel 0.14) with
+                            #   each deck's own beam.lambda (MMWBeam.H). FLAT with temperature by the user's decision
+                            #   (2026-11-05). To be replaced by a Grimsel measurement.
+
+# --- the surface's emissivity (radiation to the surroundings) --------------
+losses.epsilon      = 0.8                      # LIT: granite emissivity
+losses.epsilon_high = 0.8
+losses.T_eps_break  = 1.0e30                   # one emissivity at every temperature

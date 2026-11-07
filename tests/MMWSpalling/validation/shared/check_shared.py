@@ -27,6 +27,19 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
 SHARED = [os.path.join(HERE, "rock_grimsel.inputs"), os.path.join(HERE, "model_form_flame.inputs")]
 
 
+def parse_shared(path):
+    """parse(), with a NESTED `FILE =` line replaced by the included file's entries, recursively (AMReX follows a
+    nested include; P2-21: rock_grimsel.inputs includes loss_table_hartlieb.inputs), so the included keys are shared
+    keys and `FILE` itself is not one"""
+    out = []
+    for k, v in parse(path):
+        if k == "FILE":
+            out += parse_shared(v if os.path.isabs(v) else os.path.join(ROOT, v))
+        else:
+            out.append((k, v))
+    return out
+
+
 def parse(path):
     """ParmParse-style: [(key, value-string)] in file order, comments stripped; FILE lines kept as ('FILE', path)"""
     out = []
@@ -104,7 +117,7 @@ def main(argv):
     arg_kv = parse_argv(pos[1]) if len(pos) > 1 else []
     shared = {}
     for f in SHARED:
-        for k, v in parse(f):
+        for k, v in parse_shared(f):
             shared[k] = v
     bad = []
 

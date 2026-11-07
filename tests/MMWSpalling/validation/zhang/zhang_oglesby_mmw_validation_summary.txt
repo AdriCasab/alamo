@@ -214,3 +214,51 @@ This validation mostly checks whether the thermal model, material properties,
 and boundary/surface treatment can reproduce the measured centre-surface
 temperature response. It does not validate melt flow, vapor removal, drilling
 rate, or final borehole geometry.
+
+=====================================================================================================================
+PROVENANCE ADDENDUM (P2-20, 2026-11-06) -- from the DOE final report DE-EE0005504 (Oglesby, Woskov, Einstein,
+Livesay, Dec 2014, OSTI 1169951), read by the planner 2026-11-05. These facts govern how the curve above may be used.
+=====================================================================================================================
+ * The experiment in Zhang's Fig. 6 / 7 is ROCK TEST #28c: the THIRD exposure (6/18/2014) of a 4" x 1" Barre disc,
+   0.7-3.0 kW, TE11 from a 20 mm aperture, 20 m 54 s. It is "a previously melted sample and does not have the
+   beginning dynamics of virgin granite" (p. 53). A glassed surface heats > 10x faster than virgin rock (Woskov &
+   Michael 2011: 110 +- 5 vs 7.4 C/s), so a cold volumetric model MUST fall short in the first minute; that gap
+   measures the glass, not the virgin loss tangent, and is not a tuning target.
+ * The HEATING is at 28 GHz (lambda = c/28 GHz = 1.070687e-2 m). 137 GHz is the RADIOMETER.
+ * The radiometer signal is "uncorrected for emissivity ... an average across the whole aperture of view"; the
+   published temperatures were divided by 0.7, the MELT emissivity. The "experimental T" column above is therefore
+   the uncorrected signal / 0.7; the signal itself is that column x 0.7.
+ * Barre granite at 28 GHz: absorption "0.14 nepers/cm, corresponding to about 30 % absorption in a 1" (2.54 cm) thick
+   sample" (p. 52) and "only 30 % of the 28 GHz power on a single pass" through 2.5 cm (p. 44) => POWER coefficient
+   -ln(0.7)/0.025 = 14.3 ~ 14 1/m (a literature note's 28 was a factor-2 misreading of the nepers figure); index of
+   refraction 2.24 (eps' 5.02) and "surface reflection ... 0.14 before melting calculated by the Fresnel equations".
+ * Zhang 2023 uses alpha = 14 Np/m solid, 56 liquid as the POWER coefficient (their eq. 3) and does not apply R; their
+   Table III omega_0 = 0.20 m is a misprint for 0.02 (see the beam waist note above).
+ * The VIRGIN-granite record is test #19 (1/8/2014, 4" x 1" Barre, two samples stacked, HE11 from a 32.5 mm aperture,
+   1.5-3.4 kW; p. 54 Fig. 34): beam on ~200 s at ~2 kW, melt onset ~300 +- 50 s after beam-on (the 28 GHz
+   transmission cuts off and the 137 GHz signal jumps at ~500-520 s); melt spot ~38 mm; "the melt initially starts
+   2-4 mm below the surface and breaks through to the surface from below" (p. 53).
+ * The deck at validation/zhang/zhang_oglesby/input runs the first 150 s with these inputs and the reference's
+   eps 0.7/0.3 and h 56; its test scores the raw and the brightness (1 - R) T against the signal and the printed
+   values. Nothing is tuned (studies/p2_20_beam_deposition/).
+
+
+=====================================================================================================================
+TEST #19 -- THE THREE OBSERVABLES (P2-21, 2026-11-06). Fig. 34 (p. 54) re-read from the re-fetched PDF and DIGITISED
+(studies/p2_21_loss_table/doe/: the PDF, fig34_digitise.py, FIG34.txt; the lower panel, 10 s windows, pixel medians).
+=====================================================================================================================
+ * MELT DEPTH: "the melt initially starts 2 - 4 mm (0.08 - 0.16") below the surface and breaks through to the
+   surface from below" (p. 53).
+ * ONSET TIME: beam-on at ~205-215 s (the first window with both traces is 215 s); the 28 GHz pick-off collapses and
+   the 137 GHz signal jumps in the 505 s window => onset ~295 s after beam-on (~300 +- 50 s).
+ * INCIDENT POWER (the black trace): 1.46 kW at beam-on, 1.43-1.63 kW over the first ~170 s, rising to 1.96 kW just
+   before the collapse (mean 1.62 kW from beam-on to onset); 2.0-2.2 kW AFTER onset, 3.3 kW at ~1800 s.
+   ⚠ The P2-21 packet's Sources read "beam on ~200 s at ~2 kW rising to ~2.3 kW" -- that is the level after onset.
+   The user decided (2026-11-06) that the P2-21 #19 legs run this MEASURED ramp (run.py ramp_schedule), not 2 kW.
+ * TRANSMISSION: "the 28 GHz test chamber pick off signal, which is mostly due to transmission through the sample"
+   (the caption; a CHAMBER pick-off, so the TOTAL transmitted power is the closer model analogue). The pick-off /
+   incident ratio (the transmitted FRACTION, arbitrary units) relative to its first two beam-on windows: it dips to
+   0.79 at ~95 s after beam-on, then RISES to 1.17 (~225 s) and reads 1.05 just before the collapse; after the collapse
+   it falls ~7x within 60 s. It never drops more than ~21 % before melt -- the planner's ">= 0.75" envelope holds.
+   ⚠ A RISING transmitted fraction while the solid heats is the opposite of what any loss that grows with
+   temperature produces; it is reported, not explained.

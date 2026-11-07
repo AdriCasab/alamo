@@ -44,6 +44,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
 MMW = os.path.join(ROOT, "src", "Integrator", "MMWSpalling.H")
 REM = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "Removal.H")
+# P2-18 A3: the helpers both paths call (ElasticConstants, the scan pieces, the remap, the
+# step prologue) moved from the top of Removal.H into Shared.H. Every clause below that
+# reads `rem` reads the UNION of the two files, so the counts it asserts are unchanged.
+SHR = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "Shared.H")
 
 def strip_comments(text):
     """blank out // and /* */ comments, PRESERVING newlines so every line number
@@ -86,7 +90,8 @@ def main():
             fails.append(msg)
 
     # ⚠ every assertion below reads CODE, never comments -- see strip_comments.
-    mmw, rem = strip_comments(open(MMW).read()), strip_comments(open(REM).read())
+    mmw, rem = strip_comments(open(MMW).read()), \
+        strip_comments(open(REM).read()) + "\n" + strip_comments(open(SHR).read())
     # ---- P2-2a (b4) + (b8): ONE RESTRAINT REFERENCE, NO SECOND FORM ------
     # ⚠⚠ WHY EACH CLAUSE. Three things can go wrong here and none shows in any
     # output:

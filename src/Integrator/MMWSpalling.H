@@ -51,6 +51,7 @@
 #include <eigen3/Eigen/Eigenvalues>
 
 #include <algorithm>
+#include <iomanip>
 #include <cmath>
 // P1g-2c deliverable 1: the lateral thermal shift's write-back collects
 // per-cell deltas in a small ordered map before touching the field, so a cell
@@ -130,6 +131,49 @@ public:
                 Util::Abort(INFO, k, " was retired in P2-16 (the constraint depth was "
                             "deleted; spall.buckle_span carries the minimum flux); remove "
                             "it from the input");
+        // P2-20: THE TYPED BEAM ABSORPTION AND REFLECTION are retired: one dielectric
+        // description per rock (beam.eps_r, beam.tan_delta) now gives both, alpha =
+        // 2 pi sqrt(eps_r) tan_delta / lambda and R = ((sqrt(eps_r) - 1)/(sqrt(eps_r) + 1))^2
+        // (MMWBeam.H). Checked HERE, before the beam parse, so the message names the
+        // replacement rather than the strict scope's generic "specified but not used",
+        // and with the beam off (P0 = 0) as well.
+        for (const char* k : {"beam.alpha_expr", "beam.R"})
+            if (pp.contains(k))
+                Util::Abort(INFO, k, " was retired in P2-20 (the typed beam absorption and "
+                            "reflection): declare beam.eps_r and beam.tan_delta instead, from "
+                            "which alpha and R are computed; remove it from the input");
+        // P2-18 A2: KEYS RETIRED AT A DEFAULT. A deleted parse is not a guard: a
+        // top-level key (`spall.*`, `microstructure.*`, ...) is then silently
+        // ignored, and a strict-scope key (`surface_patch.*`, `beam.*`, the
+        // per-phase `grimsel.*`) aborts as "specified but not used" whatever its
+        // value. Kept decks name retiring keys at their old defaults far more
+        // often than at live values (census 2026-11-05 §4 A2), so each entry
+        // here is read ONCE, which marks it used for the strict scopes, and
+        // compared with the value the deleted code accepted: equal (or "*" = the
+        // key was never read, any value is correct) -> the deck runs unchanged;
+        // anything else -> abort naming the key, the value and the packet that
+        // retired it. Deleting the parse of a key with a single old default ADDS
+        // A ROW HERE; it does not go in the abort list above.
+        struct RetiredAtDefault { const char* key; const char* value; const char* note; };
+        static const RetiredAtDefault retired_at_default[] = {
+            {"surface_patch.face",  "zhi",
+             "P2-18: consumed, checked == zhi, read by nothing (only the +z patch exists)"},
+            {"surface_patch.T_ext", "*",
+             "P2-18: parsed into a member nothing read"},
+            {"surface_patch.type",  "prescribed_temperature",
+             "P2-18: the legacy Step 6d key; surface_patch.mode decides"},
+        };
+        for (const RetiredAtDefault& r : retired_at_default)
+        {
+            if (!pp.contains(r.key)) continue;
+            std::vector<std::string> toks;
+            static_cast<amrex::ParmParse&>(pp).queryarr(r.key, toks);   // marks the entry used
+            std::string got;
+            for (const std::string& t : toks) got += (got.empty() ? "" : " ") + t;
+            if (std::string(r.value) == "*" || got == r.value) continue;
+            Util::Abort(INFO, r.key, " = ", got, " was retired at its default (", r.value,
+                        ") -- ", r.note, "; remove it from the input or restore the code");
+        }
         // Reuse HeatConduction's parse: hc.heat.alpha (diffusivity κ/(ρ c_p)),
         // hc.heat.refinement_threshold, hc.ic.*, hc.bc.temp.* (BC on T).
         // The "Temp" / "Temp_old" fields it registers serve as our T field.
@@ -147,6 +191,37 @@ public:
         value.RegisterIntegratedVariable(&value.beam_E_trans,        "beam_E_trans",        false);
         value.RegisterIntegratedVariable(&value.beam_closure_err,    "beam_closure_err",    false);
         value.RegisterIntegratedVariable(&value.beam_invariant_viol, "beam_invariant_viol", false);
+        // P2-21: the optical-depth deciders, only on a deck whose loss table
+        // varies AND whose beam can deposit (a beam-OFF deck that includes the
+        // rock file, e.g. the face gate's HOS_S and CAL_S, keeps its header).
+        // P2-24: the melt keys reach the deposition only through the column optical-depth sum
+        if (value.beam.melt_active() && value.beam.can_deposit() && !value.beam.alpha_varies())
+            Util::Abort(INFO, "beam.melt_factor / beam.R_melt (P2-24) act only through the column optical-depth "
+                        "sum: they need a varying beam.tan_delta_T (two equal pairs give a flat one); got "
+                        "melt_factor ", value.beam.melt_factor, ", R_melt ", value.beam.R_melt,
+                        " with a flat table");
+        if (value.beam.alpha_varies() && value.beam.can_deposit())
+        {
+            value.RegisterIntegratedVariable(&value.beam_tau_max,     "beam_tau_max",     false);
+            value.RegisterIntegratedVariable(&value.beam_alpha_max,   "beam_alpha_max",   false);
+            value.RegisterIntegratedVariable(&value.beam_col_err_max, "beam_col_err_max", false);
+            value.RegisterIntegratedVariable(&value.bc_T_peak,        "bc_T_peak",        false);
+            value.RegisterIntegratedVariable(&value.bc_z_peak,        "bc_z_peak",        false);
+            value.RegisterIntegratedVariable(&value.bc_z_melt,        "bc_z_melt",        false);
+            value.RegisterIntegratedVariable(&value.bc_tau,           "bc_tau",           false);
+            value.RegisterIntegratedVariable(&value.bc_ell_p,         "bc_ell_p",         false);
+            value.RegisterIntegratedVariable(&value.bc_ell_pk,        "bc_ell_pk",        false);
+            // P2-24: the melt and vapour record, appended
+            value.RegisterIntegratedVariable(&value.beam_P_beam,    "beam_P_beam",    false);
+            value.RegisterIntegratedVariable(&value.bc_T_rad,       "bc_T_rad",       false);
+            value.RegisterIntegratedVariable(&value.bc_T_view,      "bc_T_view",      false);
+            value.RegisterIntegratedVariable(&value.bc_A_melt,      "bc_A_melt",      false);
+            value.RegisterIntegratedVariable(&value.bc_f_L_peak,    "bc_f_L_peak",    false);
+            value.RegisterIntegratedVariable(&value.bc_z_liq,       "bc_z_liq",       false);
+            value.RegisterIntegratedVariable(&value.bc_R_col,       "bc_R_col",       false);
+            value.RegisterIntegratedVariable(&value.bc_n_vapor,     "bc_n_vapor",     false);
+            value.RegisterIntegratedVariable(&value.bc_n_vapor_int, "bc_n_vapor_int", false);
+        }
 
         // Cache the diffusivity for use in Advance (HeatConduction's alpha is
         // private; cheaper than another queryclass).
@@ -335,8 +410,6 @@ public:
             for (int i = 0; i < nphases; ++i)
             {
                 std::string pfx = "microstructure.phase" + std::to_string(i);
-                pp.query_default (pfx + ".name",     value.phases[i].name,
-                                  std::string("phase") + std::to_string(i));
                 pp.query_required(pfx + ".fraction", value.phases[i].fraction);
                 pp.query_required(pfx + ".kappa",    value.phases[i].kappa);
                 pp.query_required(pfx + ".beta",     value.phases[i].beta);
@@ -344,8 +417,6 @@ public:
                 pp.query_required(pfx + ".mu",       value.phases[i].mu);
                 pp.query_required(pfx + ".rho",      value.phases[i].rho);
                 pp.query_required(pfx + ".Cp",       value.phases[i].Cp);
-                pp.query_required(pfx + ".alpha_attenuation",
-                                  value.phases[i].alpha_atten);
                 pp.query_required(pfx + ".A_D",      value.phases[i].A_D);
                 Util::Assert(INFO, TEST(value.phases[i].fraction >= 0.0));
 
@@ -944,6 +1015,10 @@ public:
         // reads the key -- retire, don't stack) and reads the reconstructed skin length, so
         // either missing would leave the key SILENTLY INERT: both abort, naming the key.
         // Witnesses registered ONLY under the key.
+        // P2-23: the record of B's evaluations needs B, or it would be silently empty
+        if (value.sp_buckle_log_csv && !(value.sp_buckle_span > 0.0))
+            Util::Abort(INFO, "spall.buckle_log_csv = 1 (P2-23) logs the buckling condition's "
+                        "evaluations: it needs spall.buckle_span > 0");
         if (value.sp_buckle_span > 0.0)
         {
             if (!value.surface_patch.face_list)
@@ -991,7 +1066,9 @@ public:
                     ph_abort("surface_patch.robin_form other than surface");
                 if (!sp.jet_enthalpy) ph_abort("surface_patch.jet_closure other than enthalpy");
             }
-            if (!(sp.mode == SurfacePatch::Mode::ConvectiveFlame && sp.use_expr))
+            // P2-23: with the patch OFF there is no flame to map -- every listed face
+            // is billed at h = 0 (its losses only); the map is required only when on.
+            if (sp.enabled && !(sp.mode == SurfacePatch::Mode::ConvectiveFlame && sp.use_expr))
                 Util::Abort(INFO, "surface_patch.face_list = 1 requires mode = "
                             "convective_flame with an h_expr map: F2 evaluates h_expr "
                             "at every face centre");
@@ -1030,7 +1107,20 @@ public:
                             "rule along one line per surface cell) does not carry ",
                             what, "; that is ", owner, "'s");
             };
-            if (value.vapor_enabled) fr_abort("regime 2 (vapor.enabled)", "the MMW step");
+            // P2-24: regime 2 IS carried now -- the face list's vapour rule (a LISTED cell whose enthalpy has
+            // passed its phase table's H_vap_hi leaves, once; FaceRemoval.H). It reads phase 0's table: one rock
+            // phase (SR 13), with a declared vaporisation band.
+            if (value.vapor_enabled)
+            {
+                if (value.phases.size() != 1)
+                    Util::Abort(INFO, "vapor.enabled under the face list (P2-24) reads ONE rock phase's enthalpy "
+                                "table; got microstructure.nphases = ", value.phases.size());
+                for (const auto& ph : value.phases)
+                    if (!(ph.T_vap_lo < 1.0e29 && ph.L_v > 0.0))
+                        Util::Abort(INFO, "vapor.enabled under the face list (P2-24) needs the rock phase's "
+                                    "vaporisation band: microstructure.phase0.T_vap_lo < 1e30 and L_v > 0; got "
+                                    "T_vap_lo ", ph.T_vap_lo, ", L_v ", ph.L_v);
+            }
             if (value.bit_enabled)   fr_abort("regime 3 (bit.enabled)", "a later step");
             if (sp.feet && sp.foot_body_clearance)
                 fr_abort("regime 4 (surface_patch.foot_body_clearance)", "P2-11");
@@ -1083,11 +1173,22 @@ public:
             value.RegisterIntegratedVariable(&value.fr_fresh,     "fr_fresh",      false);
             // P2-9 rev 2 item 7
             value.RegisterIntegratedVariable(&value.fr_misaligned,  "fr_misaligned",  false);
-            value.RegisterIntegratedVariable(&value.fr_noskin_c[0], "fr_noskin_floor", false);
-            value.RegisterIntegratedVariable(&value.fr_noskin_c[1], "fr_noskin_wall",  false);
-            value.RegisterIntegratedVariable(&value.fr_noskin_c[2], "fr_noskin_roof",  false);
+            value.RegisterIntegratedVariable(&value.fr_nodepth_c[0], "fr_nodepth_floor", false);
+            value.RegisterIntegratedVariable(&value.fr_nodepth_c[1], "fr_nodepth_wall",  false);
+            value.RegisterIntegratedVariable(&value.fr_nodepth_c[2], "fr_nodepth_roof",  false);
             value.RegisterIntegratedVariable(&value.fr_t_removal,   "fr_t_removal",   false);
             value.RegisterIntegratedVariable(&value.fr_t_step,      "fr_t_step",      false);
+            // P2-24: lines NOT scanned because their surface cell is fully liquid, or a fully liquid cell lies
+            // inside their window (a solid lid over a melt); per step, appended LAST on every face-list deck
+            value.RegisterIntegratedVariable(&value.fr_n_molten,    "fr_n_molten",    false);
+            value.RegisterIntegratedVariable(&value.fr_n_lid,       "fr_n_lid",       false);
+            if (value.vapor_enabled)
+            {
+                // P2-24: the vapour rule's counts (per step) and the enthalpy that left with it (cumulative, J)
+                value.RegisterIntegratedVariable(&value.fr_n_vapor,     "fr_n_vapor",     false);
+                value.RegisterIntegratedVariable(&value.fr_n_vapor_int, "fr_n_vapor_int", false);
+                value.RegisterIntegratedVariable(&value.ledger_E_vapor, "ledger_E_vapor", false);
+            }
             // 3 ghosts: the smoothed normal reads +-3 cells (5x5x5 kernel, then
             // a central difference)
             value.RegisterNewFab(value.fr_f_mf,     nullptr, 1, 3, "fr_f",     true);
@@ -1422,6 +1523,56 @@ protected:
         bool flat           = false; // no usable gradient; T_surf == T_top
     };
 
+    // P2-21: the column optical depth (ColumnOpticalDepth), built once per step
+    // per path when the loss table varies and the beam is on. Indexed
+    // [col*nz + (k - klo)] as ColumnSolidAboveCount; tau_top is the optical depth
+    // from the column's top solid face to the cell's top face, tau_bot to its
+    // bottom face (tau_top + a_k dz, the SAME a_k the gather used). k_last is the
+    // column's lowest solid cell (the transmitted power's exit), INT_MIN if none.
+    // Declared here, ahead of its first use as a parameter type (as SurfaceRecon).
+    struct BeamTau
+    {
+        amrex::Vector<Set::Scalar> top, bot;
+        amrex::Vector<int>         k_last;
+        // P2-24: the column's reflection R_col = R + (R_melt - R) f_L(T_top), one per column (ncols); used at
+        // P_inc, P_trans and every cell's (1 - R) prefactor in that column
+        amrex::Vector<Set::Scalar> Rcol;
+        bool built = false;
+    };
+    // P2-21: a cell's (tau_top, tau_bot) for the kernels, captured by value in a
+    // ParallelFor. Unbuilt => -1, -1 => BeamSource's closed form.
+    struct TauView
+    {
+        const Set::Scalar* top = nullptr;
+        const Set::Scalar* bot = nullptr;
+        int ilo = 0, jlo = 0, klo = 0, nx = 0;
+        std::size_t nz = 0;
+        AMREX_GPU_HOST_DEVICE std::size_t at(int i, int j, int k) const
+        {
+            return (static_cast<std::size_t>(j - jlo) * nx + (i - ilo)) * nz + (k - klo);
+        }
+        AMREX_GPU_HOST_DEVICE Set::Scalar t(int i, int j, int k) const { return top ? top[at(i, j, k)] : -1.0; }
+        AMREX_GPU_HOST_DEVICE Set::Scalar b(int i, int j, int k) const { return bot ? bot[at(i, j, k)] : -1.0; }
+        // P2-24: the column's R when built, else the deck's scalar R (byte for byte)
+        const Set::Scalar* rc = nullptr;
+        AMREX_GPU_HOST_DEVICE Set::Scalar R(int i, int j, Set::Scalar R_scalar) const
+        {
+            return rc ? rc[static_cast<std::size_t>(j - jlo) * nx + (i - ilo)] : R_scalar;
+        }
+    };
+    TauView ViewOf(const BeamTau& bt, int lev) const
+    {
+        TauView v;
+        if (!bt.built) return v;
+        const amrex::Box& d = geom[lev].Domain();
+        v.top = bt.top.data();
+        v.bot = bt.bot.data();
+        v.rc  = bt.Rcol.empty() ? nullptr : bt.Rcol.data();
+        v.ilo = d.smallEnd(0); v.jlo = d.smallEnd(1); v.klo = d.smallEnd(2);
+        v.nx  = d.length(0);   v.nz  = static_cast<std::size_t>(d.length(2));
+        return v;
+    }
+
     void Advance(int lev, Set::Scalar time, Set::Scalar dt) override
     {
         // P2-9 rev 2 item 7: the step's wall time (a thermo column only under
@@ -1478,12 +1629,17 @@ protected:
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const Set::Scalar bn  = beam.n_idx;   // P2-22: in-rock spread
         const int         bprof = beam.profile;
         const Set::Scalar brad  = beam.radius;
-        auto alpha_f = beam.alpha_f;
+        const Set::Scalar b_alpha = beam.alpha;   // P2-20: computed from beam.eps_r, beam.tan_delta, beam.lambda
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
         const Set::Scalar inv_dz = 1.0 / DX[2];
+        // P2-21: the column optical depth (unbuilt unless the loss table varies
+        // and the beam is on: then the kernel keeps the closed form)
+        const BeamTau btau = BuildBeamTau(lev, P_now, {});
+        const TauView tv = ViewOf(btau, lev);
 
         for (amrex::MFIter mfi(*H_mf[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
@@ -1499,8 +1655,8 @@ protected:
                 Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
                 Set::Scalar Tv = T_old(i, j, k);
                 Set::Scalar Q  = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                            bR, bprof, brad, alpha_f, x, y, z, Tv,
-                                            DX[2]);
+                                            tv.R(i, j, bR), bprof, brad, b_alpha, x, y, z,
+                                            DX[2], -1.0, tv.t(i, j, k), tv.b(i, j, k), bn);
                 Set::Scalar eps = (Tv <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
                                    * (eps * sig_SB * (Tv*Tv*Tv*Tv - T_a*T_a*T_a*T_a)
@@ -1508,6 +1664,14 @@ protected:
                 H(i, j, k) = H_old(i, j, k) + dt * (lap + Q - q_loss * inv_dz);
             });
         }
+        // P2-20: the deposition closure (P_inc = P_dep + P_trans) on THIS path too,
+        // as AdvanceMicrostructure does: computed and written to thermo.dat on every
+        // path a beam deck can take. Not void-aware here (removal is off on this path).
+        // P2-21 (P2-20 review DR-5): the empty k_top_col is valid only off the
+        // void-aware paths -- removal needs the microstructure (spall/vapor abort
+        // without it), which dispatches to AdvanceMicrostructure.
+        Util::Assert(INFO, TEST(!removal_enabled()));
+        if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, {}, btau);
     }
 
     void AdvanceMaterial(int lev, Set::Scalar time, Set::Scalar dt)
@@ -1519,15 +1683,20 @@ protected:
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const Set::Scalar bn  = beam.n_idx;   // P2-22: in-rock spread
         const int         bprof = beam.profile;
         const Set::Scalar brad  = beam.radius;
-        auto alpha_f = beam.alpha_f;
+        const Set::Scalar b_alpha = beam.alpha;   // P2-20: computed from beam.eps_r, beam.tan_delta, beam.lambda
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
         const Set::Scalar inv_dz = 1.0 / DX[2];
         const Set::Scalar inv_dx2 = 1.0 / (DX[0] * DX[0]);
         const Set::Scalar inv_dy2 = 1.0 / (DX[1] * DX[1]);
         const Set::Scalar inv_dz2 = 1.0 / (DX[2] * DX[2]);
+        // P2-21: the column optical depth (unbuilt unless the loss table varies
+        // and the beam is on: then the kernel keeps the closed form)
+        const BeamTau btau = BuildBeamTau(lev, P_now, {});
+        const TauView tv = ViewOf(btau, lev);
 
         // Removed cells are void and must not exchange heat with surviving
         // material (mirrors AdvanceMicrostructure). Without this, a voided cell
@@ -1619,8 +1788,8 @@ protected:
                 }
 
                 Set::Scalar Q = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                           bR, bprof, brad, alpha_f, x, y, z, Tc,
-                                           DX[2]);
+                                           tv.R(i, j, bR), bprof, brad, b_alpha, x, y, z,
+                                           DX[2], -1.0, tv.t(i, j, k), tv.b(i, j, k), bn);
 
                 Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
@@ -1630,6 +1799,14 @@ protected:
                 H(i, j, k) = H_old(i, j, k) + dt * (div_kgrad + Q - q_loss * inv_dz);
             });
         }
+        // P2-20: the deposition closure (P_inc = P_dep + P_trans) on THIS path too,
+        // as AdvanceMicrostructure does: computed and written to thermo.dat on every
+        // path a beam deck can take. Not void-aware here (removal is off on this path).
+        // P2-21 (P2-20 review DR-5): the empty k_top_col is valid only off the
+        // void-aware paths -- removal needs the microstructure (spall/vapor abort
+        // without it), which dispatches to AdvanceMicrostructure.
+        Util::Assert(INFO, TEST(!removal_enabled()));
+        if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, {}, btau);
     }
 
     // Backward-Euler diffusion via amrex::MLABecLaplacian:
@@ -1651,12 +1828,17 @@ protected:
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const Set::Scalar bn  = beam.n_idx;   // P2-22: in-rock spread
         const int         bprof = beam.profile;
         const Set::Scalar brad  = beam.radius;
-        auto alpha_f = beam.alpha_f;
+        const Set::Scalar b_alpha = beam.alpha;   // P2-20: computed from beam.eps_r, beam.tan_delta, beam.lambda
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
         const Set::Scalar inv_dz = 1.0 / DX[2];
+        // P2-21: the column optical depth from T_old, the temperature the source
+        // is built from (unbuilt unless the loss table varies and the beam is on)
+        const BeamTau btau = BuildBeamTau(lev, P_now, {});
+        const TauView tv = ViewOf(btau, lev);
 
         const amrex::BoxArray ba = grids[lev];
         const amrex::DistributionMapping &dm = dmap[lev];
@@ -1695,8 +1877,8 @@ protected:
                 Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
                 Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
                 Set::Scalar Q = BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                           bR, bprof, brad, alpha_f, x, y, z, Tc,
-                                           DX[2]);
+                                           tv.R(i, j, bR), bprof, brad, b_alpha, x, y, z,
+                                           DX[2], -1.0, tv.t(i, j, k), tv.b(i, j, k), bn);
                 Set::Scalar eps = (Tc <= T_eps_b) ? eps_lo : eps_hi;
                 Set::Scalar q_loss = surf(i, j, k)
                                    * (eps * sig_SB * (Tc*Tc*Tc*Tc - T_a*T_a*T_a*T_a)
@@ -1768,6 +1950,14 @@ protected:
                 H(i, j, k) = material_table.H_of_T(Tn(i, j, k));
             });
         }
+        // P2-20: the deposition closure (P_inc = P_dep + P_trans) on THIS path too,
+        // as AdvanceMicrostructure does: computed and written to thermo.dat on every
+        // path a beam deck can take. Not void-aware here (removal is off on this path).
+        // P2-21 (P2-20 review DR-5): the empty k_top_col is valid only off the
+        // void-aware paths -- removal needs the microstructure (spall/vapor abort
+        // without it), which dispatches to AdvanceMicrostructure.
+        Util::Assert(INFO, TEST(!removal_enabled()));
+        if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, {}, btau);
     }
 
     // Step 6b: heterogeneous-property explicit enthalpy update for the
@@ -1839,15 +2029,22 @@ protected:
         const int* sab    = solid_above_col.data();
         const int  nz_dom = dhi[2] - dlo[2] + 1;
         const int  klo_d  = dlo[2];
+        // P2-21: the column optical depth, through solid cells only from each
+        // column's top solid cell when void-aware (the solid-count convention),
+        // else from the domain top (unbuilt unless the loss table varies and the
+        // beam is on: then the kernel keeps the closed form)
+        const BeamTau btau = BuildBeamTau(lev, P_now, void_aware ? k_top_col : amrex::Vector<int>());
+        const TauView tv = ViewOf(btau, lev);
 
         const Set::Scalar* DX  = geom[lev].CellSize();
         const Set::Scalar* PLO = geom[lev].ProbLo();
         const Set::Scalar bw0 = beam.omega0, blam = beam.lambda;
         const Set::Scalar bx0 = beam.x0, by0 = beam.y0, bz0 = beam.z0;
         const Set::Scalar bR  = beam.R;
+        const Set::Scalar bn  = beam.n_idx;   // P2-22: in-rock spread
         const int         bprof = beam.profile;
         const Set::Scalar brad  = beam.radius;
-        auto alpha_f = beam.alpha_f;
+        const Set::Scalar b_alpha = beam.alpha;   // P2-20: computed from beam.eps_r, beam.tan_delta, beam.lambda
         const Set::Scalar eps_lo = eps_rad, eps_hi = eps_rad_hi, T_eps_b = T_eps_break;
         const Set::Scalar sig_SB = sigma_SB, h_c = h_conv, T_a = T_amb;
         const Set::Scalar inv_dz = 1.0 / DX[2];
@@ -1880,10 +2077,24 @@ protected:
         // kernel, the pin rule, the ledger and the diagnostics.
         // P2-8 F1: the face list, after the column tops and BEFORE the march
         // (BuildFlameColumns), which bills every listed face.
-        const bool fl_on = surface_patch.face_list && sp_on && void_aware
-                           && !sp_presc;
+        // P2-23: the list runs WITHOUT a flame too. `owner` is kept (the finest
+        // level owns the surface); `sp_presc` (the mode) counts only with the patch
+        // ON -- a disabled patch reads the default mode, prescribed_T. With the
+        // patch on this is the old condition exactly.
+        const bool fl_on = surface_patch.face_list && owner && void_aware
+                           && !(surface_patch.enabled && sp_presc);
         if (fl_on) BuildFaceList(lev, k_top_col);
         if (sp_on) BuildFlameColumns(lev, time, dt, k_top_col);
+        // P2-23: with the patch OFF BuildFlameColumns -- which bills the list's
+        // heat, gives every listed cell its T_s and every face its gas
+        // temperature -- does not run, so its LIST half runs here, in its order,
+        // without the flame: h = 0 on every face, T_s, T_gas = 0.
+        else if (fl_on)
+        {
+            FaceListHeat(lev, 0.0, time, k_top_col);
+            FrAssignTs(lev);
+            FaceListTg(lev);
+        }
         const Set::Scalar* fh  = sp_on ? flame_h.data()  : nullptr;
         const Set::Scalar* fTg = sp_on ? flame_Tg.data() : nullptr;
         // P2-8 F5: the list every kernel face reads.
@@ -2047,7 +2258,7 @@ protected:
                 // where the floor picks the wrong cell (see SolidFacePath).
                 Set::Scalar Q = self_void ? Set::Scalar(0.0)
                                           : BeamSource(P_now, bw0, blam, bx0, by0, bz0,
-                                                       bR, bprof, brad, alpha_f, x, y, z, Tc,
+                                                       tv.R(i, j, bR), bprof, brad, b_alpha, x, y, z,
                                                        DX[2],
                                                        // ktc is null unless void-aware (Q = 0 when P_now == 0).
                                                        // D2q-1: `sab` is the solid-cell count above k;
@@ -2058,7 +2269,8 @@ protected:
                                                              sab ? sab[static_cast<std::size_t>(col_c) * nz_dom
                                                                        + (k - klo_d)]
                                                                  : ktc[col_c] - k, DX[2])
-                                                         : Set::Scalar(-1.0));
+                                                         : Set::Scalar(-1.0),
+                                                       tv.t(i, j, k), tv.b(i, j, k), bn);
 
                 (void)q_rob; (void)q_los;
                 const Set::Scalar q_loss = q_out;
@@ -2074,7 +2286,7 @@ protected:
         }
 
         // E1: standing beam-deposition closure counter (thermo.dat).
-        if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, k_top_col);
+        if (P_now > 0.0) BeamEnergyBalance(lev, time, dt, k_top_col, btau);
         // S1: whole-domain energy ledger (thermo.dat), after the H update.
         // P2-8: the per-class robin power, the kernel's terms summed by class.
         if (fl_on) FaceListDiagnostics(lev);
@@ -2243,6 +2455,13 @@ protected:
     void FaceListTg(int lev)
     {
         if (!fl_ready) return;
+        // P2-23: no flame (the patch off): no gas -- and flame_Tg is EMPTY, so
+        // nothing is indexed
+        if (!surface_patch.enabled)
+        {
+            for (auto& e : fl_faces) e.Tg = 0.0;
+            return;
+        }
         if (!surface_patch.face_heat_path)
         {
             for (auto& e : fl_faces) e.Tg = flame_Tg[static_cast<std::size_t>(e.col)];
@@ -3852,10 +4071,17 @@ protected:
         const Set::Scalar* DX  = geom[lev].CellSize();
         const Set::Scalar* PLO = geom[lev].ProbLo();
         long mism = 0;
+        // P2-23: no flame (the patch off): every listed face is billed at h = 0
+        // -- its radiative and convective losses only. No FaceH, and no
+        // flame_h to compare against (it is empty).
+        if (!surface_patch.enabled)
+        {
+            for (auto& e : fl_faces) e.h = 0.0;
+        }
         // P2-11b: face_heat = path -- every face from the surface path; the
         // column's flame_h (read only by column diagnostics under the list)
         // takes its top face's value, so fl_h_top_mismatch stays an identity.
-        if (surface_patch.face_heat_path)
+        else if (surface_patch.face_heat_path)
         {
             FaceListPath(lev, z_n, time, k_top_col);
             for (const auto& e : fl_faces)
@@ -3922,7 +4148,10 @@ protected:
         }
         fl_P_top = P[FL_TOP]; fl_P_up = P[FL_UP]; fl_P_side = P[FL_SIDE]; fl_P_down = P[FL_DOWN];
         const Set::Scalar Ps = fl_P_top + fl_P_up + fl_P_side + fl_P_down;
-        fl_id_march = (std::abs(Ps) > 0.0) ? std::abs(jet_P_face - Ps) / std::abs(Ps) : 0.0;
+        // P2-23: the march's identity exists only with a march (the patch on);
+        // flameless, jet_P_face is never set and the identity is vacuous
+        fl_id_march = (surface_patch.enabled && std::abs(Ps) > 0.0)
+                    ? std::abs(jet_P_face - Ps) / std::abs(Ps) : 0.0;
     }
 
     static void SurfaceCellFlux(bool in_patch, bool face_form, Set::Scalar surf_c,
@@ -4108,8 +4337,10 @@ protected:
         const bool sidecsv = surface_patch.side_power_interval > 0.0;
         std::vector<Set::Scalar> sidecol;
         // P2-8: under the face list the ledger mirrors the LIST, face for face.
-        const bool        fl_on_l = surface_patch.face_list && sp_on && void_aware
-                                    && !sp_presc && fl_ready;
+        // P2-23: the kernel's switch (the ledger is single-level, so `owner` is
+        // true); with the patch on, the old condition exactly
+        const bool        fl_on_l = surface_patch.face_list && void_aware
+                                    && !(sp_on && sp_presc) && fl_ready;
         std::vector<int> has_surf(static_cast<std::size_t>(ncx) * ncy, 0);
         // rev7 d2: sized here, where ncx/ncy are known, not at the declaration.
         if (sidecsv) sidecol.assign(static_cast<std::size_t>(ncx) * ncy, 0.0);
@@ -4231,8 +4462,10 @@ protected:
             const Set::Scalar Ps = fl_P_top + fl_P_up + fl_P_side + fl_P_down;
             fl_id_ledger = (std::abs(Ps) > 0.0) ? std::abs(P_robin - Ps) / std::abs(Ps) : 0.0;
         }
-        // P0b witnesses for robin_form = surface.
-        if (surface_patch.robin_form == SurfacePatch::RobinForm::Surface)
+        // P0b witnesses for robin_form = surface -- a FLAME patch's witnesses
+        // (registered only with the patch on; they read flame_h, which is empty
+        // without it: P2-23)
+        if (sp_on && surface_patch.robin_form == SurfacePatch::RobinForm::Surface)
         {
             amrex::ParallelDescriptor::ReduceRealSum(P_robin_side);
             surf_side_share = (std::abs(P_robin) > 0.0)
@@ -4307,7 +4540,8 @@ protected:
         // gap between ledger_err and ledger_err_solid is the flake credit the
         // TOTAL row omits by design, and the accepted CTRL5 shows a larger gap
         // while closing here to 7.78e-04.
-        ledger_err_solid = (dE_sol - (ledger_E_src - ledger_E_flake - foot_mech_E))
+        // P2-24: and the vapour's enthalpy (the face list's regime 2: H V of each vaporised cell)
+        ledger_err_solid = (dE_sol - (ledger_E_src - ledger_E_flake - foot_mech_E - ledger_E_vapor))
                            / std::max(std::abs(ledger_E_src), Set::Scalar(1.0e-30));
         ledger_surface_missing_cols = Set::Scalar(n_missing);
     }
@@ -4664,6 +4898,280 @@ protected:
         return cnt;
     }
 
+    // P2-21: THE COLUMN OPTICAL DEPTH for a temperature-dependent loss
+    // (beam.tan_delta_T). Mirrors ColumnSolidAboveCount: every solid cell's
+    // a_k*dz, a_k = beam.alpha_at(T_old), into an ncols*nz vector (-1 marks a
+    // void cell; each cell is owned by exactly one box, so a sum over ranks
+    // gathers the column), ONE ReduceRealSum, then per column from the top solid
+    // cell down the running sums tau_top (0 at the top cell) and tau_bot =
+    // tau_top + a_k*dz -- the SAME a_k*dz, never recomputed from another T.
+    // The CENTRAL column's temperatures (the column containing (x0, y0); it can
+    // span several z-boxes, so it is never assumed to sit on one rank) ride in
+    // the same vector, so the deciders read the T_old the gather used.
+    // k_top_col empty => every column's top is the domain top and every cell is
+    // solid (the material paths, and the microstructure path without removal);
+    // the beam then enters at the domain top, so beam.z0 must be that top.
+    // Also sets the thermo deciders beam_tau_max ... bc_ell_pk.
+    // Cost: one (ncols*nz + nz)-double allreduce per step, ONLY on a deck whose
+    // table varies and only while the beam is on (BuildBeamTau).
+    BeamTau ColumnOpticalDepth(int lev, const amrex::Vector<int>& k_top_col)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo = domain.smallEnd(0), jlo = domain.smallEnd(1);
+        const int klo = domain.smallEnd(2), khi = domain.bigEnd(2);
+        const int nx = domain.length(0), ny = domain.length(1);
+        const std::size_t NZ = static_cast<std::size_t>(domain.length(2));
+        const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const Set::Scalar dz = DX[2];
+        const bool void_aware = !k_top_col.empty();
+        const int kmin = std::numeric_limits<int>::min();
+        if (!void_aware && std::abs(beam.z0 - geom[lev].ProbHi()[2]) > 1.0e-9 * dz)
+            Util::Abort(INFO, "beam.tan_delta_T: the column optical depth starts at the domain top (",
+                        geom[lev].ProbHi()[2], " m); beam.z0 = ", beam.z0, " must equal it");
+        auto top_of = [&](std::size_t c) { return void_aware ? k_top_col[c] : khi; };
+
+        // a column is LIT when the beam reaches its top cell (Pi > 0 for any P > 0;
+        // a Gaussian's waist only grows with depth, a uniform disk's radius is fixed)
+        std::vector<char> lit(ncols, 0);
+        for (std::size_t c = 0; c < ncols; ++c)
+        {
+            const int kt = top_of(c);
+            if (kt == kmin) continue;
+            const int i = ilo + static_cast<int>(c % nx), j = jlo + static_cast<int>(c / nx);
+            lit[c] = BeamIncidentIntensity(1.0, beam.omega0, beam.lambda, beam.x0, beam.y0, beam.z0,
+                                           beam.profile, beam.radius,
+                                           PLO[0] + (Set::Scalar(i) + 0.5) * DX[0],
+                                           PLO[1] + (Set::Scalar(j) + 0.5) * DX[1],
+                                           PLO[2] + (Set::Scalar(kt) + 0.5) * dz) > 0.0;
+        }
+        const int ic = std::min(nx - 1, std::max(0, static_cast<int>(std::floor((beam.x0 - PLO[0]) / DX[0]))));
+        const int jc = std::min(ny - 1, std::max(0, static_cast<int>(std::floor((beam.y0 - PLO[1]) / DX[1]))));
+        const std::size_t c0 = static_cast<std::size_t>(jc) * nx + ic;
+
+        // [ncols*NZ: a_k dz | NZ: the central column's T | ncols: each column's TOP solid cell T (P2-24)]
+        std::vector<Set::Scalar> g(ncols * NZ + NZ + ncols, 0.0);
+        const std::size_t o_top = ncols * NZ + NZ;
+        const Set::Scalar mf = beam.melt_factor;
+        Set::Scalar amax = 0.0;
+        for (amrex::MFIter mfi(*temp_old_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& T = (*temp_old_mf[lev]).const_array(mfi);
+            amrex::Array4<const Set::Scalar> const& rem =
+                void_aware ? (*removed_mf[lev]).const_array(mfi) : (*temp_old_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int k = lo.z; k <= hi.z; ++k)
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                const std::size_t c = static_cast<std::size_t>(j - jlo) * nx + (i - ilo);
+                const std::size_t p = c * NZ + (k - klo);
+                if (c == c0) g[ncols * NZ + (k - klo)] = T(i, j, k);
+                if (void_aware && rem(i, j, k) > 0.5) { g[p] = -1.0; continue; }
+                if (k == top_of(c)) g[o_top + c] = T(i, j, k);
+                // P2-24: the melt's absorption on the liquid fraction (1 + (m - 1) f_L); m = 1 skips it
+                const Set::Scalar a = (mf != 1.0)
+                    ? beam.alpha_at(T(i, j, k)) * (1.0 + (mf - 1.0) * MeltFraction(T(i, j, k)))
+                    : beam.alpha_at(T(i, j, k));
+                g[p] = a * dz;
+                if (lit[c] && a > amax) amax = a;
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(g.data(), static_cast<int>(g.size()));
+        amrex::ParallelDescriptor::ReduceRealMax(amax);
+
+        BeamTau out;
+        out.top.assign(ncols * NZ, -1.0);
+        out.bot.assign(ncols * NZ, -1.0);
+        out.k_last.assign(ncols, kmin);
+        Set::Scalar tmax = 0.0, emax = 0.0;
+        for (std::size_t c = 0; c < ncols; ++c)
+        {
+            const int kt = top_of(c);
+            if (kt == kmin) continue;
+            Set::Scalar acc = 0.0, e_top = 1.0, s = 0.0;
+            for (int k = kt; k >= klo; --k)
+            {
+                const std::size_t p = c * NZ + (k - klo);
+                if (g[p] < 0.0) continue;              // void: no material, no attenuation
+                out.top[p] = acc;
+                out.bot[p] = acc + g[p];
+                acc = out.bot[p];
+                out.k_last[c] = k;
+                // the kernel's own pair: e^{-tau_top} of this cell IS e^{-tau_bot}
+                // of the solid cell above (the same double), so the sum telescopes
+                const Set::Scalar e_bot = std::exp(-out.bot[p]);
+                s += e_top - e_bot;
+                e_top = e_bot;
+            }
+            if (!lit[c] || out.k_last[c] == kmin) continue;
+            tmax = std::max(tmax, acc);
+            emax = std::max(emax, std::abs(s + e_top - 1.0));
+        }
+        beam_tau_max     = tmax;
+        beam_alpha_max   = amax;
+        beam_col_err_max = emax;
+
+        // P2-24: the column's reflection from its top solid cell's liquid fraction (only when the melt keys
+        // differ from the no-op: unbuilt => every site reads the scalar R, byte for byte), and the surface
+        // record of the melt: the synthetic radiometer over the DOE launcher's view, the melt spot's area
+        const Set::Scalar R_s = beam.R, R_l = beam.R_melt;
+        if (beam.melt_active())
+        {
+            out.Rcol.assign(ncols, R_s);
+            for (std::size_t c = 0; c < ncols; ++c)
+                if (top_of(c) != kmin) out.Rcol[c] = R_s + (R_l - R_s) * MeltFraction(g[o_top + c]);
+        }
+        {
+            // the radiometer's view: the 32.5 mm launcher aperture (DOE DE-EE0005504 L992-1002), r <= 16.25 mm
+            // from the beam axis. eps_137 = (1 - R_melt) f_L + (1 - R)(1 - f_L): the DOE's own melt absorptance
+            // (0.7) and the solid's from its permittivity, both from the one dielectric description. A LOG.
+            const Set::Scalar r_view = 0.01625;
+            Set::Scalar n_v = 0.0, sTr = 0.0, sT = 0.0, A_m = 0.0;
+            for (std::size_t c = 0; c < ncols; ++c)
+            {
+                if (top_of(c) == kmin) continue;
+                const Set::Scalar Tt = g[o_top + c];
+                const Set::Scalar fL = MeltFraction(Tt);
+                if (fL > 0.0) A_m += DX[0] * DX[1];
+                const int i = ilo + static_cast<int>(c % nx), j = jlo + static_cast<int>(c / nx);
+                const Set::Scalar dxc = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0] - beam.x0;
+                const Set::Scalar dyc = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1] - beam.y0;
+                if (dxc * dxc + dyc * dyc > r_view * r_view) continue;
+                n_v += 1.0;
+                sT  += Tt;
+                sTr += ((1.0 - R_l) * fL + (1.0 - R_s) * (1.0 - fL)) * Tt;
+            }
+            bc_T_rad  = (n_v > 0.0) ? sTr / n_v : std::numeric_limits<Set::Scalar>::quiet_NaN();
+            bc_T_view = (n_v > 0.0) ? sT / n_v : std::numeric_limits<Set::Scalar>::quiet_NaN();
+            bc_A_melt = A_m;
+        }
+
+        // the central column: its contiguous solid run from the top, T from the
+        // gathered T_old; depths are cell centres below the top solid face
+        const Set::Scalar nan = std::numeric_limits<Set::Scalar>::quiet_NaN();
+        bc_T_peak = bc_z_peak = bc_z_melt = bc_tau = bc_ell_p = bc_ell_pk = nan;
+        bc_f_L_peak = bc_z_liq = bc_R_col = nan;
+        const int kt0 = top_of(c0);
+        if (kt0 != kmin)
+        {
+            // P2-24: the central column's reflection, from its top solid cell (the form every site reads)
+            bc_R_col = R_s + (R_l - R_s) * MeltFraction(g[o_top + c0]);
+            // P2-24: the ROCK PHASE's solidus on the microstructure path (phase.T_m left the beam deck)
+            const Set::Scalar Tm = !phases.empty() ? phases[0].T_m : (material ? material->T_m : T_m);
+            std::vector<Set::Scalar> Tcol;
+            for (int k = kt0; k >= klo && g[c0 * NZ + (k - klo)] >= 0.0; --k)
+                Tcol.push_back(g[ncols * NZ + (k - klo)]);
+            const int nmax = static_cast<int>(Tcol.size()) - 1;
+            int d_pk = 0;
+            for (int d = 0; d <= nmax; ++d)
+            {
+                if (Tcol[d] > Tcol[d_pk]) d_pk = d;
+                if (!std::isfinite(bc_z_melt) && Tcol[d] >= Tm) bc_z_melt = (Set::Scalar(d) + 0.5) * dz;
+            }
+            bc_T_peak = Tcol[d_pk];
+            bc_z_peak = (Set::Scalar(d_pk) + 0.5) * dz;
+            // P2-24: the liquid fraction at the peak, and the deepest fully liquid cell of the column
+            bc_f_L_peak = MeltFraction(bc_T_peak);
+            for (int d = 0; d <= nmax; ++d)
+                if (MeltFraction(Tcol[d]) >= 1.0) bc_z_liq = (Set::Scalar(d) + 0.5) * dz;
+            if (out.k_last[c0] != kmin) bc_tau = out.bot[c0 * NZ + (out.k_last[c0] - klo)];
+            // P2-19's helpers on the rise above the ambient (the Zhang decks' IC);
+            // the face sample is the top cell's rise (no surface reconstruction here)
+            auto rise_at_d = [&](int d) { return Tcol[d] - T_amb; };
+            Set::Scalar z_pk = nan;
+            bc_ell_p = ProfileEFoldDepth(rise_at_d, Tcol[0] - T_amb, dz, nmax);
+            ProfilePeak(rise_at_d, Tcol[0] - T_amb, dz, nmax, z_pk, bc_ell_pk);
+        }
+        out.built = true;
+        return out;
+    }
+
+    // P2-21: the column optical depth when it applies (the table varies AND the
+    // beam is on this step), else an unbuilt BeamTau (every kernel then keeps the
+    // closed form) with the deciders cleared on a table deck.
+    BeamTau BuildBeamTau(int lev, Set::Scalar P_now, const amrex::Vector<int>& k_top_col)
+    {
+        beam_P_beam = P_now;   // P2-24: the schedule's power now (the DOE's denominator)
+        if (beam.alpha_varies() && P_now > 0.0) return ColumnOpticalDepth(lev, k_top_col);
+        if (beam.alpha_varies())
+        {
+            const Set::Scalar nan = std::numeric_limits<Set::Scalar>::quiet_NaN();
+            beam_tau_max = beam_alpha_max = beam_col_err_max = 0.0;
+            bc_T_peak = bc_z_peak = bc_z_melt = bc_tau = bc_ell_p = bc_ell_pk = nan;
+            // P2-24: with the beam OFF the surface still cools; on a BEAM deck the radiometer and the melt spot
+            // are read anyway (a top-cell gather, no optical depth). A flame deck (no beam power ever) skips it.
+            if (beam.can_deposit()) SurfaceMeltRecord(lev, k_top_col);
+        }
+        return BeamTau();
+    }
+
+    // P2-24: THE ROCK'S LIQUID FRACTION f_L(T) -- ONE phase (SR 13): phase 0's fusion band on the microstructure
+    // path, the global material's on a material path; 0 when no band is declared (T_m >= 1e29).
+    // f_L = clamp((T - (T_m - w/2)) / w, 0, 1); a sharp band (w <= 0) is the step at T_m. The beam's melt factor
+    // and reflection, the face list's molten / lid exclusions and the melt records all read THIS.
+    Set::Scalar MeltFraction(Set::Scalar T) const
+    {
+        Set::Scalar Tm = 1.0e30, w = 0.0;
+        if (!phases.empty()) { Tm = phases[0].T_m; w = phases[0].fus_width; }
+        else if (material)   { Tm = material->T_m; w = material->fus_width; }
+        if (!(Tm < 1.0e29)) return 0.0;
+        if (!(w > 0.0)) return (T >= Tm) ? 1.0 : 0.0;
+        const Set::Scalar f = (T - (Tm - 0.5 * w)) / w;
+        return (f <= 0.0) ? 0.0 : ((f >= 1.0) ? 1.0 : f);
+    }
+
+    // P2-24: the beam-OFF surface record (after the beam is switched off the melt still cools): bc_T_rad,
+    // bc_T_view, bc_A_melt from each column's top solid cell, as ColumnOpticalDepth forms them
+    void SurfaceMeltRecord(int lev, const amrex::Vector<int>& k_top_col)
+    {
+        const amrex::Box& domain = geom[lev].Domain();
+        const int ilo = domain.smallEnd(0), jlo = domain.smallEnd(1), khi = domain.bigEnd(2);
+        const int nx = domain.length(0), ny = domain.length(1);
+        const std::size_t ncols = static_cast<std::size_t>(nx) * ny;
+        const Set::Scalar* DX  = geom[lev].CellSize();
+        const Set::Scalar* PLO = geom[lev].ProbLo();
+        const bool void_aware = !k_top_col.empty();
+        const int kmin = std::numeric_limits<int>::min();
+        std::vector<Set::Scalar> Ttop(ncols, 0.0);
+        for (amrex::MFIter mfi(*temp_old_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<const Set::Scalar> const& T = (*temp_old_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                const std::size_t c = static_cast<std::size_t>(j - jlo) * nx + (i - ilo);
+                const int kt = void_aware ? k_top_col[c] : khi;
+                if (kt != kmin && kt >= lo.z && kt <= hi.z) Ttop[c] = T(i, j, kt);
+            }
+        }
+        amrex::ParallelDescriptor::ReduceRealSum(Ttop.data(), static_cast<int>(Ttop.size()));
+        const Set::Scalar R_s = beam.R, R_l = beam.R_melt, r_view = 0.01625;   // as ColumnOpticalDepth
+        Set::Scalar n_v = 0.0, sTr = 0.0, sT = 0.0, A_m = 0.0;
+        for (std::size_t c = 0; c < ncols; ++c)
+        {
+            if ((void_aware ? k_top_col[c] : khi) == kmin) continue;
+            const Set::Scalar fL = MeltFraction(Ttop[c]);
+            if (fL > 0.0) A_m += DX[0] * DX[1];
+            const int i = ilo + static_cast<int>(c % nx), j = jlo + static_cast<int>(c / nx);
+            const Set::Scalar dxc = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0] - beam.x0;
+            const Set::Scalar dyc = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1] - beam.y0;
+            if (dxc * dxc + dyc * dyc > r_view * r_view) continue;
+            n_v += 1.0;
+            sT  += Ttop[c];
+            sTr += ((1.0 - R_l) * fL + (1.0 - R_s) * (1.0 - fL)) * Ttop[c];
+        }
+        const Set::Scalar nan = std::numeric_limits<Set::Scalar>::quiet_NaN();
+        bc_T_rad  = (n_v > 0.0) ? sTr / n_v : nan;
+        bc_T_view = (n_v > 0.0) ? sT / n_v : nan;
+        bc_A_melt = A_m;
+        bc_f_L_peak = bc_z_liq = bc_R_col = nan;
+    }
+
     // D2q-1: length of the CONTIGUOUS solid run below each column's top cell,
     // in cells, capped at the column height. The depth scan walks downward
     // from k_top in 1-cell strides assuming every cell it passes is material;
@@ -4721,10 +5229,9 @@ protected:
     //   closure : P_dep + P_trans == P_inc
     //
     // Exact (to round-off) only for CONSTANT alpha and the UNIFORM profile.
-    // With alpha(T) each cell uses its own a_k, the column sum no longer
-    // telescopes and P_dep can exceed P_inc; a correct alpha(T) deposition
-    // needs the cumulative optical depth tau = sum_k a_k*dz (follow-on step,
-    // required before real alpha(T) MMW work). A Gaussian profile adds an
+    // A temperature-dependent alpha deposits through the cumulative optical
+    // depth tau = sum_k a_k*dz (P2-21: ColumnOpticalDepth), never a per-cell
+    // a_k applied to the whole path above (which over-deposits). A Gaussian profile adds an
     // O((dz/z_R)^2) deviation because Pi evolves with the geometric depth, so
     // the P_dep <= P_inc double-count guard is applied to the uniform profile
     // only.
@@ -4745,8 +5252,16 @@ protected:
     // once an interior void existed (measured 14.29 % closure error).
     // Single level: lev == 0 only (multi-level unsupported; composite sums
     // would double-count covered cells).
+    // P2-21: with a built BeamTau (a varying loss table) every cell's source is
+    // the optical-depth pair the kernel used and P_trans leaves at each column's
+    // LOWEST solid cell with e^{-tau_bot} there; the per-column pairs telescope
+    // (beam_col_err_max), but the closure keeps a residual of the size
+    // (d/z_R)^2 x the centre-to-edge contrast in alpha: Pi is the cell's own, and
+    // a Gaussian's Pi changes with depth -- the lateral power a column sum cannot
+    // follow (studies/p2_21_loss_table/step0). Unbuilt: the closed form, as before.
     void BeamEnergyBalance(int lev, Set::Scalar time, Set::Scalar dt,
-                           const amrex::Vector<int>& k_top_col)
+                           const amrex::Vector<int>& k_top_col,
+                           const BeamTau& btau)
     {
         if (!SurfaceOwner(lev)) return;
         const bool void_aware = removal_enabled();
@@ -4760,20 +5275,22 @@ protected:
         const Set::Scalar A  = DX[0] * DX[1];
         const Set::Scalar V  = A * dz;
         const Set::Scalar P_now = beam.power_at(time);
-        auto alpha_f = beam.alpha_f;
+        const Set::Scalar b_alpha = beam.alpha;   // P2-20: computed from beam.eps_r, beam.tan_delta, beam.lambda
         // D2q-1: solid-cell count above k, as in AdvanceMicrostructure.
         const amrex::Vector<int> solid_above =
             (void_aware && P_now > 0.0 && !k_top_col.empty())
             ? ColumnSolidAboveCount(lev, k_top_col) : amrex::Vector<int>();
         const int* sab    = solid_above.data();
         const int  nz_dom = domain.length(2);
+        const TauView tv = ViewOf(btau, lev);
 
         Set::Scalar P_inc = 0.0, P_dep = 0.0, P_trans = 0.0, n_viol = 0.0;
         for (amrex::MFIter mfi(*H_mf[lev], false); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.validbox();
-            amrex::Array4<const Set::Scalar> const& T_old = (*temp_old_mf[lev]).array(mfi);
             // Placeholders as in AdvanceMicrostructure when not void-aware.
+            // (P2-20: alpha no longer depends on T, so no temperature is read
+            // here -- the call is valid on every advance path.)
             amrex::Array4<const Set::Scalar> const& rem =
                 void_aware ? (*removed_mf[lev]).const_array(mfi) : (*surface_mf[lev]).const_array(mfi);
             amrex::Array4<const Set::Scalar> const& phi =
@@ -4831,21 +5348,34 @@ protected:
                 const Set::Scalar x = PLO[0] + (Set::Scalar(i) + 0.5) * DX[0];
                 const Set::Scalar y = PLO[1] + (Set::Scalar(j) + 0.5) * DX[1];
                 const Set::Scalar z = PLO[2] + (Set::Scalar(k) + 0.5) * DX[2];
+                // P2-22: `path` is -1 off the void-aware path (BeamSource then takes the
+                // geometric z0 - z as the solid path); the incident intensity must use the
+                // same solid path as the deposit or P_inc and P_dep disagree (smoke: 1.43).
+                const Set::Scalar s_rock = (path >= 0.0) ? path : (beam.z0 - z);
                 const Set::Scalar Pi = BeamIncidentIntensity(P_now, beam.omega0, beam.lambda,
                                                              beam.x0, beam.y0, beam.z0,
-                                                             beam.profile, beam.radius, x, y, z);
+                                                             beam.profile, beam.radius, x, y, z,
+                                                             beam.n_idx, s_rock);
                 if (Pi == 0.0) continue;
 
-                const Set::Scalar Tc = T_old(i, j, k);
+                // P2-24: the column's R (the melt's reflection over a molten top), the deck's scalar R unbuilt
+                const Set::Scalar Rc = tv.R(i, j, beam.R);
                 const Set::Scalar Q = BeamSource(P_now, beam.omega0, beam.lambda,
-                                                 beam.x0, beam.y0, beam.z0, beam.R,
-                                                 beam.profile, beam.radius, alpha_f,
-                                                 x, y, z, Tc, dz, path);
+                                                 beam.x0, beam.y0, beam.z0, Rc,
+                                                 beam.profile, beam.radius, b_alpha,
+                                                 x, y, z, dz, path, tv.t(i, j, k), tv.b(i, j, k),
+                                                 beam.n_idx);
                 P_dep += Q * V;
-                if (at_col_top) P_inc += (1.0 - beam.R) * Pi * A;
-                if (k == klo_dom)
+                if (at_col_top) P_inc += (1.0 - Rc) * Pi * A;
+                if (btau.built)
                 {
-                    const Set::Scalar a = alpha_f(Tc);
+                    // P2-21: the gathered value at the column's exit cell
+                    if (k == btau.k_last[static_cast<std::size_t>(col_b)])
+                        P_trans += (1.0 - Rc) * Pi * std::exp(-tv.b(i, j, k)) * A;
+                }
+                else if (k == klo_dom)
+                {
+                    const Set::Scalar a = b_alpha;
                     const Set::Scalar s_bot = (path >= 0.0 ? path : (beam.z0 - z)) + 0.5 * dz;
                     P_trans += (1.0 - beam.R) * Pi * std::exp(-a * s_bot) * A;
                 }
@@ -4918,19 +5448,31 @@ protected:
     static Set::Scalar BeamSource(Set::Scalar P, Set::Scalar w0, Set::Scalar lam,
                                   Set::Scalar x0, Set::Scalar y0, Set::Scalar z0,
                                   Set::Scalar R, int profile, Set::Scalar radius,
-                                  amrex::ParserExecutor<1> alpha_f,
+                                  Set::Scalar a,
                                   Set::Scalar x, Set::Scalar y, Set::Scalar z,
-                                  Set::Scalar T,
                                   Set::Scalar dz_cell = 0.0,
-                                  Set::Scalar dz_abs = -1.0)
+                                  Set::Scalar dz_abs = -1.0,
+                                  Set::Scalar tau_top = -1.0,
+                                  Set::Scalar tau_bot = -1.0,
+                                  Set::Scalar n_rock = 1.0)
     {
         if (P == 0.0) return 0.0; // perf: beam off (Pi would be 0 anyway)
         Set::Scalar dz = z0 - z;
-        Set::Scalar Pi = BeamIncidentIntensity(P, w0, lam, x0, y0, z0,
-                                               profile, radius, x, y, z);
-        if (Pi == 0.0) return 0.0;
-        Set::Scalar a    = alpha_f(T);
+        // P2-22: the solid path to this cell (dz when the beam origin is the
+        // rock surface) sets the in-rock spread; n_rock 1 keeps the geometric dz.
         Set::Scalar path = (dz_abs >= 0.0) ? dz_abs : dz;
+        Set::Scalar Pi = BeamIncidentIntensity(P, w0, lam, x0, y0, z0,
+                                               profile, radius, x, y, z, n_rock, path);
+        if (Pi == 0.0) return 0.0;
+        // P2-21: a VARYING coefficient. The column's optical depth to this cell's
+        // top and bottom faces (ColumnOpticalDepth) replaces a*s: the Beer-Lambert
+        // integral of a(T) along the solid path, so the column's pairs telescope to
+        // 1 - e^{-tau_N}. Pi stays the cell's own (the closed form's, unchanged).
+        // tau_top < 0 (the default) is the closed form below, byte for byte.
+        if (tau_top >= 0.0)
+            return (1.0 - R) * Pi * (std::exp(-tau_top) - std::exp(-tau_bot)) / dz_cell;
+        // P2-20: a = beam.alpha, the POWER coefficient computed from the
+        // dielectric description (no temperature dependence: user, 2026-11-05)
         if (dz_cell > 0.0)
         {
             // Analytic cell integral of I*a*exp(-a*s) over the material
@@ -4952,13 +5494,21 @@ protected:
     // Returns 0 above the beam origin (z > z0), for P == 0, and outside the
     // uniform disk. The Gaussian waist evolves with the geometric z0 - z.
     AMREX_GPU_HOST_DEVICE
+    // P2-22: n_rock = sqrt(eps_r) and s_rock = the solid path from the surface to
+    // this point. A Gaussian beam crossing a plane interface into a dielectric
+    // keeps its waist and propagates with the Rayleigh range n*zR, i.e. the waist
+    // law is evaluated at the REDUCED distance d_air + s_rock / n. Written as
+    // dz - s_rock*(1 - 1/n) so that n = 1 reproduces the geometric dz BIT FOR BIT
+    // (s_rock * 0.0 = 0.0; every eps_r 1 fixture is byte-identical).
     static Set::Scalar BeamIncidentIntensity(Set::Scalar P, Set::Scalar w0, Set::Scalar lam,
                                              Set::Scalar x0, Set::Scalar y0, Set::Scalar z0,
                                              int profile, Set::Scalar radius,
-                                             Set::Scalar x, Set::Scalar y, Set::Scalar z)
+                                             Set::Scalar x, Set::Scalar y, Set::Scalar z,
+                                             Set::Scalar n_rock = 1.0, Set::Scalar s_rock = 0.0)
     {
         Set::Scalar dz = z0 - z;
         if (dz < 0.0 || P == 0.0) return 0.0;
+        Set::Scalar dz_red = dz - s_rock * (1.0 - 1.0 / n_rock);
         Set::Scalar r2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
         Set::Scalar Pi;
         if (profile == Numeric::MMWBeam::Uniform)
@@ -4972,7 +5522,7 @@ protected:
         else
         {
             Set::Scalar zR = M_PI * w0 * w0 / lam;
-            Set::Scalar w  = w0 * std::sqrt(1.0 + (dz / zR) * (dz / zR));
+            Set::Scalar w  = w0 * std::sqrt(1.0 + (dz_red / zR) * (dz_red / zR));
             Pi = (2.0 * P / (M_PI * w0 * w0)) * (w0 / w) * (w0 / w)
                * std::exp(-2.0 * r2 / (w * w));
         }
@@ -6615,9 +7165,12 @@ private:
              ? &phases[0].grimsel : nullptr;
     }
 
-    // UpdateRemovalAfterCohesive — extracted to a partial header to keep this
-    // file navigable. The definition is still an inline member of MMWSpalling,
-    // textually included here at its original position (R1 refactor).
+    // The removal code lives in three class-body fragments, textually included
+    // here at the original position of UpdateRemovalAfterCohesive (R1 refactor):
+    // Shared.H (P2-18: the helpers and the step prologue BOTH paths call),
+    // Removal.H (the column path, face_list = 0) and FaceRemoval.H (the line
+    // path, face_list = 1, production).
+    #include "Integrator/MMWSpalling/Shared.H"
     #include "Integrator/MMWSpalling/Removal.H"
     #include "Integrator/MMWSpalling/FaceRemoval.H"
 
@@ -7068,6 +7621,21 @@ private:
                 }
                 else
                     phase_tables[p].Build(phase_materials[p]);
+                // P2-24: THE TABLE THE RUN INVERTS, printed once per build when a latent band is declared: its
+                // band temperatures and enthalpies [J/m^3, H(T_ref) = 0] (b1 reads the fusion jump from here)
+                if ((phases[p].T_m < 1.0e29 || phases[p].T_vap_lo < 1.0e29)
+                    && amrex::ParallelDescriptor::IOProcessor())
+                {
+                    const Numeric::Material::Table& tb = phase_tables[p];
+                    const Set::Scalar fl = phases[p].T_m - 0.5 * phases[p].fus_width;
+                    const Set::Scalar fh = phases[p].T_m + 0.5 * phases[p].fus_width;
+                    std::cout << std::setprecision(17)
+                              << "P2-24 phase " << p << " enthalpy table [J/m^3]: H(fus_lo " << fl << " K) = "
+                              << tb.H_fus_lo() << ", H(fus_hi " << fh << " K) = " << tb.H_fus_hi()
+                              << ", H(vap_lo " << phases[p].T_vap_lo << " K) = " << tb.H_vap_lo()
+                              << ", H(vap_hi " << phases[p].T_vap_hi << " K) = " << tb.H_vap_hi()
+                              << std::setprecision(6) << std::endl;
+                }
             }
         }
 
@@ -7597,6 +8165,29 @@ private:
     Set::Scalar beam_invariant_viol = 0.0;
     long        beam_viol_steps     = 0;
 
+    // P2-21: the deciders, thermo columns registered ONLY when
+    // beam.alpha_varies() && beam.can_deposit() (every flat and every beam-OFF
+    // deck keeps its header). Per step, non-extensive; set by ColumnOpticalDepth.
+    Set::Scalar beam_tau_max     = 0.0;  // max over lit columns of tau_bot at the last solid cell
+    Set::Scalar beam_alpha_max   = 0.0;  // max a_k over lit solid cells [1/m]
+    Set::Scalar beam_col_err_max = 0.0;  // max over lit columns |sum_k (e^-tt - e^-tb) + e^-tN - 1|
+    Set::Scalar bc_T_peak = std::numeric_limits<Set::Scalar>::quiet_NaN();  // central column [K]
+    Set::Scalar bc_z_peak = std::numeric_limits<Set::Scalar>::quiet_NaN();  // [m below the top face]
+    Set::Scalar bc_z_melt = std::numeric_limits<Set::Scalar>::quiet_NaN();  // shallowest T >= T_m [m]
+    Set::Scalar bc_tau    = std::numeric_limits<Set::Scalar>::quiet_NaN();  // central tau_bot at k_last
+    Set::Scalar bc_ell_p  = std::numeric_limits<Set::Scalar>::quiet_NaN();  // P2-19 face e-fold [m]
+    Set::Scalar bc_ell_pk = std::numeric_limits<Set::Scalar>::quiet_NaN();  // P2-19 peak e-fold [m]
+    // P2-24: the melt and vapour record (same registration condition as the bc_* above)
+    Set::Scalar beam_P_beam = 0.0;   // the schedule's power now [W] (the DOE's denominator; P_inc is after R)
+    Set::Scalar bc_T_rad    = std::numeric_limits<Set::Scalar>::quiet_NaN();  // synthetic radiometer eps T [K]
+    Set::Scalar bc_T_view   = std::numeric_limits<Set::Scalar>::quiet_NaN();  // view mean of T_top [K]
+    Set::Scalar bc_A_melt   = 0.0;   // top solid cells with f_L > 0 [m^2]
+    Set::Scalar bc_f_L_peak = std::numeric_limits<Set::Scalar>::quiet_NaN();  // f_L at the central peak [-]
+    Set::Scalar bc_z_liq    = std::numeric_limits<Set::Scalar>::quiet_NaN();  // deepest central f_L >= 1 [m]
+    Set::Scalar bc_R_col    = std::numeric_limits<Set::Scalar>::quiet_NaN();  // the central column's R_col [-]
+    Set::Scalar bc_n_vapor     = 0.0;   // cumulative surface cells vaporised (the face list's vapour rule)
+    Set::Scalar bc_n_vapor_int = 0.0;   // cumulative cell-steps an INTERIOR cell sat past H_vap_hi
+
     // S1: surface.follow_mask applies the convective_flame patch and the
     // surface losses at the `removed`-mask column top (ColumnTopSolid)
     // instead of the fixed domain top / the phi-window surface_mf.
@@ -7709,6 +8300,10 @@ private:
     // A fired line is withdrawn unless C_L x <= L_span (FaceRemoval.H, BuckleRatio). Witnesses
     // registered only under the key; per step, reset and added once in RecedeAlongLines.
     Set::Scalar sp_buckle_span = 0.0;
+    // P2-23: spall.buckle_log_csv -- one row per line B evaluated, on
+    // thermo-output steps, into <plot_file>_buckle_log.csv (FaceRemoval.H)
+    bool sp_buckle_log_csv = false;
+    bool sp_buckle_log_header_written = false;
     Set::Scalar bk_span_out = 0.0, bk_n_eval = 0.0, bk_n_block = 0.0, bk_n_inf = 0.0,
                 bk_n_block_floor = 0.0, bk_n_block_wall = 0.0, bk_n_block_roof = 0.0,
                 bk_max_pass = 0.0;
@@ -7819,7 +8414,6 @@ private:
         // Sentinel -1 = inert. ⚠ A BOUND, not a fitted coefficient.
         Set::Scalar pad_shield_open = -1.0;
         Set::Scalar x0 = 0.0, y0 = 0.0, radius = 0.0;
-        Set::Scalar T_ext   = 0.0;
         Set::Scalar h_conv  = 0.0;  // convective_flame: flame coefficient h_fl
         Set::Scalar T_flame = 0.0;  // convective_flame: flame temperature
         amrex::Parser            T_parser;
@@ -7899,8 +8493,15 @@ private:
             int en = 0;
             pp.query_default("enabled", en, 0);
             v.enabled = (en != 0);
-            if (!v.enabled) return;
 
+            // P2-23: THE FACE LIST WITHOUT A FLAME. The keys the face list itself
+            // needs -- the switch, the surface form, and the listing mask (centre
+            // and radius) -- are read BEFORE the `enabled` return, so a flameless
+            // deck that includes the shared model form (face_list = 1, robin_form =
+            // surface) reads them instead of aborting on unread keys. With the
+            // patch ON they stay required exactly as before; with it OFF the mask
+            // defaults to nothing listed (radius 0). Every flame-only key and
+            // every robin_form check stays behind the return.
             {
                 int fl = 0;
                 pp.query_default("face_list", fl, 0);
@@ -7908,6 +8509,27 @@ private:
                     Util::Abort(INFO, "surface_patch.face_list must be 0 or 1, got: ", fl);
                 v.face_list = (fl == 1);
             }
+            std::string robin_str;
+            pp.query_default("robin_form", robin_str, std::string("cell"));
+            if      (robin_str == "cell")   v.robin_form = RobinForm::Cell;
+            else if (robin_str == "face")   v.robin_form = RobinForm::Face;
+            else if (robin_str == "pinned") v.robin_form = RobinForm::Pinned;
+            else if (robin_str == "surface") v.robin_form = RobinForm::Surface;
+            else Util::Abort(INFO, "surface_patch.robin_form must be 'cell', 'face', "
+                                   "'pinned' or 'surface', got: ", robin_str);
+            if (v.enabled)
+            {
+                pp.query_required("x0",     v.x0);
+                pp.query_required("y0",     v.y0);
+                pp.query_required("radius", v.radius);
+            }
+            else
+            {
+                pp.query_default("x0",     v.x0,     0.0);
+                pp.query_default("y0",     v.y0,     0.0);
+                pp.query_default("radius", v.radius, 0.0);
+            }
+            if (!v.enabled) return;
             // P2-11b: read only under the face list; position = today.
             if (pp.contains("face_heat"))
             {
@@ -7934,10 +8556,6 @@ private:
                 v.has_barrier = true;
             }
 
-            // Legacy `type` key — always consumed so the strict parser does
-            // not choke on existing Step 6d-style inputs.
-            std::string type;
-            pp.query_default("type", type, std::string("prescribed_temperature"));
             // `mode` is the Step 15a authority; default prescribed_T keeps
             // legacy inputs unchanged.
             std::string mode_str;
@@ -7949,23 +8567,12 @@ private:
             else
                 Util::Abort(INFO, "surface_patch.mode must be 'prescribed_T' "
                                   "or 'convective_flame', got: ", mode_str);
-            if (v.mode == Mode::PrescribedTemperature &&
-                type != "prescribed_temperature")
-                Util::Abort(INFO, "surface_patch.type must be "
-                                  "'prescribed_temperature', got: ", type);
 
             // S1: Robin discretisation for convective_flame (microstructure
             // path only; see SurfaceCellFlux). `cell` (default) applies
             // h*(T_flame - T_cell) and cell-centred losses; `face` solves the
             // top-face balance for T_f and injects (2k/dz)*(T_f - T_cell).
-            std::string robin_str;
-            pp.query_default("robin_form", robin_str, std::string("cell"));
-            if      (robin_str == "cell")   v.robin_form = RobinForm::Cell;
-            else if (robin_str == "face")   v.robin_form = RobinForm::Face;
-            else if (robin_str == "pinned") v.robin_form = RobinForm::Pinned;
-            else if (robin_str == "surface") v.robin_form = RobinForm::Surface;
-            else Util::Abort(INFO, "surface_patch.robin_form must be 'cell', 'face', "
-                                   "'pinned' or 'surface', got: ", robin_str);
+            // (robin_form is read above, before the `enabled` return: P2-23)
             if (v.robin_form == RobinForm::Face && v.mode != Mode::ConvectiveFlame)
                 Util::Abort(INFO, "surface_patch.robin_form = face requires "
                                   "surface_patch.mode = convective_flame");
@@ -8010,14 +8617,7 @@ private:
                                 v.pad_shield_open);
             }
 
-            std::string face;
-            pp.query_default("face", face, std::string("zhi"));
-            if (face != "zhi")
-                Util::Abort(INFO, "surface_patch.face must be 'zhi' (only +z "
-                                  "patch implemented), got: ", face);
-            pp.query_required("x0",     v.x0);
-            pp.query_required("y0",     v.y0);
-            pp.query_required("radius", v.radius);
+            // (x0, y0, radius are read above, before the `enabled` return: P2-23)
 
             // T_expr: required under prescribed_T, optional (consumed but
             // unused) under convective_flame.
@@ -8038,7 +8638,6 @@ private:
             // flame heat-transfer coefficient h_fl and T_flame the flame
             // temperature: q = h_fl*(T_flame - T_surface). Under prescribed_T
             // they are reserved/unused.
-            pp.query_default("T_ext",   v.T_ext,   0.0);
 
             // D2a: spatial flame, h_expr / T_flame_expr in (x, y, r, s, t) [SI],
             // r = distance of the column centre from (x0, y0), s = stand-off of
@@ -8364,7 +8963,6 @@ private:
     // re-querying the phase table on every kernel.
     struct MineralPhase
     {
-        std::string name;
         Set::Scalar fraction = 0.0;
         Set::Scalar kappa = 0.0;
         Set::Scalar beta  = 0.0;
@@ -8372,7 +8970,6 @@ private:
         Set::Scalar mu    = 0.0;
         Set::Scalar rho   = 0.0;
         Set::Scalar Cp    = 0.0;
-        Set::Scalar alpha_atten = 0.0;
         Set::Scalar A_D   = 0.0;
         // Step 6b: phase-change scalars used to build the per-phase
         // H<->T table. Defaults disable phase change.
@@ -8808,6 +9405,12 @@ private:
     // INCLUDING void ones (whose H is deliberately frozen rather than reset),
     // so removal has never been a sink in its eyes. This is what closes it.
     Set::Scalar ledger_E_flake = 0.0;
+    // P2-24: the face list's vapour rule and the melt exclusions (FaceRemoval.H)
+    Set::Scalar ledger_E_vapor = 0.0;   // cumulative H V of the vaporised cells [J]
+    Set::Scalar fr_n_vapor     = 0.0;   // per step: surface (listed) cells vaporised
+    Set::Scalar fr_n_vapor_int = 0.0;   // per step: INTERIOR solid cells past H_vap_hi (not voided)
+    Set::Scalar fr_n_molten    = 0.0;   // per step: lines whose surface cell is fully liquid (not scanned)
+    Set::Scalar fr_n_lid       = 0.0;   // per step: lines with a fully liquid cell in their window (not scanned)
     // P0b (c''): the SOLID-ONLY enthalpy sum and its residual.
     // ⚠⚠ THE EXISTING LEDGER CANNOT SEE REMOVAL AT ALL. `ledger_E_H` sums H
     // over every cell including void ones, whose H is deliberately frozen
@@ -9161,6 +9764,15 @@ private:
         if (!(std::isfinite(value.sp_buckle_span) && value.sp_buckle_span >= 0.0))
             Util::Abort(INFO, "spall.buckle_span must be finite and >= 0 m, got: ",
                         value.sp_buckle_span);
+        // P2-23: the blocked-line record (default off; a LOG, read by nothing).
+        // Checked against the span in Parse, beside the span's own face-list check.
+        {
+            int bl = 0;
+            pp.query_default("spall.buckle_log_csv", bl, 0);
+            if (bl != 0 && bl != 1)
+                Util::Abort(INFO, "spall.buckle_log_csv must be 0 or 1, got: ", bl);
+            value.sp_buckle_log_csv = (bl == 1);
+        }
         if (value.spallation_model != SpallationModel::SpWeibull) return;
 
         // Hard mutual-exclusion: sp_weibull bypasses CZM (Step 15 Weibull

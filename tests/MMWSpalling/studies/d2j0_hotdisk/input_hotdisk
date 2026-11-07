@@ -101,8 +101,6 @@ beam.lambda     = 2.19e-3
 beam.x0         = 0.0
 beam.y0         = 0.0
 beam.z0         = 0.10
-beam.alpha_expr = 2000.0
-beam.R          = 0.0
 
 bit.enabled = 0
 bit.feed_rate  = 4.166667e-4

@@ -1,0 +1,35 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# P2-23 unit/face_beam: THE FACE LIST WITHOUT A FLAME, on the beam deck (validation/oglesby/input) at 3.125 mm
+# cubes. The emissivity is ZEROED here (a LINEAR loss h_conv (T_s - T_amb), so every listed face's T_s and loss are
+# closed-form) -- this unit deck only; the validation deck keeps the rock file's 0.8.
+#   U1 this deck: every top face listed (fl_n_top = 1024, fl_n_side = 0), billed at h = 0 (the gain fl_P_top = 0),
+#      its loss at its OWN T_s (ledger_P_loss against the analytic sum the test forms from the plotfile)
+#   U2 U1 + surface_patch.face_list=0 spall.buckle_span=0 spall.buckle_log_csv=0 (the column-top form; the span and
+#      its log abort without the list, so they go too)
+#   U3 U1 on the P2-22 binary: it ABORTS (the flameless deck's face-list keys are unread there)
+# THREE steps of 0.5 s (explicit limit 0.97 s at 3.125 mm): the thermo row stamped t reports the step that ENDED at
+# t and the last step's row is never written, so the scored row is t = 1.0 (step 2, whose T_old is the t = 0.5
+# plotfile; step 1's T_old is the IC, where every loss is zero and a comparison would match two zeros).
+#
+# check_shared: allow losses.epsilon
+# check_shared: allow losses.epsilon_high
+
+FILE = tests/MMWSpalling/validation/oglesby/input
+
+plot_file = tests/MMWSpalling/unit/face_beam/output/U1
+
+amr.n_cell        = 32 32 16
+amr.max_grid_size = 16
+timestep          = 0.5
+stop_time         = 1.5
+amr.plot_int      = 1
+weibull.V0        = 3.0517578125e-8   # the cell volume (3.125 mm)^3
+
+losses.epsilon      = 0.0
+losses.epsilon_high = 0.0

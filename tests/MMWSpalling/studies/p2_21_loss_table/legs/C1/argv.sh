@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/zhang/zhang_oglesby/input 'beam.tan_delta_T=295.15 1.0' amr.node.any=1 amr.plot_int=5 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_21_loss_table/legs/C1/run
