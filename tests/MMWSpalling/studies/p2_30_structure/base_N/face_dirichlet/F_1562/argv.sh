@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/face_dirichlet/input amr.n_cell=16 16 64 timestep=0.125 amr.plot_int=240 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/face_dirichlet/output/F_1562/run

@@ -1,149 +1,161 @@
 <!-- INDEX:BEGIN  regenerate: python3 docs/project/tools/archive_index.py -->
 # Archive index
 
-126 completed-step records + 10 roadmap snapshots. Line numbers are exact as of the last
+132 completed-step records + 10 roadmap snapshots. Line numbers are exact as of the last
 regeneration and are verified by the generator; re-run it after any append.
 (161 sub-headings inside records -- Goal, Guardrails, Commands, takeaways,
 review findings -- are deliberately not indexed; find them inside their record.)
 
-- L213: Step 1 - Skeleton Integrator And Build Registration
-- L225: Step 2 - Enthalpy Heat Formulation
-- L239: Step 3 - MMW Beam Source
-- L250: Step 4 - Surface Losses
-- L261: Step 4b - Zhang/Oglesby Granite Heating Validation
-- L286: Step 5 - Voronoi Microstructure With Mineral Phases
-- L331: Step 6 - Heterogeneous And Damage-Modified Conductivity
-- L375: Step 6b - H/T Consistency For Heterogeneous Microstructure
-- L415: Step 6c - Grain Topology Correction
-- L458: Step 6d - Hu Prescribed-Surface-Temperature Conduction
-- L514: Step 7 - Heterogeneous Thermoelastic Mechanics
-- L572: Step 7b - Hu Thermoelastic Stress Validation, Single-Level
-- L647: Step 7c - Early AMR Correctness For Microstructure Regrid
-- L696: Step 7d - Hu Thermoelastic Stress Validation With AMR
-- L765: Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution
-- L836: Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution
-- L910: Step 9 - Grain-Boundary Cohesive-Zone Unit Test
-- L964: Step 10 - Surface Advancement And Spall Detachment
-- L1029: Step 11 - Vaporisation Removal And Unified RoP
-- L1097: Step 11b - Hu LRST And Onset-Spallation With DP Damage
-- L1172: Step 12 - Spallation-Model Toggle + Sp Onset Criterion
-- L1353: Step 14 - Hu Flame-Jet End-to-End Validation (damage_law)
-- L1434: Step 14b - Damage-Law Spall Sampling Knob
-- L1508: Step 15a - Convective Robin Surface-Patch BC
-- L1597: Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling
-- L1712: Step 15b - Kant Onset Validation (sp_kant_onset)
-- L1801: Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring)
-- L1925: Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b)
-- L2027: Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh)
-- L2134: Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope
-- L2174: Step 16d - T-derived σ_xx with prescribed-T face BC (option (a))
-- L2284: Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half)
-- L2407: Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact)
-- L2562: Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5)
-- L2667: Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate)
-- L2735: Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed)
-- L2788: P1 — Melt-aware spallation (completed, review-accepted)
-- L2855: P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15)
-- L2878: E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted)
-- L3309: S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted)
-- L3876: A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (comp...
-- L4439: C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted)
-- L5028: D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, ...
-- L5667: D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (complete...
-- L6407: D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted)
-- L7352: D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted)
-- L8317: D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh che...
-- L8991: D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed)
-- L9632: D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-a...
-- L10128: D2e — retroactive review (2026-09-19; attaches to the D2e entry above)
-- L10233: D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-acce...
-- L10546: D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet)
-- L10583: D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED)
-- L10663: D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same...
-- L10715: D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet)
-- L10783: D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier ...
-- L10876: D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered ...
-- L10951: D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported a...
-- L11029: D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accept...
-- L11246: D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by ...
-- L11404: D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise r...
-- L11515: D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by a...
-- L11626: D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, revi...
-- L11724: D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberat...
-- L11811: D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted)
-- L11956: D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23)
-- L12078: D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23)
-- L12162: D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23)
-- L12235: D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES)
-- L12418: D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES)
-- L12520: D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by d...
-- L12617: D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — pla...
-- L12701: D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, revi...
-- L12837: D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24)
-- L12926: D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code)
-- L12990: D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code)
-- L13059: D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held)
-- L13120: D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted)
-- L13286: P4 REFUTED, in the informative direction
-- L13486: P3a REFUTED — the planner's crater-wall assumption
-- L13651: P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF
-- L13684: P7 CONFIRMED — `PD` jammed, and it was pre-registered
-- L14078: P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accep...
-- L14208: P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01
-- L14352: P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid ...
-- L14467: P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the...
-- L14555: P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both sh...
-- L14641: ROADMAP `## Current Status` as it stood on 2026-10-02, before the collapse
-- L15678: ROADMAP `Active step:` region — the 14 COMPLETED blocks that had accumulated there, 2026-10-02
-- L15941: P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate ...
-- L16174: P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mec...
-- L16473: P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-...
-- L16690: ROADMAP `Next milestones` block as it stood before P1g-1 — collapsed 2026-10-03
-- L17188: ROADMAP `Known Stale/Important Notes` as it stood before P1g-1 — compressed 2026-10-03
-- L17985: P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEE...
-- L18256: P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real...
-- L18514: P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics f...
-- L18575: P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the...
-- L18656: P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the th...
-- L18723: P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06)
-- L18868: P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limit...
-- L18966: ROADMAP notes released 2026-10-07 — superseded by P2-1 and P2-2
-- L19020: P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, r...
-- L19124: P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complet...
-- L19187: P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not valid...
-- L19292: P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the ro...
-- L19658: ROADMAP notes released 2026-10-13 — superseded by P2-2f (feet descent) and P2-3
-- L19680: P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by rev...
-- L20093: P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archi...
-- L20499: P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found...
-- L20999: P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; ...
-- L21602: P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at t...
-- L22004: P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maxi...
-- L22399: P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (20...
-- L22850: P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built...
-- L23237: P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (...
-- L23775: ROADMAP notes released 2026-10-28 — superseded by P2-10 (the code they describe is deleted) and the new pla...
-- L23800: P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-...
-- L24213: ROADMAP notes released 2026-10-28 (b) — plan of record superseded at P2-11 planning
-- L24222: P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by ...
-- L24485: P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the b...
-- L24878: P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at ...
-- L24902: ROADMAP notes released 2026-10-30 — the 2026-10-28 plan of record, superseded by the 2026-10-30 plan
-- L24909: P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the produ...
-- L25307: ROADMAP notes released 2026-11-02 — the property-table clamp bullet (replaced by standing rule 18)
-- L25323: P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port...
-- L25817: P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both ...
-- L26303: P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, bu...
-- L26733: P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder (2026-1...
-- L27507: P2-19 — The flake depth from the line's own profile: the fallback reads the e-fold depth, the no-skin refus...
-- L28022: P2-20 — Beam deposition from one dielectric description: permittivity declared once, absorption and reflect...
-- L28578: P2-21 — Temperature-dependent loss as a rock property, with the optical-depth sum: Hartlieb's measured shap...
-- L29147: P2-22 — The in-rock beam spread (Rayleigh range n·z_R inside the dielectric) and test #19 at its true spot ...
-- L29282: P2-23 — The beam port: the face list runs without a flame, test #19 on the production rock, and the no-thin...
-- L29841: P2-24 — Melt and vapour on the enthalpy path: latent heat on the production rock, the melt's absorption and...
-- L30467: P2-25 — The regime check: spall or melt under a beam, over deposition depth and net flux, from the validate...
+- L225: Step 1 - Skeleton Integrator And Build Registration
+- L237: Step 2 - Enthalpy Heat Formulation
+- L251: Step 3 - MMW Beam Source
+- L262: Step 4 - Surface Losses
+- L273: Step 4b - Zhang/Oglesby Granite Heating Validation
+- L298: Step 5 - Voronoi Microstructure With Mineral Phases
+- L343: Step 6 - Heterogeneous And Damage-Modified Conductivity
+- L387: Step 6b - H/T Consistency For Heterogeneous Microstructure
+- L427: Step 6c - Grain Topology Correction
+- L470: Step 6d - Hu Prescribed-Surface-Temperature Conduction
+- L526: Step 7 - Heterogeneous Thermoelastic Mechanics
+- L584: Step 7b - Hu Thermoelastic Stress Validation, Single-Level
+- L659: Step 7c - Early AMR Correctness For Microstructure Regrid
+- L708: Step 7d - Hu Thermoelastic Stress Validation With AMR
+- L777: Step 8 - Drucker-Prager Failure Criterion And Continuous Damage Evolution
+- L848: Step 8b - Hu Breakage-Probability Indicator Without Damage Evolution
+- L922: Step 9 - Grain-Boundary Cohesive-Zone Unit Test
+- L976: Step 10 - Surface Advancement And Spall Detachment
+- L1041: Step 11 - Vaporisation Removal And Unified RoP
+- L1109: Step 11b - Hu LRST And Onset-Spallation With DP Damage
+- L1184: Step 12 - Spallation-Model Toggle + Sp Onset Criterion
+- L1365: Step 14 - Hu Flame-Jet End-to-End Validation (damage_law)
+- L1446: Step 14b - Damage-Law Spall Sampling Knob
+- L1520: Step 15a - Convective Robin Surface-Patch BC
+- L1609: Step 15b - Sp Mechanics: Weibull Flaw Distribution + Sign Fix + Depth-Resolved Sampling
+- L1724: Step 15b - Kant Onset Validation (sp_kant_onset)
+- L1813: Step 15c - Surface labeller, detach_mode A/B, AMR regrid-repair, sensitivity sweep (v2 dual-scoring)
+- L1937: Step 16 - Sp-vs-depth h_spall mechanics (Rossi validation deferred to 16b)
+- L2039: Step 16b - Rossi crack-event count + sub-cell bisection (depth bands not met at working mesh)
+- L2146: Step 16-series Rossi chain — closed, R1 deferred to Step 18+ scope
+- L2186: Step 16d - T-derived σ_xx with prescribed-T face BC (option (a))
+- L2296: Step 17 - per-cell v_n with simultaneous spall + vap (mechanics half)
+- L2419: Step 16c - h_col CSV log + linear cell-to-cell σ_xx (R1 FAILs on (L) artefact)
+- L2574: Step 18 - Kant 2017 confining-pressure sweep validation (revised-approach Stage 5)
+- L2679: Step 19 - sp_weibull spall under MMW beam (relax Step 16d surface_patch gate)
+- L2747: Refactor R1 — extract UpdateRemovalAfterCohesive into a partial header (completed)
+- L2800: P1 — Melt-aware spallation (completed, review-accepted)
+- L2867: P4 — Cuttings/debris shielding (WITHDRAWN before implementation, 2026-09-15)
+- L2890: E1 — Beam/void gap energy leak fix + deposition closure counter (completed, review-accepted)
+- L3321: S1 — 1-D surface-resolution study (fixed-flux and Robin sources) (completed, review-accepted)
+- L3888: A1 — Removal fixes (scalar flaw, removal-event log) + S1b firing temperature under production Weibull (comp...
+- L4451: C1 — Pinned-surface Robin closure (`robin_form = pinned`) (completed, review-accepted)
+- L5040: D2a — Impinging-jet face source: spatial Robin h(r, s), T_gas(s) with a prescribed nozzle path (completed, ...
+- L5679: D2a2 — Energy-conserving wall-jet gas temperature T_gas(r, s); no jet flux above the nozzle plane (complete...
+- L6419: D2b — Burner-on-feet descent and the scored Meier ROP / hole-diameter test (completed, review-accepted)
+- L7364: D2c — Steady-state and no-funnel closures + pre-registration (code only; completed, review-accepted)
+- L8329: D2d — Meier campaign: scored run, far-field control, T_nozzle sweep, funnel isolation, full-domain mesh che...
+- L9003: D2e — Speed-up acceptance and the mesh-seed diagnosis (completed; NOT /verify-ed)
+- L9644: D2f — Contact support rule as Meier ran it: q = 1.0 mesh gate and quantile sensitivity (completed, review-a...
+- L10140: D2e — retroactive review (2026-09-19; attaches to the D2e entry above)
+- L10245: D2g-1 — Long mesh check of the D2f support rule (q = 0.9) to the 0.40 m bottom stop (completed, review-acce...
+- L10558: D2h — Key-only diagnostic pairs on the D2f support rule (2026-09-20; reviewer diagnostic, no packet)
+- L10595: D2i — Support-rule mesh gate with the idle clock off (COMPLETED 2026-09-21, review-accepted; GATE FAILED)
+- L10675: D2j-0 — The hot-disk edge test with today's model (COMPLETED 2026-09-21; its verdict was WITHDRAWN the same...
+- L10727: D2j-0b — The hot disk under a descending exclusion plane (reviewer diagnostic, 2026-09-21 evening; no packet)
+- L10795: D2k — Side-face flux on exposed vertical faces (COMPLETED 2026-09-22, review-accepted; arbiter PASS, Meier ...
+- L10888: D2l — Gate 0 scan: why the model drills 2.7× too fast (COMPLETED 2026-09-22; window EMPTY ⇒ pre-registered ...
+- L10963: D2m — Is the cut diameter set by the feet or by the flame? (COMPLETED 2026-09-22; MIXED verdict, reported a...
+- L11041: D2o-0 — Prescribed floor/wall heating: does a cylindrical hole appear? (COMPLETED 2026-09-22; review-accept...
+- L11258: D2o-0b — Prescribed floor/wall heating with the field bounded in radius (COMPLETED 2026-09-22; REJECTED by ...
+- L11416: D2p-0 — Lateral recession at exposed step faces (CLOSED 2026-09-22 at DESIGN TIME, zero run cost; premise r...
+- L11527: D2p-1 — Corner regularisation (CLOSED 2026-09-22 at DESIGN TIME, never hashed, never launched; refuted by a...
+- L11638: D2q-1 — Make `removed_mf` authoritative (per-cell void, stage 1: pure refactor) (COMPLETED 2026-09-22, revi...
+- L11736: D2q-2b (checkpoint stage) — Per-cell removal: the mechanism, built and gated (2026-09-22; arbiter deliberat...
+- L11823: D2q-2c — The arbiter: does the corner drain spall the wall? (2026-09-22/23, review-accepted)
+- L11968: D2r-0 (pre-flight stage) — closed at item 4, PLANNER ERROR, no code written (2026-09-23)
+- L12090: D2r-0b — SUPERSEDED BEFORE LAUNCH by a code fact found in review (2026-09-23)
+- L12174: D2r-0c — SUPERSEDED BEFORE LAUNCH, inert by construction (2026-09-23)
+- L12247: D2r-1 — Heating the SIDE faces of above-plane columns (COMPLETED 2026-09-23, review-accepted; (a) PASSES)
+- L12430: D2t — Retire the mask edge with a smooth radial taper, and score SHAPE (COMPLETED 2026-09-23; (a) PASSES)
+- L12532: D2u — Meier shape packet: WITHDRAWN BEFORE LAUNCH 2026-09-23 (fatal design flaw + a prediction refuted by d...
+- L12629: D2v — the body-in-the-hole h map (COMPLETED 2026-09-24; (a) PASSES, but the ATTRIBUTION IS CONFOUNDED — pla...
+- L12713: D2w — the 2x2 attribution: the MAP owns the funnel, the SIDE PATH owns the rate (COMPLETED 2026-09-24, revi...
+- L12849: D2x — split `f`: the derived area is measured, and it does NOT reach Meier's hole (COMPLETED 2026-09-24)
+- L12938: D2y — conservative surface area: PARKED BEFORE LAUNCH 2026-09-24 (never ran, no code)
+- L13002: D2z — the step-height closure: PLANNED AND PARKED 2026-09-25, pending D2z-0 (never ran, no code)
+- L13071: D2z-0 — retire the half-cell removal increment (COMPLETED 2026-09-25; P1/P2 refuted by the METRIC, P3/P4 held)
+- L13132: D2z-1 — whole-cell removal unconditional, the key deleted (COMPLETED 2026-09-27, review-accepted)
+- L13298: P4 REFUTED, in the informative direction
+- L13498: P3a REFUTED — the planner's crater-wall assumption
+- L13663: P3 REFUTED — and the mechanism is the finding: THE SIDE TERM DEFENDS ITSELF
+- L13696: P7 CONFIRMED — `PD` jammed, and it was pre-registered
+- L14090: P0b — ONE surface temperature for the BC, the criterion and the removal (SOURCE, revision 7) — review-accep...
+- L14220: P1 — the gradient-aware firing criterion (SOURCE, revision 5) — review-accepted 2026-10-01
+- L14364: P1b — unsupported hot rock comes off (SOURCE, revision 2) — implemented 2026-10-01, **(c) FAILED on a grid ...
+- L14479: P1c — a grid-isotropic support rule (revision 2) — implemented 2026-10-01, **FAILED both primary gates; the...
+- L14567: P1e — the staircase side-face correction — implemented 2026-10-01, **correction RIGHT, stall CURED, both sh...
+- L14653: ROADMAP `## Current Status` as it stood on 2026-10-02, before the collapse
+- L15690: ROADMAP `Active step:` region — the 14 COMPLETED blocks that had accumulated there, 2026-10-02
+- L15953: P1f — lateral flake drive + lateral removal (revision 11) — implemented 2026-10-02, **ACCEPTED, every gate ...
+- L16186: P1g-0 — the corner-face temperature fix and the azimuthal witness — implemented 2026-10-02, **ACCEPTED; mec...
+- L16485: P1g-0b — one criterion, one kernel: the coefficient cap and the four-site argument lock — implemented 2026-...
+- L16702: ROADMAP `Next milestones` block as it stood before P1g-1 — collapsed 2026-10-03
+- L17200: ROADMAP `Known Stale/Important Notes` as it stood before P1g-1 — compressed 2026-10-03
+- L17997: P1g-1 — the lateral flake sink (sub-cell lateral recession) — implemented 2026-10-03, **ACCEPTED AS BOOKKEE...
+- L18268: P1g-2 — the lateral flake sink, THERMAL half — implemented 2026-10-03, **ACCEPTED; the thermal half IS real...
+- L18526: P1g-3 — the flake thickness from the rock — implemented 2026-10-05, **REJECTED ON PROVENANCE; the physics f...
+- L18587: P2-0 — the wall heat-transfer coefficient from the annulus flow — ord 0/1 run 2026-10-06, **SUPERSEDED: the...
+- L18668: P1g-2b — the lateral sub-cell mode at Meier scale — run 2026-10-06, **ACCEPTED with `(b3)` FAILED on the th...
+- L18735: P1g-2c — the thermal shift's energy leak, CLOSED; P3 refuted (review-accepted 10-06)
+- L18880: P2-1 — the wall heat-transfer coefficient, DERIVED; the typed constant was too LOW, and the wall self-limit...
+- L18978: ROADMAP notes released 2026-10-07 — superseded by P2-1 and P2-2
+- L19032: P2-2a — the stress-free reference, and the retirement of `differential` and the support rule (2026-10-08, r...
+- L19136: P2-2b — the measured Grimsel properties and the relief factor (2026-10-08, rev 2, PARTIAL — ord 0-3 complet...
+- L19199: P2-2d — the at-temperature toughness: the LEVEL banked parameter-free, the exponent CHARACTERISED not valid...
+- L19304: P2-2f — the measured Grimsel properties on Meier: the firing temperature TRANSFERS, the price closes the ro...
+- L19670: ROADMAP notes released 2026-10-13 — superseded by P2-2f (feet descent) and P2-3
+- L19692: P2-3 — the floor coefficient to Kant, the wall on, the gas marched up the bore (2026-10-13, REJECTED by rev...
+- L20105: P2-4 — the cold body in the annulus: a second sink in the wall march (2026-10-13, ACCEPTED by review; archi...
+- L20511: P2-5 rev 1 — the Höser lab leg: REJECTED at `a1` before any leg ran (2026-10-14; four planner defects found...
+- L21011: P2-5 rev 2 — the Höser lab leg: volume right, shape wrong, no overheating (2026-10-14, ACCEPTED by review; ...
+- L21614: P2-2e — the constraint depth: d_ref = 2.0 mm reproduces Kant's minimum flux, and the Meier burner jams at t...
+- L22016: P2-7 — Höser at measured heat: her data show a 4.7–6.5× uptake gap and the model takes in 2.7–3.0× her maxi...
+- L22411: P2-8 — the surface face list: one heat rule and one area rule for every face; six dead settings deleted (20...
+- L22862: P2-9 rev 1 — one line per surface cell: BLOCKED at a2 (vi) on P2-8's area rule (2026-10-27, line rule built...
+- L23249: P2-9 rev 2 — one breaking rule per surface cell: normal, edge temperatures and fallbacks fixed; Höser run (...
+- L23787: ROADMAP notes released 2026-10-28 — superseded by P2-10 (the code they describe is deleted) and the new pla...
+- L23812: P2-10 — the old flame wall machinery retired (5,006 lines); the 45° residue diagnosed, unresolved (2026-10-...
+- L24225: ROADMAP notes released 2026-10-28 (b) — plan of record superseded at P2-11 planning
+- L24234: P2-11 — G1 probe: Goldstein's average profile used as a LOCAL value on Höser — GO (2026-10-28, ACCEPTED by ...
+- L24497: P2-11b — X1, the surface-path heat rule on Höser: depth matches her, Ø freezes at the flange opening; the b...
+- L24890: P2-12 — X1's path mode deleted, then restored the same day: net source change zero (2026-10-30, advisor at ...
+- L24914: ROADMAP notes released 2026-10-30 — the 2026-10-28 plan of record, superseded by the 2026-10-30 plan
+- L24921: P2-13 — One Grimsel rock, one model form: the shared input files and the Kant calibration deck in the produ...
+- L25319: ROADMAP notes released 2026-11-02 — the property-table clamp bullet (replaced by standing rule 18)
+- L25335: P2-14a — The constraint depth on the face list (the merge's first slice), and one Poisson's ratio: the port...
+- L25829: P2-15 — Two conditions for a spall: the buckling thickness condition, faithful; one span cannot serve both ...
+- L26315: P2-16 — One minimum-flux mechanism: the constraint depth retired; span ∝ 1/UCS survives at equal onsets, bu...
+- L26745: P2-17 — Buckling on in production, the flake cap shown dead as a bound, and the Höser uptake ladder (2026-1...
+- L27519: P2-19 — The flake depth from the line's own profile: the fallback reads the e-fold depth, the no-skin refus...
+- L28034: P2-20 — Beam deposition from one dielectric description: permittivity declared once, absorption and reflect...
+- L28590: P2-21 — Temperature-dependent loss as a rock property, with the optical-depth sum: Hartlieb's measured shap...
+- L29159: P2-22 — The in-rock beam spread (Rayleigh range n·z_R inside the dielectric) and test #19 at its true spot ...
+- L29294: P2-23 — The beam port: the face list runs without a flame, test #19 on the production rock, and the no-thin...
+- L29853: P2-24 — Melt and vapour on the enthalpy path: latent heat on the production rock, the melt's absorption and...
+- L30479: P2-25 — The regime check: spall or melt under a beam, over deposition depth and net flux, from the validate...
+- L31045: P2-26 — The closed-switch sweep: delete every removal switch the record closed, fix two parse defects, and ...
+- L31571: P2-27 — Inputs, the damage lineage and the feet: one cleanup packet in five builds (census input items + C1...
+- L32090: P2-28 — H: one removal path. The face list learns the prescribed patch and the evaluate-only onset, then th...
+- L32603: P2-29 — D: one heat path. Zhang becomes a phase law on the production kernel (a quarter block), the separat...
+- L33123: P2-30 — The structural pass: the header cut into slices and its dead history moved out (both proven by the ...
+- L33501: P2-31 — The review's code fixes (one reference temperature, parse and interlock repairs, a rename, dead cod...
 
 <!-- INDEX:END -->
+
+
+
+
+
+
 
 
 
@@ -31029,3 +31041,2940 @@ the regime deck, `z0.py`/`z1.py`/`run.py`/`reduce.py`/`prune.py` and the records
   cuts (thermo and events CSV); `witness/{p2_25,p2_24,p2_18,d2aa,d2t}.md5`, `face_p2_2{4,5}/`, `REFERENCE.md`;
   `studies/p2_18_prereq/a2_apply.py`; `docs/project/census_2026-11-05/work/annot.py`.
 - The user should run `/plan` next; the planner will archive this step.
+
+## P2-26 — The closed-switch sweep: delete every removal switch the record closed, fix two parse defects, and re-pin the gate for the three switches that gate decks still set (2026-11-07/08; ACCEPTED by review 2026-11-08)
+
+**Status:** ACCEPTED by review (2026-11-08): every gating row (z0, a1–a4, b1–b4, m2) re-derived from the two pre-image trees,
+the archived old bytes and the shipped source; 123 diff hunks reviewed, **0 `bug`**, 2 nits, 6 named risks. Binaries: stage 1
+`980de09e`, stage 2 `e0551036` (ships); the "before" side of every A/B was P2-24's `bin_p2_24` (same `src/`; c052c348 was
+not archived — takeaway 8). Study `tests/MMWSpalling/studies/p2_26_closed_switches/` (`Z0.txt`, `GATE_*.txt`, `B1_FIELDS.txt`,
+`PROBES.txt`, `AB*.txt`, `MEIER_AB.txt`, `K1_*/K2_*.log`, `src_pre_1/`, `src_pre_2/`, `pre2_out/`, `DECK_EDITS.txt`).
+Tree re-pinned to `witness/p2_26.md5` (46 movers, all thickness reports); face gate IDENTICAL after both stages.
+
+### What the step established
+- **Census B1–B3, C2, C3 are gone: 932 lines, twelve keys.** Stage 1 (parse-order fix for `spall.flake_h_max` vs
+  `h_spall_max`, `side_power_interval` out of the enthalpy branch, two dead members, the stranded text, five closed
+  switches) read **0 of 2,639** and face **IDENTICAL**: every deleted branch was unreachable at its default
+  (`pad_shield_open = -1`, `jet_T_above = -1`, four bools false) and every deleted multiplier was exactly 1.0 with its
+  association preserved. Stage 2 (`surface_normal` + the coherence cap, `melt_aware` + `lambda_crit`) moved **46 files,
+  all inside the pre-registered 233** (`beam_void_closure` 39, `dev2d` 7); the only fields that moved are the column
+  scan's thickness reports (`h_spall_field` ≤ 0.34 mm, one cell of `spall_thickness`/`RoP_spall`); `removed`, `phi`,
+  `Temp`, `H` identical in every plotfile; the thermo column `sn_recession_superseded` left. **C3 moved nothing**: the
+  all-cell read over 507 plotfiles gives a hottest cell of 658.96 K against a 1,448 K solidus and Λ_L 0 everywhere.
+- **The coherence cap was load-bearing on the validation records, not on the gate.** Bypassed wherever
+  `surface_normal = 1` (both gate decks), it was BINDING on Meier `input_energy` (4,648 → 12,100 removed cells at 4 s;
+  case A's TSE 10.22 → 3.93 J/mm³ vs 15.4, FAIL on both sides; case B ROP 1.44 m/h both, V(56 s) 100.6 → 122.9 cm³) and
+  on three Hu decks (721 → 1,526; 218 → 495; 351 → 498). The free-spall Meier deck now strips 97 cm³ in 3 s and stalls
+  at 4,521 K instead of 37 cm³ and 4,385 K: the cap slowed the run into the same stall. Every Meier/Hu number quoted
+  before P2-26 from those decks is superseded (`WHICH_TESTS.md`, the deck headers, `MODEL_CARD.md`).
+- **`surface_normal`'s criterion half was inert on both gate decks** (the /cos θ sampling stays inside the top cell for
+  a µm flaw); only the reported thickness moved. The column path now recedes vertically by `h_col` unconditionally (DR-1).
+- **Two probes settled the parse-order fix two-sidedly** (0.012/0.015 abort → run; 0.008/0.005 run → abort); the
+  packet's own probe 0.02/0.015 was non-discriminating (aborts both sides against the 0.010 initialiser).
+- **Four tests had been red since P2-23 and nobody had run them** (`lateral_flux_lock`, `buckle_lock`: the flameless
+  list; `face_removal --check`: FAIL (4) on 2026-10-27 outputs; `surface_T_recon` (3): P1's `q_ratio` column). The
+  two locks were restated with a pre-image RED check, not loosened; the other two are left as found.
+
+### Carry-forwards (review and planner)
+- **DR-1** the column path's slope-aware recession is deleted for good; re-derive `h_col / cos θ` if it is ever revived
+  on a sloped surface (it dies at H).
+- **DR-2** a retired regulariser was holding Meier case A's TSE within 34 %; both readings are true and only "needle
+  regulariser" was in the packet's framing. No gating row moves; the records are stamped.
+- **DR-3 → P2-27 stage 1:** the retired-at-default table compares STRINGS; the reviewer's comment-stripped sweep of
+  1,332 deck/argv files finds **622 aborting occurrences across 529 record files** (`flake_length=flux` 286,
+  `flake_coherence_length` 227, `size_volume=flux` 75, `melt_aware=1` 18, `surface_normal=1` 8, three `surface_patch`
+  legs 6, `flake_fraction=weibull` 2); **0 live decks**. A numeric-aware compare for numeric defaults closes it.
+- **DR-4 → P2-27 stage 1:** `unit/jet_d2c/output` can enter the tree oracle (the `rec_fixed` legs that blocked it are gone).
+- **DR-5 → released today:** `ROADMAP.md`'s hand-written part sat at 350 / 350.
+- **DR-6 → P2-27:** `MODEL_CARD.md` §6 row 5 carries two solidus numbers in one cell (1,448 K deck-local vs the
+  1,410.5–1,610.5 K band of `rock_grimsel.inputs`) without saying which deck each belongs to.
+- **Takeaway 2 → P2-27 stage 1:** route `FaceRemoval.H` / face-list edits to `lateral_flux_lock` and `buckle_lock` in
+  `WHICH_TESTS.md`; fix `surface_T_recon`'s header constant (P1's `q_ratio`).
+- **Takeaway 8 → P2-27 chain:** archive the pre-change binary in the study (`bin_pre/`) before the first build.
+- Nits: `removal_increment` (f) went with the SN leg (declared); the `*` table rows accept and ignore silently.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-09)
+
+- **P2-26 — The closed-switch sweep: census B1–B3 + C2 + C3 — delete every removal switch the record closed, fix two
+  parse defects, re-pin the gate for the three switches gate decks still set** (`ACTIVE_STEP.md`; 2026-11-07; user:
+  the MERGE and the code cut come next, the stress solver deferred — the regime map's depth boundary is geometric).
+  - Archived: P2-25 ACCEPTED (`ARCHIVE_DONE.md` *"P2-25"*): the depth × flux map on the validated pieces — spall only
+    at 1/α ≤ 1 mm (2 mm mesh-dependent) AND q ≥ 1 MW/m² absorbed (threshold 0.48); nothing removed at ≥ 4 mm (9 B +
+    7 M decided cells); K_Ic ×0.5/×2 moves the onset T 620 → 1,140 K and no regime letter; P400R = P400 to the event;
+    volumes quantitative to ≈ 40 % across meshes. Granite at 28 GHz is melt-mode at any power.
+  - This step: two builds. Stage 1 (B1 parse-order fix + `side_power_interval`, B2 text, B3 pad shield / above-plane
+    pair / rec_fixed / flake_length=flux / size_volume=flux) must read 0/2639 + face IDENTICAL. Stage 2 (C2
+    `surface_normal` + coherence, C3 `melt_aware`) is a declared re-pin: movers `beam_void_closure` 169 + `dev2d` 64
+    + the s1 smoke legs z0 names (the five melt-aware unit legs never fired above 655 K).
+  - Next in the merge: C1 DAMAGE (two packets, 2,466-hash re-pin) → G feet port (Meier kept as a regression — user to
+    confirm) → H delete `Removal.H` + column-top state (the 2,639 gate retires to a record; the face gate is THE gate;
+    Q5's Hu re-expression deferred to a record — user to confirm) → D Zhang merge/delete (explicit re-run, hours).
+  - Advisor 2026-11-07 (user: "target more fixes"; list in `Claude_markdowns/2026-11-07.md` "Further cleanup"): an
+    INPUT-SIMPLIFICATION packet after P2-26 (V0 derived; inert-required keys optional; one interlock check; a dt-limit
+    check; schedule file) and, AFTER H, the structural refactor (split the header, records out, provenance to archive).
+
+### ROADMAP `Known Stale/Important Notes` bullets released 2026-11-09 (verbatim; superseded or no longer constraining the next steps)
+
+- ⚠⚠ **P1's ROUGHNESS INSTABILITY — the P1g-3 witness.** Aborted t = **177.616 s** at **r = 26.4 mm,
+  inside the floor**; **152 of 316** columns stopped firing before 120 s (rev 7: zero), median depth
+  **48 vs 180 mm**, **78 %** with ≥ 2 exposed sides. The gradient physics is right, its geometry wrong.
+- **A CONFINED `h` MAP RAISES THE EXHAUST TEMPERATURE** — less power leaves the block top, so a
+  declared above-plane `T_gas` anchored to the frozen **1690 K** sits on the **low** side. State the
+  direction; never adjust to match.
+- ⚠⚠ **NEVER PUT A STOP RULE FROM AN OPEN-LOOP PREDICTION ON A CLOSED-LOOP LEG.** Meier absorbs a
+  rise through two feedbacks the 1-D column lacks (`jet_closure = enthalpy` depletes `T_gas`; `h_expr`
+  falls off with a standoff a faster descent opens). **Predict direction on Meier, magnitude on 1-D.**
+- ⚠ **THE TREE SWEEP HAS NO RUNNER** — no `run.py --check`/`--repin`. It swaps the binary into place
+  and diffs an md5 list against a **declared reference**; the re-pinning procedure must be written
+  down before anyone runs it. `witness/{hash.sh,wit.sh,post_all.sh,guarded_post_all.sh}`.
+- ⚠ **A PRESCRIBED-FEED LEG CAN RUN INTO THE BOTTOM OF THE BLOCK, AND THE BASE IS ADIABATIC.** Check
+  floor-height-above-base at every scored time; the nozzle plane reaches only 283 mm at 800 s, and
+  under `prescribed` pads at 28–40 mm **pass through rock** ⇒ Ø and volume void from first contact.
+
+### The P2-26 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-26 — The closed-switch sweep: delete every removal switch the record closed, fix two parse defects, and re-pin the gate for the three switches that gate decks still set
+
+Status: **accepted by review** 2026-11-08 (every gating row re-derived independently; see `## Review findings`). Implemented 2026-11-07/08: both stages, every gate row PASS; see `## Claude completion notes`. Planned 2026-11-07 (P2-25 ACCEPTED and archived — `ARCHIVE_DONE.md` *"P2-25"*; the user's direction 2026-11-07: the merge of the removal paths and the cut of accumulated code come next, the stress-solver packet deferred because the regime map's depth boundary is geometric). This is census packets **B1, B2, B3, C2, C3** of `docs/project/CODE_CENSUS_2026-11-05.md` §2; the DAMAGE lineage (C1), the feet port (G), the column path (H) and Zhang (D) follow in their own packets. Revised 2026-11-07 after the user's review paste: three points adopted (zero C3 movers; the edited decks' own tests; the flake-cap scan in z0).
+
+### Context
+
+The production model runs on the face list; the column path and a decade of study switches are still compiled, parsed
+and guarded. The 2026-11-05 census ordered their removal and the user decided every open question that day (log
+`Claude_markdowns/2026-11-05.md`, "Census §4 open decisions"): Q6 `melt_aware` DELETE, Q7 `surface_normal` RETIRE
+with the coherence length in one re-pin. This packet takes every deletion that is off in production and either off
+in every gate deck (B1–B3: zero differing files expected) or on in a named handful of gate decks (C2, C3: a declared
+re-pin whose movers are listed BEFORE the run). P2-18 already removed the DEAD keys and cleaned 602 default lines
+from the decks, so the closed switches below have **no live setter** except the three re-pin keys. Two defects ride
+along because they sit in the same parse block: the flake-cap check that reads `h_spall_max` before it is parsed, and
+a diagnostic key parsed inside a closure branch. Carried: every deletion is one commit's worth in a chain with the two
+gates after each build (SR 9: `src_pre/` for EVERY touched file, P2-25 DR-4); nothing is tuned; no physics on the
+production path changes — the face gate must read IDENTICAL throughout.
+
+### Sources (opened 2026-11-07; `M:` = `src/Integrator/MMWSpalling.H`, `R:` = `MMWSpalling/Removal.H`, `F:` = `MMWSpalling/FaceRemoval.H`, today's lines)
+
+- **The census** `docs/project/CODE_CENSUS_2026-11-05.md` §2 (B) :184–276 and (C2) :333–364, (C3) :365–391 — the item
+  lists below are its, re-resolved to today's lines here; its `M:` numbers are the 11-05 snapshot and have drifted.
+- **B1 parse defects.** `spall.flake_h_max` parsed `M:6156`, its check against `value.spall_h_spall_max` `M:6159–6162`;
+  `spall.h_spall_max` parsed `M:6302` (AFTER the check ⇒ the check reads the member's initialiser, not the deck).
+  `surface_patch.side_power_interval` parsed `M:8805–8809` inside the `jet_closure = enthalpy` branch (a `jet_closure
+  = none` deck cannot set it). Dead members: `fl_wtop` (`M:3509`, written `M:4027, 4035`, never read);
+  `sp_surface_T_mode` (set `M:6105, 6111, 6117`, declared `M:9568`, never read — the two bools are).
+- **B2 stranded text / dead locals:** the census's list (B2) by content, not line: the P1b comment blocks, the
+  `pc`/`p_n`/`q_rob q_los` unused bindings, the `(void)` pairs, the duplicated pad-ring block (`M:2328–2427` region,
+  dies with B3's pad shield). Comments and locals only — bit identity.
+- **B3 closed switches (0 live setters; test scripts and study `run.py` records name them):**
+  `surface_patch.pad_shield_open` (parse `M:8471–8484`, `CheckPadRing` `M:8481, 8937, 8954`, uses `M:1061, 2328,
+  2389, 2427, 3890, 3905, 8415`); `jet_above_h` / `jet_T_above` (parse `M:8446–8456`, uses `M:1064, 2363–2403,
+  3467, 3897, 8778–8827`); `jet_T_ent_mode = rec_fixed` + `jet_T_rec_fixed` (parse `M:8694–8716`, uses `M:2648,
+  2787, 2790, 3023`); `spall.flake_length = flux` + `spall.flake_fraction = weibull` (parse `M:6176–6185`; the
+  `ell_flux` branch `M:3196–3240` in `BuildSurfaceTColumns`; thermo `len_fb_h0/q0` registered `M:300–306`; members
+  `M:9373–9374, 9391–9392`); `weibull.size_volume = flux` + `weibull.V_ref` (parse `M:9934–9952`,
+  `WeibullSizeFactor` `M:8347`, callers `M:6842`, `R:` one, members `M:9938–9946`). Evidence each is closed: census
+  C.7.3 (D2aa, D2v, D2e, P1g-3 rejected, P2-2d "no target").
+- **C2** `spall.surface_normal` (parse `M:6024–6050`, registration of `sn_recession_superseded` under the key
+  `M:1009–1011`, `SP_SN_COS_MIN` `M:6506, 6537, 9219`, `ColumnSurfaceCos` `M:6508, 6637`, `R:256–257, 1711, 2109`,
+  `sn_recession_superseded` `R:1710, 2105, 2124`; the `sn_cth`/`sn_icth` parameters `R:931–933, 1165, 1246, 1271,
+  1704`; the literals `1.0, 1.0` at `F:591`); `spall.flake_coherence_length` (parse `M:6313–6316`, `spall_flake_coh_len`
+  `M:1145, 9133`, `R:1510–1511`). **Live setters:** `surface_normal = 1` in `unit/beam_void_closure/input`,
+  `unit/seed_void/input`, `validation/meier/sp_meier_pilot/input_2d_dev`, `…/input_2d_dev_melt`;
+  `flake_coherence_length` 0.004 in `unit/{beam_void_closure,surface_T_recon,gradient_blind,seed_void}/input`,
+  `validation/meier/sp_meier_pilot/input_{energy,drilling,drilling_25mm,2d_dev,2d_dev_melt}`,
+  `validation/kant/sp_kant_onset_meiercfg/input_{model,weibull}`, `validation/p0_steady_column/input`; 0.002 in five
+  `extensions/hu_spall_onset_mmwbeam_lefm/input_*`. **Gate members among them:** `beam_void_closure` (169 files) and
+  `dev2d` = `meier/input_2d_dev` (64 files) — the C2 movers; the thermo column `sn_recession_superseded` leaves both
+  and the criterion's `/cos θ` sampling changes `Cell_D`.
+- **C3** `spall.melt_aware` + `melt.lambda_crit` (parse `M:6069–6076`, members + `MeltSkeleton` `M:9196–9211`, refusal
+  `M:1127`, `R:723, 729, 1071–1079` (the Λ_L gather and `LL_at_didx`), `R:1174–1179, 1203, 1229` (`f_skel`)). **Live
+  setters (all `= 1`, `lambda_crit 0.4`):** `unit/{robin_pinned/input_pinned, robin_jet/input_jet,
+  jet_enthalpy/input_quarter, jet_enthalpy/input_strip, robin_feet/input_feet, robin_feet/input_column,
+  scalar_flaw/input}`, `studies/s1_surface_resolution/input`, `validation/meier/sp_meier_pilot/input_2d_dev_melt`,
+  plus `unit/sp_melt_skeleton/input`. Every one of these decks sets `phase0.T_m 1473.0`, `fus_width 50.0` (solidus
+  1448 K). **Zero-compute reading (this session, the p2_25 sweep's outputs in `unit/*/output`):** the maximum `T_top`
+  over every regime-1 event is **655 K** on robin_pinned, robin_jet, jet_enthalpy, robin_feet and scalar_flaw — no
+  firing ever saw Λ_L > 0. **The reviewer's reading (2026-11-07, the user's paste) goes further and settles it:** the
+  per-box maxima stored in EVERY plotfile of all six melt-aware gate tests give a hottest cell of 655.1–655.4 K (the
+  five unit tests) and 659.0 K (the s1 smoke legs), with the melt fraction 0 in every cell at every time, against a
+  solidus of 1448 K. The skeleton factor multiplies the stress in every EVALUATION, not only the firings, so the
+  all-cell bound is the right one — and it holds. `MeltSkeleton(0) = 1 − 0/0.4 = 1.0` exactly in IEEE arithmetic
+  ⇒ the C3 deletion is bit-neutral on all 1,600 melt-aware gate files. **C3 moves nothing; stage 2's movers are the
+  233 C2 paths and no other.** z0 reproduces the all-cell read (`Temp` and `Lambda_L` per-box maxima from the
+  plotfile headers of `unit/*/output` and `s1_surface_resolution/output_smoke`).
+- **The retired-at-default table** `M:157–176` (`RetiredAtDefault {key, value, note}`; `"*"` = any value; the
+  comparison is a STRING match on the joined tokens, so a numeric default must be written as decks write it).
+  **ALAMO ignores an unknown top-level key silently** (SR 1): `spall.*`, `weibull.*` (`pp.query_default` at `M:9934`)
+  and `melt.*` are top-level and NEED a table entry; `surface_patch.*` is a strict scope and aborts on an unread key.
+- **Locks and tests that name the symbols:** `unit/lateral_flux_lock/test:308` (the depth-scan stress regex
+  `f_skel \* \(sp_relief \* phase_E_loc`), `:405–436` (`WeibullSizeFactor`, `size_volume`, `V_ref` clauses);
+  `unit/retired_keys/test` (clauses R1–R6, MUTATIONS, K legs on `unit/gradient_blind/input`);
+  `unit/removal_increment/test:14, 71, 168–180` (the SN leg); `unit/face_heat/test:49–50` (BASE tokens
+  `spall.flake_coherence_length=0.0`, `spall.surface_normal=0`); `unit/jet_d2c/test:139, 200–205` (RECF legs KT,
+  K15, A17–A19, run but not hashed); `unit/sp_melt_skeleton/test` (the A/B test of the skeleton; `output_off`,
+  `output_on`); `unit/seed_void/input`. Study `run.py` scripts naming the keys are RECORDS and are not edited.
+- **Gates:** tree `witness/p2_18.md5` (controls d2aa 26, d2t 863; the P2-25 list `p2_25.md5` equals it at 0/2639),
+  face `face_p2_24` (13 legs; `cmp p2_24 p2_25` IDENTICAL). Re-pin procedure: `witness/REFERENCE.md` "How to re-pin
+  next time" (new list → diff → classify every path → declare → keep the old list). `retired_units/` holds retired
+  tests (`constraint_ref_lock`, `face_cref`). `WHICH_TESTS.md:34, 46` name `removal_increment` and `jet_d2c`.
+- **Records to touch:** `MODEL_CARD.md` §6 rows 22 (`flake_length`), 23 (`flake_coherence_length`), the §12 item 7
+  dead/inert list (:231), `WHICH_TESTS.md`, `witness/REFERENCE.md`.
+
+### Goal
+
+Two builds, in order. Stage 1 (B1 + B2 + B3) must read 0/2639 and IDENTICAL; stage 2 (C2 + C3) is the declared re-pin.
+Before each build: copy every file the stage will touch to `studies/p2_26_closed_switches/src_pre_<stage>/`.
+
+1. **B1 — two parse defects, two dead members.** Move the `spall.h_spall_max` parse (`M:6302`) above the
+   `spall.flake_h_max` check at `M:6159` — i.e. above the `if (!value.spall_enabled) return;` at `M:6231` too, which
+   only means the key is read (default 0.010) on a spall-off deck, harmless — so the check reads the deck's value (bit-neutral: every production deck has
+   `flake_h_max 0.0015 < h_spall_max 0.015`; a deck violating it now aborts loudly). Move `side_power_interval`'s
+   parse out of the enthalpy branch (its member and consumers unchanged). Delete `fl_wtop` and `sp_surface_T_mode`
+   (keep the two bools and the `surfT` string parse).
+2. **B2 — stranded text and dead locals**, from the census list re-resolved; nothing that reaches an expression.
+3. **B3 — the five closed switches, parse to consumer**, with their members, thermo columns (`len_fb_h0/q0`),
+   `CheckPadRing`, `WeibullSizeFactor` (every caller returns to the bare flaw: under `cell` the factor was exactly 1),
+   the `ell_flux` branch of `BuildSurfaceTColumns`, the `rec_fixed` branch of the march. `jet_T_ent_mode` keeps
+   `fixed` / `exhaust`; `rec_fixed` aborts as an unknown value. Top-level keys join the retired-at-default table:
+   `spall.flake_length` → `twocell`, `spall.flake_fraction` → `cf`, `weibull.size_volume` → `cell`, `weibull.V_ref` →
+   `*` (inert number). Strict-scope keys (`pad_shield_open`, `jet_above_h`, `jet_T_above`, `jet_T_rec_fixed`) are
+   simply unparsed: a setter aborts in the scope. Tests: `jet_d2c` drops KT, K15, A17–A19 (and its (k) checks);
+   `lateral_flux_lock` drops the `WeibullSizeFactor` / `size_volume` / `V_ref` clauses and gains a name clause that
+   none of the five switches' identifiers survive in `src/`.
+4. **C2 — `surface_normal` and the coherence length.** Delete parse, message, members, the conditional registration,
+   `ColumnSurfaceCos`, `SP_SN_COS_MIN`, the site-A `/cos θ` sampling, the `R:` uses, the `sn_cth`/`sn_icth`
+   parameters of `DepthScanH` (constant 1.0 after the deletion: bit-safe) and `F:591`'s literals; delete the
+   coherence cap (`R:1510–1511` block) and `spall_flake_coh_len`. Both keys join the table at `0` (and the
+   face_heat BASE tokens are dropped so no argv writes `0.0`). Edit the 17 + 4 live setters (remove the line; the
+   Meier, Kant-meiercfg, p0 and Hu decks are records whose next run changes by design — say so in each file's
+   header line). Tests: `removal_increment` drops the SN leg and checks (e)–(e4); `seed_void/input` edited.
+5. **C3 — `melt_aware` and `lambda_crit`.** Delete parse, members, `MeltSkeleton`, the refusal, the Λ_L gather,
+   `LL_at_didx`, `f_skel` and the `ScanSigmaT` parameter (`R:128–146` region; the literal at `F:577`). Both keys join
+   the table (`melt_aware` → `0`, `lambda_crit` → `*`). Edit the 10 setters. `unit/sp_melt_skeleton` moves to
+   `retired_units/` with a one-line README entry (it tests the deleted feature). `lateral_flux_lock:308`'s stress
+   regex loses `f_skel \* `.
+6. **The retired-keys lock.** `unit/retired_keys/test` gains, for THIS packet's table entries, one R-clause (each key
+   string appears in `src/` exactly once, in the table) and K legs on `gradient_blind/input`: each key at its default
+   runs (rc 0), at a non-default aborts naming the key (`spall.surface_normal=1`, `spall.flake_coherence_length=0.004`,
+   `spall.melt_aware=1`, `spall.flake_length=flux`, `weibull.size_volume=flux`), and one strict-scope probe
+   (`surface_patch.pad_shield_open=0.5` aborts). MUTATIONS: one per new clause. ⚠ The "exactly once" clause counts
+   every occurrence of the key STRING in `src/`, comments included: today `spall.surface_normal` appears 12 times,
+   `melt.lambda_crit` 8, `weibull.V_ref` 8 — the comment mentions go with the code (they are packet history, B9).
+7. **Records.** `MODEL_CARD.md` §6 rows 22–23 marked deleted (this packet), §12 item 7 updated; `WHICH_TESTS.md`
+   (`sp_melt_skeleton` retired, `removal_increment` SN leg gone, `jet_d2c` RECF legs gone, and one line per
+   outside-the-gate test whose reference changed BY DESIGN with the deleted live value — m2); `witness/REFERENCE.md`
+   re-pinned to `p2_26.md5` naming every classified path, `p2_18.md5` kept; the daily log. Study
+   `studies/p2_26_closed_switches/` with `z0.py`/`Z0.txt`, `chain.sh`, `src_pre_1/`, `src_pre_2/`, `BINARY_1.txt`,
+   `BINARY_2.txt`, `GATE_*.txt`, `RESULTS.txt`. Nothing committed.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | B1: the `flake_h_max ≥ h_spall_max` check reads the DECK's `h_spall_max` | `M:6156–6162` vs `M:6302` (today the check runs first) | the abort | `sp_flake_h_max > 0` | z0 prints both parse lines' order before and after; K-leg: `spall.flake_h_max=0.02 spall.h_spall_max=0.015` aborts (today it does not) |
+| L2 | B1: `side_power_interval` parsed on every `jet_closure` | `M:8805` (inside the enthalpy branch today) | `v.side_power_interval` consumers `M:4337, 4477, 4483` | — | a `jet_closure = none` deck (CAL) with `surface_patch.side_power_interval=1.0` runs (rc 0) after; aborts before |
+| L3 | B3: `WeibullSizeFactor` returns exactly 1.0 on every gate deck (none sets `size_volume = flux`) and both callers apply it as `*=` (`a_loc *= …` `M:6842`, `a_f *= …` `R:905`): multiplication by 1.0 is the IEEE identity ⇒ deleting the factor and both calls is bit-exact | `M:8347` (`if (!sp_size_flux) return 1.0;`), `M:6842`, `R:905` | the flaw read | `sp_size_flux` false everywhere | stage-1 tree 0/2639, face IDENTICAL |
+| L4 | B3: the `ell_flux` branch and `len_fb_*` columns exist only under `flake_length = flux` (registered conditionally `M:300–306`) | `M:3196–3240` | thermo header | `sp_flake_len_flux` | no gate header has `len_fb_h0` (z0 greps the p2_25 outputs); stage-1 0/2639 |
+| L5 | C2: `sn_recession_superseded` is registered ONLY under `surface_normal` (`M:1009–1011`) and the `/cos θ` sampling changes `Cell_D` only where the key is 1 | `M:1009`, `M:6506–6537`, `R:1165–1271` | thermo header, `Cell_D` | `spall_surface_normal` | the C2 movers are EXACTLY `beam_void_closure` (169) + `dev2d` (64) = 233 paths; every other path identical |
+| L6 | C2: `DepthScanH`'s `sn_cth`/`sn_icth` are 1.0 on every call once the column uses go; `F:591` passes `1.0, 1.0` today | `R:931–933`, `F:591` | the scan's depth sampling | — | face IDENTICAL (the face list passed literals 1.0 already) |
+| L7 | C3: `f_skel = MeltSkeleton(Λ_L(z_v))` differs from 1 only where a scanned cell has Λ_L > 0, and `MeltSkeleton(0)` is EXACTLY 1.0 (step zero: confirm `1.0 - 0.0 / melt_lambda_crit == 1.0` bit-exactly and that the multiplication by 1.0 is the identity on the stress) | `R:1174–1179`, `M:9205–9211` | the driving stress | `melt_aware` | all six melt-aware gate tests: hottest cell ≤ 659 K, `Lambda_L` 0 in every cell at every time (per-box plotfile maxima; z0 reproduces) ⇒ ZERO C3 movers on 1,600 files |
+| L8 | the CONJUNCTION a retired key needs: the string appears ONCE in `src/` (the table) AND a default-valued setter runs AND a non-default setter aborts naming the key | `M:157–176` | Parse | `pp.contains(key)` | retired_keys R-clauses + K legs (Goal 6); the string compare means `0` not `0.0` — the face_heat BASE tokens are dropped, not rewritten |
+| L9 | units: `flake_h_max`, `h_spall_max`, `flake_coherence_length` [m]; `lambda_crit` [–]; `V_ref` [m³]; `jet_T_rec_fixed`, `jet_T_above` [K]; `side_power_interval` [s] | — | — | — | z0 lists each with its unit beside the deck values it deletes |
+| L10 | the deck edits change no gate output EXCEPT through C2/C3's code (a deleted line at a live value = the code change itself; a deleted line at the default = nothing) | the edited decks (z0's list: ≈ 26 distinct files) | — | — | z0's edit list marks each line DEFAULT or LIVE; every LIVE line is in a C2/C3 deck |
+
+### Legs and the chain (exact tokens)
+
+`PY=/Users/tzetze20/Desktop/code/.venv/bin/python`; `W=tests/MMWSpalling/studies/tree_sweep_0922/witness`;
+`S=tests/MMWSpalling/studies/p2_26_closed_switches`. Serial, under caffeinate (the tree sweep's three lanes ran 57 min
+under Spotlight indexing on P2-25: exclude the repo from Spotlight first, or expect it). Run order:
+
+| step | what | expected |
+|---|---|---|
+| z0 | offline: the census items re-resolved to today's lines (one table: item, file:line, action); the deck-edit list with DEFAULT/LIVE per line; the gate-header grep (`len_fb_h0`, `sn_recession_superseded` in the p2_25 outputs); the all-cell `Temp`/`Lambda_L` maxima of the six melt-aware gate tests' plotfiles; the flake-cap scan (every live `spall.flake_h_max` setter and its deck's `h_spall_max`: expected 0.0015 vs 0.015 everywhere — `face_list`, `face_removal`, `relief_diag`, `model_form_flame.inputs`); the pre-registered mover list; `src_pre_1/` copied; `BINARY_pre.txt` | movers = EXACTLY the 233 C2 paths; C3 zero; the flake-cap fix changes no live deck |
+| s1 | build stage 1 (B1 + B2 + B3), `BINARY_1.txt` | compiles; `find src -newer` lists only the touched files |
+| g1 | `guarded_post_all_par.sh p2_26a`; `tree_compare.py p2_26a p2_18 d2aa d2t`; `face_gate.py run p2_26a`; `cmp p2_24 p2_26a` | 0/2639 (26 / 863); IDENTICAL |
+| k1 | `unit/retired_keys/test` (the B3 clauses and K legs), `unit/lateral_flux_lock/test`, `unit/buckle_lock/test`, `unit/face_removal/test --check`, `unit/jet_d2c/test` (RECF legs gone), L1/L2's two probe legs | all PASS; the probes behave as L1/L2 say |
+| s2 | `src_pre_2/`; build stage 2 (C2 + C3) + the deck edits (z0's list) + the test edits, `BINARY_2.txt` | compiles |
+| g2 | `guarded_post_all_par.sh p2_26`; `tree_compare.py p2_26 p2_18 d2aa d2t` (the d2aa / d2t counts are informational at this stage: the moved files overlap theirs); classify EVERY differing path; `face_gate.py run p2_26`; `cmp p2_24 p2_26` | differing ⊆ the two C2 legs, both thermo.dat moved, nothing else; IDENTICAL |
+| k2 | `retired_keys` (all clauses), `lateral_flux_lock`, `buckle_lock`, `face_removal --check`, `removal_increment` (SN gone), `face_heat`, `beam_void_closure` (re-pinned; T3 FAIL by design), the `rankcheck p2_26` | all PASS / as declared |
+| r | `REFERENCE.md` re-pinned to `p2_26.md5`; `RESULTS.txt` with the line count before/after (`wc -l` of the four headers) | — |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline: every census item resolved to a present symbol at today's line; the deck-edit list (≈ 26 files) with DEFAULT/LIVE; the mover list; the all-cell melt read; the flake-cap scan; `src_pre_1/` complete | every item found or struck with a reason; every LIVE line in a C2/C3 deck; hottest cell < 1448 K and `Lambda_L` 0 on all six melt-aware gate tests; every live flake cap below its deck's scan depth | **gate** | the census and the code have diverged more than drift — re-plan the item; or a melt-aware gate leg DID melt and C3 is a physics change there |
+| a1 | 2 (after s1) | tree gate stage 1 vs `p2_18` | **0 of 2,639** (controls 26 / 863) | **gate** | a "closed" switch was live on a gate deck, or a B2 edit reached an expression |
+| a2 | 2 | face gate `cmp p2_24 p2_26a` | IDENTICAL | **gate** | a switch sat on the face list's path |
+| a3 | 2 | `retired_keys` B3 clauses + K legs; `lateral_flux_lock`; `buckle_lock`; `face_removal --check`; `jet_d2c` | PASS | **gate** | a lock still names a deleted symbol, or a key is silently ignored instead of refused |
+| a4 | 2 | L1 probe (`flake_h_max=0.02 h_spall_max=0.015` on `gradient_blind/input`) aborts naming both keys; L2 probe (`side_power_interval=1.0` on the CAL deck, `stop_time` one step) runs | both | **gate** | the parse order did not change, or moved the wrong way |
+| b1 | 3 (after s2) | tree gate stage 2 vs `p2_18`: the set of differing paths | every differing path lies INSIDE the 233 paths of `beam_void_closure` (169) and `dev2d` (64), both legs' `thermo.dat` are among them (the column leaves), every differing path is classified (`sn_recession_superseded` gone / `Cell_D` moved by the `/cos θ` sampling), and the paths of those two legs that did NOT move are listed (a t = 0 plotfile cannot move); nothing outside the two legs | **gate** | an unlisted mover = a deletion touched a deck the pre-registration missed; a C3 mover = the skeleton was not 1.0 where nothing was molten (a bug in what was deleted, or in z0's read) |
+| b2 | 3 | face gate `cmp p2_24 p2_26` | IDENTICAL | **gate** | the face list read `f_skel` or the scan parameters after all |
+| b3 | 3 | `retired_keys` all clauses + MUTATIONS + K legs (incl. `surface_normal=1`, `coherence=0.004`, `melt_aware=1` ABORT; defaults run) | PASS | **gate** | a retired key is silently inert (SR 1) |
+| b4 | 3 | `removal_increment` (SN leg gone), `face_heat`, `beam_void_closure` T1–T4 on the re-pinned output, `rankcheck p2_26` | PASS / T3 by design / physics identical across ranks | **gate** | the deletion changed decomposition behaviour |
+| m1 | 3 | the line count of the four headers before/after; the number of keys parsed before/after | report (expected ≈ 600–700 lines, 12 keys) | report | — |
+| m2 | 3 | the edited decks OUTSIDE the gate that have their own test — `unit/seed_void`, `unit/surface_T_recon`, `unit/gradient_blind`, `validation/p0_steady_column`, `validation/kant/sp_kant_onset_meiercfg`, `validation/meier/sp_meier_pilot` legs, `extensions/hu_spall_onset_mmwbeam_lefm` (no `test`: compare scripts only — record, do not run) — each test that exists run on the new binary | a deck whose deleted line was INERT passes unchanged; a deck whose deleted line was LIVE (coherence 0.004 / 0.002, `surface_normal` 1) has its reference change recorded BY DESIGN in `WHICH_TESTS.md` and in the test's header, with the old and new value of what moved | **gate** (for the records) | a test fails silently the next time someone runs it |
+| m3 | 3 | every edited deck starts (`stop_time` one step) on the new binary | rc 0 on all | report | a deck still carried a retired key at a live value elsewhere |
+| e0 | 4 | verdict | — | **verdict** | a1–a4, b1–b4 hold ⇒ the record's closed switches are gone, the two defects fixed, the production path untouched, and the gate re-pinned to `p2_26` with every moved path named |
+
+### Pre-registered predictions
+- **P1.** Stage 1 is 0/2639 and IDENTICAL: no gate deck sets any B3 switch (verified: 0 live setters), the B1
+  order fix changes no accepted deck, B2 is text.
+- **P2.** Stage 2 moves files only inside `beam_void_closure` (169 paths) and `dev2d` (64) through C2 — their
+  `thermo.dat` certainly (a column leaves), their `Cell_D` where a line fired, not their t = 0 plotfiles — and nothing
+  through C3 (no melt-aware gate cell ever exceeded 659 K against a 1448 K solidus; the skeleton factor was 1.0 bit-exactly
+  everywhere). The planner's earlier guess that two s1 smoke legs would move was unsupported and is withdrawn.
+- **P3.** The face gate is IDENTICAL after both stages (no face-list deck sets any of the twelve keys; the face
+  list already passed `1.0, 1.0` to the scan and never read `f_skel` — if it did, b2 is the finding).
+- **P4.** About 600–700 source lines leave (B3 ≈ 300, C2 ≈ 200, C3 ≈ 80, B1/B2 ≈ 80) and twelve input keys stop
+  being parsed; the production decks and the rock/model-form files are untouched.
+
+### Refuting evidence on disk
+- `witness/p2_25.md5` = `p2_18.md5` at 0/2639 on binary `c052c348` — the baseline every stage compares to.
+- `unit/*/output` and `s1_surface_resolution/output_smoke` (the p2_25 sweep): hottest cell 655–659 K, `Lambda_L` 0
+  everywhere, on all six melt-aware gate tests — if ANY C3 move appears, the reading or the deleted code is wrong, not
+  the prediction's logic.
+- `studies/p2_18_prereq/` (A2): the retired-at-default pattern, its K legs K0–K6 and `a2_apply.py` (the deck-edit
+  tool and its DEFAULT/LIVE rule) — reuse, do not reinvent.
+
+### What would make this inert, and the witness for each
+- A deleted key becomes silently ignored instead of refused (top-level keys are not strict): the table entry and
+  its K leg (b3) — this is the whole point of Goal 6.
+- A B2 "comment" edit removes a line with code on it: a1 (0/2639) or a compile error.
+- The s1 `Lambda_L` read looks at the wrong cells (not the fired ones): m2's bug clause; cross-check with the
+  plotfile's `spall_event` field.
+- `src_pre_<stage>/` missing a touched file: `find src -newer BINARY_pre` vs the copy list (z0 and s1).
+- The tree sweep's binary moves mid-sweep: `guarded_post_all_par.sh` exits 2 (SR 9) — rerun.
+
+### Guardrails
+- Nothing on the production path changes: `rock_grimsel.inputs`, `model_form_flame.inputs`, every face-list deck,
+  the face gate's thirteen legs, the beam, B, c_f, the span, R, the flaw — untouched.
+- No deletion from C1 (DAMAGE), G (feet), H (`Removal.H`, column-top state, `robin_form` values, pinned) or D
+  (Zhang) — they are their own packets. `RefreshKappaEff` and the B4 dead face-list evaluations are left to H.
+- Study `run.py` scripts, `legs/`, `*_wit/`, `src_pre/` copies and `inputs_pre/` are records: not edited.
+- Each stage's build is preceded by its `src_pre_<stage>/` copy of EVERY touched file (P2-25 DR-4).
+- The old lists (`p2_18.md5`, `p2_25.md5`, `face_p2_24`) stay on disk; `p2_26.md5` is declared beside them.
+- Nothing committed by this packet.
+
+### Commands
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_26_closed_switches
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness; U=tests/MMWSpalling/unit
+$PY $S/z0.py > $S/Z0.txt                                              # z0: items, edits, movers, Lambda_L read
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8   # s1, later s2
+bash $W/guarded_post_all_par.sh p2_26a; $PY tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py p2_26a p2_18 d2aa d2t
+$PY $W/face_gate.py run p2_26a; $PY $W/face_gate.py cmp p2_24 p2_26a
+for t in retired_keys lateral_flux_lock buckle_lock jet_d2c; do $PY $U/$t/test; done; $PY $U/face_removal/test --check
+# ... stage 2 edits, src_pre_2, rebuild, then:
+bash $W/guarded_post_all_par.sh p2_26; $PY tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py p2_26 p2_18 d2aa d2t
+$PY $W/face_gate.py run p2_26; $PY $W/face_gate.py cmp p2_24 p2_26; $PY $W/face_gate.py rankcheck p2_26
+for t in retired_keys lateral_flux_lock buckle_lock removal_increment face_heat beam_void_closure; do $PY $U/$t/test; done
+wc -l src/Integrator/MMWSpalling.H src/Integrator/MMWSpalling/*.H src/Numeric/MMWBeam.H   # m1 (14,021 before)
+```
+
+### Claude completion notes
+
+**Binaries:** pre `c052c348` (P2-25; not archived -- the "before" side of every probe / A/B is `studies/p2_24_melt_vapour/bin_p2_24`
+`98a261d3`, the same src/); stage 1 `980de09e` (`BINARY_1.txt`); stage 2 `e0551036` (`BINARY_2.txt`, ships). Study:
+`tests/MMWSpalling/studies/p2_26_closed_switches/` (abbreviated `S/` below). Nothing committed.
+
+**Files changed.**
+- src (`src_pre_1/`, `src_pre_2/` hold every pre-image): `MMWSpalling.H`, `MMWSpalling/Removal.H` (stage 1 + 2);
+  `MMWSpalling/Shared.H`, `MMWSpalling/FaceRemoval.H` (stage 2 only: `ScanSigmaT` / `DepthScanH` parameters).
+- tests: `unit/{retired_keys,lateral_flux_lock,buckle_lock,jet_d2c,face_heat,removal_increment}/test`, the
+  `unit/seed_void/test` header and `validation/meier/sp_meier_pilot/test`'s (the by-design record); `unit/sp_melt_skeleton/` → `retired_units/sp_melt_skeleton/` + `retired_units/README.md`
+  (new, three lines); 25 decks, 39 lines (`S/DECK_EDITS.txt`; the LIVE-C2 decks carry a header stamp).
+- witness: `face_gate.py` (`DROP` += the two C2 keys), `WHICH_TESTS.md`, `REFERENCE.md` (tree re-pinned to `p2_26.md5`);
+  new lists `p2_26a.md5`, `p2_26.md5`, `face_p2_26a.md5`, `face_p2_26.md5`. Docs: `MODEL_CARD.md` (rows 5, 22, 23, the
+  face_heat and dead-key rows of Ledger B, §12 item 7, the §1 calibration-deck line).
+
+| # | measured | verdict | output |
+|---|---|---|---|
+| z0 | every census item resolved at today's lines but one struck (the "duplicated" Voronoi comment occurs once, in the 11-05 snapshot too); 26 deck files (25 edited + sp_melt_skeleton moved), every LIVE line a C2/C3 key, 0 B3 deck setters; `len_fb_h0` and the flux `ell_q` in no gate header, `sn_recession_superseded` in beam_void_closure's only (**dev2d writes no thermo.dat**); melt read over 507 plotfiles of the six melt-aware tests: hottest cell **658.96 K**, Λ_L **0** everywhere, MeltSkeleton(0) = 1.0 bit-exactly; flake cap 0.0015 < 0.015 on all 10 live setters, no spall-off deck sets h_spall_max; movers 169 + 64 = 233 (`S/MOVERS_PRE.txt`) | PASS | `S/Z0.txt` |
+| a1 | stage-1 tree `p2_26a` vs `p2_18`: **0 of 2639** (d2aa 26, d2t 863) | PASS | `S/GATE_tree_1.txt` |
+| a2 | face `cmp p2_24 p2_26a`: **IDENTICAL** (timers only) | PASS | `S/GATE_face_1.txt` |
+| a3 | retired_keys PASS (R7 + its mutation; K5–K9: B3 keys at default run, flux / weibull values abort naming P2-26, pad_shield_open=0.5 refused by the strict scope); `--pre src_pre_1 --red R7` PASS; lateral_flux_lock PASS (P2-26 name clause; two clauses restated, below); buckle_lock PASS (B2 restated, below); face_removal --check **FAIL (4), byte-identical to P2-19's lock log** (the standing state on its 2026-10-27 outputs; bar restated "unchanged"); jet_d2c PASS (the sweep's run, RECF legs gone) | PASS | `S/K1_*.log`, `S/CHAIN_1.log` |
+| a4 | P1a 0.012/0.015: before ABORTS, after runs; P1b 0.008/0.005: before runs, after ABORTS naming both keys; P1c (the packet's 0.02/0.015) aborts on both = non-discriminating, recorded; P2 CAL + side_power_interval=1.0: before refused as unused, after rc 0 | PASS | `S/PROBES.txt` |
+| b1 | stage-2 tree `p2_26` vs `p2_18`: **46 of 2639**, 0 one-sided, **all inside the 233** (beam_void_closure 39, dev2d 7), C3 movers **0**; classified: beam_void_closure `thermo.dat` loses exactly `sn_recession_superseded`, all 201 rows' shared columns identical; 45 cell-plotfile fabs: the moved FIELDS are `h_spall_field` (≤ 0.34 mm) and, in one cell of one plotfile, `spall_thickness`/`RoP_spall` (0.8 %); **`removed`, `phi`, `Temp`, `H` identical in every plotfile**; node and t = 0 plotfiles unmoved (187 unmoved mover paths listed) | PASS (restated, below) | `S/GATE_b1.txt`, `S/B1_FIELDS.txt`, `S/GATE_tree_2.txt` |
+| b2 | face `cmp p2_24 p2_26`: **IDENTICAL**, 1,217 files each side (second run; the first aborted M0S on `0.0 != 0`, archived `S/face_2_attempt1/`, fixed in `face_gate.py` DROP) | PASS | `S/GATE_face_2.txt` |
+| b3 | retired_keys all clauses (R1–R8, every mutation RED, full revert RED; K0–K13: C2/C3 keys at default run, surface_normal=1 / coherence=0.004 / melt_aware=1 abort naming P2-26); `--pre src_pre_2 --red R8` PASS | PASS | `S/K2_retired_keys*.log` |
+| b4 | removal_increment PASS (W, PRESC); face_heat PASS; beam_void_closure T1a–d, T2a–b, T4 PASS, **T3 FAIL by design**; rankcheck p2_26 decomposition-stable (rel 1e-15) | PASS | `S/K2_*.log`, `S/RANKCHECK_2.txt` |
+| m1 | 14,021 → **13,089** lines (−932; stage 1 −538); 12 keys no longer parsed (8 join the retired-at-default table, 4 strict-scope keys simply unparsed) | report | `S/BINARY_{1,2}.txt` |
+| m2 | before/after on all 15 edited out-of-gate decks: INERT over the full run = gradient_blind, surface_T_recon, p0_steady_column, Kant meiercfg ×2 (verdict unchanged by identity); thickness reports only = seed_void (test PASS), Meier 2d_dev_melt; **trajectory moved (the coherence cap was binding)** = Meier input_energy 4,648 → 12,100 removed cells at 4 s, Hu pulsed_brittle_400w 721 → 1,526 (30 s), _hires 218 → 495, wellbore_3d 351 → 498 (8 s); prefixes identical: Meier drilling (1 s), drilling_25mm (2 s), Hu fine/smallgrain (0.5 s). Meier pilot test before → after (`S/MEIER_AB.txt`): case A FAILS on both (A1 0.00 both; A2 TSE(10 s) 10.22 → 3.93 J/mm³ vs 15.4; V(3 s) 37.2 → 96.8 cm³), case B PASSES on both (ROP 1.44 m/h both; V(56 s) 100.6 → 122.9 cm³; TSE 6.35 → 5.20 J/mm³). Recorded in `WHICH_TESTS.md` and the test / deck headers; surface_T_recon's own test FAILS check (3) on both binaries (pre-existing: its header predates P1's `q_ratio`) | PASS (records) | `S/AB.txt`, `S/AB_FIELDS.txt`, `S/MEIER_AB.txt`, `S/M2_*.log` |
+| m3 | every edited deck runs on the new binary (rc 0 on all 15) | PASS | `S/AB.txt` |
+| e0 | a1–a4, b1–b4 hold: the closed switches are gone, the two parse defects fixed, the production path untouched (face IDENTICAL both stages), the tree re-pinned to `p2_26.md5` with every moved path named | **accepted by the implementer's reading** | `REFERENCE.md` P2-26 block |
+
+**Declared deviations (each a restatement, none a change of what is deleted):**
+1. a4/L1: the packet's probe cannot discriminate (old check compares against the 0.010 initialiser); P1a/P1b are the bar.
+2. b1: "both legs' thermo.dat" is unmeetable -- dev2d writes none; restated to beam_void_closure's, plus the
+   removal-state field identity (neither leg writes an event log, so "no event log moved" would be vacuous).
+3. face_heat R_pad / R_above: refused by the strict scope now (not P2-12's message); the census asked for it, the packet
+   did not list it.
+4. Three locks were RED before this packet and are restated with a pre-image check, not loosened:
+   lateral_flux_lock's `FaceListHeat` count (2 since P2-23's flameless list; the clause now asserts the second call is
+   the `else` of `BuildFlameColumns`), buckle_lock B2 (P2-23's log-only `br.bk_lb` call; asserted inside `if (bk_log)`
+   and read only by the CSV), face_removal --check (bar "byte-identical to P2-19's log").
+5. `face_gate.py` DROP gained the two C2 keys (M0S replays a record argv writing them at default).
+6. m2 by before/after A/B instead of every long test: inert decks keep their verdict by identity; the Meier pilot test is
+   scored on both sides (`S/meier_ab.py`); the Kant / p0 tests are not re-run (their decks are identical over the full
+   run); the Hu decks have no test.
+7. B2: one census item struck (no duplicate exists); `(void)DX` in UpdateDamageAfterMechanics left (DX is read; the
+   function is C1's, guardrail).
+
+### Implementation takeaways
+
+1. ⚠⚠ **The retired-at-default table compares STRINGS, and recorded argvs write `0.0`.** It cost one face-gate run
+   (M0S). Still exposed: 7 study / retired decks that write `spall.flake_coherence_length = 0.0` (`S/Z0.txt` RECORD
+   rows) and every P2-17-era study argv naming the two C2 keys -- each aborts if re-run. A numeric-aware compare for
+   numeric defaults would close it; that is a planner decision (the packet chose the string compare).
+2. ⚠⚠ **Four tests were red before P2-26 and nobody had run them since P2-23** (lateral_flux_lock, buckle_lock:
+   P2-23's flameless list and blocked-line record; face_removal --check: FAIL (4) on 2026-10-27 outputs;
+   surface_T_recon (3): P1's `q_ratio`). WHICH_TESTS' site table never routes a face-list edit to the two locks. Run
+   lateral_flux_lock and buckle_lock whenever FaceRemoval.H or the face list changes.
+3. **surface_normal's criterion half was inert on both gate decks.** Site A's /cos θ sampling stays inside the top cell
+   for a µm flaw, so `Sp_field` never moved; the only effect was the column scan's reported thickness. Whole-cell removal
+   (D2z-1) had already made the rest a report.
+4. **The coherence cap never acted on the gate** (it was bypassed wherever `surface_normal = 1`), but it was BINDING on
+   the Meier pilot `input_energy` (2.6× the removed cells at 4 s without it) and three Hu decks. Any number quoted from
+   those decks predates P2-26.
+5. **C3 moved nothing** -- the all-cell read in z0 (507 plotfiles) is the evidence, not the firing cells.
+6. The flux-only `ell_q` event column and `rc_ellq` went with B3 (`flake_length = flux`); `SurfaceRecon::ell_q` survives
+   as the face list's logged tangent depth only.
+7. 932 lines left, not 600–700: the "key string exactly once" clause forced every comment mention out with the code.
+8. Archive the pre-change binary in the study (`bin_pre/`): c052c348 was not kept, so every "before" leg used P2-24's
+   binary (same src/).
+9. Contention, not code: VS Code's renderer (~150–185 % CPU) and Steam took the stage-1 sweep to 4.4 h and its face gate
+   to 4.6 h (the stage-2 face gate took 3 min with the load lower). Hash-guarded, so the results stand.
+
+### Review findings
+
+Reviewer, 2026-11-08. Re-derived from the two pre-image trees (`src_pre_1/`, `src_pre_2/`), the archived old bytes
+(`pre2_out/`) and the shipped source with my own reductions: my own plotfile fab parser (component by component, all
+29 plotfiles of both b1 decks, not a sample), my own thermo column differ, my own retired-key sweep over 1,332 deck
+and argv files with comments stripped the way ParmParse reads them, my own `src/` symbol and key-string counts, my
+own line accounting across the three source images, my own re-run of the two **offline** face-gate manifest
+compares, and an all-cell read of the 507 melt-aware plotfiles. **No simulation and no build was re-run** — every
+gating row was reachable from artefacts plus the two pre-images.
+
+| # | test | bar | implementer | **my value** | **read from** |
+|---|---|---|---|---|---|
+| z0 | census resolved; deck-edit list; movers; all-cell melt read; flake-cap scan | items found; LIVE lines in C2/C3 decks; hottest cell < 1448 K, Λ_L 0 | 507 pf, **658.96 K**, Λ_L 0, MeltSkeleton(0)=1.0 | **507 pf (91/170/92/41/63/50 — counts exact); max Temp 655.40 / 655.42 / 655.43 / 655.23 / 655.05 / 658.96 K; global 658.96 K, margin 789 K; `Lambda_L` PRESENT in all 507 (0 absent ⇒ not vacuous) and max 0 in every one; (1−0/0.4)==1.0 and 1.0*x==x exact. LIVE decks carrying an aborting retired key: 0** | my fab reader over `unit/{robin_pinned,robin_jet,jet_enthalpy,robin_feet,scalar_flaw}/output` + `s1_surface_resolution/output_smoke`; my comment-stripped sweep |
+| a1 | tree stage 1 vs `p2_18` | **0 / 2,639** (26 / 863) | 0 / 2639 | **0 of 2,639; controls 26 / 863** | `GATE_tree_1.txt`, my manifest walk |
+| a2 | face `cmp p2_24 p2_26a` | IDENTICAL | IDENTICAL | **IDENTICAL, 0 substantive, 1,217 files each side** (my own re-run of the offline cmp) | `face_gate.py cmp`, `face_p2_26a.md5` |
+| a3 | `retired_keys` B3 + K legs; `lateral_flux_lock`; `buckle_lock`; `face_removal --check`; `jet_d2c` | PASS | PASS (face_removal FAIL (4) restated) | **8 table keys ×1 each in `src/`; 4 strict-scope keys ×0; 23 deleted symbols ×0 (`melt_aware`'s single hit IS its table string); R7 RED on `src_pre_1`; `face_removal` log md5 `4411cda6…` byte-identical to `p2_19_flake_depth/lock_face_removal.log`** | my `grep -ro` counts; `K1_*.log`, `K1_retired_keys_pre.log` |
+| a4 | L1 probe aborts naming both keys; L2 probe runs | both | P1a/P1b discriminate; P1c non-discriminating | **derived from the pre-image: `spall_h_spall_max = 0.010` initialiser (`src_pre_1:9167`) with the parse at :6302 AFTER the check at :6161 ⇒ P1c 0.02/0.015 aborts BOTH sides (correctly recorded dead); P1a 0.012/0.015 abort→run; P1b 0.008/0.005 run→abort. Shipped order: parse :5871 BEFORE check :5883** | `PROBES.txt`; `src_pre_1` vs `src/…/MMWSpalling.H` |
+| b1 | every differing path inside the 233; classified; removal state unchanged | ⊆ 233, nothing outside | 46, 39+7, C3 0 | **46 of 2,639, 0 one-sided, all 46 inside `MOVERS_PRE.txt`'s 233, 0 outside; thermo 10→9 columns, removed set exactly `{sn_recession_superseded}`, 0 added, 200 rows both sides, **0 shared non-timer columns moved**; full scan of all 29 plotfiles: 26 moved, exactly three fields — `h_spall_field` 3.38542e-4 m, `RoP_spall` 7.8125e-3, `spall_thickness` 7.8125e-6 — and **`removed`/`phi`/`Temp`/`H` identical in EVERY plotfile**; zero C3 movers** | my fab + thermo differs over `pre2_out/` vs live |
+| b2 | face `cmp p2_24 p2_26` | IDENTICAL | IDENTICAL | **IDENTICAL, 1,217 each side (my own re-run). The `DROP` edit cannot mask it: M0's record writes `flake_coherence_length=0.0` / `surface_normal=0`, and the pre-image defaults are `0.0` / `false` (`src_pre_2:6092, 5831`) ⇒ a default-valued token** | `face_gate.py cmp`; `p2_9_face_removal/legs/M0/argv.sh` |
+| b3 | all clauses + MUTATIONS + K legs | PASS | PASS | **R7/R8 each with its own mutation RED, R8 RED on `src_pre_2`; K5–K13 two-sided (defaults rc 0; `flake_length=flux`, `size_volume=flux`, `flake_fraction=weibull`, `surface_normal=1`, `coherence=0.004`, `melt_aware=1` all rc 6 naming the key + P2-26; `pad_shield_open=0.5` refused by the strict scope)** | `K2_retired_keys.log`, `K2_retired_keys_pre.log` |
+| b4 | removal_increment, face_heat, beam_void_closure, rankcheck | PASS / T3 by design / rank-stable | PASS | **removal_increment (a)–(d2) PASS, SN gone; face_heat PASS incl. R_pad/R_above refused by the strict scope; beam_void_closure T1d `19648.400 J vs 19648.361`, T3 `[0,dz/2)=2400, [dz/2,dz)=0`, T4 `18-18 layers` — **byte-equal to P2-21's `A2_beam_void_closure.txt`** ⇒ "unchanged by design" is literal; rankcheck rel ≤ 1.01e-15, CSVs identical** | `K2_*.log`, `RANKCHECK_2.txt`, P2-21's A2 log |
+| m1 | line count before/after; keys parsed | report (≈600–700, 12 keys) | 14,021 → 13,089 (−932; stage 1 −538) | **exact: pre1 9987+2282+376+1151 +225 = 14,021; pre2 9521+2210+376+1151 +225 = 13,483; now 9331+2008+374+1151 +225 = 13,089 ⇒ −932 total, −538 / −394 by stage. MMWBeam.H IDENTICAL. Stage attribution right: Shared.H and FaceRemoval.H changed in stage 2 only** | `wc -l` over `src_pre_1/`, `src_pre_2/`, `src/` |
+| m2 | each edited out-of-gate deck's change recorded BY DESIGN with old and new | records exist | INERT ×5, reports ×2, trajectory ×4 | **`input_energy` 4,648 → 12,100 removed cells (a plotfile STATE read, `np.sum(removed > 0.5)` — not a summed per-step counter, SR 7 OK), hottest 4274.9 → 4079.5 K; Meier test A2 **10.22 → 3.93** J/mm³ vs 15.4 (case A FAILS both), B1 1.44 m/h both, V(56 s) 100.61 → 122.85 cm³, B4 6.35 → 5.20; every LIVE-C2/C3 deck carries a header stamp naming the OLD value; `WHICH_TESTS.md` carries all four trajectory movers with numbers** | `MEIER_AB.txt`, `AB_FIELDS.txt`, `ab_fields.py:31`, the deck headers, `WHICH_TESTS.md` |
+| m3 | every edited deck starts on the new binary | rc 0 on all | rc 0 on 15 | **independent and stronger: over 1,332 deck/argv files, comments stripped, **0 LIVE decks** carry a retired key at an aborting value** | my sweep |
+| e0 | verdict | — | accepted by the implementer | **accepted** | — |
+
+#### Diff review
+
+123 hunks across four headers (stage 1: MMWSpalling.H 83 / Removal.H 7; stage 2: MMWSpalling.H 14 / Removal.H 12 /
+Shared.H 4 / FaceRemoval.H 3), +203 / −1,118 lines. Rows below cover all 123.
+
+| # | hunk / change | class | tag | finding |
+|---|---|---|---|---|
+| 1 | `retired_at_default` += 4 B3 keys (`M:162`) | 7, 9 | ok | each has a reader (the table's own `queryarr`), a K leg and a mutation; my count: string ×1 in `src/` |
+| 2 | `retired_at_default` += 4 C2/C3 keys (`M:172`) | 7 | ok | same; defaults written as decks write them (`"0"`, `*`) |
+| 3 | `hj = (s > 0.0 \|\| jet_above_h) ? h_f : 0` → `(s > 0.0) ?` | 2, 12 | ok | `jet_above_h = false` (`src_pre_1:8453`) ⇒ identity; the sibling in `FaceHr` got the **same** edit |
+| 4 | `flame_Tg[col] = (s>0 \|\| !(jet_T_above>=0)) ? jet_T_ent : jet_T_above` → `jet_T_ent` | 12 | ok | `jet_T_above = -1.0` sentinel ⇒ the predicate was always true |
+| 5 | pad-ring `flame_h[col] *= pad_open` block deleted | 12 | ok | `pad_shield_open = -1.0` sentinel ⇒ never multiplied |
+| 6 | `FaceHr`: pad-ring block + `jet_above_h` deleted | 1, 2 | ok | the duplicated pad block (two copies) dies in both places at once — the one duplication this packet retires |
+| 7 | `T_mix = jet_rec_fixed ? … : exhaust ? … : T_ent` → 2-way | 12 | ok | `jet_rec_fixed = false` ⇒ branch unreachable; `fixed`/`exhaust` kept, `rec_fixed` now an unknown value |
+| 8 | `BuildSurfaceTColumns(int lev, dt)` → `(int lev)`; `len_fb_h0/q0` resets deleted | 2, 7, 8 | ok | the one call site updated (`M:1562`); the counters' registration deleted with them (SR 7's per-step reset goes with the counter) |
+| 9 | `FaceListPath` signature + its one call site | 2 | ok | consistent |
+| 10 | `WeibullSizeFactor` + both `*=` callers deleted | 1, 12 | ok | `sp_size_flux = false` ⇒ the factor returned exactly 1.0; `*= 1.0` is the IEEE identity |
+| 11 | the `ell_flux` branch of `BuildSurfaceTColumns`, `rc_ellq`, `len_fb_*` | 5, 7 | ok | all three gated on `sp_flake_len_flux = false`; 0 occurrences left in `src/` |
+| 12 | `ScanSigmaT`: `f_skel` parameter and factor removed (`Shared.H:201`) | 2, 3 | ok | **the inner association is preserved** (`f_skel * (A + B)` → `A + B`, not re-associated) — the P2-21/R6 hazard avoided; both call sites updated |
+| 13 | `DepthScanH`: `sn_cth`/`sn_icth` parameters and all five `* sn_*` uses removed | 2, 6 | ok | `×1.0` and `/1.0` are exact, incl. `std::floor(z_mid * 1.0 / dz)` → `std::floor(z_mid / dz)` |
+| 14 | **all five** `ScanSigmaT` / `DepthScanH` call sites | 2 | ok | 3 in `FaceRemoval.H` (literal `1.0`s dropped) + 2 in `Removal.H`; I enumerated them — no stale caller |
+| 15 | `z_v = (z_crack+d) * sn_icth` → `z_crack + d` | 3, 6 | ok | ×1.0 exact |
+| 16 | `return f_skel * (sx(z_v) + conf)` → `sx(z_v) + conf` | 3 | ok | association preserved |
+| 17 | `h_vert = h_col * sn_icth` → `h_col` | 3, 11 | **risk** | correct at `sn_icth = 1`, but it deletes the Step-20 rationale (the height function must recede by `h_col/cos θ`). The column path now recedes vertically by `h_col` **unconditionally**. In scope (user Q7 = retire; D2z-1 whole-cell superseded it) and report-only on the gate — my scan shows `removed` identical everywhere — but the planner should know the column path has lost slope-aware recession for good. Named: **DR-1** |
+| 18 | `dv = depth * icth` → `depth`; `T_recon_at(a_loc * icth)` → `(a_loc)` | 3, 11 | ok | the comments were rewritten, not left false |
+| 19 | conditional registration of `sn_recession_superseded` deleted | 7, 8 | ok | matches my thermo diff exactly: that one column and no other |
+| 20 | `MeltSkeleton`, the Λ_L gather, `LL_at_didx`, the refusal (`M:1112`) | 9, 12 | ok | `MeltSkeleton(0) == 1.0` bit-exact and Λ_L was 0 on all 507 gate plotfiles — the deletion is bit-neutral by construction, not just by the gate |
+| 21 | the coherence cap block (`R:1510`) + `spall_flake_coh_len` | 9 | ok | the only deletion that moves a non-gate trajectory; recorded (m2, DR-2) |
+| 22 | `fl_wtop`, `sp_surface_T_mode` deleted | 7 | ok | both write-only; the two bools and the `surfT` parse kept |
+| 23 | B1: `spall.h_spall_max` parse moved above the `flake_h_max` check | 6, 13 | ok | the check keeps its `sp_flake_h_max > 0.0` guard, so `0` stays inert; two-sided probes P1a/P1b |
+| 24 | B1: `side_power_interval` parse moved out of the `jet_closure = enthalpy` branch | 4, 7 | ok | scope predicate vs data source — exactly the class-4 defect, fixed; L2 probe two-sided |
+| 25 | B2: comment blocks, `(void)` pairs, dead locals (≈60 hunks) | 11 | ok | one census item struck as non-existent (declared); `(void)DX` left because DX is read and the function is C1's |
+| 26 | `lateral_flux_lock`: clauses 2, 2b, 3 deleted (−109 lines) | 9, 10 | ok | **authorised and verified**: every subject (`WeibullSizeFactor`, `rc_ellq`, `Ktop`, `k_use`, `"TOP CELL CENTRE"`) is 0 occurrences in `src/`; replaced by a name clause that is RED on the pre-image |
+| 27 | `lateral_flux_lock`: `FaceListHeat` expected calls 1 → 2 | 9 | ok | not a loosening — backed by a new structural assertion that the second call is the `else` of `BuildFlameColumns` (`:717`), which is stronger than the count |
+| 28 | `buckle_lock` B2: `BuckleRatio` calls 2 → 3 | 9 | ok | same pattern: `o.bk = BuckleRatio(` ×1, the second inside `if (bk_log)`, `.bk_lb` ×2 (write + CSV) |
+| 29 | `removal_increment`: SN leg, checks (e)–(e4) **and (f)** | 9 | nit | the packet listed (e)–(e4); (f) went too, necessarily (its subject is the deleted column) and is named in the header. Declared, not silent |
+| 30 | `jet_d2c`: RECF legs KT/K15/A17–A19 + check (k) | 9 | ok | authorised by Goal 3; `rec_fixed` is gone |
+| 31 | `face_heat`: BASE tokens dropped; R_pad/R_above now strict-scope refusals | 9 | ok | both legs still rc 6 — the verdict is unchanged, only the message's source. Declared (deviation 3) |
+| 32 | `sp_melt_skeleton` → `retired_units/` + README | 9 | ok | it tested the deleted feature |
+| 33 | `face_gate.py` `DROP` += the two C2 keys | 9 | ok | cannot mask: both tokens were default-valued in M0's record (row b2) |
+| 34 | `retired_keys` R7/R8 + K5–K13 + mutations (+55 lines) | 10 | ok | every new clause RED on its own pre-image; K legs two-sided |
+| 35 | the `*` table rows (`weibull.V_ref`, `melt.lambda_crit`) | 7, 9 | nit | they **accept and ignore** — no abort, no message. Safe only because each is inert without its companion switch, and the companion aborts. Worth one `Util::Message` if the planner ever wants symmetry |
+
+**Deferred risks, by name**
+
+- **DR-1 — the column path's recession is now vertical-only** (row 17). Report-only on both gate decks (`removed`
+  identical in every plotfile), by design, but the `/cos θ` rationale is deleted from the source. If the column path
+  is ever revived for a sloped surface, this is the thing to re-derive, not re-discover.
+- **DR-2 — a retired regulariser was load-bearing on a validation record.** The coherence cap's removal moves Meier
+  `input_energy` by 2.6× in removed cells and takes **case A's A2 from 34 % to 75 % error** (TSE 10.22 → 3.93 vs
+  15.4), with the early surface staying at ~860 K to 3 s and then running to 4521 K. Case A failed before and fails
+  after, and the column path is not production, so no gating row moves — but "the cap was a needle regulariser" and
+  "the cap was holding the energy case's TSE within 34 %" are both true, and only the first is in the packet's
+  framing. The Hu decks move 2.1× / 2.3× / 1.4× likewise.
+- **DR-3 — takeaway 1 understates its own hazard by ~75×.** The string compare does not break 7 decks: my
+  comment-stripped sweep of 1,332 deck/argv files finds **622 aborting occurrences across 529 record files**
+  (`flake_length=flux` 286, `flake_coherence_length` 227, `size_volume=flux` 75, `melt_aware=1` 18, `surface_normal=1`
+  8, three `surface_patch` legs 6, `flake_fraction=weibull` 2). **0 live decks** are affected, so nothing is broken
+  today; every archived study leg and `output/argv.sh` replay is. A numeric-aware compare for numeric defaults, or a
+  `retired_at_default` entry that tolerates `0.0 == 0`, closes it — a planner decision, as takeaway 1 says.
+- **DR-4 — `jet_d2c/output` can now enter the tree oracle** (`WHICH_TESTS.md` says so itself): the `rec_fixed` legs
+  that blocked hashing it are gone. A cheap coverage win for the next re-pin.
+- **DR-5 — `ROADMAP.md`'s hand-written part is at exactly 350 / 350 lines.** The next archive breaches it.
+- **DR-6 — `MODEL_CARD.md` row 5 now carries two solidus numbers in one cell** (the 1,448 K of the melt-aware decks'
+  deck-local `T_m 1473 / fus_width 50`, beside P2-24's 1,410.5–1,610.5 K band from `rock_grimsel.inputs`) without
+  saying which deck each belongs to. Nothing turns on it — the margin is 789 K either way. nit.
+
+**Checked and clean:** no edits to `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE`;
+`src/` touched in exactly the four declared headers; `rock_grimsel.inputs` and `model_form_flame.inputs` untouched;
+`src_pre_1/` and `src_pre_2/` each hold all **five** headers (more than DR-4 of P2-25 asked); the old lists
+`p2_18.md5`, `p2_25.md5`, `face_p2_24.md5` are all still on disk; nothing committed. The completion notes quote
+nothing the packet or `ROADMAP.md` marks unquotable — no `## Known Stale/Important Notes` bullet names any deleted
+switch, `## Standing rules` stands at 20 / 20, and the one SR that this packet's headline number could have violated
+(SR 7, never sum a per-step thermo counter) is honoured: the 4,648 → 12,100 figure is `np.sum(removed > 0.5)` over a
+plotfile, a state read.
+
+#### Verdict: accepted
+
+- **Every gating row (z0, a1–a4, b1–b4, m2) reproduces from my own reduction**, and no diff-review row is tagged
+  `bug`. Two nits (rows 29, 35) and six named risks, none must-fix.
+- The two bit-neutrality arguments are **structural, not just empirical**: every deleted B3 branch was unreachable at
+  its default (`pad_shield_open = -1.0`, `jet_T_above = -1.0`, `jet_above_h`/`jet_rec_fixed`/`sp_size_flux`/
+  `sp_flake_len_flux` all false), and every deleted multiplier was exactly `1.0` with its surrounding association
+  preserved. The gates confirm what the source already implies.
+- **b1's classification is the strongest row**: over all 29 plotfiles of both C2 decks, exactly three fields move and
+  all three are the column scan's *thickness reports*; `removed`, `phi`, `Temp` and `H` are identical in every
+  plotfile, and `beam_void_closure`'s T1d/T3/T4 numbers are byte-equal to P2-21's log. The re-pin changes what the
+  scan *says*, not what the model *removes*.
+- **The three restated locks are restatements, not relaxations** — each replaced a count with a structural assertion
+  and each is RED on its own pre-image; `face_removal --check`'s log is md5-identical to P2-19's.
+- Files inspected: the four headers against both pre-images hunk by hunk; `Shared.H` and `FaceRemoval.H` in full;
+  `face_gate.py`'s `DROP` and its two use sites; `unit/{retired_keys,lateral_flux_lock,buckle_lock,jet_d2c,face_heat,
+  removal_increment,seed_void}/test`; `Z0.txt`, `GATE_*.txt`, `B1_FIELDS.txt`, `PROBES.txt`, `K1_*/K2_*.log`,
+  `RANKCHECK_2.txt`, `AB*.txt`, `MEIER_AB.txt`, `MOVERS_PRE.txt`; `REFERENCE.md`, `WHICH_TESTS.md`, `MODEL_CARD.md`.
+- Next: **run `/plan` to archive this step and prep the next packet.**
+
+## P2-27 — Inputs, the damage lineage and the feet: one cleanup packet in five builds (census input items + C1a + C1b + G) (2026-11-09; ACCEPTED by review 2026-11-09)
+
+**Status:** ACCEPTED by review (2026-11-09): every gating row re-derived (the reviewer's own component audit over all 792
+changed plotfiles, field audit, abort-multiset extractor over the five source images, ledger/CSV/rank reductions); 37 diff
+rows, **0 `bug`**, 2 nits, 3 risks, 9 named deferred items. Binaries: pre `e0551036`, s1 `ccfa2baa`, s2 `7dc8bde5`, s3
+`eed9343c`, s4 `5b575c85` (rev 2), s5 **`27433870` (ships)**. Study `tests/MMWSpalling/studies/p2_27_cleanup/` (`Z0.txt`,
+`GATE_*`, `AUDIT_3_{tree,face}.txt`, `AUDIT_4_fields.txt`, `K1…K5_*.log`, `M2/M3/M4_*.log`, `RANKCHECK_*`, `MOVERS_*`,
+`INTERLOCKS_MOVE.txt`, `src_pre_1…5/`, `bin_pre/`, `bin_1…5/`, `tree_archive_p2_27b/` 955 MB). References now **tree
+`p2_27.md5`** (2,901 paths; controls d2aa 1,230 / d2t 1,346, 270 only-in-new, 8 only-in-ref) and **face `face_p2_27.md5`**
+(1,529 files, 16 legs incl. FEET_S / FEET_0). Sleep events in every stage window: 0; stage walls ≈ 520 s.
+
+### What the step established
+- **Stage 1 (inputs) moved no byte**: numeric-aware retired-key compare (one token, full double parse; `"0 0"` stays a
+  string), `CheckInterlocks` holding 58 aborts verbatim (the multiset unchanged but for the one new dt abort), the
+  per-level explicit time-step check (`dt ≤ dx²/(6α)` at the coldest start temperature; `T_cold` guards an unset
+  `T_amb` = 0 K where Grimsel's c_p has a pole), `beam.schedule.file` with strict monotonicity for both forms, the #19
+  deck's 159 pairs moved to a file element-wise exactly; `unit/jet_d2c/output` (270 paths) joined the oracle after its
+  five stale retired legs were moved out. **The dt check found 18–19 decks over the limit today** (7 live unit tests
+  on uniform insulated fields up to 24,576×; `sp_lefm/input_weibull_regrid` genuinely 1.73× on its fine level) — the
+  packet's STOP; the user chose ABORT on the face list, WARN elsewhere (face-list max 0.823, oglesby).
+- **The damage + cohesive lineage is gone** (stage 2: 0 changed, spall_event's 8 left; stage 3: every `Cell_D` of the
+  708 tree and 84 face cell plotfiles lost exactly `{D, kappa_eff, k_eff}` with every kept component bit-identical;
+  node plotfiles, CSVs, thermo untouched; the abort count unchanged). `spallation.model` ∈ {`none`, `sp_weibull`},
+  `damage_law` aborts by value; 35 keys retired; `DruckerPrager.H`, `CohesiveZone.H` deleted.
+- **The six grimsel-inert scalars are refused** (`kappa/rho/Cp` under the law; `beta/E/mu` only when
+  `spall.stress_law = grimsel` too): tree 0 changed, face exactly the 70 declared t = 0 paths in four fields (1.5 →
+  3.43 W/mK, 8e-6 → 8.4e-6, 30 → 53.3 GPa, 11.5 → 20.5 GPa at the start temperature). Rev 1 added a second reader of
+  the law and `lateral_flux_lock`'s P2-2b one-reader rule caught it; rev 2 routes the t = 0 fill through
+  `UpdatePropertyFields(lev, step=false)`.
+- **The pad clearance runs on the face list** (`FrFootClearance`, FaceRemoval.H +164): regime 4, `fr_f = 0`,
+  `foot_mech_E += H·V` with H frozen, phi shift, a 37-field CSV row; the column block guarded `!face_list` (tree 0
+  changed); exactly one refusal lifted. `unit/face_feet`: 14 regime-4 rows on P / 0 on N, cut set == proud set at
+  6.41 s, no ratchet, `foot_mech_vol == Σ n_voided·dx³`, `ledger_err_solid` 3.6e-15, frozen H, rank-identical events.
+  No dead spot in the flame map needed (the column path's CLD needed one). `input_feet_face` ran 20 s (60 regime-4
+  rows, old constants: Meier is one step closer, not yet a test).
+- **`weibull.V0` kept** (the Weibull size correction, OFF by rule (iv) on every production deck); the member comment
+  now says what the code does and defers the physics decision to the mesh-check runs.
+- **Hu re-expressed as Grimsel under Hu's granite-2 ramp (m4, record): t\* 107.88 s at T_B1 1041.7 K** vs
+  pre-registered 50–66 s / 826–885 K (Hu 37 s / 773 K) — OUTSIDE, and the side is the PATH: under a prescribed patch
+  site A reads K_Ic at the boundary T (1042 K) but the stress from the 3.125 mm cell average (790.7 K; the P0
+  reconstruction is off under prescribed_T). A mixed-temperature measurement of the mesh's surface lag, not of the
+  rock. Never quote it; re-SCORE at H on the evaluate-only face list.
+- **Net code size** 13,089 → 12,651 (−438; +192 / −736 / −93 / +43 / +156) plus the two deleted headers (−146):
+  groundwork for H, not the cut.
+
+### Carry-forwards (review and planner)
+- **DR-1 → H:** the face list's TOTAL `ledger_err` is not a closure on a spalling deck (omits the flake credit by
+  design; 0.40 on `face_feet` with the clearance OFF); `ledger_err_solid` is the closing row. Rename the column or
+  credit the sinks in the total.
+- **DR-2 → H:** m4's 107.88 s is a path measurement (see above); re-score, not reproduce, when the evaluate-only
+  face list exists; fix the deck header's "must reproduce".
+- **DR-3 → H or the refactor:** the conduction kernel's governing-equation comment (`M:2128–2131`, `M:2290`) still
+  states the deleted `κ_eff(x,D)` and `h_gb(D)`.
+- **DR-4:** `retired_keys` measures "exactly once" two ways (R7/R8 bare substring incl. comments; R9 quoted literal —
+  the right one); adopt R9's for R7/R8.
+- **DR-5:** the `law_T && !law_s` branch (grimsel thermal law + scalar stress law, `E/beta/mu` still required) ships
+  untested; no live deck, no K leg.
+- **DR-6:** `amr_microstructure_regrid` is in neither gate and reads rc 1 (`is_grain_boundary` at level 0) since
+  before the packet.
+- **DR-7:** two report counts disagree (18 vs 19 decks over `dt_lim`; "48" vs 79 decks defaulting the model key).
+- **DR-8:** one `pkill -f` on the implementer's own wait loop, self-disclosed (SR).
+- **DR-9:** `face_p2_27d` already carried the FEET legs (added to `face_gate.py` before stage 4's rev-2 run).
+- Small items for the next packet that touches them: halve `sp_lefm/input_weibull_regrid`'s dt; drop the unread
+  `bit.*` keys from `input_feet_face`; `check_shared.py` on `unit/face_beam` (nested include) pre-existing FAIL.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-09)
+
+- **P2-27 — Inputs, the damage lineage and the feet: one cleanup packet in five builds (census input items +
+  C1a + C1b + G)** (`ACTIVE_STEP.md`; 2026-11-09; user: "run 1 to 3 all in one packet").
+  - Archived: P2-26 ACCEPTED (`ARCHIVE_DONE.md` *"P2-26"*): 932 lines and twelve keys gone, bit-neutral by
+    construction; the coherence cap was load-bearing on Meier case A and three Hu decks (numbers superseded).
+  - Stage 1 `p2_27a` (0/2639 + jet_d2c declared into the oracle; face IDENTICAL): numeric-aware retired-key
+    compare, `CheckInterlocks()` once at the end of Parse, a dt ≤ dx²/(6α) check at the IC temperature,
+    `beam.schedule.file`, the hygiene P2-26 left. Stage 2 `p2_27b` (C1a; 0 changed, spall_event's 8 leave):
+    damage + cohesive out; `spallation.model` ∈ {none, sp_weibull}. Stage 3 `p2_27c` (C1b): D, kappa_eff, k_eff
+    deregistered — whole-tree and face re-pin with a component audit. Stage 4 `p2_27d`: the six grimsel-inert
+    scalars refused (t = 0 plotfile fields only); **`weibull.V0` NOT deleted** — it is the Weibull size correction
+    (OFF on every production deck by rule (iv)): a physics choice for the mesh-check runs, recorded in the card.
+    Stage 5 `p2_27`: the pad clearance on the face list (regime 4, `foot_mech_E` booked, H frozen), `unit/face_feet`
+    + two face-gate legs, `input_feet_face` (old constants: Meier is one step closer, not yet a test of the model).
+  - User 2026-11-09 (Q5): `hu_spall_onset` re-expressed on the LEFM rule (a RECORD, m4); `hu_end_to_end` + diag
+    retired. ⚠ Time budget: a tree sweep is ≈ 4–5 min awake and plugged in; P2-26's hours were clamshell sleep.
+  - Next in the merge: H delete `Removal.H` + column-top state (the 2,639 gate retires to a record; the face gate
+    is THE gate) → D Zhang merge/delete → the structural refactor (split the header, records out, provenance to the
+    archive, kernel helper, schema-built CSV rows) → the P2-25 follow-ups → the operator stress packet.
+
+### The P2-27 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-27 — Inputs, the damage lineage and the feet: one cleanup packet in five builds (census input items + C1a + C1b + G)
+
+Status: **accepted by review** 2026-11-09 (every gating row re-derived independently; see `## Review findings`). Implemented 2026-11-09 (`/implement`; completion notes and takeaways at the end). Planned 2026-11-09 (P2-26 ACCEPTED 2026-11-08 and archived — `ARCHIVE_DONE.md` *"P2-26"*; the user 2026-11-09: "run 1 to 3 all in one packet" = the input-simplification list, census C1, census G). Five builds in one chain; each stage has its own `src_pre_<n>/`, binary, tree and face comparison, and either a bit-identity bar or a mover list declared BEFORE the run. A failed stage stops the chain; the stages before it stand. Revised 2026-11-09 after the user's review paste (four points): the dt check is PER LEVEL; Hu: `hu_spall_onset` is re-expressed on the LEFM rule, `hu_end_to_end` and the diag runs retire (user: agreed); the chain logs sleep events and the time budget is corrected (P2-26's hours were clamshell sleep on battery, not slow code); **`weibull.V0` is NOT deleted** — it is the Weibull size correction, a physics choice deferred to the mesh-check runs (advisor's recommendation, reversible by one message); stage 4 keeps only the grimsel-inert scalars.
+
+### Context
+
+P2-26 removed the closed switches and left three cleanup fronts open. (1) The input files: the retired-key table compares strings (P2-26 DR-3: 622 record argvs abort on `0.0` vs `0`), the rock file carries six scalars that are inert under `law = grimsel`, cross-key interlocks sit in three places (Oct census B14), there is no time-step stability check, and the #19 deck carries two 159-token lines. (2) Census C1: the Drucker-Prager damage + cohesive lineage (decision 1 of 2026-11-05: LEFM is THE model) is parsed and computed on every production step and its three fields sit in every plotfile. (3) Census G: Meier's burner stands on feet whose pad clearance lives only on the column path; the face list refuses it, so the Meier regression the user keeps cannot move to the production path until the clearance is ported. Carried: the face gate reference is `face_p2_24` (REFERENCE.md:42), the tree reference `p2_26`; nothing is tuned; every production result must be either identical or moved by a declared, audited cause.
+
+### Sources (opened 2026-11-09; `M:` = `src/Integrator/MMWSpalling.H` 9,331 lines, `R:` = `MMWSpalling/Removal.H` 2,008, `F:` = `MMWSpalling/FaceRemoval.H` 1,151, `S:` = `MMWSpalling/Shared.H` 374, `B:` = `src/Numeric/MMWBeam.H` 225, `G:` = `src/Numeric/Material/Grimsel.H`)
+
+- **Census** `docs/project/CODE_CENSUS_2026-11-05.md` §2 C1 (:277–332), G (:564–582), §3.7 (:698–709); Oct census `docs/project/CODE_CENSUS.md` B14 (:593–614). Every census line number has drifted; today's are below.
+- **Retired-at-default** table `M:158–176`, loop `M:177–194` (`got == r.value` string compare; `"*"` wildcard). Numeric rows today: `spall.surface_normal`, `spall.flake_coherence_length`, `spall.melt_aware` all `"0"`. `face_gate.py:58–62` DROP strips those two C2 tokens from M0S's record because of it.
+- **`weibull.V0` — NOT touched (decision recorded, not made).** Parse `M:9294–9297`, member `M:8865`, the one use `M:7629–7631` `vol_factor = pow(V_cell / weibull_V0, inv_m)` on intragranular draws: the Weibull size correction (smaller cells draw smaller flaws, so a finer mesh does not break earlier just by drawing more often). The member comment (:8861–8864, "FIXED physical constant") and `check_shared.py` rule (iv) ("V0 equals the deck's cell volume") contradict each other, and the rule — followed on every production deck — switches the correction OFF (factor ≡ 1). Deleting the key would make that permanent; keeping it keeps the question testable on the mesh-check runs (P2-25 follow-ups: the 0.78 mm twin fired 2.09× the events with the correction off). This packet only RECORDS the contradiction (`MODEL_CARD.md` §6 new row, §11) and flags the one typed inconsistency (`kant/sp_kant_onset_meiercfg/input_weibull:103` V0 8e-9 on a 1 mm mesh — a legacy record, not edited).
+- **Inert under grimsel** (`M:404–418` requires `fraction kappa beta E mu rho Cp A_D` per phase; `.law` `M:424`, `grimsel_law` `M:442`): `kappa/beta/E/mu` land ONLY in the t = 0 plotfile fields `kappa_phase`, `beta_phase`, `E_phase`, `mu_phase` (`M:7387–7390` → `:7453–7456`), overwritten by `UpdatePropertyFields` (`M:4549–4600`) at the top of every Advance (`M:1569`); `rho/Cp` branch to the law at `M:7412–7421` (fully inert). `rock_grimsel.inputs:4–12` carries all seven; `law = grimsel` also in `unit/face_list/input`, `unit/face_removal/input`. NOT inert and NOT touched: `hc.heat.alpha` (HC:79 required by shared code; `M:247`, read `M:1607` const-α path), `alpha` (`M:342`, Zhang/homogeneous path → D), `el.model1.{E,nu}` (Mechanics `query_exactly<2>` even under disable; shared), `hc.bc.temp.*` (parser-optional but the default is Dirichlet 0 K — required for the answer).
+- **Interlocks.** End-of-Parse matrix `M:693–1203` (members only); sub-parse cross-key aborts: `M:5871–5878` (flake_h_max vs h_spall_max), `M:5905–5920` (removal_energy ↔ surface_T ↔ stress_source), `M:6105–6107` (bit ↔ spall|vapor), `M:9148–9153` (sp_weibull refuses damage — dies in C1a); runtime configuration abort `M:3707–3710` (face list requires cubic cells, checked per call; `geom` is available at Parse). `SurfacePatch::Parse`'s own checks (`M:8019–8425`, `pp.contains` based) stay where they are.
+- **dt.** Kernel `M:2254` `H = H_old + dt·(div_kgrad + Q − q_loss/dz)`, `div_kgrad` `M:2157–2160` ⇒ forward Euler, stable for **dt ≤ dx²/(6 α)** in 3-D (harmonic faces, voids, GB resistance, latent boxcars only lower the effective α). Grimsel α(T) = λ/(ρ c_p) (`G:134–137`; λ `G:140–145`, c_p `G:127–131`, ρ `G:125`) is strictly DECREASING in T ⇒ the bound is at the coldest temperature the run starts from: α(297.5 K) = 1.6746e-6 m²/s ⇒ 0.2430 s at 1.5625 mm (the oglesby comment's 0.24 s); the table floor 200 K would give 0.124 s and reject production — never use it. `timestep` is read by `Integrator.cpp:30` and reaches M only as `Advance`'s `dt`; under AMR each finer level takes a SMALLER dt (the Integrator's subcycling; `amr.nsubsteps`), so a check must compare each level's OWN dt with its OWN dx (two live AMR decks: `unit/amr_microstructure_regrid`, `unit/sp_lefm/input_weibull_regrid`). M has no dt check of any kind. Surface losses explicit on the plain branch (`M:4075–4080`): limit ρc_p dz/(h_c + 4εσT³) ≈ 57 s, not binding.
+- **Schedule.** `B:146–149` `queryarr("schedule.t_end")`, `("schedule.P")`, equal-length abort; `power_at(t)` `B:156–162` piecewise constant, left-closed, LAST value persists; the promised "strictly increasing" (`B:142–145`) is unchecked. `validation/oglesby/input:111–112`: 159 values each = `studies/p2_21_loss_table/doe/FIG34_FULL.txt`'s 158 intervals + the pair (1800, 0). 12 live decks use `beam.schedule.*`.
+- **C1 inventory (today's lines).** Functions: `ParseDamageSettings` `M:5370–5467` (call :289), `RefreshKappaEff` `:5469–5485` (calls :5627, :7535), `DamageGrowthRHS` `:5487–5499`, `IntegrateDamageRK4` `:5501–5517`, `UpdateDamageAfterMechanics` `:5519–5628` (call :1571), `ParseCohesiveSettings` `:5630–5681` (:296), `UpdateCohesiveAfterMechanics` `:5683–5746` (:1572), `ResetCohesiveDiagnostics` `:5748–5754` (:7547), `PrincipalStressRatio` `:6123–6141` (R:1201), `FiniteMatrix` `:7088–7094`, `SpallSampleMode` `:8592`; `ParseSpallationModel` `:9107–9328` lineage parts `:9109–9114` (key, default `damage_law`), `:9143`, `:9145–9154`; `ParseSpallSettings` lineage keys `:5937–6001`; `InitializeMicrostructure` `:7520–7547` + k_eff block `:7549–7584`; `UpdateModel` `:1345–1346, 1370–1373, 1410–1423`; `Initialize/Regrid` `reset_damage` `:1239, 1292, 7060`; `AdvanceMicrostructure` `:1963` (D ghost fill), `:2034–2038`, `:2098–2099`, `:2136–2145` (GB conductance `h_eff = h_gb0·(1 − D_face)`), `:2255`. Members `M:8517–8523` (D_mf, kappa_eff_mf, k_eff_mf, kappa_damage_alpha, h_gb_conductance STAYS, ic_damage), `:8525–8548`, `:8550–8567`, `:8575–8594` (spall_enabled :8574 STAYS), `MineralPhase::A_D` `:8442`, `enum SpallationModel` `:8714–8715`. Registrations `M:570` `"D"` (1 ghost), `:571` `"kappa_eff"`, `:572` `"k_eff"` (unconditional in the microstructure block), `:573–578` damage_*, `:579–585` gb_* (conditional). κ-factor sites (all `kappa·exp(−a_D·D)`, exact 1 at a_D 0): `M:2110, 2128, 2640, 3201, 3760, 4189, 5482`, `F:454–456`. `R:40–58` damage-law h_spall (runs every production step; the ONLY production reader of `hc.heat.alpha` besides `M:1607`), `R:251–310` PASS 1.5, `R:1181–1210`, `R:1262–1272`, `R:1437–1445`, comments `R:472, 1244, 1416, 1482`. D writes: `R:208`, `R:1711`, `F:999`, `F:1031`; dead bind `R:715`. Aborts `M:693–697`, `:858–865` (message cites `unit/spall_event`), `:1122–1123` (stays, simplifies). `src/Numeric/DruckerPrager.H` (74), `src/Numeric/CohesiveZone.H` (72): used by nothing else in `src/`.
+- **C1 decks and gate.** Tree gate (`witness/hash.sh:5`): 2,639 paths, 2,466 `Level_0/Cell_D_*`; per deck robin_face 798, robin_jet 448, robin_pinned 323, jet_enthalpy 288, scalar_flaw 261, beam_void_closure 169, s1 smoke 142, robin_feet 138, dev2d 64, **spall_event 4 + 4**. `damage.enabled = 1`: 11 decks, all OUT of both gates (dp_yield; hu_spall_onset ×2 + diag ×4; hu_end_to_end ×2; extensions hu_spall_onset_mmwbeam, hu_spall_onset_voronoi). `kappa_damage_alpha` ≠ 0: dp_yield, amr_microstructure_regrid, heterogeneous_kappa (ln 2; OUT). `damage.ic.*`: regime_low_high_power, amr_microstructure_regrid, heterogeneous_kappa, **spall_event ×2 (IN)**. `spallation.model` explicit `sp_weibull` on every gate deck except spall_event; **48 live decks take the default `damage_law`** (thermal-only unit tests, `robin_face/input_form` IN-GATE, Zhang, Hu conduction/thermoelastic, the shared rock and loss files) — on them "damage_law" means NO criterion loaded: `Sp_field` registers only under `SpWeibull` (`M:632–634`) and `spallation.sp.a0` is REQUIRED under it (`M:9156`). `robin_face/output/form_*` plotfiles have no `Sp_field` today (ncomp 23); `ledger` has it (36). `phase<i>.A_D = 0.0` on every gate deck and the rock file (:37); non-zero only on retired-lineage decks.
+- **G (today's lines).** `FeetDescent` `M:2443–2560` (signature `(lev, dt, k_top_col)`; arms `foot_clear_k` `:2551–2558`), called from `BuildFlameColumns` `M:2304–2306` (use_expr branch) ← `AdvanceMicrostructure` `M:2067` with `k_top_col = ColumnTopSolid(lev)` `M:1998–2000` (non-empty under `follow_mask`, which the face list requires `M:1071–1074`). Standoff reaches BOTH heat paths from `z_n` via `flame_s` (`M:2318–2320`; position heat `FaceH(x, y, z_n − z_f)` `M:3888`; path heat's `H = mean(flame_s)` `M:3396–3400`). Refusals: `M:1053` (path heat refuses feet — STAYS, production is position heat: `model_form_flame.inputs` sets no `face_heat`), **`M:1114–1115` `fr_abort("regime 4 (surface_patch.foot_body_clearance)", "P2-11")` — LIFT**. Dispatch `M:1585` → `UpdateRemovalAfterCohesive` `R:25` → `ResetRemovalStepFields` `R:100` → **column clearance block `R:160–233`** (flips `removed`, `regime 4`, `D = 0`, shifts `phi` by n·dz, books `foot_mech_E/vol/cols`, clears `foot_clear_k`) → `k_top_global = ColumnTopSolid` `R:242` → `if (face_list) { RecedeAlongLines; return; }` `R:243–248` ⇒ under the face list the block WOULD run but never zero `fr_f_mf` nor write its CSV row (`R:1937–1943`, after the return). Face-list template = the P2-24 vapour rule: detection `F:466–505`, skip in scan `F:560`, booking `F:943–955` (`ledger_E_vapor += H·V`), write `F:1010–1036` (`ff = 0, rm = 1, reg = 2, regf = 2, ropU, D = 0, vapor_event/thickness/RoP`; `phi` column shift `F:1016–1024`; `H` untouched), CSV row `F:1107–1125` (regime literal `",2,"`, placeholders for the 22 line columns), header `F:1064–1078`. Whole-cell spall void `F:958–1011`. A newly exposed cell takes a fresh `T_s` in `FrAssignTs` (`F:162–253`) — no carry needed. Ledger `M:4353`: `ledger_err_solid = (dE_sol − (E_src − E_flake − foot_mech_E − E_vapor)) / …` — `foot_mech_E` is already credited. `foot_mech_*` registered `M:959–971` (gated feet && clearance && removal). `pad_clear_ledger/test` and `jet_d2c/test` (h) drive `robin_feet/input_feet` (column, pinned; `robin_feet/output` IS in the tree gate; `jet_d2c`, `pad_clear_ledger` outputs are not).
+- **Decks for G.** `meier/sp_meier_pilot/input_feet` (`#@ check=false`; `robin_form = pinned` :147, `nozzle_descent = feet` :153, feet keys :154–159, `h_expr` :152, `jet_closure = enthalpy` :160, `weibull.V0 = 8e-9` :145 = cell; no `face_list`, no `surface_T`, no `removal_energy`, no `foot_body_clearance`); `input_feet_d2c` adds `foot_body_clearance = 1` :162 and the D2c jet closures incl. `jet_free_surface = 1` :181. `test_feet`, `test_feet_d2c` are CHECK-ONLY over `studies/d2b_feet_rop/output` and `studies/d2c_steady/output` (not re-run; unchanged). `unit/robin_feet/input_feet` (pinned, weibull off, `h_expr = "1500.0*0.01875/max(0.01875, r)"` :98, feet :99–105). Face-list requirements a feet deck must meet: `M:1057–1074` (convective_flame + h_expr, `robin_form = surface`, microstructure, follow_mask), `M:1116–1130` (local_thermoelastic, max_level 0, sp_weibull + spall.enabled, `surface_T = reconstructed`, `removal_energy = flake`). `MODEL_CARD.md:147` (§5 Meier feet row), §12 item 1.
+- **Hu onset (decisions 5 and 8 of 2026-11-05; the file `validation/hu/hu_thermal_spallation_validation_tests_augmented_vv_framework.txt`, opened today).** Granite 2 (primary): prescribed patch temperature `T_B1(t) = 638.22 + 3.74·t` K (:51), measured onset **37.0 s**, LRST **773.15 K** (:73); granite average LRST 791.48 K, onset 31.5 s (:81–82); cube 0.1 m, patch Ø 30 mm at (0.05, 0.05), T0 = T_ext = 280.15 K (:38–46); the file gives Hu's granite E 29.98 GPa, ν 0.19, β 8e-6, α 1.143e-6 (:17–25) and **no K_Ic and no flaw** ⇒ the only one-rock statement is GRIMSEL UNDER HU'S RAMP (the rock file's criterion: `grimsel_table`, R 0.531, a0 8 µm). The existing deck `validation/hu/hu_spall_onset/input_granite2` (32³ cells = 3.125 mm, dt 0.8, `surface_patch.mode` default prescribed_T with `T_expr = 638.22+3.74*t`, `el.type = static`, `damage.enabled = 1`) is damage-law. The no-removal onset criterion today is site A (`UpdateSpAfterMechanics`, `M:6200–6360`: `Tsurf = use_presc_T ? presc_T_f(time) : T_a` at `M:6338`, key `spallation.sp.prescribed_T_surface.{enabled,expr}` `M:9233–9242`), the mechanism the Kant onset decks use (`validation/kant/sp_kant_onset/test` `onset_homogeneous`: first top cell with `Sp_field ≥ 1`, bracketed between plotfiles). The face list cannot take a prescribed patch (`M:735–738` follow_mask refuses prescribed_T; `fl_on` needs `!sp_presc` `M:2063`): decision 8's evaluate-only face-list mode is H's. Grimsel's onset band on the face list: 826–885 K (P2-25 base legs), offline twin 842 K (a0 8 µm), Weibull median 849 K (`grimsel_calibration/offline_onset.py`).
+- **Hygiene.** `unit/surface_T_recon/test:53–59` `HDR_P0B` lacks `,q_ratio` (appended 2026-10-08; `R:1921–1925`); `WHICH_TESTS.md:55` (face-list row) routes to neither `lateral_flux_lock` nor `buckle_lock`; `hash.sh:5` omits `unit/jet_d2c/output` (955 files on disk; ≈ 200 would hash); P2-26's chains recorded the pre-binary by hash only (P2-24 kept `bin_pre/`); `MODEL_CARD.md:176` (§6 row 5) carries three solidus numbers in one cell.
+- **Precedents to reuse:** `studies/p2_18_prereq/a2_apply.py` (deck-edit tool, DEFAULT/LIVE rule), `studies/p2_26_closed_switches/{z0.py, chain_1.sh, chain_2.sh, classify.py, field_diff.py, ab.py, ab_fields.py}`, `REFERENCE.md` "How to re-pin next time" (:232) and the D2z-1 component audit (:156–170), `unit/retired_keys/test` R-clauses + K legs, `unit/face_vapor/test:123–128` (removed set == regime cells with H unchanged; ledger ≤ 1e-9), `unit/jet_d2c/test:533–600` (check (h): pad rule, no ratchet, `foot_mech_vol == Σ n_voided·dz³`, ranks).
+
+### Goal (five builds, in this order; before each: `src_pre_<n>/` of every file the stage touches; `bin_pre/` once, before build 1)
+
+**Stage 1 — build `p2_27a`: input fixes that are bit-identical by construction.**
+1. Retired-at-default loop: when `r.value` and the joined `got` are each ONE token that parses fully as a double, compare the doubles; otherwise the string compare; `"*"` unchanged. `face_gate.py` DROP loses the two C2 keys (M0S replays its record as written).
+2. `CheckInterlocks(value)`: one static function, called ONCE as the last statement of `Parse` (after `vapor.A_beam`'s derivation `M:1195–1203`), holding verbatim the cross-key aborts of the matrix `M:693–1203` (the `fl_*`/`fr_*` REGISTRATIONS in `M:1032–1190` stay in `Parse`, in their order — only the abort statements move), the member-only sub-parse cross-key aborts (`M:5871–5878`, `M:5905–5920`, `M:6105–6107`) and the cubic-cell requirement of `M:3707–3710` (parse-time from `geom[0].CellSize()`; the runtime copy deleted). Same condition, same message text, same order relative to each other. `SurfacePatch::Parse`'s checks are not moved.
+3. Time-step check, PER LEVEL: at the first `TimeStepBegin` of each level (where the level's actual `dt` is known), `dt_lim(ℓ) = dx_min(ℓ)²/(2·AMREX_SPACEDIM·α_max)` with `α_max = max over phases of α(T_cold)` — grimsel phases `g.kappa(T_cold)`, constant phases `kappa/(rho·Cp)`, `T_cold = min(phase T_ref, T_amb)`. `Util::Message` `dt(ℓ)`, `dt_lim(ℓ)` once per level; `Util::Abort` naming the level, both numbers, the phase and `T_cold` when `dt(ℓ) > dt_lim(ℓ)`. Microstructure path only (`microstructure_enabled`). ⚠ Never the level-0 dt against a finer level's dx (a factor 2 per level too strict).
+4. `beam.schedule.file = <path>`: two columns `t_end P` (`#` comments, blank lines), mutually exclusive with the arrays (abort if both), and `t_end` strictly increasing enforced for BOTH forms (`B:142–145`'s promise). `validation/oglesby/input:111–112` → `beam.schedule.file = tests/MMWSpalling/validation/oglesby/fig34_schedule.txt` (the file written from the deck's two lines; z0 proves the 159 pairs identical as text, and its first 158 P values equal `FIG34_FULL.txt`'s schedule).
+5. Hygiene: `HDR_P0B += ",q_ratio"` in `surface_T_recon/test` (then it must PASS); `WHICH_TESTS.md:55` += `unit/lateral_flux_lock`, `unit/buckle_lock`; `hash.sh` += `unit/jet_d2c/output` (declared "only in new"); `MODEL_CARD.md:176` split into three named numbers; the chain copies `bin/mmwspalling-3d-g++` to `S/bin_pre/` before build 1 and to `S/bin_<n>/` after each build.
+6. Tests: `unit/interlocks/` (new; one-step legs on `unit/gradient_blind/input` or the smallest deck that reaches each abort): ≥ 12 legs, each a key pair that aborts with the moved message, plus the valid base deck (rc 0), plus `timestep = 10 × dt_lim` aborts naming the limit and `timestep = dt_lim × 0.9` runs, and the two AMR decks run unchanged (their fine level's dt is already halved); `unit/beam_tau/test` or a new `unit/beam_schedule/test`: file form == array form to the byte on a 1 s run, non-monotone `t_end` aborts, both forms given aborts. `retired_keys`: K leg `spall.flake_coherence_length=0.0` RUNS (today aborts), `=0.004` still aborts.
+
+**Stage 2 — build `p2_27b`: C1a, the damage and cohesive computations and keys out; fields kept registered.**
+7. Delete the functions, members, parses, aborts and branches listed under "C1 inventory" EXCEPT: the three registrations `M:570–572`, `D_mf`/`kappa_eff_mf`/`k_eff_mf`, the k_eff block, `RefreshKappaEff` (now a plain copy of `kappa_mf`), the D = 0 writes `R:208, 1711, F:999, 1031`, the D ghost fill — those go in stage 3. Every κ-factor site becomes the bare `kappa`; `h_eff = h_gb0·(1 − D_face)` → `h_gb0` (D = 0 on every live deck; `conductivity.h_gb0` STAYS, MICRO). `InitializeMicrostructure` loses `reset_damage` (D is zeroed at init until stage 3). Delete `src/Numeric/DruckerPrager.H`, `src/Numeric/CohesiveZone.H`, the includes `M:36–37`.
+8. `spallation.model` ∈ {`none` (default — what the 48 default decks have today: no criterion loaded, no `Sp_field`, `sp.a0` not required), `sp_weibull`}; `damage_law` aborts by value naming P2-27. Every registration guard that read `== SpWeibull` keeps reading `== SpWeibull` (so the 48 default decks' plotfiles are unchanged). `M:858–865`'s message rewritten (no `unit/spall_event`).
+9. Keys: table rows `damage.enabled` `"0"`, `conductivity.kappa_damage_alpha` `"0.0"`, `spall.sample` `"top_cell"`; ABORT-list entries (presence aborts naming P2-27) for `damage.*` (incl. `damage.ic.*`), `cohesive.*`, `spall.{alpha, C_h, t_spall, damage_threshold, xi_s, shallow_depth, prescribed_ratio.enabled, prescribed_ratio.expr}`; `microstructure.phase<i>.A_D` optional, and if present must equal 0.0 (abort otherwise) — the rock file's `:37` line and every gate deck's `A_D = 0.0` line deleted (a2_apply rule: DEFAULT).
+10. Tests → `retired_units/` (+ README lines): `dp_yield`, `gb_cohesive`, `spall_event` (and `hash.sh` drops its two dirs), `regime_low_high_power`. `amr_microstructure_regrid`: drop the D checks (`test:140–146`) and `kappa_eff` (:197–198); its deck loses `kappa_damage_alpha`, `damage.ic.*`. `heterogeneous_kappa`: retired in stage 3 (its heterogeneity IS the damage IC). Validation (user 2026-11-09, census Q5): `hu_end_to_end`, `hu_spall_onset/diag/` and `extensions/{hu_spall_onset_mmwbeam, hu_spall_onset_voronoi}` move to `tests/MMWSpalling/retired_validation/hu_damage_law/` with a README; **`hu_spall_onset` is RE-EXPRESSED on the LEFM rule, zero src change**: new `validation/hu/hu_spall_onset/input_granite2_lefm` = Hu's geometry, mesh (32³, 3.125 mm), IC/ambient 280.15 K, Neumann sides and the prescribed patch (`surface_patch.mode = prescribed_T`, `T_expr = 638.22+3.74*t`, radius 0.015 at 0.05, 0.05) + `FILE = validation/shared/rock_grimsel.inputs` (the ONE rock: its laws, `grimsel_table`, R, a0; the deck sets no key the file sets — `check_shared.py` on it) + `spallation.model = sp_weibull`, `spall.enabled = 0` (onset only), `spall.stress_source = local_thermoelastic`, `weibull.enabled = 1`, `weibull.seed = 12345`, `weibull.V0 = 3.0517578125e-8` (rule iv), `spallation.sp.prescribed_T_surface.enabled = 1`, `.expr = "638.22+3.74*t"` (the criterion's surface T IS Hu's boundary), `spallation.sp.n_segments = 128`, `el.type = disable`, `phase0.T_ref = 280.15`, `stop_time = 120`, `amr.plot_int` every 1 s of simulated time, dt ≤ the stage-1 limit (z0: α(280 K) at 3.125 mm). Header: Grimsel under Hu's granite-2 ramp — Hu's granite has no published K_Ic or flaw, so this is the Grimsel criterion's prediction for Hu's boundary condition, not a fit. `test_lefm`: runs the deck, reports the first-firing time t* (first top cell with `Sp_field ≥ 1`, bracketed as `sp_kant_onset/test` does) and `T_B1(t*)`, beside Hu's 37.0 s / 773.15 K (m4). Sandstone is NOT run (Grimsel is a granite). The damage-law `input_granite2`, `input_sandstone2` and `test` move to the retired folder. ⚠ Site A retires at H (decision 8); this deck is re-expressed then on the evaluate-only face list and must reproduce t* — write that in its header. Locks: `retired_keys` R9 (every symbol in "C1 inventory" ×0 in `src/`; the key strings ×1) + K legs (`damage.enabled=1`, `spallation.model=damage_law`, `damage.ic.type=expression`, `spall.sample=shallow_max` abort; `damage.enabled=0`, `conductivity.kappa_damage_alpha=0.0`, `spall.sample=top_cell` run); `lateral_flux_lock` name clause.
+
+**Stage 3 — build `p2_27c`: C1b, deregister `D`, `kappa_eff`, `k_eff`.** Delete `M:570–572`, the three fabs, the k_eff block `M:7549–7584`, `RefreshKappaEff` and its two calls (and `F:1141`'s tail call, `R:2001`), the D = 0 writes and binds (`R:186, 208, 715, 1621, 1711`, `F:417, 971, 999, 1031`), the D ghost fill `M:1963`, `ic_damage`. Nothing else. `heterogeneous_kappa` → `retired_units/`; `amr_microstructure_regrid` drops `k_eff` (:205–206, :212). Whole-tree and face re-pin with the COMPONENT AUDIT (Goal 14).
+
+**Stage 4 — build `p2_27d`: the inert grimsel scalars (declared movers: t = 0 plotfiles of grimsel legs only).**
+11. `weibull.V0`: NO code or deck change. Record the contradiction between `M:8861–8864` and `check_shared.py` (iv) in `MODEL_CARD.md` (§6 new row "Weibull size correction: OFF on every production deck by rule (iv); the member comment says the opposite; decide on the mesh-check runs", §11 item) and in `WHICH_TESTS.md` (the `meiercfg/input_weibull` 8e-9-at-1-mm inconsistency, a legacy record); rewrite the member comment to state what the code does under rule (iv) (a comment, bit-neutral).
+12. `microstructure.phase<i>.{kappa, beta, E, mu, rho, Cp}` optional (`query_default`) — and REFUSED when `law = grimsel` and present ("inert under grimsel; remove it", naming P2-27); at init the four plotted fields `kappa_phase, beta_phase, E_phase, mu_phase` of a grimsel phase are filled from the law at the phase's `T_ref` (what `UpdatePropertyFields` writes one step later). Delete the six lines from `rock_grimsel.inputs`, `unit/face_list/input`, `unit/face_removal/input`. `MODEL_CARD.md` §12 item 7: the six scalars and `A_D` struck; `hc.heat.alpha`, `alpha`, `el.model1.*`, `hc.bc.temp.*` listed with WHY each stays (shared parse / D's path / shared parse / Dirichlet default).
+
+**Stage 5 — build `p2_27`: G, the pad clearance on the face list.**
+13. In `RecedeAlongLines`, after `FrInitFraction` (`F:356`) and before `FrCells()` (`F:365`): if `surface_patch.feet && foot_body_clearance && foot_clear_k.size() == ncols`, for every column with `k_top_global[idx] > k_c = foot_clear_k[idx]`: every solid cell `k > k_c` gets `fr_f = 0, removed = 1, regime = 4, regime_field = 4`, `RoP = n·dz/dt`; `foot_mech_E += H·V` per flipped cell (H untouched, as the vapour rule), `foot_mech_vol += n_flip·V`, `foot_mech_cols`; the column's `phi` shifted by `n·dz` with the vapour rule's tie handling; one regime-4 CSV row per cleared column in the face header (`",4,"`, `k_top` = top before the cut, `h_applied = n·dz`, `n_voided = n`, the vapour row's placeholders elsewhere); then `foot_clear_k.clear()`. MPI: per-rank cell sums reduced once (`ReduceRealSum`), per-column flips reduced (`ReduceIntSum`), exactly as `R:220–231`. The column block `R:160–233` gains the guard `&& !surface_patch.face_list` (identity on every column-path deck). Lift `M:1114–1115` only; `M:1053` stays. No `D` write (gone in stage 3).
+14. Audits and tools: `S/audit_components.py` — for two tree (or face) lists, every differing plotfile is read component by component; PASS iff the Header's component names differ by exactly the declared removed set, and every remaining component is byte-identical, and every non-plotfile path is identical; `S/audit_fields.py` (from `field_diff.py`) for stage 4: the differing fields per plotfile with max |d| and the t index.
+15. Decks and legs for G: `unit/face_feet/input` = `robin_feet/input_feet` re-keyed (`surface_patch.face_list = 1`, `robin_form = surface`, `spall.surface_T = reconstructed`, `spall.removal_energy = flake`, `surface_patch.foot_body_clearance = 1`, `energy_ledger.enabled = 1`, 10 s); `validation/meier/sp_meier_pilot/input_feet_face` = `input_feet` re-keyed the same way (its `pinned_idle_cycles` line dropped), `#@ check=false`, header naming it the face-list Meier feet regression (constants as `input_feet`'s: the rebuild on the production rock is MODEL_CARD §12 item 5, not this packet). `input_feet`, `input_feet_d2c`, `test_feet*` untouched (records). Face gate: two new legs `FEET_S` (`unit/face_feet/input`, 10 s, −np 4) and `FEET_0` (same + `surface_patch.foot_body_clearance=0`).
+16. `unit/face_feet/test`: legs P (as the deck), N (`foot_body_clearance=0`), P3 (P on 3 ranks). Checks: (a) P: regime-4 rows > 0 and ≤ (annulus columns × steps); (b) N: regime-4 rows = 0 and `foot_mech_*` columns absent; (c) every regime-4 row's column lies in the annulus and its cut lands on the pad rule recomputed from the previous plotfile's column tops (jet_d2c (h)'s rule); no ratchet (a column's `k_top` after the cut ≥ the pad index); (d) `foot_mech_vol == Σ n_voided · dx·dy·dz` to 1e-12; (e) `|ledger_err| ≤ 1e-10` and `|ledger_err_solid| ≤ 1e-9` at every thermo row (the face_vapor bar); (f) at the last plotfile the set of `regime_field == 4` cells has `fr_f == 0`, `removed == 1`, and `H` equal to the previous plotfile's `H` in every such cell (frozen); (g) P3 == P on events CSV, thermo (timers excluded) and every `Cell_D`. Plus a 20 s prefix of `input_feet_face` on the final binary: rc 0, regime-4 rows > 0, (e) holds — recorded, not scored.
+17. Records: `WHICH_TESTS.md` (stage 1 routing; retired tests; the G legs; by-design changes of stage 4 with numbers), `REFERENCE.md` (tree `p2_26` → `p2_27`, face `face_p2_24` → `face_p2_27`, with the stage-by-stage audit summary; old lists kept), `MODEL_CARD.md` (§5 rows: Meier feet runs on the face list via `input_feet_face`, Hu onset/end-to-end retired; §6 rows for V0 and the grimsel scalars; §12 items 1 (feet ✓), 7), the daily log. Study `tests/MMWSpalling/studies/p2_27_cleanup/` (`S/`): `z0.py`/`Z0.txt`, `chain.sh` (stops at the first failed gate; stage labels), `bin_pre/`, `bin_<n>/`, `src_pre_<n>/`, `BINARY_<n>.txt`, `GATE_tree_<n>.txt`, `GATE_face_<n>.txt`, `AUDIT_<n>.txt`, `K<n>_*.log`, `AB_*.txt`, `RESULTS.txt`. Nothing committed.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | numeric compare: `"0"` vs `0.0` tolerated, `"0"` vs `0.004` refused; string rows unchanged | `M:177–194` | the abort | `pp.contains` | K legs (Goal 6); face IDENTICAL with DROP reduced |
+| L2 | the moved aborts fire on the same inputs: every moved condition reads only `value.*` members that are already parsed when `CheckInterlocks` runs (it runs LAST) | `M:693–1203`, `:5871–5920`, `:6105`, `:3707` | — | — | `unit/interlocks` legs: one per moved class, abort message identical to the pre-image's text; z0 diffs the condition expressions old vs new |
+| L3 | dt check never fires on a live deck | `Integrator.cpp:30`, `G:134–137`, `geom[0]` | abort | `microstructure_enabled` | z0 computes `dt_lim` offline for every live and gate deck (dx, law or scalars, T_ref, T_amb) and lists `timestep/dt_lim`; expected max 0.82 (oglesby) — any value > 1 is a STOP (planner decision; fixing a deck's dt moves its output) |
+| L4 | schedule file parses to the SAME doubles as the arrays; `t_end` monotone on all 12 live schedule decks | `B:146–162` | `power_at` | — | z0 text-compares the pairs and checks monotonicity; BEAM_S IDENTICAL (face_beam includes oglesby) |
+| L5 | C1a: every deleted computation is inert on every gate deck: `damage_enabled` false (no gate deck sets it), `a_D = 0` (`exp(0) = 1` exact), `D ≡ 0` (no gate deck sets `damage.ic`) ⇒ `h_gb0·(1 − 0)` exact, `UpdateModel` factor path unreached, `R:40–58` computed-and-discarded | the inventory | — | — | tree `p2_27b` vs `p2_27a`: 0 changed, spall_event's 8 only-in-ref; face IDENTICAL |
+| L6 | C1a: the `none` default keeps the 48 default decks' registrations: `Sp_field`/`regime_field`/`flaw_a`… guards still read `== SpWeibull` | `M:623–634` | plotfile headers | `spallation_model` | `robin_face/output/form_*` Header ncomp 23 before and after (z0 reads the pre-image headers; the gate reads the new) |
+| L7 | C1b: deregistering three components shifts every later component; the data of every remaining component is unchanged | `M:570–572` | plotfile layout | — | `audit_components.py`: removed set == {D, kappa_eff, k_eff} on every Cell_D, remaining bytes identical, thermo/CSV identical |
+| L8 | stage 4 touches no tree-gate deck: `law = grimsel` appears only in `rock_grimsel.inputs`, `unit/face_list/input`, `unit/face_removal/input` (face gate), never in a tree-gate deck | the three files | — | `grimsel_law` | tree `p2_27d` vs `p2_27c`: 0 changed |
+| L9 | stage 4: the four grimsel fields differ from the typed scalars ONLY in the t = 0 plotfile | `M:7453–7456` vs `M:4549–4600` | plotfile | `grimsel_law` | face `p2_27d` vs `p2_27c`: differing paths = t = 0 `Cell_D` of grimsel legs; `audit_fields.py` shows only `kappa_phase, beta_phase, E_phase, mu_phase`; every later plotfile identical |
+| L10 | G: the column block never runs under the face list after the guard; the face pre-pass runs iff feet && clearance && `foot_clear_k` armed; `k_top_global` is `ColumnTopSolid` (removed-based) in BOTH paths | `R:160`, `F:356–365`, `R:242` | `fr_f`, `removed`, ledger | the three keys | tree `p2_27` vs `p2_27d`: 0 changed (robin_feet is column-path); FEET_S regime-4 rows > 0, FEET_0 = 0 |
+| L11 | G: energy — a cleared cell's H stays and is booked once to `foot_mech_E`, which `M:4353` already subtracts | `F` pre-pass, `M:4353` | `ledger_err`, `ledger_err_solid` | — | face_feet (e), (f) |
+| L12 | units: `weibull.V0` [m³], `dt_lim` [s], `α` [m²/s], `h_applied` [m], `foot_mech_E` [J], `foot_mech_vol` [m³], `h_gb0` [W/m²K], `kappa` [W/mK] | — | — | — | z0 lists them |
+| L13 | deck edits: every deleted line is DEFAULT (no behaviour) except the LIVE ones named: the six grimsel scalars (t = 0 fields only), the retired decks | a2_apply DEFAULT/LIVE | — | — | z0's edit list marks each; m2 runs the out-of-gate tests |
+
+### Chain (exact tokens; `PY=/Users/tzetze20/Desktop/code/.venv/bin/python`, `W=tests/MMWSpalling/studies/tree_sweep_0922/witness`, `TC=tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py`, `S=tests/MMWSpalling/studies/p2_27_cleanup`; serial, under caffeinate, **lid open and charger in**: the tree sweep took 244–255 s on P2-16…P2-23 and the face gate ≈ 3 min — P2-26's 4–5 h stages were clamshell sleep on battery (`pmset -g log`), not slow code. `chain.sh` records `pmset -g log | grep -iE 'Sleep|Wake'` for its own window after every stage and prints any sleep event beside the stage's wall time, so a slow run is never again read as slow code. Whole chain ≈ 1 h of compute)
+
+| step | what | expected |
+|---|---|---|
+| z0 | offline (`S/z0.py > S/Z0.txt`): every Sources line re-resolved; the deck-edit list with DEFAULT/LIVE; the dt table PER LEVEL (L3); the schedule proof (L4); `form_*` headers (L6); the mover lists for stages 3, 4; `bin_pre/`, `src_pre_1/` | no STOP condition (L3); movers as declared |
+| s1 | build; `S/bin_1/`, `BINARY_1.txt` | compiles |
+| g1 | `guarded_post_all_par.sh p2_27a`; `TC p2_27a p2_26 d2aa d2t`; `face_gate.py run p2_27a`; `cmp p2_24 p2_27a` | **0 changed, 0 only-in-ref, only-in-new = `unit/jet_d2c/output/**` (count declared in z0)**; IDENTICAL |
+| k1 | `unit/interlocks`, `unit/beam_schedule` (or beam_tau), `unit/surface_T_recon` (now PASS), `retired_keys` (K: coherence `0.0` runs), `lateral_flux_lock`, `buckle_lock`, `face_removal --check` | PASS |
+| s2 | `src_pre_2/`; build C1a; test moves; deck edits (A_D lines); `hash.sh` drops spall_event | compiles |
+| g2 | sweep `p2_27b`; `TC p2_27b p2_27a`; face `cmp p2_24 p2_27b` | **0 changed, 8 only-in-ref (spall_event), 0 only-in-new**; IDENTICAL |
+| k2 | `retired_keys` (R9 + K), `lateral_flux_lock`, `buckle_lock`, `amr_microstructure_regrid`, `face_heat`, `removal_increment`, `scalar_flaw`; the Hu LEFM onset deck runs to its onset (m4) | PASS (amr_microstructure_regrid was rc 1 before: record its state before/after) |
+| s3 | `src_pre_3/`; build C1b | compiles |
+| g3 | sweep `p2_27c`; `TC p2_27c p2_27b`; `audit_components.py tree p2_27b p2_27c`; face run `p2_27c`; `cmp p2_24 p2_27c`; `audit_components.py face p2_24 p2_27c` | every `Cell_D` changed, nothing else; audits PASS (removed set exactly {D, kappa_eff, k_eff}) |
+| k3 | `retired_keys`, `lateral_flux_lock`, `buckle_lock`, `amr_microstructure_regrid`, `rankcheck p2_27c` | PASS |
+| s4 | `src_pre_4/`; build stage 4; deck edits (grimsel ×6 in 3 files) | compiles |
+| g4 | sweep `p2_27d`; `TC p2_27d p2_27c`; face run `p2_27d`; `cmp p2_27c p2_27d`; `audit_fields.py` | tree 0 changed (L8); face differing = t = 0 plotfiles of grimsel legs, four fields (L9) |
+| k4 | `retired_keys` (K: `microstructure.phase0.kappa=3.0` on CAL aborts; the same key on a constant-law deck runs), `check_shared.py` on the three edited files, m2 (below) | PASS |
+| s5 | `src_pre_5/`; build G; new decks, test, face legs | compiles |
+| g5 | sweep `p2_27`; `TC p2_27 p2_27d d2aa d2t`; face run `p2_27`; `cmp p2_27d p2_27` | **0 changed**; IDENTICAL on the 14 old legs + `FEET_S`, `FEET_0` only-in-new |
+| k5 | `unit/face_feet/test`, `pad_clear_ledger`, `jet_d2c`, `robin_feet`, `face_heat` (R_feet still aborts), `rankcheck p2_27`; the 20 s `input_feet_face` prefix | PASS; prefix rc 0 with regime-4 rows |
+| r | `REFERENCE.md`, `WHICH_TESTS.md`, `MODEL_CARD.md`, `RESULTS.txt` (line counts per stage; keys parsed before/after) | — |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline: Sources re-resolved; dt table per level; schedule proof; `form_*` headers; mover lists; edit list | every item found or struck with a reason; **no live or gate deck has `dt(ℓ) > dt_lim(ℓ)` on any level**; the 159 pairs identical and monotone; movers as declared | **gate** | the code drifted from the inventory (re-plan the item); a deck violates the explicit limit TODAY (planner decision before any build) |
+| a1 | 2 | tree `p2_27a` vs `p2_26` | 0 changed, 0 only-in-ref, only-in-new = jet_d2c's declared paths | **gate** | an "interlock move" changed behaviour, or the numeric compare let a live value through |
+| a2 | 2 | face `cmp p2_24 p2_27a` | IDENTICAL | **gate** | the schedule file parsed differently, or DROP's removal exposed a record token |
+| a3 | 2 | `unit/interlocks` (≥ 12 abort legs + base + dt pair), schedule test, `surface_T_recon`, `retired_keys`, both locks, `face_removal --check` | PASS (face_removal: byte-identical to P2-19's log) | **gate** | a moved abort fires on a valid deck or stopped firing on an invalid one |
+| b1 | 3 | tree `p2_27b` vs `p2_27a` | 0 changed; 8 only-in-ref; 0 only-in-new | **gate** | a lineage computation was live on a gate deck (a_D or D non-zero somewhere), or the `none` default changed a registration |
+| b2 | 3 | face `cmp p2_24 p2_27b` | IDENTICAL | **gate** | same, on the production path |
+| b3 | 3 | `retired_keys` R9 + K (C1 keys), locks, `amr_microstructure_regrid` | PASS; regrid test's before/after state recorded | **gate** | a lineage symbol survives, or a retired key is silently ignored |
+| c1 | 4 | tree `p2_27c` vs `p2_27b` + component audit | every `Cell_D` differs ONLY by the three removed components; thermo and CSVs identical | **gate** | the registration order was load-bearing somewhere else (Oct census B1), or a reader of D/kappa_eff survived |
+| c2 | 4 | face `cmp p2_24 p2_27c` + component audit; `rankcheck p2_27c` | same; rank-stable | **gate** | same, production path |
+| d1 | 5 | tree `p2_27d` vs `p2_27c` | 0 changed | **gate** | a tree-gate deck reads a grimsel scalar after all |
+| d2 | 5 | face `cmp p2_27c p2_27d` + field audit | differing = t = 0 plotfiles of grimsel legs; fields ⊆ {kappa_phase, beta_phase, E_phase, mu_phase}; every later plotfile identical | **gate** | a scalar was read after init (the "inert" verdict is wrong) |
+| d3 | 5 | `retired_keys` K (grimsel-scalar probes, two-sided), `check_shared.py` on the edited files | PASS | **gate** | a redundant number is accepted silently |
+| e1 | 6 | tree `p2_27` vs `p2_27d` | 0 changed | **gate** | the column block's guard is not an identity |
+| e2 | 6 | face `cmp p2_27d p2_27` | IDENTICAL on the 14 legs; `FEET_S`, `FEET_0` only-in-new | **gate** | the pre-pass touched a feet-off path |
+| e3 | 6 | `unit/face_feet/test` (a)–(g) | PASS; (a) two-sided; (e) ≤ 1e-10 / 1e-9 | **gate** | a sink unbooked (e), a cell cleared off the pad rule (c), decomposition (g) |
+| e4 | 6 | `pad_clear_ledger`, `jet_d2c`, `robin_feet`, `face_heat` | PASS (unchanged: they drive the column path) | **gate** | the guard broke the column path |
+| m1 | 6 | line counts per stage; keys parsed before/after | report (expected ≈ −1,100 lines by stage 3, +≈ 150 at stage 5; ≈ 40 keys retired) | report | — |
+| m2 | 5–6 | out-of-gate decks whose t = 0 fields change (stage 4: every deck including `rock_grimsel.inputs`: `face_melt`, `face_vapor`, `hoeser/input_lab`) — each test that exists run on the new binary | PASS unchanged (the fields are rewritten at step 1) | **gate** (records) | a test goes red silently next time |
+| m4 | 3 | `hu_spall_onset/input_granite2_lefm`: first-firing time t* and `T_B1(t*)` vs Hu's 37.0 s / 773.15 K | report; PRE-REGISTERED: `T_B1(t*)` in the Grimsel band **826–885 K** ⇒ **t\* = 50–66 s, LATER than Hu by 13–29 s** (Grimsel's onset temperature sits 50–110 K above Hu's granite LRST; the onset is a temperature, flat with the ramp rate); a t* < 37 s or > 80 s is a finding about the rock mismatch or the prescribed-T path, not a bug | report | the model's real criterion scored on Hu for the first time; a deviation names which side (rock or mechanism) in the notes |
+| m3 | 6 | the 20 s `input_feet_face` prefix | rc 0; regime-4 rows > 0; (e) holds | report | the Meier feet deck cannot run on the face list yet (name the refusal) |
+| e0 | 7 | verdict | — | **verdict** | a1–e4 hold ⇒ inputs simplified without a byte moved, the lineage gone with an audited re-pin, the grimsel scalars retired with their movers named, the feet on the production path |
+
+### Pre-registered predictions
+- **P1.** Stage 1 is 0/2,639 and IDENTICAL: the compare change, the interlock move, the dt check, the schedule form and the hygiene all evaluate to the same decisions and the same doubles; jet_d2c adds ≈ 200 declared paths.
+- **P2.** Stage 2 moves nothing: no gate deck has damage on, a_D ≠ 0 or D ≠ 0; the `none` default keeps every header (form_* stays at 23 components).
+- **P3.** Stage 3 moves every `Cell_D` in both gates and nothing else; the audit shows exactly three names removed and identical bytes elsewhere.
+- **P4.** Stage 4 moves nothing on the tree; the face gate moves only in the t = 0 plotfile of the grimsel legs, in four fields. If `rho_phase`/`Cp_phase` move, the "already law-filled" reading is wrong (d2 is the finding). The Hu LEFM onset (m4): Grimsel under Hu's ramp fires at 826–885 K ⇒ 50–66 s, later than Hu's 37 s.
+- **P5.** Stage 5 is 0 changed on the tree and IDENTICAL on the 14 face legs; FEET_S clears pad-height rock on the first steps a column stands proud (jet_d2c's CLD fires on 620 of ~1,000 steps), FEET_0 writes no regime-4 row, and both ledgers close to the face_vapor bar.
+
+### Refuting evidence on disk
+- `witness/p2_26.md5`, `face_p2_24.md5` (+ `face_p2_26.md5` IDENTICAL): the baselines.
+- `unit/robin_face/output/form_*/00000cell/Header` (ncomp 23, no `Sp_field`) vs `ledger` (36): the `none`-default reading of L6.
+- `studies/p2_26_closed_switches/MEIER_AB.txt`, `AB_FIELDS.txt`: the before/after pattern and the Meier numbers now on record.
+- `unit/jet_d2c/output/CLD*` and `studies/d2c_steady/output/R1_scored`: what the column-path clearance did (pad rule, `foot_mech_vol`), for (c) and (d) of face_feet.
+- `studies/p2_21_loss_table/doe/FIG34_FULL.txt`: the schedule's source.
+
+### What would make this inert, and the witness for each
+- A moved abort that no longer fires: `unit/interlocks` (a3) is two-sided per class.
+- The dt check scoped so narrowly it never runs: its `Util::Message` must appear in every microstructure run's log (k1 greps the gate logs for it).
+- The schedule file silently ignored: `BEAM_S` IDENTICAL AND the `beam_P_inc` thermo column non-zero on the oglesby prefix.
+- A retired key tolerated with no message: the K legs are two-sided (default runs, live aborts); the `"*"` rows accept — none added here.
+- The face pre-pass never armed: `foot_clear_k` is armed by `FeetDescent` only when a column stands proud — FEET_S's deck is `robin_feet/input_feet`'s geometry, where CLD armed on 620 steps; (a)'s lower bound catches a dead pre-pass.
+- The guard on `R:160` written as `face_list` instead of `!face_list`: e4 (column path tests) and e1.
+
+### Guardrails
+- Nothing on the production path changes except by the declared causes: no rock constant, no span, no c_f, no R, no flaw a0, no loss table; **`weibull.V0` and `vol_factor` untouched** (the size correction is a physics decision for the mesh-check runs); `model_form_flame.inputs` untouched; the beam untouched beyond the schedule's file form.
+- No deletion from H (`Removal.H`'s column path beyond the one guard, `robin_form` values, pinned) or D (Zhang, the const-α path, `alpha`, `hc.heat.alpha`); `h_gb_conductance`/`conductivity.h_gb0` stays (MICRO); `regime`, `regime_field`, `Sp_field` registrations stay.
+- `SurfacePatch::Parse`'s checks stay in place; registrations never move (Oct census B1); only abort statements move into `CheckInterlocks`; the dt check is the one NEW abort and lives in `TimeStepBegin`, per level.
+- Stage 3 is the ONLY stage that touches registrations, and it touches nothing else.
+- `input_feet`, `input_feet_d2c`, `test_feet*`, the d2b/d2c study outputs, every `run.py`, `legs/`, `src_pre/`, `inputs_pre/` are records: not edited.
+- Each stage's `src_pre_<n>/` holds EVERY touched file; `bin_pre/` holds the P2-26 binary (`e0551036`) before build 1.
+- Old lists stay on disk; new lists are declared beside them. Nothing committed.
+
+### Commands
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_27_cleanup
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness; TC=tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py; U=tests/MMWSpalling/unit
+mkdir -p $S/bin_pre && cp bin/mmwspalling-3d-g++ $S/bin_pre/ && shasum -a 256 $S/bin_pre/mmwspalling-3d-g++ > $S/BINARY_pre.txt
+$PY $S/z0.py > $S/Z0.txt                                                     # z0, STOP on a dt violation
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8   # each stage
+bash $W/guarded_post_all_par.sh p2_27a; $PY $TC p2_27a p2_26 d2aa d2t          # then p2_27b vs p2_27a, p2_27c vs p2_27b, ...
+$PY $W/face_gate.py run p2_27a; $PY $W/face_gate.py cmp p2_24 p2_27a           # stage 3+: audit_components.py, stage 4: audit_fields.py
+$PY $S/audit_components.py tree p2_27b p2_27c; $PY $S/audit_components.py face p2_24 p2_27c
+for t in interlocks retired_keys lateral_flux_lock buckle_lock surface_T_recon; do $PY $U/$t/test; done; $PY $U/face_removal/test --check
+$PY $U/face_feet/test; $PY $U/pad_clear_ledger/test; $PY $U/jet_d2c/test; $PY $W/face_gate.py rankcheck p2_27
+wc -l src/Integrator/MMWSpalling.H src/Integrator/MMWSpalling/*.H src/Numeric/MMWBeam.H   # m1 (13,089 before)
+```
+
+### Claude completion notes
+
+Implemented 2026-11-09 (`/implement`), study `tests/MMWSpalling/studies/p2_27_cleanup/` (`S/`). Nothing committed.
+Binaries (`S/BINARY_<n>.txt`, copies in `S/bin_<n>/`; pre `e0551036`): s1 `ccfa2baa`, s2 `7dc8bde5`, s3 `eed9343c`,
+s4 `5b575c85` (rev 2; rev 1 `be7bd689` kept as `bin_4_rev1/`), s5 `27433870` (ships). Chain log `S/CHAIN.log` (sleep/wake
+events per stage: 0 in every window, `S/SLEEP_<n>.txt`).
+
+**Files changed.** src: `MMWSpalling.H`, `MMWSpalling/{Removal,FaceRemoval,Shared}.H`, `Numeric/MMWBeam.H`; deleted
+`Numeric/DruckerPrager.H`, `Numeric/CohesiveZone.H`. Tests: new `unit/interlocks`, `unit/beam_schedule`,
+`unit/face_feet` (+ `input`), `validation/hu/hu_spall_onset/{input_granite2_lefm, test_lefm}`,
+`validation/meier/sp_meier_pilot/input_feet_face`, `validation/oglesby/fig34_schedule.txt`; edited `retired_keys`,
+`lateral_flux_lock`, `surface_T_recon`, `amr_microstructure_regrid` (test + deck); moved `dp_yield`, `gb_cohesive`,
+`spall_event`, `regime_low_high_power`, `heterogeneous_kappa` → `retired_units/`; Hu damage-law validation →
+`retired_validation/hu_damage_law/` (README). Decks: `validation/oglesby/input` (schedule file), 92 A_D /
+damage lines in 59 files (`S/DECK_EDITS_2.txt`), the six grimsel scalars in `rock_grimsel.inputs`,
+`unit/face_list/input`, `unit/face_removal/input`. Witness: `face_gate.py` (DROP reduced; FEET_S/FEET_0), `hash.sh`
+(+jet_d2c, −spall_event), `post_all_par.sh`, `wit.sh`, `WHICH_TESTS.md`, `REFERENCE.md`; `docs/project/MODEL_CARD.md`.
+
+| # | test | measured | result | output |
+|---|---|---|---|---|
+| z0 | offline | every Sources anchor resolved (drift ≤ 13 lines); schedule: 159 pairs text-identical, monotone, first 158 = FIG34_FULL; `form_*` ncomp 23, no Sp_field; movers declared (jet_d2c 270, spall_event 8, t = 0 face 70); **dt: 18 decks over dx²/(6α) (7 live unit tests with uniform T, 11 retiring), max 24,576× -- the packet's STOP; the user chose (option 1) ABORT on the face list, WARN elsewhere; face-list max 0.823 (oglesby)** | PASS after the decision | `Z0.txt` |
+| a1 | tree p2_27a vs p2_26 | 0 of 2,909 changed, 0 only-in-ref, 270 only-in-new == MOVERS_1 (jet_d2c); controls d2aa 72, d2t 863 | PASS | `GATE_a1.txt` |
+| a2 | face p2_24 vs p2_27a | IDENTICAL (M0S replays `flake_coherence_length=0.0` as written); dt message in 14 / 14 leg logs | PASS | `GATE_face_1.txt` |
+| a3 | stage-1 tests | interlocks: 19 one-rule legs, messages IDENTICAL to the P2-26 binary's (`--pre`), D1-D5 (abort / warn / per level); beam_schedule (file == arrays, byte-for-byte but timers); surface_T_recon PASS (was RED since 10-08); retired_keys (K14 0.0 runs, K16 "0 0" aborts); both locks; face_removal --check byte-identical to P2-19's log (FAIL (4), the standing state) | PASS | `K1_*.log` |
+| b1 | tree p2_27b vs p2_27a | 0 changed, 8 only-in-ref (spall_event), 0 only-in-new | PASS | `GATE_b1.txt` |
+| b2 | face p2_24 vs p2_27b | IDENTICAL | PASS | `GATE_face_2.txt` |
+| b3 | stage-2 tests | retired_keys R9 + K17-K26, `--pre src_pre_2 --red R9`; both locks; interlocks `--pre` (I20 new); face_heat, removal_increment, scalar_flaw; amr_microstructure_regrid **rc 1 before and after** (is_grain_boundary L0 + k_eff; its D / kappa_eff checks went with the fields) | PASS (regrid recorded) | `K2_*.log` |
+| c1 | tree p2_27c vs p2_27b + component audit | 1,314 of 2,901 changed = every Cell_D of the 708 CELL plotfiles, each lost exactly {D, kappa_eff, k_eff}, every kept component bit-identical, Header and Cell_H min/max of kept identical; 708 node plotfiles, CSVs, thermo identical | PASS | `AUDIT_3_tree.txt` |
+| c2 | face + audit + rankcheck | 84 cell plotfiles (336 Cell_D, 168 Header/Cell_H) removed-ok; node 0; thermo timers only; rankcheck rel 1e-15 | PASS | `AUDIT_3_face.txt`, `RANKCHECK_3.txt` |
+| d1 | tree p2_27d vs p2_27c | 0 changed (rev 1 and rev 2) | PASS | `GATE_d1.txt`, `rev1_GATE_d1.txt` |
+| d2 | face p2_27c → p2_27d + field audit | exactly the 70 declared paths (t = 0 Cell_D + Cell_H of 14 legs); fields ⊆ {kappa, beta, E, mu}_phase (1.5 → 3.43053 W/mK, 8e-6 → 8.4e-6, 30 → 53.3 GPa, 11.54 → 20.5 GPa at 293.15 K); rho/Cp unmoved; every later plotfile identical | PASS | `AUDIT_4_fields.txt` |
+| d3 | stage-4 tests | retired_keys K27 (kappa on CAL aborts), K28 (CAL runs), K29 (kappa on a constant deck runs); both locks (rev 2); check_shared CAL_S, HOS_S PASS; BEAM_S FAIL (incl + (ii) vapor.enabled) -- identical on P2-26's run (pre-existing) | PASS | `K4_*.log` |
+| m2 | out-of-gate decks, stage-4 binary | face_list, face_melt, face_vapor, face_beam PASS | PASS | `M2_*.log` |
+| m4 | Hu LEFM onset (record) | **t\* 107.88 s, T_B1 1041.7 K** vs Hu 37.0 s / 773.15 K; pre-registered 50-66 s / 826-885 K: OUTSIDE (finding, takeaway 9) | report | `M4_hu_lefm.log` |
+| e1 | tree p2_27 vs p2_27d | 0 of 2,901 changed (the `!face_list` guard is an identity on every column-path deck) | PASS | `GATE_e1.txt` |
+| e2 | face p2_27d → p2_27 | the 14 legs AND FEET_0 (run at p2_27d on the stage-4 binary, clearance off) unchanged (15 thermo timers only); 156 new files = FEET_S (14 regime-4 rows; FEET_0 0); rankcheck rel 1e-15; dt message 16 / 16 | PASS | `GATE_face_5.txt`, `RANKCHECK_5.txt` |
+| e3 | face_feet (a)-(g) | (a) 14 regime-4 rows (≤ 162 × 5000), 9,125 spall rows; (b) N: 0, no foot_mech_* column; (c) annulus, 1 ≤ n_voided ≤ n; at t1 = 6.410 s the cut set == the proud set (10 / 10), k_top == rebuilt, k_top − n == pad k, pad k [38, 39, 38] unchanged (no ratchet), PT's 5,837 earlier rows == P's; (d) foot_mech_vol 1.12e-07 == Σ n_voided dx³ (printed), foot_mech_cols per step 0 mismatches; (e) **restated**: \|ledger_err_solid\| ≤ 3.6e-15 (P), 2.7e-15 (N); (e2) foot_mech_E +31.0131 J at the cut step == Σ H V of the 10 cut cells; (f) 14 cut cells frozen; (g) P3 == P (events, plotfiles bit for bit; thermo 5e-16) | PASS | `K5_face_feet.log` |
+| e4 | column-path tests | pad_clear_ledger PASS; jet_d2c (sweep) 26 ok, rc 0; robin_feet (sweep) 19 ok, rc 0; face_heat PASS (R_feet still aborts: path heat refuses feet); retired_keys, both locks, interlocks `--pre` (18 / 18 messages identical, after giving the old binary the scalars stage 4 deleted from its fixture) | PASS | `K5_*.log` |
+| m3 | 20 s input_feet_face | rc 0, wall 212 s; 60 regime-4 rows (feet clearance fires on the Meier deck), 13,855 spall rows; foot_mech_E 289.0 J, foot_mech_vol 4.8e-07 m³ at 19.9 s; max \|ledger_err_solid\| 3.9e-15 (the total `ledger_err` −0.169: no flake credit, takeaway 7); dt check level 0: 0.004 s vs dt_lim 0.966 s. Old constants, checked to run only -- not a Meier comparison | report | `M3_feet_face.log`, `m3_feet_face/` |
+| m1 | lines / keys | `MMWSpalling.H + MMWSpalling/*.H + MMWBeam.H`: 13,089 → 13,281 (s1, +192) → 12,545 (s2, −736) → 12,452 (s3, −93) → 12,495 (s4, +43) → 12,651 (s5, +156) = **−438**, plus the two deleted headers (−146); the packet expected ≈ −1,100 by stage 3 (measured −637 + 146). Keys: 35 retired (15 damage.*, 8 cohesive.*, 9 spall.* + kappa_damage_alpha + damage.ic.* + A_D) + the damage_law value + 6 scalars refused under the law | report | `LINES_<n>.txt` |
+| e0 | verdict | every gate row a1–e4 holds: the inputs simplified without a byte moved (a, b), the lineage out with an audited re-pin (c), the grimsel scalars refused with their movers named (d), the feet on the production path (e) | **PASS** | `RESULTS.txt` |
+
+**Declared deviations** (each a planner bar restated or a gap closed, none a tuned number):
+1. z0's dt STOP → the user's option 1 (abort on the face list, warn elsewhere).
+2. Stage 2: `spall.enabled` / `vapor.enabled` without sp_weibull now ABORT (else silently inert; 0 live decks); the
+   column path's vapour law is the local one for every sp_weibull deck (the bulk form was reachable only by a
+   vapour-only sp_weibull deck: 0 live).
+3. A_D lines: the packet said non-zero only on retired decks; 33 non-zero inert lines (10 `hu_spall_onset_mmwbeam_lefm`
+   decks, `unit/voronoi`) were deleted as DEFAULT (damage off); all 88 DEFAULT lines on live decks went (a2 rule), not
+   only the gate decks'.
+4. Stage 3's movers are the CELL plotfiles only (node plotfiles carry no D/kappa_eff/k_eff), not "every Cell_D".
+5. Stage 4: E / beta / mu are refused only when `spall.stress_law = grimsel` too (live under the scalar stress law);
+   `ElasticConstants().ok` no longer needs the scalar E / mu under the rock law; the column path's logged `q_ratio`
+   datum takes the law's lambda(T_ref); the t = 0 fill is `UpdatePropertyFields(lev, step=false)` (rev 2, the P2-2b
+   one-reader lock).
+6. Stage 5: face_feet (e) restated (the total `ledger_err` omits the flake credit by design); (g) thermo to round-off.
+7. The Hu deck sets `spall.buckle_span = 0.0` with the `# check_shared: allow` directive (the rock file's span is
+   face-list only; the calibration deck's precedent).
+8. `unit/jet_d2c/output`'s five retired legs (A17-A19, K15, KT) moved to `S/jet_d2c_retired_legs/` before the oracle
+   took the directory (else hashed as constants); 270 paths, not ≈ 200.
+9. The `weibull.V0` member comment was rewritten in stage 5's build (comment only), not stage 4's.
+
+### Implementation takeaways
+
+1. **The dt check's T_cold drops an unset `losses.T_amb`** (default 0 K): Grimsel's c_p has a pole at T ≈ 2.15 K, so
+   evaluating α there makes the bound vacuous. T_cold = min(phase T_ref, T_amb when > 0). Over the limit the face list
+   aborts and every other deck warns (the user's option 1): the seven live unit decks that warn (alpha_beta_transition,
+   grain_topology, sp_lefm ×3, thermal_stress, voronoi) run stand-in properties at dt = 1 s on a uniform, insulated,
+   source-free field -- unconditionally stable there; `sp_lefm/input_weibull_regrid` is genuinely 1.73× over on its fine
+   level for 8 steps (round-off growth ~1e-16 → 1e-13). The message appears once per level in every microstructure log.
+2. **`CheckInterlocks` moved 58 abort statements verbatim and in their old firing order** (`S/interlocks_move.py` →
+   `INTERLOCKS_MOVE.txt`); the three sub-parse conditions gained their early-return guards explicitly (`bit_enabled &&`,
+   `spallation_model == SpWeibull &&`). ⚠ An input breaking TWO rules can now meet a different abort first (bit.enabled
+   with spall off still reads the required `bit.feed_rate`); one broken rule fires exactly as before -- verified by
+   `unit/interlocks --pre` against the P2-26 binary. ⚠ The old binary needs on its argv every key a later stage
+   deleted from the fixture it still requires (`PRE_EXTRA`): `phase0.A_D=0.0` since stage 2, and since stage 4 the six
+   grimsel scalars at their old values (kappa 1.5, beta 8e-6, E 30e9, mu 11.538461538e9, rho 2750, Cp 790) -- the
+   stage-5 chain stopped there once (the old binary aborted on a missing key, not on the rule).
+3. **The retired-at-default numeric compare** applies only when BOTH sides are one token that parses fully as a
+   double; `"0 0"` stays a string and aborts (K16). The table's word rows are unchanged.
+4. **`spallation.model = none`** keeps every `== SpWeibull` registration guard, so the 48 default decks' headers are
+   unchanged (robin_face form_* ncomp 23). The enum value is `None` (the old `DamageLaw` slot).
+5. **Deregistration shifts every later plotfile component** but leaves node plotfiles untouched; an audit must not
+   compare Cell_H's third line (the component count) or wall-clock thermo columns (`fr_t_removal`, `fr_t_step`,
+   `fl_t_path`). `S/audit_components.py` reads FABs directly (Cell_H offsets, little-endian doubles, component-major)
+   and needs the OLD tree outputs archived first (`archive p2_27b` → 955 MB, verified against the md5 list).
+6. **The "grimsel-inert" scalars had three readers the inventory missed:** `ElasticConstants().ok` required phase-0
+   E > 0 and mu > 0 even under the rock law (an abort, not a value); `Removal.H`'s `phase_kappa_loc` fed the column
+   path's logged `q_ratio`; `phase_materials` copies rho/Cp/kappa but builds a law phase's table from the law. And
+   E / beta / mu are LIVE under `spall.stress_law = scalar` with `law = grimsel` (no live deck; refusal conditioned).
+   ⚠⚠ `lateral_flux_lock`'s P2-2b block is a real rule, not text: the law's raw pieces (`E_of`, `alpha_of`, `mu_of`,
+   `strain_of`) have ONE reader, the per-cell cache writer, and the rho/Cp scalars three permitted sites. Rev 1 filled
+   the t = 0 fields with a second reader and went RED; rev 2 calls `UpdatePropertyFields(lev, step=false)` at the end of
+   `InitializeMicrostructure` (the law at the START temperature = what step 1 writes; the per-step counters untouched).
+7. **The face list's TOTAL `ledger_err` is not a closure on a deck that spalls** -- it omits the flake credit by design
+   (`EnergyLedger`'s comment); `unit/face_feet` reads −0.40 with the clearance OFF. `ledger_err_solid` (which credits
+   `foot_mech_E`, `ledger_E_flake`, `ledger_E_vapor`) is the closing row: 3.6e-15. The face_vapor 1e-9 total bar holds
+   there only because U3 does not spall.
+8. **The face-list clearance needs no dead spot in the flame map**: with `h ∝ 1/r` the annulus recedes unevenly and
+   the 0.9-quantile pad rule cuts 10 columns at 6.41 s on `unit/face_feet` (the column path's jet_d2c CLD needed the DEAD
+   map). A cut cell stays in this step's `FrCells` (the list is last step's) and is skipped by its zero solid run; its
+   column top takes a fresh T_s at the next list build. The column path's regime-4 event rows write EIGHT reconstruction
+   placeholders under a nine-column header (`Removal.H`, pre-existing, the column path retires at H; not fixed).
+9. **Hu re-expressed: t\* 107.9 s at T_B1 1042 K** (pre-registered 50-66 s at 826-885 K; Hu 37 s / 773 K). The side
+   is the PATH, measured: at T_B1 = 825 K (t = 50 s) the patch reads Sp 0.67, outside it 0; at onset the top cell's
+   average is 790.7 K. With `prescribed_T_surface`, site A evaluates K_Ic at the boundary T (1042 K: the table's flat
+   end, ×0.6) but the STRESS from the 3.125 mm cell average (`T_recon_at` needs `rec_ok`, which prescribed T switches
+   off) -- so the deck measures the mesh's surface lag, not the rock. Flaw statistics (72 patch cells vs the
+   calibration's thousands) explain ≤ 14 % in K_I. At H the deck moves to the evaluate-only face list, whose
+   reconstruction should remove the lag; it must then be re-scored, not reproduced.
+10. **Stale-but-hashed outputs**: jet_d2c's five retired legs were still on disk (2026-11-07); moving a directory into
+   the oracle requires checking its contents against the runner's leg list first.
+11. **Process**: deleting a header needs the stale `obj/obj-3d-g++/mmwspalling.cc.d` removed (make has no rule for the
+   missing prerequisite); I deleted that one generated file. I once staged two deletions with `git rm --cached` and
+   undid it (`git reset HEAD -- <files>`; nothing staged now). `face_gate.py` was edited (FEET legs) before stage 4's
+   rev-2 face run, so that run also ran FEET_S (aborted on the then-present regime-4 refusal -- the pre-port state)
+   and FEET_0; stage 5 uses FEET_0 as an extra identity (clearance off is unchanged by the port). I used `pkill -f` once,
+   on my own wait loop, after the run had finished -- against the standing rule.
+12. **Pre-existing, recorded not fixed:** `check_shared.py` fails on `unit/face_beam` (nested include + oglesby's
+   `vapor.enabled = 1`) on P2-26's run too; `amr_microstructure_regrid` rc 1 on `is_grain_boundary` at level 0.
+
+### Review findings
+
+Reviewer, 2026-11-09. Re-derived from the five pre-image trees, the archived pre-stage-3 tree outputs
+(`tree_archive_p2_27b/`, 955 MB), the per-label face output trees (`witness/face_p2_27{a,b,c,d}/`) and the shipped
+source, with my own reductions: my own manifest differ over all six tree lists, **my own component audit over all
+792 changed plotfiles** (708 tree + 84 face, component by component, not a sample), my own field audit for stage 4,
+my own string-literal-aware extractor for every `Util::Abort` in the five source images, my own ledger/CSV/rank
+reductions on `face_feet`, my own re-run of the five **offline** face-gate `cmp`s and `check_shared.py`, and my own
+line accounting. **No simulation and no build was re-run.**
+
+| # | test | bar | implementer | **my value** | **read from** |
+|---|---|---|---|---|---|
+| z0 | items; dt table; schedule; movers | items found; **no deck over `dt_lim`**; 159 pairs monotone; movers as declared | 18 decks over, max 24,576×; face-list max 0.823 | **the gate FAILED as written and was resolved by the user's recorded decision (option 1), which is the row's own failure path. Face-list max ratio **0.8231** (oglesby) ⇒ the ABORT can never fire on the production path. 24,576 = 1/4.069e-5 exact. α(297.5 K) = **1.67466e-6** m²/s and dt_lim(1.5625 mm) = **0.242984 s** reproduce the source comment exactly, and α(293.15) > α(297.5) confirms its "cold end binds". Schedule: **159** pairs, strictly increasing, **element-wise exactly equal** to the pre-image deck's two 159-token arrays; the live deck has the file and not the arrays. ⚠ decks over the limit: **21 paths / 19 distinct deck files**, not 18 (DR-7)** | `Z0.txt`; my arithmetic over `src_pre_1`; `fig34_schedule.txt` vs `src_pre_1/.../oglesby/input` |
+| a1 | tree `p2_27a` vs `p2_26` | 0 changed; 0 only-in-ref; only-in-new = jet_d2c | 0 of 2,909; 270 only-in-new | **0 changed, 0 only-in-ref, 270 only-in-new, set-EQUAL to `MOVERS_1_jet_d2c.txt` (0 outside, 0 missing), every path under `unit/jet_d2c/`** | my manifest differ on `p2_26.md5` / `p2_27a.md5` |
+| a2 | face `cmp p2_24 p2_27a` | IDENTICAL | IDENTICAL | **IDENTICAL: 1217/1217, 0 only-in-either, 14 differing = timers only** (my own cmp) | `face_gate.py cmp` |
+| a3 | interlocks ≥12 legs + dt pair; schedule; surface_T_recon; retired_keys; both locks; face_removal | PASS (face_removal byte-identical to P2-19) | PASS | **structural and stronger: across stage 1 the multiset of abort statements is UNCHANGED except exactly one addition (the dt abort) — `Util::Abort` 177 → 178, `fr_abort` 8 → 8, `ph_abort` 4 → 4; `CheckInterlocks` holds 46 + 8 + 4 = **58**, matching the artefact. `face_removal` log md5 **4411cda6…**, byte-identical to `p2_19_flake_depth/lock_face_removal.log`** | my extractor over `src_pre_1`/`src_pre_2`; `K1_*.log` |
+| b1 | tree `p2_27b` vs `p2_27a` | 0 changed; 8 only-in-ref; 0 only-in-new | 0; 8; 0 | **0 changed, 8 only-in-ref, 0 only-in-new; all 8 under `unit/spall_event/`, set-EQUAL to `MOVERS_2_only_ref.txt`. Structural reason verified: the old default was `damage_law`, `None` reuses that enum slot, and all **17** guards read `== SpWeibull`, so a defaulted deck takes the same branch** | my manifest differ; `src_pre_2:9264` vs `src/…:8627` |
+| b2 | face `cmp p2_24 p2_27b` | IDENTICAL | IDENTICAL | **IDENTICAL: 1217/1217, 0 only-in-either, 14 timers** | my own cmp |
+| b3 | `retired_keys` R9 + K; locks; regrid | PASS; regrid state recorded | PASS (regrid rc 1 before and after) | **C1 inventory: 0 occurrences of every deleted identifier; the 11 retired key strings occur once each as code (the extras are comments, plus `damage.enabled`'s necessary family exemption `k != "damage.enabled"`); the deleted headers are gone. Regrid: the FAIL set is **identical** before and after stage 2, and `is_gb` code is byte-unchanged across stage 1 ⇒ the residual failure predates the packet. After stage 3 only `is_grain_boundary` remains, so Goal 10's k_eff drop happened** | my `grep -ro` counts; `K2_amr_regrid_{before,after}.log`, `K3_amr_regrid.log` |
+| c1 | tree `p2_27c` vs `p2_27b` + component audit | every `Cell_D` differs ONLY by the three removed components; thermo and CSVs identical | 1,314 changed; all removed-ok | **FULL audit, not a sample: 1,314 changed files are **all** `Cell_D_*` across **708** plotfiles, **0** node paths, and no `Header`/`Cell_H`/`thermo`/`csv` changed at all. Reading all 708 component by component: ncomp 23→20 / 34→31 / 36→33, **0 name-or-order violations, 0 kept-component violations**. ⚠ the tree manifest hashes only `Cell_D_*`, `thermo.dat` and `*.csv` — not `Header`/`Cell_H` — so the gate structurally cannot see a component change; the audit is what carries this row | my component audit over `tree_archive_p2_27b/` vs live (archive: all 2,901 paths present, 40-file sample hashes to `p2_27b`) |
+| c2 | face + audit + rankcheck | same; rank-stable | 84 plotfiles removed-ok | **the raw `cmp` is DIFFERENT (504 substantive) by construction; my classification: 336 `Cell_D` + 84 `Header` + 84 `Cell_H` = 504, + 14 thermo = 518, over **84** cell plotfiles and **0** node. FULL audit of all 84: ncomp 41→38 / 43→40 / 45→42 / 46→43, **0 name/order violations, 0 kept-component violations**. Live face headers carry none of the three (212 scanned)** | my component audit over `face_p2_27b/` vs `face_p2_27c/` |
+| d1 | tree `p2_27d` vs `p2_27c` | 0 changed | 0 | **0 changed** | my manifest differ |
+| d2 | face + field audit | differing = t=0 of grimsel legs; fields ⊆ {kappa,beta,E,mu}_phase; later plotfiles identical | the 70 declared paths | **70 substantive = 56 `Cell_D` + 14 `Cell_H`, every one a `00000cell` (t = 0) plotfile of the 14 legs; no later plotfile differs. Fields that moved: EXACTLY {`E_phase`, `beta_phase`, `kappa_phase`, `mu_phase`} with 1.5→3.43053, 8e-6→8.4e-6, 3e10→5.33e10, 1.15385e10→2.05e10 — the notes' numbers; `rho`/`Cp` unmoved. ⚠ plus **156 only-in-new** (the FEET legs), not in this row's bar — disclosed in takeaway 11 only (DR-9)** | my field audit over `face_p2_27c/` vs `face_p2_27d/` |
+| d3 | `retired_keys` K (grimsel probes, two-sided); `check_shared` | PASS | PASS; BEAM_S FAIL pre-existing | **K24–K29 two-sided (A_D 0.0 runs / 0.5 aborts; kappa on CAL aborts / on a constant deck runs; fixture rc 0); rule (iv) PASS on all three legs. I re-ran `check_shared.py` on `unit/face_beam` myself: FAIL on `incl` + `(ii) vapor.enabled: 1 != 0` — exactly takeaway 12's cause, and structural (a deck property), so pre-existing** | `K4_*.log`; my own `check_shared.py` run |
+| e1 | tree `p2_27` vs `p2_27d` | 0 changed | 0 | **0 changed. And exactly ONE refusal was lifted — `fr_abort("regime 4 (surface_patch.foot_body_clearance)")`, precisely the one Goal 13 authorised (`fr_abort` 8 → 7); the column block gained one conjunct `&& !surface_patch.face_list`** | my manifest differ; my abort census |
+| e2 | face `cmp p2_27d p2_27` | IDENTICAL on the 14 legs; FEET only-in-new | 15 thermo timers; 156 new | **0 substantive over 1,373 common (which includes `FEET_0`, an extra identity), 156 only-in-new** | my own cmp |
+| e3 | `face_feet` (a)–(g) | PASS; (a) two-sided; (e) ≤1e-10 / 1e-9 | PASS, (e) restated | **(a) P 14 regime-4 rows / N **0**, two-sided; (b) on N the `foot_mech_*` columns are genuinely ABSENT; (d) `foot_mech_vol` 1.12e-07 = Σ n_voided·V_cell to **1.18e-16** relative; (e) **the packet's 1e-10 TOTAL bar is unmeetable** — `ledger_err` reads 0.405 on P and **0.402 on N with the clearance OFF**, so it predates the feature; `ledger_err_solid` **3.64e-15** ≪ 1e-9 is the closing row; (g) **89 of 91** non-timer thermo columns bit-identical across 4 and 3 ranks, the only two differing being the ledger residuals at **2.15e-16 / 3.29e-16 absolute**, events CSV byte-identical. ✅ the new regime-4 CSV row is **37 fields against a 37-column header** — the face path does NOT inherit the column path's 8-under-9 defect (takeaway 8)** | my reductions over `unit/face_feet/output/{P,N,P3,PT}` |
+| e4 | `pad_clear_ledger`, `jet_d2c`, `robin_feet`, `face_heat` | PASS (unchanged) | PASS | **all four PASS; and e1's 0-changed is the empirical proof that the new conjunct is an identity on every column-path deck** | `K5_*.log` |
+| m1 | lines / keys | report | 13,089 → 12,651 (−438) | **exact at every stage: 13,089 → 13,281 → 12,545 → 12,452 → 12,495 → **12,651** (+192 / −736 / −93 / +43 / +156, net **−438**), plus the two deleted headers at **74 + 72 = 146** lines. 13,089 chains to the total I verified for P2-26** | my `wc -l` over the five pre-image trees |
+| m2 | out-of-gate decks on the stage-4 binary | PASS unchanged | 4 PASS | **`face_list`, `face_melt`, `face_vapor`, `face_beam` all PASS** | `M2_*.log` |
+| m4 | Hu LEFM t\* and T_B1 | report; pre-registered 50–66 s / 826–885 K | **t\* 107.88 s, T_B1 1041.7 K: OUTSIDE** | **reproduced from the log and the mechanism verified in code: `rec_ok = sp_surface_T_apply` (`M:6002`) is FALSE on this deck, so `T_kic = rec_ok ? T_recon_at(a_loc) : Tsurf` takes the prescribed boundary T (1042 K) while the stress uses the 3.125 mm cell average (790.7 K). The two halves of the criterion read temperatures **250 K apart** ⇒ this is not a measurement of the Grimsel criterion against Hu (DR-2). Correctly captioned by the implementer and by the log's own FINDING line** | `M4_hu_lefm.log`; `MMWSpalling.H:5995–6123` |
+| m3 | 20 s `input_feet_face` | rc 0; regime-4 > 0; (e) holds | rc 0; 60 rows | report; consistent with e3 | `M3_feet_face.log` |
+| e0 | verdict | — | PASS | **accepted** | — |
+
+#### Diff review
+
+122 hunks over five stages (+886 / −1,324): s1 MMWSpalling.H 22 / MMWBeam.H 2; s2 48 / 12 / 2; s3 11 / 7 / 4;
+s4 5 / 1 / 1; s5 2 / 1 / 4. Rows below cover all 122.
+
+| # | hunk / change | class | tag | finding |
+|---|---|---|---|---|
+| 1 | `CheckInterlocks`: 58 aborts moved out of `Parse` (s1, ~20 hunks) | 2, 9 | ok | **verbatim, proven two-sidedly**: the abort multiset is unchanged except the one new dt abort, and 58 = 46 + 8 + 4 sit in the new function. ⚠ the honest caveat is the implementer's own (takeaway 2): a deck breaking TWO rules can now meet a different abort first; one broken rule is unchanged |
+| 2 | the dt stability check (s1, new 50-line function) | 6, 13 | ok | `dx = min` over dimensions (conservative); `!(dt > dt_lim)` admits equality and is NaN-safe; the division cannot fault — `nphases >= 1` is asserted at parse (`M:427`), so `a_max = -1.0` is unreachable; all-zero κ gives `dt_lim = inf`, which is the correct bound for zero diffusivity |
+| 3 | its abort/warn split | 4, 12 | ok | aborts only under `surface_patch.face_list`, warns otherwise — the user's option 1, and safe because the face-list max ratio is 0.8231 |
+| 4 | `T_cold = (T_amb > 0) ? min(T_ref, T_amb) : T_ref` | 3, 13 | ok | takeaway 1's reason verified: an unset `T_amb` defaults to 0 K and Grimsel's c_p has a pole near 2.15 K, which would make the bound vacuous. The guard is the right shape |
+| 5 | `beam.schedule.file` (s1, MMWBeam.H +49) | 7, 13 | ok | new key read on the claimed path, default `""` ⇒ inert; mutual exclusion with the arrays aborts; open failure aborts with the path; two-token parse with **full consumption** on both tokens; empty-file aborts; `#` comments and blank lines skipped |
+| 6 | strict `t_end` monotonicity for BOTH forms | 9, 13 | ok | this **adds** a check that `B:142–145` only promised; NaN-safe; no live deck breaks (z0's 159 pairs are monotone, and a1/m3 would have caught it) |
+| 7 | `validation/oglesby/input` → the schedule file | 5 | ok | the file's 159 pairs are **element-wise exactly** the deck's old arrays; the deck no longer carries them. Path is cwd-relative, as documented and as `FILE =` already is |
+| 8 | numeric retired-at-default compare (s1) | 6 | ok | closes my own P2-26 DR-3. One-token-and-fully-parses-as-double only, string compare first, `"0 0"` stays a string and aborts (K16). Exact `==` on doubles is right for a default match |
+| 9 | `damage` / `cohesive` family abort via `getEntries` (s2) | 7, 9 | ok | any family entry aborts; `damage.enabled` is exempted there because it is a table row — the exemption is necessary, not a loophole, and R9 asserts it |
+| 10 | the eight `spall.*` damage-removal keys abort by presence (s2) | 7 | ok | checked before any key is queried, so an entry can only come from the input |
+| 11 | `spallation.model` default `damage_law` → `none` (s2) | 2, 7 | ok | **the key structural point**: `None` reuses the old `DamageLaw` enum slot and all 17 guards read `== SpWeibull`, so every defaulted deck takes the branch it always took ⇒ no registration moves. `damage_law` aborts by value naming P2-27 |
+| 12 | `spall.enabled` / `vapor.enabled` without `sp_weibull` now ABORT (s2) | 7, 9 | ok | deviation 2; closes a silent-inertness hole, 0 live decks affected (K26) |
+| 13 | `h_eff = h_gb0·(1−D_face)` → `h_gb0` (s2) | 1, 3 | ok | only the damage factor went: `conductivity.h_gb0` is still parsed (`M:608`) and the GB resistance still added in series (`M:2313`) under `h_gb0 > 0 && g_n != gc` |
+| 14 | every κ-factor site → bare `kappa` (s2) | 2 | ok | consistent across sites; b1/b2 are 0-changed because D ≡ 0 on every live deck |
+| 15 | `A_D` optional, must equal 0.0 (s2) | 6, 7 | ok | local parse + abort; `0.0` runs (K24), `0.5` aborts (K25). A float `!=` against a declared-dead default, which is correct here |
+| 16 | `DruckerPrager.H` / `CohesiveZone.H` deleted + includes (s2) | 9 | ok | both gone, 0 references; pre-images kept in `src_pre_2/` |
+| 17 | deregistration of `D`, `kappa_eff`, `k_eff` (s3, 22 hunks) | 8, 9 | ok | the single best-evidenced change in the packet: 792 plotfiles audited, every one lost exactly those three with every kept component bit-identical and in order. `Util::Abort` count is **unchanged** across s3 ⇒ no check went with the fields |
+| 18 | the conduction kernel's governing-equation comment | 11 | **nit** | `M:2128–2131` still states `κ_eff(x,D) = κ_phase·exp(−α_D·D)` and `h_gb(D) = h_gb0·(1−D)`, and `M:2290` still says "the cell-centred κ_eff" — all three quantities are deleted. The *site* comment (`M:2311`) was correctly updated; the governing block was not. Named **DR-3** |
+| 19 | the six grimsel scalars refused (s4) | 4, 7 | ok | the refusal is conditioned where the value is genuinely unread: `kappa/rho/Cp` under `law = grimsel`; `beta/E/mu` only when `spall.stress_law = grimsel` too (deviation 5). A constant-law phase still `query_required`s all six, one statement per key (the P2-2b rule) |
+| 20 | the `law_T && !law_s` branch | 10 | **risk** | grimsel thermal law + scalar stress law ⇒ `E/beta/mu` still required. No live deck is in that state and no K leg covers it, so the branch ships untested. Named **DR-5** |
+| 21 | `UpdatePropertyFields(lev, step=false)` at init (s4 rev 2) | 1, 2 | ok | routes the t = 0 fill through the **one** per-cell writer instead of adding a second reader of the law's raw pieces — rev 1 did add one and `lateral_flux_lock`'s P2-2b block caught it (takeaway 6). `if (!step) return;` keeps the per-step counters untouched, so no thermo column moves (d1 = 0) |
+| 22 | the `weibull.V0` member comment rewritten (s5) | 11 | ok | deliverable 11: the old comment claimed a FIXED reference volume; the new one states that every production deck sets `V_0 = its own cell volume` (check_shared rule iv) so the size correction is **off**, and defers the physics decision. Recording a contradiction rather than silently "fixing" it is the right call |
+| 23 | `FrFootClearance` (s5, FaceRemoval.H +164) | 1, 8 | ok | reuses P2-2f's `foot_mech_E/vol/cols` and the existing `ledger_err_solid` credit — **no parallel ledger term was added**. All three are registered non-integrated, so the cumulative `+=` is right and `foot_mech_cols` is reset per step (SR 7) |
+| 24 | its MPI reduction | 2 | ok | `ReduceIntSum(flip)` + one `ReduceRealSum(E_local)`, mirroring `R:220–231`; cells come from `validbox()` so no double count; `n_cut` is built from global per-column vectors, so it is rank-invariant. (g) confirms: events CSV byte-identical across 4 and 3 ranks |
+| 25 | its `phi` shift and tie handling | 6 | ok | `phi -= n·dz` once per column (validboxes partition), flipped cells forced strictly negative, the pad cell clamped to exactly 0 — the vapour rule's handling |
+| 26 | its regime-4 CSV row | 3, 8 | ok | **37 fields against the 37-column header**, verified on the produced file (9,139 rows, all 37); `h_applied` 2e-3 = 1 cell at dz 2 mm, `n_voided` 1, the four reconstruction columns NaN placeholders |
+| 27 | the registration guard for `foot_mech_*` | 7 | ok | `enabled && feet && foot_body_clearance`, path-agnostic, so a face-list feet deck gains the columns and a clearance-off deck gains none (e3(b) confirms absence) |
+| 28 | the column block's `&& !surface_patch.face_list` (s5) | 2, 4 | ok | one conjunct; e1's 0-changed proves it is an identity on every column-path deck, and e4's four tests still pass |
+| 29 | the `regime 4` refusal lifted (s5) | 9 | ok | exactly one `fr_abort` removed, the one Goal 13 names; every other face-list refusal stays |
+| 30 | `retired_keys` R9 + K17–K29 (+mutations) | 10 | ok | R9 is RED on its own pre-image (`--pre src_pre_2 --red R9`) and has a planted-member mutation; K legs two-sided |
+| 31 | R9's counting instrument | 2 | **nit** | R9 counts the **quoted** literal (`:224`), R7/R8 count the **bare** substring including comments (`:207`). R9's is better targeted — a parse needs the quoted literal — but one test now measures "appears exactly once" two ways. I verified R7/R8's eight keys still read 1, so P2-26's lock was respected. Named **DR-4** |
+| 32 | `lateral_flux_lock` STRESS regex, `buckle_lock`, `surface_T_recon` `HDR_P0B += ",q_ratio"` | 9 | ok | the `q_ratio` addition turns a test that had been RED since 10-08 GREEN, which is a fix, not a relaxation |
+| 33 | `amr_microstructure_regrid`: D / kappa_eff (s2) and k_eff (s3) checks dropped | 9 | ok | authorised by Goals 10 and the C1b list; every dropped check's subject is deregistered. ⚠ this deck is in **neither** gate (0 paths in the tree manifest) and reads rc 1 from before the packet on `is_grain_boundary` — named **DR-6** |
+| 34 | five tests → `retired_units/`, Hu damage-law → `retired_validation/` | 9 | ok | each tested a deleted feature; `hash.sh` dropped `spall_event`'s two dirs (the 8 only-in-ref of b1) and gained `jet_d2c/output` |
+| 35 | `validation/hu/hu_spall_onset/input_granite2_lefm` + `test_lefm` (new) | 12 | **risk** | zero src change, and the deck is honestly captioned — but its two criterion halves read temperatures 250 K apart, so its t\* is a path measurement. Named **DR-2** |
+| 36 | `face_gate.py` DROP reduced; FEET_S / FEET_0 legs added | 9 | ok | DROP losing the two C2 tokens is the point of deliverable 1 (M0S replays its record as written) and a2 is IDENTICAL with it |
+| 37 | 92 A_D / damage lines in 59 decks; the six scalars in 3 decks | 9 | ok | deviation 3 declares the widening (all DEFAULT lines on live decks, not only the gate decks'); d1/d2 bound the consequence |
+
+**Deferred risks, by name**
+
+- **DR-1 — the total `ledger_err` is not a closure on any spalling face-list deck.** It omits the flake credit by
+  design, so it reads **0.402 on `face_feet` with the clearance OFF** and 0.405 with it on; `ledger_err_solid` is the
+  closing row (3.64e-15). The packet's e3(e) bar of 1e-10 was imported from `face_vapor`, whose U3 leg does not
+  spall — a threshold carried from a different population (class 12). The restatement is right; the *column name*
+  is the hazard, because it is the one a reader checks. Either credit the sinks in the total or rename it.
+- **DR-2 — do not quote m4's 107.88 s as "Grimsel predicts 108 s for Hu".** Verified in source: `rec_ok` is false on
+  that deck, so K_Ic is evaluated at the prescribed boundary T (1042 K) while the driving stress comes from the
+  3.125 mm cell average (790.7 K). The number measures the surface lag of a mixed-temperature configuration. The
+  implementer says exactly this; the risk is downstream quotation. It must be **re-scored**, not reproduced, at H.
+- **DR-3 — the conduction kernel's governing-equation comment is stale** (`M:2128–2131`, `M:2290`): it still carries
+  `κ_eff(x,D) = κ_phase·exp(−α_D·D)` and `h_gb(D) = h_gb0·(1−D)` after both were deleted. A future reader starts
+  from a false equation.
+- **DR-4 — `retired_keys` now measures "exactly once" two ways** (R7/R8 bare substring incl. comments; R9 quoted
+  literal). R9's instrument is the correct one; adopting it for R7/R8 would also let P2-26's keys be documented.
+- **DR-5 — the `law_T && !law_s` branch ships untested** (grimsel thermal law with the scalar stress law still
+  requires `E/beta/mu`). No live deck, no K leg.
+- **DR-6 — `amr_microstructure_regrid` is in neither gate** (0 paths in the tree manifest) and has read rc 1 since
+  before this packet; after stage 3 its only remaining failure is `is_grain_boundary` at level 0. An uncovered deck
+  whose state is only ever seen by running it by hand.
+- **DR-7 — two counts I could not reproduce, both report-level.** z0's row says "18 decks over" the dt limit; the
+  artefact itself lists **21 paths / 19 distinct deck files** (7 live unit tests + 12 retiring decks + 2 output
+  records). And the source comment at `M:8626` says "the 48 decks that never named the key"; I count **79** live
+  non-retired deck files that never name it (97 including retired). Nothing depends on either.
+- **DR-8 — a standing rule was broken, self-disclosed:** takeaway 11 records one use of `pkill -f`, on the
+  implementer's own wait loop after the run had finished. No artefact is affected (every gate re-derives), but the
+  rule exists because `pkill -f` can match a sweep. Disclosed, not hidden.
+- **DR-9 — d2's 156 only-in-new files are outside that row's bar.** `face_gate.py` gained the FEET legs before
+  stage 4's rev-2 face run, so `face_p2_27d` already carries them (1,217 → 1,373 → 1,529). Disclosed in takeaway 11
+  only; `REFERENCE.md` does record the final 1,529 and the new controls (d2aa 1,230 / d2t 1,346).
+
+**Checked and clean:** no edits to `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE`;
+nothing staged, nothing committed; `src/` touched in exactly the five declared headers plus the two declared
+deletions; `src_pre_1…5/` hold every touched file (over-collected, including the deleted headers); `tree_archive_p2_27b/`
+makes stage 3 reproducible forever and the per-label face trees make stage 3's and 4's face audits reproducible too;
+the old lists (`p2_26.md5`, `face_p2_24.md5`, the rev-1 stage-4 artefacts) are all kept. The completion notes quote
+nothing `ROADMAP.md` marks unquotable; SR 7 is honoured twice over (the new counters are registered non-integrated,
+and m2's cell counts are plotfile **state** reads, not summed per-step counters).
+
+#### Verdict: accepted
+
+- **Every gating row reproduces from my own reduction.** No diff-review row is tagged `bug`. Two nits (rows 18, 31),
+  three risks (rows 20, 35, and DR-1), nine named deferred items.
+- **Two gating bars could not be met as written and were correctly restated, both with the right instrument:**
+  e3(e)'s total-ledger 1e-10 (impossible on any spalling deck — the N control at 0.402 proves it predates the
+  feature) and e3(g)'s exact thermo equality across rank counts (impossible for an MPI sum; 89/91 columns *are* bit
+  identical and the two residuals differ by 2e-16 absolute). z0's "no deck over `dt_lim`" also failed as written and
+  was resolved through the row's own escape hatch by the user's recorded decision.
+- **Stage 3 is the best-evidenced change I have reviewed in this programme**: 792 plotfiles read component by
+  component, every one losing exactly `{D, kappa_eff, k_eff}` with every kept component bit-identical and in order,
+  the abort count unchanged, and the "before" bytes archived so it stays reproducible.
+- **The one finding worth the planner's attention is a measurement hazard, not a defect:** the total `ledger_err`
+  column does not close on a spalling face-list deck (DR-1), and m4's Hu number is a path measurement, not a rock
+  measurement (DR-2). Both are stated correctly in the notes; both are easy to mis-quote later.
+- Files inspected: the five headers across all five pre-images hunk by hunk; `CheckTimeStepLimit`, `CheckInterlocks`,
+  the retired-key tables and the numeric compare, `FrFootClearance` and its CSV/ledger/MPI, `MMWBeam.H`'s schedule
+  parse, the stage-4 refusals and `UpdatePropertyFields`; `unit/retired_keys/test` (R7/R8/R9 instruments),
+  `amr_microstructure_regrid/test`, `face_gate.py`; `Z0.txt`, `GATE_*`, `AUDIT_3_{tree,face}.txt`, `AUDIT_4_fields.txt`,
+  `PROBES`-equivalents, `K1…K5_*.log`, `M2/M3/M4_*.log`, `RANKCHECK_{3,5}.txt`, `MOVERS_{1,2,4}*.txt`,
+  `INTERLOCKS_MOVE.txt`; `REFERENCE.md`, `WHICH_TESTS.md`, `MODEL_CARD.md`.
+- Next: **run `/plan` to archive this step and prep the next packet.**
+
+## P2-28 — H: one removal path. The face list learns the prescribed patch and the evaluate-only onset, then the column path and its gate retire (census H + C4 + C5) (2026-11-09; ACCEPTED by review 2026-11-09)
+
+**Status:** ACCEPTED by review (2026-11-09): every gating row re-derived from the two pre-image trees and the per-label
+face trees (the reviewer's own erfc integration, manifest differ, component + thermo audit over all 140 + 17 changed
+files, `Temp` compare over 121 + 10 plotfiles, onset reductions, md5s, line counts; no simulation re-run); 30 diff rows,
+**0 `bug`**, 3 risks, 3 nits, DR-1…DR-9. Binaries: pre `27433870`, stage 1 `e291bc04`, stage 2 **`ee4b6b9b` (ships)**.
+Study `tests/MMWSpalling/studies/p2_28_column_path/` (`RESULTS.txt`, `Z0.txt`, `GATE_a1/a2`, `K1_*/K2_*/K2b_*.log`,
+`src_pre_1/`, `src_pre_2/`, `bin_pre/`, `bin_1/`, `bin_2/`, `cal_before/`, `legs/hu_{column,face}`). References: **face
+`face_p2_28.md5` is THE gate** (2,010 files, 19 legs incl. KV_S, HU_S, GB_S); the tree gate is a RECORD, its last list
+`p2_27.md5`. Stage 2 ran on the user's "go" after the stage-1 stop.
+
+### What the step established
+- **The prescribed-temperature boundary had applied HALF the conductance for the code's whole history** (`kc·ΔT/dz²`,
+  the held T a full cell away; first order, so refinement hid it). Corrected to `2·kc·ΔT/dz²` at the microstructure
+  kernel, its diagnostics and both ledger sites; `unit/face_dirichlet` vs the exact (erfc) cell average: −1.46/−1.02/
+  −0.70 % at 3.125 mm, −0.32/−0.24/−0.17 % at 1.5625 mm, ratio 4.1–4.6 (second order). ⚠ `AdvanceMaterial`'s copy
+  is still half (out of scope; MODEL_CARD §11 7b; the site comment still argues dz/2 — DR-1).
+- **One removal path**: `Removal.H` deleted (1,869); src 12,651 → 12,826 (stage 1) → **9,308** (−3,343). 16 unit tests
+  → `retired_units/`, 4 validation sets → `retired_validation/column_path/` (11,653 source lines). Site A, the
+  reconstruction, the pin rule, the bit, the clusters, the column CSVs deleted; four new interlocks (removal, jet
+  enthalpy, `h_expr`/`T_flame_expr`, `robin_form = surface` each require `face_list = 1`).
+- **Inert where it must be**: Hu column vs face `Temp` bit-identical over 121 plotfiles; CAL 60 s event log
+  byte-identical (md5 dfc398c0, 10,804 rows) and the c1 level still **850.43 K** = P2-13; 140 changed face plotfiles
+  lose exactly the declared fields with every kept component bit-identical (`--mutate` FAILs); `ledger_err` →
+  `ledger_err_raw` (values identical; `ledger_err_solid` is the closure).
+- **Kant on the production criterion**: ΔT 446.93 / 447.90 K vs Eq. 15's 445.6 (+0.30/+0.52 %); pressure slope
+  −0.9343 vs −0.9286 K/MPa. The old site-A records' ~28 K offset is the variable (top-cell mean vs surface rise), not
+  the site (SR 17).
+- **Hu re-scored (Grimsel rock, Hu's ramp, buckling ON, evaluate-only)**: criterion onset first 50.00 s / 825.22 K,
+  median 56.25 s / 848.60 K (pre-registered 50–66 s); **all 9,545 firings withdrawn by buckling** (bk 1.38–2.93,
+  first-firing ell_p median 5.65 mm) ⇒ no spall by 120 s where Hu saw it at 37 s. P2-27's 107.88 s was the half
+  conductance: never quote.
+- Lessons: bit-identity across two call sites needs the same product ORDER (FMA; weight first); the removal step
+  runs before the kernel, so a time-dependent boundary is re-evaluated at `time`; check a declared mover against the
+  OLD list before an exact-set audit; a parser refusal must be checked against argv-composed test legs.
+
+### Carry-forwards (review and planner)
+- DR-1 `AdvanceMaterial`'s half term (D deletes it); DR-2 `RESULTS.txt` lacks the material-kernel note; DR-3 19.6 %
+  (113/576) of CAL first firings above the 873.15 K table end (SR 18); DR-4 `pinned_idle_cycles` read-and-tolerated;
+  DR-5 three mechanisms with no test (jet march per-bin recursion, feet feed cap/stall/foot_rule, beam across an
+  interior void); DR-6 `obj/*.d` deleted for the second packet running (propose a guardrail exception); DR-7 the
+  `interlocks --pre` message identity retired; DR-8 `amr_microstructure_regrid` rc 1 (pre-P2-27); DR-9 percentile
+  conventions.
+- `latent_heat` was red from P2-27 stage 4 until P2-28 (argv-composed grimsel leg): run every kept test at packet end.
+- Advisor 2026-11-10 (`Claude_markdowns/2026-11-10.md`): Hu's bk FALLS with time (1.71 → 1.38) and is lowest at the
+  patch rim; bk = 1 on the worst column needs T_s ≈ 1,430 K (≈ 212 s, at the melt range); Hu's surface flux ≈ 0.14
+  MW/m² vs the ≈ 0.43 MW/m² the 12 mm span requires. A model–experiment disagreement, not to be fixed by moving the span.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-10)
+
+Active step:
+- **P2-28 — H: one removal path. The face list learns the prescribed patch and the evaluate-only onset, then
+  the column path and its gate retire** (`ACTIVE_STEP.md`; 2026-11-09; decisions Q2/Q3/Q4/Q5/Q8 of 11-05 in force).
+  - Archived: P2-27 ACCEPTED (`ARCHIVE_DONE.md` *"P2-27"*): inputs bit-neutral; damage lineage out with a
+    792-plotfile component audit; grimsel-inert scalars refused; the feet on the face list; net −438 lines
+    (groundwork). ⚠ Hu's 107.88 s is a PATH artefact (K_Ic at the boundary T, stress from the 3 mm cell) — never
+    quote; re-scored here. ⚠ The face list's TOTAL `ledger_err` is not a closure on a spalling deck — renamed here.
+  - Stage 1 `p2_28a` (tree 0 changed; 16 face legs IDENTICAL): ⚠⚠ the prescribed-T term applied HALF the boundary
+    conductance (`kc·ΔT/dz²`, the held T a full cell away; user's review, planner reproduced: −12…−20 % in the rise at
+    3.125 mm, first order) — corrected to `2·kc·ΔT/dz²` at both sites, plumbing by identity, factor by the exact
+    solution (new `unit/face_dirichlet`); evaluate-only mode; Kant/pressure/Hu/gradient_blind as face-list decks;
+    Hu with buckling ON (pre-registered: onset 50–66 s, every firing withdrawn). STOP for the user before stage 2.
+  - Stage 2 `p2_28`: delete `Removal.H` (1,869) + ≈ 1,450 column-only lines (site A, pinned, bit, P0 keys, AMR
+    column repair, column CSVs); `robin_form` cell/face stay for no-removal decks; the face gate re-pins under a
+    component + thermo-column audit (six fields, eleven columns leave); the CAL leg must reproduce 850.43 K; the
+    2,901-path tree gate retires to a record (`p2_27.md5` kept). ≈ 15,000 test lines move to `retired_*`.
+  - Next: D Zhang merge/delete → the structural refactor (split the header, records out, provenance to the
+    archive, kernel helper, schema CSV) → trim the source-text locks → the mesh-check runs (and the V0 decision) →
+    the Meier rebuild on the rock file → the melt's heat transport → the operator stress → the flame source rule.
+
+### The P2-28 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-28 — H: one removal path. The face list learns the two things the column path still does for a live test, then the column path and its gate retire
+
+Status: **accepted by review** 2026-11-09 (every gating row re-derived independently; see `## Review findings`). Implemented 2026-11-09, `/implement`: stage 1, then stage 2 on the user's "go"; stage-1 and stage-2 notes and takeaways at the end. Planned 2026-11-09 (P2-27 ACCEPTED and archived the same day — `ARCHIVE_DONE.md` *"P2-27"*; the user: "go ahead to planning for H"). Census (H) + (C4) + (C5) with the 2026-11-05 decisions in force: Q2 bit RETIRE, Q3 Rossi RETIRE, Q4 pinned RETIRE, Q8 criterion site A RETIRE with an evaluate-only face-list mode, Q5 Hu re-scored there. Two builds: stage 1 is ADDITIVE and must leave every existing face-gate leg identical; stage 2 deletes and re-pins the face gate under a component audit. The tree gate is not run after stage 2: it retires to a record. **The implementer STOPS after stage 1** (status "stage 1 complete — awaiting the user"); stage 2 runs only on the user's go, after the stage-1 comparisons are read. Revised 2026-11-09 after the user's review paste (five points, all adopted, two modified): the prescribed-temperature term applies HALF the boundary conductance and is corrected in stage 1 (verified independently, see Sources); Hu runs with the full rule (buckling ON) in ONE evaluate-only run that logs both the criterion onset and the buckling verdict; the old-vs-new onset gap is reported in kelvin under a 10 K gate; the calibration check is before/after identity, with the 850.43 K comparison reported separately.
+
+### Context
+
+After P2-27 the column removal path (`Removal.H`, one function of 1,869 lines, plus ≈ 1,450 column-only lines in the integrator) is reached by no production deck. It still carries two things a live test needs and the face list lacks: a PRESCRIBED surface temperature (Hu's and Rossi's boundary; the Kant onset decks are convective) and an onset criterion that runs WITHOUT removal (criterion site A: the five Kant onset decks, the pressure sweep, the Hu record). Decision 8 gives the face list an evaluate-only mode instead of keeping site A; the prescribed patch comes with it because the Hu re-score needs both. Stage 1 adds those two on the face list and proves them against the column path while it still exists (the Dirichlet discretisation is the same expression, so the temperature fields must agree to round-off; Kant Eq. 15 must reproduce within the old test's 8 %; `confining.p` already reaches the face-list criterion through `ElasticConstants().conf`). Stage 2 deletes the column path, site A, the pinned Robin form, the bit, the AMR column repair, the P0 reconstruction keys and their fields and thermo columns; 2,225 of the 2,901 tree-gate paths die with it and the 676 `robin_face/form_*` files that would survive are cell/face Robin controls with no removal, so the tree list `p2_27.md5` becomes the column era's record and the face gate is THE gate. ⚠⚠ The column kernel's prescribed-temperature term is WRONG by a factor of two (Sources, "The Dirichlet defect"): copying it verbatim onto the face list would make the identity witness prove only that the bug was copied, and the fallback "refine the mesh" would hide it because the error shrinks with the cell. Stage 1 corrects it in BOTH kernels the face list and the column path share for this deck, proves the plumbing by identity, and proves the factor against the exact solution. Carried: the cell and face Robin forms STAY for no-removal decks (the cell form is production's loss path on unlisted tops and the face Newton is `FrFaceFlux`'s fallback; only `pinned` is retired); `weibull.V0` untouched (P2-27); nothing tuned; a result moves only by a declared, audited cause.
+
+### Sources (opened 2026-11-09; `M:` = `src/Integrator/MMWSpalling.H` 8,840 lines, `R:` = `MMWSpalling/Removal.H` 1,869, `F:` = `MMWSpalling/FaceRemoval.H` 1,293, `S:` = `MMWSpalling/Shared.H` 377)
+
+- **Census** `docs/project/CODE_CENSUS_2026-11-05.md` (H) :583–632, (C4) :392–405, (C5) :406–420, Q2/Q4/Q8 :783–857; decisions `Claude_markdowns/2026-11-05.md:70–96`. Stale since: R is one function (A3 moved the helpers to S); `FrFootClearance` landed (P2-27); regime 2 is on the list; `spall.prescribed_ratio` and `damage_law` already retired; `unit/sp_lefm` and `hu_spall_onset/test_lefm` depend on site A and are absent from the census tables.
+- **The dispatch.** `M:1767 UpdateRemovalAfterCohesive(lev, time, dt)` (in `Advance` M:1740–1783, after `UpdateSpClusters` M:1763) → `R:25`; prologue `R:27 RemovalStepBegins` (S:340–346), `R:79 ResetRemovalStepFields` (S:351–375 — F relies on it: it writes regime/RoP/event fields only on voided cells), `R:99–217` the column clearance (guarded `!face_list` R:144–145), `R:219–222 k_top_global = ColumnTopSolid(lev)` (M:4792–4815), **`R:228–232 if (surface_patch.face_list) { RecedeAlongLines(lev, time, dt, k_top_global); return; }`**. Everything after R:232 (1,635 lines) is column-only. What F consumes lives in S and M already (`ElasticConstants` F:670, `ScanTAtZv/ScanKIcPa/ScanSigmaT/DepthScanH` F:793–853, `RemapProfile` F:288, `ProfileEFoldDepth/Peak` F:774/850–851, `SurfaceGasTempCap` M:8602, `RawSurfaceX/ReconFromX` M:8501/8516, `MeltFraction` M:5084, `LawSigma` M:6411 via S:212, `SurfaceCellFlux` face/surface branches M:4173–4221, `ColumnTopSolid`, `UpdateSurfaceMaskFromPhi` M:6616–6637 (F:1285), `InvertHtoT` F:1278, `RefillTempGhosts` F:1283).
+- **Column-only in M (dies in stage 2):** site A `UpdateSpAfterMechanics` M:5844–6171 (called M:1759 every step, no `spall_enabled` guard; writes `Sp_field` M:5959/6141, `T_surf_field/ell_eff_field` M:5972–6011, `recon_*` M:6151–6160; reads `spallation.sp.prescribed_sigma/prescribed_T_surface` M:5858–5861, 6058, 6123) and `UpdateSpClusters` M:6172–6376 (M:1763; `Sp_cluster_id` M:6340–6344; `_clusters.csv` M:6354–6375); `BuildSurfaceTColumns` M:3163–3254 (M:1749), `SharedSurfaceRecon` M:3255–3276, `SurfaceRobinT` M:3277–3291 (`surf_*` members M:8339–8350, `rc_ell_prev` M:8356); the pinned closure `BuildPinEffective` M:3292–3313, `PinRule` M:3314–3337, `SurfaceCellFlux` pinned branch M:4222–4233, pin state M:7405–7416, `pinned_idle_cycles` M:7546 (parse M:7707–7711, inert message M:762–767), interlocks M:1163–1181, registrations M:746–752, 798–805, pin record R:1453–1472; `PatchDiagnostics` M:3338–3411 (called M:2434–2435 on every face-list `h_expr` deck; writes `pinned_*` and `patch_P_robin` M:3410 — a flux the list does not apply); `GatherColumnSurface` M:5802–5843, `ColumnSolidRunBelowTop` M:5154–5230; AMR column repair `RepairRemovalStateAfterRegrid` M:4551–4643 (Regrid M:1489), `CheckSurfaceCovered` M:4644–4708 (R:1840), the surface band in `TagCellsForRefinement` M:5508–5528 (`surface.refine_depth/height` M:754–755 parse); the bit `ParseBitSettings` M:5771–5791 (M:345), members M:8194–8207, interlocks M:1079–1082, fr_abort M:1325; `JetEnthalpyMarch` M:2778–3162 column pieces M:2789–2790, 2793–2811 (`jTc/jkc` gather), 2891, 2906–2915 (the `q_col` Robin it then discards under `fl_on_m` M:2916–2930); P0 keys `spall.surface_T` M:5594–5620 (flags M:8469/8472), `spall.removal_energy` M:5657–5664 (M:8477) with consumers M:693/700/786, 1053–1075, 1203–1227, 1260–1262, 1336–1340, 3165, 5937/6002 — F uses only `sp_flake_c_f`, `spall_h_spall_max`, `sp_flake_h_max` (F:240–241, 529–530, 779–781) and its own R1 (`FrAssignTs` F:162–253); `DetachMode` M:8390–8394 (parse M:8811–8836; R:715–729, M:6284, 7219, fr_abort M:1341–1345); `sp_emit_clusters_csv` M:8406, `sp_emit_h_col_events_csv` M:8407 (parse M:5585–5586; writer R:1206–1255); `spallation.sp.prescribed_stress.*` M:8730–8740, `prescribed_T_surface.*` M:8742–8752 (site A only); `robin_form` enum M:7539 default `Cell` M:7545, parse M:7622–7628, branches M:748, 759, 1148–1208, 1282–1294, 2257–2260, 2789–2790, 3279, 3346–3347, 4283–4286, 4436, 7685–7700.
+- **Registrations that leave every face-gate plotfile / thermo in stage 2** (`face_p2_27_headers.txt`; confirmed on `CAL_S/run/00500cell/Header`): fields `Sp_field` M:663 (guard SpWeibull), `Sp_cluster_id` M:673–674 (weibull), `h_spall_field` + `crack_event_count` M:682–689 (spall; written only by R:658–659/744 — constant 0 on every face leg), `T_surf_field` + `ell_eff_field` M:695–698 (recon); thermo `recon_*` ×8 M:702–717 (all 16 legs), `patch_P_robin` M:810, `surf_cols_robin` + `surf_q_mean` M:768–769 (15 legs, not BEAM_S), `pinned_*` M:750–752, 798–805 (no face leg). STAY: `flaw_a` M:669 (F:579 reads), `surf_side_share` M:770 (ledger M:4438–4440, independent), `patch_min_standoff` M:809 (`BuildFlameColumns` M:2529), `regime_field`, `fr_*`, `fl_*`, `bk_*`, `foot_mech_*`, `ledger_*`.
+- **Evaluate-only mode, what exists:** the per-line score is `DepthScanH`'s out-param (S:231–298) at F:826–831 (`o.score`, `o.fire = (o.h_col > 0)`); the per-cell winner `win[]` F:959–966; **`fr_score`/`fr_mu` are already written for EVERY listed cell** F:1194–1203 (registered M:984–985); the ONE WRITE F:1117–1193; the events CSV F:1212–1277 writes rows only for fired lines (`evs`), header `FrEventsHeader` F:330–347. Refusals to lift: M:1117–1121 (follow_mask requires removal), M:1334–1335 (`!spall_enabled` refused), `fl_on` M:2236–2237 (`void_aware = removal_enabled()` M:2159), `RemovalStepBegins` S:342 (returns on `!removal_enabled()`), the registrations of `phi/removed/regime/RoP` M:614–632 under `removal_enabled()` (F binds them F:569–574, 1124–1134; S:353–354 resets them). The P2-13 onset statistic `kant/grimsel_calibration/reduce.py:6–11, 42–53`: per column the FIRST events row with `dir = 5` and `ts_fb = 0`, its `T_surf`; level = median over columns; band 826.15–873.15 K, banked 843.757 K.
+- **Prescribed patch, what exists:** no Dirichlet branch for a face (F has 0 hits for prescribed). The column kernel's top-cell term **M:2343–2346 `if (sp_presc) div_kgrad += kc * (sp_T - Tc) * inv_dz2;`** (k == k_top, inside the radius; `sp_T = surface_patch.T_at(time)` M:2228), its ledger mirror M:4358–4362, the UpdateModel top-node override M:1517–1521/1574–1578. `FaceEntry` M:3440–3463 (`h, T, K, Ts, tsfb, qline, Tg, sp, blk`); `FaceListHeat` M:4010–4073 sets `e.h` (`FaceH` M:4049; 0 with the patch off M:4021–4023; path M:4030–4033); the kernel bills listed faces by `FrFaceFlux` at M:2375–2381 (F:138–156, always Robin through `SurfaceCellFlux(true, true, …)`); `EnergyLedger` mirror M:4378–4386; `FaceListDiagnostics` M:4075–4098. Mode refusals: `fl_on`'s `!(enabled && sp_presc)` M:2237, "face_list requires convective_flame + h_expr" M:1287–1291, "follow_mask not supported with prescribed_T" M:1122–1125.
+- **The Dirichlet defect (the user's review paste 2026-11-09, reproduced by the planner).** The microstructure kernel's top-cell term `M:2346–2348` `div_kgrad += kc * (sp_T - Tc) * inv_dz2` and its ledger mirror `M:4361` `P_robin += kc * (sp_T - Tc) * inv_dz2 * V` put the held temperature a FULL cell from the cell centre; the surface is half a cell away (the material kernel's own comment `M:1936`: "a Dirichlet face value at distance dz/2"; the same term at `M:1946`; the doc comment `M:7520` writes the flux as `kappa*(T_patch − T_cell)/dz`). Correct: `2·kc·(sp_T − Tc)·inv_dz2`, the half-cell conductance the face form already uses (`G = 2kc/dz`). Planner's 1-D check (`Claude_markdowns/scripts/p2_28_dirichlet_1d.py` → `.txt`): on Grimsel at 3.125 mm under Hu's ramp the top cell reads 646.6 / 717.5 K at 50 s and 823.1 / 910.5 K at 108 s (factor 1 / factor 2; a 0.05 mm reference 722.9 / 916.9 K) — the P2-27 Hu run's 790.7 K at onset matches factor 1; against the exact semi-infinite solution (constant properties, `T_s = 638.22 + 3.74 t`, top-cell AVERAGE vs the exact cell average) the rise error is **−19.6 / −15.0 / −11.7 %** at 30 / 60 / 120 s for factor 1 at 3.125 mm (first order: halving dz halves it, ratio 2.00–2.04) and **−1.48 / −1.02 / −0.70 %** for factor 2 (−0.32 / −0.24 / −0.17 % at 1.5625 mm; second order, ratio 4.1–4.6). Users of the microstructure term: the Hu LEFM deck, `rossi` and `removal_increment/input_presc` (both retire in stage 2); NO tree- or face-gate deck. The material kernel's term (`M:1946`) serves the four Hu thermal decks (`hu_conduction`, `hu_thermoelastic`(`_amr`), `hu_breakage_index`) and dies with Zhang in D — NOT fixed here; `hu_conduction`/`hu_thermoelastic` score sandstone/granite RATIOS (the shared factor cancels, which is why no test caught it) but `hu_breakage_index` scores absolute f_b at 37 s (`FB_ABS_TOL 0.10`) and will move when D fixes it. Corrected, the 3-D explicit limit on a prescribed top cell is `dz²/((2d+1)·α)` (four lateral faces + one below + the 2× top): 0.769 s at 3.125 mm and α(280.15 K) = 1.8145e-6 m²/s, vs `dz²/(6α)` = 0.897 s; the Hu deck runs at 0.5 s.
+- **`confining.p`** parse M:8641–8644 → `Shared.H:55–56` `c.conf = p·ν/(1−ν)` in `ElasticConstants()` → F:670–671 `conf_off = ec.conf` → `ScanSigmaT` F:803 (the criterion) and F:852–853. Also site A M:5911, R:358–359. The calibration deck's `CAL_p27/CAL_p48` legs ran it (RESULTS.txt:130–131: −26.48 / −38.43 K).
+- **The Kant decks and their numbers.** `validation/kant/sp_kant_onset/test` (915 lines): Eq. 15 `Θ_onset = K_Ic(1−ν)/(2·1.763·√(a/π)·E·α)` (:13, :87–89) with `T_I 293.15, E 35.0e9, ν 0.26, α 8.0e-6, a 20.0e-6, I_FK 1.763, K_Ic0 1.5e6` (:59–66); target 3 FEM vs Eq. 15 within `TOL_EQ15 = 0.08` (:73); target 5 `input_verification` (h 150, 48 s) vs `input_verification_hfl` (h 250, 24 s) within 0.08 (:74). `sp_kant_pressure_sweep/test` (370): `Θ = (1−ν)/(Eα)·[K_Ic/(2·1.763·√(a/π)) − p·ν/(1−ν)]` (:72–77), R1 |ΔT_FEM − ΔT_Eq15|/ΔT_Eq15 ≤ 0.08 at p ∈ {0, 27, 48} MPa, R2 monotone, R4 slope −ν/(Eα) = −0.9286 K/MPa within 20 % (:23–30, :80–83); `confining.p=<Pa>` on argv (:131); deck `input:74–86, :107` (sp_weibull, local_thermoelastic, a0 20 µm, K_Ic linear 1.5, h 150, no `spall.enabled`, `el.type = disable`). The five `sp_kant_onset/input_*` are site-A-only (removal off; `clusters_csv`, `detach_mode = connected_cluster` on `_cluster`).
+- **Hu.** `validation/hu/hu_spall_onset/input_granite2_lefm` (`T_expr = 638.22+3.74*t` :81, `spall.enabled = 0` :93, `prescribed_T_surface` :96–97, `FILE rock_grimsel.inputs` :30); `test_lefm:50` reads `Sp_field`; P2-27 m4: t\* 107.88 s at 1041.7 K = a PATH artefact (K_Ic at the boundary T, stress from the 3.125 mm cell average; `rec_ok` false under prescribed_T); pre-registration 50–66 s / 826–885 K stands (P2-27 DR-2). The deck switches buckling OFF (`spall.buckle_span = 0.0` :32 with `# check_shared: allow` :31) because "B is evaluated on the face list only" — a reason that disappears when it moves to the face list. The buckling log (`F:862–951`, `spall.buckle_log_csv`) is written BEFORE the withdrawal (`F:881–893`: "the record, taken BEFORE the withdrawal") with `class, fire, …, ell_p, …, x, bk, bk_lb, blocked` for every line the criterion fired; a withdrawn line sets `o.fire = 0` (`F:898`). Hu's heated layer (planner's 1-D reference, Grimsel): the e-fold depth of the rise is **6.58 / 7.28 / 7.92 / 9.03 mm** at 37 / 50 / 66 / 108 s; P2-25 separated spalls (`bc_ell_p` ≤ 3.341 mm) from fired-and-withdrawn (≥ 3.370 mm), and the layer limit `L/(C_L μ c_f)` is 2.35–3.75 mm over 850–1400 K (span 12 mm, the rock file's).
+- **Tests and gates.** Tree gate `witness/hash.sh:9` (10 dirs) + `post_all_par.sh:53–70`; `p2_27.md5` 2,901 paths: robin_face 798 (form_* 676 + ledger 89 + ledger_nofollow 33), robin_jet 448, robin_pinned 323, jet_enthalpy 288, jet_d2c 270, scalar_flaw 261, beam_void_closure 169, s1_smoke 142, robin_feet 138, dev2d 64. Face gate `face_gate.py` 16 legs (fr ×5, fl ×2, fb, fh ×2, M0S, HOS_S, CAL_S, BEAM_S, FEET_S, FEET_0) = `face_p2_27.md5` 1,529 files; `cmp` (:261–298, NaN-aware, timers skipped), `rankcheck` (:302–364). Lock clauses that name the column path: `lateral_flux_lock/test` (920 lines) at :5, 46–49, 93–94, 160, 186–195, 209–241, 257–299, 309–366, 402, 454–472, 514, 547, 566–586, 607–684 (fixture `gradient_blind`, face_list=0 control :664–668), 693–698, 714–717, 755–759, 785–822; `buckle_lock/test` :7, :10, :16, :32–34, :51–53, :62–63, :111–112, :129–133; `retired_keys/test` :42, :99–120 (SUBST `Removal.H`), fixture :46/:324; `interlocks/test` legs on `gradient_blind` :79–99, 109, 181–205 and on `face_list` :100–105 (I2, I5, I9, I11, I13, I14, I16, I17, I18 die or change). `WHICH_TESTS.md:13–17, 60–85`. `MODEL_CARD.md:141, 146, 147, 150` (§5), §12 item 1 (:490–493), §2 "two removal paths". `REFERENCE.md:8–33`. `retired_units/README.md`, `retired_validation/hu_damage_law/README.md` (precedents).
+- **Precedents:** `studies/p2_27_cleanup/{audit_components.py, audit_fields.py, chain.sh, z0.py}`, `studies/p2_18_prereq/a2_apply.py`, `unit/face_feet/test` (the ledger/CSV/rank reductions), `grimsel_calibration/reduce.py` (the onset statistic).
+
+### Goal (two builds; before each: `src_pre_<n>/` of every touched file, `bin_pre/` once; study `tests/MMWSpalling/studies/p2_28_column_path/` = `S/`)
+
+**Stage 1 — build `p2_28a`: the face list learns the prescribed patch and the evaluate-only onset. Additive; the 16 legs identical; tree 0 changed.**
+1. **Prescribed patch on the face list.** `FaceEntry` gains `T_presc` (−1 = none). `FaceListHeat`: when `surface_patch.mode == PrescribedTemperature` and the face is a TOP face inside the patch radius, `e.T_presc = surface_patch.T_at(time)`, `e.h = 0`. The kernel's listed-face bill at M:2375–2381: for a face with `T_presc > 0` the term is the half-cell Dirichlet flux **`2·kc·(T_presc − Tc)·inv_dz2`** (the same `kc`, the same `sp_T` evaluation time as the column term), else `FrFaceFlux` as today; mirrored in `EnergyLedger` (M:4378–4386) and `FaceListDiagnostics` (M:4075–4098). **The column kernel's term `M:2348` and its ledger mirror `M:4361` are corrected to the same `2·` in the same build** (one expression, two call sites — the identity witness a5 then proves the face plumbing against an independent implementation of the SAME corrected term), with the doc comment `M:7520` for the microstructure kernel; the material kernel `M:1946` is NOT touched (D's path; listed in `RESULTS.txt` and `MODEL_CARD.md` §11 with the four Hu thermal decks it serves). The per-level dt check (P2-27) uses `2d+1` instead of `2d` on a level whose top carries a prescribed patch. The criterion's surface temperature on such a face is `T_presc` (in `FrAssignTs` F:162–253 the carry/reconstruction is bypassed: the surface temperature is known); the scan's `T_s` F:731–790 the same. Lift M:2237's `!(enabled && sp_presc)`, M:1287–1291 (`convective_flame` required) and M:1122–1125 (follow_mask refuses prescribed_T). Side and roof faces are never prescribed (a prescribed patch is a flat top boundary).
+1b. **`unit/face_dirichlet`** (new): the exact-solution test of the corrected term. A 1-D configuration in 3-D: 8 × 8 × 32 cells of 3.125 mm (and 16 × 16 × 64 of 1.5625 mm), Neumann sides and bottom, the patch radius 1 m (every top cell prescribed), `T_expr = 638.22+3.74*t`, IC 280.15 K, one constant-law phase with Hu's granite (`kappa 2.5`, `rho 2640`, `Cp 827.2`), the face list in evaluate-only mode (so the face term is the one exercised), `timestep` 0.5 / 0.125 s, 120 s. Legs F (face list) and C (the column kernel: `surface_patch.face_list = 0`, removal off). Checks: (a) at t = 30, 60, 120 s the top-cell average rise vs the exact cell average `T0 + (A−T0)·erfc η + B t [(1+2η²) erfc η − (2/√π) η e^{−η²}]`, `η = z/(2√(αt))`, averaged over the cell: |error| ≤ **2 %** at 3.125 mm and ≤ **0.5 %** at 1.5625 mm; (b) coarse/fine error ratio ≥ **3** at each time (second order; factor 1 gives 2.0); (c) F and C identical to 1e-12 K (the two call sites agree); (d) `ledger_err_solid` ≤ 1e-9 on F (the mirror booked the same flux). The planner's 1-D numbers above are the expectation and are archived beside the script.
+2. **Evaluate-only mode** = `surface_patch.face_list = 1` with `spall.enabled = 0` and `vapor.enabled = 0` under `sp_weibull` (no new key: this is what the Kant onset decks ARE). Register `phi/removed/regime/RoP/fr_*/fl_*` under `removal_enabled() || face_list` (the guard M:614; S:353–354's reset likewise), let `RemovalStepBegins` (S:342) and `fl_on`/`void_aware` (M:2159, 2236) run under `face_list`; lift M:1117–1121 and M:1334–1335 for this case. In `RecedeAlongLines`: R0–R2 and the buckling withdrawal run as today; when evaluate-only, R3 and the ONE WRITE are skipped (no `fr_f`, `removed`, `phi`, `H` change), `fr_score`/`fr_mu` are written as today (F:1194–1203), and **one events row is emitted per cell whose winning line fired AFTER the buckling condition** (`o.fire` as left by `F:898`: exactly the rows production would write), in the existing header (`h_applied = 0`, `f_after = f0`, `h_line` as scanned, the rest as a fired row) — so `reduce.py`'s first-`dir = 5` statistic reads it unchanged. With buckling on, the lines the criterion fired BEFORE the withdrawal are in the buckling log (written as today). Nothing is removed in evaluate-only mode, so the temperature field does not depend on buckling: one run with buckling on gives the criterion's onset (the first floor row of the buckling log) AND the model's prediction (the first events row) — a buckling-off twin would reproduce the same firings and is not run. ⚠ Each cell fires at most once per step and may fire again next step (no state changes): the onset statistic takes the FIRST row per column; the test counts rows per column to show re-firing is bounded (≤ steps).
+3. **Face-list decks for what site A served.** `validation/kant/sp_kant_onset/input_verification_face` (+ `_hfl_face`): the old `input_verification`(`_hfl`) with `surface_patch.face_list = 1`, `robin_form = surface`, `surface.follow_mask = 1`, `spall.surface_T = reconstructed`, `spall.removal_energy = flake`, `spall.removal_events_csv = 1`, no `spall.enabled` (evaluate-only), constant-law phase, frozen `K_Ic0 1.5`, deterministic `sp.a0 20e-6`, `h 150` / `250`, `T_flame 1673.15`, the old mesh and stop times; `test_face` = targets 3 and 5 on the P2-13 statistic (first `dir = 5` row per column; the level = median T_surf over the patch columns, ΔT = level − 293.15) vs Eq. 15 with the old constants, `TOL 0.08`. `validation/kant/sp_kant_pressure_sweep/input_face` + `test_face`: R1, R2, R4 over `confining.p` ∈ {0, 27e6, 48e6} on argv, same bars. `validation/hu/hu_spall_onset/input_granite2_lefm` → face list (the same five keys; `spallation.sp.prescribed_T_surface.*` lines deleted — the face's `T_presc` IS the criterion's surface temperature; **the `spall.buckle_span = 0.0` override and its allow line deleted** so the rock file's 12 mm span applies — the full rule; `spall.buckle_log_csv = 1`); `test_lefm` reports (m4a) the criterion onset = the first floor-class row of the buckling log (t\*, `T_B1(t*)`, its `ell_p`, `bk`, `blocked`) and (m4b) the model's prediction = the first events row (or none by 120 s), each beside Hu's 37 s / 773 K; header "re-SCORE on the corrected boundary; buckling on" (DR-2). a NEW `unit/gradient_blind/input_face` (the same five keys; the test runs it too: "must not fire" on both decks). ⚠ The old `input` stays the fixture of `retired_keys`, `interlocks` and `lateral_flux_lock` UNTIL stage 2 — moving it now would change which abort fires first on the message-identity legs. The old `input_verification`, `_hfl`, `input_model`, `input_weibull`, `_cluster`, the old pressure-sweep input and both old tests stay on disk UNTIL stage 2 (the identity witnesses below need them).
+4. **Witnesses that need the column path alive (stage 1 only):** (i) **Dirichlet identity (plumbing)** — the Hu deck as a column run (today's file, `spall.enabled = 0`, no face list: pure thermal with the prescribed patch, on the stage-1 binary whose column term is corrected) vs the face-list evaluate-only deck: `Temp` identical at every plotfile (`audit_fields.py`: max |ΔT| over all cells and times; prediction bit-identical, bar ≤ 1e-9 K) — this proves the face plumbing; 1b proves the factor; (ii) **site A vs the face list on the same deck, in kelvin**: the old `input_verification` (site A) and `input_verification_face`, onset ΔT by the SAME statistic on both (site A's: the first plotfile time at which the top-slab maximum of the criterion field reaches 1, interpolated between plotfiles — `Sp_field` on site A, `fr_score` on the face list — with `amr.plot_int` such that plotfiles are ≤ 1 s apart), and the face list's event-row statistic beside it. Two implementations of one rule on one input: gate **≤ 10 K**, prediction ≤ 3 K; 3–10 K is reported with its cause (site A samples the top cell, the face list the line's scan); > 10 K is a finding about which site is right, scored against Eq. 15. (The 8 % ≈ 40 K tolerance is for the comparison with the closed form, not between the two sites.) (iii) the old `sp_kant_onset/test` and `sp_kant_pressure_sweep/test` run on the stage-1 binary unchanged (PASS; records of the last site-A run, `S/K1_kant_siteA.log`).
+5. Face gate: three new legs `KV_S` (`input_verification_face`, 10 s), `HU_S` (`input_granite2_lefm`, 10 s), `GB_S` (`gradient_blind/input_face`, its 0.04 s). `retired_keys` K leg for P2-27 DR-5 (`law = grimsel` + `spall.stress_law = scalar` requires `phase0.E`: present runs, absent aborts).
+
+**Stage 2 — build `p2_28`: delete the column path; the face gate re-pins under audit; the tree gate retires.**
+6. **Delete** `Removal.H` entirely; `M:1767` becomes `if (!RemovalStepBegins(lev)) return; ResetRemovalStepFields(lev); RecedeAlongLines(lev, time, dt, ColumnTopSolid(lev));` (or one `RemovalStep` in F holding those four lines). Delete every "Column-only in M" item above: site A + clusters, `BuildSurfaceTColumns`/`SharedSurfaceRecon`/`SurfaceRobinT` + `surf_*`/`rc_ell_prev`, the pinned closure + pin state + `pinned_*` columns, `PatchDiagnostics` + `patch_P_robin`, `GatherColumnSurface`, `ColumnSolidRunBelowTop`, the AMR column repair + the surface band + `surface.refine_depth/height`, the bit, the march's column gather and `q_col` Robin, the P0 keys' flags (F keeps its own R1), `DetachMode`, the clusters and `h_col_events` CSVs, `prescribed_stress.*`/`prescribed_T_surface.*`, `E_sup_local`. `robin_form`: enum {Cell, Face, Surface}; `pinned` ABORTS by value naming P2-28; `cell`/`face` stay for no-removal decks and ABORT with removal on ("the face list requires surface"); `pinned_idle_cycles` read-and-tolerated under `surface` (strict scope: a 3-line inline retired-at-default with a Message) and its two production lines deleted (`grimsel_calibration/input:94`; the HOS_R record token replays unchanged). `JetEnthalpyMarch` keeps the `fl_on_m` branch only. The stale kernel comment M:2128–2131, M:2290 corrected (P2-27 DR-3). The thermo column `ledger_err` RENAMED `ledger_err_raw` with the header comment "not a closure on a spalling deck (no flake credit); `ledger_err_solid` closes" (P2-27 DR-1; the tests that read it edited: face_vapor, face_heat, robin_face (a), interlocks if any).
+7. **Keys.** Retired-at-default: `spall.surface_T` → `reconstructed`, `spall.removal_energy` → `flake`, `weibull.detach_mode` → `per_face`, `surface.follow_mask` → `1` (tolerated at 1; aborts at 0 with removal; no-removal decks never set it). Interlock: `surface_patch.face_list = 0` (or absent) with `spall.enabled = 1` or `vapor.enabled = 1` ABORTS naming P2-28 ("one removal path"); the key stays meaningful for evaluate-only. ABORT list (presence): `bit.*`, `spall.clusters_csv`, `spall.h_col_events_csv`, `weibull.A_crit`, `spallation.sp.prescribed_stress.*`, `spallation.sp.prescribed_T_surface.*`, `surface.refine_depth`, `surface.refine_height`. `spall.stress_source` STAYS (the operator source is a future packet). `retired_keys`: R11 (every column-only name ×0 in `src/`: `UpdateRemovalAfterCohesive`, `BuildSurfaceTColumns`, `UpdateSpAfterMechanics`, `UpdateSpClusters`, `PatchDiagnostics`, `GatherColumnSurface`, `ColumnSolidRunBelowTop`, `PinRule`, `BuildPinEffective`, `SurfaceRobinT`, `SharedSurfaceRecon`, `RepairRemovalStateAfterRegrid`, `CheckSurfaceCovered`, `rc_ell_prev`, `h_col_events`, `DetachMode`, `connected_cluster`, `E_sup_local`, `Removal.H`; the retired key strings once each as table/abort-list literals — R9's quoted-literal instrument, adopted for R7/R8 too, P2-27 DR-4) + K legs on the gradient_blind face deck: `surface_patch.face_list=0` aborts; `robin_form=pinned` aborts; `spall.surface_T=cell_average` aborts / `=reconstructed` runs; `spall.removal_energy=cell` aborts / `=flake` runs; `weibull.detach_mode=connected_cluster` aborts / `=per_face` runs; `bit.enabled=0` aborts; `spall.h_col_events_csv=1` aborts; `spallation.sp.prescribed_T_surface.enabled=1` aborts; `surface.follow_mask=0` aborts / `=1` runs. SUBST loses `Removal.H`.
+8. **Decks.** Delete the retired lines from live decks (a2_apply): `pinned_idle_cycles` ×2 production; `spall.h_col_events_csv` (`unit/face_feet/input:74`); `bit.*` from `input_feet_face`; `spall.surface_T`/`removal_energy`/`follow_mask` lines at their defaults go per the a2 DEFAULT rule (`model_form_flame.inputs:18, :28, :37` go). `validation/shared/model_form_flame.inputs:38–39` (`robin_form = surface`, `face_list = 1`) stay (the form is the model; the list key is meaningful for evaluate-only decks).
+9. **Tests.** → `retired_units/` (README lines): `robin_pinned`, `robin_jet`, `jet_enthalpy`, `robin_feet`, `jet_d2c`, `pad_clear_ledger`, `pin_clock`, `removal_increment`, `scalar_flaw`, `beam_void_closure`, `seed_void`, `surface_T_recon`, `sp_v_n_regime`, `sp_lefm`; `robin_face`: `input_ledger` + its (b) legs retire (→ `retired_units/robin_face_ledger/`), (a) form legs KEEP (no removal; cell/face forms). → `retired_validation/column_path/` (README): `kant/sp_kant_onset/{input_verification, input_verification_hfl, input_model, input_weibull, input_weibull_cluster, test}` (⚠ they would RUN silently as thermal-only decks once `Sp_field` is gone — SR 1 — so they MOVE), the old `sp_kant_pressure_sweep/{input, test}`, `kant/sp_kant_onset_meiercfg` (successor `grimsel_calibration` c6), `validation/p0_steady_column` (successor `face_removal --floor`), `validation/rossi` (decision 3); `studies/s1_surface_resolution` stays a record in place (its `input` aborts loudly on `face_list` absent with removal). Meier column decks (`input_2d_dev`, `_melt`, `input_energy`, `input_drilling(_25mm)`, `input_feet`, `input_feet_d2c`), `test`, `test_feet*` stay in place as records (they abort loudly: pinned / bit / no face list) with one header line each; `extensions/hu_spall_onset_mmwbeam_lefm` the same (11 decks abort on the interlock). Survivors edited: `face_removal` (drop key-0 legs and the column half of `check_source` a3 i), `face_list` (drop OFF0/CAVU + clause iv), `face_buckle` (drop F_S_k0), `face_heat` (drop R_nolist; BASE tokens at default go), `face_beam` (drop U2), `gradient_blind` (`input` → `retired_units/gradient_blind_column/`; `input_face` becomes `input`, the fixture of the three locks moves to it), `convective_patch` KEEP, `amr_microstructure_regrid` KEEP (interlocks D5 fixture), `latent_heat` (interlocks D3 fixture: WARN-only dt, no face list). Locks rewritten per the Sources line counts (`lateral_flux_lock` loses every `Removal.H`/site-A clause and gains R11's twin name clause; `buckle_lock` drops the Removal.H read, B2's half, B3; `interlocks` re-based: G = gradient_blind face deck, dead legs removed, new legs for the stage-2 interlocks; ≥ 12 abort legs remain).
+10. **Gates and records.** Face gate: `run p2_28` → `cmp p2_28a p2_28` DIFFERENT by construction; `audit_components.py face p2_28a p2_28 --thermo` with the removed set per leg (`Sp_field, h_spall_field, crack_event_count, T_surf_field, ell_eff_field` everywhere + `Sp_cluster_id` on weibull legs) and a thermo-column audit (removed columns exactly `recon_*` ×8 + `patch_P_robin` + `surf_cols_robin` + `surf_q_mean` where present; `ledger_err` renamed; every kept column identical but the timers); CSVs identical except FEET_S's `*_h_col_events.csv` gone; `rankcheck p2_28`. Tree gate: NOT run; `REFERENCE.md` declares `p2_27.md5` the column era's last list and `hash.sh`, `post_all_par.sh`, `guarded_post_all_par.sh`, `tree_compare.py` records (a header line each; not deleted); `WHICH_TESTS.md` rewritten (the proposals in the test-side survey: march → `face_heat` (v)/(vi) + the gate; feet → `face_feet`; Robin → `robin_face` (a) + `face_beam` z1; column row deleted; beam → `beam`, `beam_tau`, `face_beam`, `face_melt`, `face_vapor`; decomposition → `rankcheck` + `face_feet` (g) + `amr_microstructure_regrid`; ledger → `face_feet` (e), `face_vapor`, `face_heat` (v)); `MODEL_CARD.md` §2 one removal path, §5 rows 141/146/147/150, §12 item 1 ✓; the ROADMAP notes that name the column path are released by the next `/plan`. `RESULTS.txt`: lines per file before/after; keys retired; the gaps the face list does not cover (named, not closed): the jet march's per-bin recursion vs the strip closed form, the feet descent's feed cap / stall / foot_rule modes, a beam path across an interior void.
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | change | read at | consumed at | guard | witness |
+|---|---|---|---|---|---|
+| L1 | the prescribed term is `2·kc·(sp_T − Tc)·inv_dz2` at BOTH sites (column `M:2348` + ledger `M:4361`, face + its ledger mirror), the same `kc`, `sp_T`, `inv_dz2` | M:2346–2348, 4361 vs the new face site | the enthalpy update, the ledger | `T_presc > 0` / `sp_presc` | a5 plumbing identity; a7 exact solution (2 %, 0.5 %, ratio ≥ 3) |
+| L1b | the buckling log is written for every criterion-fired line BEFORE the withdrawal; a withdrawn line has `o.fire = 0` and so writes no events row | F:881–898 | the log, the emit | `bk_on && o.fire`, `bk_log` | m4a reads the log, m4b the events; the test asserts every events row has a log row with `blocked = 0` at the same (time, col) |
+| L2 | no existing face-gate leg has a prescribed patch or removal off ⇒ stage 1 touches no existing leg's path | the 16 legs' decks | — | `mode`, `spall_enabled` | a2 IDENTICAL (16 legs) |
+| L3 | evaluate-only emits a row only when `o.fire` for the winning line; the statistic reads the FIRST `dir = 5` row per column | F:826–832, 959–966, the new emit | `reduce.py:42–53` | `!removal_enabled() && face_list` | a3: Eq. 15 within 8 %; rows per column ≤ steps |
+| L4 | `confining.p` reaches the face-list criterion | M:8641, S:55–56, F:670–671, 803 | `ScanSigmaT` | `confining_p != 0` | a4: R1 at 27 and 48 MPa, R4 slope |
+| L5 | the face-list criterion equals site A's on the same deck (P0 closed the gap; shared helpers) | F:793–853 vs M:5844–6171 | onset ΔT | — | a3 (ii): the two within 0.08 of each other; both vs Eq. 15 |
+| L6 | stage 2: every deleted function has zero callers outside the deleted set; every deleted field/column has no writer in F | the inventory | — | — | compile; R11 ×0; the component/thermo audit's removed sets EXACTLY the declared |
+| L7 | `ResetRemovalStepFields` and `ColumnTopSolid` survive and are called in the old order before `RecedeAlongLines` | S:351–375, M:4792 | F:1140–1190 | — | b1 kept components bit-identical on every leg |
+| L8 | the cell/face Robin forms stay reachable only without removal; the surface form is forced with removal | M:7622–7628, the new interlock | `SurfaceCellFlux` | `removal_enabled()` | K legs; `robin_face` (a) PASS; `convective_patch` PASS |
+| L9 | the HOS_S record argv (`pinned_idle_cycles=1.0e9`, `surface_patch.face=zhi`…) still replays | `face_gate.py from_record` | — | — | b1: HOS_S audited like every leg (not aborting) |
+| L10 | units: `T_presc` [K], `kc` [W/mK], `inv_dz2` [1/m²], `confining.p` [Pa], Eq. 15 ΔT [K], slope [K/MPa], `ledger_err_raw` [–] | — | — | — | z0 lists them |
+| L11 | deck edits: every deleted line DEFAULT (a2 rule) except the declared LIVE ones (`face_feet:74` h_col CSV → one file leaves FEET_S; `input_feet_face` bit lines inert); stage 1 edits NO existing deck (new files only, plus the Hu deck's two `prescribed_T_surface` lines) | a2_apply | — | — | z0's list; a6 (the three locks' fixtures unchanged at stage 1) |
+
+### Chain (exact tokens; `PY=/Users/tzetze20/Desktop/code/.venv/bin/python`, `W=tests/MMWSpalling/studies/tree_sweep_0922/witness`, `TC=tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py`, `S=tests/MMWSpalling/studies/p2_28_column_path`; serial, under caffeinate, lid open, charger in; the chain logs sleep events per stage as P2-27's did)
+
+| step | what | expected |
+|---|---|---|
+| z0 | offline (`S/z0.py > S/Z0.txt`): every Sources anchor re-resolved; the removed-component and removed-column sets per face leg from `face_p2_27_headers.txt` + one Header per leg; the test classification table (KEEP / RETIRE / MOVE / EDIT) with the silent-inertness check (a moved deck would RUN after stage 2 ⇒ it MOVES); the deck-edit list DEFAULT/LIVE; `bin_pre/`, `src_pre_1/` | no STOP |
+| s1 | build stage 1; `S/bin_1/` | compiles |
+| g1 | `guarded_post_all_par.sh p2_28a`; `TC p2_28a p2_27 d2aa d2t`; `face_gate.py run p2_28a`; `cmp p2_27 p2_28a` | tree **0 of 2,901 changed**; face IDENTICAL on 16, `KV_S`/`HU_S`/`GB_S` only-in-new |
+| k1 | a7: `unit/face_dirichlet` (both meshes); a3: `sp_kant_onset/test_face` (targets 3, 5); a4: `sp_kant_pressure_sweep/test_face` (R1, R2, R4); a5: `S/dirichlet_identity.py` (Hu column vs face); the old `sp_kant_onset/test` and `pressure_sweep/test` on the stage-1 binary; `hu_spall_onset/test_lefm` (m4); `gradient_blind/test`; `retired_keys`, `interlocks`, both locks, `face_removal --check`; b5's BEFORE half: `grimsel_calibration/run.py CAL` (60 s) on the stage-1 binary, archived to `S/cal_before/` | PASS; m4a/m4b recorded; **STOP: write the stage-1 notes, set the status "stage 1 complete — awaiting the user", end the session** |
+| s2 | `src_pre_2/`; build stage 2; test moves and edits; deck edits | compiles |
+| g2 | `face_gate.py run p2_28`; `cmp p2_28a p2_28` (DIFFERENT by construction); `audit_components.py face p2_28a p2_28 --thermo`; `rankcheck p2_28` | audits PASS (removed sets exactly as declared; kept bit-identical; CSVs identical but the one h_col file) |
+| k2 | `retired_keys` (R11 + K), `lateral_flux_lock`, `buckle_lock`, `interlocks`, every KEPT test with a deck on the face list or no removal: `face_*` ×8, `gradient_blind`, `robin_face` (a), `convective_patch`, `amr_microstructure_regrid` (rc 1 before: record), `latent_heat`, `beam`, `beam_tau`, `beam_schedule`, `profile_depth`; b5's AFTER half: `grimsel_calibration/run.py CAL` (60 s) on the stage-2 binary, compared with `S/cal_before/` | PASS; CAL identical before/after |
+| r | `REFERENCE.md`, `WHICH_TESTS.md`, `MODEL_CARD.md`, `retired_*/README.md`, `RESULTS.txt` | — |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 | offline: anchors; removed sets per leg; test classification with the silent-inertness check; deck edits | every item found or struck; every retiring deck either MOVES or aborts loudly after stage 2 (none runs silently) | **gate** | the inventory drifted; or a record deck would run as a thermal-only deck with its onset field gone (SR 1) |
+| a1 | 2 | tree `p2_28a` vs `p2_27` | 0 of 2,901 changed | **gate** | stage 1 touched the column path |
+| a2 | 2 | face `cmp p2_27 p2_28a` | IDENTICAL on the 16 legs; exactly `KV_S`, `HU_S`, `GB_S` only-in-new | **gate** | the prescribed/evaluate branches are reachable on a removal deck |
+| a3 | 2 | `sp_kant_onset/test_face`: (i) onset ΔT vs Eq. 15 (frozen K_Ic) within 0.08; h 150 vs h 250 within 0.08; (ii) face vs the old site-A deck on the same statistic, in kelvin | (i) PASS; (ii) **≤ 10 K** (prediction ≤ 3 K) | **gate** | the evaluate-only criterion is not the criterion (site A and the list disagree: name which matches Eq. 15) |
+| a4 | 2 | `sp_kant_pressure_sweep/test_face`: R1 (p 0/27/48 MPa within 0.08), R2 monotone, R4 slope −0.9286 K/MPa within 20 % | PASS | **gate** | `confining.p` does not reach the face-list criterion as read (L4 wrong) |
+| a5 | 2 | Dirichlet identity (plumbing): Hu column vs Hu face, both corrected, `Temp` at every plotfile | max \|ΔT\| ≤ 1e-9 K (prediction: bit-identical) | **gate** | the face term is not the column term, or one of the two sites was not corrected |
+| a7 | 2 | `unit/face_dirichlet` (1b): top-cell rise vs the exact cell average at 30 / 60 / 120 s; convergence; F ≡ C; ledger | ≤ 2 % at 3.125 mm, ≤ 0.5 % at 1.5625 mm; ratio ≥ 3; F ≡ C to 1e-12 K; `ledger_err_solid` ≤ 1e-9 | **gate** | the factor is still wrong (an error ≈ −12 to −20 % and ratio ≈ 2 is the old term), or the boundary is first-order for another reason |
+| a6 | 2 | the old `sp_kant_onset/test`, `pressure_sweep/test`, `gradient_blind/test`, `retired_keys` (+ DR-5 leg), `interlocks`, both locks, `face_removal --check` | PASS (face_removal byte-identical to P2-19's log) | **gate** | stage 1 moved a column-path result |
+| m4a | 2 | Hu, the criterion onset: the first floor-class row of the buckling log — t\*, `T_B1(t*)`, `ell_p`, `bk` | report; pre-registered **50–66 s at 826–885 K** (Hu 37 s / 773 K); outside: name the side with the corrected boundary in place (a mesh refinement is a diagnostic only AFTER a7 passes) | report | — |
+| m4b | 2 | Hu, the model's prediction with the full rule: the first events row | report; pre-registered **NONE by 120 s** — every firing withdrawn by buckling (`ell_p` 6.6–7.9 mm at 37–66 s, beyond the 3.34 mm that separated spalls in P2-25); a passing row is a finding (its `ell_p`, `bk` name why) | report | the first test of the buckling rule against a real experiment: Hu SAW spalling at 37 s, so "none" is a model–experiment disagreement to explain (the fixed 12 mm span against Hu's 30 mm patch is the first candidate), not a bug |
+| b1 | 3 | face `p2_28a` → `p2_28` component + thermo audit | removed fields = the declared per-leg set; removed columns = the declared set; `ledger_err` → `ledger_err_raw` only a rename (values identical); every kept component/column bit-identical (timers excluded); CSVs identical but FEET_S's h_col file gone; nothing only-in-new | **gate** | a deletion reached a face-list computation (`ResetRemovalStepFields`, `ColumnTopSolid`, the march, the ledger), or a field F writes was deregistered |
+| b2 | 3 | `rankcheck p2_28` | decomposition-stable | **gate** | — |
+| b3 | 3 | `retired_keys` R11 + K (two-sided), `lateral_flux_lock`, `buckle_lock`, `interlocks` (≥ 12 legs) | PASS; R11 RED on `src_pre_2` | **gate** | a column-only name survives, or a retired key is silently ignored |
+| b4 | 3 | every KEPT test (k2's list) | PASS (regrid: state recorded) | **gate** | a survivor depended on the column path |
+| b5 | 3 | `grimsel_calibration` CAL leg (60 s), stage-1 binary vs stage-2 binary | events CSV byte-identical; every kept thermo column identical (timers excluded); the c1 level (median of first dir-5 rows) reported beside P2-13's 850.43 K as a separate row (it predates P2-17…P2-27 and may have drifted for reasons outside this packet) | **gate** (identity); report (vs 850.43) | the deletion was not inert on the calibration |
+| m1 | 3 | lines: R gone (1,869), M before/after, F/S; tests moved (lines); keys retired | report (expected ≈ −3,300 src lines, ≈ 15,000 test lines to `retired_*`) | report | — |
+| m2 | 3 | the coverage gaps named in `RESULTS.txt` | the three gaps listed with the test that used to cover each | report | — |
+| e0 | 4 | verdict | — | **verdict** | a1–a7, b1–b5 hold ⇒ one removal path, the face gate THE gate, the column era a record with its last list kept, and the Hu/Kant onsets scored on the production criterion |
+
+### Pre-registered predictions
+- **P1.** Stage 1: tree 0 changed; face IDENTICAL on 16 legs (no existing leg has a prescribed patch or removal off — the column-kernel correction touches no gate deck); `Temp` on the Hu deck bit-identical column vs face (same corrected expression, same operands); the exact-solution errors as the planner's 1-D check (−1.48 / −1.02 / −0.70 % at 3.125 mm, ratio ≈ 4).
+- **P2.** The face-list evaluate-only onset reproduces Eq. 15 within 8 % and site A within 3 K: P0 closed the two-site gap and the list uses the shared helpers; the pressure slope lands within 20 % of −0.9286 K/MPa (the calibration's p 27/48 legs already moved the level −26 / −38 K ≈ −0.98 / −0.80 K/MPa).
+- **P3.** Hu: the criterion fires LATER than Hu (50–66 s at 826–885 K: the corrected boundary puts ≈ 70–90 K more into the top cell than P2-27's run, and the face's T_s is the boundary itself), and **buckling withdraws every firing (no spall predicted by 120 s)**: Hu's layer is twice as deep as any layer that spalled in P2-25.
+- **P4.** Stage 2 removes exactly the declared components and columns from every face leg and nothing else; `CAL` is byte-identical before/after; ≈ 3,300 source lines leave; every retiring deck is moved or aborts loudly.
+
+### Refuting evidence on disk
+- `witness/face_p2_27_headers.txt`, `face_p2_27/*/run/*cell/Header`: the component sets the audit must match.
+- `kant/grimsel_calibration/RESULTS.txt` (c1 850.43 K; c5 −26.48 / −38.43 K; c6 mesh rows): the production numbers stage 2 must reproduce and the pressure slope's scale.
+- `kant/sp_kant_onset/output/*`, `sp_kant_pressure_sweep/output/*` (site A's last runs): a3 (ii)'s other side.
+- `studies/p2_27_cleanup/M4_hu_lefm.log` (107.88 s; top cell 790.7 K at onset ≈ the factor-1 column of the planner's 1-D table): the artefact m4a must not reproduce.
+- `Claude_markdowns/scripts/p2_28_dirichlet_1d.{py,txt}`: the factor-1 / factor-2 / exact-solution numbers a7 is predicted to reproduce.
+- `studies/p2_25_regime_map/RESULTS.txt` (`bc_ell_p` S ≤ 3.341 mm, non-S ≥ 3.370 mm): the basis of m4b's "none".
+- `studies/p2_27_cleanup/K5_face_feet.log`: the ledger/CSV reductions and the `ledger_err` 0.40 that motivates the rename.
+
+### What would make this inert, and the witness for each
+- The prescribed face billed by `FrFaceFlux` after all (`T_presc` never set): with `e.h = 0` the face would not heat and the Hu face run would stay at 280 K — a5's max |ΔT| would be hundreds of K, not ≤ 1e-9.
+- Evaluate-only emitting no rows: a3 fails on an empty statistic — the test asserts ≥ 1 row per patch column within the run.
+- The evaluate-only list built but `fr_score` not written: `KV_S`'s `fr_score` component non-zero on patch cells at the last plotfile (z0 declares the check; k1 reads it).
+- A retiring deck that still runs silently: z0's silent-inertness check (the deck's keys after stage 2: removal off + no face list ⇒ it RUNS ⇒ it must MOVE).
+- The audit tolerant by accident: `audit_components.py` is run once with a WRONG declared set on purpose (one name missing) and must FAIL (the planted mutation, as the locks do).
+
+### Guardrails
+- Nothing on the production path changes except by the declared causes: no rock constant, no span, no c_f, no R, no flaw, no loss table, no beam; `model_form_flame.inputs` loses only default lines; `weibull.V0` untouched.
+- The cell and face Robin forms, `SurfaceCellFlux`'s cell/face/surface branches, `ColumnTopSolid`, `ColumnSolidAboveCount`, `InitSurfaceMask`, `ApplySeedVoid`, `UpdateSurfaceMaskFromPhi`, `surf_side_share`, `patch_min_standoff`, `flaw_a`, `regime_field`, `spall.stress_source`, the mechanics (MECH), the microstructure (MICRO), Zhang (D) stay.
+- Stage 1 adds, and corrects ONE term at its two call sites (the prescribed Dirichlet factor); it deletes nothing and edits no existing leg's deck. Stage 2 deletes; it adds no physics. The material kernel's term (`M:1946`, D's path) is not touched.
+- The implementer stops after stage 1; stage 2 needs the user's go.
+- The Meier column decks, `test_feet*`, the s1 study, the extension decks and every `legs/`, `run.py`, `src_pre/`, `inputs_pre/` are records: a header line at most. `p2_27.md5`, `face_p2_27.md5` and every earlier list stay on disk.
+- `retired_units/` and `retired_validation/` READMEs name the successor test for each retired subject.
+- Nothing committed.
+
+### Commands
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+PY=/Users/tzetze20/Desktop/code/.venv/bin/python; S=tests/MMWSpalling/studies/p2_28_column_path
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness; TC=tests/MMWSpalling/studies/p2_9_face_removal/tree_compare.py; U=tests/MMWSpalling/unit; V=tests/MMWSpalling/validation
+mkdir -p $S/bin_pre && cp bin/mmwspalling-3d-g++ $S/bin_pre/ && shasum -a 256 $S/bin_pre/mmwspalling-3d-g++ > $S/BINARY_pre.txt
+$PY $S/z0.py > $S/Z0.txt
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8   # each stage
+bash $W/guarded_post_all_par.sh p2_28a; $PY $TC p2_28a p2_27 d2aa d2t                        # stage 1 only
+$PY $W/face_gate.py run p2_28a; $PY $W/face_gate.py cmp p2_27 p2_28a
+$PY $V/kant/sp_kant_onset/test_face; $PY $V/kant/sp_kant_pressure_sweep/test_face; $PY $S/dirichlet_identity.py; $PY $V/hu/hu_spall_onset/test_lefm
+# stage 2:
+$PY $W/face_gate.py run p2_28; $PY $S/audit_components.py face p2_28a p2_28 --thermo; $PY $W/face_gate.py rankcheck p2_28
+for t in retired_keys lateral_flux_lock buckle_lock interlocks gradient_blind robin_face convective_patch face_feet face_vapor face_melt face_beam face_heat face_list face_removal face_buckle; do $PY $U/$t/test; done
+$PY $V/kant/grimsel_calibration/run.py CAL && $PY $V/kant/grimsel_calibration/reduce.py                 # b5
+wc -l src/Integrator/MMWSpalling.H src/Integrator/MMWSpalling/*.H src/Numeric/MMWBeam.H                 # m1 (12,651 before)
+```
+
+### Claude completion notes (stage 1)
+
+Stage 1 implemented 2026-11-09 (`/implement`), study `tests/MMWSpalling/studies/p2_28_column_path/` (`S/`), chain
+`S/chain.sh 1` (one call; log `S/CHAIN.log`; 0 sleep/wake events). Binaries: pre `27433870` (= P2-27's), stage 1
+**`e291bc04`** (`S/BINARY_1.txt`, `S/bin_1/`). A first chain on `8a1bfe93` (before the one-step-lag fix, deviation 5) is
+kept in `S/r0/`; the fix changed the binary, so every row below is the full chain re-run on `e291bc04`. **Stage 2 is not
+started.** Nothing committed.
+
+**Files changed.** src: `MMWSpalling.H` (+105: `list_state()`/`evaluate_only()`, seven interlocks relaxed for the list,
+the dt bound `2d+1` on a prescribed top, the kernel/ledger/beam `void_aware`, the column term ×2 under `!fl_on`, the
+face Dirichlet bill, `BuildFlameColumns`' constant-patch list half, `FaceEntry::T_presc`, `FaceListHeat`'s prescribed
+branch, the diagnostics/ledger mirrors, the struct comment), `MMWSpalling/FaceRemoval.H` (+69: the prescribed T_s in
+`FrAssignTs` and R1, the shared depth rule, evaluate-only rows, the ONE WRITE skipped), `MMWSpalling/Shared.H` (+1:
+`RemovalStepBegins`). Tests: new `unit/face_dirichlet/{input,test}`, `kant/sp_kant_onset/{input_verification_face,
+input_verification_hfl_face, test_face}`, `kant/sp_kant_pressure_sweep/{input_face, test_face}`,
+`unit/gradient_blind/input_face`; edited `hu/hu_spall_onset/{input_granite2_lefm, test_lefm}`, `gradient_blind/test`
+(the face leg), `retired_keys/test` (K30/K31), `lateral_flux_lock/test` (deviation 4), `witness/face_gate.py` (KV_S,
+HU_S, GB_S). Study: `z0.py`, `pf.py`, `chain.sh`, `dirichlet_identity.py`, `siteA_vs_face.py`, `stage1_checks.py`,
+`legs/hu_column/input` (the P2-27 Hu deck, a5's column side). Archived (moved, SR 9): the old site-A outputs of
+`sp_kant_onset`, `sp_kant_pressure_sweep`, `hu_spall_onset/output_lefm` → `S/archive/*_pre_p2_28`.
+
+| # | test | measured | result | output |
+|---|---|---|---|---|
+| z0 | offline | 103 anchors resolved against `src_pre_1/` (13 drift, max −103: the march's `fl_on_m` declaration vs the cited use); the 16 face legs all removal-on, none prescribed (BEAM_S: patch off); removed sets per leg = the five fields everywhere + `Sp_cluster_id` on CAV/STAIR/FLAT_P/BORE_P/M0S…, 11 thermo columns; every retiring deck MOVES or ABORTS after stage 2 (the 4 silent Kant/pressure onset decks all MOVE); 28 KEEP decks run; deck-edit list (LIVE incl. `pinned_idle_cycles` on `face_list/input`, `face_removal/input`, CAL); dt of the new decks 0.41–0.71 | PASS | `S/Z0.txt` |
+| a1 | tree `p2_28a` vs `p2_27` | **0 of 2,901 changed**, 0 only-in; controls d2aa 1,230 / d2t 1,346 | PASS | `S/GATE_a1.txt` |
+| a2 | face `p2_27` → `p2_28a` | 1,529 common, 0 changed but the 16 thermo timer columns; only-in-new 481 = KV_S 295 + HU_S 157 + GB_S 29; dt message 19/19 | PASS | `S/GATE_a2.txt`, `S/STAGE1_CHECKS.txt` |
+| a3 | (i) `sp_kant_onset/test_face` | dT **446.9 K** (h 150) / **447.9 K** (h 250) vs Eq. 15 445.6 K: 0.30 / 0.52 %; target 5 0.22 %; 576/576 columns, ≤ 124 rows per column of 480 steps; onset 35.6 s / 12.8 s | PASS | `S/K1_kant_face.log` |
+| a3 | (ii) site A vs face, same statistic (top-slab max criterion = 1, dT = top-cell mean) | **gate (deviation 3): face `fr_score` vs site A `Sp_field` on the SAME run: 0.00 K** (418.38 K both, t 35.57 s); reported: the recorded deck (site A at the CELL-AVERAGE T) 446.09 K → **−27.71 K**: the surface-temperature form, not the site — the face's own T_surf statistic is 446.93 K (Eq. 15 +0.30 %), the variable Eq. 15 is written in | PASS (declared gate) | `S/K1_siteA_vs_face.log` |
+| a4 | `sp_kant_pressure_sweep/test_face` | R1 446.9 / 421.9 / 402.1 K vs 445.6 / 420.5 / 401.0 (≤ 0.34 %); R2 monotone; R4 −0.9343 vs −0.9286 K/MPa (0.6 %) | PASS | `S/K1_pressure_face.log` |
+| a5 | Dirichlet identity, Hu column vs face | **bit-identical**: max \|ΔT\| 0 over 121 plotfiles to 120 s | PASS (prediction met) | `S/K1_dirichlet_identity.log` |
+| a7 | `unit/face_dirichlet` | rise error **−1.464 / −1.018 / −0.698 %** (3.125 mm) and **−0.321 / −0.241 / −0.170 %** (1.5625 mm) at 30 / 60 / 120 s (the planner's −1.48/−1.02/−0.70, −0.32/−0.24/−0.17); ratio 4.57 / 4.23 / 4.12; F ≡ C bit-identical both meshes; ledger_err_solid 1.6e-15 / 4.9e-15; fl_P_top 94.1 W | PASS | `S/K1_face_dirichlet.log` |
+| a6 | the old site-A tests and the locks | old `sp_kant_onset/test` PASS with its recorded numbers (446.1, 351.9, 446.8, 56/576, sweep 9/9); old `pressure_sweep/test` PASS; `gradient_blind` 0 firings on `input` AND `input_face`; `retired_keys` PASS (K30 aborts naming `microstructure.phase0.`, K31 runs); `interlocks` PASS (messages unchanged); `lateral_flux_lock` PASS after deviation 4; `buckle_lock` PASS; `face_removal --check` byte-identical to P2-19's log | PASS | `S/K1_*.log` |
+| m4a | Hu, the criterion's onset (buckling log) | first floor row **t\* 50.00 s at T_s 825.22 K = T_B1(t\*)** (rim column 11,16; ell_p 4.39 mm, bk 1.95, withdrawn); per column (76/76): median **56.25 s at 848.60 K** (p10 832.7, p90 878.5); Hu 37.0 s / 773.15 K → +13.0 s / +52.1 K (first). Pre-registered 50–66 s / 826–885 K: the median INSIDE, the first column 0.78 K below (< one step, 1.87 K) | report | `S/K1_hu_lefm.log`, `S/STAGE1_CHECKS.txt` |
+| m4b | Hu, the model's prediction | **NONE by 120 s**: 9,545 firings, all withdrawn (bk 1.38–2.93; per column at first firing ell_p median 5.65 mm, bk min 1.69) — as pre-registered; Hu SAW spalling at 37 s (the model–experiment disagreement the packet names) | report | `S/K1_hu_lefm.log` |
+| b5 | CAL BEFORE half | CAL 60 s rc 0 on `e291bc04`, archived `S/cal_before/` (10,804 event rows) | — (stage 2 compares) | `S/K1_cal_before.log` |
+| b1–b4, b5 AFTER, m1, m2, e0 | stage 2 | see *Claude completion notes (stage 2)* | — | — |
+
+**Declared deviations** (none a tuned number; each a gap closed or a bar restated with its reason):
+1. **Step zero: four refusals beyond the packet's lift list** blocked evaluate-only / prescribed decks: `robin_form =
+   surface`, `removal_events_csv = 1` and `removal_energy = flake` each "require spall.enabled = 1", and
+   `SurfacePatch::Parse` refused `robin_form = surface` under a prescribed patch. Each now also admits the face list
+   (`evaluate_only()` / `face_list`); every message is unchanged (interlocks I2, I6, I9–I11 abort as before). The
+   prescribed-vs-`follow_mask` refusal is lifted ONLY under the face list (the column path keeps it).
+2. **Constant flames as constant maps.** The list refuses `h_conv`/`T_flame` (F2 evaluates h_expr per face), so the
+   three Kant face decks and `gradient_blind/input_face` write `h_expr`/`T_flame_expr` constants + `nozzle_z0 1.0` +
+   `nozzle_collision_radius 0.05` (SR 6). Lifting that refusal outright would have left the list unheated
+   (`BuildFlameColumns`' constant branch returns before `FaceListHeat`).
+3. **a3 (ii)'s gate pair.** The recorded deck runs site A at `spall.surface_T = cell_average` (its default) — not the
+   face list's rule; the same deck + `spall.surface_T=reconstructed` SEGFAULTS at step 1 on the P2-27 binary too (site
+   A's reconstruction needs `surface.follow_mask`; column path, pre-existing, dies at stage 2). The face deck runs site
+   A every step on the same field at the reconstructed T, so the gate is `fr_score` vs `Sp_field` on that one run; the
+   recorded deck is reported (−27.7 K, cause above).
+4. **`lateral_flux_lock` restated, not loosened**: `FaceListHeat` has 3 call sites (the constant-patch branch of
+   `BuildFlameColumns`, which returns after it), with a new structural clause asserting that placement — still once per
+   step. First chain: RED on the count (2 → 3).
+5. **The prescribed face's T_s is T_expr(`time`)**, not the list's `T_presc`: removal runs BEFORE the kernel in
+   `Advance`, so the list's value is one step old (the r0 run logged 50.5 s against T_B1(50.0)). Fixed; `test_lefm`
+   now asserts T_s == T_B1(time) on every floor row (max |diff| 0).
+6. Hu deck: `amr.thermo.plot_int = 1` (the buckling log is written on thermo steps only; else m4a would be empty).
+7. Evaluate-only rows: `h_line`/`h_n` = the h production would apply (`through ? L_av : h_f` clipped), `h_applied` 0,
+   `n_voided` 0, `f_after` = the cell's own fraction; `fr_n_*`/`fr_v_*` (recessions) not counted; `fl_id_march` is 0
+   under a prescribed patch (no march).
+8. a3 (ii) lives in `S/siteA_vs_face.py` (it needs site A, which stage 2 deletes); `test_face` scores (i) only.
+
+### Implementation takeaways (stage 1)
+
+1. ⚠⚠ **Bit-identity across two call sites needs the same EXPRESSION SHAPE, not the same value**: the compiler fuses
+   the last multiply with the add (FMA), so `div += w * (2 kc ΔT inv_dz2)` differed from the column's
+   `div += 2 kc ΔT inv_dz2` by one ulp in H at 8 of 76 cells even with w = 1.0 exactly. Writing `w * 2.0 * kc * ΔT *
+   inv_dz2` (w first) restored bit-identity. Any future "same term, second site" must copy the product order.
+2. **The removal step runs before the kernel** (`Advance`: criterion and removal, then the swap, then the kernel). Any
+   per-step value the kernel stores on the list (`T_presc`, `h`, `Tg`) is one step old when the criterion reads it; a
+   time-dependent boundary must be re-evaluated at `time` there.
+3. **Two Kant statistics differ by ~28 K, and only one is Eq. 15's variable.** The old test's dT is the TOP-CELL mean at
+   the crossing; Eq. 15's Θ is the SURFACE rise. Site A at cell-average T fired when the cell reached Θ (446.1 K), the
+   face list when the surface did (T_surf 446.9 K; its top cell then 418.4 K). Both "match Eq. 15" in their own variable;
+   a future comparison must name the variable (SR 17).
+4. **Hu under the full rule**: the criterion fires at 50–72.5 s (median 56.3 s, 848.6 K) on every patch column, and
+   buckling withdraws every firing (bk ≥ 1.69): the heated layer at first firing is 4.3–6.7 mm (median 5.65 mm; the
+   planner's 1-D 7.28 mm is the axis without the rim's lateral loss), against the ≤ 3.34 mm that spalled in P2-25 and a
+   12 mm span. Spalling at Hu's onset would need bk ≤ 1: the span ≥ 1.69 × 12 = 20 mm or a layer ≤ 0.59 × its value —
+   the first quantitative handle on the 37 s disagreement (the packet's candidate: the fixed span vs Hu's 30 mm patch).
+5. **Site A cannot reconstruct without `surface.follow_mask`** (segfault, P2-27 binary too); the KV face deck's
+   `Sp_field` is site A at the reconstructed T for free — equal to `fr_score` at every crossing here (0.00 K).
+6. `face_gate.py cmp` prints only the first 20 only-in paths; count them from the two `.md5` lists
+   (`S/stage1_checks.py`).
+7. The P2-27 Hu record (107.88 s / 1041.7 K) is superseded: 50.0 s first / 56.3 s median on the corrected boundary.
+
+### Claude completion notes (stage 2)
+
+Stage 2 run 2026-11-09 on the user's "go". Chain `S/chain.sh 2` (log `S/CHAIN.log`) on binary **`ee4b6b9b`**
+(`S/BINARY_2.txt`, `S/bin_2/`, ships), then `S/chain2b.sh` (the corrected b1 + b5). 27 sleep/wake events in the window
+(the user's pause, `kill -STOP`/`-CONT`; `S/SLEEP_2.txt`); no leg died. Nothing committed.
+
+**Files changed.** src: `MMWSpalling/Removal.H` **deleted** (1,869 lines; pre-image `S/src_pre_2/`); `MMWSpalling.H`
+8,945 → 7,283 (`S/stage2_src.py`, the transform from the pre-images: the column dispatch, site A, the reconstruction,
+the bit, the pin rule, the march's column flux, the column ledger terms and diagnostics; the retired-key rows and
+presence aborts; the four new interlocks; `RemovalStep`); `FaceRemoval.H` +13 (`RemovalStep`; `SurfaceCellFlux` without
+the pin arguments); `Shared.H` (comment lines). Tests (`S/stage2_tests.py`, log `S/STAGE2_TESTS.txt`): 16 unit tests →
+`retired_units/`, the site-A Kant/pressure decks and tests, `sp_kant_onset_meiercfg`, `p0_steady_column`, `rossi` →
+`retired_validation/column_path/` (both READMEs name each successor); record headers on the Meier column decks, s1 and
+11 extension decks and the four tree scripts; 44 default-valued deck lines deleted. Edited tests: `retired_keys`
+(R11, K32–K44), `lateral_flux_lock`, `buckle_lock`, `interlocks` (rewritten), `face_feet`, `face_vapor`, `face_heat`,
+`face_list`, `face_beam`, `face_buckle`, `face_removal`, `face_dirichlet`, `robin_face`, `gradient_blind`,
+`latent_heat` (deviation 2). Witness: `face_gate.py` (DROP `bit.enabled`; GB_S reads `gradient_blind/input`),
+`WHICH_TESTS.md` rewritten for the face gate, `REFERENCE.md` (P2-28 block: `face_p2_28.md5` is THE gate). Docs:
+`MODEL_CARD.md` (§1, §2, §5, §11 7b, §12). Study: `stage2_src.py`, `stage2_tests.py`, `audit_components.py`,
+`cal_compare.py`, `chain2b.sh`, `RESULTS.txt`. Build: `obj/obj-3d-g++/mmwspalling.cc.d` deleted (deviation 8).
+
+| # | test | measured | result | output |
+|---|---|---|---|---|
+| b1 | face `p2_28a` → `p2_28` audit | 2,010 / 2,010 paths, none on one side only; 280 plotfiles = **140 removed-ok + 140 identical**, 0 FAIL; per leg the removed fields ⊆ {Sp_field, Sp_cluster_id, h_spall_field, crack_event_count, T_surf_field, ell_eff_field} as each carried them (KV_S 3, HU_S 4, GB_S 5, the rest 5–6); 17 thermo files lose exactly `recon_*` ×8 (+ `surf_cols_robin`, `surf_q_mean`, `patch_P_robin` where present), `ledger_err` → `ledger_err_raw` values identical, every other column identical; CSVs identical. `--mutate` FAIL (140) as it must | PASS (after deviation 1) | `S/K2b_audit.log`, `S/K2b_audit_mutate.log`; first run `S/K2_audit.log` |
+| b2 | `rankcheck p2_28` | -np 1 vs 4 on fl/CAV, fr/T00_1_k1: CSVs identical, thermo rel 1.0e-15 | PASS | `S/K2_rankcheck.log` |
+| b3 | `retired_keys`, both locks, `interlocks` | retired_keys PASS (R11 GREEN; RED on `pre2_flat/` = `src_pre_2` and on a planted comment; K32–K44 two-sided); `lateral_flux_lock` PASS; `buckle_lock` PASS; `interlocks` PASS (15 abort legs ≥ 12, 3 valid decks, 5 dt legs; dt message 19/19 face legs) | PASS | `S/K2_{retired_keys,lateral_flux_lock,buckle_lock,interlocks}.log` |
+| b4 | every KEPT test | PASS: face_feet, face_vapor, face_melt, face_beam, face_heat, face_list, face_buckle, face_dirichlet, gradient_blind, robin_face (a), convective_patch, beam, beam_tau, beam_schedule, profile_depth, kant_face, pressure_face; **latent_heat FAIL in the chain → PASS after deviation 2**. Records: `face_removal --check` FAIL (4) = P2-19's four rows, same numbers; `amr_microstructure_regrid` rc 1 on the is_grain_boundary line it carried before P2-27; hu_lefm 50.00 s / 825.2 K, none (= stage 1) | PASS | `S/K2_*.log` |
+| b5 | CAL 60 s, stage 1 vs stage 2 | event log **BYTE-IDENTICAL** (10,804 rows); thermo: the declared columns gone, rename only, every other column identical | PASS | `S/K2_cal_compare.log`, `S/K2_cal_after.log` |
+| b5 | c1 level (report) | **850.43 K before and after = P2-13's banked 850.43 K** (0.00 K); 19.6 % of first rows above the 873.15 K table end | report | `S/K2_cal_compare.log` |
+| m1 | lines | src 12,651 (P2-27) → 12,826 (stage 1) → **9,308** (−3,343; stage 2 alone −3,518): M 7,283, F 1,375, S 378, R deleted, MMWBeam 272; tests to `retired_*` 11,653 source lines (validation 4,770, units 6,883); keys: 5 by presence + 3 families, 4 at a default, `robin_form = pinned` by value | report (≈ −3,300 expected) | `S/RESULTS.txt`, `S/LINES_2.txt` |
+| m2 | coverage gaps | (1) the jet march's per-bin recursion vs the strip closed form ← `jet_enthalpy`; (2) the feet descent's feed cap / stall / foot_rule modes ← `jet_d2c`; (3) a beam path across an interior void ← `beam_void_closure` | report | `S/RESULTS.txt`, `retired_units/README.md` |
+| e0 | verdict | a1–a7 and b1–b5 hold ⇒ one removal path (the face list); the face gate is THE gate (`face_p2_28.md5`); the tree gate a record, its last list `p2_27.md5`; the Kant and Hu onsets scored on the production criterion | **every gate held** (the verdict is /verify's) | `S/RESULTS.txt` |
+
+**Declared deviations (stage 2):**
+1. **b1's declaration, not its computation.** The packet declared FEET_S's h_col events CSV as the one path that
+   leaves; it never existed on the face list (only the column path wrote it), so the first audit FAILED (1) on the
+   phantom alone. `GONE_PATHS` emptied (the stronger bar, "nothing on one side only"); the audit code otherwise
+   untouched; the mutation still fails. The chain treated the FAIL as gating: it ran the short k2 tests (minutes each)
+   and SKIPPED CAL, the one long leg; `chain2b.sh` ran CAL after the corrected audit passed.
+2. **`latent_heat` was RED since P2-27 stage 4**, not by P2-28: its grimsel leg adds `microstructure.phase0.law=grimsel`
+   by argv to a deck that writes `phase0.kappa/rho/Cp`, which P2-27 stage 4 refuses. `run()` now writes that leg's deck
+   without the three lines (pre-image in `S/src_pre_2/`). ⚠ The chain's failing log was overwritten by the re-run;
+   `CHAIN.log`'s rc 1 line is its record.
+3. `face_gate.py` DROP gains `bit.enabled` (the bit now aborts by presence; the recorded argvs replay without it).
+4. **Locks and interlocks re-based**, not loosened: `lateral_flux_lock` site-A clauses restated for one site, R11's twin
+   clause, `ElasticConstants` count ≥ 1, `Removal.H` read tolerant of its absence (boundary regex: `Removal.H` is a
+   substring of `FaceRemoval.H`); `buckle_lock` B2/B3 kept (B2's "Removal.H never reads the key" half is now vacuous);
+   `interlocks` rewritten for the surviving rules, its `--pre` message comparison against the pre-binary retired
+   (the column-path interlocks it compared are gone).
+5. **Three interlocks beyond the packet's one** (removal needs the list): `jet_enthalpy`, `h_expr`/`T_flame_expr` and
+   `robin_form = surface` each need `face_list = 1` — the column code each fell back to is deleted, so without the
+   refusal each would run silently unheated or unreconstructed (N1–N3).
+6. `surface.follow_mask` is a retired-at-default row at 1; the member is derived (`= face_list`).
+7. Kept tests trimmed of their column legs (face_list OFF0/CAVU and (iv), face_heat R_nolist, face_beam U2/z1r,
+   face_buckle F_S_k0 and b2, robin_face (b) → `retired_units/robin_face_ledger`, face_removal `--floor` key 1 only);
+   `gradient_blind/input` IS the face deck (the column deck → `retired_units/gradient_blind_column`).
+8. **Build:** I deleted the one generated file `obj/obj-3d-g++/mmwspalling.cc.d` (inside `obj/`, normally untouched)
+   BEFORE the stage-2 build, pre-emptively: it lists every header the binary includes, `Removal.H` among them, and
+   P2-27 showed this `.d` decides whether make recompiles. No build error was observed (none was given the chance).
+
+### Implementation takeaways (stage 2)
+
+1. ⚠⚠ **Check a declared mover against the OLD list before the audit runs** (`grep <path> face_<old>.md5`). An exact-set
+   audit fails on a phantom as loudly as on a real leak; FEET_S's h_col file was declared from the column era's
+   outputs and had never been written on the face list.
+2. ⚠ **A parser refusal must be checked against argv-composed legs, not only deck files.** P2-27 stage 4's deck scan
+   passed because `latent_heat/input` is not a grimsel deck; the test turns it into one by argv. Grep the tests for
+   `law=grimsel`-style overrides too.
+3. ⚠ **Deleting a header: remove `obj/obj-3d-g++/mmwspalling.cc.d` first** (or `make clean`). The `.d` lists every
+   included header, the deleted one too; P2-27 showed it decides whether make recompiles. Done pre-emptively here, so
+   the failure mode was not observed. Expect the same at every header deletion (G, D).
+4. **CAL's c1 level is exactly P2-13's 850.43 K** on the stage-2 binary: P2-17…P2-28 left the calibration's onset
+   level untouched — the packet's "may have drifted" did not happen, so 850.43 K stands as banked.
+5. **Since P2-28 the per-edit tests and THE gate are face-list tests** (`WHICH_TESTS.md` rewritten); the tree scripts
+   carry a record header. `face_removal --check`'s FAIL (4) (tilted lines, P2-19) and the regrid test's
+   is_grain_boundary line are the two standing reds; both predate P2-27.
+6. **After P2-28 a deck with spall and vapour off and no face list is a THERMAL deck**, by design, and runs without a
+   criterion; an onset deck must set `surface_patch.face_list = 1` (evaluate-only). That is why the site-A onset decks
+   MOVED rather than aborting.
+7. The three coverage gaps (m2) are what the next cleanup or port should pick up if the march recursion, the feet
+   modes or an interior-void beam path ever matter again; each retired test is the spec.
+
+### Review findings
+
+Reviewer, 2026-11-09. Re-derived from the two pre-image trees, the per-label face output trees
+(`witness/face_p2_28a/`, `face_p2_28/`), the archived identity legs (`S/legs/hu_{column,face}`, `S/cal_before/`) and
+the shipped source. My own reductions: **my own analytic (erfc) solution of the prescribed-temperature problem**, my
+own manifest differ, my own component audit over all 140 changed face plotfiles, my own thermo-column audit over all
+17, my own `Temp` comparison over the 121 identity plotfiles and the 5+5 Dirichlet plotfiles, my own onset reductions
+from the Kant / pressure / Hu / CAL event logs and the Hu buckling log, my own `md5`s, and my own line accounting.
+**No simulation and no build was re-run.**
+
+| # | test | bar | implementer | **my value** | **read from** |
+|---|---|---|---|---|---|
+| z0 | anchors; removed sets; test classification; deck edits | every item found; every retiring deck MOVES or aborts loudly | 103 anchors; 4 silent decks MOVE | **the load-bearing half re-derived downstream: b1's per-leg removed sets match z0's declaration exactly, and the four new interlocks that make a retired deck abort loudly rather than run silently are in the source (`M:990, 995, 1054, 1077`), each naming what the column code used to do** | `Z0.txt`; `MMWSpalling.H` |
+| a1 | tree `p2_28a` vs `p2_27` | 0 of 2,901 changed | 0 | **0 changed, 0 only-in-either** | my manifest differ |
+| a2 | face `cmp p2_27 p2_28a` | IDENTICAL on 16 legs; exactly KV_S, HU_S, GB_S only-in-new | 0 substantive; 481 new | **0 substantive over 1,529 common (all 16 differing are thermo timers); only-in-new 481 = KV_S 295 + HU_S 157 + GB_S 29, and nothing only-in-ref** | my own `cmp` + manifest differ |
+| a3 | (i) onset vs Eq. 15 within 0.08; h 150 vs 250; (ii) face vs site A ≤ 10 K | PASS; ≤ 10 K | 446.9 / 447.9 K; 0.00 K | **(i) my own reduction of the event logs: 576/576 columns, median first-`dir 5` `T_surf` → ΔT **446.93 K** (h 150) and **447.90 K** (h 250) vs Eq. 15's 445.6 ⇒ **+0.30 %** and **+0.52 %**, both ≪ 0.08; onset 35.60 s / 12.80 s; max 124 rows per column of 480 steps (re-firing bounded). (ii) 0.00 K is a declared gate pair (deviation 3) — I could not re-derive it independently because the recorded site-A deck runs a DIFFERENT surface-temperature form; the −27.71 K it reports is the variable, not the site, and takeaway 3 says so (SR 17)** | my reduction of `output_face/verification{,_hfl}_removal_events.csv`; `K1_siteA_vs_face.log` |
+| a4 | R1 within 0.08; R2 monotone; R4 slope within 20 % | PASS | 446.9 / 421.9 / 402.1; −0.9343 | **my own reduction: ΔT **446.93 / 421.93 / 402.07 K** at 0 / 27 / 48 MPa vs 445.6 / 420.5 / 401.0 ⇒ +0.30 / +0.34 / +0.27 %; monotone; least-squares slope **−0.9343 K/MPa** vs −0.9286 (0.61 %), endpoint slope −0.9347** | my reduction of `output_face/p{0,27,48}_removal_events.csv` |
+| a5 | Hu column vs Hu face, `Temp` every plotfile | ≤ 1e-9 K (prediction bit-identical) | bit-identical, 121 pf | **121 of 121 plotfiles **BIT-IDENTICAL**, max \|ΔT\| = 0 K** | my own `Temp` compare over `S/legs/hu_{column,face}` |
+| a7 | rise vs the exact cell average; convergence; F ≡ C; ledger | ≤ 2 % / ≤ 0.5 %; ratio ≥ 3; 1e-12 K; 1e-9 | −1.464/−1.018/−0.698 %, −0.321/−0.241/−0.170 %, ratio 4.57/4.23/4.12 | **I integrated the exact solution myself** — `T0 + (A−T0)erfc η + Bt[(1+2η²)erfc η − (2/√π)η e^{−η²}]`, α = 2.5/(2640·827.2) = 1.144789e-6 m²/s, averaged over the top cell — and get **−1.4642 / −1.0179 / −0.6981 %** at 3.125 mm and **−0.3206 / −0.2409 / −0.1696 %** at 1.5625 mm: the notes to four decimals and the planner's pre-registration. Ratios **4.567 / 4.225 / 4.116** (≥ 3, second order). F ≡ C **bit-identical on all 5+5 plotfiles**, max \|ΔT\| = 0. `ledger_err_solid` **1.566e-15 / 4.887e-15**. `fl_P_top` converges: 94.09 vs 94.35 W at 120 s (0.3 %) | my erfc integration + my plotfile reduction of `unit/face_dirichlet/output/{F,C}_{3125,1562}` |
+| a6 | the old site-A tests, locks, `face_removal` | PASS (face_removal byte-identical to P2-19's log) | PASS | **`K1_face_removal.log` md5 **4411cda6…**, byte-identical to `p2_19_flake_depth/lock_face_removal.log` — the same hash I verified for P2-26 and P2-27; every other stage-1 lock log reads PASS** | my `md5`; `K1_*.log` |
+| m4a | Hu criterion onset (buckling log) | report; pre-registered 50–66 s at 826–885 K | first 50.00 s / 825.22 K; median 56.25 s / 848.60 K | **my own reduction of the 9,545-row buckling log: first floor row **t\* 50.00 s, T_surf 825.22 K**, column (11,16), `ell_p` 4.39 mm, `bk` 1.95, blocked; 76 columns fired, first-firing median **56.25 s at 848.60 K** (p10 832.7, p90 879.5 — the notes' 878.5 is a percentile convention), range 50.00–72.50 s. The median is INSIDE the band; the first column is 0.78 K below it, less than one step's 1.87 K, and the notes say exactly that** | my reduction of `output_lefm/granite2_buckle_log.csv` |
+| m4b | Hu model prediction | report; pre-registered NONE by 120 s | NONE; 9,545 firings all withdrawn | **events CSV has **0 data rows**; all **9,545** buckling-log rows are `blocked`, `bk` 1.38–2.93, first-firing `ell_p` median **5.65 mm** (full range 3.99–6.90; the notes' 4.3–6.7 is an inner range). ✅ **NOT vacuous**: the Kant face deck runs the SAME evaluate-only emit and wrote **71,424** rows, so "none" is a real withdrawal, not a dead path** | my reductions of both CSVs + the Kant face log |
+| b1 | face `p2_28a` → `p2_28` component + thermo audit | removed = the declared sets; kept bit-identical; CSVs identical; nothing only-in-new | 140 removed-ok + 140 identical; 0 FAIL | **FULL audit, not a sample. 2,010 paths both sides, **0 only-in-either**. 857 differ = 140 Header + 140 Cell_H + 560 Cell_D + 17 thermo; the other 140 plotfiles (all the node ones) and **all 33 CSVs and 280 Checkpoints are identical**. All **140 of 140** changed cell plotfiles: removed fields ⊆ the declared six, nothing added, kept order preserved, **every kept component bit-identical** (ncomp 32→29 … 43→37); per leg KV_S 3, HU_S 4, GB_S 5, the rest 5–6, exactly as declared. All **17 of 17** thermo files: removed = `recon_*` ×8 (every file) + `patch_P_robin` (15), `surf_cols_robin` (16), `surf_q_mean` (16); added = `ledger_err_raw` (16), and in all 16 the renamed column's values are **identical**; **0** kept-column violations. The `--mutate` control FAILs (140) ⇒ the audit discriminates** | my component + thermo audit over `witness/face_p2_28{a,}` |
+| b2 | `rankcheck p2_28` | decomposition-stable | rel 1e-15 | **CSVs identical; the only moving thermo columns are the two ledger residuals at 2.21e-16 absolute; the rename is live in the rankcheck output** | `K2_rankcheck.log` |
+| b3 | `retired_keys` R11 + K two-sided; locks; `interlocks` ≥ 12 | PASS; R11 RED on `src_pre_2` | PASS | **my own count: 18 of the 19 R11 names are **0** in `src/`; the four apparent survivors are all legitimate — every `Removal.H` hit is a `FaceRemoval.H` substring (word-boundary grep: none), `h_col_events` is the one abort-list literal, all 5 `Sp_field` hits are **comments**, and the 4 `pinned_idle` hits are the declared 3-line read-and-tolerate block with its `Util::Message`** | my `grep -ro`; `K2_retired_keys.log` |
+| b4 | every KEPT test | PASS (regrid recorded) | PASS; latent_heat after deviation 2 | **every kept log reads PASS. The two exceptions are the declared pre-existing ones: `amr_microstructure_regrid` rc 1 on the same `is_grain_boundary mismatch at raw cell 224` line as P2-27, and `face_removal --check` FAIL (4). ⚠ the stage-2 `face_removal` log is NOT byte-identical to P2-19's (the key-0 legs and the column half of a3 i are gone, both authorised) — but **the four FAIL rows are byte-identical** and the three floor rates `6.680803e-04 / 6.131584e-04 / 6.026731e-04` m/s are unchanged, which is the substance** | my `diff`; `K2_*.log` |
+| b5 | CAL 60 s, stage 1 vs stage 2 | events byte-identical; kept columns identical; c1 level reported | BYTE-IDENTICAL; 850.43 K both | **my own md5 of both event logs: **dfc398c0…**, identical, 10,804 rows each. My own c1 reduction: 576 columns, median first-`dir 5` `T_surf` = **850.43 K before and after** = P2-13's banked 850.43 K; **19.6 %** (113/576) of first firings sit above the 873.15 K table end (SR 18, now quantified)** | my `md5` + my reduction of `cal_before/` vs `grimsel_calibration/legs/CAL/` |
+| m1 | lines; keys | report (≈ −3,300) | 12,651 → 12,826 → 9,308 (−3,343) | **exact: **12,651 → 12,826 → 9,308** (M 7,283, F 1,375, S 378, MMWBeam 272, Removal **deleted at 1,869 lines**); stage 2 alone −3,518. 12,651 chains exactly to the P2-27 total I verified last review** | my `wc -l` over both pre-image trees |
+| m2 | the coverage gaps named | three gaps with the test that covered each | three named | **all three in `RESULTS.txt` and `retired_units/README.md`: the jet march's per-bin recursion (`jet_enthalpy`), the feet descent's feed cap / stall / foot_rule modes (`jet_d2c`), a beam path across an interior void (`beam_void_closure`)** | `RESULTS.txt` |
+| e0 | verdict | — | every gate held | **accepted** | — |
+
+#### Diff review
+
+129 hunks plus one whole-file deletion (+484 / −3,827 lines): stage 1 M 28 / F 8 / S 1 (+295 added — the new
+behaviour); stage 2 M 82 / F 7 / S 3 and `Removal.H` deleted (1,869 lines). Rows below cover all of it.
+
+| # | hunk / change | class | tag | finding |
+|---|---|---|---|---|
+| 1 | the prescribed term `kc·ΔT/dz²` → **`2·kc·ΔT/dz²`** | 3 | ok | **the packet's substance, and I verified it against physics, not against itself**: my own erfc cell-average gives ≤ 1.47 % error at 3.125 mm and second-order convergence (ratio 4.1–4.6). A Dirichlet value on the face is dz/2 from the centre ⇒ the conductance is 2k/dz |
+| 2 | the four surviving prescribed sites | 2 | ok | kernel `M:2206`, diagnostics `M:3650`, ledger non-list `M:3898`, ledger list `M:3923` — **all four carry `2.0`**, and the two weighted ones put `w` FIRST |
+| 3 | `w` first, not `w * (...)` | 6 | ok | takeaway 1's FMA lesson, and it is load-bearing: a7's F ≡ C and a5's column-vs-face are **bit-identical**, which a parenthesised weight would have broken by one ulp |
+| 4 | **`AdvanceMaterial`'s copy left at HALF** (`M:~1761`) | 3, 11 | **risk** | declared out of scope (D's path) and recorded well in `MODEL_CARD.md` §11 7b — which names the four Hu thermal decks, says why no test caught it (the first two score RATIOS, so the factor cancels) and flags that `hu_breakage_index` scores absolute f_b and will move. ⚠ **but the site's own comment still argues the dz/2 ghost convention** — the exact reasoning that implies the factor 2 — with no warning that the kernel 400 lines below now uses 2×. Named **DR-1** |
+| 5 | the same note promised in `RESULTS.txt` | 9 | **nit** | Goal 1 said "listed in `RESULTS.txt` **and** `MODEL_CARD.md` §11". `RESULTS.txt` carries no mention. The durable record has it; the study summary does not. Named **DR-2** |
+| 6 | the corrected site's comment quoting the old bug | 11 | ok | `M:~2160` says "Until P2-28 this read `kc (…)/dz²` — half the boundary conductance (−12 to −20 % …; first order, so refinement hid it)". Explicitly historical and quantified, which is this repo's convention and high-value |
+| 7 | `FaceEntry::T_presc` (−1 = none) + `FaceListHeat`'s branch | 7 | ok | the new field has a consumer (the kernel, the ledger, the diagnostics, `FrAssignTs`, R1) and a sentinel default; top faces inside the radius only |
+| 8 | `FrAssignTs`: a prescribed cell's one `T_s` | 2 | ok | `Tp = max` over the cell's faces, then every face of the cell takes it with `tsfb = 0` — P2-9's "one T_s per cell", and the max is safe because one patch holds one value |
+| 9 | **the one-step lag, found and fixed inside the packet** | 2, 5 | ok | removal runs before the kernel, so the list's stored `T_presc` is `T_expr(time−dt)`; the criterion now re-evaluates `T_at(time)` and `T_presc` only MARKS which faces are held. The comment quantifies it (1.9 K at 3.74 K/s and dt 0.5 s) and names the witness (the first run logged 50.5 s against `T_expr(50.0)`). `test_lefm` asserts `T_s == T_B1(time)` on every floor row |
+| 10 | `depth_from_Ts` lambda | 1 | ok | one copy of P2-19's flake-depth rule, shared by the fallback and the prescribed face, rather than a second copy |
+| 11 | the evaluate-only emit (one row per cell whose winning line fired) | 7, 10 | ok | **not vacuous**: the identical path wrote 71,424 rows on the Kant face deck and 0 on Hu, so m4b's "none" is a withdrawal |
+| 12 | evaluate-only skips R3 and the ONE WRITE | 8 | ok | nothing is removed, so no ledger term is owed; `h_applied` 0 and `n_voided` 0 in the row (deviation 7 lists every placeholder) |
+| 13 | the dt bound `2d+1` on a prescribed top | 3, 13 | ok | the half-cell Dirichlet face tightens the explicit bound by exactly one unit of `1/dz²`; the new decks' ratios are 0.41–0.71 |
+| 14 | seven interlocks relaxed to admit the list (stage 1) | 4, 9 | ok | each **also** admits `evaluate_only()`/`face_list`; every message unchanged, and `interlocks` PASS with `--pre` message identity. Deviation 1 names the four beyond the packet's list |
+| 15 | **the four new interlocks** (stage 2) | 7, 9 | ok | `spall/vapor.enabled` without the list, `jet_closure = enthalpy`, `robin_form = surface`, `h_expr/T_flame_expr` each now require `face_list = 1`. Three are beyond the packet (deviation 5) and each closes exactly the SR 1 hole the deletion would otherwise open: the fallback code is gone, so without the refusal the deck would run silently unheated |
+| 16 | `Removal.H` deleted (1,869 lines) | 9 | ok | pre-image in `S/src_pre_2/`; `RemovalStep` in F holds the four surviving lines; b1 proves `ResetRemovalStepFields` and `ColumnTopSolid` still run in the old order (every kept component bit-identical on every leg) |
+| 17 | site A, the reconstruction, the pin rule, the bit, the clusters deleted | 9 | ok | R11 ×0 on my own count; the deregistered fields are exactly b1's declared removed sets |
+| 18 | `ledger_err` → `ledger_err_raw` | 11 | ok | closes my own P2-27 DR-1. A pure rename: identical values in all 16 files, with a header comment naming `ledger_err_solid` as the closure |
+| 19 | `robin_form`: `pinned` aborts by value; `cell`/`face` abort with removal | 7, 9 | ok | K legs two-sided; `robin_face` (a) and `convective_patch` still PASS, so the no-removal forms stay reachable (L8) |
+| 20 | `pinned_idle_cycles` read-and-tolerated | 7 | **nit** | accepted at **any** value with only a `Util::Message`, not a retired-at-default abort. That is required by L9 (the HOS_R record replays `1.0e9`) and it is announced — but it is one-sided protection, the same shape as P2-26's `*` rows. Named **DR-4** |
+| 21 | the retired-at-default rows and presence-abort families (stage 2) | 7 | ok | 5 by presence + 3 families + 4 at a default + `robin_form = pinned` by value; K32–K44 two-sided |
+| 22 | `lateral_flux_lock`, `buckle_lock`, `interlocks` re-based | 9 | ok | deviation 4 lists each: `lateral_flux_lock`'s site-A clauses restated for one site plus R11's twin; `buckle_lock` keeps B2/B3 with B2's "Removal.H never reads the key" half now vacuous; `interlocks` rewritten with 15 abort legs ≥ 12. ⚠ the `--pre` message comparison retired with the interlocks it compared — honestly declared, and a real loss of a two-sided instrument |
+| 23 | `lateral_flux_lock` `FaceListHeat` count 2 → 3 | 9 | ok | restated with a new structural clause asserting the third call is the constant-patch branch of `BuildFlameColumns`, which returns after it — still once per step. First chain was RED on the count, so the clause discriminates |
+| 24 | 16 unit tests → `retired_units/`, 4 validation sets → `retired_validation/column_path/` | 9 | ok | the four silently-inert Kant/pressure onset decks **MOVE** rather than stay (SR 1: with `Sp_field` gone they would run as thermal-only decks); the Meier and extension decks STAY and abort loudly. Both READMEs name each successor |
+| 25 | kept tests trimmed of their column legs | 9 | ok | deviation 7 enumerates each; the removals' subjects are all deleted, and b4 is PASS on every survivor |
+| 26 | `face_gate.py`: KV_S/HU_S/GB_S added, DROP += `bit.enabled` | 9 | ok | a2 shows the three new legs are exactly the only new paths; the DROP entry is needed because the bit now aborts by presence and the records replay without it |
+| 27 | `latent_heat`'s grimsel leg deck rewritten | 9 | ok | deviation 2: it was RED since **P2-27 stage 4** (its argv adds `law = grimsel` to a deck writing the three scalars P2-27 refuses), not by P2-28. ⚠ the failing chain log was overwritten by the re-run; `CHAIN.log`'s rc 1 line is the only record |
+| 28 | `obj/obj-3d-g++/mmwspalling.cc.d` deleted | 3 | **nit** | a generated file inside `obj/`, a **Do-Not-Touch** directory. Declared (deviation 8) and legitimate — the stale `.d` lists the deleted `Removal.H`, so make would fail — but this is the **second packet running** to do it. Named **DR-6** |
+| 29 | the tree gate retired | 9, 12 | **risk** | 2,901 files over 91 decks stop being compared; the face gate is 2,010 files over 19 legs. `p2_27.md5` and the four scripts are kept as records with header lines, and m2 names the three mechanisms that lose their only test. Named **DR-5** |
+| 30 | `MODEL_CARD.md` §1/§2/§5/§11/§12 and `WHICH_TESTS.md` rewritten | 11 | ok | §5:149 records the Hu re-score and states "P2-27's 107.9 s was a path artefact (half the boundary conductance): **never quote**" — which closes my own P2-27 DR-2 at its root |
+
+**Deferred risks, by name**
+
+- **DR-1 — the uncorrected twin is silent at its own site.** `AdvanceMaterial`'s prescribed term is still
+  `kc(T−Tc)/dz²`, and the comment above it argues the dz/2 face convention that implies the factor 2, with nothing
+  saying the microstructure kernel now differs. `MODEL_CARD.md` §11 7b is an excellent record; the source line is not.
+  Three words at that site would stop the next reader re-deriving the bug.
+- **DR-2 — `RESULTS.txt` is missing the note Goal 1 promised it** about the uncorrected material kernel and its four
+  Hu thermal decks. `MODEL_CARD.md` carries it.
+- **DR-3 — SR 18 is now quantified on the calibration: 19.6 % (113 of 576) of first firings are above the 873.15 K
+  table end.** The level itself is reassuringly stable — 850.43 K before and after the deletion, and exactly P2-13's
+  banked value five packets later — but one firing in five is scored on the clamped flat end of the property table.
+- **DR-4 — `pinned_idle_cycles` is accepted at any value with a Message only.** Required by L9's record replay, and
+  announced, but it is a key that is read and ignored rather than refused.
+- **DR-5 — the tree gate's coverage is gone, by design.** 2,901 files / 91 decks → 2,010 files / 19 legs. The three
+  named gaps (the jet march's per-bin recursion, the feet descent's feed cap / stall / foot_rule modes, a beam path
+  across an interior void) now have no test at all. They are listed, not closed, which is the honest position — but
+  the next packet that touches the march or the feet has no net under it.
+- **DR-6 — `obj/` was touched for the second packet running.** Both times declared, both times for the same real
+  reason (a stale `.d` naming a deleted header). The planner should carve the exception into the guardrail rather
+  than let it recur as a deviation.
+- **DR-7 — `interlocks --pre` message identity retired with the interlocks it compared** (deviation 4). Stage 1 used
+  it to prove the seven relaxations changed no message; after stage 2 there is no two-sided instrument left for the
+  surviving interlock messages.
+- **DR-8 — `amr_microstructure_regrid` still reads rc 1** on `is_grain_boundary` at level 0, unchanged since before
+  P2-27, and it is in neither gate — only ever seen by running it by hand (carried from my P2-27 DR-6).
+- **DR-9 — two quoted ranges are inner percentiles, not ranges**: m4a's p90 (878.5 vs my 879.5 K) and m4b's
+  first-firing `ell_p` "4.3–6.7 mm" (my full range 3.99–6.90 mm; the median 5.65 mm matches exactly). Conventions,
+  nothing depends on them.
+
+**Checked and clean:** no tracked edit to `ext/`, `bin/`, `build/`, `compile_commands.json`, `configure`, `LICENSE`
+(`obj/` as DR-6); nothing staged, nothing committed; `src/` changed in exactly the four declared files plus the one
+declared deletion, with pre-images for both stages; the archived identity legs, `cal_before/` and the per-label face
+trees make a5, a7, b1 and b5 reproducible from the repository. The completion notes quote nothing `ROADMAP.md` marks
+unquotable, and SR 17 (name the variable) is honoured explicitly in takeaway 3 — the 28 K Kant gap is the
+top-cell-mean vs surface-rise variable, not a site disagreement.
+
+#### Verdict: accepted
+
+- **Every gating row reproduces from my own reduction.** No diff-review row is tagged `bug`. Three risks (rows 4, 20
+  as a nit, 29) and three nits (rows 5, 20, 28); nine named deferred items.
+- **The headline is a physics correction, verified against physics.** The prescribed-temperature boundary had applied
+  **half** the conductance for the whole history of the code — first order, so refinement hid it. I integrated the
+  exact solution myself and the corrected term lands within 1.47 % at 3.125 mm and 0.33 % at 1.5625 mm with
+  second-order convergence (ratio 4.1–4.6). That also closes my own P2-27 DR-2 at its root: Hu's 107.9 s was this
+  factor, and the re-scored onset is 50.0 s first / 56.3 s median.
+- **The deletion is inert where it must be**: `Temp` bit-identical on 121 plotfiles (a5), F ≡ C bit-identical (a7),
+  the CAL event log **byte-identical** with the calibration level still 850.43 K (b5), the three `face_removal` floor
+  rates and its four FAIL rows byte-identical to P2-19's, and all 140 changed face plotfiles plus all 17 thermo files
+  losing exactly the declared sets with every kept value bit-identical (b1, with a mutation control that FAILs).
+- **The one finding worth the planner's attention is DR-1**, a comment: the surviving half-conductance term argues
+  the convention that implies the factor it is missing. The second is DR-5 — the tree gate's retirement is correct
+  but it leaves three named mechanisms with no test.
+- Files inspected: the four headers across both pre-images; the four prescribed-flux sites and the material kernel's
+  twin; the four new interlocks and the seven relaxed ones; `FrAssignTs`, the evaluate-only emit, `depth_from_Ts`,
+  `RemovalStep`; `unit/retired_keys/test` (R11 and its instrument), `lateral_flux_lock`, `buckle_lock`, `interlocks`,
+  `face_removal/test`; `Z0.txt`, `GATE_a1/a2`, `K1_*/K2_*.log`, `K2b_audit{,_mutate}.log`, `RANKCHECK`, `RESULTS.txt`,
+  `MODEL_CARD.md` §5/§11, `REFERENCE.md`, `WHICH_TESTS.md`, both `retired_*/README.md`.
+- Next: **run `/plan` to archive this step and prep the next packet.**
+
+## P2-29 — D: one heat path. Zhang becomes a phase law on the production kernel (a quarter block), the separate kernels retire, three untested mechanisms get tests, and every kept test runs from its own deck (census D) (2026-11-10; ACCEPTED by review 2026-11-10)
+
+**Status:** ACCEPTED by review (2026-11-10): every gating row re-derived; 0 `bug`, 2 risks, 1 nit, DR-1…DR-7.
+Binaries: pre `ee4b6b9b`, stage 1 `43d87dae`, stage 2 **`ccd15b91` (ships; stage 3 tests only)**. Study
+`tests/MMWSpalling/studies/p2_29_one_heat_path/` (`RESULTS.txt`, `Z0.txt`, `GATE_a1/b1`, `K1_*/K2_*/K3_*`, `src_pre_1/2`,
+`bin_pre/1/2`, `legs/`, `archive/`). The face-gate reference is UNCHANGED (`face_p2_28.md5`; both stages IDENTICAL).
+
+### What the step established
+- **One heat path**: `AdvanceConstAlpha`, `AdvanceMaterial`, `AdvanceMaterialImplicit`, `SolverKind`, the global
+  material/phase scalars, the homogeneous mechanics branch and `foot_rule` max/mean deleted; `MMWSpalling.H` 7,283 →
+  6,823 (−460). A deck without `microstructure.nphases` aborts. The last half-conductance term went with `AdvanceMaterial`.
+- **`phaseN.law = zhang`** on the production kernel; the merge proven three ways at one round-off floor: ZF vs the
+  old explicit kernel 2.3e-13 K, the QUARTER block vs the full block 2.3e-13 K (= the full block's mirror asymmetry),
+  `convective_patch` old vs new 3.4e-13 K. κ = Zhang's law to 1.7e-16 against the START-of-step T.
+- **Hu on the corrected boundary**: conduction L1 460.0 / 527.5 K, L2 343.7 / 407.3 K (inside every pre-registered band;
+  09-25: 424.9 / 492.2 / 328.9 / 386.0); thermoelastic L3 / L4 contrasts moved TOWARD Hu (errors 4.75 → 1.20 pp,
+  12.39 → 7.12 pp); breakage at uniform 2.5 mm (AMR off) f_b 0.85 at 37 s (Hu 0.91 ± 0.10), 0.82 at 89 s (0.82 ± 0.10)
+  — ⚠ the surface value is EXTRAPOLATED (sampled 0.67 / 0.70 at 1.25 mm depth); the resolution travels with the result.
+- **Three gap tests** (P2-28 DR-5 closed): `unit/jet_march` (the recursion to 1e-14, first order), `unit/face_feet` B/P/C
+  (the stall clock, the feed cap to round-off), `unit/beam_void` (the solid-path continuation to 4e-15; Gaussian closure
+  −1.8e-3). `run_kept.py` built (manifest 36, EXCLUDED 5), proven on a 4-test subset; **the full run is the user's
+  periodic check, not a packet step**.
+- **Found**: `Table.H`'s sharp fusion band read a liquid cell L_m/c_p too hot (fixed, the user's decision; no live deck
+  sharp); AMR + mechanics aborts on the production path (`MLMG failed` at the first regrid; pre-existing) ⇒ the user:
+  avoid AMR until fixed; `hu_thermoelastic_amr` and `unit/amr_microstructure_regrid` retired.
+- **Planner predictions wrong**: m8's SIGN (the face-list loss form runs +0.15 % WARMER under a beam: T_s < T_top); m3's
+  onset (cited from Oglesby #19 — Zhang's deck reaches 626 K by 150 s and never melts).
+- **The user's trims (11-10)**: no old-side re-runs where an output of unchanged code exists; `run_kept.py` periodic;
+  one-time proofs run once; a cost column per leg.
+
+### Carry-forwards (review and planner)
+- DR-1 the `Table.H` sharp-band fix has no assertion (the Stefan front is insensitive to it); DR-2 the equilibrium
+  fixture is 1.73 % short of equilibrium at 700 s; DR-3 `CheckTimeStepLimit`'s level ≥ 1 branch untested (AMR-repair
+  packet); DR-5 the loss-form sign; DR-7 breakage resolution.
+- ⚠⚠ **The Zhang deck's beam radius is wrong** (advisor + user, 11-10; `Claude_markdowns/2026-11-10.md`,
+  `Claude_markdowns/scripts/p2_29_zhang_waist/`): `beam.omega0 = 0.02` is the aperture's diameter; **the user: the
+  correct radius is 0.01 m** (Zhang eqs. 4–7 = our formula, ω0 "the wave guide radius"; Table 4's 0.20 a misprint). The
+  P2-29 merge identities do not depend on it; every reported Zhang temperature does. Even at 0.01 with Zhang's printed
+  physics (α 14 → 56 Np/m, R 0, n 1) the model reads 763 / 910 / 993 K at 50 / 100 / 150 s against Fig. 7's 989 / 1400 /
+  1678; with the deck's Hartlieb table at 0.01 it overshoots (2,526 K). The absorption question is open (Zhang eq. 14
+  unread).
+- M0F's −7.2 % beam closure on interior-void rows is not reproduced by the small seeded void (−0.18 %): open.
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-10)
+
+Active step:
+- **P2-29 — D: one heat path. Zhang becomes a phase law on the production kernel (a quarter block), the separate
+  kernels retire, three untested mechanisms get tests, every kept test runs from its deck** (`ACTIVE_STEP.md`;
+  2026-11-10; Q1 = Zhang explicit, implicit deleted; the user: model a quarter of the Zhang block).
+  - Archived: P2-28 ACCEPTED (`ARCHIVE_DONE.md` *"P2-28"*): `Removal.H` deleted, src 12,651 → 9,308; the face gate
+    is THE gate (`face_p2_28.md5`); ⚠⚠ the prescribed-T boundary had HALF the conductance (corrected, second order);
+    Hu re-scored 50.0 s first / 56.3 s median, every firing withdrawn by buckling (no spall where Hu saw it at 37 s).
+  - Stage 1 `p2_29a` (additive): `phaseN.law = zhang`; Zhang on a QUARTER block (ZQ) vs its full-block twin (ZF) vs
+    the old explicit kernel (ZO), ≤ 1e-6 K each, plus a face-list evaluate-only twin (ZL) reporting production's
+    surface-loss form; the 4 fixtures in physical units (the table spans 200–5000 K);
+    `convective_patch` + the 9 Hu decks on the production kernel (the factor 2 moves them: pre-registered L1 granite
+    458 ± 5 K vs 424.9 old; no old side re-run — the 09-25 outputs are the baseline; `hu_thermoelastic_amr` RETIRED,
+    AMR parked); `run_kept.py` built (launches every deck — P2-28's b4 scored stale outputs) but run by the USER every
+    few days, not per packet (user 11-10). STOP for the user.
+  - Stage 2 `p2_29`: delete the three kernels, `SolverKind`, the homogeneous mechanics, `foot_rule` max/mean (the
+    feed cap STAYS: Meier's rig mode, tested in stage 3); a deck without `nphases` aborts; keys retired (multi-token compare becomes numeric). Stage 3: tests for
+    the jet march recursion, the feet stall clock, a beam across an interior void; `run_kept.py` is the verdict.
+  - Next: the structural refactor (split the header, records out, provenance to the archive, kernel helper, schema
+    CSV) → trim the source-text locks → the mesh-check runs (and the V0 decision) → the Hu disagreement (Hu's paper
+    first; never move the span to fit) → the Meier rebuild on the rock file → the melt's heat transport → the
+    operator stress → the flame source rule.
+
+### The P2-29 file verbatim (packet, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-29 — D: one heat path. Zhang becomes a phase law on the production kernel (on a quarter block), the separate kernels retire, three untested mechanisms get tests, and every kept test runs from its own deck
+
+Status: **accepted by review** 2026-11-10 (every gating row re-derived independently; see `## Review findings`). Implemented 2026-11-10, `/implement`: stage 1, then stages 2 and 3 on the user's "continue"; notes and takeaways for both at the end. Planned 2026-11-10 ( P2-28 ACCEPTED and archived the same day — `ARCHIVE_DONE.md` *"P2-28"*). Census (D) with Q1 decided by the user 2026-11-10 (Zhang runs explicit; the implicit solver is deleted) and the user's instruction to **model only a quarter of the Zhang block**. Three stages: stage 1 is ADDITIVE (the old path untouched; the ported decks run beside the old ones); **the implementer STOPS after stage 1** (status "stage 1 complete — awaiting the user"); stage 2 deletes; stage 3 adds tests only. Revised 2026-11-10 after the user's review paste (four points, all adopted): the equality checks record WHERE they first break; a face-list evaluate-only twin of the quarter deck reports production's surface-loss form; Hu's breakage direction is OPEN, not "up"; the feed cap is KEPT and tested (Meier's rig fed the burner at a set rate), only `foot_rule` max/mean go. **Trimmed 2026-11-10 (the user):** `run_kept.py` is NOT run per packet — it is the user's periodic check (every few days); the packet proves it on a short subset only. `hu_thermoelastic_amr` is RETIRED (AMR is parked). No "old side" is re-run where an output of the unchanged code exists on disk: the old fixture outputs and the 09-25 Hu outputs are the baselines; the Hu breakage decks are scored against Hu's data only. ZO runs on the quarter block. **AMR OFF (user 11-10, "avoid AMR until we can fix it")**: the three breakage ports run `amr.max_level = 0` (uniform 40³, 2.5 mm) as REPORTS with the resolution named; the level-1 port aborted at its first elastic solve (`MLMG failed`, chain 11:12) and that abort is recorded, not debugged here; a8 is withdrawn.
+
+### Context
+
+The face list is the one removal path since P2-28. The heat equation still has four kernels: `AdvanceMicrostructure` (production) and three that serve only 14 live decks — `AdvanceConstAlpha` (4 non-dimensional fixtures), `AdvanceMaterial` (`convective_patch` + 9 Hu thermal decks) and `AdvanceMaterialImplicit` (`zhang_oglesby`, the MMW thermal anchor). So Zhang validates a kernel the production runs never use, and `AdvanceMaterial` still carries the **half-conductance prescribed term** P2-28 corrected elsewhere (P2-28 DR-1). This step moves every one of those decks onto the production kernel, deletes the three kernels, and closes two P2-28 gaps: **three reachable mechanisms with no test** (DR-5), and a kept-test run that **scored stale outputs** (P2-28's b4 ran the `beam` and `convective_patch` tests against outputs written 11-06 and 11-03 — its runner never launched their decks; `hu_thermoelastic_amr` and `hu_breakage_index` have had no output since 09-17).
+
+### Sources (opened 2026-11-10; `M:` = `src/Integrator/MMWSpalling.H` 7,283 lines, `Z:` = `src/Numeric/Material/Zhang.H`, `G:` = `src/Numeric/Material/Grimsel.H`, `TB:` = `src/Numeric/Material/Table.H`)
+
+- **The dispatch** M:1585–1588: `microstructure_enabled` → `AdvanceMicrostructure` (M:1955); else `material && Implicit` → `AdvanceMaterialImplicit` (M:1796–1938: asserts `finest_level == 0`, hard-codes Neumann M:1897–1900, no surface patch); else `material` → `AdvanceMaterial` (M:1654–1787; **half term M:1761** `kc*(sp_T - Tc)*inv_dz2`); else `AdvanceConstAlpha` (M:1600–1652; H in kelvin, ρc_p ≡ 1). `microstructure_enabled` is set by `microstructure.nphases` only (M:403, M:564).
+- **The phase law** M:463–489 (`.law` ∈ {constant, grimsel}; the grimsel object parsed UNCONDITIONALLY, M:465–481 says why); scalars M:500–521 (`law_T` refuses kappa/rho/Cp; E/beta/mu required unless `law_s`); latent scalars M:528–534 (defaults switch phase change OFF); table build M:5536–5549 (a grimsel phase builds from a COPY of the law carrying the phase's latent scalars); `UpdatePropertyFields` M:4104–4179 is grimsel-only (`any` M:4106–4109; `kappa_mf = g.lambda(Tc)` M:4145, a CONDUCTIVITY [W/(m K)]); `MineralPhase` slot M:6663–6664 (`bool grimsel_law; Grimsel grimsel;`).
+- ⚠⚠ **`kappa` means two things.** `Material::kappa` is documented [W/(m K)] and `Zhang::kappa` returns a conductivity (Z:73–77); `Grimsel::kappa` returns the DIFFUSIVITY λ/(ρc_p) [m²/s] (G:133–137), and the dt check relies on that (M:1278).
+- **The dt check** `CheckTimeStepLimit` M:1265–1305, per level, microstructure only (M:1235): `a = ph.grimsel_law ? ph.grimsel.kappa(T_cold) : ph.kappa/(ph.rho*ph.Cp)` (M:1277–1279); `n_den = 2·dim + (prescribed top ? 1 : 0)` (M:1285–1288); off the face list it WARNS (M:1300). Subcycling is on by default (`nsubsteps[lev] = ref ratio`, `src/Integrator/Integrator.cpp:95–96`).
+- **Zhang's law** Z:36–84 (defaults = Zhang Table 1): ρ = −0.2877θ + 2884, **2300 above 1273 K (a step down, ~11 %)**; κ = 1/(0.3154 + 3.8e-4 θ) capped at 1273 K; c_p = −2.73e-4θ² + 0.894θ + 788 (≤ 1510.5 K), 0.184θ + 1249 above; latent T_m 1510.5, fus_width 200, L_m 3.4e5, vap 3233–3503 K, L_v 4.8e6; θ = T − 273.15. α(297.5 K) = **1.3225e-6 m²/s** (κ 3.080, ρ 2877.0, c_p 809.6). Emissivity is the deck's `losses.*` (0.7 / 0.3 split at 1510.5 K), shared by every path.
+- **The table** TB:30–99: trapezoid of `effective_rhocp` over **200–5000 K** at 0.5 K, H(T_ref) = 0; sharp fusion (`fus_width = 0`, `L_m > 0`) handled by an explicit jump (TB:71–75). ⇒ a deck whose T leaves [200, 5000] K is off-table (the four const-α fixtures run at 0–2 K today).
+- **The Zhang deck** `validation/zhang/zhang_oglesby/input`: 0.10×0.10×0.025 m, 128×128×32 (0.78125 mm), `timestep 2.0`, `stop_time 150`, `solver = implicit`, 800 W to 150 s, ω0 0.02, x0 = y0 = 0.05, z0 0.025, eps_r 5.02, tan δ 0.01065 + Hartlieb table, losses 0.7/0.3/1510.5, h 56, T_amb 297.5, all Neumann. Test gates b1 (thermo, table deck), b2 (`P_dep/P_inc` at the first step ± 0.002), b3 only with `--explicit`; c-rows report. The test reads `solver` from metadata (test:183).
+- **Quarter-domain facts** (verified): nothing that feeds T normalises the beam (intensity analytic M:4838–4841; source per cell); the radius is always from `beam.x0/y0` (M:4826); the optical-depth sum is per column (M:4324–4372); the central column `ic = floor((x0 − PLO)/DX)` (M:4313–4315) is **the same physical cell** on both blocks (64 on the full block, 0 on the quadrant); Neumann ghosts copy the nearest cell (`src/BC/Constant.cpp:92–93`) — ⚠ **not** `reflect_even` (Constant.cpp:94–95 reads an absolute index). Become ¼: `beam_P_inc/P_dep/P_trans`, `beam_E_*`, `bc_A_melt`; unchanged: `beam_P_beam` (= schedule P), closure ratio, maxima, `bc_*` of the central column. No live deck yet has the beam on with its axis on a corner.
+- **Explicit-vs-implicit history on the old path** (refuting evidence for m3): `studies/p2_20_beam_deposition/legs/Z1x` (dt 0.03, 50 s in 20 s wall) surface-centre T 468.2 vs 467.7 K (+0.12 %); `p2_21_loss_table/legs/T1x` onset 77.70 vs 84.00 s (−7.5 %); `p2_22_inrock_spread/legs/X` 45.57 vs 50.00 s (−8.9 %) — the 2 s implicit step quantises and lags the onset.
+- **Hu decks** (`validation/hu/`): granite2 κ 2.50, ρ 2640, c_p 827.2, α_th 8.0e-6, E 29.98e9, ν 0.19; sandstone2 κ 4.96, ρ 2480, c_p 829.3, α_th 1.0e-5, E 16.63e9, ν 0.34; T_ref 280.15; patch r 15 mm at (0.05, 0.05), T_expr granite `638.22+3.74*t`, sandstone `684.64+2.46*t`; 40³ over 0.1 m (2.5 mm), AMR decks `max_level 1`. Old 3-D record (09-25, still PASS today): hu_conduction L1 granite **424.86** / sandstone **492.18** K (+15.84 %; Hu +12.58), L2 **328.85 / 386.01** (+17.38 %; Hu +18.90). hu_thermoelastic wall 275 s (granite) / 572 s (sandstone). Mechanics: the homogeneous branch (M:1455–1492, `F0 = η α (T_node − T_ref)`, top nodes in the patch overridden to the held T) and the microstructure branch (M:1396–1447, per-phase E, μ, β, the same override via `ThermalFreeStrain`) are the same linear law for one phase.
+- **Planner's 1-D pre-registration** `Claude_markdowns/scripts/p2_29_hu_factor2_1d.{py,txt}` (Hu constants, 2.5 mm, factor 1 vs 2 vs exact, t = 30 s): at 6.25 mm granite 433.3 → **468.5** (exact 470.1), sandstone 520.8 → **553.4**; at 11.25 mm granite 333.3 → 349.1, sandstone 412.0 → 433.9. The factor-2 deck lands within 2 K of the exact solution.
+- **The three gaps** (P2-28 DR-5; all REACHABLE in production): (1) the jet march's per-bin recursion M:2838–2841 (live on `face_feet`, `face_list`, `face_heat`, the gate's HOS_S/FEET/fh legs; only a conservation self-check, M:2934–2946); the retired spec `retired_units/jet_enthalpy/test` (b): T_gas per bin = `e *= 1 − 2π h_ref min((k+½)dr, r_core) dr/(m c_p)` to 1e-9, first-order convergence to `core exp(−π r² h_ref/(m c_p))`. (2) `FeetDescent` M:2446–2563: `foot_rule` max/mean (M:2517–2523) and `nozzle_feed_max` (M:2545) have **no live deck** (both live feet decks run pads, no cap); `foot_stall_time` (M:2549) is logged on the live legs and checked by nothing; the retired spec is `retired_units/robin_feet` (FM/FA/FC/SM/SP — ⚠ README:25 wrongly names `jet_d2c`). (3) a beam crossing an interior void: production makes one (face-list vapour voids wall cells; `fl_n_up` up to 392 on `studies/p2_24_melt_vapour/legs/M0F`, whose closure reads **−0.0719** on those rows against ≥ −1.5e-12 without); `SolidFacePath` M:4065–4068, `ColumnOpticalDepth` skips voids (M:4362); `spall.seed_void` (M:4966–5008) needs `spall.enabled` (early return M:4952); retired spec `retired_units/seed_void` S2.
+- **Surface losses differ by path**: off the face list the cell form bills radiation + convection on the TOP-CELL T (`SurfaceCellFlux`, M:3777–3780, `Tc`); on the face list `FrFaceFlux` (F:138–160) bills them on the reconstructed surface **T_s**. Scale on Zhang: εσT⁴ at 1500 K = 0.20 MW/m² against the absorbed peak 2P(1−R)/(πω0²) = 1.09 MW/m² (R = 0.146) — ≈ 18 %, so the two forms can differ by a few per cent of T near the melt.
+- **The feed cap** `nozzle_feed_max` (M:2545, default +∞): no live deck sets it (only `studies/d2v_hmap/run.py` ever did), but it is the designed Meier mode — the rig fed the burner at 1.5 / 1.3 m/h (D2ac; `ARCHIVE_DONE.md` L6811 "(d) Operator cap") and the Meier rebuild on the rock file is on the roadmap. Retired spec FC (`retired_units/robin_feet`): `nozzle_z` falls at exactly the cap to 0.1 %.
+- **Retired-at-default table** M:187–254: one-token values compare as doubles; several tokens compare as a STRING (M:238–247) — so `alpha = 0 0` ≠ `"0.0 0.0"`.
+
+### Goal (three builds; before each: `src_pre_<n>/` of every touched file; `bin_pre/` once = P2-28's `ee4b6b9b`; study `tests/MMWSpalling/studies/p2_29_one_heat_path/` = `S/`)
+
+**Stage 1 (`p2_29a`, additive).**
+1. **`microstructure.phaseN.law = zhang`** — mirror the grimsel slot exactly: `bool zhang_law; Numeric::Material::Zhang zhang;` on `MineralPhase`; `queryclass<Zhang>(pfx + ".zhang", …)` UNCONDITIONALLY beside grimsel's; the law check accepts `constant | grimsel | zhang`; `law_T = grimsel_law || zhang_law` for the kappa/rho/Cp refusal; `law_s` stays grimsel-only (a zhang phase keeps E/beta/mu required). Table: build from a copy of the zhang law carrying the phase's latent scalars (the grimsel rule, one rule for both). `UpdatePropertyFields`: a zhang phase refreshes the THERMAL fields only (`kappa_mf = zhang.kappa(Tc)` [W/(m K)], `rho_mf`, `Cp_mf`); the mechanics block stays grimsel-only. `CheckTimeStepLimit`: a zhang phase uses `zhang.kappa(T)/(zhang.rho(T)·zhang.cp(T))` [m²/s]. `InitializeMicrostructure`'s law-aware ρ (M:5720–5729) gains the zhang case.
+2. **The Zhang deck on a quarter block** `zhang_oglesby/input_phase`: `geometry.prob_lo = 0.05 0.05 0.0`, `prob_hi = 0.10 0.10 0.025`, `amr.n_cell = 64 64 32`, beam x0 = y0 = 0.05 (the corner), the full schedule power (**not** ÷4), all faces `neumann`; one phase (`microstructure.mode = expression`, `phase_expr = 0`, `nphases = 1`, `phase0.fraction = 1.0`, `phase0.law = zhang`, latent scalars T_m 1510.5 / fus_width 200 / L_m 3.4e5 / T_vap_lo 3233 / T_vap_hi 3503 / L_v 4.8e6, E/mu/beta written and marked inert), `el.type = disable`, no `material.*`, `solver`, `implicit.*`, `alpha`; `timestep = 0.05` (limit 0.0769 s, ratio 0.65), `amr.plot_int = 200` (every 10 s), thermo every step; the beam/loss/schedule keys unchanged. Study twins (`S/legs/`, not test decks): **ZF** = the same deck on the full block (0–0.10, 128×128×32); **ZO** = the OLD deck on `bin_pre` + argv `solver=explicit timestep=0.05 amr.plot_int=200` on the QUARTER block (the same geometry/n_cell argv as ZQ; the old explicit kernel takes the deck's BCs) — if a full-block ZO has already run, a3 compares it with ZF instead, either pair proves the merge; **ZL** = the quarter deck + `surface_patch.face_list = 1` in evaluate-only mode (spall and vapour OFF, `surface_patch.enabled = 0`, `surface_patch.x0 = y0 = 0.05` so `FillFractionGhosts` mirrors at the corner, `robin_form = surface`, the flaw / K_Ic / span keys copied from `rock_grimsel.inputs` and labelled CHOICE — nothing is removed, so they cannot move T) — production's surface-loss form on the heating benchmark. The test: drop b3 and the `solver` read; everything else unchanged (the quadrant's centre column is unique).
+3. **The fixtures in physical units** (`input_phase` beside each; one constant phase; T inside [250, 2000] K throughout; each test reads its constants from the run's metadata, not hard-coded copies). The OLD side is not re-run: m2 scores the outputs already on disk (`beam` 11-06, `beam_tau` 11-09, `equilibrium`/`stefan`/`convective_patch` 11-03), dated in the log:
+   - `unit/beam_tau`: κ 0, ρ 1, c_p 1 (its T is already 300/1000 K); U1, U2 unchanged; **U3 retires** (a byte lock on the const-α output).
+   - `unit/beam`: IC 300 K, κ 0, ρ = c_p = 1; the energy check becomes ∫(H_end − H_0)dV vs `P0·t·(1 − e^{−αL})`; the hot-spot check unchanged.
+   - `unit/equilibrium`: IC = `losses.T_amb` = 300 K, σ = 5.670374419e-8, ε = 1, h = 0, κ 0, ρ = 1000, c_p = 1000, `P0` chosen so T_eq ≈ 1000 K (the test solves εσ(T⁴ − T_amb⁴) = q_abs); `dt = 1.0`, `stop_time = 3000` (the radiative relaxation time at 1000 K is ≈ 138 s; dt ≤ it).
+   - `unit/stefan`: St = 1 kept: T_m = 1000 K, IC = T_m (on the SOLID side of the plateau — assert Λ_L = 0 at t = 0, else start 0.01 K below and say so), xlo Dirichlet 1100 K, `fus_width = 0`, ρ = 1, c_p = 1000, κ = 1000 (α = 1, the test's), L_m = 1.0e5 (= c_p ΔT); λ = 0.6201 unchanged.
+   - `unit/convective_patch`: constant phase κ 2.50, ρ 2630, c_p 800, T_ref 293.15; patch unchanged.
+4. **The Hu decks** (`input_<rock>_phase` beside each of the **7**: `hu_conduction` ×2, `hu_thermoelastic` ×2, `hu_breakage_index` ×3; `hu_thermoelastic_amr` is NOT ported — stage 2 retires it): one constant phase with the deck's κ/ρ/c_p, `beta` = the old `alpha`, `E`, `mu = E/(2(1+ν))` (granite 12.597e9, sandstone 6.2052e9), `T_ref = 280.15`; no `material.*`, `phase.*`, `alpha`; mechanics keys otherwise unchanged. `amr.max_level = 0` on the three breakage decks (uniform 40³, 2.5 mm; the explicit limit at 2.5 mm is 0.37 s, dt 0.2 kept); plot times kept (37 s, 89 s); `hu_breakage_index/test` finds plotfiles **by time**, not by step number. Each Hu test accepts a run-directory argument. The OLD side is not re-run: m4/m5 compare with the 09-25 outputs in `hu_conduction/output/` and `hu_thermoelastic/output/` (archived first, SR 9); m6 has no old output (none since 09-17) and scores against Hu's data only.
+5. **The kept-test runner** `W/run_kept.py` (`W = tests/MMWSpalling/studies/tree_sweep_0922/witness`): an explicit manifest of every kept test (deck(s) + argv + test command + expected outcome: PASS, or a declared RECORD with its failure signature — today `face_removal --check` FAIL (4) only); it **archives each output directory, launches every deck, then scores** (never a check-only score of an old output); asserts every scored plotfile is newer than the runner's start; a discovery cross-check fails if any `unit/*/test` or `validation/**/test*` is neither in the manifest nor in an `EXCLUDED` list with a reason. One summary file, one line per test, dated. **It is the user's periodic check (every few days), not a packet step**: the chain runs it once on a 4-test subset (`latent_heat`, `beam`, `stefan`, `face_dirichlet`) to prove launch, score, mtime assertion and the cross-check; `WHICH_TESTS.md` records the cadence.
+
+**Stage 2 (`p2_29`, delete) — only on the user's go.**
+6. Delete `AdvanceConstAlpha`, `AdvanceMaterial`, `AdvanceMaterialImplicit`, the dispatch's three branches, `SolverKind` and its members (M:5964–5992 except the `losses` members), `material`/`material_table`/`BuildEnthalpyTable`/`SetPhaseFractionsConstAlpha`, the global and closed-form branches of `ConvertTtoH`/`InvertHtoT`, `UpdateModel`'s homogeneous branch, `therm_alpha` and its parse (M:306; `hc.heat.alpha` stays required by `HeatConduction::Parse`), the `material ? … :` fallbacks (M:4427, M:4483), the material+microstructure abort (M:1193–1195), the struct comment about the half term (M:6145–6149).
+7. **A deck without `microstructure.nphases` aborts** naming P2-29 and the successor (one phase, `law = constant | grimsel | zhang`).
+8. **Retired keys** (each aborts naming P2-29; `retired_keys` K rows two-sided): by presence `material.type` and `material.*`, `implicit.*`, `phase.T_ref`, `phase.T_m`, `phase.T_v`, `phase.lh_m`, `phase.lh_v`; at a default `solver = explicit` (`implicit` aborts), `surface_patch.foot_rule = pads`, top-level `alpha = 0 0` — and the table's multi-token compare becomes **token-wise numeric** (equal count, each token a double, each equal), so `0.0 0.0` equals `0 0`.
+9. Delete `foot_rule` max/mean (closed switches, no live deck). **The feed cap stays** (Meier's mode; stage 3 tests it).
+10. The phase decks become the decks (`input_phase` → the deck's name); the old decks and `unit/beam_tau` U3 move to `retired_validation/separate_path/` and `retired_units/` with a README naming each successor; `hu_thermoelastic_amr` (both decks + test) moves to `retired_validation/separate_path/` and **`unit/amr_microstructure_regrid` to `retired_units/`** (red since before P2-27, run as a "record" every packet since), each with a README line: AMR parked (SR 12), re-instate with the AMR-repair packet; `hu_thermoelastic` covers the thermoelastic physics. `run_kept.py`'s EXCLUDED list names both with that reason; `WHICH_TESTS.md`'s decomposition/AMR row drops the regrid test. `MODEL_CARD.md` §11 7b closed; `WHICH_TESTS.md` gains rows for the phase law, the Hu ports, the three new tests and `run_kept.py`; `retired_units/README.md` corrects the robin_feet / jet_d2c attribution.
+
+**Stage 3 (`p2_29`, tests only — no source change).**
+11. **`unit/jet_march`**: the retired `jet_enthalpy` (b) on a face-list fixture (cubic cells, `robin_form = surface`, quarter block, flat top, one step from a uniform 500 K, position-mode bins, `jet_profile_interval` on): T_gas per bin vs the discrete recursion, and first-order convergence (dr halved twice) to the continuous solution.
+12. **`unit/face_feet` stall and cap legs**: a leg whose descent is blocked, one that descends (`foot_stall_time` from thermo), and one with `nozzle_feed_max` below the free descent rate (the retired FC spec).
+13. **`unit/beam_void`**: a face-list deck, beam on, `spall.seed_void` an interior box below solid under the axis, two steps from cold (nothing fires): leg U (uniform profile) and leg G (Gaussian).
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | claim | site / guard | resolves to |
+|---|---|---|---|
+| L1 | a deck reaches the production kernel iff `microstructure.nphases` is set | M:403, M:564; dispatch M:1585 | every `input_phase` deck sets it; grep |
+| L2 | the zhang law is SELECTED, not silently constant | the new `.law` branch; `zhang_law` read by the table build, `UpdatePropertyFields`, the dt check | a6's κ witness (κ_mf varies with T as Z:73–77) |
+| L3 | the conjunction: a zhang phase is refreshed by `UpdatePropertyFields` AND that function runs on a no-list deck | the `any` gate (M:4106–4109) and its caller (M:1577, every path) | the new `any` includes `zhang_law`; a6 |
+| L4 | the dt check covers a zhang phase in [m²/s] | M:1277–1279 new branch | printed α(297.5 K) = 1.3225e-6 m²/s |
+| L5 | the quadrant's symmetry planes are Neumann ghosts = nearest cell | `src/BC/Constant.cpp:92–93` | `hc.bc.temp.constant.type.xlo/ylo = neumann` in the deck |
+| L6 | the beam is not quartered by hand | M:4838–4841 (analytic I), `beam.schedule` | `beam_P_beam` = 800 W in ZQ's thermo; a4 |
+| L7 | the Hu prescribed patch reaches the production kernel's 2× term | M:2155–2172 (`!fl_on` → `2.0 * kc * …`) under `surface_patch.enabled && SurfaceOwner(lev)` | a8 coverage witness; the probe rise |
+| L8 | no live deck in this packet runs AMR (`max_level = 0` everywhere; the regrid unit test and the AMR Hu decks are the known-broken AMR users) | grep `amr.max_level` over the ported decks | z0 list |
+| L9 | the mechanics port is the same linear law | M:1396–1447 vs M:1455–1492 | m5's stress shift is explained by T alone (report) |
+| L10 | a fixture's T stays on the table | TB:30–37 (200–5000 K) | each fixture test prints its T min/max; a7 |
+| L11 | every live deck carrying `alpha` writes zeros after stage 1 | grep `^alpha` over live decks | z0 list; b3 |
+| L12 | `foot_rule` max/mean have no live setter; the cap's only setter is a study | grep over live decks and face-gate argvs | z0 list |
+| L13 | `seed_void` runs on the face list with the beam on | M:4952 (needs `spall.enabled`), M:4966–5008 | c3's deck sets `spall.enabled = 1`, nothing fires (T cold) |
+
+### Chain (exact tokens; `PY=/Users/tzetze20/Desktop/code/.venv/bin/python`, `W=tests/MMWSpalling/studies/tree_sweep_0922/witness`, `S=tests/MMWSpalling/studies/p2_29_one_heat_path`; serial, under `caffeinate -dis`, lid open, charger in; `S/chain.sh <stage>` mirrors P2-28's — sleep events per stage, a failed gate skips every later long leg)
+
+- **s1:** z0 (offline) → build `bin_1` → a1 face gate `run p2_29a` + `cmp p2_28 p2_29a` → a2 `unit/latent_heat` → a7 fixtures (new on `bin_1`; the old side from disk) → ZO (quarter), ZF, ZQ, ZL (≈ 1.5 + 5 + 1.5 + 2 min) → a6, a3, a4, a5, m3, m8 → Hu new on `bin_1` (7 decks; the two thermoelastic ≈ 15 min, the three breakage not yet measured) → m4–m6 → **STOP**.
+- **s2:** build `bin_2` → b1 face gate `run p2_29` + `cmp p2_29a p2_29` → b2 → b3 → b4.
+- **s3:** c1–c3 → k1 `run_kept.py --subset` on `bin_2` (≈ 10 min) → m1, e0. The full `run_kept.py` is the user's, every few days.
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 (offline) | step zero: ledger L1–L13; the dt ratio of every new deck at every level; the live `alpha`/`foot_rule`/`nozzle_feed_max`/`phase.*`/`material.*` setter lists; the old outputs archived (SR 9) | every row resolves; every new deck's ratio ≤ 0.75 | gate | the packet is wrong somewhere; stop and report the row |
+| a1 | 2 | face gate `p2_28` → `p2_29a` | IDENTICAL (thermo timers excepted) | gate | stage 1 moved a grimsel/constant deck — the phase-law edit is not additive |
+| a2 | 3 | `unit/latent_heat` + a new zhang leg (its two-halves assertion on a zhang table) | PASS all legs | gate | the zhang table drops or double-counts latent heat (the grimsel trap, M:5539–5545) |
+| a7 | 4 | the five fixture tests on `input_phase` (beam, beam_tau U1/U2, equilibrium, stefan, convective_patch) | each PASS at its existing bar; T within [200, 5000] K | gate | a fixture's port is wrong (units, IC on the plateau's wrong side, off-table T) — stage 2 would delete its only working copy |
+| m2 | 4 | the fixtures old vs new (each test's scored number: the dated output on disk vs `input_phase` on `bin_1`) | report; convective_patch top T within 1e-6 K predicted | report | a path difference beyond round-off on an identical problem — name it |
+| a6 | 5 | κ witness on ZQ's first and last plotfile: `kappa` vs Z:73–77 at 20 sampled cells; the dt message's α | rel ≤ 1e-12; α = 1.3225e-6 m²/s (4 s.f.) | gate | the law is not selected or κ is a diffusivity (the two-meanings trap) |
+| a3 | 6 | ZF vs ZO: `Temp` every cell, every plotfile; thermo beam columns; and the FIRST difference above 1e-9 K (plotfile time, cell, the quantity, both values) written whether or not the bar holds | max \|ΔT\| ≤ 1e-6 K; thermo rel ≤ 1e-9 | gate | the merged kernel is not the old explicit kernel on Zhang's problem; stage 2 must not run |
+| a4 | 7 | ZQ vs ZF's quadrant (cell (i, j, k) ↔ (64+i, 64+j, k)); ZF's own mirror asymmetry (cell 63−i vs 64+i) as the noise floor; thermo `beam_P_inc/P_dep/P_trans/E_*` × 4, `bc_*` | max \|ΔT\| ≤ 1e-6 K; ×4 totals rel ≤ 1e-9; `bc_*` rel ≤ 1e-9; `beam_P_beam` = 800; the first-difference record as a3 | gate | the quarter is not the full block (a non-local term, a corner effect, or hand-quartered power) |
+| a5 | 8 | `zhang_oglesby/test` on ZQ | b1, b2 PASS | gate | the closure or the first-step partition broke on the quadrant |
+| m8 | 8 | ZL vs ZQ: surface-centre T at 25/50/100/150 s; `bc_z_melt` onset; total losses | report; prediction: ZL cooler, \|ΔT\|/T ≤ 0.5 % at 50 s and ≤ 3 % at 150 s, onset later by ≤ 10 % | report | the two loss forms differ by more than the radiative share — the no-list benchmark does not stand for production |
+| m3 | 8 | ZQ vs the implicit record: c1 T at 25/50/100/150 s; c5 onset (first finite `bc_z_melt`) | report; prediction: T within 2 %, onset 5–10 % earlier | report | the explicit/implicit gap differs from P2-20–22's — a finding about the old record |
+| m4 | 9 | hu_conduction phase vs the 09-25 output: L1/L2 probes, pct | report; pre-registered L1 granite 458 ± 5 K, sandstone 521 ± 8 K, pct 13.7 ± 1.5; L2 343 ± 5 / 404 ± 8, pct 17.6 ± 1.5; test PASS | report | the factor 2 does not account for the move (lateral loss or the probe's tie cell) — explain before stage 2 |
+| m5 | 9 | hu_thermoelastic phase vs the 09-25 output: T as m4; L4 von Mises pct; peak top von Mises | report; tests PASS predicted; stress moves with T only | report | the mechanics port is not the same law (L9) |
+| m6 | 9 | hu_breakage_index phase (uniform 2.5 mm — the surface f_b is extrapolated from coarser nodes than Hu's 09-17 AMR deck intended) vs Hu's data (no old output exists): f_b granite 37 s (Hu 0.91 ± 0.10), sandstone 89 s (0.82 ± 0.10), L5, L6 | report; pass/fail of each bar not predicted (the surface nodes are pinned to the held T on both paths; only the rock below gets hotter) | report | a validation verdict moves on the corrected boundary — the user reads it at the STOP |
+| — | **STOP** | status "stage 1 complete — awaiting the user" | — | — | — |
+| b1 | 10 | face gate `p2_29a` → `p2_29` | IDENTICAL | gate | a deletion reached a production deck (the feet cap rewrite, a shared helper) |
+| b2 | 11 | ZQ and hu_conduction re-run on `bin_2` vs their `bin_1` outputs | byte-identical thermo + plotfiles | gate | the deletion moved a ported deck |
+| b3 | 12 | `retired_keys` (new K rows two-sided: each retired key aborts naming P2-29; `alpha = 0 0` and `0.0 0.0` run, `alpha = 8e-6 0` aborts; `solver = explicit` runs, `implicit` aborts; `foot_rule = pads` runs, `max` aborts; `nozzle_feed_max` still parses; a deck without `nphases` aborts) + `lateral_flux_lock`, `buckle_lock`, `interlocks` | PASS; the new rows RED on `src_pre_2` | gate | a retired key would run silently (SR 1) |
+| b4 | 13 | source assertions: the three Advance functions, `SolverKind`, `material_table`, `therm_alpha` absent; no `kc * (sp_T - Tc) * inv_dz2` without `2.0` in `src/` | 0 hits each | gate | the deletion is incomplete; the half term survives somewhere |
+| c1 | 14 | `unit/jet_march` | T_gas per bin = recursion rel ≤ 1e-9 on every bin; a planted h × 1.01 FAILS; convergence ratio 1.8–2.2 | verdict | the march is not the recursion it documents |
+| c2 | 15 | `unit/face_feet` stall legs | blocked leg: `foot_stall_time` = (n−1)·dt on every row; descending leg: 0 on every descending row; cap leg: `nozzle_z` falls at exactly the cap (0.1 %) and no faster | verdict | the stall clock or the cap is wrong |
+| c3 | 16 | `unit/beam_void` U (uniform) | invariant 0; closure ≤ 1e-9; P_dep ≤ P_inc; Q below the void = the Beer–Lambert continuation with no attenuation across the gap, per cell rel ≤ 1e-9 | verdict | the beam leaks or attenuates through a void |
+| m7 | 16 | `unit/beam_void` G (Gaussian): closure | report; prediction \|err\| ≤ 0.1 (the lateral-spread residual class of P2-21 b1r) | report | M0F's −0.0719 is not the known residual — a new energy defect under the beam |
+| k1 | 17 | `run_kept.py --subset` on `bin_2` (4 tests) | each PASS; the cross-check lists every unlisted test as 0; the mtime assertion FAILS on a planted stale output | verdict | the runner cannot be trusted for the user's periodic check |
+| m1 | 18 | lines (src, tests moved) | report; ≈ −400 src | report | — |
+| e0 | 19 | verdict: one heat path; Zhang validates the production kernel on a quarter; three gaps tested; every kept test runs from its deck | a1–a7, b1–b4, c1–c3, k1 hold | verdict | — |
+
+### Pre-registered predictions
+
+- P1 a3: ZF ≡ ZO to ~1e-9 K (the two harmonic forms differ by an ulp; nothing else differs on a no-void, no-list, single-level deck).
+- P2 a4: the quadrant reproduces the full block to round-off (~1e-10 K); `beam_P_inc` = ¼ of ZF's.
+- P3 m3: the explicit onset is earlier than the 2 s implicit record by 5–10 %; T at 25–150 s within 2 %.
+- P4 m4: the numbers in the row (planner's 1-D scaled by the 3-D/1-D ratio of the old record); the ratio tests keep passing.
+- P5 m6: whether each breakage bar holds is not predicted (a hotter layer under a pinned surface can lower the surface stress), nor whether the granite 0.91 ± 0.10 bar still holds.
+- P6 (withdrawn with AMR: at 2.5 mm uniform, dt 0.2 is ratio 0.54.)
+- P7 m7: the Gaussian closure stays inside the known lateral-residual class (|err| ≤ 0.1).
+
+### Refuting evidence on disk
+
+P2-20 `legs/Z1x`, P2-21 `legs/T1x`, P2-22 `legs/X` (explicit vs implicit on the old path) for P3; `validation/hu/hu_conduction/output/` (09-25, the old record) for P4; `studies/p2_24_melt_vapour/legs/M0F/run/thermo.dat` (closure −0.0719 with `fl_n_up` > 0) and `studies/p2_21_loss_table/RESULTS.txt` b1r (the residual range −3.69e-4 … +5.41e-2) for P7; `Claude_markdowns/scripts/p2_29_hu_factor2_1d.txt` for P4.
+
+### What would make this inert, and the witness for each
+
+- The zhang law silently constant (a typo in `.law` falling to the default) → a6 (κ varies with T as Zhang's law).
+- The quadrant fed a full-power beam per quarter, or a hand ÷4 → a4's ×4 totals and `beam_P_beam`.
+- The Hu patch not applied on the production kernel (SurfaceOwner, AMR coverage) → a8 and m4's probe rise > 0.
+- A fixture off-table (T < 200 K) → a7's printed T range.
+- A test scoring an old output (P2-28's b4) → `run_kept.py`'s mtime assertion.
+- The jet test reading its own logged numbers back (a tautology) → c1's planted h × 1.01 must FAIL.
+
+### Guardrails
+
+- The grimsel and constant phase paths stay bit-identical (a1, b1); no coefficient of any law is changed; Zhang's coefficients are Z:39–64's defaults (Zhang Table 1).
+- The Oglesby #19 deck is NOT quartered (its test divides by `P_beam` and reads `bc_A_melt`).
+- `AdvanceMicrostructure`'s prescribed term (M:2155–2172) is not touched.
+- The feed cap `nozzle_feed_max` is not deleted (Meier's mode).
+- The ported decks change units and paths only; no physics value of a deck is tuned (the sandstone breakage dt is the stability bound, P6).
+
+### Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+caffeinate -dis bash tests/MMWSpalling/studies/p2_29_one_heat_path/chain.sh 1   # then STOP for the user
+caffeinate -dis bash tests/MMWSpalling/studies/p2_29_one_heat_path/chain.sh 2   # on the user's go
+caffeinate -dis bash tests/MMWSpalling/studies/p2_29_one_heat_path/chain.sh 3
+# one run, as the chain does it:
+mpirun --oversubscribe --bind-to none -np 4 bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/zhang/zhang_oglesby/input_phase
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py cmp p2_28 p2_29a
+```
+
+### Claude completion notes (stage 1)
+
+Stage 1 implemented 2026-11-10 (`/implement`), study `S/` = `tests/MMWSpalling/studies/p2_29_one_heat_path/`, chains
+`S/chain.sh 1` (10:40–10:56, stopped by the user's trim inside the old Hu loop), `1h` (10:58–11:12, the trimmed Hu
+section; the first breakage leg aborted), `1b` (11:26–11:32, the breakage decks single level); log `S/CHAIN.log`;
+0 sleep/wake events. Binaries: pre `ee4b6b9b` (= P2-28's), stage 1 **`43d87dae`** (`S/BINARY_1.txt`, `S/bin_1/`; the
+smoke runs used `a6b306eb`, the same source -- `src/IO/WriteMetaData.cpp` embeds the git diff, so a test edit
+re-hashes the binary). Nothing committed.
+
+**Files changed.** src: `MMWSpalling.H` (+64/−9: `phaseN.law = zhang` -- parse, the `<pfx>.zhang.<latent>` refusal,
+`law_T`/`law_s`, the dt check's zhang diffusivity, `UpdatePropertyFields` thermal-only zhang branch, the table copy
+rule, the law-aware initial rho/Cp, `MineralPhase::zhang_law/zhang`); `Numeric/Material/Table.H` (+36/−15: the
+sharp-band jump in `H_of_T`/`T_of_H`, the user's decision). Decks (new, `_phase`/`input_phase`, generated by
+`S/make_decks.py` from the old ones; `--check` re-verifies): Zhang quarter block; `unit/{beam_tau, beam, equilibrium,
+stefan, convective_patch}`; `hu_conduction` ×2, `hu_thermoelastic` ×2, `hu_breakage_index` ×3 (single level).
+Tests edited: `zhang_oglesby/test` (b3 + the solver read dropped), `unit/{beam, equilibrium, stefan,
+convective_patch}/test` (constants from the run's metadata, Temp range printed), `unit/beam_tau/test` (`--deck`,
+`--bin`; U3 only on the old deck), `unit/latent_heat/test` (a zhang leg), `hu_breakage_index/test` (plotfiles by
+TIME, an incomplete run refused). Witness: new `run_kept.py` (manifest 36, EXCLUDED 5 with reasons, `--subset`,
+`--plant-stale`, discovery), `WHICH_TESTS.md` (the user's every-few-days cadence). Study: `z0.py`, `make_decks.py`,
+`smoke.py`, `fixtures.py`, `zcompare.py`, `hu_compare.py`, `ZL.input`, `chain.sh`. Archived (SR 9):
+`unit/beam_tau/output` (moved), `hu_conduction/output`, `hu_thermoelastic/output` (copied) → `S/archive/`.
+
+| # | test | measured | result | output |
+|---|---|---|---|---|
+| z0 | step zero | every ledger row resolves; every new deck's ratio ≤ 0.686 (Zhang 0.686, breakage single level 0.256/0.540, Hu 0.256/0.270, fixtures ≤ 0.393); setters: `alpha` non-zero only on the 7 old Hu mechanics decks, `foot_rule` = pads ×4, `nozzle_feed_max` 0, `phase.*` 8, `material.*` 11, `solver/implicit` 1 | PASS | `S/Z0.txt`, `S/Z0_b.txt` |
+| a1 | face gate `p2_28` → `p2_29a` | 2,010 / 2,010 files, none on one side only; the 17 differing are thermo timer columns only | PASS (IDENTICAL) | `S/GATE_a1.txt` |
+| a2 | `unit/latent_heat` + zhang leg | constant / grimsel / **zhang**: H = the same-grid trapezoid (0.0e+00); latent ρL_m(1 + dT/w) to 4e-15 / 4e-15 / 3e-15 | PASS | `S/K1_latent_heat.log` |
+| a7 | five fixtures on `input_phase` | beam 0.00 %; equilibrium **1.73 %** (T_sim 982.7 vs 1000.0 K at 700 s); stefan 4.23 %, Λ_L(t = 0) = 0; convective_patch PASS; beam_tau U1/U2 PASS (U3 not run, retires). T ranges 300–305, 482–1484, 1000–1095, 293–1271, 300–1002 K | PASS | `S/K1_fixtures.log` |
+| m2 | old vs new | beam 0.00 % both; equilibrium 0.00 % → 1.73 % (the 700 s run, not yet at equilibrium); stefan front **0.8398 both** (4.23 %); beam_tau fractions equal to 1e-14; **convective_patch max \|T_new − T_old\| 3.4e-13 K** (top 2.3e-13; prediction ≤ 1e-6) | report | `S/K1_fixtures.log` |
+| a6 | κ witness | t = 0: rel 0 on every cell; last plotfile vs ZQ1's start-of-step T, 20 cells 298–657 K: max rel **1.7e-16**, κ 2.168–3.078 W/(m K); dt message α **1.39514e-6 m²/s at T_cold 273.15 K** (deviation 3) | PASS | `S/K1_a6.log` |
+| a3 | ZF vs ZO | **max \|ΔT\| 2.3e-13 K** over 16 plotfiles × 524,288 cells; first difference > 1e-9 K: none; thermo beam columns 18,000 / 18,000 tokens equal (ZO full block, deviation 9) | PASS | `S/K1_a3.log` |
+| a4 | ZQ vs ZF's quadrant | max \|ΔT\| **2.3e-13 K** = ZF's own mirror asymmetry; no difference > 1e-9 K; beam totals ×4 within print half-units on every row (worst printed rel 6.0e-6); 14 bc_* tokens equal every row; beam_P_beam 800 every row | PASS | `S/K1_a4.log` |
+| a5 | `zhang_oglesby/test` on ZQ | b1: 2,999 rows, closure col err 0.0e+00, α_max ≥ 13.9992; b2: P_dep/P_inc 0.2953 vs 0.2954 | PASS | `S/K1_a5_zhang.log` |
+| m8 | ZL vs ZQ | surface-centre T +0.017 / +0.038 / +0.087 / **+0.146 %** at 25/50/100/150 s (ZL **WARMER**); losses 0.5311 vs 0.5355 kJ (−0.8 %); no melt either | report: size inside, **sign opposite** to the prediction | `S/K1_m8.log` (first ZL listed nothing: `S/legs/ZL_r0_emptylist/`) |
+| m3 | ZQ vs the implicit record (ZI) | c1 +0.12 / +0.10 / +0.16 / +0.20 % (prediction ≤ 2 %); c5: **neither melts by 150 s** (centre T 626 K) | report: T as predicted; onset unscoreable (deviation 6) | `S/K1_m3.log` |
+| a8 | breakage level-1 coverage | **not run: the breakage decks run single level** (the user; AMR + mechanics fails, deviation 8) | — | `S/legs/hu_new/hu_breakage_index/granite2_37.AMR_MLMG_FAIL.log` |
+| m4 | hu_conduction new vs 09-25 | L1 granite **459.99** (458 ± 5 ✓), sandstone **527.52** (521 ± 8 ✓), pct 14.68 (13.7 ± 1.5 ✓); L2 **343.67** (343 ± 5 ✓) / **407.27** (404 ± 8 ✓), pct 18.51 (17.6 ± 1.5 ✓); test PASS; 09-25 = 424.86 / 492.18 / 328.85 / 386.01, reproduced to the printed digit by bin_pre | report: inside every band | `S/K1_m4_m6.log` |
+| m5 | hu_thermoelastic new vs 09-25 | T as m4; L4 vM pct 34.35 → **39.63 %** (Hu 46.74); L3 3.83 → 3.50e7 Pa granite (DOWN while T rose); L4 6.40 → 6.37e7; peak 6.82 → 6.71e7 Pa granite; test PASS | report | `S/K1_m4_m6.log` |
+| m6 | hu_breakage_index vs Hu (single level, 2.5 mm) | granite 37 s max heated-surface f_b **0.8505** (Hu 0.91 ± 0.10 ✓); sandstone 89 s **0.8240** (0.82 ± 0.10 ✓); L5 centre granite margin +17.84 % (Hu +19.69); L6 0.206 / 0.226 (< 0.25); test PASS | report | `S/K1_m4_m6.log` |
+
+**Declared deviations** (none a tuned number):
+1. **`Table.H`'s sharp band fixed** (the user, 2026-11-10; outside the packet): with `fus_width = 0` a liquid cell read
+   L_m/c_p too hot (100 K on the Stefan port) and `ConvertTtoH` dropped ρL_m. No live deck had a sharp band (a1 identical).
+2. **equilibrium `stop_time = 700`** (the user, step zero): 3000 s drives the sub-surface cells (κ 0, no loss) to
+   ≈ 5,370 K, off the table. ⚠ The revised Goal 3 still reads 3000. At 700 s the top cell is 1.7 % short of T_eq.
+3. **a6's α at T_cold = 273.15 K** (1.39514e-6), not 1.3225e-6 at 297.5 K: T_cold = min(phase T_ref, T_amb) and the
+   deck keeps the old deck's T_ref 273.15 (H = 0 there). Limit 0.0729 s, ratio 0.686.
+4. **a3/a4 thermo bars at print precision**: `thermo.dat` prints 6 significant digits (the stream default, no option),
+   so "rel ≤ 1e-9" is scored as equal tokens (a3) or ×4 within the print's half-units (a4); the plotfile Temp bars
+   (doubles) are the binding gates.
+5. **a6's last plotfile against ZQ1** (the same run one step shorter): the kernel refreshes κ from the step's START T.
+6. **m3**: the implicit record re-run as leg ZI (the old deck as written, bin_pre) -- `zhang_oglesby/output` holds no
+   plotfile or thermo. Its onset half is unscoreable: the P2-20–22 onsets the prediction cites ran the Oglesby #19
+   configuration (1,460 W, ω0 12.88 mm, argv), not this deck (800 W, ω0 20 mm), which melts on neither path by 150 s.
+7. **ZL** needs `surface_patch.radius = 0.08` (the listing mask defaults to 0 with the patch off: the first ZL listed
+   NO face, so m8 first read ZL ≡ ZQ -- my miss; kept as `legs/ZL_r0_emptylist`) and `spall.stress_source =
+   local_thermoelastic` (interlock I3).
+8. **The breakage decks single level** (the user, 2026-11-10): the AMR decks abort (`MLMG failed` in the elastic solve
+   at the first step after the regrid creates level 1); the SAME phase deck on bin_pre aborts identically ⇒ pre-existing
+   on the production path (the old deck on the old kernel runs). On the 40³ base grid every deck keeps dt 0.2; a8 dropped.
+9. **The trim** (the user, mid-chain): the old Hu loop stopped after 3 of 9 legs (conduction ×2 and thermoelastic
+   granite on bin_pre; sandstone killed at step 162/300, kept as `.INCOMPLETE`); the conduction pair reproduces the
+   09-25 outputs to the printed digit, so they are the baselines. ZO ran the full block (a3 pairs it with ZF); the old
+   fixtures were re-run on bin_pre before the trim (`S/legs/fix_old/`). `hu_thermoelastic_amr` not ported (its two
+   generated decks deleted). `run_kept.py`: EXCLUDED adds `hu_thermoelastic_amr` and (the user) `amr_microstructure_regrid`.
+10. **A new refusal**: `<pfx>.zhang.{T_ref, T_m, fus_width, L_m, T_vap_lo, T_vap_hi, L_v}` abort -- `Zhang::Parse` reads
+    them but the table carries the PHASE's latent scalars, so they would be read and overwritten silently.
+11. The fixture decks keep their `el.*` keys (the old static solve at step 0, β = 0), not `el.type = disable`.
+
+**For stage 2 (found here):** `unit/interlocks` D4/D5 run `unit/amr_microstructure_regrid/input` (the only per-level
+dt check) -- moving that deck to `retired_units/` breaks them unless they are repointed or retired with AMR; and that
+deck writes `alpha = 0.0` as ONE token, which the planned token-wise compare against `0 0` would refuse.
+
+### Implementation takeaways (stage 1)
+
+1. ⚠⚠ **A property field in a plotfile lags its Temp by one step**: `UpdatePropertyFields` runs at the step's start,
+   the plotfile after it. A field-vs-T witness needs the start-of-step T -- a one-step-shorter twin (`max_step`) gives it
+   bit-exactly.
+2. ⚠⚠ **A flameless face-list deck lists NOTHING unless `surface_patch.radius` is set** (the listing mask defaults to 0
+   with the patch off). Any such deck's smoke must check `fl_n_top > 0`; a run with an empty list is the cell form.
+3. ⚠ **Smoke an AMR deck past its first regrid** (`regrid_int` + 2 steps): the breakage MLMG abort is invisible earlier.
+4. **On a beam benchmark the surface form loses LESS than the cell form** (T_s < T_top: heat is deposited inside and
+   leaves through the face) -- the opposite of a flame, where the surface is hotter than the cell.
+5. **Zhang's deck does not melt in its first 150 s on either kernel**; the melt onsets in P2-20–22 are the #19
+   configuration's. A prediction transferred between decks must name the deck its numbers came from.
+6. **Hu on the corrected boundary**: the top-cell rise lands inside every pre-registered band (L1 +35.1 K granite,
+   +35.3 K sandstone); the surface stresses barely move (the top nodes are pinned to the held T on both paths) while L3's
+   drops (3.83 → 3.50e7 Pa: a hotter layer under a pinned surface lowers the interior gradient); breakage single level at
+   2.5 mm meets both of Hu's onset bars.
+7. The const-α Stefan and the table Stefan put the front at the SAME cell (0.8398): the sharp-band fix is exact.
+8. `src/IO/WriteMetaData.cpp` is recompiled on every build (it embeds the git diff): the binary hash moves with any
+   tracked-file edit; record the source hashes beside it (BINARY_1.txt does).
+
+### Claude completion notes (stages 2 and 3)
+
+On the user's "continue" (2026-11-10), after re-reading the revised packet against stage 1: consistent except
+`interlocks` D4/D5 (they run the regrid deck Goal 10 retires; the user: retire them with AMR) and Goal 3's stale
+equilibrium 3000 s (700 s kept). Stage 2: `S/stage2_src.py` (the source transform from `S/src_pre_2/`) +
+`S/stage2_tests.py` (the moves and edits, log `S/STAGE2_TESTS.txt`), then `S/chain.sh 2` (11:49–11:55, binary
+**`ccd15b91`**, `S/BINARY_2.txt`, 0 sleep events). Stage 3: tests only, run one by one (`S/K3_face_feet.log`, the
+tests' own `output/`). Nothing committed.
+
+**Files changed.** src: `MMWSpalling.H` 7,338 → 6,823 (the three kernels, the dispatch branches, `SolverKind` and its
+members, `material`/`material_table`/`BuildEnthalpyTable`/`SetPhaseFractionsConstAlpha`, the converters' other branches,
+`UpdateModel`'s homogeneous branch, `therm_alpha`, the global phase scalars, `alpha`, the material fallbacks and abort,
+`FootRule` max/mean, the implicit includes; the P2-29 presence aborts, the `nphases` abort, three retired-at-default
+rows, the token-wise numeric compare). Decks: the phase decks renamed to the deck names (plot_file → `output`); the old
+decks + outputs + logs → `retired_units/<name>_separate_path/` ×5 and `retired_validation/separate_path/` (zhang,
+hu_conduction, hu_thermoelastic, hu_breakage_index); `hu_thermoelastic_amr` and `unit/amr_microstructure_regrid` moved
+whole. New tests: `unit/jet_march/{input,test}`, `unit/beam_void/{input,test}`; edited: `unit/face_feet/test` (B / C legs,
+(h)–(j)), `unit/beam_tau/test` (U3 gone), `unit/interlocks/test` (D4/D5 gone), `unit/retired_keys/test` (R12, K45–K60).
+Witness: `run_kept.py` (renamed rows, `jet_march` + `beam_void` added, EXCLUDED paths updated), `WHICH_TESTS.md` (the
+phase law, the one heat path, the march / feet / beam-void rows, the regrid test dropped), `REFERENCE.md` (unchanged
+reference). Docs: `MODEL_CARD.md` §11 7b closed; `retired_units/README.md` (P2-29 lines; robin_feet / jet_d2c corrected);
+new `retired_validation/separate_path/README.md`. Study: `stage2_src.py`, `stage2_tests.py`, `b2.py`, `pre2_flat/`,
+`RESULTS.txt`.
+
+| # | test | measured | result | output |
+|---|---|---|---|---|
+| b1 | face gate `p2_29a` → `p2_29` | 2,010 / 2,010 files, none on one side only, 17 timer-only | PASS (IDENTICAL) | `S/GATE_b1.txt` |
+| b2 | ZQ + hu_conduction ×2 on bin_2 vs bin_1 | 225 + 434 + 434 files (thermo + every plotfile file) byte-identical | PASS | `S/K2_b2.log` |
+| b3 | `retired_keys` + locks + `interlocks` | R12 GREEN, RED on `pre2_flat/` (every other clause GREEN there), its mutation caught; K45–K60 all as specified (presence aborts name P2-29; `alpha` `0 0` / `0.0 0.0` run, `8e-6 0` and one-token `0.0` abort; `solver` explicit runs / implicit aborts; `foot_rule` pads runs / max, mean abort; `nozzle_feed_max` parses on the feet deck; no `nphases` aborts); `lateral_flux_lock`, `buckle_lock`, `interlocks` PASS | PASS | `S/K2_retired_keys.log`, `S/K2_*.log` |
+| b4 | source assertions | 0 deleted names; 0 half-conductance terms (both `kc (sp_T - Tc)/dz^2` sites carry 2.0) | PASS | `S/CHAIN.log` |
+| c1 | `unit/jet_march` | B4 / B2 / B1 (15 / 29 / 57 bins): inlet T_gas = the independent recursion, max rel 9.9e-15 / 2.1e-15 / 1.2e-15, counts equal; planted h × 1.01 misses by 4.7e-3 / 4.4e-3 / 4.3e-3; error ratios **2.019, 2.031** | PASS | `unit/jet_march/output/` |
+| c2 | `unit/face_feet` B / P / C | blocked: stall = (n − 1) dt on 499 rows (printed); P: 2 descending rows, 0 on each, t − t_last between; C (cap 1e-3 m/s): one capped run 6.408–8.406 s, slope/cap − 1 = −2.2e-16, max \|z − line\| 2.8e-17 m, fastest step 2.0e-6 m = cap × dt | PASS | `S/K3_face_feet.log` |
+| c3 | `unit/beam_void` U | invariant 0; closure 1.4e-16; P_dep 68.75 ≤ P_inc 99.03 W; seed 32 void cells, solid above/below; per cell Q = the solid-path continuation on 2,656 cells, max rel **4.1e-15** (160 below the void); void cells 0; the geometric path planted misses by 0.105 | PASS | `unit/beam_void/output/` |
+| m7 | `unit/beam_void` G | closure **−1.8e-3** (prediction \|err\| ≤ 0.1); invariant 0 | report: as predicted | `unit/beam_void/output/G.log` |
+| k1 | `run_kept.py run p2_29 --subset --plant-stale` | latent_heat, beam, stefan, face_dirichlet PASS on fresh plotfiles; the planted 1-h-old Header FAILS the mtime assertion as it must; discovery 0 unlisted, 0 missing | PASS | `witness/kept_p2_29.txt` |
+| m1 | lines | `MMWSpalling.H` 7,283 → 7,338 → **6,823 (−460**; packet ≈ −400); `Table.H` +21; tests to `retired_*` 2,552 lines; new tests 521 lines | report | `S/RESULTS.txt` |
+| e0 | verdict | a1–a7, b1–b4, c1–c3, k1 hold (a8 withdrawn with AMR) | **every gate held** (the verdict is /verify's) | `S/RESULTS.txt` |
+
+**Declared deviations (stages 2–3):**
+1. **`interlocks` D4/D5 retired with AMR** (the user, 2026-11-10): they ran the regrid deck Goal 10 retires;
+   CheckTimeStepLimit's level ≥ 1 branch is untested until the AMR-repair packet.
+2. **`foot_rule` retires at `pads` via the table**, so its parse leaves `SurfacePatch::Parse` and `FeetDescent` keeps
+   only the pads arithmetic (unchanged; b1 identical, `face_feet` P / P3 unchanged).
+3. **K52 (`alpha = 0.0`, one token) aborts**: the packet's equal-count rule; no live deck writes it (the regrid deck
+   that did is retired).
+4. **c2's cap bar is scored over the capped RUN** (≥ 500 rows), not per step: `thermo.dat`'s 6 digits resolve 1e-6 m,
+   the per-step fall is 2e-6 m. The capped descent here is 2 mm, so 0.1 % is resolvable.
+5. **c3's deck needs `surface_patch.radius`** (the listing mask) and the rock file's flaw keys (`weibull.enabled` via
+   the model form).
+6. The stage-1 `unit/beam_tau/output_phase` was moved to `S/archive/`; the old outputs went with their decks.
+7. `retired_keys` K59 uses the retired const-alpha beam deck (`retired_units/beam_separate_path/input`) as the deck
+   without phases.
+
+### Implementation takeaways (stages 2 and 3)
+
+1. ⚠ **A deleted kernel's deck must be scanned for every OTHER consumer before it moves**: `interlocks` D4/D5 ran
+   `amr_microstructure_regrid/input` for an unrelated check (the per-level dt). Grep the tests for the deck path, not
+   only for the test.
+2. **On the face list with losses off, the march is exactly reproducible offline**: a uniform field gives no profile, so
+   every face takes the face Newton's linear root and bills h G/(G + h) (T_gas − T_c). The same construction tests any
+   future change to the march's bin rule.
+3. **`thermo.dat`'s 6 digits set a minimum run length for a rate bar**: 0.1 % on a rate needs a run whose total change
+   is ≥ 1e3 × the print resolution (c2: 2 mm of descent for 1e-6 m).
+4. **A seeded void is listed by the face list** (16 up, 16 down, 32 side faces here): with h = 0 and no losses they bill
+   nothing, so c3 isolates the beam path; with a flame they would heat the cavity walls.
+5. The face-gate reference is unchanged (`face_p2_28.md5`): P2-29 moved no gated leg at either stage.
+
+### Review findings
+
+Reviewer, 2026-11-10. Re-derived from the two pre-image trees, the comparison legs (`S/legs/`, `S/legs2/`,
+`S/archive/`) and the shipped source. My own reductions: **my own transcription of Zhang's κ/ρ/c_p laws** from
+`src/Numeric/Material/Zhang.H`, my own plotfile assembler and whole-field `Temp` comparisons for the Zhang legs and
+the fixtures, my own byte-comparison of the stage-1/stage-2 re-runs, my own `nozzle_z` fit from thermo, my own deck
+sweep over all 59 live MMWSpalling decks, my own re-score of three tests from their existing output directories, my
+own run of the runner's `discover` cross-check, and my own line accounting. **No simulation and no build was
+re-run** — the three re-scores and `discover` read artefacts already on disk and launch nothing.
+
+| # | test | bar | implementer | **my value** | **read from** |
+|---|---|---|---|---|---|
+| z0 | ledger L1–L13; dt ratios; setter lists; archives | every row resolves; every new deck ≤ 0.75 | ratios ≤ 0.686 | **the load-bearing halves re-derived downstream: L2/L4 by a6 below; L1 and the retired-key setters by my own sweep of all **59** live MMWSpalling decks — **0** carry `material.*`, `implicit.*`, `phase.T_*`, `phase.lh_*`, `solver` or `foot_rule`, **0** lack `nphases`, and **0** write an `alpha` that is not two zero tokens** | my deck sweep; `Z0.txt` |
+| a1 | face gate `p2_28` → `p2_29a` | IDENTICAL | IDENTICAL | **IDENTICAL: 2,010/2,010, 0 only-in-either, 17 differing = timers only** | my own `cmp` |
+| a2 | `latent_heat` + a zhang leg | PASS all legs | 0 / 4e-15 / 3e-15 | **the zhang leg carries the latent heat: H = the same-grid trapezoid to 0.0, latent seen = ρL_m(1+dT/w) to **3.064e-15**, and the boxcars-OFF contrast (4.168e9 vs 4.947e9 J/m³) makes it non-vacuous; ρL_m 7.705e8 × 1.01 = 7.78205e8 is exact** | `K1_latent_heat.log`, my arithmetic |
+| a7 | the five fixtures on `input_phase` | each PASS at its **existing** bar; T in [200, 5000] K | all PASS | **all five PASS and **neither tolerance was loosened**: equilibrium `TOL = 0.05` and stefan 5 % are unchanged in the diff, and both tests now **solve** for T_eq and λ by bisection instead of hard-coding them (λ recovered as 0.6201) — a strengthening, not a relaxation. T ranges 300–305 / 482–1484 / 1000–1095 / 293–1271 / 300–1002 K, all on the table | my `git diff` of each test; `K1_fixtures.log` |
+| m2 | the fixtures old vs new | report; convective_patch within 1e-6 K | 3.4e-13 K | **my own whole-field compare over all 17 common plotfiles: max \|T_new − T_old\| = **3.41e-13 K**, top layer **2.27e-13 K** — the merge validated on a convective problem independently of Zhang. beam 0.00 % both; stefan front **0.8398 both**. ⚠ equilibrium's 0.00 % → 1.73 % is not a path difference: the old leg ran in dimensionless units to equilibrium (T_eq 0.59) and the new runs 700 s to 982.7 of 1000.0 K (deviation 2) | my plotfile compare of `legs/fix_{old,new}/convective_patch` |
+| a6 | κ witness; the dt α | rel ≤ 1e-12; α = 1.3225e-6 | rel 1.7e-16; α 1.39514e-6 at 273.15 K | **I transcribed Zhang's laws myself: t = 0 `kappa_phase` = κ(T) with max rel **0**; the last plotfile against ZQ1's T (one step earlier) **3.11e-16**, and against the SAME plotfile's T **6.69e-5** — so κ really is the start-of-step value (deviation 5 proven, not asserted). κ spans 2.1677–3.0778 W/(m K) ⇒ a conductivity, L2's two-meanings trap cleared. **α(273.15) = 1.39514e-6** and **α(297.50) = 1.32241e-6** m²/s ⇒ deviation 3 is right and the packet's L4 was the 297.5 K value** | my transcription of `Zhang.H`; `legs/ZQ`, `legs/ZQ1` |
+| a3 | ZF vs ZO, every cell and plotfile | max \|ΔT\| ≤ 1e-6 K | 2.3e-13 K | **my own compare: max \|ΔT\| = **2.27e-13 K** over 16 plotfiles × 524,288 cells, **no** difference above 1e-9. The merged production kernel reproduces the OLD explicit kernel on Zhang's problem to round-off** | my `Temp` compare of `legs/ZF` vs `legs/ZO` |
+| a4 | ZQ vs ZF's quadrant; ZF's own mirror as the floor | max \|ΔT\| ≤ 1e-6 K | 2.3e-13 K = the mirror | **my own compare: quarter-vs-quadrant **2.27e-13 K** and ZF's own mirror asymmetry (63−i vs 64+i) **2.27e-13 K** — the same number, so the quarter's difference IS the full block's own asymmetry. `beam_P_beam` 800 W every row (L6)** | my compare of `legs/ZQ` vs `legs/ZF` |
+| a5 | `zhang_oglesby/test` on ZQ | b1, b2 PASS | closure 0.0; 0.2953 vs 0.2954 | PASS as recorded (closure column err 0.0e+00, α_max ≥ 13.9992) | `K1_a5_zhang.log` |
+| m8 | ZL vs ZQ | report; prediction ZL cooler | ZL **WARMER** +0.017…+0.146 % | report; **the size is inside the prediction and the SIGN is opposite**, and the notes say so rather than reframing it. Losses 0.5311 vs 0.5355 kJ (−0.8 %), no melt either side | `K1_m8.log` |
+| m3 | ZQ vs the implicit record | report; T within 2 %, onset 5–10 % earlier | +0.12…+0.20 %; onset unscoreable | report; the onset half is honestly withdrawn (deviation 6: the P2-20–22 onsets ran a different configuration — 1,460 W, ω0 12.88 mm — not this deck) | `K1_m3.log` |
+| a8 | breakage level-1 coverage | — | **withdrawn with AMR** | withdrawn by the user's "avoid AMR"; the `MLMG failed` abort is recorded and reproduces on `bin_pre`, so it is pre-existing on the production path | `legs/hu_new/.../granite2_37.AMR_MLMG_FAIL.log` |
+| m4 | hu_conduction vs 09-25 | report; pre-registered bands | all inside | **the corrected boundary moves L1 granite 424.86 → 459.99 K and sandstone 492.18 → 527.52 K (+35 K each), both inside the pre-registered 458 ± 5 / 521 ± 8; L2 343.67 / 407.27 inside 343 ± 5 / 404 ± 8; pct 14.68 and 18.51 inside 13.7 ± 1.5 / 17.6 ± 1.5. A well-aimed pre-registration** | `K1_m4_m6.log` |
+| m5 | hu_thermoelastic vs 09-25 | report; stress moves with T only | L4 pct 34.35 → 39.63 % | **better than the notes state, and I re-derived it: BOTH granite-vs-sandstone contrasts — the quantities Hu reports — move TOWARD Hu. L3 +9.02 → +12.57 % against Hu's +13.77 (error 4.75 → **1.20** pp); L4 +34.35 → +39.62 % against +46.74 (12.39 → **7.12** pp). Absolute von Mises falls 0.5–11.4 % because sandstone falls more than granite; "stress moves with T only" is a causal claim (T is the only changed input), not a monotonicity claim | my arithmetic on `K1_m4_m6.log` |
+| m6 | hu_breakage_index vs Hu | report; bars not predicted | granite 0.8505, sandstone 0.8240 | report; **both inside Hu's bands** (0.91 ± 0.10, 0.82 ± 0.10), L5 +17.84 % vs Hu's +19.69, L6 0.206/0.226 < 0.25 — at uniform 2.5 mm with AMR parked, which the row names | `K1_m4_m6.log` |
+| b1 | face gate `p2_29a` → `p2_29` | IDENTICAL | IDENTICAL | **IDENTICAL: 2,010/2,010, 0 only-in-either, 17 timers** | my own `cmp` |
+| b2 | ZQ + hu_conduction on `bin_2` vs `bin_1` | byte-identical | 225 + 434 + 434 | **my own byte-comparison: 225 / 434 / 434 files, 0 on one side only, **0 differing** — the deletion moved no ported deck** | my `filecmp` over `legs/` vs `legs2/` |
+| b3 | `retired_keys` K rows + locks | PASS; new rows RED on `src_pre_2` | PASS | **R12 GREEN with a planted-comment mutation that turns it RED, and **RED on `pre2_flat/` while every other clause is GREEN there**; K45–K60 all two-sided as specified. My sweep adds the structural half: **0** of 59 live decks carries any retired key, so nothing runs silently (SR 1)** | `K2_retired_keys.log`; my sweep |
+| b4 | source assertions | 0 hits each | 0 / 0 | **my own greps: all ten deleted names (`AdvanceConstAlpha`, `AdvanceMaterial`, `AdvanceMaterialImplicit`, `SolverKind`, `material_table`, `BuildEnthalpyTable`, `SetPhaseFractionsConstAlpha`, `therm_alpha`, and P2-27's two headers) read **0**; all **five** surviving prescribed-Dirichlet sites carry `2.0`. ✅ this closes my own P2-28 **DR-1**: the half-conductance twin is gone because its only home was deleted** | my `grep -ro` over `src/` |
+| c1 | `unit/jet_march` | rel ≤ 1e-9; planted h×1.01 FAILS; ratio 1.8–2.2 | 9.9e-15…1.2e-15; 2.019, 2.031 | **I re-scored it from its own output: rel **9.93e-15 / 2.13e-15 / 1.16e-15**; the planted h × 1.01 misses by **4.7e-3** ⇒ the check discriminates; errors 3.880e-2 → 1.922e-2 → 9.464e-3 give ratios **2.019 / 2.031**, first order confirmed by my own division** | my re-score of `unit/jet_march` |
+| c2 | `face_feet` stall / cap legs | stall = (n−1)dt; cap exact to 0.1 % and no faster | −2.2e-16; fastest step = cap×dt | **my own fit of `nozzle_z` over the capped window: 2.000 mm of fall in 2.010 s, least-squares slope **−0.000999935 m/s** = **6.5e-5** relative to the 1e-3 cap (bar 0.1 %) even on my wider window, and the **largest single step is exactly 2e-6 m = cap × dt** ⇒ never faster than the cap** | my reduction of `unit/face_feet/output/C` |
+| c3 | `unit/beam_void` U | invariant 0; closure ≤ 1e-9; Q = the continuation | 0; 1.4e-16; 4.1e-15 | **I re-scored it: invariant **0**, closure **1.44e-16**, P_dep 68.75 ≤ P_inc 99.03; 32 void cells with 192 solid above and 160 below; Q = the solid-path Beer–Lambert continuation on **2,656** cells to **4.09e-15**, including all 160 below the void; and the planted GEOMETRIC path (void counted as rock) misses by **1.05e-1** ⇒ the beam genuinely does not attenuate across a void** | my re-score of `unit/beam_void` |
+| m7 | `unit/beam_void` G closure | report; \|err\| ≤ 0.1 | −1.8e-3 | **−1.796e-3, well inside; invariant 0** | my re-score |
+| k1 | `run_kept.py --subset --plant-stale` | each PASS; cross-check 0 unlisted; mtime FAILS on a plant | PASS | **I ran `discover` myself: **41 live tests on disk, 38 in the manifest, 5 excluded with a reason** — 0 unlisted. The four subset tests PASS on fresh plotfiles and the planted 1-h-old Header FAILS the mtime assertion as it must. ⚠ my own sweep first read 44 scripts; the three extras were `__pycache__/*.pyc`, not tests — the runner is right** | my `run_kept.py discover`; `witness/kept_p2_29.txt` |
+| m1 | lines | report (≈ −400 src) | 7,283 → 7,338 → 6,823 (−460) | **exact: `MMWSpalling.H` **7,283 → 7,338 → 6,823** (−460), and 7,283 chains to the P2-28 total I verified last review; `Table.H` 216 lines now** | my `wc -l` over both pre-image trees |
+| e0 | verdict | a1–a7, b1–b4, c1–c3, k1 | every gate held | **accepted** | — |
+
+#### Diff review
+
+43 hunks (+182 / −621): stage 1 `MMWSpalling.H` 10 (+64/−9) and `Table.H` 5 (+36/−15); stage 2 `MMWSpalling.H` 28
+(+82/−597). Rows below cover all of it.
+
+| # | hunk / change | class | tag | finding |
+|---|---|---|---|---|
+| 1 | `phaseN.law = zhang` — parse, `law_T`, the law check | 2, 7 | ok | mirrors the grimsel slot exactly; `queryclass<Zhang>` unconditional beside grimsel's; `law_s` stays grimsel-only so a zhang phase keeps E/β/μ required (the packet's rule) |
+| 2 | the `<pfx>.zhang.{T_ref, T_m, fus_width, L_m, T_vap_*, L_v}` refusal | 7 | ok | deviation 10, and it is the right call: `Zhang::Parse` reads them but the table carries the PHASE's scalars, so they would be read and silently overwritten — the SR 1 shape |
+| 3 | `UpdatePropertyFields`' zhang branch (thermal fields only) | 2, 4 | ok | the mechanics block stays grimsel-only, matching `law_s`; L3's `any` gate includes `zhang_law`, and a6 shows the refresh actually runs on a no-list deck |
+| 4 | the table build from a copy of the law with the phase's latent scalars | 1 | ok | one rule for both laws rather than a second table builder; a2's zhang leg is the lock |
+| 5 | `CheckTimeStepLimit`'s zhang diffusivity | 3 | ok | `κ/(ρ c_p)` in m²/s — my own evaluation gives 1.39514e-6 at 273.15 K, matching the printed value to six digits, so the units are right and it is not a conductivity |
+| 6 | `InitializeMicrostructure`'s law-aware ρ gains zhang | 2 | ok | the third branch beside constant and grimsel |
+| 7 | **`Table.H`: the sharp-band jumps hoisted above every `H_of_T` call** | 2, 4 | ok | this is the actual defect — the cached band ends were computed before the jump existed. The comment says exactly that, and the fix sets `m_fus_jump`/`m_vap_jump` before `H_ref` and both band ends |
+| 8 | `H_of_T` adds the jump strictly above the band T | 6 | ok | `T > m_T_m` (strict), so `H_of_T(T_m)` is the band's bottom and `T_of_H` returns `T_m` for the whole plateau — the two conventions meet without a gap or an overlap at the boundary |
+| 9 | `T_of_H` subtracts the jumps, vapour **before** fusion | 2, 6 | ok | the order matters and is right: an H above the vapour band carries both jumps, and `m_H_fus_hi` carries only the fusion jump, so the vapour jump must come off first for the second test to be against a like quantity |
+| 10 | every new `Table.H` term guarded on `m_sharp_*` | 4 | ok | and I verified the scope structurally, not only by the gate: of 18 live decks naming a latent band, **17 have a finite band** (every new term a no-op) and **exactly one is sharp** — `unit/stefan/input`, the fixture the bug was found on |
+| 11 | **nothing asserts the `Table.H` fix** | 10 | **risk** | by the checklist's own standard this is a test that passes on both binaries: m2 records the Stefan front as **0.8398 / 4.23 % before and after**, because the front is the T = T_m isotherm and the bug was a ~100 K error in the LIQUID above it. The new test prints the Temp range (`test:87`) but bars only Λ_L(0) = 0, front detection and the 5 % position. So a correction to code shared by grimsel and the constant law ships **unlocked**. Named **DR-1** |
+| 12 | `Table.H` is outside the packet's Goal | 9 | ok | deviation 1, the user's decision the same day; a1 IDENTICAL plus row 10's structural argument bound it |
+| 13 | the Zhang quarter-block deck | 4, 5 | ok | symmetry planes Neumann (L5), beam at the corner, **full** schedule power not hand-quartered (L6: `beam_P_beam` 800 W every row), and a4 shows the quarter is the full block to the full block's own mirror noise |
+| 14 | the five fixtures re-expressed in physical units | 3, 5 | ok | and the tests now **read their constants from the run's metadata** and solve for T_eq and λ instead of hard-coding them — exactly class 5, fixed rather than introduced |
+| 15 | equilibrium at 700 s, not 3000 s | 12 | **nit** | deviation 2, and the Goal text still says 3000. The consequence is real but small: the fixture no longer reaches equilibrium, so 1.73 of its 5 % budget is spent on not having converged, and nothing asserts steady state. Named **DR-2** |
+| 16 | the 7 Hu phase decks | 2 | ok | one constant phase with the deck's κ/ρ/c_p, `beta` = the old `alpha`, `mu = E/(2(1+ν))`; m4's +35 K lands inside a pre-registered band, which is the evidence that the port is the same problem on a corrected boundary |
+| 17 | `amr.max_level = 0` on the three breakage decks | 12 | ok | the user's instruction; the level-1 abort reproduces on `bin_pre`, so it is recorded as pre-existing and not debugged here (a8 withdrawn) |
+| 18 | `hu_breakage_index/test` finds plotfiles by TIME | 5 | ok | a step number is a mesh artefact; by-time is the right key, and an incomplete run is now refused |
+| 19 | the three kernels + dispatch + `SolverKind` + `material*` deleted (stage 2, ~22 hunks) | 9 | ok | b4's ten names at 0, b1 IDENTICAL, b2 byte-identical on the ported decks; the half-conductance term goes with `AdvanceMaterial` |
+| 20 | the `nphases` abort | 7 | ok | K59 two-sided; **0** of 59 live decks lacks it |
+| 21 | the presence aborts and three retired-at-default rows | 7 | ok | K45–K48, K53–K57, K60 two-sided; **0** live setters remain |
+| 22 | the **token-wise numeric** multi-token compare | 6 | ok | `0 0` ≡ `0.0 0.0` (K49/K50), `8e-6 0` aborts (K51). ⚠ a one-token `0.0` aborts by the equal-count rule (K52, deviation 3) — acceptable only because the one deck that wrote it is retired, which I verified |
+| 23 | `foot_rule` max/mean deleted, the feed cap KEPT | 9 | ok | deviation 2 of stage 2: the retirement is via the table at `pads`, so `FeetDescent` keeps only the pads arithmetic; b1 IDENTICAL and `face_feet` P/P3 unchanged. The cap is Meier's mode and c2 now tests it |
+| 24 | `interlocks` D4/D5 removed | 9 | **risk** | they were the ONLY exercise of `CheckTimeStepLimit`'s level ≥ 1 branch, and they went because they ran the regrid deck this packet retires (the user's call, deviation 1). The per-level dt check is now untested until the AMR-repair packet. Named **DR-3** |
+| 25 | `amr_microstructure_regrid` → `retired_units/` | 9 | ok | it had been red since before P2-27 and run as a "record" every packet since (my P2-27 DR-8 and P2-28 DR-8); retiring it with AMR is the honest resolution, with a README naming the re-instatement condition |
+| 26 | 5 unit tests + 4 validation sets → `retired_*` | 9 | ok | each README names a successor; `run_kept.py`'s EXCLUDED names both AMR exclusions with the reason, and my own `discover` run confirms 0 unlisted |
+| 27 | `unit/jet_march` (new) | 10 | ok | the planted h × 1.01 is the discriminator (4.7e-3 ≫ 1e-9), and the convergence ratio is a second, independent statement |
+| 28 | `unit/beam_void` (new) | 10 | ok | the planted geometric path is the discriminator (1.05e-1), and it is the right control: it distinguishes the two physically possible behaviours rather than perturbing a number |
+| 29 | `unit/face_feet` B / C legs (new) | 6 | ok | deviation 4 is sound: `thermo.dat`'s six digits resolve 1e-6 m, so a 0.1 % bar on a rate needs ≥ 1e3 × that in total travel — the leg descends 2 mm. Scored over the run, not per step, and stated |
+| 30 | `run_kept.py` (new) | 5, 10 | ok | archives then launches then scores (never a check-only score), asserts every scored plotfile is newer than the start, and the `--plant-stale` leg proves the assertion fires. The discovery cross-check is real — I ran it |
+| 31 | `MODEL_CARD.md` §11 7b closed | 11 | ok | the item I raised as P2-28 DR-1 is closed because the code it described is gone, not because the text was deleted |
+| 32 | `retired_units/README.md` robin_feet / jet_d2c attribution corrected | 11 | ok | a record correction carried in rather than left |
+
+**Deferred risks, by name**
+
+- **DR-1 — the `Table.H` sharp-band fix ships unlocked.** The fix is correct (I checked the hoisting, the strict
+  boundary conventions, the vapour-before-fusion order and that only `unit/stefan` is sharp), but **no assertion
+  would fail if it regressed**: the Stefan front is the T = T_m isotherm and is insensitive to the ~100 K liquid
+  error, so the test's scored number is 0.8398 / 4.23 % on both binaries. The Temp range is printed, not barred. One
+  assertion — the liquid maximum below the Dirichlet 1100 K, or H(T) continuity across the band — would close it,
+  and it matters because `Table.H` is shared by grimsel and the constant law.
+- **DR-2 — the equilibrium fixture no longer reaches equilibrium.** At 700 s it is 1.73 % short of T_eq against a
+  5 % bar, so a third of the budget is spent on not having converged and nothing asserts steady state. (The Goal
+  text still says 3000 s; deviation 2 explains why 3000 drives the sub-surface off the table.)
+- **DR-3 — `CheckTimeStepLimit`'s level ≥ 1 branch is now untested.** `interlocks` D4/D5 were its only exercise and
+  went with the regrid deck. The per-level dt check was P2-27's deliverable and is now unlocked until AMR is
+  repaired — put it on the AMR-repair packet's list explicitly.
+- **DR-4 — three mechanisms the tree gate used to cover are now tested, and that closes P2-28 DR-5.** `jet_march`,
+  `face_feet` B/C and `beam_void` are exactly the three gaps I named when the tree gate retired. Worth recording as
+  closed rather than carried.
+- **DR-5 — m8's prediction was wrong in sign** (ZL is warmer, not cooler, by 0.017–0.146 %). Reported as a sign
+  reversal rather than reframed, which is right; but the planner's model of the two loss forms needs the correction
+  before it is used again.
+- **DR-6 — the Hu thermoelastic result is better than the notes say.** Both granite-vs-sandstone contrasts move
+  toward Hu's data (L3's error 4.75 → 1.20 pp, L4's 12.39 → 7.12 pp). The notes quote L4's percentage and flag the
+  absolute fall as odd without noting that the quantities Hu actually reports both improved.
+- **DR-7 — `hu_breakage_index` is now scored at uniform 2.5 mm** because AMR is parked, so its surface f_b is
+  extrapolated from coarser nodes than Hu's deck intended. Both verdicts land inside Hu's bands anyway, but the
+  resolution is part of the result and must travel with it.
+
+**Checked and clean:** no edit to `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE`
+— and unlike the previous two packets, **no `obj/*.d` deletion was needed** (P2-29 deleted no header), so my P2-28
+DR-6 did not recur; nothing staged, nothing committed; `src/` changed in exactly the two declared files, with
+pre-images for both stages; the archived 09-25 Hu outputs and the old fixture runs make m2/m4/m5 reproducible from
+the repository. The completion notes quote nothing `ROADMAP.md` marks unquotable; SR 1 is honoured (every retired key
+aborts and **0** live decks set one), SR 9 is honoured (the old outputs archived before the moves), and SR 12 / the
+user's "avoid AMR" instruction is honoured on every ported deck (`max_level = 0`).
+
+#### Verdict: accepted
+
+- **Every gating row reproduces from my own reduction.** No diff-review row is tagged `bug`. Two risks (rows 11, 24)
+  and one nit (row 15); seven named deferred items.
+- **The merge is established three independent ways, not one.** The production kernel reproduces the old explicit
+  kernel on Zhang's problem to **2.27e-13 K** (a3); the quarter block reproduces the full block to **2.27e-13 K**,
+  which is the full block's **own** mirror asymmetry (a4); and the convective fixture reproduces the old separate
+  kernel to **3.41e-13 K** on a different physics (m2). One round-off floor, three problems.
+- **The Zhang law is genuinely selected, and I proved the subtle half**: `kappa_phase` matches my transcription of
+  Zhang's κ(T) to 3.11e-16 against the *start-of-step* temperature and to only 6.69e-5 against the same plotfile's —
+  so the field is the law evaluated where the kernel says, and κ spans 2.17–3.08 W/(m K), a conductivity.
+- **My own P2-28 DR-1 is fully closed**: the half-conductance prescribed-temperature term is gone because
+  `AdvanceMaterial`, its only home, was deleted, and all five surviving sites carry `2.0`. The uncorrected twin was
+  retired rather than patched — the right outcome.
+- **The three new tests each have a planted discriminator** (h × 1.01 at 4.7e-3; the geometric beam path at 1.05e-1;
+  the cap's per-step fall exactly `cap × dt`), so none of them passes by construction. The one place that standard
+  is not met is the `Table.H` fix (DR-1).
+- Files inspected: `Zhang.H`'s three laws and `Table.H` in full against its pre-image; `MMWSpalling.H`'s zhang parse,
+  refusal, `UpdatePropertyFields` branch, dt branch and the five prescribed-Dirichlet sites; the stage-2 deletions by
+  name; `unit/{stefan,equilibrium}/test` diffs for tolerance changes; `unit/{jet_march,beam_void}/test` re-scored and
+  `unit/face_feet/output/C`'s thermo refitted; `run_kept.py`'s discovery run; `Z0.txt`, `GATE_a1/b1`, `K1_*/K2_*/K3_*`
+  logs, `RESULTS.txt`, `kept_p2_29.txt`, `WHICH_TESTS.md`, `MODEL_CARD.md` §11, both `retired_*/README.md`.
+- Next: **run `/plan` to archive this step and prep the next packet.**
+
+## P2-30 — The structural pass: the header cut into slices and its dead history moved out (both proven by the compiler's own input), the locks made move-proof and trimmed, test fixes, then two small code changes under the face gate (2026-11-10; ACCEPTED by review 2026-11-10)
+
+**Status:** ACCEPTED by review (2026-11-10): every gating row re-derived; 0 `bug`, 1 nit, DR-1…DR-7. Binaries: pre
+`ccd15b91`, `p2_30a` f3d47cf0 (stages 1–2), `p2_30b` 7ae4345e (4a), `p2_30` 64be2409 (4b); **after the same-day comment
+review: `0db6623783c9961b` (comments only)**. Study `tests/MMWSpalling/studies/p2_30_structure/` (`RESULTS.txt`,
+`CHECK_<stage>.log`, `Z0*.txt`, `src_pre_{1,2,4a,4b,5}/`, `covers/`, `COMMENT_SORT.txt`, `LOCK_TRIM.txt`).
+**The face-gate reference changed AFTER the packet (the user, 2026-11-10): `face_p2_30c.md5`, 21 legs, 3,051 files.**
+
+### What the step established
+- **The split**: `src/Integrator/MMWSpalling.H` 6,823 → 258 lines + eleven slices under `src/Integrator/MMWSpalling/`
+  (`Parse`, `Model`, `Heat`, `Flame`, `FaceList`, `Ledger`, `BeamProps`, `ParseRemoval`, `Fields`, `SurfacePatch`,
+  `State`; 194–1,378 lines), each included in place. A pure move, proven twice: the preprocessed token stream is
+  identical over 2,095,494 tokens (every difference an `INFO` file string or line integer), and the slices re-assembled
+  are byte-identical to the old header (397,673 bytes). The instrument: `pp_identity.py` + `slice_edges.py`.
+- **One reader of the source for tests**: `tests/MMWSpalling/unit/_src.py` (`header()` / `text()`); six tests use it;
+  `face_heat` and `face_removal` have a `--source` mode.
+- **Tests**: Zhang deck `beam.omega0 = 0.01` (823.0 / 2184.8 / 2526.4 K at 50 / 100 / 150 s, onset 72.0 s — the
+  planner's pre-registered argv run to the digit; the PASS line says "a report, not a validation"); `unit/stefan`
+  asserts the liquid cap and H(T) monotonicity with two discriminating plants (P2-29 DR-1 closed); `unit/equilibrium`
+  reaches equilibrium at 0.001 % and asserts its own steadiness (DR-2 closed).
+- **Code (face gate IDENTICAL at every build)**: 4a one column list per CSV + `CsvCheckRow` (a field COUNT check, not
+  order); 4b `PatchConstants(DX)` shared by the kernel and the ledger; the two "handed column tops" locals renamed
+  `have_tops`. `sp_on` differs between kernel (`enabled && owner`) and ledger (`enabled`) by design (AMR packet).
+- **Both volume predictions MISSED**: 81 of 586 candidate comment lines moved (predicted 200–450); the six tests
+  −0.3 % (predicted −10…−30 %). History sits as dated clauses inside live sentences; whole-line moves cannot remove it.
+- **Found by the implementer**: the gate wrote no buckle-log data row and no vapour row (covers added); a lock that
+  pins literal text broke at 4a and was caught at 4b (no lock run was scheduled at 4a); the driver once showed a
+  crashed row as GREEN (fixed). Measured costs: build ≈ 20 s, face gate ≈ 155 s, list N 37 s, Zhang quarter 11 s.
+
+### After the packet, the same day, with the user (ad hoc; `Claude_markdowns/2026-11-10.md`)
+- **A comment review of all 20 files** (the parent, 13 slices, `MMWBeam.H`, five `Numeric/Material` files): every
+  comment read against the code beside it; ~600 comment lines replaced or removed; the old text is in
+  `docs/project/CODE_HISTORY.md`. No code changed: comment-stripped text identical in all 20 files, 2,096,272
+  preprocessed tokens identical, the six locks print the same 258 lines (pre-image `src_pre_5`,
+  `comment_review_check.py`).
+- **The gate has 21 legs**: `VAP_S` (64 vapour rows) and `BKL_S` (3,456 buckle-log rows). `cmp p2_28 p2_30c`: 2,010
+  common files, 0 substantive differences. The reference is `face_p2_30c.md5` (`witness/REFERENCE.md`).
+- **Documents**: `CLAUDE.md` (goal, lessons 4–5, the layout, the gate commands); `.claude/commands/plan.md` items 9–11
+  and the 500-line limit; `MODEL_CARD.md` §11 items 8–11; the Zhang reference file's STATUS block and addendum.
+- **Reading and paper checks**: Hu 2018, the DOE final report, Woskov & Michael 2012, Gokhale 2026, Wilkinson & Tester
+  1993. Hu's spall verdict and Zhang's Fig. 7 PARKED (the user); the minimum flux sits ×1.2–2 high against the laser
+  spalls (`Claude_markdowns/scripts/minflux_check_1110/`); a melt/vapour modelling sketch and a pressure/depth sketch
+  (both parked for their own packets).
+
+### Carry-forwards (review, the comment review and the planner)
+- DR-1 run the locks on every stage that edits code (now `plan.md` item 9); DR-2 the Zhang number needs its caption
+  (the STATUS block); DR-3 / DR-4 dated prose survived the whole-line rule (closed by the comment review); DR-5 the
+  field-count check cannot see a swap; DR-6 the driver pattern; DR-7 the planner's volume model was ~4× off.
+- **Latent code issues the comment review surfaced** (the next packet): the surface reconstruction reads
+  `phases[0].T_ref` where the stress reads `T_init_mf` (`FaceRemoval.H:228`, `:704`); `Upd::h_line` is
+  last-writer-wins when lines overlap (`FaceRemoval.H:1117`, `:1128`) — ⚠ NOT rare on a tilt: 792 cells in 4 steps on
+  gate leg `fr/TL45_1`, 10 on `SPH_1`, 1 on `BORE_1`; two keys parsed after the spall-off return
+  (`ParseRemoval.H:94`); a stale abort string (`Parse.H:1055`); dead vapour keys, members and functions; `kappa()`
+  is a diffusivity in `Grimsel` and a conductivity in `Zhang` / `Constant`; `Grimsel::strain_of` holds above 1000 °C
+  (`MODEL_CARD.md` §11 item 11).
+- Uncommitted at archive time: P2-26 … P2-30 and everything above (the user commits).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-10)
+
+Active step:
+- **P2-30 — the structural pass: the header cut into slices and its dead history moved out (proven by the compiler's
+  own input), the locks made move-proof and trimmed, four test fixes, then two small code changes** (`ACTIVE_STEP.md`;
+  2026-11-10; four stages, the user's order).
+  - Archived: P2-29 ACCEPTED (`ARCHIVE_DONE.md` *"P2-29"*): one heat path (`MMWSpalling.H` 7,283 → 6,823), Zhang a
+    phase law on a quarter block (merge exact to 2.3e-13 K), Hu on the corrected boundary inside every band, three gap
+    tests, `run_kept.py` (the user's periodic check). ⚠⚠ The Zhang deck's radius was the aperture DIAMETER: the user,
+    11-10: **0.01 m is correct**; even so the model reads about half of Zhang's Fig. 7 rise with Zhang's printed
+    absorption and overshoots with Hartlieb's table — open (Zhang eq. 14 unread). ⚠ AMR: avoid until fixed (user).
+  - Stages 1–2 (NO code change): consecutive in-place slices; history-worded comment blocks, sorted by hand, move
+    verbatim to `docs/project/CODE_HISTORY.md`; SIX tests read the source SET through one helper; locks trimmed.
+    Instrument: preprocessed-source identity with `INFO`'s file:line masked; the face gate once, as the belt.
+  - Stage 3 (tests): Zhang `beam.omega0 = 0.01` (pre-registered 823.0 / 2184.8 / 2526.4 K); a Stefan assertion for
+    the `Table.H` fix; an equilibrium fixture that reaches equilibrium.
+  - Stage 4 (code, one build each, face gate IDENTICAL): one column list per log file with a field-count check
+    (formats stay per row type); the three true duplicates of the patch set-up shared by kernel and ledger (SR 14).
+  - Rev 2 (11-10, outside read adopted). Stages advance unattended on green (user). ≈ 35 min; `run_kept.py` not in the chain.
+  - Next: the mesh-check runs (and the V0 decision) → the Meier rebuild on the rock file → AMR repair when fine
+    surface cells are needed → the melt's heat transport → the operator stress → the flame source rule. PARKED 11-10
+    (user): Hu's spall verdict, Zhang's Fig. 7; ⚠ the minimum flux sits high vs Wilkinson's laser spalls (log 11-10).
+
+### The P2-30 file verbatim (packet rev 2, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-30 — The structural pass: the header cut into slices and its dead history moved out (both proven by the compiler's own input), the locks made move-proof and trimmed, test fixes, then two small code changes under the face gate
+
+Status: **accepted by review** 2026-11-10 (every gating row re-derived independently; see `## Review findings`). Implemented 2026-11-10, `/implement`, the four stages unattended on green; rev 2 of the packet; two rows after a first RED recorded in the notes. Planned 2026-11-10; rev 2 the same day after an outside read of rev 1 (`Claude_markdowns/2026-11-10.md` *"P2-30 rev 2"*). Four stages (the user): 1 and 2 change NO code; 3 is tests only; 4 is two code changes, one build each.
+
+### Context
+
+`src/Integrator/MMWSpalling.H` is one 6,823-line class body, 30 % comments, much of it dated narrative about code that no longer exists. This step restructures it WITHOUT changing the program, and proves that with the strongest cheap instrument available: if the compiler's input is the same token stream, the binary is the same program on every deck. Two small code changes follow as their own stage so they never share a build with a move. ⚠ The working tree carries P2-26…P2-29 uncommitted (HEAD `a237c13eb`, 275 changed paths at planning); z0 reports the state and pre-images are taken either way.
+
+### The advance rule (the user, 11-10: no approval between stages)
+
+- Each stage's checks live in ONE driver, `S/check.sh <1|2|3|4a|4b>`, which runs that stage's rows in table order, appends to `S/RESULTS.txt` and exits non-zero at the first red **gate** row. It is launched with the same single command every time (Commands), in the background, never behind a wait loop.
+- **Green ⇒ the implementer starts the next stage at once.** No question to the user between stages, and no "shall I proceed". The pre-deletion question of earlier packets is waived here: the pre-images and the identity instrument are the safety.
+- **Red gate ⇒ stop and report.** A red verdict or report row is recorded and the chain continues, with one exception: **b3 red ⇒ restore `S/src_pre_4b/`, rebuild, record, finish** (4a stands).
+
+### Sources (opened 2026-11-10; `M:` = `src/Integrator/MMWSpalling.H` 6,823 lines, `F:` = `MMWSpalling/FaceRemoval.H` 1,375, `S:` = `MMWSpalling/Shared.H` 378)
+
+- **The class layout**: includes M:31–61; `class MMWSpalling` opens M:65, closes M:6821; two slices are ALREADY included in place inside the class body (M:4740–4741). That is the pattern to mirror. Access specifiers sit at M:1199 (`protected:`) and M:4483 (`private:`).
+- **Member anchors (the member's own first line)**: `Parse` 81, `CheckInterlocks` 978, `Initialize` 1200, `TimeStepBegin` 1237, `CheckTimeStepLimit` 1269, `Regrid` 1324, `UpdateModel` 1338, structs `SurfaceRecon`/`BeamTau`/`TauView` 1469–1536, `Advance` 1537, `AdvanceMicrostructure` 1581, `FaceListTg` 2006, `JetEnthalpyMarch` 2231, `struct FaceEntry` 2592, `FrInitFraction` 2919, `BuildFaceList` 3022, `FaceListDiagnostics` 3255, `EnergyLedger` 3418, `SolidFacePath` 3683 (its `AMREX_GPU_HOST_DEVICE` is 3682), `UpdatePropertyFields` 3722, `ColumnOpticalDepth` 3911, `BeamEnergyBalance` 4206, `TagCellsForRefinement` 4475, `ParseSpallSettings` 4484, `ParseVaporSettings` 4641, `ConvertTtoH` 4746, `InitializeMicrostructure` 5045, `InitializeFlaws` 5419, `struct SurfacePatch` 5703, `struct MineralPhase` 6172, members to 6820. ⚠ Seven of these carry a comment block directly above (1537, 2006, 2919, 3418, 3683, 5703, 6172): the block belongs to the member.
+- **Abort messages embed the file and line**: `#define INFO __FILE__, __func__, __LINE__` (`src/Util/Util.H:21`) ⇒ the identity instrument masks them.
+- **The compile rule**: `$(CC) -c <src> -o <obj> ${ALAMO_INCLUDE} ${CXX_COMPILE_FLAGS}` (`Makefile:137–177`). The preprocess command is the same line with `-E -P` on `src/mmwspalling.cc`.
+- **SIX tests read the source by path**: `unit/lateral_flux_lock/test` (920 lines, ≈ 82 `need(` clauses; :45), `unit/retired_keys/test` (528; `SUBST` :121–125, mutations :339–343), `unit/buckle_lock/test` (178; :33, :131–136), `unit/profile_depth/test`, and — built with `os.path.join(ROOT, "src", "Integrator", …)`, so a grep for `src/Integrator` misses them — `unit/face_heat/test:296–309` and `unit/face_removal/test:316–319`. After a split each would read only the short parent.
+- **The comment census** (planner's count, three files): 533 comment blocks, 2,420 lines (M: 438 / 2,056). `retired_keys` R11/R12 scan comments too, so a retired NAME is already absent from every comment: a name-based rule matches ≈ 4 blocks. History WORDING (`deleted|retired|until P2-|no longer|formerly|superseded|replaced by|used to`) matches ≈ 85–89 blocks, ≈ 610 lines.
+- **The event log has THREE row writers under one header** (`FrEventsHeader(bk_on)`): the feet row F:472–492 (regime 4), the firing row F:1297–1333 (regime 1), the vapour row F:1335– (regime 2). ⚠ The print format depends on the ROW TYPE: column 8 is the literal `0` in the feet and vapour rows and the real `0.0` (`0.0000000000000000e+00`) in the firing row. Other writers: `_buckle_log.csv` F:995, `_jet_profile.csv` M:2396–2509 (an `ostringstream`, precision 16, optional columns), `_side_power.csv` M:3616–3640 (**precision 10**). The gate reference hashes 19 / 2 / 6 / 6 files of the four kinds.
+- **The kernel and the ledger set up the patch separately**: kernel M:1649–1681, `EnergyLedger` M:3434–3441. True duplicates: `inv_dz2`, `sp_presc`, `sp_r2`. ⚠ NOT duplicates: `sp_on` is `enabled && owner` in the kernel (M:1672) and `enabled` in the ledger (M:3436) — equal on one level only; `void_aware` is `list_state()` at M:1602, 3423, 4212 but `!k_top_col.empty()` ("was I handed column tops") at M:3922, 4129.
+- **Zhang deck radius** (the user: **0.01 m is correct**): `validation/zhang/zhang_oglesby/input:70` `beam.omega0 = 0.02`. The planner's run of THIS deck on P2-29's binary with argv `beam.omega0=0.01`: surface-centre T **823.0 / 2184.8 / 2526.4 K** at 50 / 100 / 150 s, melt onset **72.0 s** at 1.95 mm (`Claude_markdowns/scripts/p2_29_zhang_waist/thermo_w0.01.dat`). The test's gates b1/b2 are beam-power checks only; its `c1` report already prints Zhang's column (989 / 1400 / 1678 K, `test:46`, `:222–229`).
+- **`unit/equilibrium`** (deck `input`: α = 2 1/m, dz = 1/32 m, `beam.P0 = 1.4585e12`, ω0 1000 m ⇒ I = 9.2851e5 W/m²; ε = 1, T_amb 300 K; κ = 0; stops at 700 s, 1.73 % short). The test's deposit is the centre-point form `I·α·dz·exp(−α dz/2)` (`test:55–57`). Relaxation time ρc_p dz/(4εσT³) = 137.8 s at 1000 K.
+
+### Goal (pre-images `S/src_pre_<stage>/` before each stage; study `tests/MMWSpalling/studies/p2_30_structure/` = `S/`)
+
+**Stage 1 — the split (no code change).**
+1. Cut `MMWSpalling.H` into **consecutive** slices under `src/Integrator/MMWSpalling/`, each `#include`d in place, in the original order — no member reordered, renamed or edited. **A slice begins at the first line of the comment block (and any `AMREX_GPU_*` line) above its first member and ends after its last member's closing brace. The two access specifiers stay in the parent.** Suggested members per slice (300–1,200 lines each): `Parse.H` (`Parse` … 1198), `Model.H` (`UpdateModel` … 1536 less `Advance`'s comment), `Heat.H` (`Advance` …), `Flame.H` (`FaceListTg` …), `FaceList.H` (`FrInitFraction` …), `Ledger.H` (`EnergyLedger` …), `BeamProps.H` (`SolidFacePath` … 4474), `ParseRemoval.H` (4484–4739), `Fields.H` (`ConvertTtoH` …), `SurfacePatch.H` (`struct SurfacePatch` …), `State.H` (`struct MineralPhase` … 6820). The parent keeps the file head, the class head, the lifecycle (1199–1337), `TagCellsForRefinement`, the specifiers and the include lines.
+2. **`S/pp_identity.py`**: preprocess `src/mmwspalling.cc` with the build's own flags (`-E -P`), mask every `INFO` expansion (the file string and the line integer), compare token streams with the pre-image's. **`S/slice_edges.py`** (the identity check cannot see a stranded comment): in the parent, the non-blank line above each slice include is not a `//` line, an `AMREX_GPU_*` line or `template<`; each slice ends on `}` / `};` / `;`; neither specifier is inside a slice.
+3. **`tests/MMWSpalling/unit/_src.py`**: one helper returning the class's source as a single text (the parent with every in-place `#include "Integrator/MMWSpalling/…"` expanded, in order) and as a per-file map. All SIX source-reading tests use it; `retired_keys`' mutation harness substitutes by file through the map. `face_heat` and `face_removal` gain a `--source` mode that runs only their source-reading clauses (seconds). No clause changes in this stage.
+
+**Stage 2 — dead history out, locks trimmed (no code change).**
+4. **`S/history_candidates.py`** lists every comment block matching the history wording above. The implementer sorts each BY HAND into `S/COMMENT_SORT.txt`: `MOVE` (pure history), `SPLIT` (history + a sentence about present code: the live sentences stay), `KEEP` — one reason each. Moved text goes **verbatim** to `docs/project/CODE_HISTORY.md` under its slice and member, leaving at most one pointer line per member.
+5. **Lock trim**: delete a clause only when its subject no longer exists in `src/` AND a `retired_keys` row already aborts on it (name the row), or when it duplicates another clause; list in `S/LOCK_TRIM.txt` (clause → reason → covering row).
+
+**Stage 3 — tests only.**
+6. `zhang_oglesby/input`: `beam.omega0 = 0.01`, comment "the wave guide radius (Zhang eq. 4; the 20 mm aperture is a diameter)"; the reference summary's `omega_0` section corrected the same way (reasoning kept as history). The test's last line states what its PASS covers: "beam energy only; surface T at 150 s <model> K vs Zhang 1678 K (simulation), 1716 K (experiment) — a report, not a validation".
+7. `unit/stefan/test`: assert the liquid region's maximum T ≤ the Dirichlet 1100 K + 1e-6 K and H(T) monotone across the band.
+8. `unit/equilibrium`: only the top cell absorbs. Deck: α·dz = 40 (α = 1280 1/m, keeping tan δ ≪ 1 — e.g. `beam.lambda = 1.0e-6`, `beam.tan_delta = 2.0371832715762604e-4`); **`beam.P0 = 8.8348e10`** (I = 5.6244e4 W/m² = σ(1000⁴ − 300⁴) ⇒ T_eq 1000 K; at the old P0 it would be 2,012 K); **`stop_time = 1800`** (13 relaxation times). Test: the deposit is **`I·(1 − exp(−α dz))`** (the centre-point form gives 8e-8 of the power at this depth); it asserts steadiness itself.
+9. `MODEL_CARD.md`'s one `MMWSpalling.H:<line>` citation becomes a function name; `WHICH_TESTS.md` gains the slice → test map.
+
+**Stage 4 — two code changes, one build each.**
+10. **4a, one column list per log file**: the ordered column NAMES live in one place per file; the header is built from it and every row writer checks its own field count against it (assemble the row in an `ostringstream` with the writer's present flags, count, abort on a mismatch, then write). **Each row type keeps its own `<<` chain and formats** — nothing is re-typed. The three event-log writers share one list. Bytes unchanged. ⚠ This catches a missing or extra field, not two fields swapped.
+11. **4b, the true duplicates only**: one function returns `inv_dz2`, `sp_presc`, `sp_r2`, read by the kernel and by `EnergyLedger`. The two "was I handed column tops" locals (M:3922, 4129) are renamed `have_tops` so they stop looking like the third meaning. `sp_on` and the `list_state()` sites are NOT touched. ⚠ No flux expression is rewritten — every product keeps its order (P2-28).
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | claim | site | resolves to |
+|---|---|---|---|
+| L1 | an in-class `#include` of a slice is legal here and already used | M:4740–4741 | the two existing lines |
+| L2 | the preprocess command is the build's | `Makefile:137–177` | `pp_identity.py` prints it; self-identity + a planted one-token edit caught |
+| L3 | a pure move changes only `INFO`'s file and line | `Util.H:21` | stage 1's unmasked diff lists ONLY such tokens (count reported) |
+| L4 | no test compares an abort's file:line text | grep the kept tests for `\.H:[0-9]` in expected strings | z0 list (expected empty) |
+| L5 | every source-reading test goes through `_src.py` | grep live tests for `"src"`, `src/`, `Integrator` inside `open(` / `os.path.join(` | only `_src.py`; z0 names any seventh reader |
+| L6 | every log writer's bytes are checked in 4a | the gate reference: 19 / 2 / 6 / 6 files | z0: each kind non-empty in ≥ 1 leg; rows per regime across the gate — regime 4 > 0, **regime 2 expected 0** ⇒ `unit/face_vapor`'s event log is the vapour writer's only cover |
+| L7 | after 4b the kernel and the ledger read the three values from one function | its only definition | a `lateral_flux_lock` clause (two-sided) |
+| L8 | the top cell's deposit is `I·(1 − exp(−α dz))` (W/m²) and nothing below absorbs | the new equilibrium run | first-step P_dep / P_inc ≥ 1 − 1e-6; every cell below the top within 1e-9 K of 300 K at the end |
+| L9 | `sp_on` and `void_aware` differ between consumers by design | M:1672 / 3436; M:1602 / 3922 | reported in the completion notes for the AMR-repair packet; not changed |
+
+### Chain and cost (serial, `caffeinate -dis`; `PY=/Users/tzetze20/Desktop/code/.venv/bin/python`, `W=tests/MMWSpalling/studies/tree_sweep_0922/witness`)
+
+| leg | when | cost |
+|---|---|---|
+| `pp_identity.py`, `slice_edges.py` | stages 1, 2 | seconds |
+| the six tests' source clauses (`--source`) | stages 1, 2, 4b | seconds |
+| build | after stage 2, 4a, 4b (none after stage 1: identical tokens compile identically) | ≈ 4 min each |
+| face gate `run` + `cmp p2_28 <label>` | after stage 2 (`p2_30a`), 4a (`p2_30b`), 4b (`p2_30`) | ≈ 5 min each |
+| Zhang quarter at 0.01; `stefan`; `equilibrium` (1,800 steps, 4×4×32) | stage 3 | ≈ 3 min |
+| `unit/face_vapor` event log, bytes before / after | 4a (the "before" from `output/` on disk if written by `ccd15b91`, else run first) | ≈ 1 min |
+| list N, once: Zhang quarter (vs **c1's run**, not the 0.02 baseline), `hu_conduction` ×2, `convective_patch`, `beam`, `beam_tau`, `stefan`, `latent_heat`, `face_dirichlet` — bytes vs the `ccd15b91` outputs on disk | after 4b only (the one stage that touches the kernel's set-up) | ≈ 3 min |
+| total | | ≈ 35 min |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 (offline) | ledger L1–L7, L9; git state; the instrument's self-identity and planted edit; baselines on disk for list N and `face_vapor` | every row resolves | gate | the instrument or a premise is wrong; stop |
+| a1 | 2 | stage 1: `pp_identity.py` vs `src_pre_1`; `slice_edges.py` | token streams identical after the mask, the unmasked diff `INFO` tokens only; no edge violation | gate | the split edited code, or stranded a comment / macro / specifier — fix the split, never the mask |
+| a2 | 3 | stage 1: the six tests' source clauses through `_src.py` | every clause line identical to its pre-stage log; bytes of source read = the pre-image's total | gate | the helper changed what a lock sees, or a test still reads the short parent |
+| a3 | 4 | stage 2: `pp_identity.py` vs `src_pre_2` | identical after the mask | gate | a "comment" move removed code |
+| a4 | 5 | stage 2: the comment sort | every candidate has a verdict and a reason; the lines removed from `src/` = the lines added to `CODE_HISTORY.md` (as multisets); the flag list — moved lines that name an identifier present in non-comment `src/` beside `must` / `never` / `NOT` / `⚠` — is empty or justified line by line | gate | live knowledge left the source |
+| a5 | 6 | stage 2: lock trim | every deleted clause has a reason and a covering row; every **rewritten or merged** clause is RED on a planted mutation; every untouched clause's line is identical to stage 1's log | gate | a trimmed lock is a deleted check |
+| a6 | 7 | stages 1–2: build; face gate `cmp p2_28 p2_30a` | compiles with no new warning; IDENTICAL | gate | the identity instrument missed something — stage 4 must not start on it |
+| m1 | 7 | lines: the parent, each slice, comment lines moved, lock lines | report; prediction: parent ≤ 600; 200–450 comment lines moved of ≈ 610 candidates; locks −10 to −30 % | report | the history wording is narrower or wider than counted |
+| c1 | 8 | stage 3: Zhang at 0.01 | b1, b2 PASS; T 823.0 / 2184.8 / 2526.4 K at 50 / 100 / 150 s, onset 72.0 s, to the printed digit; the last line carries the report sentence | verdict | the deck differs from the planner's argv run by more than the radius |
+| c2 | 9 | stage 3: `stefan` assertion | PASS on the run; RED on a planted profile (the run's own T with one liquid cell raised 5 K) — no old output on disk can serve (`fix_old` is the old deck, other units) | verdict | the assertion cannot see what it guards |
+| c3 | 10 | stage 3: `equilibrium`; L8 | L8 holds; \|T(end) − T(0.9·end)\|/T ≤ 1e-4; error vs the analytic T_eq (1000 K) ≤ 1 %; every cell within [200, 5000] K | verdict | the fixture still does not test equilibrium |
+| b1 | 11 | 4a: build; face gate `cmp p2_28 p2_30b`; `face_vapor`'s event log vs its pre-stage bytes | IDENTICAL; byte-identical | gate | a row changed a byte (a literal printed as a real, a flag lost on the string stream) |
+| b2 | 12 | 4a: the field-count check | holds on every row of every writer in the gate; a planted extra field ABORTS | verdict | the list does not deliver its one promise |
+| b3 | 13 | 4b: build; face gate `cmp p2_28 p2_30`; list N | IDENTICAL; byte-identical | verdict | the shared values changed an expression's shape — revert 4b (advance rule), keep 4a |
+| b4 | 14 | 4b: the L7 clause; the six tests' source clauses | PASS; RED when a second definition is planted | verdict | SR 14 is asserted in a comment, not a bar |
+| e0 | 15 | verdict | a1–a6, b1 hold; c1–c3, b2–b4 reported | verdict | — |
+
+### Pre-registered predictions
+
+- P1 a1: the unmasked stage-1 diff is several hundred `INFO` tokens and nothing else.
+- P2 a6: IDENTICAL on all 19 legs — the binary differs only in abort line numbers.
+- P3 m1: as in the row (rev 1 predicted ≥ 400 lines from a name-based rule that would have moved ≈ 43; not measured before it was written).
+- P4 c1: to the printed digit. P5 c3: T_sim within 0.1 % of 1000 K. P6 b1/b3: IDENTICAL.
+
+### Refuting evidence on disk
+
+`Claude_markdowns/scripts/p2_29_zhang_waist/thermo_w0.01.dat` (c1's numbers); `witness/face_p2_28.md5` (the gate reference, unchanged since P2-28); list N's outputs written by `ccd15b91` in each test's `output/` and `studies/p2_29_one_heat_path/legs/`.
+
+### What would make this inert, and the witness for each
+
+- The identity instrument comparing a file with itself → z0's planted edit must be caught.
+- The mask swallowing a real change inside an `INFO` call → it replaces ONLY the file string and the integer; L3's unmasked diff is inspected.
+- A lock passing because `_src.py` returns an empty or parent-only text → a2's byte count.
+- The comment sort moving nothing, or everything → m1's count beside the candidate total; a4's flag list.
+- 4a's check never running on a row type the gate does not write → L6's per-regime row counts.
+
+### Guardrails
+
+- Stages 1–3 change no token of code; any behaviour fix found on the way is reported, not made.
+- No function, key, field or CSV column is renamed; no physics value changes; the Zhang deck changes its radius only (the absorption question stays open).
+- `CLAUDE.md` lesson 4 still says 0.02: the user's edit, not the implementer's.
+- No AMR deck; `run_kept.py` is not in the chain.
+
+### Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+# one command per stage, the same shape each time (the driver builds, runs and compares):
+caffeinate -dis bash tests/MMWSpalling/studies/p2_30_structure/check.sh 1    # then 2, 3, 4a, 4b
+# what the driver calls:
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_30_structure/pp_identity.py src_pre_1
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py run p2_30a
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/tree_sweep_0922/witness/face_gate.py cmp p2_28 p2_30a
+mpirun --oversubscribe --bind-to none -np 4 bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/zhang/zhang_oglesby/input
+```
+
+### Claude completion notes
+
+Binaries: pre `ccd15b91` (P2-29's); `p2_30a` f3d47cf0 (stages 1–2); `p2_30b` 7ae4345e (4a); **`p2_30` 64be2409 (4b, ships)**. `S/RESULTS.txt` carries every row as it ran; `S/CHECK_<stage>.log` every command's output. Not committed (the user commits). Not run, by the packet: `run_kept.py`, any AMR deck, the Meier decks.
+
+**Files.** `src/Integrator/MMWSpalling.H` (6,823 → 258 lines) + 11 new slices `src/Integrator/MMWSpalling/{Parse,Model,Heat,Flame,FaceList,Ledger,BeamProps,ParseRemoval,Fields,SurfacePatch,State}.H`; `Shared.H` (4a's column lists and `CsvCheckRow`, 4b's `PatchConstants`), `FaceRemoval.H`, `Flame.H`, `Ledger.H` (4a), `Heat.H`, `Ledger.H`, `BeamProps.H` (4b). `docs/project/CODE_HISTORY.md` (new), `docs/project/MODEL_CARD.md` (the citation). Tests: `unit/_src.py` (new); the six source readers; `face_heat` / `face_removal` `--source`; `buckle_lock` B6; `lateral_flux_lock` trim + L7; `unit/stefan/test`; `unit/equilibrium/{input,test}`; `validation/zhang/zhang_oglesby/{input,test}` and the reference summary; witness `WHICH_TESTS.md`, `REFERENCE.md`. Study `tests/MMWSpalling/studies/p2_30_structure/`.
+
+| # | measured | result | output |
+|---|---|---|---|
+| z0 | L1, L2 (2,095,494 tokens self-identical; a one-token edit and an edit inside an `INFO` message both caught), L4 (0 hits in executable lines, 2 in docstrings), L5 (the six; no seventh), L6 (19/2/6/6; regime 1 75,214 rows, 4: 14, 2: 0), L9 (holds; the packet's M:1672 is M:1664). ⚠ L6: `_buckle_log.csv` is header-only in both gate legs ⇒ a cover added (below). Baselines: all of list N on disk except `convective_patch` (run on the 4a binary before the 4b build); `face_vapor`'s pre-dates the binary (run first, as the packet says) | PASS, one cover added | `S/Z0.txt`, `Z0_selftest.txt`, `Z0_covers.txt` |
+| a1 | identical after the mask; 366 unmasked differences, all `INFO` file strings or line integers; 0 edge violations | PASS | `CHECK_1.log` |
+| a2 | 260 clause lines identical; `_src.header()` = the pre-image (397,673 bytes), `_src.text()` = the pre-image with fragments in place (491,954 bytes), both byte-identical | PASS | `logs/pre_1`, `logs/stage1` |
+| a3 | identical after the mask (350 unmasked, all `INFO`) | PASS | `CHECK_2.log` |
+| a4 | 81 verdicts with reasons; 81 lines left `src/` = 81 in `CODE_HISTORY.md` (multisets); 0 non-comment lines; 2 flagged lines justified | PASS | `COMMENT_SORT.txt`, `COMMENT_FLAGS.txt`, `COMMENT_MOVED.txt` |
+| a5 | 5 clause lines deleted, each with a reason and a covering row; none rewritten or merged; every other line identical (`lateral_flux_lock` 174 → 169) | PASS | `LOCK_TRIM.txt`, `logs/stage2` |
+| a6 | builds, 4 warnings, 0 new; face gate IDENTICAL (2,010 files, 17 timer-only) | PASS | `witness/face_p2_30a.md5` |
+| m1 | parent 258 (≤ 600); slices 194–1,378; **81 of 586 comment lines moved (predicted 200–450); the six tests −0.3 % (predicted −10 to −30 %)**: most candidates are live specifications with one "(deleted, P2-28)" clause, and the trim rule keeps every name-absence clause no `retired_keys` row covers | report: both predictions MISSED | `RESULTS.txt` |
+| c1 | 823.0 / 2184.8 / 2526.4 K; onset 72.0 s; b1, b2 PASS; the last line carries the sentence | PASS, to the printed digit | `legs/zhang_w0.01`, `c1_zhang_test.log` |
+| c2 | run: liquid max 1094.970095 K ≤ 1100, H(T) monotone (largest fall 0); median liquid cell +5 K → RED (H(T) falls 4.6e3); hottest +6 K → RED (the cap) | PASS on the second block; first block RED, my plant (below) | `legs/stefan`, `RESULTS.txt` |
+| c3 | L8 (below the top 0.0 K from 300 K; first-step P_dep/P_inc 1.00000000); steadiness 1.6e-5; T 999.9924 vs analytic 999.9984 K (0.001 %); all cells within 300–999.99 K | PASS | `legs/equilibrium` |
+| b1 | face gate IDENTICAL; `face_vapor`'s log (64 regime-2 rows) and the added cover (3,456 firing, 3,456 buckle rows) byte-identical before / after | PASS | `witness/face_p2_30b.md5`, `covers/pre4a` / `post4a` |
+| b2 | 19 of 19 gate legs rc 0 with the check on; a planted extra field in the vapour row aborts, rc 6: "a row has 39 fields, its header has 38" | PASS | `legs/plant4a.log` |
+| b3 | face gate IDENTICAL; list N byte-identical on 1,703 files over 9 comparisons | PASS | `witness/face_p2_30.md5`, `legs/N_*`, `base_N/` |
+| b4 | L7 PASS; a planted second definition turns exactly that clause RED; the six logs identical to stage 2 except L7's 3 new lines | PASS on the second run; first RED (below) | `logs/stage4b` |
+| e0 | a1–a6, b1 hold; c1–c3, b2–b4 hold | **holds** | `RESULTS.txt` |
+
+**Declared deviations.**
+- **L6, a planner gap.** The gate never writes a buckle-log data row. I added `covers.py B` (`unit/face_buckle`'s F_S + `spall.buckle_log_csv=1`) beside the packet's vapour leg, before and after 4a.
+- **c2.** The packet's +5 K cannot reach the cap: the hottest liquid cell is 5.03 K under the wall. The first block planted that cell and stayed green, which read RED; the controls are now the median cell (+5 K, H(T)) and the hottest (+6 K, the cap).
+- **b4.** 4a moved text that `buckle_lock` B6 pinned literally (the header's `bk`, the row's `ofs <<`). B6 and its mutation now read `FrEventsColumns` and `row <<`; the mutation is RED. The packet ran no lock at 4a, so 4b caught it.
+- **`convective_patch` baseline.** None on disk from `ccd15b91`; run on the 4a binary before the 4b build.
+
+**L9, for the AMR-repair packet.** `sp_on` is `enabled && owner` in the kernel (`Heat.H`) and `enabled` in the ledger: equal on one level only. `void_aware` is `list_state()` in `Heat.H`, `Ledger.H` and `BeamEnergyBalance`; the two "handed column tops" locals are now `have_tops` (`ColumnOpticalDepth`, `SurfaceMeltRecord`).
+
+### Implementation takeaways
+
+- **Reading the source from a test goes through `unit/_src.py`.** `header()` is what `MMWSpalling.H` held before the split (the slices expanded, `Shared.H` and `FaceRemoval.H` left as includes); `text()` expands everything. A mutation in `retired_keys` edits the one file that holds its target.
+- **Some comments are load-bearing:** `retired_keys` R9, R11, R12 and `lateral_flux_lock`'s "P2-10: THE RETIRED KEYS" anchor on comment text, and `profile_depth` cuts between two comment markers. A later comment pass must keep those lines; the locks say so if it does not.
+- **A lock that pins literal text breaks when text moves, and the packet's rows did not re-run the locks at 4a.** Run `locks.py` on any stage that edits code.
+- **The face gate is blind to two writers** (the buckle row and the vapour row); `covers.py` reaches both. `REFERENCE.md` records this.
+- **Comment wording selects narrowly.** Stale prose without those words stays: the parent's head still describes a `material` block and the const-alpha path, and `CheckInterlocks` names the deleted `ParseBitSettings`. Neither was in the candidate set; a reader-driven pass would catch them.
+- **Whole-line moves leave some "(deleted, P2-28)" clauses inside live sentences.** The bar (multisets of lines) forbids rewriting a mixed line, so those stay.
+- ⚠ **ALAMO renames an existing `plot_file` directory to `<dir>.old.<stamp>`.** Files written into it before the run move with it. `leg()` now puts provenance beside the directory.
+- ⚠ The driver hid a crashed row as GREEN once (exit status ignored); `check.sh` now honours it. The rebuilt binary differs in hash from the first build of the same source (the build stamps), as ever.
+- **Costs measured:** a build ≈ 20 s (the packet: 4 min), the face gate ≈ 155 s (5 min), list N 37 s (3 min), the Zhang quarter 11 s. ⚠ `CLAUDE.md` lesson 4 still says 0.02 (the guardrail: the user's edit).
+
+### Review findings
+
+Reviewer, 2026-11-10. Re-derived from the four pre-image trees (`S/src_pre_{1,2,4a,4b}/`), the legs and the shipped
+source. My own reductions: **I drove the identity instrument myself, pre-image against pre-image**, because a1/a3
+compared trees that no longer exist live; my own rebuild of `_src.header()`/`text()` from the post-split pre-image;
+my own multiset differ of the comment move; my own re-score of `stefan` (with both plants), `equilibrium`,
+`lateral_flux_lock`, `buckle_lock`, `profile_depth` and the two new `--source` modes; my own arithmetic on the
+equilibrium deck's constants; my own `diff` of both stage-4 changes. **No simulation and no build was re-run** —
+every re-score reads an existing output or only `src/`, and the preprocessor runs are `-E -P`, not compiles.
+
+| # | test | bar | implementer | **my value** | **read from** |
+|---|---|---|---|---|---|
+| z0 | L1–L7, L9; git state; the instrument's self-test; baselines | every row resolves | PASS, one cover added | **L2 re-run by me: self-identity **2,095,494 tokens, 0 unmasked differences, IDENTICAL**; the planted `/`→`*` in `inv_dz2` is caught (DIFFERENT, the token shown); a planted edit **inside** an `INFO` message (P2-10→P2-11) is also caught ⇒ the mask replaces only the file and the line. **SELFTEST PASS**, 430 `INFO` expansions. ⚠ the declared L6 gap is real and the implementer closed it himself (the gate never writes a buckle-log data row) | my `pp_identity.py --selftest src_pre_1`; `Z0*.txt` |
+| a1 | the split: pp-identity + slice edges | identical after the mask; unmasked `INFO` only; no edge violation | identical; 366 unmasked | **I drove the instrument pre-split vs post-split (both pre-images, so the include-path spelling cancels): **2,095,494 tokens compared, IDENTICAL after the mask**, and **every one of 289** unmasked differences is an `INFO` file string or line integer. The token COUNT is equal, so no code was added or removed. (289 vs the notes' 366: their live-vs-pre run carries the extra `./src/` vs `src/` `__FILE__` spellings — the same class)** | my pre-vs-pre run of `pp_identity.py` |
+| a2 | the six tests through `_src.py` | every clause identical; bytes = the pre-image's | 397,673 / 491,954 bytes | **I rebuilt both from the post-split pre-image: `header()` is **byte-identical** to the pre-split `MMWSpalling.H` at **397,673 bytes** and `text()` at **491,954 bytes** — the notes' figures exactly. So the split is a pure move at the BYTE level too, a second instrument agreeing with the token one. All four source-reading locks and both new `--source` modes PASS on the live tree (I ran them)** | my rebuild from `src_pre_1`/`src_pre_2`; my runs of the locks |
+| a3 | stage 2: pp-identity | identical after the mask | identical; 350 unmasked | **post-split vs post-comment-move: **IDENTICAL after the mask**, 273 unmasked, all `INFO`, same token count ⇒ the comment move removed no code** | my pre-vs-pre run |
+| a4 | the comment sort | every candidate a verdict + reason; lines out = lines in (multisets); flag list empty or justified | 81 = 81; 0 non-comment | **my own multiset differ of `src_pre_2` → `src_pre_4a`: **0 removed lines are non-comment** (the load-bearing claim) and **0 removed comment lines are missing from `CODE_HISTORY.md`**; exactly **one** line was added, the pointer line. My count is 85 removed vs the notes' 81 — a whitespace/pooling convention, not a discrepancy of substance | my multiset differ; `docs/project/CODE_HISTORY.md` |
+| a5 | the lock trim | every deletion a reason + covering row; every rewritten clause RED on a plant; others identical | 5 deleted; none rewritten | **`LOCK_TRIM.txt` carries exactly **5** clause deletions, each naming its covering row (`retired_keys` R11, R10 ×2, R4, and this test's own P2-10 scan) and each covering row's own mutation. "Rewritten or merged: none" ⇒ that half of the bar is vacuous and said so. ✅ the rule was applied **conservatively**: the record lists the name-absence clauses it did NOT trim because no `retired_keys` row covers them. `lateral_flux_lock` PASSES on the live tree | `LOCK_TRIM.txt`; my run of the lock |
+| a6 | stages 1–2: build; face `cmp p2_28 p2_30a` | compiles, no new warning; IDENTICAL | 4 warnings, 0 new; IDENTICAL | **IDENTICAL: 2,010/2,010, 0 only-in-either, 17 timer-only** | my own `cmp` |
+| m1 | lines | report; parent ≤ 600; 200–450 comment lines; locks −10…−30 % | parent 258; **81 of 586**; **−0.3 %** | **parent **258** lines (≤ 600 ✓); 11 slices **194–1,378**. Both other predictions MISSED and reported as missed, with the cause named (most candidates are live specifications carrying one dated clause, and the trim rule keeps every name-absence clause no row covers). ⇒ the structural goal was met; the *volume* predictions were wrong | my `wc -l`; `RESULTS.txt` |
+| c1 | Zhang at 0.01 | b1, b2 PASS; T and onset to the printed digit; the report sentence | 823.0 / 2184.8 / 2526.4 K; 72.0 s | **823.0 / 2184.8 / 2526.4 K at 50/100/150 s and onset **72.0 s** at 1.95 mm — the planner's independent argv run on the P2-29 binary to the printed digit; b1 (`beam_col_err_max` 8.88e-16) and b2 (0.2953 vs 0.2954) PASS. The last line reads verbatim "beam energy only; surface T at 150 s 2526.4 K vs Zhang 1678 K (simulation), 1716 K (experiment) — a report, not a validation"** | `c1_zhang_test.log`; `legs/zhang_w0.01` |
+| c2 | the `stefan` assertion | PASS on the run; RED on a plant | PASS; both plants RED | **✅ this closes my own P2-29 **DR-1**. The run: liquid max **1094.970095 K ≤ 1100 + 1e-6** and **H(T) monotone** over 1,024 cells, largest fall **0.0000e+00** (bar 1e-6 × span 1.9497e5). I ran both plants: `--plant` (median cell +5 K) breaks **only** monotonicity (−4.6211e3) and `--plant-hot` (hottest +6 K) breaks **only** the cap (1100.970095) ⇒ the two clauses discriminate independently** | my re-score + both plants of `unit/stefan/test` |
+| c3 | `equilibrium`; L8 | L8; steadiness ≤ 1e-4; error ≤ 1 %; T on the table | 1.6e-5; 0.001 % | **✅ this closes my own P2-29 **DR-2**. T_sim **999.9924** vs analytic **999.9984 K** (0.001 %, was 1.73 %); it now **asserts steadiness itself** (1.60e-5 over the last 180 s, bar 1e-4), so it can no longer pass while still heating. L8: every cell below the top within **0.00e+00 K** of 300 K and first-step **P_dep/P_inc = 1.00000000**. Every constant checks from first principles: α = 2π√ε′·tanδ/λ = **1280.0000** 1/m, α·dz = **40**, 1 − e^−40 = 1.000000000000, I = 56,244.08 vs σ(1000⁴−300⁴) = 56,244.44 ⇒ T_eq **999.9984 K**, and 1800 s = **13.1** relaxation times of 137.8 s | my re-score; my arithmetic on `unit/equilibrium/input` |
+| b1 | 4a: build; face `cmp p2_28 p2_30b`; `face_vapor`'s log | IDENTICAL; byte-identical | IDENTICAL | **IDENTICAL: 2,010/2,010, 0 only-in-either, 17 timers. The byte-identity of the two blind writers rests on the recorded covers (`covers/pre4a` vs `post4a`), and the mechanism is sound: each writer keeps its own `<<` chain verbatim and the new string stream takes `row.copyfmt(ofs)`, so no flag can be lost** | my own `cmp`; my read of the 4a diff |
+| b2 | the field-count check | holds on every gate leg; a planted extra field ABORTS | 19/19 rc 0; plant rc 6 | **the plant aborts with the exact text `_removal_events.csv: a row has 39 fields, its header has 38` at `Shared.H:340 (CsvCheckRow)`, rc 6, and the source was restored and rebuilt. `CsvCheckRow` counts commas + 1 — right for numeric fields, and the packet already states the limit (it catches a missing or extra field, not a swap)** | `RESULTS.txt:126`; `Shared.H:335–341` |
+| b3 | 4b: build; face `cmp p2_28 p2_30`; list N | IDENTICAL; byte-identical | IDENTICAL; 1,703 files | **IDENTICAL: 2,010/2,010, 0 only-in-either, 17 timers. And the one subtlety is sound: `Ledger.H` moved from a local `dz` to `DX[2]`, and `dz = DX[2]` on line 29 of both images, so `1.0/(dz*dz)` and `1.0/(DX[2]*DX[2])` are the same expression on the same operand — P2-28's product-order rule respected** | my own `cmp`; my `diff` of `Ledger.H` |
+| b4 | the L7 clause; the six tests' source clauses | PASS; RED on a planted second definition | PASS (after a first RED) | **L7 is a real structural clause: it counts `PatchConstants(` definitions (1), asserts both consumers read `PatchConstants(DX)` and `= patch_c.inv_dz2`, and counts the three old local forms; its harness plants a second definition. All four source locks and both `--source` modes PASS on the live tree (my runs). ⚠ the first run was RED because 4a moved text `buckle_lock` B6 pinned literally — found by 4b, not by 4a, because the packet ran no lock at 4a (the implementer's own takeaway)** | my runs; `logs/stage4b`; `lateral_flux_lock/test:812–824` |
+| e0 | verdict | a1–a6, b1 hold; c1–c3, b2–b4 reported | holds | **accepted** | — |
+
+#### Diff review
+
+Stages 1–2 are a pure move, **proven by two independent instruments** (2.1 M preprocessor tokens; 397,673 bytes), so
+they are reviewed as one row each rather than per hunk. Stage 4 is the only code-change surface: 4a 12 hunks
+(+118/−47), 4b 10 hunks (+28/−16). Rows below cover all of it.
+
+| # | hunk / change | class | tag | finding |
+|---|---|---|---|---|
+| 1 | the split: 6,823 → 258 + 11 slices, each `#include`d in place | 9 | ok | **the strongest "pure move" proof in this programme**: the compiler's own input is token-identical (count equal, every difference an `INFO` file/line) AND `_src.header()` is byte-identical to the pre-split file. L1's pattern (an in-class include) was already in use |
+| 2 | `slice_edges.py` — the check the identity instrument cannot make | 11 | ok | a stranded comment or `AMREX_GPU_*` line survives preprocessing invisibly, so a second, text-level check is genuinely needed; 0 edge violations, and both access specifiers stayed in the parent |
+| 3 | the `INFO` mask | 5, 6 | ok | masks **only** the file string and the line integer of a `"…" , __func__ , N` triple, and the self-test proves it by planting an edit inside the message text, which is caught. The mask is the narrowest thing that makes a move provable |
+| 4 | stage 2: 85 comment lines out, 1 pointer line in | 9, 11 | ok | 0 non-comment lines moved, every moved line present in `CODE_HISTORY.md`, and the move was hand-sorted with a reason per block. The two flagged lines are justified individually |
+| 5 | the lock trim (5 clauses) | 9 | ok | each deletion names a covering row whose own mutation is RED, and the record also lists what was **not** trimmed and why — a conservative application of the rule, which is the right direction for a lock |
+| 6 | `unit/_src.py` (new) — one reader of `src/` | 1 | ok | replaces six ad-hoc path reads with one helper; `header()` vs `text()` is the right distinction (the locks read `Shared.H`/`FaceRemoval.H` under their own names), and L5's grep holds that nothing else opens `src/` |
+| 7 | `face_heat` / `face_removal` `--source` | 5 | ok | lets the source clauses run in seconds instead of behind a simulation — the reason the locks can now be run on every code-touching stage (the takeaway) |
+| 8 | 4a: the header built from one column list | 1, 5 | ok | the hand-typed header strings are gone; the three event-log writers share `FrEventsColumns(bk_on)`, so the list is the single source |
+| 9 | 4a: each row assembled in an `ostringstream` | 6 | ok | **`row.copyfmt(ofs)`** is the detail that makes this byte-safe — the string stream inherits precision and flags, which is exactly the hazard b1's bar names. Each row keeps its own `<<` chain verbatim, so nothing is re-typed |
+| 10 | 4a: `CsvCheckRow` | 13 | ok | commas + 1 against the list's size, abort naming the file and both counts; the plant proves it fires. The declared limit (a swap is invisible) is stated in the packet, not discovered later |
+| 11 | 4a: `FrBuckleColumns` / `_buckle_log.csv` | 7 | ok | the second writer gets the same treatment; ⚠ the gate never writes a buckle data row (the declared L6 gap), so the implementer added `covers.py B` — a planner gap found and closed inside the packet |
+| 12 | 4b: `PatchConst PatchConstants(DX)` | 1, 2 | ok | one definition for the three true duplicates, read by the kernel and the ledger; and the comment states explicitly that **`sp_on` is NOT here** because the kernel's carries `owner` and the ledger's does not — the distinction L9 exists to protect |
+| 13 | 4b: `Ledger.H`'s `dz` → `DX[2]` | 3, 6 | ok | `dz = DX[2]` on line 29, so the expression is unchanged operand for operand; b3's byte-identity on 1,703 files is the empirical half |
+| 14 | 4b: the two "handed column tops" locals renamed `have_tops` | 11 | ok | they were a third meaning of `void_aware`; renaming them is the cheapest way to stop the next reader merging them, and no behaviour changes |
+| 15 | `buckle_lock` B6 re-pinned to `FrEventsColumns` / `row <<` | 9 | **nit** | a legitimate re-pin (4a moved the text B6 quoted literally), and its mutation is RED — but it was found at **4b**, not 4a, because the packet scheduled no lock run at 4a. The implementer's takeaway says exactly that. Named **DR-1** |
+| 16 | `unit/stefan/test`: the cap + H(T) monotonicity | 10 | ok | two assertions, two plants, each breaking only its own clause — and the +5 K/+6 K correction (the hottest cell is 5.03 K under the wall) was found by the first block reading RED, i.e. the control caught the control |
+| 17 | `unit/equilibrium`: α·dz = 40, P0 from the balance, 1800 s | 5, 12 | ok | every constant is derivable from the deck and I derived them; the fixture now asserts its own steadiness, so it cannot pass while still heating |
+| 18 | `zhang_oglesby/input` ω0 0.02 → 0.01 + the report sentence | 12 | ok | the user's decision, and the test's verdict line now states what the PASS covers. ⚠ the model reads 2526.4 K at 150 s against Zhang's 1678 K (simulation) / 1716 K (experiment) — a 50 % overshoot, correctly labelled a report. Named **DR-2** |
+| 19 | `MODEL_CARD.md`'s line citation → a function name | 5 | ok | a line number is exactly what a split invalidates; this is the class-5 fix for documentation |
+| 20 | `check.sh` now honours a row's exit status | 9 | ok | the driver had hidden a crashed row as GREEN once; the implementer found and fixed it and recorded it. ⚠ it means earlier rows in this packet ran under a driver that could mask a crash — but every gate row here was re-derived by me from its artefact, so nothing rests on the driver |
+
+**Deferred risks, by name**
+
+- **DR-1 — a stage that edits code must run the locks.** 4a moved text that `buckle_lock` B6 pinned literally, and
+  the packet scheduled no lock run at 4a, so 4b caught it one stage late. The fix (`locks.py` on any code-touching
+  stage) is in the takeaways; it belongs in the planner's stage template, not only in a takeaway.
+- **DR-2 — the Zhang deck is now 50 % hot against its own reference.** At ω0 = 0.01 the model reads 2526.4 K at
+  150 s against Zhang's 1678 K simulation and 1716 K experiment, and melt onset is 72.0 s at 1.95 mm. The test is
+  honestly labelled "a report, not a validation", and the memory already records why the target is unreliable (a
+  pre-melted sample). Still: the deck's radius was changed on the user's instruction and the result moved away from
+  the reference — that is the number a future reader will quote, so the caption has to travel with it.
+- **DR-3 — the comment pass selects by wording, so stale prose without those words stays.** The implementer names
+  two live examples: the parent's head still describes a `material` block and the const-alpha path, and
+  `CheckInterlocks` names the deleted `ParseBitSettings`. Neither was in the candidate set. A reader-driven pass is
+  the only thing that catches those.
+- **DR-4 — whole-line moves leave dated clauses inside live sentences.** The multiset bar forbids rewriting a mixed
+  line, so "(deleted, P2-28)" fragments remain in otherwise-live comments. That is the bar working as designed, but
+  it caps how clean the source can get by this method.
+- **DR-5 — the field-count check cannot see a swap.** Declared in the packet and true: two fields exchanged pass.
+  The column list makes a swap *fixable* in one place, which is most of the value.
+- **DR-6 — `check.sh` masked a crashed row as GREEN once** before it was fixed. Every gating row here was
+  re-derived from its artefact by me, so nothing in this packet rests on it; the lesson is for the driver pattern.
+- **DR-7 — both volume predictions missed** (81 of 586 comment lines against 200–450; locks −0.3 % against
+  −10…−30 %). Reported as missed with the cause named. The planner's model of how much of this source is dead
+  history was wrong by ~4×; the structural goal was met regardless.
+
+**Checked and clean:** no edit to `ext/`, `bin/`, `obj/`, `build/`, `compile_commands.json`, `configure`, `LICENSE`;
+nothing staged, nothing committed; the 11 new slices are untracked additions and the parent plus `Shared.H`,
+`FaceRemoval.H`, `Flame.H`, `Heat.H`, `Ledger.H`, `BeamProps.H` are the only touched sources; four pre-image trees
+make a1–a5, b1–b4 reproducible from the repository, and I reproduced them from those trees rather than from the
+live one. The completion notes quote nothing `ROADMAP.md` marks unquotable; SR 14 is now a *bar* (L7) rather than a
+comment, which is the packet's own improvement on it.
+
+#### Verdict: accepted
+
+- **Every gating row reproduces from my own reduction.** No diff-review row is tagged `bug`. One nit (row 15) and
+  seven named deferred items.
+- **The central claim is proven twice over, independently.** The split and the comment move changed no code: the
+  compiler's own input is token-identical over **2,095,494 tokens** with every difference an `INFO` file string or
+  line integer and the token count unchanged, and `_src.header()` rebuilt from the slices is **byte-identical** to
+  the pre-split header at **397,673 bytes**. I drove both instruments myself, pre-image against pre-image, because
+  a1/a3 compared trees that no longer exist live — and the instrument's own self-test catches a one-token operator
+  edit *and* an edit inside an `INFO` message, so the mask is as narrow as it claims.
+- **Both of my P2-29 risks are closed, properly.** `stefan` now asserts the liquid cap and H(T) monotonicity with
+  two plants that each break only their own clause (DR-1), and `equilibrium` reaches equilibrium at 0.001 % and
+  **asserts its own steadiness** so it can no longer pass while heating (DR-2). Every constant in the new
+  equilibrium deck is derivable and I derived it.
+- **The two code changes are byte-safe by construction, not only by the gate:** 4a keeps each row's `<<` chain
+  verbatim and gives the new string stream `row.copyfmt(ofs)`; 4b's `dz` → `DX[2]` is the same operand, and the
+  shared struct deliberately excludes `sp_on` because its two meanings differ.
+- Files inspected: `pp_identity.py` and `slice_edges.py`; `unit/_src.py` in full; the 4a diff of `FaceRemoval.H`,
+  `Flame.H`, `Ledger.H`, `Shared.H` and the 4b diff of `BeamProps.H`, `Heat.H`, `Ledger.H`, `Shared.H`;
+  `Shared.H:335–341` (`CsvCheckRow`) and `FrEventsColumns`; `lateral_flux_lock/test:812–824` (L7);
+  `unit/stefan/test` and `unit/equilibrium/input`; `LOCK_TRIM.txt`, `COMMENT_SORT.txt`, `CODE_HISTORY.md`,
+  `RESULTS.txt`, `Z0*.txt`, `c1_zhang_test.log`.
+- Next: **run `/plan` to archive this step and prep the next packet.**
+
+## P2-31 — The review's code fixes (one reference temperature, parse and interlock repairs, a rename, dead code out, the overlap rule), then the mesh-resolution test on the fixed binary (2026-11-10; ACCEPTED by review 2026-11-11)
+
+**Status:** ACCEPTED by review (2026-11-11): every gating row re-derived from the artefacts; 28 diff rows, 0 `bug`,
+0 `risk`, 5 nit; DR-1…DR-9. Binaries: `p2_31a` 3f29e987 (stage 1), `p2_31b0` ba1f6dd5 (2a), `p2_31b` 296fadf3 (2b),
+**`p2_31` e705b859 ships** (stage 3). Study `tests/MMWSpalling/studies/p2_31_fixes_mesh/` (`RESULTS.txt`,
+`MESH_RESULTS.txt`, `CHECK_<stage>.log`, `Z0.txt`, `OVL_SEARCH.txt`, `M5_PHASE_IMMUNE.txt`, `src_pre_{1,2,2b,3}/`).
+**The face-gate reference is `face_p2_31.md5`** (21 legs; `regime_field` removed from the plotfiles, nothing else).
+
+### What the step established
+- **Stages 1–3 changed no production result.** Between `face_p2_30c` and `face_p2_31` the only differences on the 21
+  legs are the removed `regime_field` component and three wall-clock timer columns (the reviewer's own FAB-complete
+  reader over all 182 changed plotfiles).
+- **One reference temperature.** The reconstruction, the profile depth and the profile peak read the line's start
+  cell's initial temperature (`T0_at_d`), the stress's own reference; `phases[0].T_ref` survives as the fallback only.
+  Two-sided on a 600 K twin: 1,440 / 1,440 rows new against 576 / 1,440 old. ⚠ `T_ref` is ALSO the enthalpy table's
+  zero, so a deck that moves it cannot be byte-identical (T_surf agrees to 1.8e-15).
+- **Parse and interlocks.** `seed_void` and `h_spall_n_segments` are read with spalling off (32 voided cells against 0);
+  `law = zhang` requires its six latent keys; a grimsel phase under `stress_law = scalar` aborts on the face list; a
+  face-list deck whose FIRST list is empty aborts and names `surface_patch.radius`; the false `robin_form` abort text
+  corrected. Each new abort is RED on the pre-stage binary and has a passing twin.
+- **Rename and dead code.** `Grimsel::diffusivity()`, `Zhang::conductivity()`, `Constant::conductivity()`, the virtual
+  removed; `vapor.A_beam`, `vapor.T0`, `vapor.prescribed_rop.*` retired at default; `microstructure_enabled` and seven
+  unreachable aborts, `SurfaceRecon::ell_q`, `ElasticConsts::ok`, `Grimsel::H_of`, `MMWBeam::active()`, four `Table`
+  caches and `regime_field` deleted.
+- **The overlap rule** (`Upd::h_max` for the plotted thickness and rates, `h_phiz` for the +z line's own shift) is
+  correct and INVISIBLE on the gate: the 803 overlapped cells are interior crossings; only `TD`, `BORE`, `SPH` ever
+  differ, always a voided cell's thickness (2.97e-7 m on `TD` at 3.304 s). No fixture overwrites a +z own cell, so the
+  phi half has no RED-on-old witness (DR-1). An overlap COUNT is not evidence of an observable difference.
+- **The mesh test (40 legs, the 24 × 24 × 64 mm fixture at 2 / 1 / 0.5 mm unless stated).**
+  - ADEQUATE at 1 mm: flat-floor rate 6.681 / 6.132 / 6.027e-4 m/s (−8.2 %, −1.7 %, order 2.4); onset time 2.648 /
+    2.440 / 2.380 s (−2.5 %); onset ℓ (−2.9 %). Onset T_surf 845.5–846.0 K at every cell. Halving dt: −0.006 %.
+    The span never withdraws a firing on this flame (F ≡ F0 bit for bit).
+  - NOT established: flake ℓ 1.94 / 1.65 / 1.51 mm and h_f 0.777 / 0.659 / 0.604 mm (−15 %, −8.4 %), firing interval
+    1.224 / 1.068 / 0.996 s (−13 %, −6.7 %) — they compensate in the rate; every random-flaw quantity under either V0
+    (cell-tied rate +5.3 %, −9.2 %; fixed +7.0 %, −16.3 %; seed spread 0.8 %); BORE / flat 0.797 / 0.841 / 1.004.
+  - Tilts: the packet's 5–12 s plotfile window is phase-limited at a ~1 s firing interval (flat 1 mm reads −8.8 %
+    against its own 5–20 s value); on P2-9's phase-immune rate TL35 / flat 1.068 / 0.988 / 1.010, TL45 1.023 / 0.955 /
+    0.972.
+  - Beam heat-up (3.125 / 1.5625 / 0.78 mm): melt onset 44.8 / 43.2 / 42.3 s (−2.1 %), T_peak at 30 s +1.3 %:
+    ADEQUATE at 1.5625 mm up to melt onset. The melt depth is one cell at every mesh; T_peak at the stop 2297 / 3209 /
+    3391 K is outside the property tables (DR-5).
+  - The regime boundary: the three 1.5625 mm replays reproduce P2-25 to every digit. Class at 3.125 / 1.5625 /
+    0.78 mm: D1_Q2 S / S / S (volume 3.165 / 2.204 / 1.366e-6 m³), **D2_Q2 S / M / M**, **D2_Q4 S / S / M**; the
+    0.78 mm flip survives holding the flaw scale. Every refinement moves toward melt.
+  - Höser, 10 s: V 1.868 / 1.839 / 1.648e-6 m³ per quarter (−1.6 %, −10.4 %), depth 8 / 8 / 7 mm, radius at half depth
+    15.0 / 16.8 / 18.5 mm (+11.8 %, +10.3 %). ⚠⚠ The reviewer's finding: the SHAPE is unconverged — shallower and
+    wider as the cell shrinks, the three measures moving in different directions; the flat fixture's adequacy at 1 mm
+    does not transfer to a hole.
+- **Reporting corrections (review DR-9):** max |ledger_err_solid| over all 40 legs is 1.86e-13 (`B_08`), not 8.7e-14
+  (29 legs); the firing interval's last change is 6.6 %, not 7.0 %; the BORE / SPH ratios are event-log volume ratios;
+  the Höser legs ran `amr.plot_int=-1`.
+
+### After the packet (2026-11-10 night / 11-11, with the user; `Claude_markdowns/2026-11-11.md`)
+- **The beam column study** (`tests/MMWSpalling/studies/beam_column_1110/`, run directly at the user's request, 68
+  legs): the heat solution under a beam converges (dz ≤ D/4 for the temperature, dz ≤ D/8 for the melt onset; at
+  1.5625 mm the melt onset is 131 / 54 / 17 / 7 / 4 % late at D 0.5 / 1 / 2 / 4 / 8 mm); the surface reconstruction
+  extrapolates an exponential where the beam's profile is flat (criterion 22–33 % early at dz ≥ D); the two-cell
+  thermal length grows as 1/dz, so the flake and the buckling condition have no converged value and the class is not
+  monotone in the cell (D1_Q2: S S S M M S; D2_Q4: S S M M S S). Only "D ≥ 4 mm melts" holds at every cell.
+- **Decisions (the user, 11-11):** no spalling once the surface cell passes the solidus; ONE flake rule and ONE
+  surface temperature for flame and beam (not a beam-only branch); Kant's span re-derived once if it moves.
+
+### Carry-forwards (review)
+- DR-1 the phi half of the overlap rule is unexercised (wants a planted-geometry fixture). DR-2 `fl_built` is one
+  bool for all levels (inert while `amr.max_level = 0`). DR-3 `witness/REFERENCE.md`'s `## Current reference` block
+  and `CLAUDE.md`'s gate example still name old references. DR-4 the 2 mm fixture leg is 16 interior columns against
+  256 and 1,600. DR-5 the beam series above melt is outside the property tables. DR-6 `Material` declares no
+  conductivity interface. DR-7 the retired `vapor.A_beam` / `vapor.T0` lost their validity aborts. DR-8
+  `retired_keys` K31 no longer covers "typed scalars accepted under `stress_law = scalar`". DR-9 above.
+- Left as found by the implementer: `MMWBeam::parsed` is write-only; the `pp.contains("microstructure.nphases")`
+  wrapper in Parse is always true; a bare scope block at `Model.H:25`.
+- Uncommitted at archive time: P2-26 … P2-31 and everything above (the user commits; HEAD `a237c13eb`).
+
+### ROADMAP `Active step:` block as it stood (released verbatim 2026-11-11)
+
+Active step:
+- **P2-31 — the review's code fixes, then the mesh-resolution test on the fixed binary** (`ACTIVE_STEP.md`;
+  2026-11-10; four stages, unattended on green).
+  - Archived: P2-30 ACCEPTED (`ARCHIVE_DONE.md` *"P2-30"*): `MMWSpalling.H` 6,823 → 258 lines + eleven slices, a pure
+    move proven twice; tests read the source through `unit/_src.py`; then, the same day with the user, a comment review
+    of all 20 files (~600 lines, code proven unchanged) and **the gate's reference `face_p2_30c.md5` (21 legs)**.
+  - Stages 1–3 (code, under the gate): the reconstruction reads the initial temperature like the stress; two keys
+    parsed above the spall-off return; two new interlocks; one false abort message; `kappa()` split into
+    `diffusivity()` / `conductivity()`; dead inputs, members and unreachable interlocks out; the overlap rule (the
+    +z line's own slot for the surface shift, the largest h for the plotted thickness — 792 cells on `fr/TL45_1`).
+  - Stage 4 (no code): the 24 × 24 × 64 mm fixture at 2 / 1 / 0.5 mm — onset, flat floor (production and span-off),
+    one time-step halving, random flaws with V0 tied to the cell vs fixed, tilts and curved faces against flat at the
+    same mesh — plus the beam heat-up at three cells, the regime boundary's three points (P2-25's fine twins on disk:
+    `D2_Q4` flips S → M at 0.78 mm) and Höser for 10 s at three cells. Output: the adequate cell and
+    an error bar per quantity; the V0 decision stays the user's.
+  - Next: the melt and vapour step (test #19's heat-up as the yardstick; `MODEL_CARD.md` §11 items 6, 10, 11; start
+    with the zero-compute instrument check) → validation (the Meier rebuild on the rock file; post-melt beam data) →
+    AMR repair when fine surface cells are needed → the operator stress → the flame source rule. PARKED (user, 11-10):
+    Hu's spall verdict, Zhang's Fig. 7, the pressure / depth study (load in both conditions; properties vs pressure).
+
+### The P2-31 file verbatim (packet rev 2, completion notes, takeaways, review; headings demoted, code fences untouched)
+
+### Active Step: P2-31 — The review's code fixes (one reference temperature, parse and interlock repairs, a rename, dead code out, the overlap rule), then the mesh-resolution test on the fixed binary
+
+Status: **accepted by review** (2026-11-11; implemented 2026-11-10, 19:15–22:40; every gate row green, c1 on its second run after a declared restatement — `## Claude completion notes`). Planned 2026-11-10 as rev 2 (the regime-boundary series, the three-mesh convergence reading and the empty-list abort added after an outside read; P2-30 ACCEPTED and archived the same day — `ARCHIVE_DONE.md` *"P2-30"*). Four stages (the user): 1–3 change code under the 21-leg face gate; 4 runs the mesh test on stage 3's binary and changes no code. The stages run unattended (the advance rule).
+
+### Context
+
+P2-30's comment review read every comment against the code and surfaced latent defects the comments had hidden (`ARCHIVE_DONE.md` *"P2-30"*, carry-forwards). The user wants them fixed before the mesh test so its numbers are not mixed with code changes: one reference temperature for the surface reconstruction, two keys that an early return skips, two missing interlocks, one false abort message, one function name with two meanings, dead inputs and code, and the overlap rule. The mesh test then answers what the programme still does not know on today's code: which results move with the cell, by how much, and which cell is adequate. The one earlier measurement (flat floor 6.681 / 6.132 / 6.027e-4 m/s at 2 / 1 / 0.5 mm, a 10.4 % spread) is from P2-9, with buckling off. AMR is parked: every leg is one level.
+
+### The advance rule (the user, 11-10)
+
+One driver, `S/check.sh <1|2|3|4>`, runs a stage's rows in table order, appends to `S/RESULTS.txt`, honours every row's exit status, and exits non-zero at the first red **gate** row. Green ⇒ the next stage starts at once, with no question to the user. Red gate ⇒ stop and report. A red verdict or report row is recorded and the chain continues.
+
+### Sources (opened 2026-11-10; `D/` = `src/Integrator/MMWSpalling/`, `U/` = `tests/MMWSpalling/unit/`, `W/` = `tests/MMWSpalling/studies/tree_sweep_0922/witness/`)
+
+- **The reconstruction's reference**: `const Set::Scalar T0r = phases.empty() ? 0.0 : phases[0].T_ref;` at `D/FaceRemoval.H:228` and `:704`, read at `:235`, `:240`, `:773`, `:780`, `:811`, `:845–846`, `:908`, `:909`. The stress reads the stored initial field with a fallback: `:604–615` (`have_T0`, `T0a`), `:762–766`. The two agree on every gate leg but `GB_S` (T_ref 293.15, IC 820.0 K; `U/gradient_blind` — MUST NOT FIRE).
+- **The early return**: `if (!value.spall_enabled) return;` (`D/ParseRemoval.H:94`), above the parse of `spall.h_spall_n_segments` and `spall.seed_void`; `ApplySeedVoid` runs under `list_state()` regardless. Evaluate-only = the face list with spall and vapour off.
+- **Zhang's latent scalars**: the phase's own keys carry them; the `.zhang.` copies abort (`D/Parse.H:398–408`); a phase's defaults are "no phase change". The Zhang deck sets all six (`validation/zhang/zhang_oglesby/input:55–60`).
+- **The abort string**: `"surface_patch.face_list = 1 requires robin_form = surface: F4 keeps the column-top face on the surface form"` (`D/Parse.H:1054–1055`); the kernel zeroes that term and bills every listed face through `FrFaceFlux` (`D/Heat.H` ~:272).
+- **`kappa()`**: `Material.H:25` (pure virtual), `Grimsel.H:139` (returns λ/(ρc_p), m²/s), `Zhang.H:77` and `Constant.H:51` (W/(m K)); callers `src/Integrator/MMWSpalling.H:170–171`, `D/BeamProps.H:94`.
+- **The strain hold**: `Grimsel::strain_of` returns its last node above 1000 °C (`Grimsel.H:240`, `NSTR = 981`); readers `Grimsel.H:253` (`sigma_thermal`), `D/FaceRemoval.H:337` (`BuckleRatio`), `D/BeamProps.H:111` (the secant β). `MODEL_CARD.md` §11 item 11.
+- **The overlap**: `struct Upd` (`D/FaceRemoval.H:1031`); `u.h_line = h;` for every cell of a line's run (`:1117`) and again for a +z line's own cell (`:1128`); read by the column's phi shift (`:1219`) and the thickness / rate fields (`:1231–1234`); `fr_overlap` counts cells with `nl > 1` (`:1166`). Census on `face_p2_30c` (planner): `fr/TL45_1` 792 cells in 4 steps (first t = 2.400 s), `fr/SPH_1` 10 in 3 (3.664 s), `fr/BORE_1` 1 in 1 (4.928 s), the other 18 legs 0.
+- **Dead items the review named** (each to be proven dead at z0): `SurfaceRecon::ell_q`; `ElasticConsts::ok` (`D/Shared.H:36`); `Grimsel::H_of`; `MMWBeam::active()`; `Table`'s `m_T_v`, `m_fus_lo_T`, `m_fus_hi_T`, `m_vap_hi_T`; `vapor.A_beam`, `vapor.T0`, `vapor.prescribed_rop.enabled` / `.expr` and their members (`D/State.H:159–165`); `microstructure_enabled` (18 non-comment uses; `microstructure.nphases` is `query_required`, `D/Parse.H:107`, so it is always true and seven aborts on it cannot fire: `D/Parse.H:919, 933, 937, 942, 950, 969, 1056`). ⚠ NOT dead: `rho_mf` / `Cp_mf` — `U/heterogeneous_enthalpy` and `U/grain_topology` read `rho_phase` / `Cp_phase`. ⚠ `vapor.prescribed_rop.enabled` is SET in `U/face_beam/input` and `U/face_vapor/input` (gate legs `BEAM_S`, `VAP_S`).
+- **The mesh fixture**: `U/face_removal/input` — 24 × 24 × 64 mm, uniform gas 1866 K, h 700 W/m²K, `phase0.law = grimsel`, `spall.stress_law = grimsel`, one flaw (`weibull.enabled = 0`, `a0_ig 8e-6`, `m 13`, `seed 12345`), `weibull.V0 = 1.0e-9`, `spall.flake_c_f = 0.4`, `spall.flake_h_max = 0.0015`, no rock file, `spall.buckle_span` unset (= 0; production 0.012, `validation/shared/rock_grimsel.inputs:72`). Its test's `MESH` = {"2": (12, 32, 0.008, 8, 125), "1": (24, 64, 0.008, 16, 125), "05": (48, 128, 0.004, 32, 250)} (nx, nz, dt, max_grid_size, plot_int), `mesh_keys()`, `run_leg()`, `tilt_seeds()`, `MI.curved_keys(c, dx)` / `curved_seeds`, and `rate()` (`:229`; interior columns, window 5–20 s).
+- **The regime boundary's mesh twins ALREADY EXIST** (`studies/p2_25_regime_map/RESULTS.txt` m5, P2-25; 1.5625 vs 0.78 mm on the #19 deck with a flat loss, random flaws with V0 = the cell): `D1_Q2` S at both (first removal 1.06 / 1.25 s; volume to 20 s 2.204e-6 / 1.366e-6 m³, ratio 0.620); `D2_Q2` M at both (melt 10.33 / 8.97 s); `D4_Q2` M at both; `D2_Q1` M at both; **`D2_Q4` S at 1.5625 mm (1,606 removals) and M at 0.78 mm (melt 3.33 s, none)** — the class flips. Legs and argv: `studies/p2_25_regime_map/legs/{D1_Q2,D2_Q2,D2_Q4,F_D1_Q2,F_D2_Q2,F_D2_Q4}/argv.sh` (base `timestep=0.01`, 64 × 64 × 32; fine `timestep=0.007`, `'amr.n_cell=128 128 64'`, `amr.max_grid_size=32`, `weibull.V0=4.76837158203125e-10`; five fine legs ran in ≈ 26 min).
+- **The silent empty list**: with the patch off `surface_patch.radius` defaults to 0, the listing mask is empty, `fl_n_top` reads 0 on every row and the run ends rc 0 (`studies/p2_29_one_heat_path/legs/ZL_r0_emptylist`). Planner: 19 gate legs read, `fl_n_top` 64–4,096 on every row (`GB_S`, `KV_S` not read).
+- **Measured costs** (gate `p2_30c`, `-np 4`): build ≈ 20 s; gate 156 s; 8 s at 1 mm: T00 4.9 s, TL35 4.0 s, TL45 5.8 s, BORE (48³) 20.7 s, SPH (64³) 50.0 s; Höser 2 s at 50 × 50 × 150: 5.8 s.
+
+### Goal (pre-images `S/src_pre_<stage>/` of every touched file before each stage; `S/` = `tests/MMWSpalling/studies/p2_31_fixes_mesh/`)
+
+**Stage 1 — repairs with no intended change on 20 of the 21 gate legs (one build).**
+1. **One reference temperature.** The reconstruction, the profile depth and the profile peak read the line's start cell's initial temperature, with the stress's own fallback, at every site listed above. A zero rise must give a flat reconstruction with no division by it.
+2. **The two keys** are parsed above the spall-off return.
+3. **`law = zhang` requires the phase's six latent keys to be present** (`T_m`, `fus_width`, `L_m`, `T_vap_lo`, `T_vap_hi`, `L_v`); the abort names the missing key. A live deck that lacks them gains explicit lines at its present values.
+4. **Two aborts.** (a) A phase with `law = grimsel` under `spall.stress_law = scalar` on the face list (the solve would use the law's stiffness, the criterion the typed scalars). (b) A face-list deck whose FIRST list holds no face, naming `surface_patch.radius` (a later empty list — a block drilled through — is legal).
+5. **The abort string** states the rule and its true reason.
+6. **The rename**: `Grimsel::diffusivity()`, `Zhang::conductivity()`, `Constant::conductivity()`; the shared virtual leaves `Material`. C++ names only.
+7. **The strain hold stated at its three readers** (comments).
+8. **Unit clauses** (each two-sided on the pre-stage binary): a T_ref twin (the fixture at IC 600 K with `phase0.T_ref` 293.15 vs 600.0: event logs byte-identical after, different before); an evaluate-only deck with a seeded void (voided cells > 0 after, 0 before); the three new aborts and their passing twins in `U/interlocks` (the empty list: a flameless deck with `surface_patch.radius = 0` — rc 0 with `fl_n_top` 0 before).
+
+**Stage 2 — dead code out (2a one build; 2b only if it applies).**
+9. **2a.** Every item of the dead list that z0 proves dead is removed. The vapour keys retire by the project's convention (the retired-at-default table, a `retired_keys` row with its mutation); their lines leave the two decks. `microstructure_enabled`, its always-true tests and the seven unreachable aborts go.
+10. **2b.** `regime` and `regime_field` hold the same values at every write site. If z0 finds that one of the two names has NO live test reader, that field is removed (a component audit, then a new reference `p2_31b`); if both are read, both stay and the notes say so.
+
+**Stage 3 — the overlap rule (one build; the reference becomes `p2_31`).**
+11. `Upd` gains its own slot for the +z line's recession, written only at that line's own cell and read by the phi shift; the plotted thickness and rate take the LARGEST h of the lines through the cell. `W/REFERENCE.md` records the new reference and what moved.
+12. A clause `OVL` in `U/face_removal` on `TL45` at 1 mm with `amr.plot_int=1` through t = 2.400 s: every column's phi drop equals its +z event's `h_line` to 1e-12 m; every overlapped cell's thickness equals the maximum h of the lines through it (lines rebuilt from the event rows: start cell, direction, run).
+
+**Stage 4 — the mesh test (no code change; `S/mesh.py` on the fixture test's helpers; legs under `S/legs/`).**
+13. The legs below, then `S/RESULTS.txt`: one table per series, the change on each halving of the cell, and the adequacy table.
+
+### Legs (literal keys; `M(dx)` = `mesh_keys(dx)`; `P` = `surface_patch.face_list=1 spall.buckle_span=0.012`)
+
+| leg | deck | keys | window |
+|---|---|---|---|
+| `O_2 O_1 O_05` onset, nothing removed | fixture | `M(dx)` `P` `spall.enabled=0` `stop_time=6.0` | the first event row; each column's first row |
+| `F_2 F_1 F_05` flat floor, production form | fixture | `M(dx)` `P` | `rate()`, 5–20 s |
+| `F0_2 F0_1 F0_05` flat floor, span off (P2-9's form) | fixture | `M(dx)` `surface_patch.face_list=1` | `rate()`, 5–20 s |
+| `F_1_dt` | fixture | `F_1` + `timestep=0.004` | as `F_1` |
+| `Wc_2 Wc_1 Wc_05` random flaws, V0 = the cell | fixture | `M(dx)` `P` `weibull.enabled=1` `weibull.V0=` 8.0e-9 / 1.0e-9 / 1.25e-10 `stop_time=12.0` | first rows; rate 5–12 s |
+| `Wf_2 Wf_05` random flaws, V0 fixed | fixture | as `Wc` with `weibull.V0=1.0e-9` | as `Wc` (`Wf_1` ≡ `Wc_1`) |
+| `Wc_1_s2` seed twin | fixture | `Wc_1` + `weibull.seed=54321` | as `Wc` |
+| `TL35_dx TL45_dx` (2, 1, 05) | fixture + `tilt_seeds` | `M(dx)` `P` `stop_time=12.0` | normal rate vs `F_dx`, 5–12 s |
+| `BORE_2 BORE_1 BORE_05`, `SPH_2 SPH_1` | fixture + `MI.curved_keys(c, dx)` / seeds | `P` `stop_time=8.0` | removed volume vs time; `fr_overlap` |
+| `B_3 B_15 B_08` beam heat-up | `validation/oglesby/input` | `amr.n_cell=` 32 32 16 / 64 64 32 / 128 128 64, `timestep=` 0.2 / 0.2 / 0.05, `stop_time=` onset(1.5625 mm) + 20 s | melt onset time, `bc_z_melt`, `bc_T_peak` |
+| `R1_15 R2_15 R24_15` the regime boundary, today's binary | P2-25's `D1_Q2`, `D2_Q2`, `D2_Q4` argv replayed (retired tokens dropped as the gate's `from_record` does) | `stop_time=20.0` `beam.schedule.t_end=20.0` | class (S / M / B), first event (s), melt (s), N, removed volume (m³) to 20 s — against P2-25's rows over the same 20 s |
+| `R1_3 R2_3 R24_3` | the same three | + `'amr.n_cell=32 32 16'` `amr.max_grid_size=16` `weibull.V0=3.0517578125e-8` (= that cell) | as above |
+| `R24_08f` the flipping cell, flaw scale held | P2-25's `F_D2_Q4` argv | `weibull.V0=3.814697265625e-9` (the 1.5625 mm cell's volume) | as above |
+| `R*_08` (conditional) | P2-25's `F_D1_Q2`, `F_D2_Q2`, `F_D2_Q4` argv | unchanged | run ONLY for a point whose `R*_15` leg does not reproduce P2-25's row (class, and N within 1 %); otherwise P2-25's fine legs stand for today's code |
+| `H_2 H_1 H_05` Höser, short | the gate's `HOS_R` record (`from_record`) | `amr.n_cell=` 25 25 75 / 50 50 150 / 100 100 300, `timestep=` 0.008 / 0.008 / 0.004, `stop_time=10.0`, `amr.plot_int` = 1 s | removed volume at 5 and 10 s; depth; radius at half depth; `fr_overlap` |
+
+### Reachability ledger (step zero resolves every row; stop on a failed row)
+
+| # | claim | site | resolves to |
+|---|---|---|---|
+| L1 | the initial field exists at every line's start cell on a face-list deck | `D/FaceRemoval.H:604–615` | allocation site; the fallback is the stress's |
+| L2 | a zero rise cannot divide (K / K) | `RawSurfaceX`, `ReconFromX`, `ProfileEFoldDepth`, `ProfilePeak` | each guard named; `GB_S` smoke on the stage-1 binary: rc 0, 0 event rows, no NaN |
+| L3 | goal 2 cannot move the gate | `HU_S`, `KV_S` metadata (planner: neither key set) | confirmed |
+| L4 | every `law = zhang` deck and its six keys | grep the live decks | the list; lines added where absent |
+| L5 | no live deck or gate leg has law `grimsel` + stress `scalar` on the face list | planner: 0 of 45 inputs, 0 of 21 legs | confirmed, and any study driver that builds one named |
+| L6 | no test pins the old abort text or `.kappa(` / `H_of` / `.active(` as source text | grep `U/`, `validation/` (not stored outputs) | per-name list; `U/robin_face/test` matched the planner's grep — say what it is |
+| L7 | no polymorphic call of `kappa` | `Table::Build` and every `Material&` use | the callers = the three sites above |
+| L8 | each dead item has no non-comment reader in `src/` and no live test reader | `S/Z0.txt` table | removed / kept, per item |
+| L9 | the two decks' `vapor.prescribed_rop.enabled` value | `U/face_beam/input`, `U/face_vapor/input` | the value (expected 0, the default) |
+| L10 | what reads `phi` under the face list, dynamic or diagnostic | `D/FaceRemoval.H` (9 sites), `D/Fields.H` (5), `D/State.H`, `D/Parse.H` | per-reader class ⇒ the difference set stage 3 pre-registers |
+| L11 | evaluate-only writes event rows | `KV_S`'s event log | non-empty; the row's `h_applied` reads 0 |
+| L12 | `weibull.V0` (m³): the flaw scale carries (V_cell/V0)^(1/m) | its one site | V_cell = 8.0e-9 / 1.0e-9 / 1.25e-10 m³ at 2 / 1 / 0.5 mm; factor 1 when equal |
+| L13 | the fixture's rock keys vs `rock_grimsel.inputs` | both files | every difference listed; it travels with stage 4's conclusions |
+| L14 | costs of the two largest legs | `H_05` for 0.5 s; `B_08` for 2 s | projected wall time; a leg over 15 min is shortened (window) and the change recorded, never dropped silently |
+| L15 | `regime` / `regime_field` live readers | `U/`, `validation/`, `W/*.py` (no stored outputs) | the two counts ⇒ goal 10's branch |
+| L16 | every gate leg and live face-list deck lists > 0 faces on its first step | `fl_n_top`, first step row | per leg (planner: 19 read, all > 0); `GB_S`, `KV_S` and every `U/` + `validation/` face-list deck named |
+| L17 | P2-25's six argv replay on today's parser | the six `argv.sh` | the tokens dropped or retired since P2-25, listed; a leg that cannot replay is reported, not adapted by guess |
+
+### Chain and cost (serial, `caffeinate -dis`; `PY=/Users/tzetze20/Desktop/code/.venv/bin/python`)
+
+| leg | when | cost |
+|---|---|---|
+| build | stages 1, 2a, (2b), 3 | ≈ 20 s each |
+| the six source locks (`S30/locks.py` pattern, `S30` = `studies/p2_30_structure`) + the touched unit tests | every code stage, BEFORE its gate | seconds to 1 min |
+| face gate `run` + `cmp` | stages 1, 2a, (2b), 3 | ≈ 2.6 min each |
+| list N (P2-30's nine non-gate decks) vs `S30/base_N` | stages 1, 2a, 3 | 37 s each |
+| stage 4: O ≈ 1.5, F ≈ 4, F0 ≈ 4, dt ≈ 0.5, W ≈ 6, tilts ≈ 6, curved ≈ 7, beam ≤ 15, regime ≈ 10 (three 1.56 mm replays, three coarse, one fine; + ≈ 6 per conditional fine leg), Höser ≈ 9 min | stage 4 | ≈ 60 min |
+| total | | ≈ 75 min |
+
+### Criteria
+
+| # | run order | test | bar | gate / report / verdict | what a failure of this row means |
+|---|---|---|---|---|---|
+| z0 | 1 (offline + two smokes) | ledger L1–L17; git state; pre-images | every row resolves | gate | a premise is wrong; stop |
+| a1 | 2 | stage 1: build; the locks; goal 8's clauses on the new and on the pre-stage binary | no new warning; locks PASS; each clause PASS new, RED old | gate | a repair is not reached, or its test cannot see it |
+| a2 | 3 | stage 1: `face_gate.py cmp p2_30c p2_31a`; list N | 20 legs: 0 substantive differences; list N byte-identical | gate | a "no change" repair changed a production result |
+| a3 | 3 | stage 1: `GB_S` (the one leg where T_ref ≠ IC) | 0 event rows on both sides; every differing component named | report | prediction: only reconstruction diagnostics differ; a firing here is a2's failure, not a finding |
+| b1 | 4 | 2a: build; the locks incl. the new `retired_keys` row and its mutation; the touched decks parse | PASS; the mutation RED | gate | a removed name still has a reader, or a retired key is not refused |
+| b2 | 5 | 2a: `cmp p2_30c p2_31b0`; list N | 0 substantive differences on 21 legs; byte-identical | gate | an item on the dead list was alive |
+| b3 | 6 | 2b (only if L15 allows): component audit vs `p2_31b0`, then the reference `p2_31b` | every remaining component byte-identical on 21 legs | gate | removing the field moved another |
+| c1 | 7 | stage 3: build; the locks; `OVL` on the new and on the stage-2 binary | PASS new; RED old in ≥ 1 cell | gate | the rule is not the one specified, or the clause cannot see the old one |
+| c2 | 8 | stage 3: `cmp <stage-2 ref> p2_31`; list N | 18 legs: 0 substantive; `fr/TL45_1`, `fr/SPH_1`, `fr/BORE_1`: differences confined to the component set L10 names; their event logs, `Temp` and the solid fraction as L10 predicts | gate | the surface height feeds something L10 called diagnostic — stage 4 must not start on it |
+| c3 | 8 | stage 3: cells changed per leg | report beside the census in Sources | report | — |
+| m0 | 9 | stage 4: every leg rc 0; ledger closure of each leg within its deck's bar; `F0_2` vs P2-9's 6.681e-4 m/s | all rc 0; `F0` reported against 6.681 / 6.132 / 6.027e-4 | verdict | a leg crashed (its series is incomplete, say which) |
+| m1 | 10 | onset: first-row time, T_surf (K), ℓ (m) at 2 / 1 / 0.5 mm | report; prediction: T_surf within 5 K, time within 3 % on 1 → 0.5 | report | the reconstruction is mesh-dependent at onset |
+| m2 | 10 | flat floor `F`, `F0`: rate (m/s) and the event log's median T_surf, ℓ, h_f, firing interval | report; prediction: 2 → 1: −5 to −12 %; 1 → 0.5: ≤ 3 % | report | which factor carries the drift is read from the medians |
+| m3 | 10 | `F_1_dt` vs `F_1` | report; prediction: < 1 % | report | the error is temporal as well |
+| m4 | 10 | random flaws: first row and column-median first time, rate, for `Wc` and `Wf`; the seed twin's spread | report; the flaw scale differs by 8^(±1/13) = 1.173 / 0.852 between the two at 2 / 0.5 mm; a difference smaller than the seed twin's is "not resolved" | report | — (the V0 decision is the user's) |
+| m5 | 10 | tilts and curved: rate / volume against flat AT THE SAME MESH; `fr_overlap` per leg | report; prediction: the tilt/flat ratio moves < 3 % on 1 → 0.5 | report | removal geometry is not converged where the flat floor is |
+| m6 | 10 | beam: melt onset time (s) and depth (m) | report; prediction: within 3 % on 1.5625 → 0.78 mm | report | the beam decks need a finer cell before the melt work |
+| m7 | 10 | Höser: removed volume (m³, quarter ×4 stated) at 5 and 10 s, depth, radius | report; prediction: 2 → 1: 5–15 %; 1 → 0.5: ≤ 5 % | report | the fixture's conclusion does not carry to a hole |
+| m8 | 10 | the regime boundary: class per cell size for the three points (P2-25's fine legs where they stand); the spall point's volume at three cells; `R24_08f` against P2-25's `F_D2_Q4` | report; prediction: the 1.5625 mm replays reproduce P2-25 (so its fine legs stand); `D2_Q4` reads S / S / M at 3.125 / 1.5625 / 0.78 mm and stays M with the flaw scale held (a resolution effect, not flaw statistics); the spall volume ratio 0.78 / 1.5625 stays ≈ 0.62 | report | a class that differs between cell sizes is one map row of uncertainty on the boundary at that power — the error bar on the regime claim |
+| e0 | 11 | the adequacy table, from ALL THREE cells of a series: the three values; whether they move in one direction; the ratio of the two successive changes (and the order log2 of it when monotone); the change on the last halving as the error bar | a cell is ADEQUATE for a quantity when the last change is ≤ 3 % AND the series is monotone with a shrinking change; ≤ 3 % without that reads "within 3 % on one difference, not confirmed"; "not established" where the finest cell is the only candidate | verdict | — |
+
+### Pre-registered predictions
+
+- P1 a2 / b2: IDENTICAL. P2 a3: no firing; diagnostics only. P3 c2: as L10 classifies; if phi feeds only diagnostics, removal and temperature are untouched on all 21 legs.
+- P4 m2: 2 mm is not adequate for the flat-floor rate (ℓ ≈ 1.6–1.9 mm is under one cell); 1 mm is, within 3 %.
+- P5 m7: the same ordering on Höser. P6 m6: the beam heat-up converges at 1.5625 mm (absorption depth ≫ cell).
+- P7 m8: as in the row; removal under a beam is NOT adequate at 1.5625 mm (volume ratio 0.62 on disk), and whether 0.78 mm is cannot be established here.
+
+### Refuting evidence on disk
+
+`studies/p2_9_face_removal/A3_A6_CHECK.txt:89` (the 2 mm flat rate, span off); `W/face_p2_30c/` (L11's census, the 1 mm legs); `studies/p2_24_melt_vapour/legs/M0` (the beam onset at 1.5625 mm); `studies/p2_25_regime_map/RESULTS.txt` m5 (the five fine twins: the flip at `D2_Q4`, the 0.620); `validation/kant/grimsel_calibration/legs/CAL_2mm`, `CAL_05mm` (an earlier onset pair on the calibration deck).
+
+### What would make this inert, and the witness for each
+
+- A repair on a branch no test reaches → goal 8's clauses are RED on the pre-stage binary.
+- The T_ref twin identical before the fix (T_ref unused on that path) → a1 requires RED old.
+- `OVL` on a step with no overlap → the clause asserts ≥ 100 overlapped cells in its window (the census in Sources).
+- A mesh series whose legs differ in more than the mesh → `mesh.py` prints each series' key diff; only `amr.n_cell`, `timestep`, `amr.max_grid_size`, `amr.plot_int` and (W) `weibull.V0` may differ.
+- The random-flaw comparison read inside its own noise → the seed twin's spread is printed beside every W difference.
+
+### Guardrails
+
+- No input key is renamed or re-defaulted except the vapour keys' retirement; no physics value changes; no deck value changes apart from goal 3's explicit lines and goal 9's removed lines.
+- Stage 4 tunes nothing and decides nothing about V0, the span or R: it reports.
+- No AMR deck; `run_kept.py` is not in the chain (the user's periodic check).
+
+### Commands
+
+```bash
+cd /Users/tzetze20/amr_tools/alamo
+caffeinate -dis bash tests/MMWSpalling/studies/p2_31_fixes_mesh/check.sh 1     # then 2, 3, 4
+# what the driver calls:
+EIGEN=$PWD/ext CPLUS_INCLUDE_PATH=/opt/homebrew/include \
+  LIBRARY_PATH=/opt/homebrew/lib:/opt/homebrew/Cellar/gcc/15.2.0_1/lib/gcc/current make -j8
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness
+/Users/tzetze20/Desktop/code/.venv/bin/python $W/face_gate.py run p2_31a
+/Users/tzetze20/Desktop/code/.venv/bin/python $W/face_gate.py cmp p2_30c p2_31a
+/Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/studies/p2_31_fixes_mesh/mesh.py run
+```
+
+### Claude completion notes
+
+`S/` = `tests/MMWSpalling/studies/p2_31_fixes_mesh/`. Every row as it ran: `S/RESULTS.txt` (stage logs `S/CHECK_<stage>.log`,
+the mesh tables `S/MESH_RESULTS.txt`). Binaries: p2_31a `3f29e987`, p2_31b0 `ba1f6dd5`, p2_31b `296fadf3`, **p2_31 `e705b859`
+ships** (`S/BINARY_*.txt`); the pre-stage binaries the two-sided clauses ran are in `S/bins/` (local, `.gitignore`d).
+Pre-images: `S/src_pre_{1,2,2b,3}/`. Nothing committed.
+
+**Files changed.** `src/Integrator/MMWSpalling.H`; `src/Integrator/MMWSpalling/{FaceRemoval, Parse, ParseRemoval, FaceList,
+Flame, State, Shared, Model, BeamProps, Fields}.H`; `src/Numeric/{MMWBeam.H, Material/{Material, Grimsel, Zhang, Constant,
+Table}.H}`; tests `unit/{interlocks, face_removal, retired_keys}/test`, decks `unit/latent_heat/input` (goal 3's three
+lines), `unit/beam_void/input` (a comment), `extensions/hu_spall_onset_mmwbeam_lefm/test` (reads `regime`);
+`witness/{REFERENCE.md, WHICH_TESTS.md}`; the study `S/` (driver `check.sh` → `stages.py`; `z0.py`, `smoke.py`,
+`decks.py`, `locks.py`, `components.py`, `stage{2a,2b,3}_src.py`, `ovl_search.py`, `mesh.py`, `prune_legs.py`).
+
+| # | measured | result | output |
+|---|---|---|---|
+| z0 | every ledger row resolves; four differently from the wording (declared, none changes a stage): **L9** neither deck sets any `vapor.*` key (includes followed) — goal 9 removes no deck line; **L11** KV_S / HU_S end before their first firing (header-only logs): resolved on the Kant deck's full evaluate-only run (71,424 rows, `h_applied` 0, `n_voided` 0); **L14** H_2's 25 cells are odd under the deck's `blocking_factor` 2 → all three H legs carry `amr.blocking_factor=1`; projected H_05 5–11 min, B_08 9 min; **L4** `unit/latent_heat`'s zhang leg sets the law on its command line and its deck stated 3 of the six keys → three lines added at their present values. L16: every gate leg and live face-list deck lists 16–25,600 top faces on step 1; L17: P2-25's six argv replay rc 0, nothing dropped | PASS | `S/Z0.txt`, `S/SMOKE_Z0.txt` |
+| a1 | 4 warnings, 0 new; the six locks print their 258 lines unchanged; **TREF** new: 1,440 / 1,440 rows, the same rows, T_surf worst rel 1.8e-15, bytes NOT identical (declared restatement: T_ref is also the enthalpy table's zero) — old: 576 / 1,440 rows (RED); **SV** new 32 cells voided, old 0 (RED); **interlocks** N4, Z1, S1, E1 ok new, RED old; twins Z0, E0 ok on both; **retired_keys --run** new all 61 ok, old RED on exactly K31 (restated: the calibration deck is a face-list grimsel deck) | PASS | `S/RESULTS.txt` stage 1, `S/legs/a1_{new,old}` |
+| a2 | `face_p2_30c` vs `p2_31a`: 3,051 files, **0 substantive differences on all 21 legs** (GB_S included); list N: 9 decks, 1,703 files byte-identical | PASS | `witness/face_p2_31a.md5` |
+| a3 | GB_S: 0 event rows on both sides, no NaN, **no component differs** (P2's "diagnostics only" was conservative) | report | stage 1 |
+| b1 | 0 new warnings; locks + exactly 2 declared lines (R13, its mutation); R13 ok, the mutation RED; K61–K63 ok; on the pre-stage binary RED on exactly K62; no deck touched (L9) | PASS | stage 2a |
+| b2 | `p2_31a` vs `p2_31b0` and `p2_30c` vs `p2_31b0`: 0 substantive on 21 legs; list N byte-identical | PASS | `face_p2_31b0.md5` |
+| b3 | L15: `regime_field` has no reader in U/, validation/, W/ → removed; the 19 removal legs' plotfiles lost exactly `regime_field`, every other component FAB by FAB, every thermo column, every CSV identical | PASS | stage 2b |
+| c1 | first run RED: TL45's step from 2.392 s (408 lines, 384 overlapped cells) has no voided cell and no +z own cell crossed by a later line, so both binaries agree (phi 2.9e-18 m) — the window could not see the old rule. `ovl_search.py` replayed the old rule on every 1 mm fixture to 20 s: only TD (3.304 s), BORE (12.3 s), SPH (16.2 s) ever differ, always a voided cell; **no fixture overwrites a +z own cell**. Restated OVL = TL45 to 2.400 s + TD to 3.312 s: new PASS (phi ≤ 6.7e-18 m on 576 columns; thickness exact), old RED (TD's voided cell on two lines off by 2.97e-7 m) | PASS (2nd run) | stage 3, `S/OVL_SEARCH.txt` |
+| c2 | `p2_31b` vs `p2_31`: **0 substantive differences on all 21 legs** (the confinement to L10's set holds vacuously); list N byte-identical | PASS | `witness/face_p2_31.md5` |
+| c3 | census TL45_1 792 cells in 4 steps, SPH_1 10 in 3, BORE_1 1 in 1; plotfile cells moved: 0, 0, 0 | report | stage 3 |
+| m0 | 40 legs rc 0 (the three conditional R*_08 not needed); ledger_err_solid ≤ 8.7e-14, fr_id_remap ≤ 3.5e-15; F0 = P2-9 to the printed digit: 6.6808 / 6.1316 / 6.0267e-4 m/s | PASS | `S/MESH_RESULTS.txt` |
+| m1 | first row 2.648 / 2.440 / 2.380 s (−7.9, −2.5 %); T_surf 845.88 / 846.00 / 845.54 K; ℓ 1.623 / 1.480 / 1.437 mm (−8.8, −2.9 %); every interior column fires by 6 s | prediction holds (T_surf within 0.5 K, time 2.5 %) | m1 |
+| m2 | rate 6.681 / 6.132 / 6.027e-4 m/s (−8.2, −1.7 %); **F ≡ F0** (B never withdraws a firing on this flame); medians T_surf 845.6 / 845.9 / 845.6 K, ℓ 1.94 / 1.65 / 1.51 mm (−15, −8.4 %), h_f 0.777 / 0.659 / 0.604 mm, firing interval 1.224 / 1.064 / 0.994 s (−13, −6.6 %) | prediction holds on the rate; the flake thickness and the interval do not converge (they compensate) | m2 |
+| m3 | 6.1316 vs 6.1312e-4 m/s, −0.006 % | prediction holds | m3 |
+| m4 | Wc first row 2.392 / 2.160 / 2.092 s, column median 2.920 / 2.884 / 2.258 s, rate 6.55 / 6.89 / 6.26e-4 (+5.3, −9.2 %); Wf column median 2.452 / 2.884 / 2.660 s, rate 6.45 / 6.89 / 5.77e-4 (+7.0, −16.3 %); seed spread 0.044 s, 5.6e-6 m/s (0.8 %); Wf / Wc rate 0.985 at 2 mm, 0.921 at 0.5 mm | report: neither V0 converges; differences exceed the seed noise but for Wc's 2 → 1 column median | m4 |
+| m5 | packet metric (plotfile, 5–12 s): TL35 / flat 0.867 / 1.063 / 0.980, TL45 0.454 / 1.016 / 0.969 (1 → 0.5: −7.8, −4.6 %); phase-immune cross-check: TL35 1.068 / 0.988 / 1.010, TL45 1.023 / 0.955 / 0.972 (+2.2, +1.8 %) — the flat plotfile rate over 5–12 s at 1 mm is 8.8 % below its 5–20 s value; BORE / flat 0.797 / 0.841 / 1.004, SPH 0.981 / 0.917; fr_overlap TL45 132 / 840 / 4,320 | prediction fails on the packet's metric, holds (≈ 2 %) on the phase-immune one; curved not converged | m5, `S/M5_PHASE_IMMUNE.txt` |
+| m6 | melt onset 44.8 / 43.2 / 42.3 s (−3.6, −2.1 %); bc_T_peak at 30 s 815 / 842 / 853 K (+3.4, +1.3 %); bc_z_melt at the stop = dz/2 at every cell (one molten cell); bc_T_peak at the stop 2297 / 3209 / 3391 K | prediction holds on the heat-up; the melt depth is sub-cell at all three | m6 |
+| m7 | V(10 s) quarter 1.868 / 1.839 / 1.648e-6 m³ (×4 7.47 / 7.35 / 6.59e-6; −1.6, −10.4 %); V(5 s) −1.0, −9.3 %; depth 8 / 8 / 7 mm; radius at half depth 15.0 / 16.8 / 18.5 mm (+11.8, +10.3 %) | prediction fails (small 2 → 1, large 1 → 0.5) | m7 |
+| m8 | R1_15, R2_15, R24_15 reproduce P2-25 exactly (N 1,010 / 0 / 1,606) → P2-25's 0.78 mm legs stand. Class at 3.125 / 1.5625 / 0.78 mm: D1_Q2 S / S / S; **D2_Q2 S / M / M** (new: flips at the coarse end); D2_Q4 S / S / M; R24_08f (flaw scale held) M, melt 3.33 s = F_D2_Q4. D1_Q2 volume 3.165 / 2.204 / 1.366e-6 m³ (ratios 0.696, 0.620) | prediction holds | m8 |
+| e0 | ADEQUATE at 1 mm: flat rate (±1.7 %, order 2.4), onset time (±2.5 %), onset ℓ (±3.0 %); at 1.5625 mm: beam melt onset (±2.1 %), heat-up T_peak (±1.3 %). Converged to ≤ 0.05 % but flagged not monotone: onset and floor T_surf (changes of tenths of a K). NOT established: flake ℓ / h_f (8.4 %), firing interval (7.0 %), every random-flaw quantity, tilts on the packet's metric, BORE, melt depth (sub-cell), T_peak near vaporisation, Höser volume / depth / radius (10–14 %), the spall volume under the beam | verdict | e0 |
+
+### Implementation takeaways
+
+- **The overlap rule is correct and invisible on the gate.** `Upd::h_line` was read only at a +z line's own cell (phi)
+  and at voided cells (thickness / rates). The gate's 803 overlapped cells are interior crossings; no fixture ever
+  overwrites a +z own cell, so the phi half of the fix has never had an observable effect. The thickness half shows on
+  TD / BORE / SPH only. ⇒ an overlap COUNT is not evidence of an observable difference; `ovl_search.py` replays the old
+  rule from the event log (rows are written in processing order) and finds the steps where it matters.
+- **T_ref is two things**: the reconstruction's reference (fixed: now the start cell's `T_init`) and the enthalpy table's
+  zero (`Table.H`, H(T_ref) = 0). Changing T_ref on a deck shifts every H by a constant, so temperatures move by
+  round-off (T_surf rel 1.8e-15) and byte identity across a T_ref change is impossible.
+- **Deck scans miss command-line keys**: L4's grep found one zhang deck; the zhang law also enters through
+  `unit/latent_heat/test`'s argv. A required-key rule must be checked against the tests' leg argvs too.
+- **The mesh test, what it settles**: the flat-floor RATE is adequate at 1 mm (±1.7 %) while the flake thickness and the
+  firing interval are not (they compensate); onset T_surf is mesh-independent to < 0.5 K; dt 0.008 s is converged
+  (0.006 %). Höser at 1 mm is NOT adequate (volume −10 %, radius +10 % on 1 → 0.5), unlike the flat fixture: a hole is
+  harder than a floor. Under the beam the melt depth is one cell at 0.78 mm 20 s after onset — the melt step needs a
+  finer cell or a sub-cell measure. Random flaws converge under neither V0 (the user's decision).
+- **m5's window**: a 5–12 s plotfile rate is phase-limited at ~1 s firing intervals (flat 1 mm: −8.8 % vs 5–20 s). Use
+  `phase_rate` or a ≥ 15 s window for tilt ratios.
+- **Machine and disk**: a gate run writes 3.3 GB and the disk had 16 GiB free; the intermediate gate directories and the
+  recorded legs' plotfiles were deleted after use (md5 manifests kept; regenerable from `S/bins/`). A game used ~5.5
+  cores for part of the run (wall times ×4, results unaffected — timers are never compared).
+- **Left as found** (outside this packet): `MMWBeam::parsed` is now write-only; the `if (pp.contains("microstructure.nphases"))`
+  wrapper in Parse is always true; `CLAUDE.md`'s gate example still names `p2_30c` (REFERENCE.md now names `p2_31`).
+
+### Review findings
+
+Reviewer, 2026-11-11. Re-derived from the diff and the artefacts, not from the notes. Nothing was rebuilt and no
+leg was re-run: every number below is my own reduction of files already on disk (my own manifest differ, my own
+AMReX plotfile reader — FAB-complete and self-tested: 16 boxes / 36,864 cells on the gate's `fr/TL45_1`, and it
+reports a difference when handed two unlike components — my own event-log and `thermo.dat` reductions, my own
+re-implementation of the fixture's `rate()`, my own replay of the overlap rule, my own deck sweeps).
+
+| # | test | bar | gate/report | MY derived value | read from |
+|---|---|---|---|---|---|
+| z0 | ledger L1–L17; git state; pre-images | every row resolves | gate | **reproduces.** I re-derived 8 rows myself: **L4** 57 live deck files, 1 sets `law = zhang` (zhang_oglesby) and states all six; `unit/latent_heat/test:54` sets it in argv (the takeaway's point). **L5** 16 live face-list decks, **0** with a grimsel phase and `stress_law != grimsel`. **L8** 0 non-comment hits for 14 dead names in `src/` (`ell_q`/`h_line` hits are `cell_q0` and the event-log column). **L9** neither `face_beam` nor `face_vapor` sets ANY `vapor.*` key but `enabled` (includes followed) ⇒ the packet's Sources ⚠ was wrong, the restatement right. **L12** V_cell 8.0e-9/1.0e-9/1.25e-10 m³, 8^(±1/13) = 1.17347/0.85218. **L15** 0 live readers of `regime_field` anywhere (remaining hits: stored outputs, a README row, retired units). **L16** `fl_n_top` on the first STEP row 64–4,096 on all 19 legs that log it; `GB_S`/`KV_S` rc 0. **L17** six argv, 0 retired tokens | `S/Z0.txt`; my sweeps of `tests/MMWSpalling/{unit,validation,extensions}`, `src/`, `W/face_p2_31/*/run/thermo.dat` |
+| a1 | build; locks; goal 8's clauses two-sided | no new warning; locks PASS; each clause PASS new, RED old | gate | **reproduces.** Warnings: 4 in each of the four build logs, **same text**, only a line number moved ⇒ 0 new. Locks: all six (`retired_keys, lateral_flux_lock, buckle_lock, profile_depth, face_heat, face_removal`) import `_src.py` and ran **before** each stage's gate. **TREF new**: 1,440/1,440 rows, every integer column equal, `T_surf` worst rel **1.783e-15**, max \|ΔT_surf\| **1.71e-12 K**; **old**: **576 / 1,440** rows, structure differs ⇒ RED. **SV new**: plotfile `removed` sum **32** = 4·4·2; **old**: **0**, same deck, both rc 0 | `S/legs/a1_{new,old}/{TREF_293,TREF_600,SV_EVAL}`; `S/build_*.log`; `S/locks.py` |
+| a2 | `cmp p2_30c p2_31a`; list N | 20 legs: 0 substantive; list N byte-identical | gate | **reproduces.** My manifest differ: 3,051 files both sides, **0 only-in-either, 19 differing — every one a `thermo.dat`**; all 2,862 plotfile files, all CSVs and all 21 `run.log` byte-identical (GB_S included). End-to-end (`p2_30c` → `p2_31`, where the data survive) the differing thermo columns are exactly **`fr_t_removal`, `fr_t_step`, `fl_t_path`** — timers | `W/face_p2_30c.md5`, `W/face_p2_31a.md5`, `W/face_p2_30c/**/thermo.dat`, `W/face_p2_31/**/thermo.dat` |
+| a3 | `GB_S` | 0 event rows both sides; name every differing component | report | **reproduces, and stronger than P2's prediction.** Both references' `GB_S/run_removal_events.csv` are **header-only (1 line)**; `GB_S` contributes **0** of a2's 19 differing files ⇒ not even a diagnostic moved | `W/face_p2_{30c,31}/GB_S/run_removal_events.csv`; `W/face_p2_31a.md5` |
+| b1 | 2a build; locks + the new `retired_keys` row and its mutation; decks parse | PASS; the mutation RED | gate | **reproduces.** `microstructure.nphases` is refused when absent (`Parse.H:107–110`) ⇒ `microstructure_enabled` was unconditionally true and the seven aborts unreachable — the premise of goal 9, confirmed independently. R13's name test uses `(?<![A-Za-z_])…(?![A-Za-z_])`, so it is not fooled by `cell_q0` as a naive grep is. Log: R13 ok + mutation RED, K61/K62/K63 as specified, pre-stage binary RED on exactly K62 | `src/Integrator/MMWSpalling/Parse.H`; `tests/MMWSpalling/unit/retired_keys/test`; `S/RESULTS.txt` stage 2a |
+| b2 | `cmp p2_30c p2_31b0`; list N | 0 substantive on 21 legs; byte-identical | gate | **reproduces.** My manifest differ `p2_31a` → `p2_31b0`: 3,051 files, **19 differing, all `thermo.dat`**; same against `p2_30c` | `W/face_p2_31a.md5`, `W/face_p2_31b0.md5` |
+| b3 | 2b component audit, then `p2_31b` | every remaining component byte-identical on 21 legs | gate | **reproduces, exhaustively.** My own plotfile reader over **all 182 changed cell plotfiles**: components only in `p2_30c` = `{regime_field}` on **182 of 182**, only in `p2_31` = `{}` on 182 of 182, box sets identical, and **0 plotfiles with any retained component differing** — all 32 kept components byte-identical FAB by FAB. The 1,111 hash differences are exactly 1,092 (182 × `Header`, `Cell_H`, `Cell_D_0000[0-3]`) + 19 timers | `W/face_p2_30c/`, `W/face_p2_31/` (my reader, 36,864 cells per plotfile) |
+| c1 | 3 build; locks; `OVL` two-sided | PASS new; RED old in ≥ 1 cell | gate | **reproduces, and I re-derived the discriminator cell by hand.** `OVL_TD`, step from **3.3040 s**, 8 lines, 9 voided cells, **1** on ≥ 2 lines: cell **(19, 7, 27)**. Lines rebuilt from the event rows myself ⇒ max h = **1.017841764e-03 m**, last writer's h = **1.017544599e-03 m**. New binary's plotted `spall_thickness` = the **max**, \|Δ\| = **0.000e+00**; old binary's = the **last**, \|Δ to max\| = **2.972e-07 m** ⇒ genuinely two-sided. `phi` drop vs Σ`h_phiz`: **6.722e-18 m** on BOTH sides (the phi half never fires here — see DR-1). First attempt's RED is declared and its diagnosis is right | `S/legs/c1_{new,old}/OVL_TD/{run_removal_events.csv,run/0041[34]cell}`; `S/OVL_SEARCH.txt` |
+| c2 | `cmp p2_31b p2_31`; list N | differences confined to L10's set | gate | **reproduces.** My manifest differ: **19 differing files, all `thermo.dat`** — 0 plotfile differences on all 21 legs, so the confinement holds vacuously as claimed. Combined with b3 this closes `p2_30c` → `p2_31` end to end | `W/face_p2_31b.md5`, `W/face_p2_31.md5` |
+| c3 | cells changed per leg | report | report | **reproduces exactly.** `fr_overlap` from the gate's own thermo: `fr/TL45_1` **792 in 4 steps** (max 384), `fr/SPH_1` **10 in 3** (max 6), `fr/BORE_1` **1 in 1** | `W/face_p2_31/fr/*/run/thermo.dat` |
+| m0 | every leg rc 0; ledger closure; `F0` vs P2-9 | all rc 0; `F0` reported | verdict | **reproduces, with one correction.** 40/40 `rc` files read `0`. ⚠ My sweep of **all 40** legs gives max \|`ledger_err_solid`\| = **1.86e-13** (`B_08`; 1.42e-13 on `R24_08f`), not the notes' 8.7e-14 — the m0 table lists only 29 legs (the beam, Höser and regime legs are absent). Still **5× inside the 1e-12 bar**, and it is dimensionless (ROADMAP SR 7 ii), so the row stands. max `fr_id_remap` **3.49e-15** ✓. `F0` from my own `rate()` re-implementation: **6.68080 / 6.13158 / 6.02673e-4 m/s** = P2-9's 6.681/6.132/6.027e-4 | all 40 `S/legs/m/*/{rc,run/thermo.dat}`; `S/legs/m/F0_*/run/{00000,00625,01500,02500}cell` |
+| m1 | onset: time, T_surf, ℓ | report | report | **reproduces.** First row **2.6480 / 2.4400 / 2.3800 s** (−7.86 %, −2.46 %); `T_surf` **845.88 / 845.99 / 845.54 K**; `ell_eff` **1.6228 / 1.4802 / 1.4373 mm** (−8.79 %, −2.90 %). All rows carry `h_applied` 0 and `n_voided` 0 (evaluate-only ✓); 144 / 576 / 2,304 columns fire, all at the first instant | `S/legs/m/O_{2,1,05}/run_removal_events.csv[.gz]` |
+| m2 | flat floor rate and medians | report | report | **reproduces.** Rate **6.68080 / 6.13158 / 6.02673e-4 m/s** (−8.22 %, −1.71 %); **F0 bit-identical to F** at all three cells ⇒ B withdraws nothing on this flame. Medians over applied rows: `T_surf` 845.65/845.84/845.55 K, ℓ **1.936/1.645/1.507 mm** (−15.0 %, −8.4 %), h_f 0.775/0.658/0.603 mm, interval 1.224/1.068/0.996 s (−12.7 %, −6.7 %) | `S/legs/m/F{,0}_*/run/*cell`, `…/run_removal_events.csv` |
+| m3 | `F_1_dt` vs `F_1` | report | report | **reproduces.** 6.131209e-4 vs 6.131584e-4 = **−0.0061 %** | `S/legs/m/F_1_dt/run/*cell` |
+| m4 | random flaws; the seed twin | report | report | **reproduces.** Wc **6.5468 / 6.8938 / 6.2631e-4** (+5.30 %, −9.15 %); Wf **6.4457 / 6.8938 / 5.7693e-4** (+6.95 %, −16.31 %); seed twin \|Δrate\| **5.573e-6 m/s**; Wf/Wc **0.9846** at 2 mm, **0.9212** at 0.5 mm | `S/legs/m/W{c,f}_*/run/*cell` |
+| m5 | tilts and curved vs flat at the same mesh | report | report | **reproduces, and the metric's failure is the metric's.** Flat 5–12 s **6.50697 / 5.59260 / 6.00918e-4** — ⚠ **not monotone in the mesh**; TL35 ratio 0.8669/1.0631/0.9802, TL45 **0.4540/1.0160/0.9689** (−7.80 %, −4.63 % ⇒ prediction fails). I confirmed the cause myself: F_1's 5–12 s rate is **−8.78 %** of its own 5–20 s rate at a ~1.07 s firing interval. The cross-check is P2-9's pre-existing `phase_rate`, not a metric invented here | `S/legs/m/{F,TL35,TL45}_*/run/*cell`; `S/M5_PHASE_IMMUNE.txt` |
+| m6 | beam melt onset and depth | report | report | **reproduces.** Onset **44.8 / 43.2 / 42.3 s** (−3.57 %, −2.08 %); `bc_z_melt` at the stop = **dz/2 exactly** (1.5625e-3 / 7.8125e-4 / 3.90625e-4 m) ⇒ one molten cell at all three; `bc_T_peak` at 30 s **815.161 / 842.461 / 853.493 K** (+3.35 %, +1.31 %), at the stop 2297 / 3209 / **3391 K** (DR-5) | `S/legs/m/B_{3,15,08}/run/thermo.dat` |
+| m7 | Höser volume, depth, radius | report | report | **reproduces.** V(10 s) quarter **1.8680 / 1.8386 / 1.6479e-6 m³** (×4 7.472/7.354/6.592e-6; −1.57 %, −10.37 %); V(5 s) −1.01 %, −9.27 %; depth **8 / 8 / 7 mm**; radius at half depth **15.03 / 16.81 / 18.54 mm** (+11.84 %, +10.29 %). 207 / 1,698 / 12,610 voided cells. Prediction fails in BOTH directions, as the notes say | `S/legs/m/H_{2,1,05}/run_removal_events.csv` |
+| m8 | the regime boundary | report | report | **reproduces exactly, by my own count.** N(h_applied > 0, t ≤ 20 s) and Σh·dx²: `R1_3` 376 / 3.1648e-6, `R1_15` **1010 / 2.2040e-6** (= P2-25's `D1_Q2` to every digit), `R2_3` 96 / 1.1782e-6, `R2_15` **0**, `R24_3` 773 / 7.6719e-6, `R24_15` **1606 / 3.7651e-6** (= P2-25's `D2_Q4`), `R24_08f` **0**. Classes S/S/S, **S/M/M**, S/S/M; volume ratios **0.6965, 0.6199** | `S/legs/m/R*/run_removal_events.csv[.gz]` |
+| e0 | the adequacy table | the stated rule | verdict | **reproduces.** I recomputed every call from my own series. ADEQUATE at 1 mm: flat rate (last change 1.71 %, monotone, shrinking, **order log2(0.5492/0.1049) = 2.39**), onset time (2.46 %), onset ℓ (2.90 %); at 1.5625 mm: beam onset (2.08 %), heat-up T_peak (1.31 %). Non-monotone at ≤ 0.05 %: onset and floor `T_surf`. NOT established: ℓ/h_f (8.4 %), firing interval (**6.6 %** — the notes say 7.0 %), every random-flaw quantity, the tilt packet metric, BORE, melt depth, T_peak near vaporisation, Höser (10–12 %) | my m1–m8 series above |
+
+Nothing in the packet is marked unquotable. Checked against `ROADMAP.md`'s `## Standing rules` and `## Known
+Stale/Important Notes`: SR 3 obeyed (m7 states "quarter" and gives ×4), SR 4 obeyed (`hoeser_stats` walks from the
+line's own `k` by `n_voided`, never `k_top`), SR 7 i obeyed (no thermo column is summed; m7 integrates the event
+log), SR 7 ii obeyed (`ledger_err_solid` carries no unit), SR 1 obeyed (only a run retires a key — four rows added
+to the retired-at-default table and K61–K63 run). Budgets: `ROADMAP.md` hand-written **339/350**, total 485/600;
+this file **383/500**. No Do-Not-Touch path changed; nothing committed.
+
+#### Diff review
+
+| # | hunk / site | class | tag | finding |
+|---|---|---|---|---|
+| 1 | `MMWSpalling.H:103,125,131,205,213` — five `microstructure_enabled` guards flattened | 9 removed checks | ok | authorised by goal 9; the predicate is provably constant (`Parse.H:107` refuses a deck without `nphases`), so each guard was `if (true)` |
+| 2 | `MMWSpalling.H:168–173` — `grimsel.kappa` → `.diffusivity`, `zhang.kappa` → `.conductivity` | 3 units / 2 consistency | ok | the unit trap the rename exists to kill; the diffusivity is still formed here from Zhang's conductivity ÷ ρc_p. 0 remaining `.kappa(` in `src/` (my grep) |
+| 3 | `Material.H:28` — pure virtual `kappa` deleted, header comment rewritten | 2 consistency | ok | no polymorphic caller (L7); `Table::Build` uses `rho/cp/effective_rhocp` only. See DR-6 |
+| 4 | `Grimsel.H:138` `diffusivity()`, `Zhang.H:78` / `Constant.H:51` `conductivity()` | 1 duplication | ok | `none` — no arithmetic copied, only three renames; each comment now states its own unit |
+| 5 | `Grimsel.H:151` `H_of` deleted; `MMWBeam.H:213` `active()` deleted; `Model.H:134` `ell_q` deleted; `Table.H:73,199` four T caches deleted; `Shared.H:20,33` `ElasticConsts::ok` deleted; `State.H:46,156–165,160` members deleted | 9 removed checks / 7 dead fields | ok | every item is on the packet's dead list and proven dead at z0 and by R13's word-boundary source clause; removing `ok` leaves `ElasticConstants()`'s early return and `nu` arithmetic untouched |
+| 6 | `Parse.H:175–185` — four `vapor.*` rows added to the retired-at-default table | 7 keys have readers / 9 | ok | the reader is the table itself; `*` = record-only, `.enabled` pinned to `0`, two-sided at K61/K62/K63. ⚠ the `A_beam`/`T0` finite-and-positive aborts go with them (DR-7) |
+| 7 | `Parse.H:464–473` — `law = zhang` requires all six latent keys | 7 / 6 | ok | `pp.contains` only, so parse order is irrelevant; `zhang_law` is set earlier; the abort names the missing key. `unit/latent_heat/input` gains the three absent keys **at their exact defaults** (`Material.H:52–54`: 1.0e30, 1.0e30, 0.0) ⇒ no physics change, and `list N latent_heat` is byte-identical |
+| 8 | `Parse.H:601–611` — `regime_field` registration deleted | 7 / 2 | ok | the field duplicated `regime` at every write site; 0 live readers (my repo-wide sweep); the one `extensions/` reader was repointed to `regime` |
+| 9 | `Parse.H:850–860` — the `A_beam` default and `vapor_T0 = T_amb` deleted | 4 scope vs source | ok | both fed members nothing read |
+| 10 | `Parse.H:909–940` — seven unreachable `microstructure_enabled` aborts deleted | 9 | ok | listed with their authorising deliverable (goal 9); unreachability confirmed at `Parse.H:107` |
+| 11 | `Parse.H:1023–1026` — the `face_list` ⇒ `robin_form = surface` abort text restated | 11 false comments | ok | the old text claimed F4 keeps the column top on the surface form; the kernel zeroes that term (`Heat.H`), so the new text is the true reason. Pinned two-sided at `interlocks` N4 |
+| 12 | `Parse.H:1027–1038` — NEW abort: a grimsel phase under `stress_law = scalar` on the face list | 2 consistency / 9 | ok | one stiffness per rock; scoped to the face list, the one place the criterion runs. 0 of 16 live face-list decks hit it (my sweep). Two-sided at `interlocks` S1. ⚠ it flips `retired_keys` K31 (DR-8) |
+| 13 | `ParseRemoval.H:94` — `if (!spall_enabled) return;` deleted; `h_spall_n_segments` and `seed_void` now unconditional | 4 scope vs source / 7 | ok | the return was the function's last statement, so nothing else became unconditional; both keys use `query_default` and keep their guards. This is the defect: `seed_void` was silently ignored in evaluate-only mode — SV proves it (32 vs 0 cells, same deck) |
+| 14 | `ParseRemoval.H:150` — `ParseVaporSettings` gutted to `vapor.enabled` | 9 | ok | the three retired keys and the `Parser` compile go together; `vapor_enabled` still parsed and read |
+| 15 | `FaceList.H:191–199` — NEW abort when the FIRST list is empty | 4 / 7 | ok | `tot` is the all-gathered count, so the predicate is rank-independent; the one call site is guarded by `fl_on` (`Heat.H:147`), so the message's `surface_patch.face_list = 1` is always true where it fires; a later empty list stays legal. Two-sided at `interlocks` E1 (`face_beam` ran rc 0 listing nothing before). See DR-2 |
+| 16 | `Flame.H:624` — `bool fl_built` added | 7 | ok | one writer, one reader, both in the same function; no field, no column needed |
+| 17 | `FaceRemoval.H:203–245` — the fresh-cell block gathers `T_init(c)` (stride 3 → 4) and reconstructs from `T0c` | 2 / 13 | **nit** | arithmetic is right (exactly one owner writes each slot, so the `ReduceRealSum` is exact) and the `isfinite ? : T0r` fallback matches the line loop's. **Nit:** this is a second hand-rolled copy of "read `T_init` with the stress's fallback", and the two spell the guard differently — `T_init_mf.size() > lev` here vs `> static_cast<std::size_t>(lev)` at `:614`. ⚠ the *cast* is what produces one of the four standing `-Wsign-compare` warnings; the new site shows the fix |
+| 18 | `FaceRemoval.H:789` `T0l = T0_at_d(0)`, read at `:791, 798, 829, 921, 922` | 2 consistency | ok | **the strongest row in this diff.** `rise_at_d` already used `T0_at_d`, while the normalising rise `Ts − T0r` and `RawSurfaceX`/`ReconFromX` used `phases[0].T_ref` — the profile was measured against one reference and normalised by another, a 527 K gap on `unit/gradient_blind`. All five sites now read one reference; `T0r` survives **only** as the stress's fallback (my grep: `:236, :242, :716, :774, :778` and nowhere else) |
+| 19 | zero-rise guards for goal 1 / L2 | 13 divisions | ok | `RawSurfaceX` returns 0 unless `dT0 > 0 && dT1 > 0 && dT0 > dT1`; `ReconFromX` sets `fac = 1.0` at `x = 0`; `ProfileEFoldDepth` returns NaN on `rise_s <= 0`; `ProfilePeak` NaN on `r_pk <= 0`; `ProfileFallDepth`'s two divisors are positive by its own bracketing. Verified by reading each body |
+| 20 | `FaceRemoval.H:1047` — `Upd::h_line` split into `h_max` and `h_phiz` | 2 consistency / 8 accounting | ok | exactly goal 11. `h_max = max(h)` over the lines through the cell feeds all three thickness/rate consumers (`RoP`, `spall_thickness`, `RoP_spall`, `:1246–1249`); `h_phiz` feeds only the column `phi` shift (`:1235`). The additive books `dH`/`df` are untouched, so no ledger term moves — `ledger_err_solid` ≤ 1.86e-13 on all 40 legs |
+| 21 | `FaceRemoval.H:1145` — `upd[key].h_phiz = h` is an **assignment** | 2 / 6 | ok | safe, but for a reason the comment does not give: `L.dir = fl_faces[q].dir` and a cell has at most one open face per direction, so two +z lines cannot share an own cell. Worth stating. The `OVL` clause SUMS per column across different `k`, which is right because each +z line shifts the whole column by its own h |
+| 22 | `FaceRemoval.H:336, 1041`; `Grimsel.H:242`; `BeamProps.H:107` — comments (the strain hold, the overlap rule, the `T0r` fallback) | 11 false comments | ok | the strain hold is now stated at all three readers the Sources name, each citing `MODEL_CARD.md` §11 item 11, which exists and names the same three. The stale `regime / regime_field` and `ell_q` clauses in touched comments were corrected, not left |
+| 23 | `Model.H:25` — the removed `if` leaves a bare `{ … }` scope block | 11 | **nit** | compiles and changes nothing (the block's declarations were already scoped there); it reads as a mistake and keeps a level of indentation nobody needs |
+| 24 | `unit/face_removal/test` — `--p2_31` (TREF, SV) and `--ovl` | 10 RED on the pre-fix binary / 5 hard-coded | ok | both RED on named pre-fix binaries (`S/bins/pre_1`, `pre_3`), and I reproduced both sides myself. `OVL` cannot pass vacuously: it asserts ≥ 100 overlapped cells AND ≥ 1 cell where the last writer's h differs from the largest. **Nit (class 5):** `H_SPALL_MAX = 0.015` and `dx = 0.024/24` are hard-coded in two places (here and `S/ovl_search.py`), and the line-window rule is re-implemented in Python twice |
+| 25 | `unit/interlocks/test` — N4, Z1, S1, E1 + twins Z0, E0; `MMW_BIN` env | 10 | ok | four new aborts, each with a passing twin, all four RED on `pre_1` and the other 20 legs unchanged. `zhang_without()` rewrites the deck in a temp dir rather than editing it |
+| 26 | `unit/retired_keys/test` — R13 + its mutation, K61–K63, K31 flipped | 10 / 9 | **nit** | R13 is a six-limbed source clause with **one** mutation (re-plant `microstructure_enabled`); a limb such as `virtual Material::kappa` or `ElasticConsts::ok` has no planted counter-example. K31's flip is authorised by goal 4 a, but the assertion it replaced ("the typed scalars ARE accepted under `stress_law = scalar`") is now covered by no leg |
+| 27 | `extensions/hu_spall_onset_mmwbeam_lefm/test` — `regime_field` → `regime` | 2 consistency | ok | the two fields carried the same codes at every write site; this reader is ungated and tolerates absence |
+| 28 | `S/mesh.py`, `S/hoeser_stats`, `S/prune_legs.py` | 5 hard-coded / 12 discriminators | **nit** | the reductions are sound and I reproduced every one. Three reporting nits: the m0 ledger table covers **29 of 40** legs (hence the understated 8.7e-14); the notes' m5 line labels the BORE/SPH ratios "plotfile" when they are event-log volume ratios (`MESH_RESULTS.txt` is explicit); the Höser legs ran `amr.plot_int=-1`, not the packet's "`amr.plot_int` = 1 s" — undeclared, but `plot_int` cannot enter the solution and the event-log volume is exact |
+
+**Tally: 28 rows — 0 `bug`, 0 `risk`-tagged rows, 5 `nit`, 23 `ok`.** Every gating row reproduces on my own
+reduction; no row is tagged `bug`.
+
+#### Verdict: accepted
+
+What I checked, and how:
+
+- **The gate, end to end and exhaustively.** My own manifest differ over all four stage manifests, then my own
+  AMReX plotfile reader (FAB-complete, self-tested) over **every one of the 182 changed cell plotfiles**: the only
+  change anywhere in the 21-leg gate between `face_p2_30c` and `face_p2_31` is `regime_field` removed, with all 32
+  retained components byte-identical FAB by FAB, plus three wall-clock timer columns. a2, b2, b3 and c2 are all
+  backed by that single reduction. ⚠ I had to fix my own reader mid-review (a `^` anchor made `re.match(buf, pos)`
+  stop after the first FAB in each file); the numbers above are from the corrected, 36,864-cell-complete version.
+- **Stage 3's rule, cell by cell.** `S/legs/c1_{new,old}/OVL_TD` survive, so I rebuilt the lines from the event log
+  myself and read the plotfiles directly: cell (19, 7, 27) at 3.3040 s takes the **largest** h on the new binary
+  (Δ = 0 exactly) and the **last writer's** h on the old (Δ = 2.972e-07 m). This is the fix, demonstrated, not
+  asserted.
+- **Stage 1's two repairs, two-sided.** `TREF` 1,440/1,440 rows with `T_surf` agreeing to 1.8e-15 on the new binary
+  against **576 / 1,440** on the old; `SV` 32 voided cells against 0 from the same deck. Both from the kept legs.
+- **The ledger's premises.** I re-derived L4, L5, L8, L9, L12, L15, L16 and L17 from the repository rather than
+  reading `Z0.txt`, and my L9 confirms the implementer corrected a **planner error** (the Sources' claim that
+  `face_beam` and `face_vapor` set `vapor.prescribed_rop.enabled` is false; neither sets any such key).
+- **Every mesh number.** All 19 report/verdict rows reproduce from my own reductions of the 40 legs' event logs,
+  `thermo.dat` and surviving plotfiles, including an independent re-implementation of the fixture's `rate()` that
+  lands on the published 6.68080 / 6.13158 / 6.02673e-4 m/s with the same 16 / 256 / 1600 column counts, and
+  `R1_15`/`R24_15` reproducing P2-25's N and volume **to every digit** — which is itself a strong statement that
+  four builds changed nothing on a beam deck.
+- **Guardrails.** 4 warnings in every build with identical text; the six locks all read through `_src.py` and all
+  ran **before** each stage's gate (closing my P2-30 DR-1); no `ext/ bin/ obj/ build/ compile_commands.json
+  configure LICENSE` path touched; no deck value changed except goal 3's three lines, which I verified sit exactly
+  on the parser's defaults; nothing committed; `REFERENCE.md` records the re-pin with every stage and how to
+  regenerate the deleted intermediates.
+
+Most important substantive finding: **the Höser hole's SHAPE, not just its size, is still moving at 0.5 mm.**
+Volume falls 10.4 % on the last halving while the radius at half depth **rises** 10.3 % and the depth drops a
+cell — the hole gets shallower and wider as the cell shrinks, with no sign of converging. The notes record the
+three numbers and the right verdict ("Höser at 1 mm is NOT adequate"); the sharper statement is that the three
+move in *different directions*, so it is the geometry that is unconverged, and that bears directly on every
+computed-hole-shape claim. The flat fixture's agreement at 1 mm (±1.7 %, order 2.4) does not transfer.
+
+#### Deferred, by name
+
+- **DR-1 — the phi half of the overlap rule has no RED-on-old witness.** `ovl_search.py` replays the old rule over
+  ten 1 mm fixtures to 20 s and finds that **no** fixture ever overwrites a +z line's own cell, so `h_phiz` and the
+  old `h_line` never differ; the two-sided half of `OVL` rides entirely on the thickness. The phi change is correct
+  by construction (one open face per direction per cell ⇒ one +z line per own cell), but it is **unexercised**, and
+  it is the half that could move a production result. A deck whose geometry sends a sideways line through a +z
+  line's own surface cell would take an untested path. Worth a planted-geometry fixture, not another search.
+- **DR-2 — `fl_built` is one bool for all levels.** The empty-first-list abort checks only the first build on the
+  first level that reaches it; on AMR a new level's first (possibly empty) list would skip the check. Inert while
+  `amr.max_level = 0` on every deck, and it should be made per-level when AMR is un-parked.
+- **DR-3 — two places still mis-state the gate reference.** `W/REFERENCE.md`'s `## Current reference` section still
+  leads with "P2-29 … the reference is UNCHANGED — `face_p2_28.md5`" while the live declaration (`face_p2_31.md5`)
+  is appended 310 lines below, and `CLAUDE.md`'s gate example still reads `p2_30c on 2026-11-10`. The implementer
+  declared the second under "Left as found". `CLAUDE.md` is read at startup by every phase, so the next
+  `/implement` will be told to compare against the wrong reference. Planner: fix both, and make the
+  `## Current reference` block hold the newest declaration.
+- **DR-4 — the 2 mm leg of every fixture series is 16 interior columns**, against 256 at 1 mm and 1,600 at 0.5 mm.
+  Every "2 → 1 mm" change quoted in m1, m2, m4 and m5 compares means over very different spatial samples. Benign
+  on a uniform floor (I checked: the strict and interior-only filters give identical rates), but it is not a
+  like-for-like comparison and the 2 mm point should carry that caveat wherever it is quoted.
+- **DR-5 — m6's beam series runs far outside the property tables.** `bc_T_peak` at the stop is 2297 / 3209 /
+  **3391 K**, where the Grimsel strain table has held its 1273.15 K value since 1000 °C (MODEL_CARD §11 item 11)
+  and the rock is past vaporisation. The m6 *heat-up* conclusion (onset within 2.1 %) is below melt and stands; any
+  later reading of these legs above melt does not.
+- **DR-6 — `Material` no longer declares a conductivity at all.** `conductivity()` in Zhang and Constant and
+  `diffusivity()` in Grimsel are now three unrelated non-virtual names. A new law can omit the method and only fail
+  where it is called, and no interface documents which of the two a law owes. A pair of differently-named pure
+  virtuals (`conductivity()` plus an optional `diffusivity()`) would keep the unit fix and the contract.
+- **DR-7 — the retired `vapor.A_beam` / `vapor.T0` lost their validity aborts.** They were finite-and-positive
+  checked before; now a deck setting `vapor.A_beam = -1` runs with a record line, because the table row is `*`. No
+  reader, so no consequence today — but note it in the retirement record so a future revival does not inherit an
+  unchecked key.
+- **DR-8 — `retired_keys` K31 no longer tests what it tested.** Its assertion flipped from "the typed scalars are
+  ACCEPTED under `stress_law = scalar`" to "the pair aborts on the face list". The flip is authorised by goal 4 a,
+  but the accepted side now has no leg anywhere, so a regression that made the typed scalars unparseable would not
+  be caught. One non-face-list leg would restore it.
+- **DR-9 — reporting slips worth correcting at archive time** (none changes a verdict): m0's "ledger_err_solid ≤
+  8.7e-14" is a max over 29 of the 40 legs — the true max is **1.86e-13** (`B_08`), still 5× inside the bar; e0's
+  "firing interval (7.0 %)" is **6.6 %**; the m5 summary line labels the BORE/SPH ratios "plotfile" when they are
+  event-log volume ratios; the Höser legs ran `amr.plot_int=-1`, not the packet's "`amr.plot_int` = 1 s"
+  (undeclared, and harmless — `plot_int` cannot enter the solution, and the event-log volume is exact);
+  `tests/MMWSpalling/README.md:93` still names `regime_field` in the row for the retired `sp_v_n_regime`.

@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""P2-15 (a0) -- THE BUCKLING-CONDITION LOCK (the constraint_ref_lock pattern).
+
+Asserts by source inspection (comments stripped) that `spall.buckle_span` is one key, read once, evaluated by ONE
+helper at ONE site on the face list, refused elsewhere, and fed by the one rock law:
+  B1 the key is parsed ONCE, default 0, BEFORE the sp_weibull early return
+  B2 BuckleRatio is defined once (FaceRemoval.H) and called for ONE decision (o.bk); Removal.H never reads the key.
+     (P2-26 restated: P2-23's blocked-line record added a second, LOG-ONLY call -- br.bk_lb inside if (bk_log),
+     read by nothing but the CSV row -- and this lock was not re-run until P2-26.)
+  B3 span > 0 with face_list = 0 aborts, naming the key
+  B4 a through line's x is its solid run L_av (the fractions R3 reads), times mu; else mu c_f ell_eff
+  B5 the site blocks on !(bk <= 1) and zeroes BOTH fire and through
+  B6 the witnesses and the CSV column exist only under span > 0
+  B7 nu is ElasticConstants().nu and eps_th the law's strain_of (no second nu, no alpha(T) dT)
+Each clause has a MUTATION that must turn it RED; a full revert must turn every clause RED; with --pre <dir>
+(MMWSpalling.H, FaceRemoval.H, Removal.H before P2-15) every clause must be RED.
+Usage: test [--pre <dir>]
+"""
+import os
+import re
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
+
+
+def nc(t):
+    return re.sub(r"//[^\n]*", "", t)
+
+
+def read(d):
+    return (open(os.path.join(d, "MMWSpalling.H")).read(), open(os.path.join(d, "FaceRemoval.H")).read(),
+            open(os.path.join(d, "Removal.H")).read())
+
+
+def clauses(mmw, frm, rem):
+    m, f, r = nc(mmw), nc(frm), nc(rem)
+    out = []
+
+    def need(name, ok):
+        out.append((name, bool(ok)))
+
+    psm = re.search(r"static void ParseSpallationModel\([\s\S]*?\n    \}\n", m)
+    psm = psm.group(0) if psm else ""
+    q = psm.find('pp.query_default("spall.buckle_span", value.sp_buckle_span, 0.0);')
+    e = psm.find("if (value.spallation_model != SpallationModel::SpWeibull) return;")
+    need("B1 the key is parsed ONCE, default 0.0, BEFORE the sp_weibull early return",
+         m.count('"spall.buckle_span"') == 1 and 0 <= q < e)
+
+    need("B2 BuckleRatio is defined once in FaceRemoval.H and called for one decision (o.bk) plus P2-23's log-only "
+         "record (br.bk_lb inside if (bk_log), read only by the CSV row); nothing else defines or calls it, and "
+         "Removal.H never reads sp_buckle_span",
+         len(re.findall(r"static Set::Scalar BuckleRatio\(", f)) == 1
+         and len(re.findall(r"\bBuckleRatio\(", f)) == 3
+         and len(re.findall(r"\bo\.bk = BuckleRatio\(", f)) == 1
+         and re.search(r"if \(bk_log\)\s*\{[^}]*?br\.bk_lb = BuckleRatio\(", f) is not None
+         and len(re.findall(r"\.bk_lb\b", f)) == 2
+         and "BuckleRatio" not in m and "BuckleRatio" not in r
+         and "sp_buckle_span" not in r)
+
+    need("B3 spall.buckle_span > 0 with surface_patch.face_list = 0 aborts, naming the key",
+         re.search(r"if \(value\.sp_buckle_span > 0\.0\)\s*\{\s*if \(!value\.surface_patch\.face_list\)\s*"
+                   r"Util::Abort\(INFO, \"spall\.buckle_span > 0", m) is not None)
+
+    site = re.search(r"if \(bk_on && o\.fire\)\s*\{([\s\S]*?)\n                \}\n", f)
+    sb = site.group(1) if site else ""
+    need("B4 x = mu L_av on a through line (L_av summed from the run's fractions Gl[d*NF+4], the ones R3 reads), "
+         "else mu c_f ell_eff (finite, > 0) or +inf",
+         re.search(r"if \(o\.through\)\s*\{\s*Set::Scalar L_av = 0\.0;\s*for \(int d = 0; d < o\.run; \+\+d\) "
+                   r"L_av \+= Gl\[d \* NF \+ 4\] \* dx;\s*x = L\.mu \* L_av;", sb) is not None
+         and "? L.mu * sp_flake_c_f * ell" in sb and "std::numeric_limits<Set::Scalar>::infinity()" in sb)
+
+    need("B5 the site blocks on !(o.bk <= 1.0) and then zeroes BOTH o.fire and o.through",
+         re.search(r"if \(!\(o\.bk <= 1\.0\)\)\s*\{\s*o\.fire = 0;\s*o\.through = 0;\s*o\.bk_blocked = 1;", sb)
+         is not None)
+
+    reg = re.search(r"if \(value\.sp_buckle_span > 0\.0\)\s*\{([\s\S]*?)\n        \}", m)
+    rb = reg.group(1) if reg else ""
+    need("B6 every bk_* witness is registered inside `if (value.sp_buckle_span > 0.0)` and nowhere else; the CSV "
+         "header and row append bk only under bk_on = sp_buckle_span > 0.0",
+         len(re.findall(r"RegisterIntegratedVariable\(&value\.bk_", m)) == 8
+         and len(re.findall(r"RegisterIntegratedVariable\(&value\.bk_", rb)) == 8
+         and "const bool bk_on = sp_buckle_span > 0.0;" in f
+         and '<< (bk_on ? ",bk" : "")' in f and 'if (bk_on) ofs << "," << o.bk;' in f)
+
+    hb = re.search(r"static Set::Scalar BuckleRatio\([\s\S]*?\n    \}\n", f)
+    hb = hb.group(0) if hb else ""
+    need("B7 nu = ElasticConstants().nu (pNu = ec.nu at the site) and eps_th = law->strain_of(T_s) - "
+         "law->strain_of(T0_s) under a law; no alpha(T)*dT and no second nu",
+         "law ? law->strain_of(T_s) - law->strain_of(T0_s)" in hb
+         and "alpha" not in hb.lower().replace("// ", "") and "phases" not in hb
+         and "BuckleRatio(scan_g, pNu, pB," in sb
+         and "const ElasticConsts ec = ElasticConstants();" in f and "pNu = ec.nu" in f)
+    return out
+
+
+def mut(target, fn):
+    return (target, fn)
+
+
+MUTATIONS = [
+    ("B1", "parse the key after the sp_weibull early return", lambda m, f, r: (
+        m.replace('        pp.query_default("spall.buckle_span", value.sp_buckle_span, 0.0);\n', "", 1).replace(
+            "        if (value.spallation_model != SpallationModel::SpWeibull) return;",
+            "        if (value.spallation_model != SpallationModel::SpWeibull) return;\n"
+            '        pp.query_default("spall.buckle_span", value.sp_buckle_span, 0.0);', 1), f, r)),
+    ("B2", "a second call of BuckleRatio", lambda m, f, r: (
+        m, f.replace("                    ++bk_cnt[0];",
+                     "                    ++bk_cnt[0];\n                    (void) BuckleRatio(scan_g, pNu, pB, 0, 0, 0, 1);"), r)),
+    ("B3", "drop the face_list refusal", lambda m, f, r: (
+        m.replace("            if (!value.surface_patch.face_list)\n                Util::Abort(INFO, \"spall.buckle_span > 0",
+                  "            if (false)\n                Util::Abort(INFO, \"spall.buckle_span > 0"), f, r)),
+    ("B4", "x along the line on a through line (no mu)", lambda m, f, r: (
+        m, f.replace("x = L.mu * L_av;", "x = L_av;"), r)),
+    ("B5", "block without zeroing through", lambda m, f, r: (
+        m, f.replace("                        o.fire = 0;\n                        o.through = 0;\n",
+                     "                        o.fire = 0;\n"), r)),
+    ("B6", "the CSV column on every run", lambda m, f, r: (
+        m, f.replace('<< (bk_on ? ",bk" : "")', '<< ",bk"'), r)),
+    ("B7", "eps_th from alpha(T_s) dT", lambda m, f, r: (
+        m, f.replace("law ? law->strain_of(T_s) - law->strain_of(T0_s)",
+                     "law ? law->alpha(T_s) * (T_s - T0_s)"), r)),
+]
+
+
+def main():
+    pre = sys.argv[sys.argv.index("--pre") + 1] if "--pre" in sys.argv else None
+    # P2-18 A3: the helpers both paths call moved from Removal.H into Shared.H; `rem` is the
+    # UNION of the two, so B2's "nothing else defines or calls / never reads" covers both files
+    REM = _src.SLICE_PREFIX + "Removal.H"
+    mmw, frm, rem = (_src.header(), _src.read(_src.SLICE_PREFIX + "FaceRemoval.H"),
+                     (_src.read(REM) if _src.exists(REM) else "") + "\n" + _src.read(_src.SLICE_PREFIX + "Shared.H"))
+    bad = 0
+    print("P2-15 (a0) -- THE BUCKLING-CONDITION LOCK")
+    print("=" * 84)
+    print("POST-CHANGE source (must be GREEN):")
+    res = clauses(mmw, frm, rem)
+    for nm, ok in res:
+        print("  %s  %s" % ("ok  " if ok else "FAIL", nm))
+        bad += 0 if ok else 1
+    print("\nMUTATION CONTROLS (each must turn its own clause RED):")
+    m_all, f_all, r_all = mmw, frm, rem
+    for tgt, label, fn in MUTATIONS:
+        m2, f2, r2 = fn(mmw, frm, rem)
+        changed = (m2, f2, r2) != (mmw, frm, rem)
+        rr = dict((k.split()[0], v) for k, v in clauses(m2, f2, r2))
+        was = dict((k.split()[0], v) for k, v in res).get(tgt, False)
+        ok = changed and was and not rr.get(tgt, True)
+        print("  %s  %s: %s" % ("ok  " if ok else "FAIL", label,
+              "source unchanged" if not changed else (tgt + (" goes RED" if not rr.get(tgt, True) else " STAYS GREEN"))))
+        bad += 0 if ok else 1
+        m_all, f_all, r_all = fn(m_all, f_all, r_all)
+    still = [k.split()[0] for k, v in clauses(m_all, f_all, r_all) if v]
+    print("  %s  full revert of every mutation: %s" % ("ok  " if not still else "FAIL",
+          "every clause RED" if not still else "still GREEN: " + ", ".join(still)))
+    bad += 1 if still else 0
+    if pre:
+        pm, pf, pr = read(pre)
+        rp = clauses(pm, pf, pr)
+        print("\nPRE-CHANGE source (%s) -- every clause must be RED:" % pre)
+        for nm, ok in rp:
+            print("  %s  %s" % ("RED " if not ok else "GRN!", nm[:80]))
+        bad += sum(1 for _, ok in rp if ok)
+    print("=" * 84)
+    if bad:
+        print("FAIL: %d check(s)" % bad)
+        return 1
+    print("PASS: one key, one helper, one site on the face list, refused elsewhere, fed by the one rock law --")
+    print("      and each clause is shown to discriminate.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

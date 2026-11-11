@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""P2-28 m4 -- GRIMSEL UNDER HU'S GRANITE-2 RAMP, RE-SCORED on the corrected boundary; buckling on (a RECORD).
+
+Runs input_granite2_lefm: the face list in its EVALUATE-ONLY mode (nothing removed) on Hu's cube, mesh and prescribed
+patch T_B1(t) = 638.22 + 3.74 t, the in-patch top faces holding T_B1 by the half-cell Dirichlet term (P2-28) and that
+T_B1 being the criterion's surface temperature; the rock file's rule in full (the LEFM criterion AND the buckling
+condition, span 12 mm). Two numbers, each beside Hu's measured granite-2 onset 37.0 s / LRST 773.15 K (:73):
+  (m4a) THE CRITERION'S ONSET: the first FLOOR row (class 0) of the buckling log (granite2_buckle_log.csv: every line
+        the criterion fired, written BEFORE the withdrawal, every step: amr.thermo.plot_int = 1) -- t*, T_s = T_B1(t*)
+        at the step's start, its ell_p, x, bk and whether buckling withdrew it.
+        PRE-REGISTERED (P2-27 DR-2, kept): 50-66 s at 826-885 K.
+  (m4b) THE MODEL'S PREDICTION: the first events row (granite2_removal_events.csv: a line that fired AND passed the
+        buckling condition -- the row production would write) -- or none by 120 s.
+        PRE-REGISTERED: NONE by 120 s -- every firing withdrawn (Hu's heated layer, ell_p 6.6-7.9 mm at 37-66 s, is
+        twice any layer that spalled in P2-25, bc_ell_p <= 3.341 mm). A passing row is a FINDING (its ell_p, bk say
+        why); "none" is a model-experiment disagreement to explain (Hu SAW spalling at 37 s), not a bug.
+The test FAILS only if the run fails, the criterion never fires by stop_time (the mechanism inert), or an events row has
+no buckling-log row with blocked = 0 at the same (time, column) (L1b: the withdrawal and the emit disagree).
+⚠ P2-27's site-A record (t* 107.88 s at 1041.7 K) was a PATH artefact (half the boundary conductance, the stress from
+the 3.125 mm cell average): it is printed for contrast only and must not be quoted.
+Usage: test_lefm [--check]      (--check re-reads output_lefm/ without running)
+"""
+import csv
+import os
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input_granite2_lefm")
+OUT = os.path.join(HERE, "output_lefm")
+HU_T, HU_LRST = 37.0, 773.15                  # granite 2, the validation file :73
+BAND_T = (50.0, 66.0)                         # pre-registered (P2-27 DR-2)
+BAND_K = (826.0, 885.0)
+P2_27_ARTEFACT = (107.88, 1041.7)
+
+
+def T_B1(t):
+    return 638.22 + 3.74 * t
+
+
+def rows(name):
+    p = os.path.join(OUT, "granite2_" + name + ".csv")
+    return list(csv.DictReader(open(p))) if os.path.exists(p) else None
+
+
+def f(r, k):
+    return float(r[k])
+
+
+def main():
+    if "--check" not in sys.argv:
+        if os.path.isdir(OUT):
+            shutil.rmtree(OUT)
+        os.makedirs(OUT)
+        argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, DECK]
+        print("Running:", " ".join(argv), flush=True)
+        with open(os.path.join(OUT, "run.log"), "w") as log:
+            rc = subprocess.call(argv, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+        if rc != 0:
+            print("FAIL: the run exited with %d (output_lefm/run.log)" % rc)
+            return 1
+    bk, ev = rows("buckle_log"), rows("removal_events")
+    if bk is None or ev is None:
+        print("FAIL: the buckling log or the event log is missing (output_lefm/granite2_*.csv)")
+        return 1
+    print("P2-28 m4 -- Grimsel under Hu's granite-2 ramp on the face list (evaluate-only; buckling on, span 12 mm)")
+    print("  buckling log: %d rows (%d blocked); event log: %d rows" % (len(bk), sum(int(r["blocked"]) for r in bk),
+                                                                     len(ev)))
+    floor = [r for r in bk if r["class"] == "0"]
+    if not floor:
+        print("FAIL: the criterion never fired on a floor line by the end of the run (the mechanism inert)")
+        return 1
+    a = floor[0]
+    t_a = f(a, "time")
+    same = [r for r in floor if f(r, "time") == t_a]
+    print("\n  (m4a) the criterion's onset: t* = %.2f s (step start), T_s = %.2f K (T_B1(t*) %.2f K); %d floor line(s) "
+          "that step" % (t_a, f(a, "T_surf"), T_B1(t_a), len(same)))
+    print("        ell_p %.3f mm, x %.3f mm, bk %.3f, bk_lb %.3f, blocked %s, score %.4f (first row: col %s,%s)"
+          % (1e3 * f(a, "ell_p"), 1e3 * f(a, "x"), f(a, "bk"), f(a, "bk_lb"), a["blocked"], f(a, "score"),
+             a["col_i"], a["col_j"]))
+    print("        vs Hu granite 2: %.1f s / LRST %.2f K: t* - Hu = %+.1f s, T_s - LRST = %+.1f K"
+          % (HU_T, HU_LRST, t_a - HU_T, f(a, "T_surf") - HU_LRST))
+    ins = BAND_T[0] <= t_a <= BAND_T[1] and BAND_K[0] <= f(a, "T_surf") <= BAND_K[1]
+    print("        pre-registered 50-66 s at 826-885 K: %s" % ("INSIDE" if ins else "OUTSIDE"))
+    nb = sum(int(r["blocked"]) for r in floor)
+    print("        floor rows over the run: %d, withdrawn by buckling %d (%.1f %%); bk range %.3f-%.3f"
+          % (len(floor), nb, 100.0 * nb / len(floor), min(f(r, "bk") for r in floor), max(f(r, "bk") for r in floor)))
+    if ev:
+        e = ev[0]
+        print("\n  (m4b) the model's prediction: FIRST EVENTS ROW at t = %.2f s, T_surf %.2f K, ell_p %.3f mm, bk %s, "
+              "h_line %.3f mm, col %s,%s -- a FINDING (pre-registered: none)" % (
+                  f(e, "time"), f(e, "T_surf"), 1e3 * f(e, "ell_p"), e.get("bk", "-"), 1e3 * f(e, "h_line"),
+                  e["col_i"], e["col_j"]))
+    else:
+        print("\n  (m4b) the model's prediction: NONE by the end of the run -- every firing withdrawn by buckling "
+              "(pre-registered: none). Hu SAW spalling at %.1f s: a model-experiment disagreement to explain." % HU_T)
+    # L1b: every events row has a buckling-log row with blocked = 0 at the same (time, column)
+    passed = {(r["time"], r["col_i"], r["col_j"]) for r in bk if r["blocked"] == "0"}
+    orphan = [r for r in ev if (r["time"], r["col_i"], r["col_j"]) not in passed]
+    print("\n  L1b: %d events rows, %d without a passing buckling-log row at the same (time, column)" % (len(ev),
+                                                                                                    len(orphan)))
+    print("  (contrast only, never quote) P2-27's site-A path artefact: t* %.2f s at %.1f K" % P2_27_ARTEFACT)
+    if orphan:
+        print("FAIL: L1b -- the emit and the withdrawal disagree")
+        return 1
+    # the prescribed face's surface temperature IS the boundary at the logged time (the step's start), on every row
+    lag = max(abs(f(r, "T_surf") - T_B1(f(r, "time"))) for r in floor)
+    print("  the face's T_s vs T_B1 at the logged time, every floor row: max |diff| %.3e K" % lag)
+    if lag > 1.0e-6:
+        print("FAIL: the criterion's T_s on a prescribed face is not T_B1(time) (a one-step lag?)")
+        return 1
+    print("RECORD: m4a t* %.2f s at %.1f K; m4b %s" % (t_a, f(a, "T_surf"),
+                                                     ("first row %.2f s" % f(ev[0], "time")) if ev else "none"))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

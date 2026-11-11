@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/surface_T_recon/input plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_26_closed_switches/ab_legs/unit__surface_T_recon__input__after/run amr.plot_int=1000000000

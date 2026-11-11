@@ -2,37 +2,128 @@
 # Verification of Step 2: enthalpy formulation + Stefan problem.
 #
 # Pass criteria:
-#   - Melt-front position x_m at t = 0.5 within 5% of analytic 2 lambda sqrt(alpha t)
-#     with St = 1, lambda = 0.6201.
+#   - Melt-front position x_m at the last plotfile within 5% of analytic 2 lambda sqrt(alpha t), lambda solving
+#     lambda exp(lambda^2) erf(lambda) = St / sqrt(pi) (St = 1: lambda = 0.6201).
+#   - P2-29: Lambda_L = 0 everywhere at t = 0 (the IC sits on the SOLID side of the sharp plateau).
 #
 # We locate the front as the largest x where Lambda_L crosses 0.5 (i.e. the
-# liquid fraction drops below half). All other thermal params: alpha = 1.
+# liquid fraction drops below half).
+#
+# P2-29: alpha and St are read from the RUN's metadata, so one test scores the old const-alpha deck (`input`:
+# hc.heat.alpha, St = (T_b - T_m)/phase.lh_m, kelvin-free units) and the production-kernel deck (`input_phase`: one
+# constant phase, alpha = kappa/(rho c_p), St = c_p (T_b - T_m)/L_m, T_m 1000 K, sharp band). The Temp range of the
+# last plotfile is printed (the property table spans 200-5000 K).
+#
+# P2-30 (the Table.H sharp-band fix, P2-29): on the phase deck, the liquid region's maximum T stays <= the Dirichlet T_b
+# + 1e-6 K, and H(T) is monotone across the band (cells sorted by T then H: H never falls by more than 1e-6 of its span).
+# Controls: `--plant` raises the MEDIAN-T liquid cell of the run's own T by 5 K (the H(T) check must then FAIL: its T now
+# orders above hotter neighbours with their higher H); `--plant-hot` raises the HOTTEST liquid cell by 6 K (the cap must
+# FAIL: 1094.97 K + 6 K crosses 1100 K, and + 5 K would not).
+#
+# Usage: test [OUTPUT_DIR] [--plant | --plant-hot]   (default: this directory's output/)
 
 import sys
 import os
 import glob
 import math
 
+import numpy as np
 import yt
 
-ALPHA = 1.0
-T_END = 0.5
-LAMBDA_STEFAN = 0.6201           # solves lambda exp(lambda^2) erf(lambda) = 1/sqrt(pi)
 TOL = 0.05                       # 5% tolerance
 
-outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/unit/stefan/output"
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+outdir = args[0] if args else "tests/MMWSpalling/unit/stefan/output"
+PLANT = "--plant" in sys.argv
+PLANT_HOT = "--plant-hot" in sys.argv
 
-x_m_analytic = 2.0 * LAMBDA_STEFAN * math.sqrt(ALPHA * T_END)
 
-# Pick the latest cell-centred plotfile.
+def meta(run):
+    d = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            d[k.strip()] = v.strip()   # the LAST occurrence wins (an argv override follows the deck's value)
+    return d
+
+
+m = meta(outdir)
+T_b = float(m["hc.bc.temp.constant.val.xlo"])
+if "microstructure.phase0.kappa" in m:
+    k, rho, cp = (float(m["microstructure.phase0." + s]) for s in ("kappa", "rho", "Cp"))
+    ALPHA = k / (rho * cp)
+    T_m = float(m["microstructure.phase0.T_m"])
+    St = cp * (T_b - T_m) / float(m["microstructure.phase0.L_m"])
+    src = "one constant phase: kappa %g, rho %g, c_p %g, T_m %g K, L_m %g, fus_width %s" % (
+        k, rho, cp, T_m, float(m["microstructure.phase0.L_m"]), m.get("microstructure.phase0.fus_width", "?"))
+else:
+    ALPHA = float(m["hc.heat.alpha"])
+    T_m = float(m["phase.T_m"])
+    St = (T_b - T_m) / float(m["phase.lh_m"])
+    src = "const-alpha: alpha %g, T_m %g, lh_m %g" % (ALPHA, T_m, float(m["phase.lh_m"]))
+
+# lambda exp(lambda^2) erf(lambda) = St / sqrt(pi): monotone in lambda, bisection
+g = lambda L: L * math.exp(L * L) * math.erf(L) - St / math.sqrt(math.pi)
+lo, hi = 0.0, 3.0
+for _ in range(200):
+    mid = 0.5 * (lo + hi)
+    lo, hi = (mid, hi) if g(mid) < 0.0 else (lo, mid)
+LAMBDA_STEFAN = 0.5 * (lo + hi)
+print(f"from the run's metadata ({src}): alpha {ALPHA:g}, T_b {T_b:g}, St {St:.6f} -> lambda {LAMBDA_STEFAN:.5f}")
+
+# Pick the first and the latest cell-centred plotfile.
 plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
 if not plotfiles:
     print("FAIL: no plotfiles in", outdir)
     sys.exit(1)
+ok = True
+ds0 = yt.load(plotfiles[0])
+LL0 = float(ds0.all_data()["Lambda_L"].max())
+phase_deck = "microstructure.phase0.kappa" in m
+if float(ds0.current_time) == 0.0:
+    # the old const-alpha path tags T = T_m as LIQUID at initialisation (SetPhaseFractionsConstAlpha); the table
+    # path puts H(T_m) at the band's bottom: Lambda_L = 0. Asserted on the phase deck, reported on the old one.
+    print(f"Lambda_L max at t = 0: {LL0:.3e}" + (" (must be 0: the IC on the solid side of the plateau)"
+                                               if phase_deck else " (report: the old path's init tagging)"))
+    if phase_deck and LL0 != 0.0:
+        print("FAIL: Lambda_L > 0 at t = 0")
+        ok = False
 final = plotfiles[-1]
 
 ds = yt.load(final)
-ad = ds.all_data()
+T_END = float(ds.current_time)
+x_m_analytic = 2.0 * LAMBDA_STEFAN * math.sqrt(ALPHA * T_END)
+ad_final = ds.all_data()
+Tv = ad_final["Temp"].to_value()
+print(f"Temp range at t = {T_END:g}: {Tv.min():.4f} .. {Tv.max():.4f}")
+if phase_deck:
+    # P2-30: the sharp band's bookkeeping (Table.H, P2-29): the liquid stays below the wall, and H(T) never decreases
+    Tc = np.array(Tv, dtype=float)
+    Lv = ad_final["Lambda_L"].to_value()
+    Hv = ad_final["H"].to_value()
+    liq = Lv >= 0.5
+    if PLANT or PLANT_HOT:
+        ids = np.where(liq)[0]
+        order = ids[np.argsort(Tc[ids])]
+        i_l = order[-1] if PLANT_HOT else order[ids.size // 2]
+        dT_p = 6.0 if PLANT_HOT else 5.0
+        Tc[i_l] += dT_p
+        print(f"PLANTED: the {'hottest' if PLANT_HOT else 'median-T'} liquid cell ({i_l}) raised {dT_p:g} K to {Tc[i_l]:.4f}")
+    T_lmax = float(Tc[liq].max())
+    if T_lmax > T_b + 1e-6:
+        print(f"FAIL: the liquid region's maximum T {T_lmax:.6f} exceeds the Dirichlet {T_b:g} K + 1e-6 K")
+        ok = False
+    else:
+        print(f"liquid region max T {T_lmax:.6f} <= Dirichlet {T_b:g} K + 1e-6 K")
+    o = np.lexsort((Hv, Tc))
+    drop = np.diff(Hv[o])
+    span = float(Hv.max() - Hv.min())
+    worst = float(drop.min())
+    if worst < -1e-6 * span:
+        print(f"FAIL: H(T) not monotone across the band: largest fall {worst:.4e} (span {span:.4e})")
+        ok = False
+    else:
+        print(f"H(T) monotone over {Hv.size} cells sorted by T: largest fall {worst:.4e} (bar 1e-6 x span {span:.4e})")
 
 # Build a 1D ray along x at the centre of the y,z slab.
 center = ds.domain_center
@@ -57,6 +148,8 @@ print(f"Stefan front position: simulated = {x_m_sim:.4f}, analytic = {x_m_analyt
 
 if err > TOL:
     print(f"FAIL: error {err*100:.2f}% exceeds tolerance {TOL*100:.0f}%.")
+    ok = False
+if not ok:
     sys.exit(1)
 print("PASS")
 sys.exit(0)

@@ -221,7 +221,7 @@ that would have caught it, so never write one that forbids a cheap verification.
      **53 %** of a healthy run's columns. **The exclusion, not the bar, was the defect**,
      and it was measurable at zero compute from a file already on disk.
 6. **Context carries only what is needed to execute**; argument and history go to
-   the daily log and `ARCHIVE_DONE.md`. Keep the packet under 300 lines.
+   the daily log and `ARCHIVE_DONE.md`. Keep the packet under 500 lines (`CLAUDE.md` → Context Budget Rules; raised from 300 by the user, 2026-10-07).
 7. **Re-read the finished packet for INTERNAL CONSISTENCY only** — no deliverable
    contradicting a criterion, no number stated twice, every offline check ordered
    before every long leg, and the status line one sentence. ⚠⚠ **This is a self-check
@@ -232,6 +232,17 @@ that would have caught it, so never write one that forbids a cheap verification.
 8. **Take measurements, not just constants, from where they are consumed.** A number
    derived from a log field must state the field's semantics — one event log's `k_top`
    is the top *before* that removal; reading it as the state *after* is wrong by one cell.
+9. **Every stage that edits `src/` runs the source-reading lock tests before its gate
+   row.** They take seconds, and a lock that pins literal text breaks when that text
+   moves. *(Log 2026-11-10, P2-30: the packet ran the locks after stages 1, 2 and 4b but
+   not 4a; 4a moved text one lock quoted, and it was caught a stage late.)*
+10. **A bar that predicts how much a selection rule will match is measured first.** Run
+   the rule on the current tree and state the count; it costs one command. *(Same log:
+   "at least 400 comment lines" was predicted from a rule that matched 43; the corrected
+   rule's 200–450 then read 81.)*
+11. **A stage that edits an input deck invalidates every later byte-for-byte baseline for
+   that deck.** Name the new baseline in the same packet. *(Same log: a deck's radius
+   changed in stage 3 while stage 4 still compared it with the old output.)*
 
 ## Guardrails for the planner
 

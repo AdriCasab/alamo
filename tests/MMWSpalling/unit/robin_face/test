@@ -11,16 +11,10 @@
 #       * the first-step face/cell flux ratio is 1/(1+Bi), Bi = h dz/(2k) = 6.67;
 #       * the absorbed-energy ratio face/cell (losses off) at t = 20 s is < 1
 #         and matches the model;
-#       * |ledger_err| <= 1e-9 on every thermo row.
-# (b) input_ledger -- Robin (face form) + removal + surface.follow_mask +
-#     energy_ledger on 4 ranks:
-#       * |ledger_err| <= 1e-9 on every thermo row;
-#       * ledger_P_robin > 0 on every row after the first removal (the patch
-#         followed the receding surface; without follow_mask it would switch
-#         off when the domain-top cell voids);
-#       * >= 3 layers removed;
-#       * control run with surface.follow_mask = 0 (3 s): ledger_P_robin == 0
-#         for t >= 2 s (patch stuck on the voided domain top), ledger still closes.
+#       * |ledger_err_raw| <= 1e-9 on every thermo row (P2-28: the column renamed).
+# (b) RETIRED in P2-28 with the column path: input_ledger (Robin face form + removal on the column path + the
+#     follow_mask control) is retired_units/robin_face_ledger/; the ledger on a removal deck is face_feet (e),
+#     face_vapor and face_heat (v); the cell and face forms here stay (no removal).
 #
 # Usage: test            (runs ALAMO, then checks)
 #        test <outdir>   (checks existing outputs under <outdir>)
@@ -267,8 +261,8 @@ for name, (form, L) in FORM_CASES.items():
           f"step {step} (t={t_al:.6g} s): max rel dT = {relT:.2e}, max rel dH = {relH:.2e}, "
           f"T_top ALAMO {T_al[-1]:.6f} K / model {T_py[-1]:.6f} K")
     th = thermo(outdir)
-    lerr = np.max(np.abs(th["ledger_err"]))
-    check(f"a {name} ledger", lerr <= TOL_LEDGER, f"max |ledger_err| = {lerr:.2e}")
+    lerr = np.max(np.abs(th["ledger_err_raw"]))   # P2-28: renamed (nothing is removed here, so it closes)
+    check(f"a {name} ledger", lerr <= TOL_LEDGER, f"max |ledger_err_raw| = {lerr:.2e}")
     E_abs[name] = float(np.sum(H_al)) * DXY * DXY * DZ
 
 Bi = H_FL * DZ / (2.0 * KAPPA)
@@ -286,54 +280,6 @@ r_al = E_abs["form_face_off"] / E_abs["form_cell_off"]
 check("a absorbed energy face/cell (losses off)",
       abs(r_al - r_model) <= 1e-9 * r_model and r_al < 1.0,
       f"ALAMO {r_al:.6f}, model {r_model:.6f} (cell form over-absorbs at Bi = {Bi:.2f})")
-
-print()
-print("=== (b) ledger + follow_mask on a removal run ===")
-outdir = os.path.join(root_out, "ledger")
-if do_run:
-    run("input_ledger", outdir, [])
-th = thermo(outdir)
-t = th["time"]
-lerr = np.abs(th["ledger_err"])
-check("b ledger_err", lerr.size > 1 and np.max(lerr) <= TOL_LEDGER,
-      f"{lerr.size} rows, max |ledger_err| = {np.max(lerr):.2e} (tol {TOL_LEDGER:g}); "
-      f"final E_src = {th['ledger_E_src'][-1]:.4g} J, P_loss = {th['ledger_P_loss'][-1]:.4g} W")
-
-pfs = plotfiles(outdir)
-t_rem = None
-layers = 0
-for step, pf in pfs:
-    ds = yt.load(pf)
-    cg = ds.covering_grid(level=0, left_edge=ds.domain_left_edge, dims=ds.domain_dimensions)
-    rem = np.asarray(cg["removed"]) > 0.5
-    nz = rem.shape[2]
-    solid = ~rem
-    k_top = nz - 1 - np.argmax(solid[:, :, ::-1], axis=2)
-    lay = int(np.min(nz - 1 - k_top))
-    if lay > 0 and t_rem is None:
-        t_rem = float(ds.current_time)
-    layers = lay
-after = (t > (t_rem if t_rem is not None else np.inf))
-p_rob = th["ledger_P_robin"][after]
-check("b patch follows surface", t_rem is not None and p_rob.size > 0 and np.all(p_rob > 0.0),
-      f"first removal seen by t = {t_rem} s; {p_rob.size} later rows, "
-      f"min ledger_P_robin = {np.min(p_rob) if p_rob.size else float('nan'):.4g} W")
-# Negative control: same run with follow_mask = 0 -- the patch stays on the
-# fixed domain top, so once that cell voids the Robin power drops to zero.
-ctrl = os.path.join(root_out, "ledger_nofollow")
-if do_run:
-    run("input_ledger", ctrl, ["surface.follow_mask=0", "stop_time=3.0"])
-thc = thermo(ctrl)
-late = thc["time"] >= 2.0
-check("b control (follow_mask = 0) loses the patch",
-      np.any(late) and np.all(thc["ledger_P_robin"][late] == 0.0)
-      and np.max(np.abs(thc["ledger_err"])) <= TOL_LEDGER,
-      f"ledger_P_robin for t >= 2 s: max {np.max(thc['ledger_P_robin'][late]):.4g} W; "
-      f"max |ledger_err| {np.max(np.abs(thc['ledger_err'])):.2e}")
-miss = th["ledger_surface_missing_cols"]
-print(f"       ledger_surface_missing_cols: max {np.max(miss):g}, mean {np.mean(miss):.3g}")
-check("b removal happened", layers >= NLAYERS_MIN,
-      f"min layers removed over columns at the last plotfile = {layers} (need >= {NLAYERS_MIN})")
 
 print()
 print("PASS" if ok else "FAIL")

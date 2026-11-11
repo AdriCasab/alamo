@@ -1,1 +1,0 @@
-mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/kant/grimsel_calibration/input stop_time=10.0 amr.plot_int=250 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/tree_sweep_0922/witness/face_p2_20/CAL_S/run

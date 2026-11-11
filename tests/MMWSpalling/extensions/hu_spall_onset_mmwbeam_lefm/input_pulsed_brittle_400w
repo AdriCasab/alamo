@@ -1,3 +1,5 @@
+# P2-28 RECORD: this file ran the COLUMN removal path, retired in P2-28 (one removal path, the face list); it now aborts at parse. Kept as the record of its last runs, not run.
+# P2-26 (2026-11-07): `spall.flake_coherence_length = 0.002` deleted from this deck -- the key is retired (census C2). The deleted line was LIVE, so this deck's next run differs from its earlier outputs BY DESIGN.
 #@
 #@ [3d]
 #@ dim=3
@@ -90,7 +92,6 @@ microstructure.phase0.E                 = 75.0e9
 microstructure.phase0.mu                = 34.7e9
 microstructure.phase0.rho               = 2630.0
 microstructure.phase0.Cp                = 750.0
-microstructure.phase0.A_D               = 0.0003
 microstructure.phase0.T_ref             = 280.15
 microstructure.phase0.T_m               = 1510.5
 microstructure.phase0.fus_width         = 200.0
@@ -106,7 +107,6 @@ microstructure.phase1.E                 = 53.0e9
 microstructure.phase1.mu                = 23.5e9
 microstructure.phase1.rho               = 2630.0
 microstructure.phase1.Cp                = 711.0
-microstructure.phase1.A_D               = 0.0003
 microstructure.phase1.T_ref             = 280.15
 microstructure.phase1.T_m               = 1510.5
 microstructure.phase1.fus_width         = 200.0
@@ -122,7 +122,6 @@ microstructure.phase2.E                 = 55.0e9
 microstructure.phase2.mu                = 24.6e9
 microstructure.phase2.rho               = 2540.0
 microstructure.phase2.Cp                = 711.0
-microstructure.phase2.A_D               = 0.0003
 microstructure.phase2.T_ref             = 280.15
 microstructure.phase2.T_m               = 1510.5
 microstructure.phase2.fus_width         = 200.0
@@ -155,7 +154,6 @@ spall.h_spall_max      = 0.015
 # Rock-mechanics cavity-wall coherence: a firing column may recede at most this
 # far below its shallowest neighbour, so the spall cavity is a smooth coherent
 # bowl (bounded wall slope) instead of per-column needles. ~Voronoi grain scale.
-spall.flake_coherence_length = 0.002
 
 # Vapor removal ON. Harmless in the brittle regime (T stays < T_vap), and it
 # keeps the regime-selection path identical to granite2.

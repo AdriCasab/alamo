@@ -1,0 +1,88 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# P2-21 U1: THE COLUMN OPTICAL DEPTH ON A TWO-LAYER COLUMN. The unit/beam fixture (1 m cube, 64 x 64 x 16, kappa 0,
+# no losses, P0 1 W, omega0 0.1, lambda 1e-3, eps_r 1 => R 0), its FIRST step of 0.01 s scored, the top half hot:
+#   T = 1000 K for z >= 0.5, 300 K below (the beam enters at z0 = 1, the domain top)
+#   tan_delta = 0.00015915494309189536 => alpha = 1 1/m EXACTLY in the code's association (MMWBeam.H)
+#   beam.tan_delta_T = 300 1.0  1000 4.0 => alpha_at = 4 1/m above, 1 1/m below
+# The deposition is then the Beer-Lambert integral of a(z) down every column (the Gaussian is captured to
+# e^-200, and alpha is laterally uniform, so every lateral sum is P):
+#   top half    1 - e^-2                = 0.864665
+#   bottom half e^-2 (1 - e^-0.5)       = 0.053250
+#   transmitted e^-2.5                  = 0.082085
+# The OLD per-cell kernel (each cell's own alpha over the whole path above) would put e^-0.5 (1 - e^-0.5) =
+# 0.2387 in the bottom half and 1.10 in total -- an offline number (studies/p2_21_loss_table/Z0.txt).
+# The test (test) runs this deck, its two-equal-entries twin (U2) and unit/beam's own deck (U3).
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/beam_tau/output/U1
+
+timestep  = 0.01
+stop_time = 0.02     # TWO steps: step 1 (T_old = the IC) is scored; the integrator writes no thermo row for the
+                     # final step, so step 2 exists only to write step 1's row (time 0.01)
+
+amr.plot_int        = 1
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 64 64 16
+amr.blocking_factor = 4
+amr.regrid_int      = 100000
+amr.grid_eff        = 1.0
+amr.cell.all = 1
+
+geometry.prob_lo     = 0.0 0.0 0.0
+geometry.prob_hi     = 1.0 1.0 1.0
+geometry.is_periodic = 0 0 0
+
+# Thermoelastic coupling disabled.
+alpha = 0.0 0.0
+
+beam.P0         = 1.0
+beam.omega0     = 0.1
+beam.lambda     = 1.0e-3
+beam.x0         = 0.5
+beam.y0         = 0.5
+beam.z0         = 1.0
+beam.eps_r      = 1.0
+beam.tan_delta  = 0.00015915494309189536   # alpha = 1 1/m by construction (eps_r 1 => R 0); lambda 1.0e-3
+beam.tan_delta_T = 300.0 1.0  1000.0 4.0    # the ratio table: 4x above 1000 K, 1x at 300 K
+
+# HEAT CONDUCTION (kappa = 0 -> source-only test); the two-layer temperature as the IC
+hc.heat.alpha = 0.0
+hc.heat.refinement_threshold = 1.0
+hc.ic.type                 = expression
+hc.ic.expression.coord     = cartesian
+hc.ic.expression.region0   = "300.0+700.0*(z>=0.5)"
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# ELASTICITY MODEL -- present but inert (alpha_thermal = 0 zeroes thermal stress)
+el.interval = 100000
+el.bc.type = constant
+
+el.nmodels = 1
+el.model1.E  = 1.0
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+el.solver.verbose = 0
+el.solver.nriters = 1
+
+el.ref_threshold     = 1.0
+el.eta_ref_threshold = 1.0

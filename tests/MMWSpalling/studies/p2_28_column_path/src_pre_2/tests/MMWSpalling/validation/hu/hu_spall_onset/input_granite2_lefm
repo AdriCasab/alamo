@@ -1,0 +1,117 @@
+# ============================================================================
+# GRIMSEL UNDER HU'S GRANITE-2 RAMP -- the LEFM onset criterion scored on Hu's boundary condition (P2-27),
+# RE-SCORED on the face list's evaluate-only mode with the corrected boundary (P2-28).
+# ============================================================================
+# Hu et al. (validation/hu/hu_thermal_spallation_validation_tests_augmented_vv_framework.txt): a 0.1 m cube at
+# T0 = T_ext = 280.15 K (:38-46), a circular patch of radius 15 mm at (0.05, 0.05) on the top face held at the
+# prescribed temperature T_B1(t) = 638.22 + 3.74 t K (:51); granite 2 spalled at 37.0 s, LRST 773.15 K (:73).
+#
+# ⚠ THIS IS A PREDICTION FOR HU'S BOUNDARY CONDITION, NOT A FIT. Hu's file gives her granite's E, nu, beta and
+# alpha (:17-25) but NO K_Ic and NO flaw, so the only one-rock statement available is the GRIMSEL rock under her
+# ramp: the rock file (its laws, grimsel_table K_Ic, R 0.531, a0 8 um, m 13) and nothing typed here. The rock and
+# the criterion are the calibration's; only the geometry, the mesh and the boundary are Hu's.
+# PRE-REGISTERED (P2-27 m4, ACTIVE_STEP.md): the Grimsel onset band on the face list is 826-885 K (P2-25's base
+# legs; the offline twin 842 K, the Weibull median 849 K), so T_B1(t*) in 826-885 K => t* = 50-66 s, LATER than
+# Hu's 37 s by 13-29 s (the onset is a temperature, flat with the ramp rate). A t* < 37 s or > 80 s is a finding
+# about the rock mismatch or the prescribed-T path, not a bug.
+#
+# THE MECHANISM (P2-28): the FACE LIST in its EVALUATE-ONLY mode (surface_patch.face_list = 1 with spall and vapour
+# off): every listed line is scanned by the production criterion and the buckling condition, nothing is removed. The
+# prescribed patch is carried by the list: each in-patch TOP face holds T_B1(t) by the half-cell Dirichlet term
+# 2 kc (T_B1 - T_c)/dz^2 (corrected in P2-28; the P2-27 run applied half of it), and that face's T_B1(t) IS the
+# criterion's surface temperature (no reconstruction). The stress from the temperature profile (spall.stress_source =
+# local_thermoelastic, el.type = disable). THE FULL RULE: buckling ON (the rock file's 12 mm span; the P2-27
+# override is deleted -- B lives on the face list, where this deck now runs). test_lefm reports (m4a) the criterion's
+# onset = the first floor row of the buckling log (every line the criterion fired, written BEFORE the withdrawal) and
+# (m4b) the model's prediction = the first events row (a line that fired AND passed buckling).
+# ⚠ P2-27's site-A run (t* 107.88 s at 1041.7 K) was a PATH artefact -- the stress from the 3.125 mm cell average at
+# half the boundary conductance, K_Ic at the boundary T: never quote it.
+# Replaces the damage-law input_granite2 / input_sandstone2 / test (retired_validation/hu_damage_law/, the user
+# 2026-11-09, census Q5). Sandstone is not run: Grimsel is a granite.
+
+alamo.program = mmwspalling
+plot_file = tests/MMWSpalling/validation/hu/hu_spall_onset/output_lefm/granite2
+
+FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+
+# --- Hu's cube and mesh: 0.1 m, 32^3 cells of 3.125 mm (the damage-law deck's mesh) ------------------------------
+# dt 0.5 s: the explicit limit at 3.125 mm is dx^2/(6 alpha(280.15 K)) = 0.897 s (Grimsel alpha 1.8146e-6 m^2/s at
+# the cold start), ratio 0.56; a plotfile every 1 s of simulated time. P2-28: on a level with a prescribed top the
+# bound is dx^2/(7 alpha) = 0.769 s (the half-cell Dirichlet face), ratio 0.65; the face list ABORTS above it.
+timestep  = 0.5
+stop_time = 120.0
+amr.plot_int        = 2
+amr.thermo.plot_int = 1       # P2-28: the buckling log is written on thermo steps only -- every step, so the
+                              #   criterion's onset is resolved to one dt (0.5 s)
+amr.max_level       = 0
+amr.n_cell          = 32 32 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+alpha = 0.0 0.0
+
+# --- the start temperature: T_ref = the IC (check_shared iii) ----------------------------------------------------
+microstructure.phase0.T_ref = 280.15
+hc.heat.alpha = 1.8146e-6                  # HC's required parse; unused on the microstructure path
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# --- Hu's boundary: the prescribed patch (surface_patch.mode default prescribed_T), no other loss -----------------
+losses.sigma_SB = 0.0
+losses.h_conv   = 0.0
+losses.T_amb    = 280.15
+surface_patch.enabled = 1
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+surface_patch.radius  = 0.015
+surface_patch.T_expr  = 638.22+3.74*t
+surface_patch.h_conv  = 0.0
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+
+# --- the criterion: the rock file's LEFM rule on the face list, evaluate-only --------------------------------------
+spallation.model         = sp_weibull
+spall.enabled            = 0          # evaluate-only: the criterion runs, nothing is removed
+spall.stress_source      = local_thermoelastic
+spallation.sp.n_segments = 128
+surface_patch.face_list  = 1          # P2-28: the face list (its T_presc top faces carry Hu's boundary)
+surface_patch.robin_form = surface
+surface.follow_mask      = 1
+spall.surface_T          = reconstructed   # the list's form; on a prescribed face T_s IS T_B1(t) (no reconstruction)
+spall.removal_energy     = flake
+spall.removal_events_csv = 1          # (m4b) the model's prediction: lines that fired AND passed buckling
+spall.buckle_log_csv     = 1          # (m4a) the criterion's onset: every fired line, BEFORE the withdrawal
+weibull.enabled = 1
+weibull.seed    = 12345
+weibull.V0      = 3.0517578125e-8          # = the cell volume (3.125 mm)^3 (check_shared iv)
+confining.p     = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

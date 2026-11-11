@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+"""P2-29 stage 3 (c1) -- THE JET ENTHALPY MARCH on the face list (DR-5 gap 1; the retired spec is
+retired_units/jet_enthalpy (b)). Three legs of this directory's deck, one step each, -np 4: jet_dr = 4, 2, 1 mm.
+
+  (1) every bin's logged inlet T_gas (<run>_jet_profile.csv, written at 17 digits) equals an INDEPENDENT
+      recomputation of the march from the run's metadata -- the top-row column centres binned by floor(r/dr), each
+      billing h_eff (T_gas - T_c) dx dy with h_eff = h G/(G + h), G = 2 k/dx (the face Newton's linear root: losses
+      off, a uniform field, so FrFaceFlux takes its fallback), T_gas <- T_gas - P_bin/(m cp) (floored at T_ent): rel
+      <= 1e-9 on every bin, and every bin's column count equal
+  (2) the PLANTED control: the same recomputation with h x 1.01 must MISS the log by more than 1e-9 on some bin (a
+      test that passes it reads its own numbers back)
+  (3) against the continuous solution T = T_ent + (T_noz - T_ent) exp(-pi h_eff r^2 / (4 m cp)) (a quarter disk) at
+      each bin's inner edge, r <= 36 mm: the max error falls at first order as jet_dr halves -- each ratio 1.8-2.2
+Usage: test   (exit 1 on a failed check)"""
+import math
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input")
+OUT = os.path.join(HERE, "output")
+LEGS = [("B4", 0.004), ("B2", 0.002), ("B1", 0.001)]
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def meta(run):
+    d = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            d[k.strip()] = v.strip()
+    return d
+
+
+def profile(path):
+    L = open(path).read().splitlines()
+    h = L[0].split(",")
+    return [dict(zip(h, (float(x) for x in r.split(",")))) for r in L[1:] if r.strip()]
+
+
+def recursion(m, dr, h_scale=1.0):
+    """{bin: (inlet T_gas, n_cols)} -- the march recomputed from the deck's numbers (top row, flat, uniform T)"""
+    nx, ny, _ = (int(x) for x in m["amr.n_cell"].split())
+    lo = [float(x) for x in m["geometry.prob_lo"].split()]
+    hi = [float(x) for x in m["geometry.prob_hi"].split()]
+    dx, dy = (hi[0] - lo[0]) / nx, (hi[1] - lo[1]) / ny
+    x0, y0, R = (float(m["surface_patch." + k]) for k in ("x0", "y0", "radius"))
+    k_c = float(m["microstructure.phase0.kappa"])
+    Tc = float(m["hc.ic.constant.value"])
+    h = float(m["surface_patch.h_expr"]) * h_scale
+    G = 2.0 * k_c / dx
+    he = h * G / (G + h)
+    mcp = float(m["surface_patch.jet_mdot"]) * float(m["surface_patch.jet_cp"])
+    Te, Tn = float(m["surface_patch.jet_T_ent"]), float(m["surface_patch.jet_T_nozzle"])
+    xc = lo[0] + (np.arange(nx) + 0.5) * dx - x0
+    yc = lo[1] + (np.arange(ny) + 0.5) * dy - y0
+    X, Y = np.meshgrid(xc, yc)
+    r = np.sqrt(X * X + Y * Y).ravel()
+    r = r[r * r <= R * R]
+    b = np.floor(r / dr).astype(int)
+    out, T = {}, Tn
+    for kb in range(int(b.max()) + 1):
+        n = int((b == kb).sum())
+        if n == 0:
+            continue
+        out[kb] = (T, n)
+        P = n * he * (T - Tc) * dx * dy
+        avail = mcp * (T - Te)
+        T = Te if P >= avail else T - P / mcp
+    return out, he, mcp, Te, Tn
+
+
+def main():
+    print("P2-29 unit/jet_march -- the jet enthalpy march on the face list")
+    print("=" * 100)
+    if os.path.isdir(OUT):
+        shutil.rmtree(OUT)
+    os.makedirs(OUT)
+    errs = []
+    for tag, dr in LEGS:
+        run = os.path.join(OUT, tag)
+        argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, DECK,
+                "surface_patch.jet_dr=%r" % dr, "plot_file=" + run]
+        r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+        open(run + ".log", "w").write(" ".join(argv) + "\n" + (r.stdout or "") + (r.stderr or ""))
+        need(r.returncode == 0, "%s (jet_dr %g mm) runs (rc %d)" % (tag, dr * 1e3, r.returncode))
+        if r.returncode != 0:
+            continue
+        m = meta(run)
+        rows = profile(run + "_jet_profile.csv")
+        want, he, mcp, Te, Tn = recursion(m, dr)
+        bins = {int(x["bin"]): x for x in rows}
+        worst, cnt_bad = 0.0, []
+        for kb, (T, n) in want.items():
+            got = bins.get(kb)
+            if got is None:
+                cnt_bad.append(kb)
+                continue
+            worst = max(worst, abs(got["T_gas"] - T) / T)
+            if int(got["n_cols"]) != n:
+                cnt_bad.append(kb)
+        need(worst <= 1e-9 and not cnt_bad and set(bins) == set(want),
+             "%s (1) %d bins: inlet T_gas = the recomputed recursion, max rel %.2e (bar 1e-9); column counts %s "
+             "(h_eff %.4f W/m^2K, m cp %.4g W/K; T_gas %.2f -> %.2f K)" % (
+                 tag, len(want), worst, "equal" if not cnt_bad else "DIFFER at bins %s" % cnt_bad[:4], he, mcp,
+                 rows[0]["T_gas"], rows[-1]["T_gas"]))
+        planted, _, _, _, _ = recursion(m, dr, h_scale=1.01)
+        miss = max(abs(bins[kb]["T_gas"] - T) / T for kb, (T, n) in planted.items() if kb in bins)
+        need(miss > 1e-9, "%s (2) planted h x 1.01: the recomputation MISSES the log (max rel %.2e > 1e-9)" % (tag, miss))
+        e = max(abs(bins[kb]["T_gas"] - (Te + (Tn - Te) * math.exp(-math.pi * he * (kb * dr) ** 2 / (4.0 * mcp))))
+                / (Tn - Te) for kb in bins if kb * dr <= 0.036)
+        errs.append(e)
+        print("        %s vs the continuous solution (r <= 36 mm): max error %.4e of the excess" % (tag, e))
+    if len(errs) == 3:
+        rat = [errs[0] / errs[1], errs[1] / errs[2]]
+        need(all(1.8 <= x <= 2.2 for x in rat), "(3) first order as jet_dr halves: error ratios %.3f, %.3f (bar 1.8-2.2)"
+             % tuple(rat))
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

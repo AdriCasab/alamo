@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""P2-23 unit/face_beam -- THE FACE LIST WITHOUT A FLAME. Runs U1 / U2 (and U3 with --bin_pre) -np 4 into output/.
+"""P2-23 unit/face_beam -- THE FACE LIST WITHOUT A FLAME. Runs U1 (and U3 with --bin_pre) -np 4 into output/.
 
   z1 [gate] U1, the thermo row t = 1.0 (step 2; its T_old is the t = 0.5 plotfile 00001cell):
        fl_n_top = 1024 and fl_n_side = 0 (also on the step-1 row t = 0.5); the flame GAIN fl_P_top = 0 (h = 0);
@@ -11,7 +11,7 @@
              G = 2 lambda(T_c)/dz, lambda = 2000/(theta + 563) (the Grimsel law at T_old)
        bar: relative difference <= 1e-6 beyond the %g print (|d| <= 1e-6 |want| + half a unit in the 6th digit);
        the loss non-zero (the hottest top cell >= 310 K at t = 0.5)
-  z1r [report] U1 vs U2 at t = 1 s (00002cell): the H field's max relative difference and the two ledger_P_loss
+  (z1r, U1 vs U2 with the list off, retired in P2-28 with the column path)
   z2 [gate, --bin_pre PATH] U1's deck on that binary exits rc != 0; the message is printed
 Usage: test [--bin_pre PATH]   (exit 1 on a failed gate)
 """
@@ -124,26 +124,7 @@ def main(argv):
          "fl_w on the top %.6f..%.6f; hottest top cell %.2f K at t 0.5)" % (
              got_s, want, (got - want) / want if want else float("nan"), int(main_b.sum()), int(fb.sum()),
              wt.min(), wt.max(), Tt.max()))
-    # z1r
-    # P2-24: vapor.enabled=0 -- the deck (via validation/oglesby/input) turns the face list's vapour rule on, and on the
-    # column path that key would select the OLD column-path front instead; U2 stays P2-23's control
-    rc2, _, d2 = run("U2", ["surface_patch.face_list=0", "spall.buckle_span=0", "spall.buckle_log_csv=0",
-                            "vapor.enabled=0"])
-    need(rc2 == 0, "U2 (U1 + face_list=0, buckle_span=0, buckle_log_csv=0, vapor.enabled=0) runs (rc %d)" % rc2)
-    if rc2 == 0:
-        Fa, _ = grid(os.path.join(d1, "00002cell"), ("H",))
-        Fb, _ = grid(os.path.join(d2, "00002cell"), ("H",))
-        Ha, Hb = Fa["H"], Fb["H"]
-        den = np.maximum(np.abs(Ha), np.abs(Hb))
-        rH = float(np.max(np.where(den > 0, np.abs(Ha - Hb) / np.where(den > 0, den, 1), 0)))
-        dHa = Ha - grid(os.path.join(d1, "00000cell"), ("H",))[0]["H"]
-        dHb = Hb - grid(os.path.join(d2, "00000cell"), ("H",))[0]["H"]
-        mm = np.maximum(np.abs(dHa), np.abs(dHb)) > 0
-        rdH = float(np.max(np.abs(dHa - dHb)[mm] / np.maximum(np.abs(dHa), np.abs(dHb))[mm]))
-        la, lb = float(r2["ledger_P_loss"]), float(row(d2, 1.0)["ledger_P_loss"])
-        print("  z1r (report) U1 vs U2 at t = 1 s: H max rel diff %.2e (of the change since t = 0: %.2e); total loss "
-              "power %.6g vs %.6g W (rel %+.2e) -- the face form at T_s vs the column-top form at T_cell" % (
-                  rH, rdH, la, lb, (la - lb) / lb if lb else float("nan")))
+    # z1r (U1 vs U2, the column-top form) retired in P2-28: U2 ran the list OFF, which now aborts with removal on
     if "--bin_pre" in argv:
         bp = argv[argv.index("--bin_pre") + 1]
         rc3, txt3, _ = run("U3", [], binary=bp)

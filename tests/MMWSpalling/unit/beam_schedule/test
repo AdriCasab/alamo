@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""P2-27 -- THE BEAM SCHEDULE AS A FILE (`beam.schedule.file`), CHECKED AGAINST THE ARRAY FORM IT REPLACES.
+
+`validation/oglesby/input` carried its 159-interval Fig. 34 schedule as two 159-token lines; P2-27 moved them to
+`validation/oglesby/fig34_schedule.txt` (two columns `t_end P`) and made MMWBeam read either form, never both, and
+enforce the promised strictly increasing t_end for both.
+
+  S1 the file form: unit/face_beam/input as it is (FILE = oglesby, schedule.file), 1 s, -np 4
+  S2 the ARRAY form: the same deck through a temporary copy of oglesby whose schedule.file line is replaced by the
+     two arrays written back from fig34_schedule.txt's text -> every plotfile and CSV BYTE-IDENTICAL to S1's, and
+     thermo.dat identical column by column but the wall-clock timers (fr_t_removal, fr_t_step); beam_P_beam equals
+     the first interval's P (the schedule was read, not ignored: P0 = 0 in the deck)
+  S3 a schedule file with two t_end values swapped                -> rc != 0, "t_end must be strictly increasing"
+  S4 the array form with the same swap                            -> rc != 0, the same message (both forms checked)
+  S5 the file form plus beam.schedule.t_end / .P on the command line -> rc != 0, "two forms of one schedule"
+  S6 a schedule file line with three columns                      -> rc != 0, "expected two numbers"
+Usage: test
+"""
+import filecmp
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+T = os.path.join(ROOT, "tests", "MMWSpalling")
+FACE_BEAM = os.path.join(T, "unit", "face_beam", "input")
+OGLESBY = os.path.join(T, "validation", "oglesby", "input")
+SCHED = os.path.join(T, "validation", "oglesby", "fig34_schedule.txt")
+OUT = os.path.join(HERE, "output")
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+SKIP = {"metadata", "argv.sh", "diff.patch"}
+TIMERS = {"fr_t_removal", "fr_t_step", "fl_t_path"}     # wall-clock columns (the face gate never compares them)
+
+
+def pairs():
+    out = []
+    for ln in open(SCHED):
+        s = ln.split("#", 1)[0].split()
+        if s:
+            out.append((s[0], s[1]))
+    return out
+
+
+def deck_pair(sched_lines, tag):
+    """a temporary oglesby + face_beam pair: oglesby's schedule.file line replaced by `sched_lines`"""
+    d = os.path.join(OUT, "decks_" + tag)
+    os.makedirs(d, exist_ok=True)
+    og = [ln for ln in open(OGLESBY).read().split("\n")]
+    i = [k for k, ln in enumerate(og) if re.match(r"\s*beam\.schedule\.file\s*=", ln)]
+    assert len(i) == 1, "oglesby has no beam.schedule.file line"
+    og[i[0]:i[0] + 1] = sched_lines
+    p_og = os.path.join(d, "oglesby_input")
+    open(p_og, "w").write("\n".join(og))
+    fb = [re.sub(r"^FILE = tests/MMWSpalling/validation/oglesby/input\s*$", "FILE = " + p_og, ln)
+          for ln in open(FACE_BEAM).read().split("\n")]
+    assert any(ln == "FILE = " + p_og for ln in fb), "face_beam does not include oglesby"
+    p_fb = os.path.join(d, "face_beam_input")
+    open(p_fb, "w").write("\n".join(fb))
+    return p_fb
+
+
+def run(deck, outdir, extra=(), np_=4):
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    os.makedirs(outdir)
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(np_), BIN, deck, "stop_time=1.0",
+            "plot_file=" + os.path.join(outdir, "run")] + list(extra)
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    txt = ANSI.sub("", (r.stdout or "") + (r.stderr or ""))
+    open(os.path.join(outdir, "run.log"), "w").write(txt)
+    return r.returncode, txt
+
+
+def thermo(p):
+    rows = [ln.rstrip("\n").split("\t") for ln in open(p) if ln.strip()]
+    hdr = [h.strip() for h in rows[0]]
+    return {h: [r[i] for r in rows[1:]] for i, h in enumerate(hdr)}
+
+
+def files(d):
+    out = {}
+    for dp, _, fs in os.walk(d):
+        for f in fs:
+            if f in SKIP or f == "run.log":
+                continue
+            out[os.path.relpath(os.path.join(dp, f), d)] = os.path.join(dp, f)
+    return out
+
+
+def main():
+    bad = 0
+
+    def need(ok, msg):
+        nonlocal bad
+        print("  %s  %s" % ("ok  " if ok else "FAIL", msg))
+        bad += 0 if ok else 1
+
+    if os.path.isdir(OUT):
+        shutil.rmtree(OUT)
+    os.makedirs(OUT)
+    print("P2-27 -- beam.schedule.file vs the array form (unit/face_beam/input, 1 s)")
+    print("=" * 96)
+    pr = pairs()
+    rc1, _ = run(FACE_BEAM, os.path.join(OUT, "S1_file"))
+    arrays = ["beam.schedule.t_end = " + " ".join(a for a, _ in pr), "beam.schedule.P     = " + " ".join(b for _, b in pr)]
+    rc2, _ = run(deck_pair(arrays, "array"), os.path.join(OUT, "S2_array"))
+    A, B = files(os.path.join(OUT, "S1_file")), files(os.path.join(OUT, "S2_array"))
+    def same(r):
+        if r not in A or r not in B:
+            return False
+        if os.path.basename(r) == "thermo.dat":
+            ca, cb = thermo(A[r]), thermo(B[r])
+            return list(ca) == list(cb) and all(ca[h] == cb[h] for h in ca if h not in TIMERS)
+        return filecmp.cmp(A[r], B[r], shallow=False)
+    diff = [r for r in sorted(set(A) | set(B)) if not same(r)]
+    need(rc1 == 0 and rc2 == 0 and A and not diff,
+         "S1/S2 file form == array form (%d pairs): rc %d / %d, %d files, %d differ %s"
+         % (len(pr), rc1, rc2, len(A), len(diff), diff[:3]))
+    th = os.path.join(OUT, "S1_file", "run", "thermo.dat")
+    pb = [float(x) for x in thermo(th).get("beam_P_beam", [])] if os.path.exists(th) else []
+    need(pb and pb[-1] == float(pr[0][1]),
+         "the schedule is READ: beam_P_beam at 1 s = %s W (the first interval's P = %s W; the deck's P0 = 0)"
+         % (pb[-1] if pb else "n/a", pr[0][1]))
+
+    swapped = list(pr)
+    swapped[3], swapped[4] = swapped[4], swapped[3]
+    p_bad = os.path.join(OUT, "swapped_schedule.txt")
+    open(p_bad, "w").write("\n".join("%s %s" % ab for ab in swapped) + "\n")
+    rc, txt = run(deck_pair(["beam.schedule.file = " + p_bad], "swapped_file"), os.path.join(OUT, "S3"))
+    need(rc != 0 and "t_end must be strictly increasing" in txt, "S3 file form with t_end[3], t_end[4] swapped aborts (rc %d)" % rc)
+    arrays_bad = ["beam.schedule.t_end = " + " ".join(a for a, _ in swapped),
+                  "beam.schedule.P     = " + " ".join(b for _, b in swapped)]
+    rc, txt = run(deck_pair(arrays_bad, "swapped_array"), os.path.join(OUT, "S4"))
+    need(rc != 0 and "t_end must be strictly increasing" in txt, "S4 array form with the same swap aborts (rc %d)" % rc)
+    rc, txt = run(FACE_BEAM, os.path.join(OUT, "S5"), ["beam.schedule.t_end=10 20", "beam.schedule.P=1 2"])
+    need(rc != 0 and "two forms of one schedule" in txt, "S5 file form + the arrays on the command line aborts (rc %d)" % rc)
+    p_3 = os.path.join(OUT, "three_columns.txt")
+    open(p_3, "w").write("10 1460\n20 1460 7\n")
+    rc, txt = run(deck_pair(["beam.schedule.file = " + p_3], "three"), os.path.join(OUT, "S6"))
+    need(rc != 0 and "expected two numbers" in txt and "line 2" in txt, "S6 a three-column line aborts naming the line (rc %d)" % rc)
+    print("=" * 96)
+    if bad:
+        print("FAIL: %d check(s)" % bad)
+        return 1
+    print("PASS: the file form reproduces the array form byte for byte, and both forms refuse a non-increasing t_end; "
+          "giving both forms, or a malformed line, aborts.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_29_one_heat_path/bin_1/mmwspalling-3d-g++ tests/MMWSpalling/unit/equilibrium/input_phase plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_29_one_heat_path/legs/fix_new/equilibrium/run

@@ -89,7 +89,6 @@ losses.T_amb  = 293.15
 # unit/face_removal/input's heat source key for key, centred on the full domain.
 surface_patch.enabled                 = 1
 surface_patch.mode                    = convective_flame
-surface_patch.pinned_idle_cycles      = 1.0e9
 surface_patch.x0                      = 0.012
 surface_patch.y0                      = 0.012
 surface_patch.radius                  = 1.0

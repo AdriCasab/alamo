@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""P2-15 -- THE BUCKLING THICKNESS CONDITION on the face list, quick unit (rows b1-b4).
+
+Fixture F (unit/face_removal/input: uniform gas 1866 K, h 700, one 8 um flaw) with spall.buckle_span = 0.015 m
+(a FIXTURE value, not a rock value):
+  F_0 / F_S   1 mm, span off / on: the span must not touch a firing it passes (bk ~ 0.6)          (b1)
+  F_S_k0      1 mm, face_list = 0: must abort naming spall.buckle_span                            (b2)
+  N_0 / N_S   2 mm, h 150, 200 s: N_0 fires on every column, N_S never (bk ~ 3)                  (b1, b3)
+  M2_S / M05_S  2 / 0.5 mm: bk / ell_eff is mesh-free (metres, not cells); the onset equals the d = 0 twins
+               of the P2-9 record (b4; bar restated with the user 2026-11-02, the bk spread is reported)
+Usage: test [--no-run]
+"""
+import csv
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT = os.path.join(ROOT, "tests", "MMWSpalling", "unit", "face_removal", "input")
+OUT = os.path.join(HERE, "output")
+MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+B1 = ["amr.n_cell=24 24 64", "timestep=0.008", "amr.max_grid_size=16", "amr.plot_int=125"]
+B2 = ["amr.n_cell=12 12 32", "timestep=0.008", "amr.max_grid_size=8", "amr.plot_int=125"]
+B05 = ["amr.n_cell=48 48 128", "timestep=0.004", "amr.max_grid_size=32", "amr.plot_int=250"]
+K0, K1 = ["surface_patch.face_list=0"], ["surface_patch.face_list=1"]
+SU = ["spall.buckle_span=0.015"]
+NEG = ["surface_patch.h_expr=150.0", "stop_time=200.0"]
+LEGS = {"F_0": B1 + K1, "F_S": B1 + K1 + SU, "F_S_k0": B1 + K0 + SU,
+        "N_0": B2 + K1 + NEG, "N_S": B2 + K1 + NEG + SU, "M2_S": B2 + K1 + SU, "M05_S": B05 + K1 + SU}
+# the d = 0 twins' S_top on the P2-9 record (unit/face_removal/output/T00_{2,1,05}_k1), printed to 3 decimals
+TWIN = {"M2_S": "845.884", "F_S": "845.995", "M05_S": "845.537"}
+TIMERS = {"fr_t_removal", "fr_t_step", "fl_t_path"}
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg, flush=True)
+    if not ok:
+        FAIL.append(msg)
+
+
+def run(name, toks):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    a = MPI + [BIN, INPUT] + toks + ["plot_file=" + os.path.join(d, "run")]
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join("'%s'" % x if " " in x else x for x in a) + "\n")
+    with open(os.path.join(d, "run.log"), "w") as log:
+        rc = subprocess.call(a, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    open(os.path.join(d, "rc"), "w").write("%d\n" % rc)
+    print("  ran %-7s rc=%d" % (name, rc), flush=True)
+    return rc
+
+
+def events(name):
+    p = os.path.join(OUT, name, "run_removal_events.csv")
+    return list(csv.DictReader(open(p))) if os.path.exists(p) else []
+
+
+def first_top(rows):
+    f = {}
+    for r in rows:
+        if r["dir"] == "5" and float(r["ts_fb"]) == 0.0:
+            f.setdefault((r["col_i"], r["col_j"]), r)
+    return f
+
+
+def thermo(name):
+    L = open(os.path.join(OUT, name, "run", "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    return h, [r.split("\t") for r in L[1:] if r.strip()]
+
+
+def col(name, c):
+    h, rows = thermo(name)
+    return [float(r[h.index(c)]) for r in rows]
+
+
+def main():
+    if "--no-run" not in sys.argv:
+        print("P2-15 face_buckle -- running %d legs (-np 4)" % len(LEGS), flush=True)
+        rcs = {n: run(n, list(t)) for n, t in LEGS.items()}
+    else:
+        rcs = {n: int(open(os.path.join(OUT, n, "rc")).read()) for n in LEGS}
+    for n in LEGS:
+        if n != "F_S_k0":
+            need(rcs[n] == 0, "%s rc 0" % n)
+
+    # ---- b1 the span leaves a firing it passes untouched; it withdraws one it blocks
+    print("\nb1 -- A unchanged where B passes; B withdraws where it blocks")
+    a, b = events("F_0"), events("F_S")
+    shared = [k for k in (a[0].keys() if a else []) if k in (b[0] if b else {})]
+    same = len(a) == len(b) > 0 and all(x[k] == y[k] for x, y in zip(a, b) for k in shared)
+    need(same, "F_S vs F_0: every shared event-log column of every row identical (%d rows, %d columns)"
+         % (len(b), len(shared)))
+    ha, ra = thermo("F_0")
+    hb, rb = thermo("F_S")
+    sh = [c for c in ha if c in hb and c not in TIMERS]
+    tsame = len(ra) == len(rb) and all(x[ha.index(c)] == y[hb.index(c)] for x, y in zip(ra, rb) for c in sh)
+    need(tsame, "F_S vs F_0: every shared non-timer thermo column of every row identical (%d columns)" % len(sh))
+    n0, nS = first_top(events("N_0")), first_top(events("N_S"))
+    need(len(n0) == 144, "N_0 (span off, h 150) fires on every column within 200 s (%d/144)" % len(n0))
+    need(len(nS) == 0 and len(events("N_S")) == 0, "N_S (span on) has no firing in 200 s (%d rows)" % len(events("N_S")))
+
+    # ---- b2 the refusal
+    print("\nb2 -- the key cannot be silently inert on the column path")
+    log = open(os.path.join(OUT, "F_S_k0", "run.log"), errors="replace").read()
+    need(rcs["F_S_k0"] != 0 and "spall.buckle_span" in log,
+         "F_S_k0 (face_list = 0): rc %d, the abort names spall.buckle_span: %s" % (rcs["F_S_k0"], "spall.buckle_span" in log))
+
+    # ---- b3 the witnesses
+    print("\nb3 -- the witnesses mean what they say")
+    ev, bl, inf = sum(col("F_S", "bk_n_eval")), sum(col("F_S", "bk_n_block")), sum(col("F_S", "bk_n_inf"))
+    mp = max(col("F_S", "bk_max_pass"))
+    need(ev == len(b) + bl and bl == 0 and inf == 0,
+         "F_S: bk_n_eval %g = rows %d + bk_n_block %g; bk_n_block 0; bk_n_inf %g" % (ev, len(b), bl, inf))
+    need(0.4 < mp < 0.8, "F_S: 0.4 < bk_max_pass %.4f < 0.8" % mp)
+    bks = [float(r["bk"]) for r in b]
+    need(all(0.0 < x <= 1.0 for x in bks), "F_S: every logged bk in (0, 1] (%.4f-%.4f)" % (min(bks), max(bks)))
+    evN, blN = sum(col("N_S", "bk_n_eval")), sum(col("N_S", "bk_n_block"))
+    need(evN > 0 and blN == evN, "N_S: bk_n_block %g = bk_n_eval %g > 0 (every scan that fired is withdrawn)" % (blN, evN))
+    h0, _ = thermo("F_0")
+    need(not any(c.startswith("bk_") for c in h0) and "bk" not in (a[0] if a else {}),
+         "F_0 (span off): no bk_* thermo column and no bk event column")
+
+    # ---- b4 metres, not cells
+    print("\nb4 -- bk in metres (mesh-free within the skin's own spread); A unmoved on every mesh")
+    # ⚠ THE BAR, restated with the user (2026-11-02). The packet's "median bk spread <= 25 %" read 26.1 %, and its
+    # stated failure meaning (bk in CELLS, which reads x2 / x1/2) is refuted by the invariant below: bk / ell_eff is
+    # C_L c_f / L_span on every mesh. The spread is ell_eff's own mesh dependence (the skin thickens during steady
+    # recession on the coarse mesh); it is REPORTED, all rows and first firings, never barred.
+    med, ratio = {}, {}
+    for n in ("M2_S", "F_S", "M05_S"):
+        rows = events(n)
+        med[n] = float(np.median([float(r["bk"]) for r in rows])) if rows else float("nan")
+        ratio[n] = float(np.median([float(r["bk"]) / float(r["ell_eff"]) for r in rows
+                                    if float(r["ell_eff"]) > 0.0 and float(r["through"]) == 0.0]))
+        ft = first_top(rows)
+        st = sorted(set("%.3f" % float(r["T_surf"]) for r in ft.values()))
+        need(st == [TWIN[n]], "%s: S_top %s equals its d = 0 twin %s K; median bk %.4f (first firings %.4f), "
+             "median ell_eff %.3f mm" % (n, "/".join(st), TWIN[n], med[n],
+                                        float(np.median([float(r["bk"]) for r in ft.values()])),
+                                        1e3 * float(np.median([float(r["ell_eff"]) for r in rows]))))
+    rs = (max(ratio.values()) - min(ratio.values())) / ratio["F_S"]
+    need(rs <= 0.01, "bk / ell_eff = %s 1/m on 2 / 1 / 0.5 mm: spread %.3f %% <= 1 %% -- metres, not cells (a cell "
+         "count would read x2 / x1/2)" % (" / ".join("%.2f" % ratio[n] for n in ("M2_S", "F_S", "M05_S")), 100 * rs))
+    spread = (max(med.values()) - min(med.values())) / med["F_S"]
+    print("  REPORT  median bk spread over 2 / 1 / 0.5 mm: %.1f %% of F_S's (ell_eff's own mesh dependence; the "
+          "packet's 25 %% bar, superseded)" % (100 * spread))
+
+    print("\n" + ("FAIL: %d check(s)" % len(FAIL) if FAIL else "PASS"))
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

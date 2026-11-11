@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+"""P2-16 (a0 source half, a4 run half) -- THE CONSTRAINT DEPTH IS RETIRED, NOT DEFAULTED OFF.
+
+`spallation.sp.constraint_depth` (P2-2e; carried onto the face list in P2-14a) is deleted. `spallation.*` sits
+outside any strict ParmParse scope and ALAMO does not abort on an unused top-level key (standing rule 1), so a
+deleted parse alone would leave every study argv that sets d running SILENTLY with d ignored. The retired-key list
+in MMWSpalling::Parse is the only guard; this test proves it from both sides.
+
+Source half (comments included: a leftover NAME in a comment is a leftover too, as in P2-10's clause):
+  R1 none of the deleted names (sp_cref_d, CrefInterp, CrefTAtDepth, BuildConstraintRefColumns, cref_n_*,
+     T_cref, run_ref, Tref_at, cref_on) appears anywhere in src/
+  R2 the key string appears in src/ exactly ONCE, in the P2-16 retired-key list, and that list runs in Parse
+     before any key is queried
+  R3 its abort names the key (the loop variable) and P2-16
+  R4 P2-10's retired-key list is intact (three probes) and its message unchanged
+  R5 (P2-20) the typed beam absorption is gone: no `alpha_parser` / `alpha_f` identifier anywhere in src/; MMWBeam.H
+     has no parser (no `registerVariables`, no `amrex::Parser`) and no `alpha_expr` / `R` query; it parses
+     beam.eps_r and beam.tan_delta AFTER lambda and forms alpha and R from them; the key strings "beam.alpha_expr"
+     and "beam.R" each appear in src/ exactly ONCE, in the P2-20 list, which runs before the beam parse.
+     (Restated from the packet's "none of alpha_expr ... registerVariables in MMWSpalling.H": seven unrelated
+     parsers there call registerVariables legitimately, and the key string must survive in the abort list.)
+  R6 (P2-21, P2-20 review DR-2) THE ASSOCIATION LOCK: MMWBeam.H forms alpha verbatim as
+     `2.0 * M_PI * std::sqrt(v.eps_r) * (v.tan_delta / v.lambda)` -- the one order in which every beam-ON
+     fixture's tan_delta string reproduces its old typed alpha bit for bit (studies/p2_20_beam_deposition/Z0.txt);
+     an algebraically equal reassociation moves the frozen gate decks. Exactly one `v.alpha = ` assignment.
+  R7 (P2-26, census B3) the four top-level keys of the closed switches retired AT A DEFAULT -- spall.flake_length
+     (twocell), spall.flake_fraction (cf), weibull.size_volume (cell), weibull.V_ref (*) -- each appear in src/
+     exactly ONCE (comments included), as an entry of the retired-at-default table with that value
+  R8 (P2-26, census C2 + C3) the same for spall.surface_normal (0), spall.flake_coherence_length (0),
+     spall.melt_aware (0) and melt.lambda_crit (*). Until P2-27 the "0" was compared as a STRING, so a deck writing
+     0.0 aborted (P2-26 DR-3: 622 record argvs); since P2-27 a one-token number is compared as a double (K14-K16)
+Each clause has a MUTATION that must turn it RED, and the full revert turns every clause RED. With --pre <dir>
+(MMWSpalling.H, Removal.H, FaceRemoval.H, and MMWBeam.H when present, substituted for their src/ copies) the
+clauses named by --red (default R1,R2,R3: P2-16's pre-change copy) must be RED and every other one GREEN; P2-20's
+pre-change copy is checked with --red R5.
+
+Run half (bin/mmwspalling-3d-g++, the gradient_blind fixture, ONE step of 0.008 s, -np 1):
+  K1 + spallation.sp.constraint_depth=0  -> rc != 0, output names the key and P2-16 (the former DEFAULT value,
+     so an abort can only mean "the key is gone", never "the value was refused")
+  K2 + spall.lateral_drive=0             -> rc != 0, output names the key and P2-10 (the old list still works)
+  K3 + beam.alpha_expr=10                -> rc != 0, output names the key and P2-20 (P2-20; the beam is OFF here)
+  K4 + beam.R=0.0                        -> rc != 0, output names the key and P2-20
+  K0 the fixture alone                   -> rc == 0 (or "aborts" would hold for a binary refusing every deck)
+  P2-26 (census B3; the retired-at-default table, P2-18's pattern):
+  K5 + the four B3 keys at their defaults -> rc == 0 (a kept deck naming them at the old default still runs)
+  K6 + spall.flake_length=flux           -> rc != 0, output names the key and P2-26
+  K7 + weibull.size_volume=flux          -> rc != 0, output names the key and P2-26
+  K8 + spall.flake_fraction=weibull      -> rc != 0, output names the key and P2-26
+  K9 + surface_patch.pad_shield_open=0.5 -> rc != 0, the strict surface_patch scope names the key (unparsed)
+  P2-26 (census C2 + C3):
+  K10 + the four C2/C3 keys at their old defaults (0, 0, 0, 0.4) -> rc == 0
+  K11 + spall.surface_normal=1           -> rc != 0, output names the key and P2-26
+  K12 + spall.flake_coherence_length=0.004 -> rc != 0, output names the key and P2-26
+  K13 + spall.melt_aware=1               -> rc != 0, output names the key and P2-26
+  P2-27 (the numeric compare; K12 above is the live value that still aborts):
+  K14 + spall.flake_coherence_length=0.0 -> rc == 0 (0.0 equals the table's "0" as a number; aborted until P2-27)
+  K15 + spall.surface_normal=0.0 and spall.melt_aware=0.0 -> rc == 0
+  K16 + spall.flake_coherence_length="0 0" (TWO tokens) -> rc != 0: only a ONE-token number is compared as a double
+
+Usage: test [--source | --run] [--pre <dir> [--red R5,...]]     (default: both halves)
+"""
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+SRC = os.path.join(ROOT, "src")
+KEY = "spallation.sp.constraint_depth"
+DELETED = re.compile(r"\b(?:sp_cref_d|CrefInterp|CrefTAtDepth|BuildConstraintRefColumns|T_cref|run_ref|"
+                     r"Tref_at|cref_on|cref_on_sp)\b|\bcref_n_\w+")
+SUBST = {"MMWBeam.H": os.path.join("Numeric", "MMWBeam.H"),
+         "MMWSpalling.H": os.path.join("Integrator", "MMWSpalling.H"),
+         "Removal.H": os.path.join("Integrator", "MMWSpalling", "Removal.H"),
+         "FaceRemoval.H": os.path.join("Integrator", "MMWSpalling", "FaceRemoval.H")}
+
+
+def read_src(pre=None):
+    """{relpath under src/: text} for every C++ source; under --pre the three headers come from <pre>"""
+    out = {}
+    for dp, _d, fs in os.walk(SRC):
+        for fn in fs:
+            if fn.endswith((".H", ".h", ".cpp", ".cc")):
+                p = os.path.join(dp, fn)
+                out[os.path.relpath(p, SRC)] = open(p, errors="replace").read()
+    if pre:
+        for fn, rel in SUBST.items():
+            if os.path.exists(os.path.join(pre, fn)):
+                out[rel] = open(os.path.join(pre, fn)).read()
+    return out
+
+
+MMW = SUBST["MMWSpalling.H"]
+# P2-26: the keys retired AT A DEFAULT, per clause (the retired-at-default table, MMWSpalling::Parse)
+P2_26 = {"R7": {"spall.flake_length": "twocell", "spall.flake_fraction": "cf",
+                "weibull.size_volume": "cell", "weibull.V_ref": "*"},
+         "R8": {"spall.surface_normal": "0", "spall.flake_coherence_length": "0",
+                "spall.melt_aware": "0", "melt.lambda_crit": "*"}}
+
+
+def clauses(src):
+    out = []
+
+    def need(name, ok):
+        out.append((name, bool(ok)))
+
+    left = ["%s:%d" % (rel, ln) for rel, t in src.items()
+            for ln, line in enumerate(t.split("\n"), 1) if DELETED.search(line)]
+    need("R1 no deleted constraint-depth name anywhere in src/ (%d line(s)%s)"
+         % (len(left), (": " + ", ".join(left[:4])) if left else ""), not left)
+
+    m = src[MMW]
+    total = sum(t.count(KEY) for t in src.values())
+    body = re.search(r"static void Parse\(MMWSpalling& value, IO::ParmParse& pp\)\s*\{([\s\S]*?)\n    \}\n", m)
+    body = body.group(1) if body else ""
+    lst = re.search(r'for \(const char\* k : \{"%s"\}\)\s*if \(pp\.contains\(k\)\)\s*Util::Abort\(INFO, k,'
+                    % re.escape(KEY), body)
+    first_q = re.search(r"pp\.(?:query|queryclass|select|get|contains\(\"(?!%s))" % re.escape(KEY),
+                        body[:lst.start()] if lst else "")
+    # the P2-10 loop's own `pp.contains(k)` is the only query allowed before it
+    pre_q = [x for x in re.finditer(r"pp\.\w+\(", body[:lst.start()] if lst else "")
+             if not x.group(0).startswith("pp.contains(")]
+    need("R2 the key appears in src/ exactly once, in the P2-16 retired-key list, which runs in Parse before any "
+         "key is queried (%d occurrence(s))" % total,
+         total == 1 and lst is not None and not pre_q and first_q is None)
+
+    msg = re.search(r'for \(const char\* k : \{"%s"\}\)[\s\S]*?remove "\s*"it from the input"\);' % re.escape(KEY), m)
+    need("R3 the abort names the key (the loop variable k) and P2-16",
+         msg is not None and "P2-16" in msg.group(0) and "Util::Abort(INFO, k," in msg.group(0))
+
+    probes = ['"spall.lateral_drive"', '"surface_patch.side_face_flux"', '"surface_patch.jet_wall_march"']
+    need("R4 P2-10's retired-key list is intact (3 probes) and its message unchanged",
+         all(m.count(p) == 1 for p in probes)
+         and 'was retired in P2-10 (the flame wall machinery: "' in m)
+
+    bm = src[SUBST["MMWBeam.H"]]
+    bm_code = "\n".join(l.split("//")[0] for l in bm.split("\n"))
+    idents = sum(len(re.findall(r"\b(?:alpha_parser|alpha_f)\b", t)) for t in src.values())
+    nstr = {k: sum(t.count('"%s"' % k) for t in src.values()) for k in ("beam.alpha_expr", "beam.R")}
+    lst20 = re.search(r'for \(const char\* k : \{"beam\.alpha_expr", "beam\.R"\}\)\s*if \(pp\.contains\(k\)\)'
+                      r'\s*Util::Abort\(INFO, k, " was retired in P2-20', m)
+    i_beam = m.find('pp.queryclass<Numeric::MMWBeam>("beam"')
+    i_lam = bm_code.find('pp.query_default("lambda"')
+    i_eps = bm_code.find('pp.query_default("eps_r"')
+    i_td = bm_code.find('pp.query_default("tan_delta"')
+    i_a = bm_code.find("v.alpha = ")
+    i_r = bm_code.find("v.R = ")
+    need("R5 (P2-20) no alpha_parser/alpha_f in src/ (%d); MMWBeam.H has no parser and no alpha_expr/R query; "
+         "eps_r, tan_delta parsed after lambda, alpha and R formed after both; each key string once (%s), in the "
+         "P2-20 list before the beam parse" % (idents, nstr),
+         idents == 0 and "registerVariables" not in bm_code and "amrex::Parser" not in bm_code
+         and '"alpha_expr"' not in bm_code and 'query_default("R"' not in bm_code
+         and 0 <= i_lam < i_eps < i_td < min(i_a, i_r) and i_a >= 0 and i_r >= 0
+         and nstr == {"beam.alpha_expr": 1, "beam.R": 1} and lst20 is not None and 0 <= lst20.start() < i_beam)
+
+    want = "v.alpha = 2.0 * M_PI * std::sqrt(v.eps_r) * (v.tan_delta / v.lambda);"
+    n_assign = len(re.findall(r"\bv\.alpha\s*=[^=]", bm_code))
+    need("R6 (P2-21) MMWBeam.H forms alpha in the locked association `%s` (%d assignment(s) of v.alpha)"
+         % (want[10:-1], n_assign), bm_code.count(want) == 1 and n_assign == 1)
+
+    tab = re.search(r"static const RetiredAtDefault retired_at_default\[\] = \{([\s\S]*?)\n        \};", m)
+    tab = tab.group(1) if tab else ""
+    for tag, keys in P2_26.items():
+        cnt = {k: sum(t.count(k) for t in src.values()) for k in keys}
+        inn = {k: re.search(r'\{"%s",\s*"%s",' % (re.escape(k), re.escape(v)), tab) is not None
+               for k, v in keys.items()}
+        need("%s (P2-26) each key string appears in src/ exactly once, as its retired-at-default entry with the "
+             "old default (%s)" % (tag, ", ".join("%s %d%s" % (k, cnt[k], "" if inn[k] else " NOT IN TABLE")
+                                                 for k in keys)),
+             all(c == 1 for c in cnt.values()) and all(inn.values()))
+    return out
+
+
+def _mmw(fn):
+    return lambda s: dict(s, **{MMW: fn(s[MMW])})
+
+
+MUTATIONS = [
+    ("R1", "plant the member `Set::Scalar sp_cref_d = 0.0;` back",
+     _mmw(lambda t: t.replace("    Set::Scalar sp_buckle_span = 0.0;",
+                              "    Set::Scalar sp_cref_d = 0.0;\n    Set::Scalar sp_buckle_span = 0.0;", 1))),
+    ("R2", "re-add the parse of the key (a second occurrence, which would run with it read)",
+     _mmw(lambda t: t.replace('        pp.query_default("spall.buckle_span"',
+                              '        { Set::Scalar d0 = 0.0; pp.query_default("%s", d0, 0.0); }\n'
+                              '        pp.query_default("spall.buckle_span"' % KEY, 1))),
+    ("R3", "the message stops naming P2-16",
+     _mmw(lambda t: t.replace(" was retired in P2-16 (the constraint depth", " was retired (the constraint depth", 1))),
+    ("R4", "drop one P2-10 key from its list",
+     _mmw(lambda t: t.replace('                                "spall.lateral_drive",\n', "", 1))),
+    ("R5", "plant the typed-alpha executor `amrex::ParserExecutor<1> alpha_f;` back in MMWBeam.H",
+     lambda s: dict(s, **{SUBST["MMWBeam.H"]: s[SUBST["MMWBeam.H"]].replace(
+         "    std::vector<Set::Scalar> sched_t;", "    amrex::ParserExecutor<1> alpha_f;\n    std::vector<Set::Scalar> sched_t;", 1)})),
+    ("R6", "reassociate alpha to left-to-right `2 pi sqrt(eps_r) tan_delta / lambda` (algebraically equal)",
+     lambda s: dict(s, **{SUBST["MMWBeam.H"]: s[SUBST["MMWBeam.H"]].replace(
+         "std::sqrt(v.eps_r) * (v.tan_delta / v.lambda);", "std::sqrt(v.eps_r) * v.tan_delta / v.lambda;", 1)})),
+    ("R7", "re-add the parse of spall.flake_length (a second occurrence of the key string)",
+     _mmw(lambda t: t.replace('        pp.query_default("spall.flake_c_f"',
+                              '        { std::string fl; pp.query_default("spall.flake_length", fl, std::string("twocell")); }\n'
+                              '        pp.query_default("spall.flake_c_f"', 1))),
+    ("R8", "re-add the parse of spall.melt_aware (a second occurrence of the key string)",
+     _mmw(lambda t: t.replace('        pp.query_default("spall.flake_c_f"',
+                              '        { int mo = 0; pp.query_default("spall.melt_aware", mo, 0); }\n'
+                              '        pp.query_default("spall.flake_c_f"', 1))),
+]
+
+
+def source_half(pre):
+    src = read_src()
+    bad = 0
+    print("SOURCE HALF (a0) -- POST-CHANGE src/ (must be GREEN):")
+    res = clauses(src)
+    for nm, ok in res:
+        print("  %s  %s" % ("ok  " if ok else "FAIL", nm))
+        bad += 0 if ok else 1
+    print("\nMUTATION CONTROLS (each must turn its own clause RED):")
+    s_all = src
+    for tgt, label, fn in MUTATIONS:
+        s2 = fn(src)
+        changed = s2 != src
+        rr = dict((k.split()[0], v) for k, v in clauses(s2))
+        was = dict((k.split()[0], v) for k, v in res).get(tgt, False)
+        ok = changed and was and not rr.get(tgt, True)
+        print("  %s  %s: %s" % ("ok  " if ok else "FAIL", label,
+              "source unchanged" if not changed else (tgt + (" goes RED" if not rr.get(tgt, True) else " STAYS GREEN"))))
+        bad += 0 if ok else 1
+        s_all = fn(s_all)
+    still = [k.split()[0] for k, v in clauses(s_all) if v]
+    print("  %s  full revert of every mutation: %s" % ("ok  " if not still else "FAIL",
+          "every clause RED" if not still else "still GREEN: " + ", ".join(still)))
+    bad += 1 if still else 0
+    if pre:
+        red = (sys.argv[sys.argv.index("--red") + 1] if "--red" in sys.argv else "R1,R2,R3").split(",")
+        rp = clauses(read_src(pre))
+        print("\nPRE-CHANGE headers (%s) -- %s must be RED, every other clause GREEN:" % (pre, ",".join(red)))
+        for nm, ok in rp:
+            want = nm.split()[0] not in red
+            print("  %s  %s" % (("GRN " if ok else "RED ") + ("    " if ok == want else "!!  "), nm[:100]))
+            bad += 0 if ok == want else 1
+    return bad
+
+
+def leg(extra):
+    d = tempfile.mkdtemp(prefix="retkey_")
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "1",
+            os.path.join(ROOT, "bin", "mmwspalling-3d-g++"),
+            os.path.join(ROOT, "tests", "MMWSpalling", "unit", "gradient_blind", "input")] + extra + \
+           ["stop_time=0.008", "plot_file=%s" % os.path.join(d, "run")]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+
+def run_half():
+    bad = 0
+    print("RUN HALF (a4) -- one step of the gradient_blind fixture, -np 1:")
+    for tag, extra, want_abort, names in (
+            ("K1", ["%s=0" % KEY], True, [KEY, "P2-16"]),
+            ("K2", ["spall.lateral_drive=0"], True, ["spall.lateral_drive", "P2-10"]),
+            ("K3", ["beam.alpha_expr=10"], True, ["beam.alpha_expr", "P2-20"]),
+            ("K4", ["beam.R=0.0"], True, ["beam.R", "P2-20"]),
+            ("K0", [], False, []),
+            ("K5", ["spall.flake_length=twocell", "spall.flake_fraction=cf", "weibull.size_volume=cell",
+                    "weibull.V_ref=1.0e-9"], False, []),
+            ("K6", ["spall.flake_length=flux"], True, ["spall.flake_length", "P2-26"]),
+            ("K7", ["weibull.size_volume=flux"], True, ["weibull.size_volume", "P2-26"]),
+            ("K8", ["spall.flake_fraction=weibull"], True, ["spall.flake_fraction", "P2-26"]),
+            ("K9", ["surface_patch.pad_shield_open=0.5"], True, ["surface_patch.pad_shield_open",
+                                                                 "specified but not used"]),
+            ("K10", ["spall.surface_normal=0", "spall.flake_coherence_length=0", "spall.melt_aware=0",
+                     "melt.lambda_crit=0.4"], False, []),
+            ("K11", ["spall.surface_normal=1"], True, ["spall.surface_normal", "P2-26"]),
+            ("K12", ["spall.flake_coherence_length=0.004"], True, ["spall.flake_coherence_length", "P2-26"]),
+            ("K13", ["spall.melt_aware=1"], True, ["spall.melt_aware", "P2-26"]),
+            ("K14", ["spall.flake_coherence_length=0.0"], False, []),
+            ("K15", ["spall.surface_normal=0.0", "spall.melt_aware=0.0"], False, []),
+            ("K16", ["spall.flake_coherence_length=0 0"], True, ["spall.flake_coherence_length", "P2-26"])):
+        rc, txt = leg(extra)
+        named = all(n in txt for n in names)
+        ok = (rc != 0) == want_abort and named
+        print("  %s  %s %-38s rc=%d%s" % ("ok  " if ok else "FAIL", tag, " ".join(extra) or "(fixture alone)", rc,
+              ("  names " + " + ".join(names)) if names and named else
+              ("  ** does not name " + " / ".join(n for n in names if n not in txt)) if names else ""))
+        bad += 0 if ok else 1
+    return bad
+
+
+def main():
+    pre = sys.argv[sys.argv.index("--pre") + 1] if "--pre" in sys.argv else None
+    print("P2-16 -- THE CONSTRAINT DEPTH IS RETIRED")
+    print("=" * 84)
+    bad = 0
+    if "--run" not in sys.argv:
+        bad += source_half(pre)
+    if "--source" not in sys.argv:
+        if "--run" not in sys.argv:
+            print()
+        bad += run_half()
+    print("=" * 84)
+    if bad:
+        print("FAIL: %d check(s)" % bad)
+        return 1
+    print("PASS: the constraint depth (P2-16) and the typed beam absorption (P2-20) are deleted from src/, their keys "
+          "abort naming their packets, P2-10's list still works, alpha's association is locked (P2-21 R6), and "
+          "P2-26's retired-at-default keys are named once each, run at the old default (as a number since P2-27: 0.0 == 0) "
+          "and abort otherwise.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

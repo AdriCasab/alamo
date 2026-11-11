@@ -7,11 +7,99 @@ reference, not a script flag.
 
 ## Current reference
 
-**Tree gate: `p2_18.md5`** (P2-18, 2026-11-05), byte-identical to `p2_16.md5`, which was
-byte-identical to every list back to `p2_2a_r7.md5` (P2-2a was the last re-pin that moved a
-hash: 26 `jet_enthalpy` strip files). The two fixed controls that prove the comparator is live:
-`d2aa.md5` differs in exactly **26** files, `d2t.md5` in **863**. The D2z-1 declaration below is
+**P2-29 (2026-11-10): the reference is UNCHANGED -- `face_p2_28.md5`.** `face_gate.py cmp p2_28 p2_29a` (stage 1, the
+zhang phase law + `Table.H`'s sharp band; `43d87dae…`) and `cmp p2_29a p2_29` (stage 2, the separate heat kernels
+deleted; `ccd15b91…`, `studies/p2_29_one_heat_path/BINARY_2.txt`) both read IDENTICAL (2,010 / 2,010 files; the
+17 differing are thermo wall-clock timers). `face_p2_29a.md5` and `face_p2_29.md5` are kept beside it.
+
+**THE gate is the face gate: `face_p2_28.md5`** (2,010 files, 19 legs) since P2-28 (2026-11-09; binary `sha256
+ee4b6b9b0ed947e2…`, `studies/p2_28_column_path/BINARY_2.txt`). The next packet runs `face_gate.py run <label>` and
+`face_gate.py cmp p2_28 <label>`, plus `face_gate.py rankcheck <label>`. **The tree gate is a RECORD**: P2-28 deleted the
+column removal path (`MMWSpalling/Removal.H`) that most tree legs drove; `hash.sh`, `post_all_par.sh`,
+`guarded_post_all_par.sh` and `p2_9_face_removal/tree_compare.py` carry a record header and are not run. **`p2_27.md5`
+(2,901 paths) is the column era's last list** (`p2_28a.md5`, stage 1, is byte-identical to it); it and every earlier list
+stay on disk.
+
+**P2-28 re-pin, two builds** (`studies/p2_28_column_path/`, `CHAIN.log`):
+- **p2_28a** (stage 1, additive: the prescribed patch and the evaluate-only mode on the face list, the half-cell
+  Dirichlet factor corrected at both sites; `e291bc04…`, `BINARY_1.txt`): tree vs `p2_27` **0 of 2,901 changed**, 0
+  only-in (controls d2aa 1,230 / d2t 1,346); face `cmp p2_27 p2_28a`: the 16 legs IDENTICAL (thermo timers only), **481
+  only-in-new = KV_S 295 + HU_S 157 + GB_S 29** (the three new legs: Kant evaluate-only, Hu prescribed + buckling,
+  gradient_blind on the list).
+- **p2_28** (stage 2, the column path deleted; `ee4b6b9b…`): face vs `p2_28a` read by
+  `studies/p2_28_column_path/audit_components.py face p2_28a p2_28` (**PASS**, `K2b_audit.log`): 2,010 / 2,010 paths, none
+  on one side only; 280 plotfiles = **140 removed-ok** (each lost exactly the column fields it carried, ⊆ {`Sp_field`,
+  `Sp_cluster_id`, `h_spall_field`, `crack_event_count`, `T_surf_field`, `ell_eff_field`}; every kept component
+  bit-identical FAB by FAB, Header and Cell_H min/max of the kept identical) + **140 identical**; 17 `thermo.dat` lose
+  exactly `recon_*` (8), `surf_cols_robin`, `surf_q_mean`, `patch_P_robin` where present, `ledger_err` renamed
+  `ledger_err_raw` with identical values, every other column identical (timers excluded); every CSV identical. The
+  planted mutation (`--mutate`, `Sp_field` left out of the declaration) FAILS on 140 plotfiles. Rankcheck rel 1e-15.
+  ⚠ The packet declared FEET_S's h_col CSV as the one path that leaves; it never existed on the face list (only the
+  column path wrote it), so "nothing on one side only" is the bar met.
+⇒ **the reference becomes `face_p2_28.md5`**; `face_p2_27.md5`, `face_p2_28a.md5`, `p2_27.md5`, `p2_28a.md5` are kept.
+
+*(Superseded by P2-28:)* **Tree gate: `p2_27.md5`** (2,901 paths) and **face gate: `face_p2_27.md5`** (1,529 files) since P2-27 (2026-11-09,
+declared in the P2-27 block below; binary `sha256 27433870a7c28591…`, `studies/p2_27_cleanup/BINARY_5.txt`). The
+controls against `p2_27.md5` read **d2aa 1,230 / d2t 1,346 changed, 270 only in new, 8 only in ref** (P2-27 stage 3
+removed three components from every cell plotfile, so the old 26 / 863 no longer apply).
+
+**P2-27 re-pin, five builds** (`studies/p2_27_cleanup/`, `CHAIN.log`; every stage under its own bar, every bar PASS):
+- **p2_27a** (inputs: numeric retired-key compare, CheckInterlocks, the dt check, beam.schedule.file; `ccfa2baa…`):
+  tree vs `p2_26` **0 of 2,909 changed**, 0 only-in-ref, **270 only-in-new = `unit/jet_d2c/output`** entering the oracle
+  (declared `MOVERS_1_jet_d2c.txt`; its retired legs' stale outputs moved out first); face `cmp p2_24` **IDENTICAL**
+  (M0S now replays its record as written: `face_gate.py`'s DROP lost the two C2 tokens).
+- **p2_27b** (C1a, the damage lineage; `7dc8bde5…`): tree vs `p2_27a` **0 changed, 8 only-in-ref** (`unit/spall_event`,
+  retired; `hash.sh` dropped its two directories), 0 only-in-new; face `cmp p2_24` **IDENTICAL**.
+- **p2_27c** (C1b, D / kappa_eff / k_eff deregistered; `eed9343c…`): tree vs `p2_27b` **1,314 of 2,901 changed = every
+  Cell_D of the 708 CELL plotfiles**; `studies/p2_27_cleanup/audit_components.py` read each component by component:
+  every one lost exactly {D, kappa_eff, k_eff}, every kept component bit-identical, Header and Cell_H min/max of the
+  kept identical; the 708 node plotfiles, every CSV and thermo identical (old outputs archived first:
+  `tree_archive_p2_27b/`). Face: 84 cell plotfiles (336 Cell_D, 168 Header/Cell_H) the same; rankcheck rel 1e-15.
+- **p2_27d** (the six grimsel-inert scalars refused; rev 2 `5b575c85…`, rev 1 `be7bd689…` kept): tree **0 changed**;
+  face vs `p2_27c` **exactly the 70 declared paths** (`MOVERS_4_face_t0.txt`: the t = 0 Cell_D + Cell_H of the 14
+  grimsel legs), fields ⊆ {kappa, beta, E, mu}_phase (the law at the start temperature instead of the typed scalars;
+  `audit_fields.py`); every later plotfile identical. (Its face run also ran the stage-5 FEET legs, already listed:
+  FEET_S aborted on the then-present regime-4 refusal, FEET_0 ran.)
+- **p2_27** (G, the pad clearance on the face list; `27433870…`, ships): tree vs `p2_27d` **0 changed**; face vs
+  `p2_27d`: the 14 old legs and FEET_0 unchanged (timers only), **156 new files = FEET_S** (14 regime-4 rows; FEET_0 0);
+  rankcheck rel 1e-15.
+⇒ **the references become `p2_27.md5` and `face_p2_27.md5`**; every earlier list is kept.
+
+*(Superseded as the current reference by P2-27:)* **Tree gate: `p2_26.md5`** since P2-26 (2026-11-08, declared below); before it **`p2_18.md5`** (P2-18, 2026-11-05),
+byte-identical to `p2_16.md5`, which was byte-identical to every list back to `p2_2a_r7.md5` (P2-2a was the last re-pin
+before P2-26 that moved a hash: 26 `jet_enthalpy` strip files). The two fixed controls that prove the comparator is
+live: `d2aa.md5` differs from `p2_18.md5` in exactly **26** files and `d2t.md5` in **863**; against `p2_26.md5` they read
+**72** and **863** (P2-26's 46 movers overlap d2aa's set nowhere and d2t's everywhere). The D2z-1 declaration below is
 history; its re-pin procedure ("How to re-pin") still applies.
+
+**P2-26 re-pin of the tree list: `p2_26.md5`** (2026-11-08, binary `sha256 e0551036cce9a4cc…`,
+`studies/p2_26_closed_switches/BINARY_2.txt`; the closed-switch sweep, census B1–B3 + C2 + C3). Two builds:
+- **Stage 1** (B1 parse order, B2 text, B3 the pad shield / above-plane pair / `rec_fixed` / flux length and fraction /
+  flux stressed volume; binary `980de09e…`, `BINARY_1.txt`): tree `p2_26a.md5` vs `p2_18.md5` **0 of 2639** (controls 26 /
+  863); face `cmp p2_24 p2_26a` **IDENTICAL**. `p2_26a.md5` is kept.
+- **Stage 2** (C2 `spall.surface_normal` + `spall.flake_coherence_length`, C3 `spall.melt_aware` + `melt.lambda_crit`):
+  `p2_26.md5` vs `p2_18.md5` **46 of 2639 differ, 0 on one side only**, every one inside the 233 paths pre-registered
+  before any edit (`MOVERS_PRE.txt`: `unit/beam_void_closure` 169 + `dev2d` 64), classified path by path against the
+  archived old bytes (`pre2_out/`, hashing to `p2_18`) in `GATE_b1.txt` and field by field in `B1_FIELDS.txt`:
+  - **beam_void_closure (39):** `thermo.dat` loses exactly the column `sn_recession_superseded` (C2's conditional
+    registration) and every shared column is identical on all 201 rows; 38 cell-plotfile fabs (steps 2000–20000, fabs
+    2 and 3 of 4) differ.
+  - **dev2d (7):** the cell-plotfile fab 0 of steps 8000–56000. dev2d writes no `thermo.dat` and no event log.
+  - **The moved FIELDS** are only the column scan's thickness reports: `h_spall_field` (up to 0.34 mm of a 1 mm cell:
+    the scan ran in the surface-normal frame, z = s·dz·cos θ; now vertical) and, in one cell of beam_void_closure's step
+    5000 plotfile, `spall_thickness` / `RoP_spall` (h_col/cos θ → h_col, 0.8 %). **`removed`, `phi`, `Temp`, `H` are
+    identical in every plotfile**: the removal is whole-cell (one dz per firing) whatever the scan reports. Node plotfiles
+    and the t = 0 plotfiles do not move.
+  - **C3 moved nothing**, as pre-registered: no path of the six melt-aware gate tests differs (their hottest cell is
+    655–659 K against the 1448 K solidus, Λ_L 0 in every cell of every plotfile; `Z0.txt` §4).
+  Face gate `cmp p2_24 p2_26`: 1,217 files each side, **IDENTICAL** (14 `thermo.dat` differ by the wall-clock timers
+  only); `rankcheck p2_26` decomposition-stable (rel 1e-15). ⚠ `face_gate.py`'s `DROP` gained
+  `spall.flake_coherence_length` / `spall.surface_normal`: M0S replays P2-9's M0 argv, which writes them at `0.0` / `0`,
+  and the retired-at-default table compares STRINGS (`"0.0" != "0"`), so the first stage-2 run aborted M0S (archived:
+  `studies/p2_26_closed_switches/face_2_attempt1/`). Dropping a default-valued token is inert (stage-2 cmp IDENTICAL).
+⇒ **the tree reference becomes `p2_26.md5`** (`p2_18.md5` and `p2_25.md5` kept); the face reference stays
+`face_p2_24.md5`. The next packet runs `tree_compare.py <label> p2_26 d2aa d2t` (controls 72 / 863) and
+`face_gate.py cmp p2_24 <label>`.
 
 **Face-list gate: `face_p2_19.md5`** since P2-19 (declared below); before it **`face_p2_18.md5`** (P2-18 A1, 1,172 files), produced by
 `face_gate.py run p2_18` and byte-identical (but the three wall-clock timer columns) to
@@ -199,10 +287,51 @@ exactly the case worth short-circuiting. Do not "improve" this into a label cach
 **`tree0922.md5`** — the pre-D2z-1 reference. **Preserved untouched.** Nothing
 is deleted or overwritten; earlier labels (`d2x`, `d2v`, `d2t`, …) also remain.
 
+**P2-30 (2026-11-10): reference unchanged (`face_p2_28.md5`).** The header's split into slices, the comment moves and the
+two code changes read IDENTICAL on `face_p2_30a`, `face_p2_30b` and `face_p2_30` (2,010 files; 17 differ in timer columns only).
+⚠ `_buckle_log.csv` is HEADER-ONLY in both legs that write it (BEAM_S, HU_S end before any line fires), so this gate does not
+reach the buckle ROW writer; and no leg writes a vapour row. A change to either writer needs `studies/p2_30_structure/covers.py`.
+
 ## How to re-pin next time
+
+⚠ Since P2-28 the gate is the FACE gate: `face_gate.py run <label>` → `witness/face_<label>.md5`, then
+`face_gate.py cmp p2_28 <label>` (and a component audit when components leave, as P2-27 / P2-28 did). The tree steps
+below are the record of how the column era re-pinned.
 
 1. `bash witness/guarded_post_all.sh <label>` → `witness/<label>.md5` and
    `witness/<label>_wit/`.
 2. Diff against the current reference above and classify every differing path.
 3. Update this file to name the new reference and what it audited.
 4. Leave the old list in place.
+
+**2026-11-10, after P2-30: THE REFERENCE BECOMES `face_p2_30c.md5` (21 legs, 3,051 files; binary `sha256 0db6623783c9961b…`).**
+Two legs added, because P2-30's step zero found that NO leg wrote a vapour row or a buckle-log data row:
+`VAP_S` (`unit/face_vapor/input` as it stands: 64 regime-2 rows in the event log) and `BKL_S` (`unit/face_buckle`'s F_S
++ `spall.buckle_log_csv=1`, 8 s: 3,456 firing rows and 3,456 buckle-log rows). Continuity: `face_gate.py cmp p2_28
+p2_30c` reads **2,010 / 2,010 common files, 0 substantive differences (17 thermo files, timers only), 1,041 files only
+in `p2_30c`** (the two new legs) — its VERDICT line says DIFFERENT only because of those extra paths. The new legs'
+three logs are byte-identical to P2-30's covers (`studies/p2_30_structure/covers/post4a`). The binary is P2-30's source
+after the comment review of the same day (comments only: `studies/p2_30_structure/comment_review_check.py`, the
+pre-image `src_pre_5`). **From here: `face_gate.py run <label>` then `face_gate.py cmp p2_30c <label>`.**
+`face_p2_28.md5` is kept as the 19-leg record.
+
+
+**P2-31 (2026-11-10): THE REFERENCE BECOMES `face_p2_31.md5` (21 legs, 3,051 files; binary `sha256 e705b8591d083230…`,
+`studies/p2_31_fixes_mesh/BINARY_p2_31.txt`).** Four builds, each gated (`studies/p2_31_fixes_mesh/RESULTS.txt`):
+- **p2_31a** (stage 1: the reconstruction reads the start cell's initial temperature, two keys parsed above the spall-off
+  return, three new aborts, the robin_form message, `kappa()` split into `diffusivity()` / `conductivity()`;
+  `3f29e987…`): vs `p2_30c` **0 substantive differences on all 21 legs** (`GB_S`, the one leg with T_ref != IC, included).
+- **p2_31b0** (stage 2a: the dead list out, the vapour keys retired at their defaults, `microstructure_enabled` and seven
+  unreachable aborts gone; `ba1f6dd5…`): vs `p2_31a` and vs `p2_30c` **0 substantive differences**.
+- **p2_31b** (stage 2b: `regime_field` removed -- it duplicated `regime` at every write site; `296fadf3…`): vs `p2_31b0`
+  the plotfiles of the 19 removal legs lost exactly `regime_field`, every other component FAB by FAB, every thermo column
+  and every CSV identical (`components.py`; KV_S / HU_S never carried it).
+- **p2_31** (stage 3: the overlap rule -- the phi shift reads the +z line's own h, the plotted thickness / rate the largest
+  h through the cell; `e705b859…`): vs `p2_31b` **0 substantive differences on all 21 legs**. The rule changes nothing
+  the gate observes: the gate's overlaps (`fr/TL45_1` 792 cells, `SPH_1` 10, `BORE_1` 1) are interior cells, where the
+  old shared slot fed nothing; the first observable difference is on `TD` at 1 mm from 3.304 s (`unit/face_removal
+  --ovl`, `studies/p2_31_fixes_mesh/OVL_SEARCH.txt`).
+The intermediate directories `face_p2_31a/`, `face_p2_31b0/`, `face_p2_31b/` were deleted for disk (16 GiB free at the
+start); their md5 lists are kept and each is regenerable with `face_gate.py run <label>` on the binary kept in
+`studies/p2_31_fixes_mesh/bins/` (`pre_2` = p2_31a, `pre_2b` = p2_31b0, `pre_3` = p2_31b; local only, `.gitignore`d).
+**From here: `face_gate.py run <label>` then `face_gate.py cmp p2_31 <label>`.**

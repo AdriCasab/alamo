@@ -1,0 +1,286 @@
+#!/usr/bin/env python3
+"""P2-2f (a1) -- the pad-clearance removal's own ledger term.
+
+WHAT BROKE. `Removal.H`'s burner-body clearance block flips pad-height cells to
+void (regime 4) and writes phi/removed/regime/D. It credited NO energy sink, so
+every cleared cell took a whole cell's enthalpy out of the SOLID set unrecorded
+and ran `ledger_err_solid` to -3.6e-02 on the 500 s Meier feet leg, tracking
+`foot_mech_vol` exactly. This is the THIRD instance of the class already
+recorded for regime 5 (`Removal.H:2557`) and regime 6 (`:2571`).
+
+⚠⚠ THE PACKET ASKS FOR "A FIXTURE WHERE **ONLY** PAD CLEARANCE FIRES". THAT
+FIXTURE CANNOT BE BUILT, and the reason is structural, not a gap in this test.
+`MMWSpalling.H:8073` initialises phi to a FLAT top surface and there is no IC
+for a stepped one, so no column stands proud of its pad at t = 0. A column can
+only stand proud once its NEIGHBOURS have receded, and they recede by
+heat-driven spallation. Pad clearance is therefore parasitic on regime 1 by
+construction: isolating the REGIME is impossible, so this test isolates the
+TERM instead, which is what (a1) is actually for -- see row (d), which
+reconstructs the pre-fix value exactly and shows the credit doing work three
+orders of magnitude over the bar.
+
+⚠ BOOKING ONLY, AND THAT IS FORCED. Void H stays in the field and the TOTAL
+ledger keeps counting it, so the enthalpy never leaves the domain. Row (e) is
+the witness: `|ledger_err|` must stay at its 1e-15 floor. Had the fix zeroed H
+-- the literal reading of "removed from the field" -- this row would break, and
+so would `jet_d2c` case CLD, which fires this same path on 620 steps and
+asserts |ledger_err| <= 1e-10.
+
+Legs, all off `unit/robin_feet/input_feet` with jet_d2c's DEAD h_expr (the
+flame is off on the ring column at r = 31 mm, so it never fires, stands proud,
+and is cleared) and CTRL8's two ledger keys, so the configuration under test is
+the one `b4` gates:
+  P    clearance ON,  1 rank   -- the leg under test
+  N    clearance OFF, 1 rank   -- control: closes with no new term, and the
+                                  `foot_mech_E` column must be ABSENT (the
+                                  key gating that keeps the 2639 tree clean)
+  P3   clearance ON,  3 ranks  -- the ReduceRealSum witness
+
+Usage: test
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+UNIT = os.path.join(ROOT, "tests", "MMWSpalling", "unit")
+IN_F = os.path.join(UNIT, "robin_feet", "input_feet")
+OUT = os.path.join(HERE, "output")
+
+BAR_SOLID = 5.0e-3       # (a1)'s bar, from the packet
+BAR_TOTAL = 1.0e-10      # jet_d2c (h)'s bar on the total row
+
+# ⚠ byte-identical to jet_d2c's DEAD, INCLUDING the embedded double quotes:
+# ParmParse re-tokenises the value on whitespace, so `max(0.01875, r)` without
+# them is a syntax error (ParmParse.H:978) and the leg aborts rc 6.
+DEAD = ('surface_patch.h_expr="1500.0*0.01875/max(0.01875, r)'
+        '*(1.0-(x>0.030)*(x<0.032)*(y<0.002))"')
+# CTRL8's pair: `reconstructed` is what the Meier leg runs, and `flake` is what
+# makes ledger_E_flake accumulate at all. Both are needed for the
+# ledger_err_solid column to exist (MMWSpalling.H:785).
+LEDGER = ["spall.surface_T=reconstructed", "spall.removal_energy=flake"]
+
+LEGS = {
+    "P":  (["surface_patch.foot_body_clearance=1"], 1, True),
+    "N":  (["surface_patch.foot_body_clearance=0"], 1, True),
+    "P3": (["surface_patch.foot_body_clearance=1"], 3, True),
+    # ⚠⚠ PT carries NO ledger keys -- `cell_average` + the default removal
+    # energy, i.e. jet_d2c case CLD's exact configuration. It exists because
+    # the field-untouched witness CANNOT be taken on a `flake` leg: the flake
+    # sink removes enthalpy from the field by design, so `ledger_err` (the
+    # TOTAL row, which has no credit term) legitimately runs to ~-0.17 there.
+    # That is the packet's own fault-1 finding. On PT nothing else moves field
+    # enthalpy, so |ledger_err| at its round-off floor is a clean statement
+    # that pad clearance writes no enthalpy array.
+    "PT": (["surface_patch.foot_body_clearance=1"], 1, False),
+}
+
+
+def run(tag, extra, nproc, ledger=True):
+    d = os.path.join(OUT, tag)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(nproc),
+            BIN, IN_F, "stop_time=10.0", DEAD]
+           + (LEDGER if ledger else []) + extra +
+           ["plot_file=%s" % os.path.join(d, "run")])
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    with open(os.path.join(d, "run.log"), "w") as lg:
+        lg.write(" ".join(cmd) + "\n\n")
+        lg.flush()
+        return subprocess.call(cmd, cwd=ROOT, stdout=lg, stderr=subprocess.STDOUT,
+                               env=env)
+
+
+def thermo(tag):
+    """{name: [values]} from <tag>/run_thermo.dat or <tag>/thermo.dat."""
+    d = os.path.join(OUT, tag)
+    for cand in ("run_thermo.dat", "thermo.dat"):
+        p = os.path.join(d, cand)
+        if os.path.exists(p):
+            break
+    else:
+        hits = []
+        for dp, _, fn in os.walk(d):
+            hits += [os.path.join(dp, f) for f in fn if f.endswith("thermo.dat")]
+        if not hits:
+            return None
+        p = sorted(hits)[0]
+    lines = [ln.split() for ln in open(p).read().splitlines() if ln.strip()]
+    head, rows = lines[0], lines[1:]
+    out = {}
+    for i, nm in enumerate(head):
+        col = []
+        for r in rows:
+            if i < len(r):
+                try:
+                    col.append(float(r[i]))
+                except ValueError:
+                    pass
+        out[nm] = col
+    return out
+
+
+def events(tag):
+    """regime column of run_removal_events.csv, as ints."""
+    d = os.path.join(OUT, tag)
+    hits = []
+    for dp, _, fn in os.walk(d):
+        hits += [os.path.join(dp, f) for f in fn if f.endswith("removal_events.csv")]
+    if not hits:
+        return []
+    lines = open(sorted(hits)[0]).read().splitlines()
+    if len(lines) < 2:
+        return []
+    head = lines[0].split(",")
+    if "regime" not in head:
+        return []
+    ci = head.index("regime")
+    out = []
+    for ln in lines[1:]:
+        f = ln.split(",")
+        if ci < len(f):
+            try:
+                out.append(int(float(f[ci])))
+            except ValueError:
+                pass
+    return out
+
+
+FAILS = []
+
+
+def check(ok, msg, detail=""):
+    print("  %s  %s" % ("ok  " if ok else "FAIL", msg))
+    if detail:
+        print("        %s" % detail)
+    if not ok:
+        FAILS.append(msg)
+
+
+def amax(xs):
+    return max((abs(x) for x in xs), default=0.0)
+
+
+def main():
+    print("P2-2f (a1) -- pad-clearance ledger term")
+    print("=" * 72)
+    for tag, (extra, nproc, ledger) in LEGS.items():
+        rc = run(tag, extra, nproc, ledger)
+        print("  leg %-3s rc=%d  np=%d" % (tag, rc, nproc))
+        if rc != 0:
+            FAILS.append("leg %s rc=%d" % (tag, rc))
+    if FAILS:
+        print("\nFAILED: %s" % "; ".join(FAILS))
+        return 1
+
+    thP, thN, thP3, thPT = (thermo("P"), thermo("N"), thermo("P3"),
+                            thermo("PT"))
+    for tag, th in (("P", thP), ("N", thN), ("P3", thP3), ("PT", thPT)):
+        if th is None:
+            FAILS.append("no thermo.dat for leg %s" % tag)
+    if FAILS:
+        print("\nFAILED: %s" % "; ".join(FAILS))
+        return 1
+
+    # Skip t = 0: the ledger arms on the first update (ledger_started).
+    def tail(th, nm):
+        return th.get(nm, [])[1:]
+
+    # (a) the mechanism ran at all -- regime-4 rows and a non-zero sink.
+    regP = events("P")
+    n4 = sum(1 for r in regP if r == 4)
+    E_P = tail(thP, "foot_mech_E")
+    V_P = tail(thP, "foot_mech_vol")
+    check(n4 > 0 and E_P and E_P[-1] > 0.0 and V_P and V_P[-1] > 0.0,
+          "(a) pad clearance fired and booked a non-zero sink",
+          "%d regime-4 rows; foot_mech_E %.4e J; foot_mech_vol %.4e m^3"
+          % (n4, E_P[-1] if E_P else 0.0, V_P[-1] if V_P else 0.0))
+
+    # (b) the column is gated: absent with the key off. This is what keeps the
+    # 2639-file tree byte-identical, so it is asserted, not assumed.
+    check("foot_mech_E" not in thN and "foot_mech_vol" not in thN,
+          "(b) foot_mech_E / foot_mech_vol ABSENT with foot_body_clearance = 0",
+          "N columns: %d; P columns: %d" % (len(thN), len(thP)))
+
+    # (c) THE GATE.
+    sP = tail(thP, "ledger_err_solid")
+    check(bool(sP) and amax(sP) <= BAR_SOLID,
+          "(c) GATE: max |ledger_err_solid| <= %.0e on the clearance leg" % BAR_SOLID,
+          "max %.4e over %d rows" % (amax(sP), len(sP)))
+
+    # (d) POSITIVE CONTROL, computed from the logged columns and not a second
+    # run. The fix adds exactly one term, so the pre-fix value is recoverable:
+    #   post = (dE_sol - E_src + E_flake + E_mech)/|E_src|
+    #   pre  = post - E_mech/|E_src|
+    # ⚠ foot_mech_E and ledger_E_src are both CUMULATIVE state columns, so this
+    # is a per-row identity and not a sum over rows (SR 7(i)).
+    src = tail(thP, "ledger_E_src")
+    pre = [sP[i] - E_P[i] / abs(src[i]) for i in range(min(len(sP), len(E_P), len(src)))
+           if abs(src[i]) > 0.0]
+    check(bool(pre) and amax(pre) > BAR_SOLID,
+          "(d) control: the SAME rows without the credit BREACH the bar",
+          "pre-fix max |ledger_err_solid| %.4e = %.2fx the bar (FAILS (c)); "
+          "post-fix %.4e = bar/%.0f. ⚠ the 10 s fixture's pre-fix breach is "
+          "small because clearance has only just started; the 500 s Meier leg "
+          "reached -3.6e-02."
+          % (amax(pre), amax(pre) / BAR_SOLID, amax(sP),
+             BAR_SOLID / max(amax(sP), 1e-300)))
+
+    # (e) the field was NOT written: void H is frozen and the TOTAL row still
+    # closes at its round-off floor. A fix that zeroed H would fail here.
+    tPT = tail(thPT, "ledger_err")
+    E_PT = tail(thPT, "foot_mech_E")
+    tP = tail(thP, "ledger_err")
+    check(bool(tPT) and amax(tPT) <= BAR_TOTAL and bool(E_PT) and E_PT[-1] > 0.0,
+          "(e) booking only: on PT (no flake sink) max |ledger_err| <= %.0e "
+          "with clearance firing" % BAR_TOTAL,
+          "PT max |ledger_err| %.4e, foot_mech_E %.4e J booked. ⚠ for contrast "
+          "the FLAKE leg P reads %.4e on the same row, and that is correct: "
+          "the total row has no credit for rock that leaves (packet fault 1)."
+          % (amax(tPT), E_PT[-1] if E_PT else 0.0, amax(tP)))
+
+    # (f) the reduction is right: 3 ranks must book the same total. thermo.dat
+    # is %g, so compare the PRINTED token (SR 7(iv)).
+    E_P3 = tail(thP3, "foot_mech_E")
+    same = (bool(E_P3) and bool(E_P)
+            and ("%g" % E_P[-1]) == ("%g" % E_P3[-1]))
+    check(same, "(f) ReduceRealSum correct: foot_mech_E rank-count independent",
+          "1 rank %g vs 3 ranks %g"
+          % (E_P[-1] if E_P else 0.0, E_P3[-1] if E_P3 else 0.0))
+
+    # (g) the control leg closes too, so (c) is not passing on a leg where the
+    # solid row is trivially small for an unrelated reason.
+    sN = tail(thN, "ledger_err_solid")
+
+    def at_max(th, nm):
+        v, t = tail(th, nm), tail(th, "time")
+        if not v:
+            return 0.0, 0.0, 0.0
+        i = max(range(len(v)), key=lambda k: abs(v[k]))
+        return abs(v[i]), (t[i] if i < len(t) else 0.0), v[-1]
+    mP, tmP, fP = at_max(thP, "ledger_err_solid")
+    mN, tmN, fN = at_max(thN, "ledger_err_solid")
+    check(bool(sN) and amax(sN) <= BAR_SOLID,
+          "(g) control leg closes without the new term",
+          "N max %.4e at t=%.3f, final %.3e | P max %.4e at t=%.3f, final "
+          "%.3e. ⚠ both maxima fall in the startup transient BEFORE clearance "
+          "starts, which is why they agree; the discriminating comparison is "
+          "(d), on P's own rows." % (mN, tmN, fN, mP, tmP, fP))
+
+    print("=" * 72)
+    if FAILS:
+        print("FAILED %d: %s" % (len(FAILS), "; ".join(FAILS)))
+        return 1
+    print("PASS")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

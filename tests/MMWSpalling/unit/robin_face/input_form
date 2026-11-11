@@ -52,7 +52,6 @@ microstructure.phase0.E                 = 30.0e9
 microstructure.phase0.mu                = 11.538461538e9
 microstructure.phase0.rho               = 2750.0
 microstructure.phase0.Cp                = 790.0
-microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 
 conductivity.h_gb0              = 0.0

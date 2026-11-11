@@ -29,17 +29,18 @@ MMW removal data do not (yet). Höser and Meier are checks, never targets to tun
    - The onset level is set by two constants calibrated once on Kant: an 8 µm flaw and a relief factor of 0.531.
    - The flame heat input, by contrast, is typed per test: Höser's calorimeter fit and Meier's hand-shaped map.
      Both carry a heat multiplier S fitted to that test's own removed volume.
-2. **The model is currently two models.** Today's removal rule (the face list, P2-8/P2-9) runs flame drilling only.
-   It refuses vaporisation, melt-aware spallation, Meier's burner-clearance rule, mesh refinement, and any heat
-   source other than a flame map (`MMWSpalling.H` ~984–1021). The constraint depth was deleted from both paths at
-   P2-16 (2026-11-03); its key now aborts. Those features live only
-   on the older column path. **No MMW case can run on today's removal rule.**
+2. **One removal path since P2-28 (2026-11-09).** The face list (P2-8/P2-9) carries flame drilling, the beam,
+   the melt and vapour (P2-23/P2-24), Meier's pad clearance (P2-27), a prescribed surface temperature and an
+   onset-only (evaluate-only) mode (P2-28); the older column path (`Removal.H`, site A, the pinned closure, the bit)
+   is DELETED and its keys abort. What the face list does not cover is named in `studies/p2_28_column_path/
+   RESULTS.txt` (the jet march's per-bin recursion, the feet descent's feed cap / stall modes, a beam path across
+   an interior void).
 3. **The calibration decks do not run the production model.** The Kant decks that set the flaw and the relief
    factor use:
    - a single fixed flaw;
    - the `cell` surface heat form;
    - no flake cap;
-   - `flake_length = flux`;
+   - `flake_length = flux` (the key deleted in P2-26; it now aborts at any value but `twocell`);
    - 1 MPa confinement.
 
    The Höser and Meier decks use:
@@ -88,9 +89,9 @@ MMW removal data do not (yet). Höser and Meier are checks, never targets to tun
 | MMW heat input | Gaussian beam, Beer–Lambert volumetric deposition | `Numeric::MMWBeam`; §8 |
 | Surface losses | radiation (ε, to T_amb) and natural convection on every face | `SurfaceCellFlux`, `FrFaceFlux` |
 | Surface temperature | reconstructed from a two-cell exponential profile (P0) | `ReconstructSurfaceT` / `ReconFromX` |
-| Spall criterion | Sp = K_I/K_Ic ≥ 1; K_I from the stress along a flaw of size a (Tada edge crack); stress σ = R·E(T_s)·∫α dθ/(1−ν) (1-D confined), plus pν/(1−ν) for confinement; flaws per cell from a Weibull draw (or one fixed size) | `Removal.H` (`DepthScanH`), `Grimsel.H` (stress), `FaceRemoval.H` R2 |
+| Spall criterion | Sp = K_I/K_Ic ≥ 1; K_I from the stress along a flaw of size a (Tada edge crack); stress σ = R·E(T_s)·∫α dθ/(1−ν) (1-D confined), plus pν/(1−ν) for confinement; flaws per cell from a Weibull draw (or one fixed size) | `Shared.H` (the scan pieces) / `FaceRemoval.H` (`DepthScanH`), `Grimsel.H` (stress), `FaceRemoval.H` R2 |
 | Removal (face list) | one line per surface cell into the rock; the flake thickness is c_f·ℓ, capped; the solid fraction drops and the heat is remapped | `FaceRemoval.H` R0–R3 |
-| Removal (column path) | the older top-down path: vapour front, bit, melt-aware, feet clearance | `Removal.H` |
+| Removal (column path) | **deleted at P2-28** (one removal path); its decks are records (`retired_*/`) | — |
 | Burner support | Meier: the burner rests on its feet at the highest rock under its pads | `FeetDescent` (~2217) |
 
 **Single shared rule:** the stress in every site comes from `Grimsel.H`, one function (`unit/lateral_flux_lock`
@@ -138,16 +139,17 @@ From `docs/project/model_card/RUNNABLE.txt` (each deck started for one step; reg
 | deck | result | why |
 |---|---|---|
 | **Kant `grimsel_calibration/input` (P2-13)** | runs | **the calibration deck**: includes both shared files; production form, face list |
-| Kant `input_model`, `input_weibull` (shipped, legacy) | runs | — but these carry the pre-calibration constants (§6 row 1); not re-pointed (their retirement needs the user's permission) |
+| Kant `input_model`, `input_weibull` (legacy, site A) | **moved** to `retired_validation/column_path/` (P2-28) | site A is deleted: they would run SILENTLY as thermal-only decks (SR 1). The face-list onset decks `sp_kant_onset/input_verification_face` (+ `_hfl_face`) and `sp_kant_pressure_sweep/input_face` (P2-28) reproduce Eq. 15 to 0.30 / 0.52 % and the pressure slope to 0.6 % |
 | Kant P2-2e legs (V80, G2.0_130) | **aborts** | they set `spallation.sp.constraint_depth`, retired in P2-16 (records; not edited) |
 | Höser G1 (P2-11) | runs | today's Höser deck |
 | Höser `input_lab` | template | the harness supplies `amr.n_cell`; since P2-13 it includes both shared files (the rock and model form no longer come from argv); G1's argv over it reproduces G1 byte for byte to 15 s (P2-13 a3) |
 | Höser 0 MPa: P2-7 HG, what-if s100 | **aborts** | 13 keys deleted in P2-10 (`spall.lateral_*`, `side_face_*`) |
 | Meier P2-2f (last quotable), P2-2e SD | **aborts** | 14 / 16 deleted keys; SD also sets `side_face_h_scale`, which nothing reads |
-| Meier `input_feet`, `input_feet_d2c`, `input_drilling` (shipped) | runs | column path; no wall heat since P2-10, so not the P2-2f model. The face list cannot run them while `foot_body_clearance` is on |
-| Zhang (MMW) | runs | thermal only |
+| Meier `input_feet`, `input_feet_d2c`, `input_drilling`, `input_2d_dev`(_melt), `input_energy` (column path) | **aborts** (P2-28: records, a header line each) | the column path is deleted; `input_feet_face` (the face list, regime 4) runs (P2-27 m3: 20 s, 60 clearance rows); the Meier rebuild on the rock file is §12 item 5 |
+| Hu granite 2 (prescribed patch, 638.22 + 3.74 t K) | **re-scored at P2-28** (a RECORD, `validation/hu/hu_spall_onset/test_lefm`): the face list's evaluate-only mode, the corrected half-cell boundary, buckling ON | the criterion fires on every patch column at 50.0-72.5 s (median **56.3 s, T_s 848.6 K**, inside the pre-registered 826-885 K) and buckling withdraws EVERY firing (bk >= 1.69: the heated layer 4.3-6.7 mm against the 12 mm span) -- **no spall predicted by 120 s where Hu saw spalling at 37.0 s / 773 K**. P2-27's 107.9 s was a path artefact (half the boundary conductance): never quote **⚠ The spall verdict is PARKED (2026-11-10, §11 item 9); the conduction check and the onset temperature stand.** |
+| Zhang (MMW) | runs (`beam.omega0 = 0.01` since P2-30) | thermal only; **an energy-accounting check, NOT a temperature validation (§11 item 9)** |
 | **Oglesby `validation/oglesby/input` (P2-23)** | runs | **the first beam deck on the face list**: includes both shared files with the surface patch OFF (`surface_patch.enabled = 0`): the list is built and every listed face is billed at h = 0 (its losses only); test #19 (12.88 mm spot, the measured ramp) on GRIMSEL's law and rule. The stress is the 1-D confined estimate × R (the elastic operator LEFT OUT by the user, 2026-11-06: it reads 0.26–0.65 of the exact stress at ℓ/dx ≤ 2, and a 20 mm layer under a 13 mm spot is not a 1-D slab at any mesh). **P2-24: the melt is a state** — the whole Fig. 34 trace (158 × 10 s, 1,580 s of heating, 220 s of cooling), the rock file's melt and vapour set, the beam's melt keys, the molten / lid exclusions and the face list's vapour rule (`vapor.enabled = 1`, the deck's one allowed override of the model form) |
-| Hu onset, end-to-end | runs | `damage_law` failure model |
+| Hu onset, end-to-end | retired P2-27 | the `damage_law` failure model (`retired_validation/hu_damage_law/`) |
 
 ⚠ A deck rebuilt from a run's `metadata` file is **reconstruction, not replay** (SR 8): `metadata` also lists
 every default that day's binary filled in.
@@ -172,14 +174,14 @@ The decks: **K** = Kant calibration decks; **H** = Höser G1; **M** = Meier P2-2
 | 1 | `microstructure.phase0.law` | `grimsel` (H, M, K calibration deck and study legs); `constant` (legacy shipped K inputs, Hu) | all | CHOICE (form) | P2-2 | ⚠ the shipped Kant inputs are not the calibrated model |
 | 2 | Grimsel laws: c_p(T), λ(T), ρ 2650, E₀ 53.3 GPa, ν 0.30, K_Ic,0 1.5 MPa√m, Table 3 ratios α/E/K_Ic to 650 °C | — | under `law = grimsel` | MEAS-MAT | `src/Numeric/Material/Grimsel.H`; `validation/grimsel_properties/grimsel_granite_properties_reference.md` | ⚠ α above 300 °C is an estimate (±30 %); **E/E₀ and K_Ic are flat above 600 °C (873 K) and α above 650 °C**, the tables' end. 22.6 % (m 13) / 34.2 % (m 8) of Meier firings sit above 873 K. E₀ sources differ: 53.3 (ours), 47.3 (Höser), 30–40 GPa (Kant) |
 | 3 | `phase0.kappa/beta/E/mu/rho/Cp` (1.5 / 8e-6 / 30 GPa / … / 2750 / 790: Meier Table 7.1) | — | **inert under `grimsel`** (the law rewrites the cell fields each step) including E and μ since P2-14a: the confinement term pν/(1−ν) takes `grimsel.nu` under the law (`Removal.H` `ElasticConstants`); until then it read E/(2μ) − 1, equal by value only (P2-13 step zero, DR-1); live only under `constant` (shipped K inputs) | MEAS-MAT (Meier) | `MMWSpalling.H` ~4212, ~6978 | required keys that carry no meaning in production decks: a reader would assume they are used |
-| 4 | `hc.heat.alpha` | 6.9e-7 (K, H, M); 1.3e-6 (Z); 1.14e-6 (Hu) | **inert in every deck listed**: read only by `AdvanceConstAlpha` (:1432, the no-material path) and by the `damage_law` spall-depth formula when spall is on (`Removal.H:293`; Hu runs spall off) | — | `MMWSpalling.H:141, 1432` | required but dead in these decks |
-| 5 | melting and vaporisation (`phase0.T_m`, `fus_width`, `L_m`, `T_vap_lo/hi`, `L_v`) | **since P2-24 in `rock_grimsel.inputs`**: T_m 1510.5 K, fus_width 200 K (solidus band 1410.5–1610.5 K), L_m 3.4e5 J/kg, vapour 3233–3503 K, L_v 4.8e6 J/kg; were 1e30 / 0 | every Grimsel deck: the phase table (`Table::Build`) integrates ρc_p plus the boxcars, so H(T) below 1410.5 K is unchanged (no flame gate leg passes 818 K, P2-24 z0); the liquid fraction f_L(T) feeds the beam's melt keys (rows 31–32) and the face list's molten / lid exclusions | LIT (Zhang, another rock: a Barre-like granite; no Grimsel melt data on disk) | `src/Numeric/Material/Zhang.H:59–64`; P2-24 | ⚠ the Grimsel λ(T), c_p(T) are EXTRAPOLATED through the melt (Zhang's κ cap at 1273 K is the recorded alternative). The face list carries vapour since P2-24: a LISTED cell whose H passes H_vap_hi leaves once (regime 2, `ledger_E_vapor`), a buried one is counted, not voided; `vapor.enabled` stays 0 in the flame model form. A partially molten cell (0 < f_L < 1) still carries K_Ic (declared). `spall.melt_aware` is still refused |
+| 4 | `hc.heat.alpha` | 6.9e-7 (K, H, M); 1.3e-6 (Z); 1.14e-6 (Hu) | **inert in every deck listed**: read only by `AdvanceConstAlpha` (the no-material path, deleted in P2-29) and by the `damage_law` spall-depth formula when spall is on (`Removal.H:293`; Hu runs spall off) | — | `MMWSpalling::Parse`, `AdvanceConstAlpha` (deleted, P2-29) | required but dead in these decks |
+| 5 | melting and vaporisation (`phase0.T_m`, `fus_width`, `L_m`, `T_vap_lo/hi`, `L_v`) | **since P2-24 in `rock_grimsel.inputs`**: three named temperatures (P2-27) -- **T_m 1510.5 K** (the band CENTRE), **solidus 1410.5 K** = T_m − fus_width/2, **liquidus 1610.5 K** = T_m + fus_width/2 (fus_width 200 K); L_m 3.4e5 J/kg, vapour 3233–3503 K, L_v 4.8e6 J/kg; were 1e30 / 0 | every Grimsel deck: the phase table (`Table::Build`) integrates ρc_p plus the boxcars, so H(T) below 1410.5 K is unchanged (no flame gate leg passes 818 K, P2-24 z0); the liquid fraction f_L(T) feeds the beam's melt keys (rows 31–32) and the face list's molten / lid exclusions | LIT (Zhang, another rock: a Barre-like granite; no Grimsel melt data on disk) | `src/Numeric/Material/Zhang.H:59–64`; P2-24 | ⚠ the Grimsel λ(T), c_p(T) are EXTRAPOLATED through the melt (Zhang's κ cap at 1273 K is the recorded alternative). The face list carries vapour since P2-24: a LISTED cell whose H passes H_vap_hi leaves once (regime 2, `ledger_E_vapor`), a buried one is counted, not voided; `vapor.enabled` stays 0 in the flame model form. A partially molten cell (0 < f_L < 1) still carries K_Ic (declared). `spall.melt_aware` (P1's skeleton f(Λ_L) on the column path) is **deleted, P2-26** (census C3, user Q6): it never saw Λ_L > 0 on a gate deck (hottest cell 659 K vs **those gate decks' own** solidus 1448 K = their deck-local T_m 1473 − fus_width 50/2 -- not the rock file's 1410.5 K) |
 | 6 | `alpha_beta.*` (quartz transition strain) | disabled | — | CHOICE | — | the 573 °C jump is in Table 3's α instead |
 | 7 | `spallation.model` | `sp_weibull` (K, H, M); `damage_law` (Hu, Z) | — | CHOICE (form) | — | **two failure laws in the code.** Hu's check exercises the one we do not use for prediction |
 | 8 | flaw size: `spallation.sp.a0` (fixed) / `weibull.a0_ig` (Weibull scale) | **8 µm** in both roles (`rock_grimsel.inputs`; `input_lab`'s inert 20 µm gone at P2-13) | criterion | **CAL-ONCE** | **P2-13: holds in the production form** (Kant calibration deck 850.43 K, inside 826–873 K; d1 not run). P0 (2026-09-30): "re-anchor the flaw against Kant at three meshes", 4 → 8 µm, inside Kant's binding 390–560 K rise (`ARCHIVE_DONE.md` ~L13967); held through P2-2d | ⚠ Kant 2017 states a = 20 µm (thin sections). The flaw and the drive form are one calibration (SR 1) |
 | 9 | `weibull.enabled` | 1 (K calibration deck, H, M; `model_form_flame.inputs`); 0 (legacy K inputs; CAL_det control) | — | CHOICE (form) | P2-13 | ~~calibrated with one fixed flaw, applied with random flaws~~ **closed at P2-13**: the calibration deck draws Weibull flaws; the draw moves the onset +5.8 K over the fixed flaw (c3); the Weibull onset also moves ~3.7 % with mesh by construction (ROADMAP note) |
 | 10 | `weibull.m` | **13** (H, M); 20 (K weibull input); 15 (default) | Weibull decks | LIT (other rock) | Westerly granite's strength modulus via Wilkinson (`Claude_markdowns/2026-09-30a.md` ~L250) | ⚠ the result is modulus-specific: P2-2f's firing T passes at m 13 and misses at m 8 (`ARCHIVE_DONE.md` ~L19529). No Grimsel value |
-| 11 | `weibull.V0` with `size_volume = cell` | 1e-9 (H, 1 mm); 8e-9 (M, 2 mm) | — | CHOICE | V0 = V_cell in both ⇒ the size effect is neutralised (user choice 09-16) | flaws do not shrink with volume; the mesh dependence is accepted instead |
+| 11 | `weibull.V0` with `size_volume = cell` | 1e-9 (H, 1 mm); 8e-9 (M, 2 mm) | — | CHOICE | V0 = V_cell in both ⇒ the size effect is neutralised (user choice 09-16) | flaws do not shrink with volume; the mesh dependence is accepted instead. ⚠ P2-27: the Weibull SIZE CORRECTION (V_cell/V0)^(1/m) is therefore OFF on every production deck by `check_shared.py` rule (iv); the member comment said the opposite until P2-27 (it now states what the code does). NOT deleted: switching it on is a physics decision for the mesh-check runs (§11) -- the 0.78 mm twin fired 2.09x the events with it off; on, flaws at 0.78 mm would be 8^(-1/13) ≈ 0.85x ⇒ K_I 0.92x. The one deck with V0 != V_cell: `kant/sp_kant_onset_meiercfg/input_weibull` (8e-9 on 1 mm, a legacy record) |
 | 12 | `weibull.a0_gb` | 40 µm | **inert** (the rock is grain-free in every input; SR 13) | — | — | — |
 | 13 | `spallation.sp.stress_relief` R | **0.531294** (`rock_grimsel.inputs`: K calibration deck, H; M, K study legs); 1.0 default (legacy K inputs) | criterion | **CAL-ONCE** (held at P2-13) | R = UCS/σ(850 K), UCS 169 ± 37 MPa (Grimsel reference), 850 K an onset target ⇒ Kant fires 843.757 K (P2-2d; `studies/p2_2d_kic/derive_onset.py`, `LEVEL.txt`) | ⚠ P2-2b: R sits ~25 % below its own physical band, "absorbing something that is not relief". With the flaw it forms one level knob |
 | 14 | `spall.stress_law` / `stress_source` | `grimsel` / `local_thermoelastic` | criterion | CHOICE (form) | `Grimsel.H` (one stress formula) | 1-D confined stress from temperature; mechanics off (`el.type = disable`) ⇒ **an applied load (Höser 47 MPa) cannot be represented** |
@@ -190,8 +192,8 @@ The decks: **K** = Kant calibration decks; **H** = Höser G1; **M** = Meier P2-2
 | 19 | `spall.removal_energy` | `flake` (all decks including `model_form_flame.inputs`); `cell` (legacy K inputs) | — | CHOICE (form) | P0b | the face list requires `flake`; calibration and production now agree (P2-13) |
 | 20 | `spall.flake_c_f` | 0.4 | flake thickness h = c_f·ℓ; ℓ is the two-cell fit's e-fold length on the main branch and, **since P2-19, the measured e-fold depth ℓ_p of the line's own temperature rise on the face list's fallback branch** (`ProfileEFoldDepth`, `Shared.H`; was the tangent depth k·ΔT/q_net, undefined when the face loses heat) | CHOICE (literature-informed) | `MMWSpalling.H` ~5280: 0.3–0.5 from Wilkinson's 0.1–1 mm thicknesses and Rauenzahn at ℓ 0.8–1.6 mm; weak lever (±5 %). c_f stays: it carries the gradient physics the minimum flux rests on (`DESIGN_2026-11-05_onset_and_thickness.md` §4) | ⚠ on a constant-flux (erfc) profile the e-fold depth is 0.857× the tangent depth (P2-19 z0e), so the fallback's flakes are thinner than before. Every firing now also logs ℓ_p, the peak depth, the peak's e-fold and the energy thin limit h_E = K_Ic²(1+ν)/σ_s² (logged, never applied) |
 | 21 | `spall.flake_h_max` | **1.5 mm** (H, M, K calibration deck: `model_form_flame.inputs`); 0 = off (legacy K inputs) | **NUM since P2-17: each face-list line's gather/remap window** (`FaceRemoval.H:368–380`: `L.Lg = Dmax + 2 + ⌈min(cap, h_spall_max)/(μ dx)⌉`); as a flake bound **DEAD under B** | NUM (was TUNED stopgap) | P0b rev 7, set on Meier runs; failed its own check (30.6 % of firings at the cap vs a 20 % bar). P2-17: B and the cap act on the same normal flake μ·c_f·ℓ, so the cap can bind a passing line only above T_s*(L) with C_L(T_s*) = L/1.5 mm: 1272.7 K at 12.0 mm, 1151.9 K at 13.2 mm (894 K at R1's 17.77 mm band edge) (`studies/p2_17_buckle_on/Z1.txt`, e0) | ⚠ NOT a no-op to switch off: 0 sends each line from 19 to 32 cells at 1 mm and moves the deep remap; decouple the window from the cap, then retire it (with the column path) |
-| 22 | `spall.flake_length` | `twocell` (H, M); `flux` (K_dref) | — | CHOICE (form) | P1g-3 | ⚠ the face list refuses `flux` |
-| 23 | `spall.flake_coherence_length` | 4 mm (K); 0 (H, M) | column path | CHOICE | — | ⚠ the face list refuses > 0 |
+| 22 | `spall.flake_length` | **DELETED P2-26** (census B3; was `twocell` on H, M and `flux` on the retired K_dref decks) | — | — | P1g-3 rejected on provenance | the two-cell length is the only one; the key is retired at `twocell` (any other value aborts naming P2-26), with `spall.flake_fraction` (`cf`), `weibull.size_volume` (`cell`) and `weibull.V_ref` (`*`) |
+| 23 | `spall.flake_coherence_length` | **DELETED P2-26** (census C2; was 4 mm on K and the Meier pilot decks, 2 mm on the Hu extension decks, 0 on H, M) | — | — | — | the column path's needle cap; retired at `0` (any other value aborts). It was bypassed wherever `spall.surface_normal = 1` (deleted with it), so the two gate decks did not move through it; the out-of-gate decks that set it are records (`studies/p2_26_closed_switches/AB.txt`) |
 | 24 | `spall.h_spall_max` | 15 mm | scan depth | NUM / CHOICE | — | binds only when the flake cap is off |
 | 25 | `spall.sample`, `xi_s` 8, `C_h` 1, `shallow_depth` 6 mm, `damage_threshold` 0.99 | — | column path only (not read by `FaceRemoval.H`) | CHOICE (defaults) | — | inert under the face list |
 | 26 | `damage.*`, `cohesive.*`, `bit.*`, `el.*` | off in flame decks; Hu runs a Drucker–Prager damage law (φ 30°, cohesion 20 MPa, …) and a static elastic solve | Hu only | Hu: MEAS-MAT (Hu's table) + CHOICE | Hu reference file | — |
@@ -227,8 +229,8 @@ and `jet_D`). The rows that decide predictions:
 | Meier map shape | — | taper 40→56 mm, plateau 142 W/m²K, cut 60→76 mm | **CHOICE, shape-setting** | the bore wall sits inside the taper; 142 came from a model run's own geometry |
 | losses | ε 0.8, h 10 W/m²K to 293 K on every face | same | ε LIT (Höser measured 0.82); h CHOICE | no view factor; acts on in-hole faces |
 | Kant decks | h 500 / 1673 K (onset: 500 is Kant 2016's minimum, 1673 Kant 2017's "≈ 1400 °C"); h 747 / 1523 K (d_ref, retired P2-16: Kant 2016 Table 4 at 130 mm) | — | CHOICE / MEAS-RIG | losses off in both |
-| `surface_patch.face_heat` | `position` (default: G1) | — | CHOICE (form) | `path` = X1: heat at the surface-path distance from stagnation, with flange `barrier_expr`. **Default-off, kept as the physically preferred structure** (§11). It refuses feet, the pad shield, the free surface, above-plane h and non-surface Robin forms |
-| dead keys | `surface_patch.T_ext`, `face`, `type`, `phase<i>.name`, `phase<i>.alpha_attenuation`, `grimsel.T_ref` **DELETED P2-18 (2026-11-05; the first three tolerated at their old default)**; `jet_D` (inert under momentum decay); `pinned_idle_cycles`, `pad_shield_open`, `radius` (inert under `surface`) | — | — | remove the rest |
+| `surface_patch.face_heat` | `position` (default: G1) | — | CHOICE (form) | `path` = X1: heat at the surface-path distance from stagnation, with flange `barrier_expr`. **Default-off, kept as the physically preferred structure** (§11). It refuses feet, the free surface and non-surface Robin forms (the pad shield and above-plane h it also refused are deleted, P2-26) |
+| dead keys | `surface_patch.T_ext`, `face`, `type`, `phase<i>.name`, `phase<i>.alpha_attenuation`, `grimsel.T_ref` **DELETED P2-18 (2026-11-05; the first three tolerated at their old default)**; `jet_D` (inert under momentum decay); `pinned_idle_cycles`, `radius` (inert under `surface`). **DELETED P2-26** (census B3, C2, C3: closed switches): `surface_patch.pad_shield_open`, `jet_above_h`, `jet_T_above`, `jet_T_ent_mode = rec_fixed` + `jet_T_rec_fixed` (strict scope: a setter aborts as unused); `spall.flake_length`, `spall.flake_fraction`, `weibull.size_volume`, `weibull.V_ref`, `spall.surface_normal`, `spall.flake_coherence_length`, `spall.melt_aware`, `melt.lambda_crit` (retired at their old defaults: the default runs, any other value aborts) | — | — | remove the rest |
 
 **For Meier specifically:**
 - **Measured by Meier:** the mass flow, the nozzle bore (7.5 mm, drawing), the 50 mm standoff, the feet (Ø80/Ø56)
@@ -476,14 +478,79 @@ two calibrations. With B off the onset is flat in flux (847.7 / 850.4 / 851.4 / 
    superheat and continuous SURFACE evaporation (the physical mass-loss route; Zhang's boiling shelf is a model value).
    Pool flow is weak in granite melt (viscosity). `Claude_markdowns/2026-11-07.md`.
 
+7. **The Weibull size correction (P2-27, recorded, not decided).** `vol_factor = (V_cell/V0)^(1/m)` makes the flaw
+   scale shrink with the cell so a finer mesh does not break earlier just by drawing more often; every production deck
+   sets V0 = V_cell (check_shared rule iv), which switches it OFF (§6 row 11). Decide on the mesh-check runs whether
+   to fix V0 (on) or keep it per-cell (off); it moves K_I by 8^(-1/(2m)) per halving of the cell.
 ---
+
+7b. **The material kernel's prescribed-T term still applies HALF the boundary conductance** (P2-28 corrected the
+   microstructure kernel's, `kc (T - Tc)/dz^2` -> `2 kc (T - Tc)/dz^2`: the held value sits on the FACE, dz/2 away;
+   `unit/face_dirichlet` proves the corrected term against the exact solution, second order). `AdvanceMaterial`'s copy
+   serves Zhang's path and the four Hu thermal decks (`hu_conduction`, `hu_thermoelastic`(`_amr`), `hu_breakage_index`)
+   and is left for D: the first two score sandstone/granite RATIOS (the shared factor cancels -- why no test caught it),
+   `hu_breakage_index` scores absolute f_b at 37 s and will move when D corrects it.
+   ✓ **CLOSED in P2-29 (D, one heat path):** `AdvanceMaterial` (and the const-alpha and implicit kernels) are deleted;
+   the Hu decks run the production kernel's 2x term as one constant phase (L1 granite 424.9 -> 460.0 K, sandstone
+   492.2 -> 527.5 K, inside every pre-registered band); Zhang runs `phase0.law = zhang` on a quarter block. The breakage
+   decks run single level (AMR + mechanics fails on the production path, pre-existing): granite f_b 0.85 at 37 s
+   (Hu 0.91 +- 0.10), sandstone 0.82 at 89 s (0.82 +- 0.10).
+
+8. **The minimum flux sits HIGH against the measured low-flux spalls (paper check 2026-11-10,
+   `Claude_markdowns/scripts/minflux_check_1110/`).** With the model's own C_L(T), c_f 0.4 and
+   L_req = C_L·c_f·k·ΔT/Q, Wilkinson & Tester 1993's laser spalls (Table 5; first-spall T_s, Q from the T_s–√t slope)
+   need a span of 14.4–19.3 mm on Barre (lowest spall 0.31 MW/m² at 481 °C) and 19.3–25.9 mm on Westerly (0.23 MW/m²
+   at 457 °C, ONE point; its next, 0.40, needs 11.2–15.0) for k 1.6–2.14 W/mK. At the declared 12.0 mm the condition
+   would block 2–5 of 18 Barre and 1–3 of 14 Westerly spalls; every spall at ≥ 0.5 MW/m² passes. The FORM holds (a
+   minimum flux in the measured decade); the LEVEL is ×1.2–2 high. Neither span rule helps Westerly (fine-grained
+   and strong ⇒ a short span under both). ⚠ Not refitted: the fluxes are inferred, the data are one-sided (no
+   no-spall bound) and the rocks are not ours. Consequence: the beam's spall/melt boundary (§10) is probably
+   conservative — it may read "melt" where rock would still spall.
+9. **Two comparisons are PARKED (the user, 2026-11-10); neither is a target.**
+   - **Hu granite 2's spall verdict.** Onset is the first spall seen by eye, the surface temperature is an infrared
+     thermometer's, no flake size is reported, and the granite is soft (E 30 GPa, σ_s 104 MPa). Hu's flux (0.074 MW/m²,
+     the T_s–√t slope) does not reproduce Hu's own surface temperature (497 K, not 773 K, at 37 s); a constant flux
+     that does is 0.17 MW/m². So the flux is known only as 0.07–0.17 MW/m² and the first seconds not at all; the
+     condition would need a 43–125 mm span. Hu's onset TEMPERATURE (500 °C) is inside the literature band. What
+     stands: the conduction check against the thermocouples and the criterion's onset temperature (§5).
+   - **Zhang 2023 Fig. 7 (Rock #28c).** The sample was a re-heated melt crater (44 × 48 mm, ~10 mm deep, from two
+     exposures the same day) and the DOE report says it lacks virgin dynamics; Zhang's own curve is not reproducible
+     from Zhang's printed inputs. The deck is an energy-accounting check; the virgin target is test #19
+     (`validation/zhang/zhang_oglesby_mmw_validation_summary.txt`, the 2026-11-10 status and addendum).
+10. **The melt's 28 GHz absorption is not what rows 31–32 carry (Woskov & Michael 2012, read 2026-11-10; to be
+   resolved in the melt/vapour step, NOT changed here).** Measured: molten granite's 28 GHz emissivity is
+   0.66 ± 0.03, FLAT from melting to vaporisation (0.70 ± 0.03 while vaporising). One melt conductivity of
+   ≈ 12–14 S/m gives that reflection (0.30–0.34) AND a power absorption of ≈ 1,700–1,900 m⁻¹ (×120–135, a depth of
+   ≈ 0.55 mm) — the DOE's "two orders of magnitude". So `beam.R_melt` 0.3 is right and `beam.melt_factor` 4 is
+   inconsistent with it by this measure. ⚠ **Absorption follows the GLASS STATE, not only temperature:** re-heated
+   glass rose at 110 °C/s against 7.4 °C/s virgin; the model's factor rides on the instantaneous liquid fraction,
+   so a cooled melt reverts to virgin rock (wrong for any re-exposure). A steady-vaporisation benchmark exists:
+   2.25 kW absorbed on 8.0 cm² (2.8 MW/m²) for 76 s, surface 2710 ± 120 °C, 2.2 g vaporised (≈ 36 g/m²s, 13.5 µm/s),
+   conduction 0.24 kW, convection ≈ 0.1 kW, infrared emissivity < 0.5. ⚠ The 95–100 GHz absorption laws on disk
+   (Gokhale 2026 Table 2; F. Monmont's fits, T in K, field coefficient, power = 2×) are CALIBRATED AGAINST THE
+   DRILLING TESTS (the user, 2026-11-10): by this card's own rule they cannot be used in a prediction of those tests.
+   Design notes: `Claude_markdowns/2026-11-10.md`.
+
+11. **Above 1000 °C the Grimsel law EXTRAPOLATES BY HOLDING (recorded 2026-11-10; a choice to make deliberately in
+   the melt/vapour step).** The thermal-strain table spans 20–1000 °C at 1 K (`Grimsel.H`, `strain_of`); above
+   1273.15 K it returns its last value, so the rock stops expanding, and the stiffness ratio table is flat above
+   650 °C. Three things read it: the criterion's law stress (`sigma_thermal`), the buckling factor
+   C_L = π/√(6(1+ν)ε_th) (`BuckleRatio`), and the secant expansion handed to the mechanics solve
+   (`UpdatePropertyFields`; it therefore falls as 1/(T − T_ref) above 1273 K). No flame result depends on it
+   (spalling near 850 K). Under a beam, rock between 1273 K and the solidus (≈ 1410–1510 K) gains no further thermal
+   stress and no further drop in C_L. The measurements end at 1000 °C and real rock softens toward melting, so holding
+   is defensible; it is not a measured law. Decide it with the softening s(T) → 0 toward the solidus (direction B).
 
 ## 12. Before a blind prediction: the to-do list
 
 The per-test and inconsistent items above, in the order they block a prediction:
 
 1. **One removal path.** Bring vaporisation, melt, the beam and Meier's feet onto the face
-   list, or decide which path is the model. Meier-with-clearance still cannot run on the current removal rule.
+   list, or decide which path is the model. ✅ P2-27: Meier's feet with the pad clearance run on the face list
+   (`FrFootClearance`; `unit/face_feet`, the face gate's FEET_S / FEET_0, `input_feet_face`); what is left is the column
+   path's deletion (H) and the Meier deck's rebuild on the rock file (item 5). ✅ **P2-28 (H): the column path is
+   deleted -- ONE removal path.** The face list gained the prescribed patch and the evaluate-only onset mode (Kant,
+   the pressure sweep and Hu re-scored on it); the face gate is THE gate; the tree gate is a record.
    - P2-23 ported the beam (the face list without a flame); P2-24 made the melt a state on it (the latent heat in the
      table the run inverts, the beam's melt absorption and reflection on f_L, no crack scan in or over a liquid) and
      moved vaporisation onto it (a listed cell past H_vap_hi leaves once, booked). Melt flow and evacuation are not
@@ -519,10 +586,20 @@ The per-test and inconsistent items above, in the order they block a prediction:
      L_span / c_f (P2-15).
 7. **Dead and required-but-inert keys:**
    - `surface_patch.T_ext` (deleted P2-18, tolerated at any value);
-   - `hc.heat.alpha` and the `phase0` constants under `grimsel` (E and μ no longer set ν: since P2-14a the confinement term takes `grimsel.nu`);
+   - ✅ P2-27: the six `phase0` constants under `grimsel` (`kappa`, `rho`, `Cp` refused under `law = grimsel`; `beta`,
+     `E`, `mu` refused when `spall.stress_law = grimsel` too) and `A_D` (optional, 0.0 only) are struck; the t = 0
+     property fields come from the law. STAY, with why: `hc.heat.alpha` (HeatConduction's shared required parse; read
+     by the constant-alpha path), `alpha` (the homogeneous / Zhang path, D), `el.model1.{E,nu}` (Mechanics'
+     `query_exactly<2>` even under `el.type = disable`, shared), `hc.bc.temp.*` (parser-optional, but the default is
+     Dirichlet 0 K -- required for the answer, not by the parser);
    - `sp.a0` under Weibull;
    - `a0_gb`;
    - `jet_D` under momentum decay.
+   - ✅ P2-26 deleted the closed study switches (census B3, C2, C3; twelve keys, `studies/p2_26_closed_switches/`):
+     the pad shield, the above-plane pair, `rec_fixed`, the flux flake length and fraction, the flux stressed volume,
+     `surface_normal`, the coherence cap and `melt_aware`. The top-level ones are retired at their old defaults
+     (`unit/retired_keys` R7, R8); `side_power_interval` is now read under every `jet_closure`, and the flake-cap
+     check reads the deck's `h_spall_max` (B1).
 
    Remove them, or stop requiring them, so no deck carries a number that does nothing (retire, don't stack).
 8. **Load:** use Höser 47 MPa only for the load ratio until applied stress is modelled.

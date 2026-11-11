@@ -22,19 +22,9 @@ microstructure.nphases    = 1
 microstructure.phase0.fraction = 1.0
 microstructure.phase0.law      = grimsel      # CHOICE (form): the measured laws below
 
-# INERT under law = grimsel; required by the parser; to retire (MODEL_CARD §12 item 7).
-# The law rewrites every cell's kappa / beta / E / mu / rho / Cp field each step
-# (UpdatePropertyFields) and the criterion takes its stress from the law (LawSigma).
-# Since P2-14a E and mu are inert too: under the law the confinement term p nu/(1 - nu)
-# takes nu from grimsel.nu below (ElasticConstants, Removal.H), the nu LawSigma uses.
-# (Until P2-14a it read nu = E/(2 mu) - 1, equal to grimsel.nu by value only.)
-microstructure.phase0.kappa             = 1.5             # Meier Table 7.1 (inert, see above)
-microstructure.phase0.beta              = 8.0e-6
-microstructure.phase0.E                 = 30.0e9          # inert (see above)
-microstructure.phase0.mu                = 11.538461538e9
-microstructure.phase0.rho               = 2750.0
-microstructure.phase0.Cp                = 790.0
-microstructure.phase0.A_D               = 0.0
+# P2-27: the six phase scalars (kappa, beta, E, mu, rho, Cp) and A_D are GONE from this file. Under law = grimsel
+# the law fills the property fields at every cell and step and the criterion takes its stress from the law
+# (spall.stress_law = grimsel), so the parser REFUSES them; the t = 0 plotfile fields are the law at T_ref.
 
 # Grimsel laws (src/Numeric/Material/Grimsel.H; validation/grimsel_properties/
 # grimsel_granite_properties_reference.md). MEAS-MAT. ⚠ Table 3's E/E0 and K_Ic are flat

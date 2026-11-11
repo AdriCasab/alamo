@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+# D2z-1: whole-cell removal is unconditional; `spall.removal_increment` is gone.
+#
+# Geometry is the D2k side_face_flux / D2x side_face_area case verbatim (see
+# ./input): a 4 x 4 x 60 block at 2 mm with a corner column heated ten times
+# harder, under a convective_flame patch with
+# spall.stress_source = local_thermoelastic. That pair is the point: it is the
+# computed-T configuration in which the depth scan's surface region collapses
+# to T_face = T_top, which is what made a column fire twice per cell.
+#
+# Variants (4 ranks):
+#   W       ./input                            whole-cell, the only mode
+#   PRESC   ./input_presc                      prescribed_T, scan RETAINED
+#   (P2-26: the SN leg -- spall.surface_normal=1, the superseded-recession witness -- and checks (e)-(e4), (f)
+#   retire with the key, census C2.)
+#
+# Checks:
+#   (a) WHOLE-CELL IS THE DEFAULT AND NEEDS NO KEY: on W every regime-1 row
+#       voids exactly one cell and there are exactly as many rows as voided
+#       cells. The key is deleted, so this is now the behaviour of a plain run.
+#   (b) THE PHI TIE HOLDS: h_applied == dz EXACTLY on every regime-1 row.
+#       h = dz lands on a cell boundary and Removal.H:145-148 records that ties
+#       there "miss or add one"; the in-code assertion aborts the run, and this
+#       re-checks it from the log so a silent pass is visible.
+#   (c) THERE IS NO firings_per_void COLUMN. Goal 4 was revised to drop it:
+#       under whole-cell it is 1.000 by construction, so it carries no
+#       information, and registering it appended after the eight jet_* columns
+#       and broke jet_enthalpy criterion (a). The invariant it would have
+#       reported is enforced by the n_voided == 1 assertion in the code and is
+#       re-checked here from the removal log. Keeping it out makes the tree
+#       audit absolute: no column appears or disappears anywhere.
+#   (d) prescribed_T IS UNTOUCHED: PRESC still spalls, and its h_applied is
+#       about dz/2, NOT dz -- the scan is retained there. ⚠ That is
+#       CONSERVATISM, not a justified split: D2z-0 takeaway 7 found the same
+#       dz/2 landing under prescribed_T with a real gradient, which points at
+#       the gate location rather than the lerp. Keeping it untouched keeps Hu
+#       and Kant unchanged.
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import csv
+import glob
+import os
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT = os.path.join(HERE, "input")
+INPUT_P = os.path.join(HERE, "input_presc")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "output")
+
+DZ = 0.120 / 60.0                    # 2 mm, from the input's geometry/n_cell
+
+VARIANTS = {
+    "W":     (INPUT,   []),
+    "PRESC": (INPUT_P, []),
+}
+
+FAIL = []
+
+
+def check(name, cond, detail):
+    print(f"  {'PASS' if cond else 'FAIL'}  {name}: {detail}")
+    if not cond:
+        FAIL.append(name)
+
+
+def run(name, inp, keys):
+    pf = os.path.join(OUT, name)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, inp,
+            f"plot_file={pf}"] + keys)
+    os.makedirs(OUT, exist_ok=True)
+    with open(pf + ".log", "w") as log:
+        log.write(" ".join(cmd) + "\n")
+        log.flush()
+        rc = subprocess.call(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    return rc
+
+
+def thermo(name):
+    p = os.path.join(OUT, name, "thermo.dat")
+    head = open(p).readline().split()
+    a = np.loadtxt(p, skiprows=1, ndmin=2)
+    return {c: a[:, i] for i, c in enumerate(head)}
+
+
+def events(name):
+    """regime-1 (spall) rows of the removal log."""
+    p = os.path.join(OUT, name + "_removal_events.csv")
+    if not os.path.exists(p):
+        return []
+    with open(p) as f:
+        return [d for d in csv.DictReader(f) if int(d["regime"]) == 1]
+
+
+def main():
+    if len(sys.argv) == 1:
+        for n, (inp, keys) in VARIANTS.items():
+            rc = run(n, inp, keys)
+            print(f"  {n}: rc={rc}")
+            if rc != 0:
+                check(f"{n} runs", False, f"rc={rc}")
+                return 1
+
+    T = {n: thermo(n) for n in VARIANTS}
+    E = {n: events(n) for n in VARIANTS}
+
+    # ---- (a) whole-cell with no key ------------------------------------
+    nv = [int(r["n_voided"]) for r in E["W"]]
+    v = sum(nv)
+    check("(a) every firing voids exactly one cell, with no key set",
+          len(nv) > 0 and set(nv) == {1} and len(nv) == v,
+          f"{len(nv)} regime-1 rows, {v} cells voided, n_voided values {sorted(set(nv))}")
+
+    # ---- (b) the phi tie ------------------------------------------------
+    h = np.array([float(r["h_applied"]) for r in E["W"]])
+    check("(b) h_applied == dz exactly on every firing",
+          h.size > 0 and np.all(h == DZ),
+          f"h_applied/dz in [{(h/DZ).min():.12f}, {(h/DZ).max():.12f}]"
+          if h.size else "no rows")
+
+    # ---- (c) NO firings_per_void column ---------------------------------
+    # D2z-1 Goal 4 (revised): the column is deliberately NOT registered. Under
+    # whole-cell its value is 1.000 by construction, so it carries no
+    # information, and appending it after the eight jet_* columns broke
+    # jet_enthalpy's criterion (a), which asserts those are the LAST eight.
+    # The invariant lives in the n_voided == 1 assertion in Removal.H instead,
+    # which is checked from the log by (a) above. Keeping the column out lets
+    # the tree audit be absolute: no column appears or disappears anywhere.
+    for n in VARIANTS:
+        check(f"(c) {n} does NOT register firings_per_void",
+              "firings_per_void" not in T[n],
+              "absent" if "firings_per_void" not in T[n] else "PRESENT")
+    # The property that column would have reported, read from the log instead.
+    v = sum(int(r["n_voided"]) for r in E["W"])
+    check("(c2) one firing per void, read from the removal log",
+          len(E["W"]) > 0 and len(E["W"]) == v,
+          f"{len(E['W'])} regime-1 rows, {v} cells voided")
+
+    # ---- (d) prescribed_T keeps its scan ---------------------------------
+    hp = np.array([float(r["h_applied"]) for r in E["PRESC"]])
+    check("(d) prescribed_T still spalls", hp.size > 0, f"{hp.size} regime-1 rows")
+    check("(d2) prescribed_T keeps the depth scan (h about dz/2, not dz)",
+          hp.size > 0 and np.all(hp < 0.75 * DZ) and 0.4 < (hp / DZ).mean() < 0.6,
+          f"mean h_applied/dz = {(hp/DZ).mean():.4f}, max = {(hp/DZ).max():.4f}"
+          if hp.size else "no rows")
+
+    print()
+    if FAIL:
+        print(f"FAILED ({len(FAIL)}): " + ", ".join(FAIL))
+        return 1
+    print("all checks passed")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

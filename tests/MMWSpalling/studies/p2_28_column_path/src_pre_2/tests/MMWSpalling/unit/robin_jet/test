@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+# D2a: spatial flame expressions surface_patch.h_expr / T_flame_expr (x, y, r,
+# s, t) with a prescribed nozzle path z_n = nozzle_z0 - nozzle_feed*t, on the C1
+# pinned closure (robin_form = pinned), plus the pinned branch-reason counters.
+#
+# Base: input_jet = ../robin_pinned/input_pinned with the flame block replaced
+# by expressions (S1/C1 column, dz = 2 mm, scalar flaw a0 = 20 um, no beam).
+# Runs (1 rank unless noted):
+#   C   ../robin_pinned/input_pinned, constants h = 1e4, T_gas = 1000 K, 20 s
+#   A   input_jet, h_expr = "10000.0", T_flame_expr = "1000.0", nozzle far, 20 s
+#   B   T_flame_expr = 293.15 + 700*min(1, 0.05/s), h = 1e4,
+#       nozzle_z0 = top + 0.02 m, feed 0, 40 s
+#   I   B with pinned_idle_cycles = 0.5 (pins expire before the refire)
+#   S   3 x 1 x 125 strip, dx = dy = 50 mm (lateral conduction ~1e-4 of the
+#       face flux), h_expr = 1e4*(1 - 2 r): h = 1e4, 9e3, 8e3 at r = 0, 50,
+#       100 mm; T_gas = 1000 K, 20 s
+#   S3  S on 3 ranks
+#   X   nozzle_z0 = top + 4 mm, nozzle_feed = 0.01 m/s (collides at t = 0.4 s)
+#   X2  X with the column at r = 20 mm and nozzle_collision_radius = 10 mm, 2 s
+# Checks:
+#   (a) A == C: Level_0 Cell_D bytes, removal_events.csv bytes, every common
+#       thermo column printed identically.
+#   (b) B: on every row with pinned_cols_pinned = 1, pinned_q_mean ==
+#       1e4*(T_gas(s) - T_pin), s = nozzle_z0 - (k_top - n_voided + 1)*dz from
+#       the last removal_events row and T_pin = T_top of the last regime-1 row,
+#       both at time <= t - dt (a row at t holds the step advanced at t - dt).
+#       6-digit thermo print -> 1e-5 relative. s also == patch_min_standoff.
+#   (c) S: each column's ROP fit (cumulative h_applied, last 10 s) within 2 %
+#       of its closed form q/(rho Cp (T_fire - T0)) with T_fire = the mean
+#       regime-1 T_top in the window; ROP order follows h.
+#   (d) X: rc != 0 and the nozzle-collision message. X2: no abort (s <= 0 is
+#       allowed outside nozzle_collision_radius), patch_min_standoff = 0.
+#   (e) B, I, S: pinned_cols_face_unset + _idle + _qneg + _minrule ==
+#       pinned_cols_face on every row; _minrule > 0 and _idle > 0 somewhere.
+#   (f) S3 == S: removal_events.csv bytes and rank-ordered Cell_D bytes.
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import filecmp
+import glob
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = TEST_DIR.split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+MPI = lambda n: ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(n)]
+INPUT = os.path.join(TEST_DIR, "input_jet")
+INPUT_C = os.path.join(os.path.dirname(TEST_DIR), "robin_pinned", "input_pinned")
+DT, DZ, TOP = 1.0e-3, 2.0e-3, 0.250
+TOL_PRINT = 1.0e-5
+RHOCP, T0 = 2750.0 * 790.0, 293.15
+SIG, EPS, HC = 5.670374e-8, 0.8, 10.0
+Z_N_B = TOP + 0.02
+TG_B = "293.15+700*min(1,0.05/s)"
+
+IDLE2 = "surface_patch.pinned_idle_cycles=2.0"
+STRIP = ["amr.n_cell=3 1 125", "geometry.prob_hi=0.15 0.05 0.25",
+         "surface_patch.x0=0.025", "surface_patch.y0=0.025", "surface_patch.radius=0.2",
+         'surface_patch.h_expr="10000.0*(1.0-2.0*r)"', IDLE2, "stop_time=20.0"]
+RUNS = {
+    "C":  (INPUT_C, [IDLE2, "stop_time=20.0"], 1),
+    "A":  (INPUT, [IDLE2, "stop_time=20.0"], 1),
+    "B":  (INPUT, [IDLE2, "stop_time=40.0", f'surface_patch.T_flame_expr="{TG_B}"',
+                   f"surface_patch.nozzle_z0={Z_N_B!r}"], 1),
+    "I":  (INPUT, ["surface_patch.pinned_idle_cycles=0.5", "stop_time=40.0",
+                   f'surface_patch.T_flame_expr="{TG_B}"', f"surface_patch.nozzle_z0={Z_N_B!r}"], 1),
+    "S":  (INPUT, STRIP, 1),
+    "S3": (INPUT, STRIP, 3),
+    "X":  (INPUT, [IDLE2, "stop_time=2.0", f"surface_patch.nozzle_z0={TOP + 0.004!r}",
+                   "surface_patch.nozzle_feed=0.01"], 1),
+    "X2": (INPUT, [IDLE2, "stop_time=2.0", f"surface_patch.nozzle_z0={TOP + 0.004!r}",
+                   "surface_patch.nozzle_feed=0.01", "surface_patch.x0=0.021",
+                   "surface_patch.nozzle_collision_radius=0.01"], 1),
+}
+EXPECT_FAIL = {"X"}
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+def run(name, outroot):
+    inp, extra, nranks = RUNS[name]
+    pf = os.path.join(outroot, name)
+    for p in (pf, pf + "_h_col_events.csv", pf + "_removal_events.csv"):
+        if os.path.isdir(p):
+            shutil.rmtree(p)
+        elif os.path.exists(p):
+            os.remove(p)
+    cmd = ([] if nranks == 1 else MPI(nranks)) + [BIN, inp, f"plot_file={pf}"] + extra
+    print("Running:", " ".join(cmd), flush=True)
+    with open(pf + ".log", "w") as log:
+        return subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+
+
+def thermo_text(pf):
+    lines = [l.split() for l in open(os.path.join(pf, "thermo.dat")) if l.strip()]
+    return lines[0], lines[1:]
+
+
+def thermo(pf):
+    names, rows = thermo_text(pf)
+    a = np.array(rows, dtype=float)
+    return {n: a[:, i] for i, n in enumerate(names)}
+
+
+def events(pf):
+    return np.genfromtxt(pf + "_removal_events.csv", delimiter=",", names=True, ndmin=1)
+
+
+def cell_d_bytes(pf):
+    """Level_0 FAB bytes (header line + data) of every plotfile, concatenated in
+    box-index order from Cell_H's FabOnDisk entries, so runs whose boxes land
+    in different Cell_D_<rank> files (4 boxes on 3 ranks) still compare."""
+    out = {}
+    for p in sorted(glob.glob(os.path.join(pf, "*cell"))):
+        lev = os.path.join(p, "Level_0")
+        entries = [l.split()[1:3] for l in open(os.path.join(lev, "Cell_H")) if l.startswith("FabOnDisk:")]
+        blobs, sizes = [], {}
+        for fname, off in entries:
+            sizes.setdefault(fname, []).append(int(off))
+        for fname, off in entries:
+            offs = sorted(sizes[fname])
+            end = next((o for o in offs if o > int(off)), os.path.getsize(os.path.join(lev, fname)))
+            with open(os.path.join(lev, fname), "rb") as f:
+                f.seek(int(off))
+                blobs.append(f.read(end - int(off)))
+        out[os.path.basename(p)] = b"".join(blobs)
+    return out
+
+
+def tg_b(s):
+    return 293.15 + 700.0 * np.minimum(1.0, 0.05 / s)
+
+
+def closed_rop(h, T_gas, T_f):
+    q = h * (T_gas - T_f) - EPS * SIG * (T_f ** 4 - T0 ** 4) - HC * (T_f - T0)
+    return q / (RHOCP * (T_f - T0)) * 3600.0
+
+
+def fit_rop(ev, t0, t1):
+    cum = np.cumsum(ev["h_applied"])
+    sel = (ev["time"] > t0) & (ev["time"] <= t1)
+    if sel.sum() < 3:
+        return 0.0
+    return float(np.polyfit(ev["time"][sel], cum[sel], 1)[0]) * 3600.0
+
+
+outroot = sys.argv[1] if len(sys.argv) > 1 else os.path.join(TEST_DIR, "output")
+rcs = {}
+if len(sys.argv) <= 1:
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    os.makedirs(outroot, exist_ok=True)
+    for n in RUNS:
+        rcs[n] = run(n, outroot)
+        if rcs[n] != 0 and n not in EXPECT_FAIL:
+            print(f"FAIL: run {n} exited with {rcs[n]}")
+            sys.exit(1)
+P = {n: os.path.join(outroot, n) for n in RUNS}
+
+# (a) constant expressions == constants
+cC, cA = cell_d_bytes(P["C"]), cell_d_bytes(P["A"])
+check("a Cell_D A == C", len(cC) > 0 and cC.keys() == cA.keys() and all(cC[k] == cA[k] for k in cC),
+      f"{len(cC)} plotfiles")
+check("a removal_events A == C",
+      filecmp.cmp(P["C"] + "_removal_events.csv", P["A"] + "_removal_events.csv", shallow=False),
+      f"{events(P['C']).size} rows")
+nC, rC = thermo_text(P["C"])
+nA, rA = thermo_text(P["A"])
+cols = [c for c in nC if c in nA]
+iC, iA = [nC.index(c) for c in cols], [nA.index(c) for c in cols]
+same = len(rC) == len(rA) and all([x[i] for i in iC] == [y[i] for i in iA] for x, y in zip(rC, rA))
+check("a thermo A == C (common columns)", same,
+      f"{len(rC)} rows x {len(cols)} columns; A-only: {[c for c in nA if c not in nC]}")
+
+# (b) stand-off dependence on every pinned row
+thB, evB = thermo(P["B"]), events(P["B"])
+t = thB["time"]
+ia = np.searchsorted(evB["time"], t - DT + 1e-9, side="right") - 1
+fire = evB[evB["regime"] == 1]
+ip = np.searchsorted(fire["time"], t - DT + 1e-9, side="right") - 1
+k_after = np.where(ia >= 0, evB["k_top"][np.maximum(ia, 0)] - evB["n_voided"][np.maximum(ia, 0)], 124)
+s_row = Z_N_B - (k_after + 1) * DZ
+pinned = thB["pinned_cols_pinned"] == 1.0
+sel = pinned & (ip >= 0)
+q_cf = 1.0e4 * (tg_b(s_row[sel]) - fire["T_top"][ip[sel]])
+rel = np.abs(thB["pinned_q_mean"][sel] - q_cf) / np.abs(q_cf)
+check("b pinned_q_mean == h(T_gas(s) - T_pin)",
+      sel.sum() > 0 and sel.sum() == pinned.sum() and rel.max() <= TOL_PRINT,
+      f"{int(sel.sum())}/{int(pinned.sum())} pinned rows, s {s_row[sel].min() * 1e3:.1f}-"
+      f"{s_row[sel].max() * 1e3:.1f} mm, T_gas {tg_b(s_row[sel]).max():.1f}-{tg_b(s_row[sel]).min():.1f} K, "
+      f"max rel diff {rel.max():.2e} (tol {TOL_PRINT:g})")
+stepped = t > 0.0   # the t = 0 row is printed before the first step
+rs = np.abs(thB["patch_min_standoff"][stepped] - s_row[stepped]) / s_row[stepped]
+check("b s == patch_min_standoff", rs.max() <= TOL_PRINT,
+      f"{int(stepped.sum())} rows (t > 0), max rel diff {rs.max():.2e}; "
+      f"ledger max |err| {np.max(np.abs(thB['ledger_err'])):.2e}")
+
+# (c) radial dependence in the strip
+thS, evS = thermo(P["S"]), events(P["S"])
+T_END = 20.0
+rops, lines = [], []
+cond_c = True
+for ci, h in enumerate((1.0e4, 9.0e3, 8.0e3)):
+    ev = evS[evS["col_i"] == ci]
+    t0 = T_END - 10.0
+    f = ev[(ev["regime"] == 1) & (ev["time"] > t0)]
+    if f.size < 3 or ev[ev["regime"] == 1]["time"][0] > t0 - 2.0:
+        cond_c = False
+        lines.append(f"col {ci}: not steady by t = {t0} s")
+        rops.append(0.0)
+        continue
+    T_f = float(np.mean(f["T_top"]))
+    rop, cf = fit_rop(ev, t0, T_END), closed_rop(h, 1000.0, T_f)
+    rops.append(rop)
+    cond_c = cond_c and abs(rop / cf - 1.0) <= 0.02
+    lines.append(f"col {ci} h {h:.0f}: fit {rop:.3f} m/h, closed form {cf:.3f} (T_fire {T_f:.1f} K), "
+                 f"ratio {rop / cf:.4f}")
+check("c per-column ROP fit vs closed form (2 %)", cond_c, "; ".join(lines))
+check("c ROP order follows h", rops[0] > rops[1] > rops[2] > 0.0, f"{[round(r, 3) for r in rops]} m/h")
+
+# (d) collision abort
+logX = open(P["X"] + ".log", errors="replace").read()
+rcX = rcs.get("X")
+check("d nozzle collision aborts", (rcX is None or rcX != 0) and "nozzle collision" in logX,
+      f"rc = {rcX if rcX is not None else '(not rerun)'}; message "
+      f"{'found' if 'nozzle collision' in logX else 'MISSING'}")
+thX2 = thermo(P["X2"])
+check("d outside nozzle_collision_radius no abort", (rcs.get("X2", 0) == 0) and thX2["time"][-1] >= 2.0 - DT - 1e-9
+      and np.all(thX2["patch_min_standoff"] == 0.0),
+      f"column at r = 20 mm, collision radius 10 mm: reached t = {thX2['time'][-1]:g} s past the "
+      f"s = 0 crossing at 0.4 s; patch_min_standoff = 0 (no column inside the radius)")
+
+# (e) branch reasons
+tot = {"minrule": 0, "idle": 0, "qneg": 0, "unset": 0}
+parts = []
+cond_e = True
+for n in ("B", "I", "S"):
+    th = thermo(P[n])
+    s = sum(th[f"pinned_cols_face_{r}"] for r in ("unset", "idle", "qneg", "minrule"))
+    eq = bool(np.all(s == th["pinned_cols_face"]))
+    cond_e = cond_e and eq
+    counts = {r: int(np.sum(th[f"pinned_cols_face_{r}"])) for r in tot}
+    for r in tot:
+        tot[r] += counts[r]
+    parts.append(f"{n}: sum ok on {th['time'].size} rows" if eq else f"{n}: SUM MISMATCH")
+    parts.append(f"{n} col-steps {counts} pinned {int(np.sum(th['pinned_cols_pinned']))}")
+check("e reason counters sum to pinned_cols_face", cond_e, "; ".join(parts[0::2]))
+check("e min rule and idle expiry exercised", tot["minrule"] > 0 and tot["idle"] > 0,
+      "; ".join(parts[1::2]))
+
+# (f) rank identity of the strip
+check("f removal_events S3 == S",
+      filecmp.cmp(P["S"] + "_removal_events.csv", P["S3"] + "_removal_events.csv", shallow=False),
+      f"{evS.size} rows")
+cS, cS3 = cell_d_bytes(P["S"]), cell_d_bytes(P["S3"])
+check("f Cell_D S3 == S", len(cS) > 0 and cS.keys() == cS3.keys() and all(cS[k] == cS3[k] for k in cS),
+      f"{len(cS)} plotfiles (Level_0 FABs in box-index order)")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

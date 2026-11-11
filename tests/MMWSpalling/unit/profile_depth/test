@@ -30,8 +30,10 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
-SHARED = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "Shared.H")
-FR = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "FaceRemoval.H")
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
+SHARED = _src.SLICE_PREFIX + "Shared.H"
+FR = _src.SLICE_PREFIX + "FaceRemoval.H"
 BEGIN = "    // P2-19: THE DEPTH OF A LINE'S OWN TEMPERATURE RISE"
 END = "    // T at depth z_v along a line of cells of length dz."
 FAIL = []
@@ -77,7 +79,7 @@ int main()
 
 
 def probe():
-    src = open(SHARED).read()
+    src = _src.read(SHARED)
     a, b = src.find(BEGIN), src.find(END)
     need(a >= 0 and b > a, "the helpers' text is located in Shared.H between its two marker comments")
     if not (a >= 0 and b > a):
@@ -143,8 +145,8 @@ def main():
     eta, ratio = z0e()
     report("z0e constant-flux (erfc) profile: ierfc(eta*) = ierfc(0)/e at eta* = %.6f, so e-fold / tangent depth "
            "k dT_s/q = eta* sqrt(pi) = %.4f (the old fallback used the tangent depth)" % (eta, ratio))
-    fr = re.sub(r"//[^\n]*", "", open(FR).read())
-    sh = re.sub(r"//[^\n]*", "", open(SHARED).read())
+    fr = re.sub(r"//[^\n]*", "", _src.read(FR))
+    sh = re.sub(r"//[^\n]*", "", _src.read(SHARED))
     nd = sum(len(re.findall(r"static \w+(?:::\w+)? %s\(" % f, sh + fr))
              for f in ("ProfileFallDepth", "ProfileEFoldDepth", "ProfilePeak"))
     need(nd == 3 and fr.count("ProfileEFoldDepth(") == 2 and fr.count("ProfilePeak(") == 1,

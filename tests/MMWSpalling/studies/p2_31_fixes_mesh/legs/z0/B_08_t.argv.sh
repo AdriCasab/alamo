@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/validation/oglesby/input 'amr.n_cell=128 128 64' timestep=0.05 stop_time=2.0 amr.plot_int=-1 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_31_fixes_mesh/legs/z0/B_08_t

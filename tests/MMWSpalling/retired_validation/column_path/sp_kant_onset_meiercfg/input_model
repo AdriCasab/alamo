@@ -1,0 +1,168 @@
+# P2-26 (2026-11-07): `spall.flake_coherence_length = 0.004` deleted from this deck -- the key is retired (census C2). The deleted line was LIVE, so this deck's next run differs from its earlier outputs BY DESIGN.
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P0 -- THE ANCHOR THAT COVERS THE CONFIGURATION IN USE.
+#
+# ⚠ WHY THIS CASE EXISTS. The existing anchor (../sp_kant_onset) does not
+# cover the configuration the model is used at:
+#
+#            | sp_kant_onset            | Meier pilot        | here
+#   mesh     | 1 mm                     | 2 mm               | 2 / 1 / 0.5 mm
+#   flaw     | scalar 20 um             | Weibull 4/20 um    | both variants
+#   K_Ic     | Nasseri x1.05            | Nasseri x1.0       | x1.0
+#   E, nu    | 35 GPa, 0.26 (C. Aare)   | 30 GPa, 0.3        | 30 GPa, 0.3
+#   kappa    | 2.50                     | 1.50               | 1.50
+#   q        | ~0.21 MW/m^2 cold        | 0.45-1.05          | 0.21 and 0.70
+#
+# So it re-uses Kant's GEOMETRY (24 mm cube, lateral rollers + full-face
+# convective heating => eps_xx = eps_yy = 0 exactly, Kant's 1-D confinement)
+# and Kant's TARGET (onset rise 461 K, band 390-560 K), with the Meier
+# material, flaw and stress settings and the P0 surface reconstruction on.
+#
+# ⚠ THE ONSET IS READ FROM THE REMOVAL EVENT LOG, NOT FROM PLOTFILES.
+# spall.enabled = 1 + spall.removal_events_csv = 1 makes the FIRST regime-1
+# row the onset event, carrying T_surf, ell_eff, h_f and T_bar_flake at 17
+# significant digits at the exact step. Interpolating max(Sp) between
+# plotfiles (what ../sp_kant_onset does) costs a plotfile cadence and still
+# only brackets the crossing. Removal after that first firing is irrelevant
+# to onset -- nothing has been removed before it.
+#
+# Meshes and h_conv are set on the COMMAND LINE so all six legs share one
+# file and cannot drift:
+#   amr.n_cell = 12 12 12   (2 mm) | 24 24 24 (1 mm) | 48 48 48 (0.5 mm)
+#   surface_patch.h_conv = 150 | 500        (Kant's h_fl,min is 500 +- 100)
+# ⚠ timestep is held at 0.0125 s on ALL THREE meshes (the 0.5 mm explicit
+# limit dz^2/(6*alpha) = 0.060 s) so dz is the only thing that varies.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/validation/kant/sp_kant_onset_meiercfg/output/model
+
+timestep  = 0.0125
+stop_time = 90.0
+
+amr.plot_int        = 100000
+amr.max_level       = 0
+amr.n_cell          = 24 24 24
+amr.blocking_factor = 2
+amr.max_grid_size   = 12
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.024 0.024 0.024
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# Grimsel granite -- the Meier pilot's phase 0, verbatim except
+# alpha_attenuation (no beam here).
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.h_gb0              = 0.0
+
+# --- LEFM Sp = K_I/K_Ic, Meier settings ---
+# DETERMINISTIC flaw here (weibull off). ⚠ THIS IS DELIBERATE AND IT IS WHAT
+# CRITERION (a) IS SCORED ON. Under weibull the per-cell draw carries
+# (V_cell/V0)^(1/m) with V0 = 8e-9 = V_cell AT 2 mm ONLY, and the first
+# firing is the luckiest of 4x as many surface cells at each refinement. Both
+# effects move the onset flaw with dz by construction, so a Weibull leg
+# cannot measure whether the CRITERION is mesh-independent. ./input_weibull
+# is the Meier-faithful partner and is REPORTED, with the size effect
+# quantified.
+spallation.model         = sp_weibull
+spall.stress_source      = local_thermoelastic
+spallation.sp.a0         = 8.0e-6
+spallation.sp.n_segments = 128
+spallation.sp.kic.law    = nasseri_table
+spallation.sp.kic.scale  = 1.0
+
+weibull.enabled = 0
+
+spall.enabled                = 1
+spall.h_spall_max            = 0.015
+spall.removal_events_csv     = 1
+
+# ⚠ REQUIRED, NOT COSMETIC. Without surface.follow_mask the convective patch
+# is applied at the FIXED domain top (MMWSpalling.H: `k_top_c = ... : sp_topk`),
+# so the moment the first cell is voided the heating stops dead and the column
+# cools for the rest of the run. Measured on this case before the key was set:
+# the new top cell sat at 295.9 K after 59 s of nominal 0.55 MW/m^2.
+surface.follow_mask = 1
+
+# P0.
+spall.surface_T      = reconstructed
+spall.removal_energy = cell
+
+vapor.enabled = 0
+
+# Meier's lateral confinement. At E*beta*dT/(1-nu) = 158 MPa the
+# p*nu/(1-nu) = 0.43 MPa offset is 0.27 % -- carried for fidelity to the
+# Meier settings, not because it moves the anchor.
+confining.p = 1.0e6
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.012
+beam.y0     = 0.012
+beam.z0     = 0.024
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 293.15
+
+# Kant's convective flame-jet Robin BC, whole +z face (radius >> the face
+# half-diagonal), so the problem stays 1-D.
+surface_patch.enabled = 1
+surface_patch.mode    = convective_flame
+surface_patch.x0      = 0.012
+surface_patch.y0      = 0.012
+surface_patch.radius  = 0.05
+surface_patch.h_conv  = 150.0
+surface_patch.T_flame = 1673.15
+
+hc.heat.alpha = 6.9045e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+

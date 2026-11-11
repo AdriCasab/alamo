@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P2-2b (b6) -- the rebuilt enthalpy table must carry the latent heat.
 
-Two legs from one input file:
+Three legs from one input file:
 
   constant   `microstructure.phase0.law` unset  -> Table built from
              `Material::Constant` (rho, Cp scalars). This is the shipped path
@@ -10,6 +10,9 @@ Two legs from one input file:
              ⚠ Grimsel parses only `T_ref`, so `T_m`/`fus_width`/`L_m`/
              `T_vap_lo`/`T_vap_hi`/`L_v` must be COPIED onto the law object
              before `Build`, or the latent heat vanishes with no symptom.
+  zhang      `law = zhang` (P2-29)              -> Table built from Zhang's law
+             (Zhang Table 1, `Zhang.H` defaults), the SAME copy rule: the
+             phase's latent scalars, never the law's own.
 
 THE ASSERTION, and why it is in two halves. Comparing H against an analytic
 integral would measure quadrature as much as implementation, so each leg is
@@ -21,10 +24,11 @@ must equal rho*L_m. ⚠ Without that half the test would pass on a table that
 dropped the latent heat, because the first half would simply agree with a
 no-latent reference.
 
-Usage: test   (runs ALAMO twice, then checks)
+Usage: test   (runs ALAMO three times, then checks)
 """
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -46,7 +50,23 @@ RHO_C, CP_C = 2750.0, 790.0
 T_MIN, DT, T_MAX = 200.0, 0.5, 5000.0
 
 LEGS = (("constant", []),
-        ("grimsel", ["microstructure.phase0.law=grimsel"]))
+        ("grimsel", ["microstructure.phase0.law=grimsel"]),
+        ("zhang", ["microstructure.phase0.law=zhang"]))
+
+
+def zhang_rho(T):
+    """`Zhang.H` defaults (Zhang Table 1): rho = -0.2877 theta + 2884, 2300 at and above 1273 K"""
+    return 2300.0 if T >= 1273.0 else -0.2877 * (T - 273.15) + 2884.0
+
+
+def zhang_cp(T):
+    """`Zhang.H` defaults: c_p = -2.73e-4 theta^2 + 0.894 theta + 788 up to 1510.5 K, 0.184 theta + 1249 above"""
+    th = T - 273.15
+    return -2.73e-4 * th * th + 0.894 * th + 788.0 if T <= 1510.5 else 0.184 * th + 1249.0
+
+
+def rho_at(law, T):
+    return G.RHO if law == "grimsel" else (zhang_rho(T) if law == "zhang" else RHO_C)
 
 
 def rhocp(T, law, latent=True):
@@ -54,6 +74,8 @@ def rhocp(T, law, latent=True):
     `Material.H:30-43` forms it."""
     if law == "grimsel":
         rho, cp = G.RHO, G.c_p(T - 273.15)
+    elif law == "zhang":
+        rho, cp = zhang_rho(T), zhang_cp(T)
     else:
         rho, cp = RHO_C, CP_C
     if latent and FUS_W > 0.0:
@@ -86,8 +108,17 @@ def run(tag, extra):
     if os.path.isdir(d):
         shutil.rmtree(d)
     os.makedirs(d, exist_ok=True)
+    deck = os.path.join(HERE, "input")
+    if any(x in extra for x in ("microstructure.phase0.law=grimsel", "microstructure.phase0.law=zhang")):
+        # P2-27 stage 4 REFUSES kappa / rho / Cp under law = grimsel (the law fills them at every cell): the grimsel leg
+        # runs the deck without those three lines (fixed in P2-28; RED since P2-27 stage 4, which did not run this test).
+        # P2-29: law = zhang refuses them too.
+        deck = os.path.join(d, "input_" + tag)
+        keep = [ln for ln in open(os.path.join(HERE, "input")).read().split("\n")
+                if not re.match(r"\s*microstructure\.phase0\.(kappa|rho|Cp)\s*=", ln)]
+        open(deck, "w").write("\n".join(keep) + "\n")
     cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN,
-            os.path.join(HERE, "input")] + extra +
+            deck] + extra +
            ["plot_file=%s" % os.path.join(d, "run")])
     env = os.environ.copy()
     env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
@@ -157,7 +188,7 @@ def main():
             continue
         want = table_H(tag, T_INIT, latent=True)
         want_no = table_H(tag, T_INIT, latent=False)
-        rho = G.RHO if tag == "grimsel" else RHO_C
+        rho = rho_at(tag, T_M)   # the boxcar's rho: the law's at T_m (Zhang's capped 2300 here; uniform over the window)
         # ⚠⚠ THE BAR IS NOT rho*L_m. `Table::Build` integrates the boxcar with
         # the TRAPEZOID RULE on its own grid, and a trapezoid over a rectangle
         # over-books it by exactly dT/fus_width. Derivation, from the grid and
@@ -203,7 +234,7 @@ def main():
             print("  " + f)
         print("\nFAIL")
         return 1
-    print("both forms build H(T) from their own rho and c_p AND carry the")
+    print("all three forms build H(T) from their own rho and c_p AND carry the")
     print("latent heat. ⚠ Neither production deck sets a phase-change scalar,")
     print("so this is the only witness the hazard has.")
     print()

@@ -18,9 +18,7 @@ minute, and that gap measures the glass, not the virgin loss tangent. It is neve
      Gaussian once alpha varies sideways (studies/p2_21_loss_table/step0)
   b2 [gate] at the first step row: P_dep / P_inc = 1 - exp(-alpha L) +- 0.002 and P_trans / P_inc = exp(-alpha L)
      -+ 0.002, alpha from the run's metadata (the cold value), L the block height
-  b3 [gate, only with --explicit DIR] TABLE runs: the onset time (the first step row with a finite bc_z_melt) of the
-     explicit twin within 10 % of this run's; FLAT runs: the twin's raw surface-centre T at its last plotfile at or
-     before 50 s within 2 % of this run's
+  (b3, the explicit-vs-implicit twin check, retired in P2-29: one explicit kernel, the production one)
   c1 [report] raw and brightness T at 25 / 50 / 100 / 150 s vs #28c uncorrected (x 0.7) and as printed
   c4 [report] the axial profile under the beam at the last plotfile: peak T and its depth
   c5-c7, c10 [report, table deck; the per-step central-column columns, no plotfile read] at ONSET (the first step
@@ -29,7 +27,7 @@ minute, and that gap measures the glass, not the virgin loss tangent. It is neve
      beam_tau_max and beam_alpha_max; c10 bc_ell_p, bc_ell_pk, bc_z_peak beside the 2.4 mm buckling depth
   c8 [report, with --scan LABEL=DIR ...] the scan read together: c5 depth and c7 total-transmission ratio per leg
 
-Usage: test [RUN_DIR] [--explicit DIR] [--scan LABEL=DIR ...]   (RUN_DIR = the deck's plot_file directory; exit 1
+Usage: test [RUN_DIR] [--scan LABEL=DIR ...]   (RUN_DIR = the deck's plot_file directory; exit 1
 on a failed gate)
 """
 import glob
@@ -143,19 +141,8 @@ def onset_record(run):
 
 
 def main(argv):
-    pos = []
-    skip = False
-    for a in argv:
-        if skip:
-            skip = False
-            continue
-        if a == "--explicit":
-            skip = True
-            continue
-        if not a.startswith("--") and "=" not in a:
-            pos.append(a)
+    pos = [a for a in argv if not a.startswith("--") and "=" not in a]
     run = pos[0] if pos else os.path.join(HERE, "output")
-    exp_dir = argv[argv.index("--explicit") + 1] if "--explicit" in argv else None
     scan = [a.split("=", 1) for a in argv[argv.index("--scan") + 1:]] if "--scan" in argv else []
     m = meta(run)
     lam, er, td = float(m["beam.lambda"]), float(m["beam.eps_r"]), float(m["beam.tan_delta"])
@@ -178,9 +165,9 @@ def main(argv):
         i486 = next((i for i, x in enumerate(tpk) if x > 486.0), None)
         am_ok = min(am) >= 13.9 and (i486 is None or min(am[i486:]) > 14.0)
         need(min(pinc) > 0 and max(nv) == 0 and max(ce) <= 1e-12 and am_ok,
-             "b1 per-column optical depth on the %s path: %d step rows, min P_inc %.4g W, invariant violations %g, "
+             "b1 per-column optical depth: %d step rows, min P_inc %.4g W, invariant violations %g, "
              "max beam_col_err_max %.2e (bar 1e-12); beam_alpha_max min %.4f (>= 13.9), from the first row with "
-             "bc_T_peak > 486 K (%s) min %s (> 14.0)" % (m.get("solver", "?"), len(rows), min(pinc), max(nv), max(ce),
+             "bc_T_peak > 486 K (%s) min %s (> 14.0)" % (len(rows), min(pinc), max(nv), max(ce),
                                                           min(am), "t %g s" % rows[i486][h.index("time")]
                                                           if i486 is not None else "never",
                                                           "%.4f" % min(am[i486:]) if i486 is not None else "-"))
@@ -193,33 +180,16 @@ def main(argv):
                   "no cold row", "onset" if o else "the last row", cl[k_on], min(cl), max(cl)))
     else:
         need(min(pinc) > 0 and max(nv) == 0 and max(abs(x) for x in cl) <= 1e-3,
-             "b1 closure on the %s path: %d rows, min P_inc %.4g W, invariant violations %g, max |closure| %.2e "
-             "(bar 1e-3)" % (m.get("solver", "?"), len(rows), min(pinc), max(nv), max(abs(x) for x in cl)))
+             "b1 closure: %d rows, min P_inc %.4g W, invariant violations %g, max |closure| %.2e "
+             "(bar 1e-3)" % (len(rows), min(pinc), max(nv), max(abs(x) for x in cl)))
     L = float(m["geometry.prob_hi"].split()[2]) - float(m["geometry.prob_lo"].split()[2])
     want = 1 - math.exp(-alpha * L)
     fd, ft = pdep[0] / pinc[0], ptr[0] / pinc[0]
     need(abs(fd - want) <= 0.002 and abs(ft - (1 - want)) <= 0.002,
          "b2 first step row: P_dep/P_inc %.4f, P_trans/P_inc %.4f (1 - exp(-alpha L) = %.4f at alpha %.3f, L %.3f m; "
          "bar +- 0.002)" % (fd, ft, want, alpha, L))
-    if exp_dir and table and "beam_col_err_max" in thermo(exp_dir)[0]:
-        oi, oe = onset_record(run), onset_record(exp_dir)
-        if oi is None or oe is None:
-            need(False, "b3 onset times: this run %s, explicit twin %s (both must melt)" % (
-                "%.2f s" % oi["t"] if oi else "never", "%.2f s" % oe["t"] if oe else "never"))
-        else:
-            need(abs(oe["t"] / oi["t"] - 1) <= 0.10, "b3 explicit vs implicit onset time (first step row with a "
-                 "finite bc_z_melt): %.2f vs %.2f s (rel %+.1f %%, bar 10 %%)" % (oe["t"], oi["t"],
-                                                                               100 * (oe["t"] / oi["t"] - 1)))
     ax = axial(run, m)
     top = [(t, Tc[0]) for t, z, Tc in ax]
-    if exp_dir and not table:
-        axe = axial(exp_dir, meta(exp_dir))
-        # the explicit leg plots every 333 steps of 0.03 s: its last plotfile at or before 50 s (49.95 s) is the
-        # comparison time, and this run is interpolated to it
-        te_t, te = max((t, Tc[0]) for t, z, Tc in axe if t <= 50.0 + 1e-6)
-        ti = at(top, te_t)
-        need(abs(te / ti - 1) <= 0.02, "b3 explicit vs implicit raw surface-centre T at %.2f s: %.1f vs %.1f K "
-             "(rel %+.2f %%, bar 2 %%)" % (te_t, te, ti, 100 * (te / ti - 1)))
     if table:
         r = onset_record(run)
         print("\nc5-c7, c10 (report; the per-step central-column columns) at ONSET:")
@@ -262,8 +232,12 @@ def main(argv):
     print("\nc4 (report): at t %.1f s the axial peak is %.1f K at %.2f mm below the top face (top cell %.1f K)" % (
         t_end, Tc[ip], 1e3 * (zt - z[ip]), Tc[0]))
     print("=" * 100)
-    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
-    return 1 if FAIL else 0
+    if FAIL:
+        print("FAIL (%d)" % len(FAIL))
+        return 1
+    print("PASS: beam energy only; surface T at 150 s %.1f K vs Zhang 1678 K (simulation), 1716 K (experiment) — a report, "
+          "not a validation" % at(top, 150))
+    return 0
 
 
 if __name__ == "__main__":

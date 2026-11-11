@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/beam_void/input amr.thermo.int=1 amr.thermo.plot_int=1 stop_time=0.002 plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_31_fixes_mesh/legs/z0/L16_unit_beam_void_input

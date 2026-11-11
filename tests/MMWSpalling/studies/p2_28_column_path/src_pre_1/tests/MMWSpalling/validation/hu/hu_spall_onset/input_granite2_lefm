@@ -1,0 +1,107 @@
+# ============================================================================
+# GRIMSEL UNDER HU'S GRANITE-2 RAMP -- the LEFM onset criterion scored on Hu's boundary condition (P2-27).
+# ============================================================================
+# Hu et al. (validation/hu/hu_thermal_spallation_validation_tests_augmented_vv_framework.txt): a 0.1 m cube at
+# T0 = T_ext = 280.15 K (:38-46), a circular patch of radius 15 mm at (0.05, 0.05) on the top face held at the
+# prescribed temperature T_B1(t) = 638.22 + 3.74 t K (:51); granite 2 spalled at 37.0 s, LRST 773.15 K (:73).
+#
+# ⚠ THIS IS A PREDICTION FOR HU'S BOUNDARY CONDITION, NOT A FIT. Hu's file gives her granite's E, nu, beta and
+# alpha (:17-25) but NO K_Ic and NO flaw, so the only one-rock statement available is the GRIMSEL rock under her
+# ramp: the rock file (its laws, grimsel_table K_Ic, R 0.531, a0 8 um, m 13) and nothing typed here. The rock and
+# the criterion are the calibration's; only the geometry, the mesh and the boundary are Hu's.
+# PRE-REGISTERED (P2-27 m4, ACTIVE_STEP.md): the Grimsel onset band on the face list is 826-885 K (P2-25's base
+# legs; the offline twin 842 K, the Weibull median 849 K), so T_B1(t*) in 826-885 K => t* = 50-66 s, LATER than
+# Hu's 37 s by 13-29 s (the onset is a temperature, flat with the ramp rate). A t* < 37 s or > 80 s is a finding
+# about the rock mismatch or the prescribed-T path, not a bug.
+#
+# THE MECHANISM: site A (UpdateSpAfterMechanics), the no-removal onset criterion the Kant onset decks use, with its
+# surface temperature taken from Hu's boundary (spallation.sp.prescribed_T_surface: the criterion's T_surf IS
+# T_B1(t)); the stress from the temperature profile (spall.stress_source = local_thermoelastic, el.type = disable);
+# spall.enabled = 0 (onset only). test_lefm reports the first time any top cell reaches Sp_field >= 1, bracketed
+# linearly between the 1 s plotfiles as validation/kant/sp_kant_onset/test's onset_homogeneous does.
+# ⚠ SITE A RETIRES AT H (decision 8 of 2026-11-05): this deck is re-expressed then on the evaluate-only face list
+# and MUST REPRODUCE t*.
+# Replaces the damage-law input_granite2 / input_sandstone2 / test (retired_validation/hu_damage_law/, the user
+# 2026-11-09, census Q5). Sandstone is not run: Grimsel is a granite.
+
+alamo.program = mmwspalling
+plot_file = tests/MMWSpalling/validation/hu/hu_spall_onset/output_lefm/granite2
+
+FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+# check_shared: allow spall.buckle_span
+spall.buckle_span = 0.0     # ONSET-ONLY: B is evaluated on the face list only (P2-15), and this deck removes nothing;
+                            #   the same declared override as validation/kant/grimsel_calibration/input
+
+# --- Hu's cube and mesh: 0.1 m, 32^3 cells of 3.125 mm (the damage-law deck's mesh) ------------------------------
+# dt 0.5 s: the explicit limit at 3.125 mm is dx^2/(6 alpha(280.15 K)) = 0.897 s (Grimsel alpha 1.8146e-6 m^2/s at
+# the cold start), ratio 0.56; a plotfile every 1 s of simulated time.
+timestep  = 0.5
+stop_time = 120.0
+amr.plot_int        = 2
+amr.max_level       = 0
+amr.n_cell          = 32 32 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.1  0.1  0.1
+geometry.is_periodic = 0 0 0
+alpha = 0.0 0.0
+
+# --- the start temperature: T_ref = the IC (check_shared iii) ----------------------------------------------------
+microstructure.phase0.T_ref = 280.15
+hc.heat.alpha = 1.8146e-6                  # HC's required parse; unused on the microstructure path
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# --- Hu's boundary: the prescribed patch (surface_patch.mode default prescribed_T), no other loss -----------------
+losses.sigma_SB = 0.0
+losses.h_conv   = 0.0
+losses.T_amb    = 280.15
+surface_patch.enabled = 1
+surface_patch.x0      = 0.05
+surface_patch.y0      = 0.05
+surface_patch.radius  = 0.015
+surface_patch.T_expr  = 638.22+3.74*t
+surface_patch.h_conv  = 0.0
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.05
+beam.y0     = 0.05
+beam.z0     = 0.1
+
+# --- the criterion: the rock file's LEFM rule, onset only --------------------------------------------------------
+spallation.model         = sp_weibull
+spall.enabled            = 0
+spall.stress_source      = local_thermoelastic
+spallation.sp.n_segments = 128
+spallation.sp.prescribed_T_surface.enabled = 1
+spallation.sp.prescribed_T_surface.expr    = 638.22+3.74*t    # the criterion's surface T IS Hu's boundary T_B1(t)
+weibull.enabled = 1
+weibull.seed    = 12345
+weibull.V0      = 3.0517578125e-8          # = the cell volume (3.125 mm)^3 (check_shared iv)
+confining.p     = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

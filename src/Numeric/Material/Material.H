@@ -1,14 +1,18 @@
 #ifndef NUMERIC_MATERIAL_MATERIAL_H
 #define NUMERIC_MATERIAL_MATERIAL_H
 
-// Abstract base for temperature-dependent thermophysical materials. The
-// ALAMO MMW spalling integrator dispatches κ(T), ρ(T), c_p(T) through this
-// interface; phase-change scalars (T_m, T_v, latent heats, smoothing widths)
-// are stored on the base so they are uniform across material implementations.
+// Abstract base for temperature-dependent thermophysical materials.
+// Table::Build reads ρ(T) and c_p(T) through this interface (effective_rhocp);
+// phase-change scalars (T_m, the vaporisation range, latent heats, smoothing
+// widths) are stored on the base so they are uniform across material
+// implementations. The base carries NO conductivity: the integrator reads it from
+// the concrete law by its own name (P2-31) -- Grimsel::diffusivity() is a
+// DIFFUSIVITY [m^2/s] (its conductivity is lambda()), Zhang::conductivity() and
+// Constant::conductivity() are CONDUCTIVITIES [W/(m K)]. One virtual `kappa`
+// used to mean both.
 //
-// Step 4b only needs Zhang/Oglesby granite. New rock types or per-mineral
-// models slot in by deriving a new subclass and adding it to MMWSpalling's
-// `select_default<...>("material", ...)` factory call.
+// The laws are Constant, Grimsel and Zhang, one per mineral phase, selected by
+// `microstructure.phaseN.law` = constant | grimsel | zhang (MMWSpalling::Parse).
 
 #include "Set/Set.H"
 
@@ -21,11 +25,9 @@ public:
 
     virtual Set::Scalar rho  (Set::Scalar T) const = 0;   // [kg/m^3]
     virtual Set::Scalar cp   (Set::Scalar T) const = 0;   // [J/(kg K)]
-    virtual Set::Scalar kappa(Set::Scalar T) const = 0;   // [W/(m K)]
 
-    // ρ · c_p with the smoothed latent-heat boxcars baked in. This is what
-    // implicit time-steppers want as their thermal-mass coefficient, since
-    // it is the slope dH/dT used by the H↔T table. Equal to ρ·c_p outside
+    // ρ · c_p with the smoothed latent-heat boxcars baked in: the slope dH/dT
+    // that Table::Build integrates into the H↔T table. Equal to ρ·c_p outside
     // the fusion / vaporisation windows.
     Set::Scalar effective_rhocp(Set::Scalar T) const
     {

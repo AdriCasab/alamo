@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 tests/MMWSpalling/studies/p2_29_one_heat_path/bin_pre/mmwspalling-3d-g++ tests/MMWSpalling/validation/zhang/zhang_oglesby/input  plot_file=tests/MMWSpalling/studies/p2_29_one_heat_path/legs/ZI/run

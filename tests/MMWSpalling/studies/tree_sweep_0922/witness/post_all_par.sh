@@ -1,4 +1,5 @@
 #!/bin/bash
+# P2-28 RECORD: the tree gate retired with the column removal path (one removal path, the face list); p2_27.md5 is the column era's last list, its outputs moved with their tests to retired_units/. Kept, not run: face_gate.py is the gate.
 # Parallel tree sweep. Same 11 tests, same hash.sh, same 2639-file list as
 # post_all.sh + wit.sh -- only the SCHEDULE differs.
 #
@@ -12,7 +13,7 @@
 # collision:
 #   jet_d2c -> unit/jet_d2c/output          dev2d   -> validation/.../output/dev2d
 #   <unit>  -> unit/<name>/output           s1_smoke-> studies/s1_.../output_smoke
-#   spall_event also writes output_no_event, which no other test touches.
+#   (P2-27: spall_event, which also wrote output_no_event, retired with the damage lineage.)
 #
 # ⚠ It is validated by REPRODUCTION, not by argument: run it, then diff its md5
 # list against the serial list. If a single hash moves, the schedule is not
@@ -60,7 +61,6 @@ lane_b () {
   run_test dev2d             $RUN bin/mmwspalling-3d-g++ \
                              $T/validation/meier/sp_meier_pilot/input_2d_dev
   run_test scalar_flaw       $VENV $T/unit/scalar_flaw/test
-  run_test spall_event       $VENV $T/unit/spall_event/test
 }
 lane_c () {
   run_test jet_d2c           $VENV $T/unit/jet_d2c/test

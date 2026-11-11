@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""P2-27 / P2-28 -- THE CROSS-KEY INTERLOCKS (CheckInterlocks) AND THE TIME-STEP LIMIT.
+
+P2-27 moved every cross-key abort into one static CheckInterlocks(), called as the last statement of Parse. P2-28
+(census H) deleted the column removal path: the interlocks that guarded it (follow_mask / surface_T / removal_energy
+pairings, the pinned closure, the bit, site A's scope) are deleted with it, their keys abort by presence or are retired
+at their one live value, and ONE REMOVAL PATH is enforced (removal, the surface form, the flame map and the jet march
+all need the face list). This test runs one ONE-STEP leg per rule, each breaking exactly ONE rule (-np 1), and checks
+the abort's MESSAGE (the text after `ABORT: file:line (function)`).
+
+Base decks (P2-28: re-based): G = unit/gradient_blind/input (THE FACE LIST: removal on, the surface form, a constant
+h_expr map); G_CONST = G with a constant scalar flame, the cell form, no list and spall off (a deck the face list does
+not own); FL = unit/face_list/input + surface_patch.face_list=1 (the face list, ledger on, grimsel law).
+  I0  G, FL, G_CONST alone                              -> rc 0 (an abort test passes on a binary refusing every deck)
+  kept rules:
+  I1  G + spall.flake_h_max=0.02 (h_spall_max 0.015)     -> "must be SMALLER than spall.h_spall_max"
+  I3  G + spall.stress_source=mechanics                  -> "spall.stress_source != local_thermoelastic" (the face list's)
+  I7  G + energy_ledger.enabled=1 + amr.max_level=1      -> "energy_ledger.enabled is single-level only"
+  I8  G + robin_form=face + epsilon 0.5 > epsilon_high 0.3 -> "robin_form = face requires losses.epsilon_high"
+  I13 G + spall.buckle_log_csv=1                         -> "buckle_log_csv = 1 (P2-23)"
+  I14 G_CONST + spall.buckle_span=0.012                  -> "is evaluated only on the face list"
+  I19 FL + amr.n_cell = 12 12 24 (dz = dx/2)             -> "requires cubic cells; got"
+  I20 G + spallation.model=none (spall.enabled = 1)      -> "need spallation.model = sp_weibull"
+  P2-28's one removal path (NEW):
+  N1  G + surface_patch.face_list=0                      -> "need surface_patch.face_list = 1: the column removal path"
+  N2  G_CONST + robin_form=surface                       -> "robin_form = surface requires surface_patch.face_list = 1"
+  N3  G + face_list=0, spall off, cell form              -> "h_expr / T_flame_expr need surface_patch.face_list = 1"
+  P2-28's retired keys (presence / one live value; each also a retired_keys K leg):
+  R1  G + bit.enabled=1 (+ bit keys)                     -> "bit.enabled was retired in P2-28"
+  R2  FL + robin_form=pinned                             -> "robin_form = pinned was retired in P2-28"
+  R3  FL + spall.removal_energy=cell                     -> "spall.removal_energy = cell was retired at its default"
+  R4  FL + weibull.detach_mode=connected_cluster + A_crit -> "weibull.A_crit was retired in P2-28"
+  (P2-28 removed: I2, I9 (surface_T forms), I5, I16 (the bit's pairings), I6, I10-I12 (follow_mask / removal pairings),
+   I15, I17, I18 (the list's refusals of pinned / cell / the labeller): their rules are deleted with the column path)
+THE TIME-STEP LIMIT (P2-27; dt_lim = dx^2 / (n alpha(T_cold)), n = 6, 7 on a prescribed top; the face list ABORTS, any
+other deck WARNS):
+  D1  FL, timestep = 10 x dt_lim                          -> rc != 0, the abort names the level, dt, dt_lim, phase, T_cold
+  D2  FL, timestep = 0.9 x dt_lim                         -> rc 0, the per-level message, no warning
+  D3  unit/latent_heat/input (no face list), 10 x dt_lim  -> rc 0 WITH the warning (P2-28: G is the face list now)
+  (D4 / D5, the per-level limit on an AMR deck, retired with AMR in P2-29: the user, 2026-11-10)
+(P2-27's --pre comparison against the pre-move binary is retired: the P2-28 re-base changed the fixtures and the rules.)
+Usage: test
+"""
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+U = os.path.join(ROOT, "tests", "MMWSpalling", "unit")
+G = os.path.join(U, "gradient_blind", "input")
+FL = os.path.join(U, "face_list", "input")
+G1 = ["stop_time=0.008"]
+FL1 = ["surface_patch.face_list=1", "stop_time=0.008"]
+BIT = ["bit.enabled=1", "bit.feed_rate=0.001", "bit.radius=0.002"]
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+LEGS = [
+    ("I1", G, G1 + ["spall.flake_h_max=0.02"], "must be SMALLER than spall.h_spall_max"),
+    ("I3", G, G1 + ["spall.stress_source=mechanics"], "spall.stress_source != local_thermoelastic"),
+    ("I7", G, G1 + ["energy_ledger.enabled=1", "amr.max_level=1"], "energy_ledger.enabled is single-level only"),
+    ("I8", G, G1 + ["surface_patch.robin_form=face", "losses.epsilon=0.5", "losses.epsilon_high=0.3"],
+     "surface_patch.robin_form = face requires losses.epsilon_high >= losses.epsilon"),
+    ("I13", G, G1 + ["spall.buckle_log_csv=1"], "spall.buckle_log_csv = 1 (P2-23)"),
+    ("I14", "G_CONST", G1 + ["spall.buckle_span=0.012"], "is evaluated only on the face list"),
+    ("I19", FL, FL1 + ["amr.n_cell=12 12 24"], "surface_patch.face_list = 1 requires cubic cells; got"),
+    ("I20", G, G1 + ["spallation.model=none"], "spall.enabled / vapor.enabled need spallation.model = sp_weibull"),
+    ("N1", G, G1 + ["surface_patch.face_list=0"],
+     "spall.enabled / vapor.enabled need surface_patch.face_list = 1: the column removal path"),
+    ("N2", "G_CONST", G1 + ["surface_patch.robin_form=surface"],
+     "surface_patch.robin_form = surface requires surface_patch.face_list = 1"),
+    ("N3", G, G1 + ["surface_patch.face_list=0", "spall.enabled=0", "spall.removal_events_csv=0",
+                    "surface_patch.robin_form=cell"], "h_expr / T_flame_expr need surface_patch.face_list = 1"),
+    ("R1", G, G1 + BIT, "bit.enabled was retired in P2-28"),
+    ("R2", FL, FL1 + ["surface_patch.robin_form=pinned"], "surface_patch.robin_form = pinned was retired in P2-28"),
+    ("R3", FL, FL1 + ["spall.removal_energy=cell"], "spall.removal_energy = cell was retired at its default (flake)"),
+    ("R4", FL, FL1 + ["weibull.detach_mode=connected_cluster", "weibull.A_crit=1.0e-6"],
+     "weibull.A_crit was retired in P2-28"),
+]
+
+
+def g_const():
+    """G (the face-list deck) re-written as a deck the face list does not own: a constant SCALAR flame (h_conv /
+    T_flame, not the map), the cell form, no list, spall off, no event log"""
+    d = tempfile.mkdtemp(prefix="interlocks_deck_")
+    p = os.path.join(d, "input_const")
+    drop = re.compile(r"\s*(surface_patch\.(h_expr|T_flame_expr|nozzle_z0|nozzle_collision_radius|face_list|"
+                      r"robin_form)|spall\.enabled|spall\.removal_events_csv)\s*=")
+    keep = [ln for ln in open(G).read().split("\n") if not drop.match(ln)]
+    keep += ["surface_patch.h_conv = 1.0", "surface_patch.T_flame = 820.0", "spall.enabled = 0",
+             "spall.removal_events_csv = 0"]
+    open(p, "w").write("\n".join(keep) + "\n")
+    return p
+
+
+def run(binary, deck, extra, np_=1):
+    if deck == "G_CONST":
+        deck = g_const()
+    d = tempfile.mkdtemp(prefix="interlocks_")
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(np_), binary, deck] + extra + \
+           ["plot_file=%s" % os.path.join(d, "run")]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    return r.returncode, ANSI.sub("", (r.stdout or "") + (r.stderr or ""))
+
+
+def abort_message(txt):
+    """the message of the first ABORT line (the text after `(function) `)"""
+    for ln in txt.split("\n"):
+        m = re.match(r"\s*ABORT:\s+\S+:\d+ \((?:operator\(\)|[^)]*)\) (.*)$", ln)   # a lambda prints (operator())
+        if m:
+            return m.group(1).strip()
+    return None
+
+
+def grimsel_alpha(T):          # Numeric::Material::Grimsel at its defaults (the FL deck sets none of them)
+    th = T - 273.15
+    cp = 1370.0 - 178000.0 / (th + 271.0)
+    return (2000.0 / (th + 563.0)) / (2650.0 * cp)
+
+
+def main():
+    bad = 0
+    print("P2-27 / P2-28 -- THE CROSS-KEY INTERLOCKS (CheckInterlocks) AND THE TIME-STEP LIMIT")
+    print("=" * 96)
+
+    def need(ok, msg):
+        nonlocal bad
+        print("  %s  %s" % ("ok  " if ok else "FAIL", msg))
+        bad += 0 if ok else 1
+
+    for tag, deck, extra in (("I0 G", G, G1), ("I0 FL", FL, FL1), ("I0 GC", "G_CONST", G1)):
+        rc, txt = run(BIN, deck, extra)
+        need(rc == 0, "%-6s valid base deck runs one step (rc %d)%s" % (tag, rc,
+             "" if rc == 0 else ": " + str(abort_message(txt))))
+    print("-- one broken rule per leg")
+    n_abort = 0
+    for tag, deck, extra, want in LEGS:
+        rc, txt = run(BIN, deck, extra)
+        msg = abort_message(txt)
+        ok = rc != 0 and msg is not None and want in msg
+        n_abort += ok
+        need(ok, "%-4s rc=%d  %s" % (tag, rc, (msg or "(no ABORT line)")[:120]))
+    need(n_abort >= 12, "at least 12 abort legs hold (%d)" % n_abort)
+
+    print("-- the time-step limit")
+    a_fl = grimsel_alpha(293.15)
+    lim_fl = 0.001 ** 2 / (6.0 * a_fl)              # FL: dx 1 mm, T_cold min(T_ref, T_amb) = 293.15 K
+    dt = 10.0 * lim_fl
+    rc, txt = run(BIN, FL, ["surface_patch.face_list=1", "timestep=%r" % dt, "stop_time=%r" % dt])
+    msg = abort_message(txt) or ""
+    need(rc != 0 and "exceeds the explicit limit" in msg and "level 0" in msg and "phase 0" in msg
+         and "T_cold 293.15" in msg,
+         "D1 FL timestep = 10 x dt_lim (%.4g s, dt_lim %.4g s) aborts naming level, dt_lim, phase, T_cold: %s"
+         % (dt, lim_fl, msg[:120]))
+    dt = 0.9 * lim_fl
+    rc, txt = run(BIN, FL, ["surface_patch.face_list=1", "timestep=%r" % dt, "stop_time=%r" % dt])
+    need(rc == 0 and "explicit time-step limit, level 0" in txt and "WARNING" not in txt,
+         "D2 FL timestep = 0.9 x dt_lim runs (rc %d), message present, no warning" % rc)
+    lh = os.path.join(U, "latent_heat", "input")
+    lim_lh = 0.002 ** 2 / (6.0 * 1.5 / (2750.0 * 790.0))   # latent_heat: dx 2 mm, constant law
+    dt = 10.0 * lim_lh
+    rc, txt = run(BIN, lh, ["timestep=%r" % dt, "stop_time=%r" % dt])
+    wl = [l for l in txt.split("\n") if "WARNING" in l and "exceeds the explicit limit" in l]
+    need(rc == 0 and len(wl) == 1, "D3 latent_heat (no face list) timestep = 10 x dt_lim (%.4g s) runs WITH one "
+         "warning (rc %d, %d warning line(s))" % (dt, rc, len(wl)))
+    # P2-29 (the user, 2026-11-10): D4 / D5 -- the per-level limit on the 2-level amr_microstructure_regrid deck --
+    # are RETIRED with AMR (parked; that deck moved to retired_units/). CheckTimeStepLimit's level >= 1 branch is
+    # untested until the AMR-repair packet re-instates them.
+    print("=" * 96)
+    if bad:
+        print("FAIL: %d check(s)" % bad)
+        return 1
+    print("PASS: every interlock fires on its one broken rule, the valid decks run, and the explicit time-step limit "
+          "aborts on the face list and warns elsewhere, per level.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

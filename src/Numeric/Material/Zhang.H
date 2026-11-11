@@ -8,8 +8,8 @@
 //
 // theta = T - 273.15   (T in Kelvin)
 //
-// rho(T)   = a_rho * theta + b_rho                       (T <= T_rho_cap)
-//          = rho_cap                                     (T >  T_rho_cap)
+// rho(T)   = a_rho * theta + b_rho                       (T <  T_rho_cap)
+//          = rho_cap                                     (T >= T_rho_cap)
 // kappa(T) = 1 / (a_k + b_k * theta)                     (T <= T_kappa_cap)
 //          = kappa(T_kappa_cap)                          (T >  T_kappa_cap)
 // cp(T)    = a_cp_lo*theta^2 + b_cp_lo*theta + c_cp_lo   (T <= T_cp_break)
@@ -54,7 +54,11 @@ public:
         pp.query_default("cp.b_hi",  v.b_cp_hi,  1249.0);
         pp.query_default("cp.T_break", v.T_cp_break, 1510.5);
 
-        // Phase-change parameters (stored on the Material base).
+        // Phase-change parameters (stored on the Material base). ⚠ As a phase
+        // law (`microstructure.phaseN.law = zhang`) the integrator refuses these
+        // seven keys under the law's prefix and copies the PHASE's own latent
+        // scalars over them before the table is built, so these defaults do
+        // not reach a run.
         pp.query_default("T_ref",     v.T_ref,     273.15);
         pp.query_default("T_m",       v.T_m,       1510.5);
         pp.query_default("fus_width", v.fus_width, 200.0);
@@ -70,7 +74,8 @@ public:
         return a_rho * (T - 273.15) + b_rho;
     }
 
-    Set::Scalar kappa(Set::Scalar T) const override
+    // the CONDUCTIVITY [W/(m K)] (P2-31: renamed from kappa(), which Grimsel used for a diffusivity)
+    Set::Scalar conductivity(Set::Scalar T) const
     {
         Set::Scalar Tc = (T < T_kappa_cap) ? T : T_kappa_cap;
         return 1.0 / (a_kappa + b_kappa * (Tc - 273.15));

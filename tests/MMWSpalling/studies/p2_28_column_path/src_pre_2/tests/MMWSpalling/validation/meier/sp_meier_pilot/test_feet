@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+# Meier 2017 Grimsel pilot -- D2b scored test: burner on feet (J-M).
+# Reference packet: ../meier-2017-pilot-660kg-validation-reference.md
+#
+# CHECK-ONLY. The scored configuration (input_feet; 3-D quarter domain,
+# 60 x 60 x 150 at 2 mm, several hundred simulated seconds) takes over an hour
+# on 4 ranks, which is too expensive for a regression. This script scores
+# the output of
+#   tests/MMWSpalling/studies/d2b_feet_rop/run.py --stage B --wall A2
+# (run B_JM_A2, same keys as input_feet) with the study's analyze.py.
+# The Stage D mesh runs are used for the mesh criterion when present.
+#
+# Criteria (Meier 2017 Ch. 8; the J-M scored table in the study RESULTS.md):
+#   ROP                  [1.04, 1.92] m/h  (burner descent, steady window)
+#   hole Ø, depth-mean   85-93 mm over the 0.5 m block (drilled columns as
+#                        drilled, active columns projected with the run's v(r))
+#   hole Ø, minimum      >= 80 mm over the 0.5 m block (the burner feet)
+#   volume rate          [1.98, 2.96] cm^3/s, removal inside Ø 93 (Meier's
+#                        number is ROP x nominal hole area)
+#   ΔT_fire              500-560 K
+#   ROP flatness         50 s sub-fits within +-10 % (steady window exists)
+#   ledger               round-off
+#   mesh 2 -> 1 mm       ring ROP and T_fire within 5 %
+#
+# EXPECTED records each criterion's outcome as it came out of the D2b runs.
+# A FAIL there is an expected-fail, with its numbers in the study RESULTS.md;
+# the bands are not loosened. The test passes when every outcome matches
+# EXPECTED, so a change that flips any criterion (either way) is reported.
+# No parameter was adjusted toward Meier's ROP, hole diameter or volume rate.
+#
+# Usage:  python3 test_feet            (needs numpy; uses the study output)
+
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+STUDY = os.path.normpath(os.path.join(HERE, "..", "..", "..", "studies", "d2b_feet_rop"))
+sys.path.insert(0, STUDY)
+import analyze as an  # noqa: E402
+
+RUN = "B_JM_A2"
+
+# outcome per criterion as recorded after the D2b Stage B / D runs
+# (2026-09-16; B_JM_A2 stopped at the bottom watchdog at 341.6 s, window
+# 171-342 s). Expected-fails, with the numbers they came out at:
+#   hole Ø depth-mean  104.3 mm over 0-0.5 m (Ø 93 only below 245 mm)
+#   volume rate        3.27 cm^3/s inside Ø 93 (band top 2.96)
+#   ROP flatness       sub-fits within 2.5 %, but jet_s_c drifts 0.39 mm/s
+#                      (limit 0.02): the centre pit never equilibrates
+#   mesh               ring ROP -4.8 %, T_fire +0.00 % (within 5 %), but no
+#                      steady window at either resolution (burner ROP -6.4 %)
+EXPECTED = {
+    "ROP": "PASS",
+    "hole Ø, depth-mean over 0–0.5 m": "FAIL",
+    "hole Ø, minimum over 0–0.5 m": "PASS",
+    "volume rate inside Ø 93": "FAIL",
+    "ΔT_fire": "PASS",
+    "ROP flatness": "FAIL",
+    "ledger": "PASS",
+    "mesh 2 → 1 mm": "FAIL",
+}
+
+ACCEPTED_STATUS = ("ok", "bottom")
+
+
+def main():
+    runs = an.load("B_JM_")
+    if RUN not in runs:
+        print(f"FAIL: {RUN} not found under {an.OUT}; run the study's Stage B first")
+        return 1
+    run = runs[RUN]
+    res = an.analyze(run, "B")
+    status = res["status"]
+    runs_d = an.load("D_")
+    if runs_d:
+        an.mesh_result({n: an.analyze(r, "D") for n, r in runs_d.items()})
+    m = run.m
+    hand = an.hand_numbers(m["anchor"], m["T_nozzle"], m["mode"], m["entrained"], res["z_feet"])
+    rows = an.scored_table(res, hand, an.MESH.get("result"))[2:]
+    got = {}
+    print(f"{RUN}: status {status}, t_end {res['t_end']:g} s, window "
+          f"{res['W'][0]:.0f}-{res['W'][1]:.0f} s")
+    for row in rows:
+        cells = [c.strip() for c in row.strip().strip("|").split("|")]
+        name, target, sim, verdict = cells[0], cells[1], cells[2], cells[3]
+        got[name] = verdict
+        print(f"  {name:20s} {verdict:5s} {sim}  (target {target})")
+    ok = True
+    if not any(status.startswith(s) for s in ACCEPTED_STATUS):
+        print(f"FAIL: run status {status!r} (expected one of {ACCEPTED_STATUS})")
+        ok = False
+    if EXPECTED is None:
+        print("FAIL: EXPECTED outcomes not recorded yet")
+        return 1
+    for name, want in EXPECTED.items():
+        have = got.get(name)
+        if have != want:
+            print(f"FAIL: {name}: outcome {have}, recorded {want}")
+            ok = False
+        elif want == "FAIL":
+            print(f"  expected-fail: {name}")
+    print("PASS (all outcomes as recorded)" if ok else "FAILED")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

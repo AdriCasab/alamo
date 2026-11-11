@@ -24,12 +24,16 @@
 //   rho           = 2650                                 kg/m^3       [141]
 //
 // ⚠ kappa is NEVER set independently of lambda/(rho c_p) [112]: this class
-//   exposes lambda and lets the integrator form the diffusivity, exactly as
-//   the reference demands. Its three fits agree to 5.0 % against a 6.5 %
+//   exposes lambda (the CONDUCTIVITY, which the integrator writes to its
+//   conductivity field) and `diffusivity()` returns the DIFFUSIVITY formed from it,
+//   exactly as the reference demands. Its three fits agree to 5.0 % against a 6.5 %
 //   uncertainty propagated from c_p 768+/-48 and rho 2650+/-50.
+//   (P2-31: renamed from kappa(), which Zhang and Constant used for a
+//   CONDUCTIVITY [W/(m K)]; theirs is now conductivity().)
 //
-// ⚠ H(theta) here is ANALYTIC and is the exact integral of c_p, so the H<->T
-//   inversion is consistent by construction rather than by agreement.
+// ⚠ H(theta) [48] is the exact integral of c_p, and the class does not form it:
+//   a run's H<->T inversion is the phase's Table, a trapezoid of rho*c_p built
+//   from this class's rho() and cp() (Table::Build).
 //
 // =========================================================================
 // THE THERMAL STRAIN — P2-2 change 5, and the reason this class exists.
@@ -49,8 +53,8 @@
 //
 // ⇒ accumulate the STRAIN, then multiply by the stiffness AT T_s. The strain is
 // tabulated as a cumulative integral the same way the enthalpy table is, and
-// `unit/lateral_flux_lock` asserts that all seven stress sites take it from
-// here and from nowhere else. If anyone writes `alpha(T)*dT` at one site, the
+// `unit/lateral_flux_lock` asserts that `sigma_thermal` below has exactly ONE
+// caller in the integrator (`LawSigma`). If anyone writes `alpha(T)*dT` at one site, the
 // relief factor R silently absorbs a factor of two -- invisibly, because R is
 // fitted. That is gate (b6).
 //
@@ -131,7 +135,7 @@ public:
     }
 
     // ⚠ the DIFFUSIVITY, formed as lambda/(rho c_p) [112], never set apart.
-    Set::Scalar kappa(Set::Scalar T) const override
+    Set::Scalar diffusivity(Set::Scalar T) const
     {
         return lambda(T) / (rho(T) * cp(T));
     }
@@ -142,14 +146,6 @@ public:
         Set::Scalar th = T - 273.15;
         if (lam_cap_theta > 0.0 && th > lam_cap_theta) th = lam_cap_theta;
         return lam_a / (th + lam_th0);
-    }
-
-    // The analytic enthalpy [48], exactly the integral of cp above.
-    Set::Scalar H_of(Set::Scalar T) const
-    {
-        const Set::Scalar th = T - 273.15;
-        return cp_a * (th - 20.0)
-             - cp_b * std::log((th + cp_th0) / (20.0 + cp_th0));
     }
 
     Set::Scalar alpha_of(Set::Scalar T) const      // 1/K, Table 3
@@ -190,13 +186,14 @@ public:
     // THE STRAIN TABLE — the single source for every stress site.
     // =====================================================================
     // Cumulative INTEGRAL[20 degC .. theta] alpha dtheta, trapezoidal on a
-    // uniform 1 K grid from 20 to 1000 degC, linearly interpolated between
-    // nodes. ⚠ 1 K spacing makes the table agree with a dense offline
+    // uniform 1 K grid from 20 to 1000 degC; between nodes `strain_of` adds
+    // the analytic remainder. ⚠ 1 K spacing makes the table agree with a dense offline
     // quadrature to better than 1e-12 -- gate (b6) asks for 1e-10.
-    // ⚠ Called from the constructor AND from the end of `Parse`: both
-    // `alpha_cap_theta` (which reshapes the strain table) and `E0` are parsed
+    // ⚠ Called from the constructor AND from the end of `Parse`:
+    // `alpha_cap_theta` (which reshapes the strain table) is parsed
     // AFTER default construction, so a table built only once would silently
-    // ignore them. `(c7)` is exactly the `alpha_cap_theta` sensitivity, so a
+    // ignore it (`E0` needs no rebuild: the stiffness table holds the RATIO
+    // E/E_0). `(c7)` is exactly the `alpha_cap_theta` sensitivity, so a
     // stale strain table would make that row measure nothing.
     void BuildTables()
     {
@@ -242,6 +239,8 @@ public:
     // ⚠⚠ THE STRESS. Every site that needs a thermoelastic stress in this
     // material calls THIS, so there is one formula and one place to be wrong.
     // `T_s` is the hot face, `T_0` the unheated reference.
+    // ⚠ strain_of holds its last node above 1000 degC (1273.15 K): the strain,
+    // hence this stress at fixed E, stops changing there (MODEL_CARD §11 item 11).
     Set::Scalar sigma_thermal(Set::Scalar T_s, Set::Scalar T_0) const
     {
         const Set::Scalar eps = strain_of(T_s) - strain_of(T_0);

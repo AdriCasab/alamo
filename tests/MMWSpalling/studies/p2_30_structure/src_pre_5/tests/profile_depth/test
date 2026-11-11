@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""P2-19 (z0a-z0e) -- unit/profile_depth: the e-fold depth of a line's own temperature rise.
+
+The helpers ProfileFallDepth / ProfileEFoldDepth / ProfilePeak live in src/Integrator/MMWSpalling/Shared.H, a
+class-body fragment that cannot compile on its own. This test CUTS THEIR EXACT TEXT out of Shared.H (between the
+"P2-19: THE DEPTH OF A LINE'S OWN TEMPERATURE RISE" comment and the next helper's comment), wraps it in a struct with
+`Set::Scalar = double`, compiles a probe with the system C++ compiler and runs the cases on the real C++ -- no
+re-implementation. Lengths are in metres; samples are the face (z = 0) and the cell centres (d + 1/2) dz.
+
+  z0a  piecewise-LINEAR rise r(z) = 1 - z/1.5 mm, dz 1 mm: the crossing bracket's lower sample is r(1.5 mm) = 0, so
+       the linear branch runs and the samples lie on the interpolant: z* = 1.5 mm (1 - 1/e) to 1e-12 relative  [gate]
+  z0b  exponential rise exp(-z / 1.4 mm), dz 1.0 and 2.0 mm: ell_p / ell = 1 to 1e-12 at BOTH (ln-linear is exact)
+                                                                                                          [gate]
+  z0c  flat rise (r = rise_s) and rise_s = 0: NaN both                                                     [gate]
+  z0d  interior peak r(z) = exp(-((z - 2 mm)/3 mm)^2), dz 1 mm, the face value r(0): ell_p 5.61 +- 0.10 mm (analytic:
+       r(0) = 0.6412, r(0)/e at (z - 2)/3 = 1.2025, z = 5.6075 mm); z_peak 2 +- 0.5 mm; ell_pk 5.0 +- 0.10 mm  [gate]
+       (readability only: which depth is "the layer" under a beam is the port's question; both are logged)
+  z0e  offline: e-fold depth / tangent depth k dT_s / q of the constant-flux (erfc) profile             [report]
+  src  the helpers are defined once (Shared.H) and FaceRemoval.H calls ProfileEFoldDepth twice (the fallback,
+       the diagnostics) and ProfilePeak once
+Usage: test   (exit 1 on a failed gate)
+"""
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
+SHARED = _src.SLICE_PREFIX + "Shared.H"
+FR = _src.SLICE_PREFIX + "FaceRemoval.H"
+BEGIN = "    // P2-19: THE DEPTH OF A LINE'S OWN TEMPERATURE RISE"
+END = "    // T at depth z_v along a line of cells of length dz."
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def report(msg):
+    print("  REPORT " + msg)
+
+
+PROBE_MAIN = r"""
+#include <cstdio>
+int main()
+{
+    using S = double;
+    const S mm = 1.0e-3;
+    // z0a: linear, zero at 1.5 mm
+    { auto r = [&] (int d) { return 1.0 - (d + 0.5) * 1.0 * mm / (1.5 * mm); };
+      std::printf("z0a %.17g\n", H::ProfileEFoldDepth(r, 1.0, 1.0 * mm, 30)); }
+    // z0b: exponential, ell 1.4 mm, dz 1 and 2 mm
+    for (S dz : {1.0 * mm, 2.0 * mm})
+    { auto r = [&] (int d) { return std::exp(-(d + 0.5) * dz / (1.4 * mm)); };
+      std::printf("z0b %.17g %.17g\n", dz, H::ProfileEFoldDepth(r, 1.0, dz, 30)); }
+    // z0c: flat rise, and rise_s = 0
+    { auto r = [&] (int) { return 1.0; };
+      std::printf("z0c_flat %.17g\n", H::ProfileEFoldDepth(r, 1.0, 1.0 * mm, 30));
+      auto z = [&] (int) { return 0.0; };
+      std::printf("z0c_zero %.17g\n", H::ProfileEFoldDepth(z, 0.0, 1.0 * mm, 30)); }
+    // z0d: interior Gaussian peak at 2 mm, width 3 mm
+    { auto g = [&] (S zz) { const S u = (zz - 2.0 * mm) / (3.0 * mm); return std::exp(-u * u); };
+      auto r = [&] (int d) { return g((d + 0.5) * 1.0 * mm); };
+      S zp = 0.0, ep = 0.0;
+      H::ProfilePeak(r, g(0.0), 1.0 * mm, 30, zp, ep);
+      std::printf("z0d %.17g %.17g %.17g\n", H::ProfileEFoldDepth(r, g(0.0), 1.0 * mm, 30), zp, ep); }
+    return 0;
+}
+"""
+
+
+def probe():
+    src = _src.read(SHARED)
+    a, b = src.find(BEGIN), src.find(END)
+    need(a >= 0 and b > a, "the helpers' text is located in Shared.H between its two marker comments")
+    if not (a >= 0 and b > a):
+        return None
+    body = src[a:b]
+    n_defs = sum(len(re.findall(r"static \w+(?:::\w+)? %s\(" % f, body))
+                 for f in ("ProfileFallDepth", "ProfileEFoldDepth", "ProfilePeak"))
+    need(n_defs == 3, "the cut holds exactly the three helper definitions (%d)" % n_defs)
+    cxx = shutil.which("c++") or shutil.which("clang++") or shutil.which("g++")
+    d = tempfile.mkdtemp(prefix="profile_depth_")
+    cpp = os.path.join(d, "probe.cpp")
+    with open(cpp, "w") as f:
+        f.write("#include <cmath>\n#include <initializer_list>\n#include <limits>\nnamespace Set { using Scalar = double; }\n"
+                "struct H {\n" + body + "};\n" + PROBE_MAIN)
+    exe = os.path.join(d, "probe")
+    c = subprocess.run([cxx, "-std=c++17", "-O2", "-o", exe, cpp], capture_output=True, text=True)
+    need(c.returncode == 0, "the probe compiles against Shared.H's text (%s)" % os.path.basename(cxx))
+    if c.returncode != 0:
+        print(c.stderr[-2000:])
+        return None
+    out = {}
+    for ln in subprocess.run([exe], capture_output=True, text=True).stdout.splitlines():
+        t = ln.split()
+        out.setdefault(t[0], []).append([float(x) for x in t[1:]])
+    return out
+
+
+def ierfc(x):
+    return math.exp(-x * x) / math.sqrt(math.pi) - x * math.erfc(x)
+
+
+def z0e():
+    """constant-flux surface heating of a half-space: T - T0 = (2 q sqrt(kappa t) / k) ierfc(z / (2 sqrt(kappa t))).
+    dT_s = (2 q sqrt(kappa t) / k) / sqrt(pi) => tangent depth k dT_s / q = 2 sqrt(kappa t) / sqrt(pi).
+    e-fold: ierfc(eta*) = ierfc(0) / e, z* = 2 sqrt(kappa t) eta* => ratio z* / tangent = eta* sqrt(pi)."""
+    lo, hi, want = 0.0, 3.0, ierfc(0.0) / math.e
+    for _ in range(200):
+        m = 0.5 * (lo + hi)
+        lo, hi = (m, hi) if ierfc(m) > want else (lo, m)
+    eta = 0.5 * (lo + hi)
+    return eta, eta * math.sqrt(math.pi)
+
+
+def main():
+    print("P2-19 -- unit/profile_depth")
+    print("=" * 96)
+    out = probe()
+    if out:
+        mm = 1e-3
+        z = out["z0a"][0][0]
+        want = 1.5 * mm * (1.0 - 1.0 / math.e)
+        need(abs(z / want - 1) <= 1e-12, "z0a linear rise: z* %.15g m vs exact %.15g m (rel %.1e, bar 1e-12)"
+             % (z, want, abs(z / want - 1)))
+        for dz, v in out["z0b"]:
+            need(abs(v / (1.4 * mm) - 1) <= 1e-12, "z0b exponential, dz %.1f mm: ell_p/ell = %.15f (bar 1e-12)"
+                 % (dz / mm, v / (1.4 * mm)))
+        need(math.isnan(out["z0c_flat"][0][0]) and math.isnan(out["z0c_zero"][0][0]),
+             "z0c flat rise -> %r, rise_s = 0 -> %r (NaN both)" % (out["z0c_flat"][0][0], out["z0c_zero"][0][0]))
+        ep, zp, ek = out["z0d"][0]
+        need(abs(ep / mm - 5.61) <= 0.10 and abs(zp / mm - 2.0) <= 0.5 and abs(ek / mm - 5.0) <= 0.10,
+             "z0d interior peak: ell_p %.4f mm (5.61 +- 0.10; analytic 5.6075), z_peak %.2f mm (2 +- 0.5), ell_pk "
+             "%.4f mm (5.0 +- 0.10)" % (ep / mm, zp / mm, ek / mm))
+    eta, ratio = z0e()
+    report("z0e constant-flux (erfc) profile: ierfc(eta*) = ierfc(0)/e at eta* = %.6f, so e-fold / tangent depth "
+           "k dT_s/q = eta* sqrt(pi) = %.4f (the old fallback used the tangent depth)" % (eta, ratio))
+    fr = re.sub(r"//[^\n]*", "", _src.read(FR))
+    sh = re.sub(r"//[^\n]*", "", _src.read(SHARED))
+    nd = sum(len(re.findall(r"static \w+(?:::\w+)? %s\(" % f, sh + fr))
+             for f in ("ProfileFallDepth", "ProfileEFoldDepth", "ProfilePeak"))
+    need(nd == 3 and fr.count("ProfileEFoldDepth(") == 2 and fr.count("ProfilePeak(") == 1,
+         "src: three helper definitions, all in Shared.H (%d); FaceRemoval.H calls ProfileEFoldDepth %d x (fallback + "
+         "diagnostics) and ProfilePeak %d x" % (nd, fr.count("ProfileEFoldDepth("), fr.count("ProfilePeak(")))
+    print("=" * 96)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -12,13 +12,16 @@
       column) against U1's deck with the ONE-pair table 300 1.0 (the closed form): every plotfile field's max
       relative difference <= 1e-12 (Cell_D) AND, non-vacuous, the per-cell deposition's (H - H0, the quantity the
       path moves); the two closures equal to 1e-15
-  U3  unit/beam's OWN deck (no table) against studies/p2_20_beam_deposition/unit_beam_output_pre/: every plotfile
-      (Header, Cell_H, Cell_D_*) byte-identical -- the closed form untouched
+  (U3, a byte lock on unit/beam's const-alpha output, retired in P2-29 with the const-alpha path:
+      retired_units/beam_tau_separate_path/README line)
   With --bin_pre PATH (z1): that binary (the P2-20 build) on U1's deck must ABORT (rc != 0) naming beam.tan_delta_T.
+  P2-29: the deck is on the production kernel (one constant phase, kappa 0, rho = c_p = 1: H [J/m^3] = the old
+  H [K]). --deck NAME runs another deck of this directory into output_<name>/; --bin PATH runs every leg on that
+  binary.
+  The Temp range of U1's plotfiles is printed (the property table spans 200-5000 K).
 
-Usage: test [--bin_pre PATH]   (exit 1 on a failed bar)
+Usage: test [--bin_pre PATH] [--deck NAME] [--bin PATH]   (exit 1 on a failed bar)
 """
-import filecmp
 import math
 import os
 import shutil
@@ -33,10 +36,11 @@ yt.set_log_level(50)
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
 BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
-DECK = os.path.join(HERE, "input")
-BEAM_DECK = os.path.join(ROOT, "tests", "MMWSpalling", "unit", "beam", "input")
-PRE = os.path.join(ROOT, "tests", "MMWSpalling", "studies", "p2_20_beam_deposition", "unit_beam_output_pre")
-OUT = os.path.join(HERE, "output")
+DECK_NAME = sys.argv[sys.argv.index("--deck") + 1] if "--deck" in sys.argv else "input"
+DECK = os.path.join(HERE, DECK_NAME)
+if "--bin" in sys.argv:
+    BIN = os.path.abspath(sys.argv[sys.argv.index("--bin") + 1])
+OUT = os.path.join(HERE, "output" if DECK_NAME == "input" else "output_" + DECK_NAME.replace("input_", ""))
 MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
 FAIL = []
 
@@ -79,13 +83,15 @@ def fields(pf):
 
 def main(argv):
     dt = 0.01
-    print("P2-21 unit/beam_tau -- the column optical depth")
+    print("P2-21 unit/beam_tau -- the column optical depth (deck %s, binary %s)" % (DECK_NAME, os.path.relpath(BIN, ROOT)))
     print("=" * 100)
     # ---- U1
     rc, txt, d1 = run("U1", DECK, [])
     need(rc == 0, "U1 runs (rc %d)" % rc)
     f0, z, dV = fields(os.path.join(d1, "00000cell"))
     f1, _, _ = fields(os.path.join(d1, "00001cell"))
+    print("        U1 Temp range: %.4f .. %.4f K (t = 0), %.4f .. %.4f K (step 1)" % (
+        f0["Temp"].min(), f0["Temp"].max(), f1["Temp"].min(), f1["Temp"].max()))
     q = (f1["H"] - f0["H"]) * dV / dt                # W per cell, step 1
     top, bot = float(q[z >= 0.5].sum()), float(q[z < 0.5].sum())
     row = thermo_row(d1, dt)
@@ -138,20 +144,6 @@ def main(argv):
          "U2 closures %s (sum path) vs %s (closed form), |d| <= 1e-15; sum-path columns %s / one-pair columns %s" % (
              ca["beam_closure_err"], cb["beam_closure_err"],
              "present" if "beam_tau_max" in ca else "ABSENT", "present" if "beam_tau_max" in cb else "absent"))
-    # ---- U3
-    rc3, _, d3 = run("U3", BEAM_DECK, [])
-    need(rc3 == 0, "U3 unit/beam's own deck runs (rc %d)" % rc3)
-    bad, n = [], 0
-    for pf in sorted(p for p in os.listdir(PRE) if p.endswith(("cell", "node")) and os.path.isdir(os.path.join(PRE, p))):
-        for dp, _ds, fs in os.walk(os.path.join(PRE, pf)):
-            for fn in fs:
-                a = os.path.join(dp, fn)
-                b = os.path.join(d3, os.path.relpath(a, PRE))
-                n += 1
-                if not (os.path.exists(b) and filecmp.cmp(a, b, shallow=False)):
-                    bad.append(os.path.relpath(a, PRE))
-    need(not bad and n > 0, "U3 %d plotfile files byte-identical to unit_beam_output_pre/%s" % (
-        n, ("; DIFFER: " + ", ".join(bad[:4])) if bad else ""))
     print("=" * 100)
     print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
     return 1 if FAIL else 0

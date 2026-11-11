@@ -1,0 +1,123 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P2-2b (b6) -- DOES THE REBUILT ENTHALPY TABLE CARRY THE LATENT HEAT?
+#
+# ⚠⚠ WHY THIS TEST EXISTS, AND WHY NO PRODUCTION LEG CAN REPLACE IT.
+# `Numeric::Material::Table::Build(const Material&)` is polymorphic
+# (`Table.H:30`), so P2-2b hands it a `Grimsel` object directly to route rho(T)
+# and c_p(T) into conduction and into the H->T inversion from ONE curve. But
+# Grimsel parses only `T_ref`: `T_m`, `fus_width`, `L_m`, `T_vap_lo/hi` and
+# `L_v` sit at `Material`'s base defaults, and `effective_rhocp`'s latent
+# boxcars need `fus_width > 0` or `T_vap_hi > T_vap_lo` to contribute anything.
+# ⇒ unless those six are COPIED onto the law object before Build, the latent
+# heat VANISHES SILENTLY -- no abort, no warning, a smoothly wrong H(T).
+#
+# ⚠⚠ NEITHER PRODUCTION DECK CAN SEE IT. `sp_meier_pilot/input_drilling` and
+# `sp_kant_onset_meiercfg/input_model` set NO phase-change scalar at all, so the
+# boxcars are exactly zero on both forms and the energy ledger -- the row that
+# has caught this class twice -- is blind to it here. A gate aimed at an inert
+# hazard passes for the wrong reason. This deck switches melting ON so the
+# hazard is observable at all.
+#
+# THE DECK: a uniform block initialised ABOVE the melt window, so the full
+# latent heat is inside H(T_init) - H(T_ref). Conduction is irrelevant; only the
+# table is under test, and the table is built at Initialize. Two steps is enough.
+#
+#   T_ref = 293.15    T_m = 1473    fus_width = 50   =>  window [1448, 1498]
+#   T_init = 1600     (above 1498, so the whole boxcar is integrated)
+#   L_m = 335000 J/kg
+#
+# ⚠ The window edges land exactly on `Table::Build`'s grid (T_min = 200,
+# dT = 0.5), which matters: the test compares against the SAME trapezoid on the
+# SAME grid rather than against a sharper analytic integral, so the tolerance is
+# round-off and not quadrature error.
+#
+# ⚠ `law` is NOT set here -- the harness passes `microstructure.phase0.law` per
+# leg so the `constant` and `grimsel` forms run from one input file.
+
+alamo.program = mmwspalling
+
+timestep  = 0.001
+stop_time = 0.002
+
+amr.plot_int        = 1
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 4 4 4
+amr.blocking_factor = 1
+amr.max_grid_size   = 4
+amr.regrid_int      = 1000000
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.008 0.008 0.008
+geometry.is_periodic = 0 0 0
+
+# --- the mineral phase, WITH MELTING SWITCHED ON ---
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.T_ref             = 293.15
+microstructure.phase0.T_m               = 1473.0
+microstructure.phase0.fus_width         = 50.0
+microstructure.phase0.L_m               = 335000.0
+
+conductivity.h_gb0              = 0.0
+
+# no spallation, no beam, no losses -- the table is the only thing under test
+spall.enabled = 0
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.004
+beam.y0         = 0.004
+beam.z0         = 0.008
+beam.P0         = 0.0
+
+losses.epsilon  = 0.0
+losses.h_conv   = 0.0
+losses.T_amb    = 293.15
+losses.sigma_SB = 5.670374e-8
+
+hc.ic.type           = constant
+hc.ic.constant.value = 1600.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# --- blocks HeatConduction and Mechanics require unconditionally ----------
+# ⚠ Both are MANDATORY even for a table-only test: `HeatConduction::Parse`
+# query_requires `hc.heat.alpha`, and `Mechanics::Parse:131` asserts
+# `models.size() > 0` even when `el.type = disable`. A deck that omits them
+# aborts with exit 6 before Initialize, so the table is never built and the
+# test fails for a reason that has nothing to do with the latent heat.
+# `alpha` is irrelevant here (the explicit path is unused at these settings)
+# but must be present; it is scalar_flaw's value.
+hc.heat.alpha                = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+
+el.type        = disable
+el.nmodels     = 1
+el.model1.E    = 30.0e9
+el.model1.nu   = 0.3
+el.model1.F0   = 0 0 0 0 0 0 0 0 0
+

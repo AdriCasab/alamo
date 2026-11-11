@@ -1,9 +1,10 @@
 #ifndef NUMERIC_MATERIAL_CONSTANT_H
 #define NUMERIC_MATERIAL_CONSTANT_H
 
-// Constant-property material: rho, c_p, kappa do not depend on T. Used by
-// the microstructure path to give every mineral phase the same H<->T
-// machinery as the global Zhang material (Step 6b). Phase-change scalars
+// Constant-property material: rho, c_p, kappa (a CONDUCTIVITY, W/(m K)) do
+// not depend on T. The integrator fills one per mineral phase from the phase's
+// scalars and builds the H<->T Table of a `law = constant` phase from it, the
+// same machinery the grimsel and zhang laws use (Step 6b). Phase-change scalars
 // (T_m, fus_width, L_m, T_vap_lo, T_vap_hi, L_v) are inherited from the
 // Material base; defaults disable phase change so it behaves like a pure
 // linear H = rho*Cp*(T - T_ref) law.
@@ -47,7 +48,7 @@ public:
 
     Set::Scalar rho  (Set::Scalar) const override { return m_rho;   }
     Set::Scalar cp   (Set::Scalar) const override { return m_cp;    }
-    Set::Scalar kappa(Set::Scalar) const override { return m_kappa; }
+    Set::Scalar conductivity(Set::Scalar) const { return m_kappa; }   // [W/(m K)] (P2-31: was kappa())
 
     Set::Scalar m_rho   = 0.0;
     Set::Scalar m_cp    = 0.0;

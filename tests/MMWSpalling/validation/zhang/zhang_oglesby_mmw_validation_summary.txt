@@ -1,6 +1,16 @@
 Zhang et al. (2023) / Oglesby et al. (2014) MMW granite-heating validation test
 ================================================================================
 
+STATUS (2026-11-10, the user): AN ENERGY-ACCOUNTING CHECK, NOT A TEMPERATURE VALIDATION. READ THIS FIRST.
+---------------------------------------------------------------------------------------------------------
+The experiment behind Zhang's Fig. 7 (Rock #28c) re-heated a disc that already carried a melt crater about
+44 x 48 mm across and 10 mm deep from two exposures earlier the same day; the DOE report itself says it "does not
+have the beginning dynamics of virgin granite". No virgin-granite model should follow its first minutes. The deck
+(validation/zhang/zhang_oglesby/input, omega_0 = 0.01 m) reads 823.0 / 2184.8 / 2526.4 K at 50 / 100 / 150 s against
+Zhang's simulation 989 / 1400 / 1678 K: that difference is a REPORT. The deck's gates test the beam energy only.
+The virgin-granite target is test #19 (validation/oglesby/). Details: the two addenda at the end of this file.
+The comparison of temperatures with Fig. 7 is PARKED; do not tune anything to close it.
+
 Purpose of the test
 -------------------
 This is a thermal validation test, not a direct drilling-depth validation.
@@ -42,13 +52,15 @@ Stand-off distance:
   recorded at the rock surface.
 
 Beam/waveguide radius parameter:
-  omega_0 = 0.02 m   (2 cm)
+  omega_0 = 0.01 m   (1 cm): the wave guide radius (Zhang eq. 4; the 20 mm aperture is a diameter)
+  (corrected 2026-11-10, the user; the deck carried 0.02 m, the diameter, until then)
 
-Note:
+Note (the reasoning at the time, kept as history):
   An earlier draft of this file listed omega_0 = 0.20 m taken from Zhang et al.
   Table 4; that was a mistake. The intended value is 0.02 m. omega_0 = 0.02 m is
   small relative to the 0.1 x 0.1 m face, so the in-plane Gaussian is fully
   captured by the domain and no renormalisation of P(x) is required.
+  (2026-11-10: 0.02 m is the aperture's DIAMETER; the radius is 0.01 m. The in-plane argument holds a fortiori.)
 
 Time-varying incident power used by Zhang
 -----------------------------------------
@@ -233,7 +245,7 @@ Livesay, Dec 2014, OSTI 1169951), read by the planner 2026-11-05. These facts go
    -ln(0.7)/0.025 = 14.3 ~ 14 1/m (a literature note's 28 was a factor-2 misreading of the nepers figure); index of
    refraction 2.24 (eps' 5.02) and "surface reflection ... 0.14 before melting calculated by the Fresnel equations".
  * Zhang 2023 uses alpha = 14 Np/m solid, 56 liquid as the POWER coefficient (their eq. 3) and does not apply R; their
-   Table III omega_0 = 0.20 m is a misprint for 0.02 (see the beam waist note above).
+   Table III omega_0 = 0.20 m is a misprint for 0.02, the 20 mm aperture diameter; the radius is 0.01 (see the beam waist note above).
  * The VIRGIN-granite record is test #19 (1/8/2014, 4" x 1" Barre, two samples stacked, HE11 from a 32.5 mm aperture,
    1.5-3.4 kW; p. 54 Fig. 34): beam on ~200 s at ~2 kW, melt onset ~300 +- 50 s after beam-on (the 28 GHz
    transmission cuts off and the 137 GHz signal jumps at ~500-520 s); melt spot ~38 mm; "the melt initially starts
@@ -262,3 +274,35 @@ TEST #19 -- THE THREE OBSERVABLES (P2-21, 2026-11-06). Fig. 34 (p. 54) re-read f
    it falls ~7x within 60 s. It never drops more than ~21 % before melt -- the planner's ">= 0.75" envelope holds.
    ⚠ A RISING transmitted fraction while the solid heats is the opposite of what any loss that grows with
    temperature produces; it is reported, not explained.
+
+
+=====================================================================================================================
+ADDENDUM (2026-11-10) -- Zhang's paper and the DOE report re-read after the deck's radius was corrected to 0.01 m.
+Line numbers are those of the text extractions in researchDocs/thermalSpallation/raw/ (FinalReport_Woskov2014.txt,
+Vaporization_Zhang2023.txt); franck_material/Woskov2011_MMWHeating.pdf is Woskov & Michael (J IR MM THz Waves 2012).
+=====================================================================================================================
+ * THE SAMPLE'S HISTORY (the report's run log, lines 6796-7057): 28a, 14 m 33 s at 0.7-1.3 kW, left a ~1" melt spot
+   and a stalactite; 28b, 33 m 55 s at 0.7-3.4 kW, left a 1 3/4" x 1 7/8" melt crater ~0.40" deep with a raised rim;
+   28c followed on the same day (6/18/2014) at a 1.0" standoff. So #28c starts on glass, in a crater, on a disc that
+   is ~15 mm thick under the beam.
+ * THE REPORT'S OWN THERMAL MODEL (lines 2150-2215) is not Zhang's: absorption "increased about two orders of
+   magnitude" on melting (Zhang: x4, 14 -> 56); reflection 0.14 solid -> 0.3 melt (Zhang: none); the beam "a Gaussian
+   profile with a 1/e power diameter of 0.80 inch (20 mm)", which is a 1/e^2 RADIUS of 14.1 mm in this deck's
+   convention. The deck's 0.01 m is Zhang's reading (eq. 4, "the wave guide radius") and is right for reproducing
+   ZHANG'S SIMULATION; it is not the report's beam.
+ * ZHANG'S EQ. (14) is the textbook bulk coefficient from permittivity and conductivity in its POWER form (the
+   leading 2); it adds no surface absorptivity and no reflection. Eq. (3) deposits P alpha exp(-alpha depth).
+ * ZHANG'S EQ. (20), not in our runs: the gas temperature in the loss terms is 0.86 x the surface temperature
+   (printed "min", which can only mean max). At 1000 K that cuts the loss flux from 7.9e4 to 2.6e4 W/m2, but the
+   surface losses are ~12 W of the ~236 W deposited, so it cannot explain the gap.
+ * ZHANG'S CURVE IS NOT REPRODUCIBLE FROM ZHANG'S PRINTED INPUTS at omega_0 = 0.01 m. A constant-property estimate
+   (a Gaussian line source, dT = P alpha/(4 pi k) ln(1 + 8 a t/omega_0^2), k 1.9-2.3 W/mK) gives 850-880 / 1070-1130 /
+   1210-1290 K at 50 / 100 / 150 s; this code with the same printed inputs (law zhang, alpha 14 flat below melting,
+   R 0, eps 0.7, h 56) gives 763 / 910 / 993 K at the surface and a peak of 787 / 968 K at 3.5 / 5.1 mm depth;
+   Zhang's Fig. 7 reads 989 / 1400 / 1678 K. The solver agrees with the estimate to 10-20 %; Zhang's own curve needs
+   1.25-1.5x more heating than the printed inputs supply (Claude_markdowns/scripts/p2_29_zhang_waist/).
+ * WOSKOV & MICHAEL 2012, for the melt: the 28 GHz emissivity of molten granite is 0.66 +- 0.03, constant from
+   melting to vaporisation, and 0.70 +- 0.03 while vaporising; the re-heated glass rose at 110 +- 5 C/s against
+   7.4 +- 0.2 C/s for virgin granite ("much more opaque at 28 GHz than the virgin granite"). The paper gives the
+   virgin absorption as "0.14 nepers/cm ... a 1/e propagation depth of 7.1 cm" without saying field or power; the
+   report's "30 % in a 1 inch sample" is what makes it the POWER coefficient, 14 1/m.

@@ -50,7 +50,6 @@ CASES = {
         "label": "Granite 2 at 37 s",
         "outdir": os.path.join(OUTPUT_ROOT, "granite2_37"),
         "target_t": 37.0,
-        "target_step": 185,
         "sigma_s": SIGMA_S_GRANITE,
         "hu_fb": HU_FB_GRANITE_ONSET,
     },
@@ -58,7 +57,6 @@ CASES = {
         "label": "Sandstone 2 at 37 s",
         "outdir": os.path.join(OUTPUT_ROOT, "sandstone2_37"),
         "target_t": 37.0,
-        "target_step": 185,
         "sigma_s": SIGMA_S_SANDSTONE,
         "hu_fb": None,
     },
@@ -66,20 +64,15 @@ CASES = {
         "label": "Sandstone 2 at 89 s",
         "outdir": os.path.join(OUTPUT_ROOT, "sandstone2_89"),
         "target_t": 89.0,
-        "target_step": 445,
         "sigma_s": SIGMA_S_SANDSTONE,
         "hu_fb": HU_FB_SANDSTONE_ONSET,
     },
 }
 
 
-def latest_plotfile(outdir, target_t, suffix="node", target_step=None):
-    if target_step is not None:
-        exact = os.path.join(outdir, f"{target_step:05d}{suffix}")
-        if os.path.isdir(exact):
-            ds = yt.load(exact)
-            return float(ds.current_time), ds, exact
-
+def latest_plotfile(outdir, target_t, suffix="node"):
+    # P2-29: BY TIME, never by step number -- the sandstone decks on the production kernel step 0.1 s (the explicit
+    # limit at level 1), so their 37 / 89 s plotfiles are steps 370 / 890, not 185 / 445
     plotfiles = sorted(glob.glob(os.path.join(outdir, f"*{suffix}")))
     if not plotfiles:
         raise RuntimeError(f"no *{suffix} plotfiles in {outdir}")
@@ -124,8 +117,11 @@ def vm_from_components(sxx, syy, szz, sxy, syz, szx):
 
 def load_fb_case(case):
     t, ds, path = latest_plotfile(
-        case["outdir"], case["target_t"], "node", case.get("target_step")
+        case["outdir"], case["target_t"], "node"
     )
+    if abs(t - case["target_t"]) > 0.25:   # P2-29: the nearest plotfile must BE the target time (an incomplete run
+        raise RuntimeError(f"{case['label']}: nearest plotfile {path} is at t = {t:g} s, "   # is not scored)
+                           f"not {case['target_t']:g} s")
     names = stress_field_names(ds)
     ad = ds.all_data()
     comps = [ad[name].to_value() for name in names]

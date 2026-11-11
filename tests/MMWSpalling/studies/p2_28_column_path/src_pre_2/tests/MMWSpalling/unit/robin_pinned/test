@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+# C1: pinned-surface Robin closure (surface_patch.robin_form = pinned).
+#
+# S1 column at dz = 2 mm (1 x 1 x 125, 250 mm, Neumann-0), scalar flaw
+# a0 = 20 um (weibull.enabled = 0), Robin flame, follow_mask + ledger +
+# removal_events_csv, thermo every step. Runs (input_pinned + CLI):
+#   F    face form, h = 1e4, T_gas = 1000 K, 20 s              (1 rank)
+#   P0   pinned, pinned_idle_cycles = 0 (never pins), same     (1 rank)
+#   P    pinned, pinned_idle_cycles = 2 (default), same        (1 rank)
+#   P4   P on 4 ranks (amr.max_grid_size = 32 -> 4 z-boxes)
+#   M    pinned, h = 1000, T_gas = 1000 K, 60 s                (1 rank)
+# Checks:
+#   (a) P0 == F: Level_0 Cell_D bytes, removal_events.csv bytes, and every
+#       thermo column except pinned_* printed identically.
+#   (b) P: on every thermo row with pinned_cols_pinned = 1, pinned_q_mean ==
+#       h (T_gas - T_pin), T_pin = T_top (17-digit removal_events.csv) of the
+#       last regime-1 row that fed that row's step. thermo.dat is printed with
+#       6 significant digits (Integrator default), so the tolerance is 1e-5
+#       relative, not 1e-12 (the closed form itself is exact in the code).
+#       |ledger_err| <= 1e-9 on all rows; >= 5 cells removed.
+#   (c) M: after the first firing both branches occur (min rule exercised):
+#       rows with pinned_cols_pinned > 0 and rows with pinned_cols_face > 0.
+#       Branch counts only: the per-row T_c needed for a Newton replica is not
+#       in thermo.dat. Also on pinned rows the closed form holds as in (b).
+#   (d) P == F on every thermo row (non-pinned_* columns) up to the first
+#       removal: before any firing the pinned closure is the face form.
+#   (e) P4 == P: removal_events.csv bytes; Cell_D bytes (rank-ordered
+#       concatenation, A1 takeaway 7).
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import filecmp
+import glob
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = TEST_DIR.split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+MPI4 = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+INPUT = os.path.join(TEST_DIR, "input_pinned")
+DT = 1.0e-3
+TOL_PRINT = 1.0e-5
+
+RUNS = {
+    "F":  (["surface_patch.robin_form=face", "stop_time=20.0"], 1),
+    "P0": (["surface_patch.pinned_idle_cycles=0.0", "stop_time=20.0"], 1),
+    "P":  (["surface_patch.pinned_idle_cycles=2.0", "stop_time=20.0"], 1),
+    "P4": (["surface_patch.pinned_idle_cycles=2.0", "stop_time=20.0"], 4),
+    "M":  (["surface_patch.h_conv=1000.0", "stop_time=60.0", "amr.plot_int=10000"], 1),
+}
+H_OF = {"P": 1.0e4, "M": 1.0e3}
+T_GAS = 1000.0
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+def run(name, outroot):
+    extra, nranks = RUNS[name]
+    pf = os.path.join(outroot, name)
+    for p in (pf, pf + "_h_col_events.csv", pf + "_removal_events.csv"):
+        if os.path.isdir(p):
+            shutil.rmtree(p)
+        elif os.path.exists(p):
+            os.remove(p)
+    cmd = ([] if nranks == 1 else MPI4) + [BIN, INPUT, f"plot_file={pf}"] + extra
+    print("Running:", " ".join(cmd), flush=True)
+    with open(pf + ".log", "w") as log:
+        return subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+
+
+def thermo_text(pf):
+    lines = [l.split() for l in open(os.path.join(pf, "thermo.dat")) if l.strip()]
+    return lines[0], lines[1:]
+
+
+def thermo(pf):
+    names, rows = thermo_text(pf)
+    a = np.array(rows, dtype=float)
+    return {n: a[:, i] for i, n in enumerate(names)}
+
+
+def events(pf):
+    return np.genfromtxt(pf + "_removal_events.csv", delimiter=",", names=True, ndmin=1)
+
+
+def cell_d_bytes(pf):
+    out = {}
+    for p in sorted(glob.glob(os.path.join(pf, "*cell"))):
+        files = sorted(glob.glob(os.path.join(p, "Level_0", "Cell_D_*")))
+        out[os.path.basename(p)] = b"".join(open(f, "rb").read() for f in files)
+    return out
+
+
+def common_cols(pa, pb, tmax=None):
+    """Compare printed thermo values of the non-pinned_* columns of two runs."""
+    na, ra = thermo_text(pa)
+    nb, rb = thermo_text(pb)
+    cols = [c for c in na if c in nb and not c.startswith("pinned_")]
+    ia = [na.index(c) for c in cols]
+    ib = [nb.index(c) for c in cols]
+    n = 0
+    for x, y in zip(ra, rb):
+        if tmax is not None and float(x[0]) > tmax:
+            break
+        if [x[i] for i in ia] != [y[i] for i in ib]:
+            return False, n, cols
+        n += 1
+    same_len = tmax is not None or len(ra) == len(rb)
+    return same_len, n, cols
+
+
+def closed_form_rows(name):
+    th = thermo(P[name])
+    ev = events(P[name])
+    fire = ev[ev["regime"] == 1]
+    t = th["time"]
+    h = H_OF[name]
+    pinned = th["pinned_cols_pinned"] == 1.0
+    # The row printed at time t holds the step advanced at t - dt, whose pin
+    # came from removal at that step's start (time <= t - dt).
+    idx = np.searchsorted(fire["time"], t - DT + 1e-9, side="right") - 1
+    sel = pinned & (idx >= 0)
+    T_pin = fire["T_top"][idx[sel]]
+    q_cf = h * (T_GAS - T_pin)
+    rel = np.abs(th["pinned_q_mean"][sel] - q_cf) / q_cf
+    return int(pinned.sum()), int(sel.sum()), (float(rel.max()) if rel.size else float("nan"))
+
+
+outroot = sys.argv[1] if len(sys.argv) > 1 else os.path.join(TEST_DIR, "output")
+if len(sys.argv) <= 1:
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    os.makedirs(outroot, exist_ok=True)
+    for n in RUNS:
+        rc = run(n, outroot)
+        if rc != 0:
+            print(f"FAIL: run {n} exited with {rc}")
+            sys.exit(1)
+P = {n: os.path.join(outroot, n) for n in RUNS}
+
+# (a) idle = 0 is the face form
+cF, cP0 = cell_d_bytes(P["F"]), cell_d_bytes(P["P0"])
+check("a Cell_D P0 == F", cF.keys() == cP0.keys() and all(cF[k] == cP0[k] for k in cF),
+      f"{len(cF)} plotfiles")
+check("a removal_events P0 == F",
+      filecmp.cmp(P["F"] + "_removal_events.csv", P["P0"] + "_removal_events.csv", shallow=False),
+      f"{events(P['F']).size} rows")
+same, n, cols = common_cols(P["F"], P["P0"])
+check("a thermo P0 == F (non-pinned_* columns)", same, f"{n} rows x {len(cols)} columns identical")
+
+# (b) closed form on pinned rows
+thP = thermo(P["P"])
+n_pin, n_sel, rel = closed_form_rows("P")
+check("b pinned_q_mean == h(T_gas - T_pin)", n_sel > 0 and n_sel == n_pin and rel <= TOL_PRINT,
+      f"{n_sel}/{n_pin} pinned rows, max rel diff {rel:.2e} (6-digit print, tol {TOL_PRINT:g})")
+le = float(np.max(np.abs(thP["ledger_err"])))
+check("b ledger", le <= 1e-9, f"max |ledger_err| = {le:.2e}")
+nv = int(events(P["P"])["n_voided"].sum())
+nvF = int(events(P["F"])["n_voided"].sum())
+check("b removal", nv >= 5, f"{nv} cells removed in 20 s (face form: {nvF})")
+
+# (c) min rule exercised at h = 1000
+thM = thermo(P["M"])
+evM = events(P["M"])
+t1 = float(evM["time"][evM["regime"] == 1][0])
+after = thM["time"] > t1 + DT
+npin = int(np.sum(after & (thM["pinned_cols_pinned"] > 0)))
+nface = int(np.sum(after & (thM["pinned_cols_face"] > 0)))
+check("c both branches after first firing", npin > 0 and nface > 0,
+      f"first firing t = {t1:.3f} s; rows pinned {npin}, face {nface} "
+      f"(branch counts only: per-row T_c is not in thermo.dat)")
+n_pinM, n_selM, relM = closed_form_rows("M")
+check("c closed form on pinned rows (h = 1000)", n_selM > 0 and relM <= TOL_PRINT,
+      f"{n_selM} rows, max rel diff {relM:.2e}; ledger {np.max(np.abs(thM['ledger_err'])):.2e}")
+
+# (d) before the first firing pinned == face
+t_first = float(events(P["P"])["time"][0])
+same, n, cols = common_cols(P["F"], P["P"], tmax=t_first)
+check("d thermo P == F up to first removal", same and n > 0,
+      f"{n} rows (t <= {t_first:.3f} s) x {len(cols)} columns identical")
+
+# (e) 4 ranks
+check("e removal_events P4 == P",
+      filecmp.cmp(P["P"] + "_removal_events.csv", P["P4"] + "_removal_events.csv", shallow=False),
+      "cmp-identical")
+cP, cP4 = cell_d_bytes(P["P"]), cell_d_bytes(P["P4"])
+check("e Cell_D P4 == P", cP.keys() == cP4.keys() and all(cP[k] == cP4[k] for k in cP),
+      f"{len(cP)} plotfiles (rank-ordered Cell_D concatenation)")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

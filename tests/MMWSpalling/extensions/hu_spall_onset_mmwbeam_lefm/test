@@ -92,8 +92,8 @@ def summarize(ds):
     if "removed" in fields:
         rem = to_numpy(ad["removed"]) > 0.5
         out["n_removed"] = int(np.count_nonzero(rem))
-        if "regime_field" in fields and out["n_removed"] > 0:
-            reg = to_numpy(ad["regime_field"])
+        if "regime" in fields and out["n_removed"] > 0:   # P2-31: regime_field (its duplicate) is removed
+            reg = to_numpy(ad["regime"])
             reg_at_removed = reg[rem]
             out["n_spall_removed"] = int(np.count_nonzero(
                 np.isclose(reg_at_removed, 1.0, atol=0.4)))
@@ -195,8 +195,8 @@ def main():
     for f in files:
         ds_local = yt.load(f)
         ad_local = ds_local.all_data()
-        if "regime_field" in {fld[1] for fld in ds_local.field_list}:
-            reg = to_numpy(ad_local["regime_field"])
+        if "regime" in {fld[1] for fld in ds_local.field_list}:
+            reg = to_numpy(ad_local["regime"])
             if np.any((reg > 0.5) & (reg < 1.5)): any_reg1 = True
             if np.any(reg > 1.5):                 any_reg2 = True
         if any_reg1 and any_reg2:

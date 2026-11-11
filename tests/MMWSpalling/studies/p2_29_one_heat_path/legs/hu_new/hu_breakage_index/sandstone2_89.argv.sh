@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/hu/hu_breakage_index/input_sandstone2_89_phase  plot_file=tests/MMWSpalling/studies/p2_29_one_heat_path/legs/hu_new/hu_breakage_index/sandstone2_89

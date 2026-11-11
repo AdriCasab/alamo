@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# P2-28 RECORD: this file ran the COLUMN removal path, retired in P2-28 (one removal path, the face list); it now aborts at parse. Kept as the record of its last runs, not run.
 # Meier 2017 Grimsel pilot -- D2b scored test: burner on feet (J-M).
 # Reference packet: ../meier-2017-pilot-660kg-validation-reference.md
 #

@@ -45,16 +45,34 @@ import math
 import numpy as np
 import yt
 
-# --- physical constants: must match tests/MMWSpalling/unit/convective_patch/input ---
-KAPPA_TH = 2.50        # thermal conductivity   [W/(m K)]
-RHO      = 2630.0      # density                [kg/m^3]
-CP       = 800.0       # specific heat          [J/(kg K)]
+ROOT = os.path.dirname(os.path.abspath(__file__))
+outdir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "output", "granite")
+
+
+def meta(run):
+    d = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            d[k.strip()] = v.strip()   # the LAST occurrence wins (an argv override follows the deck's value)
+    return d
+
+
+# --- physical constants: P2-29, read from the RUN's metadata (the old material deck `input`: material.constant.*;
+# the production-kernel deck `input_phase`: microstructure.phase0.*) ---
+_m = meta(outdir)
+_p = "microstructure.phase0." if "microstructure.phase0.kappa" in _m else "material.constant."
+KAPPA_TH = float(_m[_p + "kappa"])                       # thermal conductivity   [W/(m K)]
+RHO      = float(_m[_p + "rho"])                         # density                [kg/m^3]
+CP       = float(_m[_p + ("Cp" if _p.startswith("micro") else "cp")])   # specific heat [J/(kg K)]
 ALPHA    = KAPPA_TH / (RHO * CP)   # thermal diffusivity [m^2/s]
-H_FL     = 1000.0      # flame heat-transfer coefficient [W/(m^2 K)]
-T_FLAME  = 1673.15     # flame temperature      [K]
-T_I      = 293.15      # initial temperature    [K]
-Z_TOP    = 0.192       # +z face position       [m]
-DZ       = Z_TOP / 384.0           # cell height [m]
+H_FL     = float(_m["surface_patch.h_conv"])             # flame heat-transfer coefficient [W/(m^2 K)]
+T_FLAME  = float(_m["surface_patch.T_flame"])            # flame temperature      [K]
+T_I      = float(_m["hc.ic.constant.value"])             # initial temperature    [K]
+Z_TOP    = float(_m["geometry.prob_hi"].split()[2])      # +z face position       [m]
+DZ       = (Z_TOP - float(_m["geometry.prob_lo"].split()[2])) / int(_m["amr.n_cell"].split()[2])   # cell height [m]
+print("from the run's metadata (%s*): kappa %g, rho %g, c_p %g, h %g, T_flame %g, T_i %g, z_top %g, dz %g"
+      % (_p, KAPPA_TH, RHO, CP, H_FL, T_FLAME, T_I, Z_TOP, DZ))
 BETA     = H_FL / KAPPA_TH         # [1/m]
 THETA_INF = T_FLAME - T_I          # [K]
 
@@ -69,7 +87,6 @@ PROFILE_TIME  = 8.0    # s (the profile check uses the plotfile closest to this)
 BOUND_EPS     = 1.0    # K slack on the [T_i, T_flame] bound
 MONO_EPS      = 0.10   # K slack on top-cell monotonicity
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def theta_point(x, t):
@@ -123,7 +140,6 @@ def column_profile(ds):
     return depth[order], Tz[order]
 
 
-outdir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "output", "granite")
 print(f"Loading convective_patch run from {outdir}")
 print(f"alpha = {ALPHA:.6e} m^2/s, beta = {BETA:.1f} 1/m, beta*dz = {BETA*DZ:.3f}, "
       f"theta_inf = {THETA_INF:.2f} K")

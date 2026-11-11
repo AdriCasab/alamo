@@ -23,6 +23,21 @@ Source half (comments included: a leftover NAME in a comment is a leftover too, 
      `2.0 * M_PI * std::sqrt(v.eps_r) * (v.tan_delta / v.lambda)` -- the one order in which every beam-ON
      fixture's tan_delta string reproduces its old typed alpha bit for bit (studies/p2_20_beam_deposition/Z0.txt);
      an algebraically equal reassociation moves the frozen gate decks. Exactly one `v.alpha = ` assignment.
+  R7 (P2-26, census B3) the four top-level keys of the closed switches retired AT A DEFAULT -- spall.flake_length
+     (twocell), spall.flake_fraction (cf), weibull.size_volume (cell), weibull.V_ref (*) -- each appear in src/
+     exactly ONCE (comments included), as an entry of the retired-at-default table with that value
+  R8 (P2-26, census C2 + C3) the same for spall.surface_normal (0), spall.flake_coherence_length (0),
+     spall.melt_aware (0) and melt.lambda_crit (*). Until P2-27 the "0" was compared as a STRING, so a deck writing
+     0.0 aborted (P2-26 DR-3: 622 record argvs); since P2-27 a one-token number is compared as a double (K14-K16)
+  R9 (P2-27, census C1a) THE DAMAGE LINEAGE IS DELETED: no identifier of the Drucker-Prager damage law, the cohesive
+     zone, the damage-law removal (the C_h sqrt(alpha t) thickness, the principal-stress ratio, spall.sample's scan
+     windows, the prescribed ratio) or the damage_law model value survives anywhere in src/ (comments included);
+     src/Numeric/DruckerPrager.H and CohesiveZone.H are gone; the three table keys (damage.enabled 0,
+     conductivity.kappa_damage_alpha 0.0, spall.sample top_cell) each appear in src/ exactly ONCE, as their
+     retired-at-default entry; the P2-27 abort list names the eight spall.* keys once each and the two families
+     damage.* / cohesive.*
+  R10 (P2-27, census C1b) D, kappa_eff and k_eff are DEREGISTERED: no `D_mf`, `kappa_eff_mf`, `k_eff_mf`, `ic_damage`,
+     `RefreshKappaEff` or `keff_out` anywhere in src/, and no RegisterNewFab names "D", "kappa_eff" or "k_eff"
 Each clause has a MUTATION that must turn it RED, and the full revert turns every clause RED. With --pre <dir>
 (MMWSpalling.H, Removal.H, FaceRemoval.H, and MMWBeam.H when present, substituted for their src/ copies) the
 clauses named by --red (default R1,R2,R3: P2-16's pre-change copy) must be RED and every other one GREEN; P2-20's
@@ -35,6 +50,70 @@ Run half (bin/mmwspalling-3d-g++, the gradient_blind fixture, ONE step of 0.008 
   K3 + beam.alpha_expr=10                -> rc != 0, output names the key and P2-20 (P2-20; the beam is OFF here)
   K4 + beam.R=0.0                        -> rc != 0, output names the key and P2-20
   K0 the fixture alone                   -> rc == 0 (or "aborts" would hold for a binary refusing every deck)
+  P2-26 (census B3; the retired-at-default table, P2-18's pattern):
+  K5 + the four B3 keys at their defaults -> rc == 0 (a kept deck naming them at the old default still runs)
+  K6 + spall.flake_length=flux           -> rc != 0, output names the key and P2-26
+  K7 + weibull.size_volume=flux          -> rc != 0, output names the key and P2-26
+  K8 + spall.flake_fraction=weibull      -> rc != 0, output names the key and P2-26
+  K9 + surface_patch.pad_shield_open=0.5 -> rc != 0, the strict surface_patch scope names the key (unparsed)
+  P2-26 (census C2 + C3):
+  K10 + the four C2/C3 keys at their old defaults (0, 0, 0, 0.4) -> rc == 0
+  K11 + spall.surface_normal=1           -> rc != 0, output names the key and P2-26
+  K12 + spall.flake_coherence_length=0.004 -> rc != 0, output names the key and P2-26
+  K13 + spall.melt_aware=1               -> rc != 0, output names the key and P2-26
+  P2-27 (the numeric compare; K12 above is the live value that still aborts):
+  K14 + spall.flake_coherence_length=0.0 -> rc == 0 (0.0 equals the table's "0" as a number; aborted until P2-27)
+  K15 + spall.surface_normal=0.0 and spall.melt_aware=0.0 -> rc == 0
+  K16 + spall.flake_coherence_length="0 0" (TWO tokens) -> rc != 0: only a ONE-token number is compared as a double
+  P2-27 stage 2 (census C1a, the damage lineage):
+  K17 + damage.enabled=0 + conductivity.kappa_damage_alpha=0.0 + spall.sample=top_cell -> rc == 0 (the defaults)
+  K18 + damage.enabled=1                 -> rc != 0, names the key and P2-27 (retired at its default)
+  K19 + spallation.model=damage_law      -> rc != 0, names damage_law and P2-27
+  K20 + damage.ic.type=expression        -> rc != 0, names the key and P2-27 (the damage.* family)
+  K21 + spall.sample=shallow_max         -> rc != 0, names the key and P2-27
+  K22 + cohesive.enabled=0               -> rc != 0, names the key and P2-27 (the cohesive.* family, any value)
+  K23 + spall.xi_s=8.0                   -> rc != 0, names the key and P2-27
+  K24 + microstructure.phase0.A_D=0.0    -> rc == 0;  K25 + microstructure.phase0.A_D=0.5 -> rc != 0, names P2-27
+  K26 + spallation.model=none            -> rc != 0: the explicit `none` with spall.enabled = 1 is refused (removal
+       needs the sp_weibull criterion since the damage-law removal is gone)
+  P2-27 stage 4 (the grimsel-inert scalars), two-sided:
+  K27 validation/kant/grimsel_calibration/input (law = grimsel, stress_law = grimsel) + microstructure.phase0.kappa=3.0
+       -> rc != 0, names the key and P2-27 (inert under the law: refused)
+  K28 the same deck alone -> rc == 0 (it no longer sets the six; the rock file does not either)
+  K29 the gradient_blind fixture (law = constant) + microstructure.phase0.kappa=1.5 -> rc == 0 (required there)
+  P2-28 (P2-27 DR-5), two-sided: the calibration deck (law = grimsel) with spall.stress_law = scalar
+  K30 without the scalar stress constants -> rc != 0, names the missing microstructure.phase0.* key (they stay REQUIRED
+       under the scalar stress law: the refusal is conditioned on stress_law = grimsel)
+  K31 with beta / E / mu given -> rc != 0 since P2-31: the scalar stress law under a grimsel phase is refused on the face
+       list (one stiffness per rock; the calibration deck is a face-list deck) -- the parse accepted it, CheckInterlocks
+       now refuses it. Before P2-31: rc == 0
+  P2-28 (census H, the column path deleted): R11 (source) + two-sided K legs on the gradient_blind FACE deck:
+  R11 no column-only name in src/ (comments included, string literals excluded), Removal.H deleted, each retired key
+       string once as a quoted literal (the table: spall.surface_T reconstructed, spall.removal_energy flake,
+       weibull.detach_mode per_face, surface.follow_mask 1; the presence list: spall.clusters_csv,
+       spall.h_col_events_csv, weibull.A_crit, surface.refine_depth / refine_height; the families bit.*,
+       spallation.sp.prescribed_stress.*, prescribed_T_surface.*); RED on the stage-2 pre-image (--pre ... --red R11)
+  K32 face_list=0 -> abort (one removal path); K33 robin_form=pinned -> abort; K34/K35 surface_T cell_average aborts /
+  reconstructed runs; K36/K37 removal_energy cell aborts / flake runs; K38/K39 detach_mode connected_cluster aborts /
+  per_face runs; K40 bit.enabled=0 aborts; K41 spall.h_col_events_csv=1 aborts; K42 prescribed_T_surface.enabled=1
+  aborts; K43/K44 surface.follow_mask 0 aborts / 1 runs. Each abort names the key and P2-28.
+
+  P2-29 (census D, one heat path): R12 (source) -- AdvanceConstAlpha / AdvanceMaterial / AdvanceMaterialImplicit,
+  SolverKind, material_table, therm_alpha, the const-alpha helpers and FootRule gone from src/ (comments included);
+  no `kc * (sp_T - Tc) * inv_dz2` without its 2.0; the table rows solver / alpha / surface_patch.foot_rule at their
+  values; the presence list and families -- RED on the stage-2 pre-image. K45-K60 two-sided: material.* / implicit.* /
+  phase.* abort; alpha `0 0` and `0.0 0.0` run, `8e-6 0` and one-token `0.0` abort; solver explicit runs, implicit
+  aborts; foot_rule pads runs, max aborts; nozzle_feed_max still parses (the feet deck); a deck without
+  microstructure.nphases aborts (retired_units/beam_separate_path/input). Each abort names the key and P2-29.
+
+  P2-31 (goal 9, the dead list): R13 (source) -- none of microstructure_enabled, the vapour members (vapor_A_beam,
+  vapor_T0, their _override flags, vapor_prescribed_rop_enabled, vapor_rop_parser, vapor_rop_f), SurfaceRecon::ell_q,
+  Grimsel::H_of, Table's m_T_v / m_fus_lo_T / m_fus_hi_T / m_vap_hi_T anywhere in src/ (comments included, string
+  literals excluded); no `ok` in ElasticConsts, no MMWBeam::active(), no virtual Material::kappa; the four vapour keys
+  once each as quoted literals, rows of the retired-at-default table (vapor.A_beam *, vapor.T0 *,
+  vapor.prescribed_rop.enabled 0, vapor.prescribed_rop.expr *). K61 vapor.prescribed_rop.enabled=0 runs; K62 =1 aborts
+  naming the key and P2-31 (before P2-31 it was never read on a vapour-off deck: rc 0); K63 vapor.A_beam / vapor.T0 /
+  vapor.prescribed_rop.expr at any value run (they were read by nothing).
 
 Usage: test [--source | --run] [--pre <dir> [--red R5,...]]     (default: both halves)
 """
@@ -46,32 +125,75 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
-SRC = os.path.join(ROOT, "src")
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
 KEY = "spallation.sp.constraint_depth"
 DELETED = re.compile(r"\b(?:sp_cref_d|CrefInterp|CrefTAtDepth|BuildConstraintRefColumns|T_cref|run_ref|"
                      r"Tref_at|cref_on|cref_on_sp)\b|\bcref_n_\w+")
-SUBST = {"MMWBeam.H": os.path.join("Numeric", "MMWBeam.H"),
-         "MMWSpalling.H": os.path.join("Integrator", "MMWSpalling.H"),
-         "Removal.H": os.path.join("Integrator", "MMWSpalling", "Removal.H"),
-         "FaceRemoval.H": os.path.join("Integrator", "MMWSpalling", "FaceRemoval.H")}
+SUBST = {"MMWBeam.H": "Numeric/MMWBeam.H",
+         "MMWSpalling.H": _src.PARENT,
+         # P2-28: Removal.H is deleted; under --pre a pre-image that still has it is read back in (R11 must go RED)
+         "Removal.H": _src.SLICE_PREFIX + "Removal.H",
+         "FaceRemoval.H": _src.SLICE_PREFIX + "FaceRemoval.H"}
 
 
 def read_src(pre=None):
-    """{relpath under src/: text} for every C++ source; under --pre the three headers come from <pre>"""
-    out = {}
-    for dp, _d, fs in os.walk(SRC):
-        for fn in fs:
-            if fn.endswith((".H", ".h", ".cpp", ".cc")):
-                p = os.path.join(dp, fn)
-                out[os.path.relpath(p, SRC)] = open(p, errors="replace").read()
+    """{relpath under src/: text} for every C++ source (_src's per-file map); under --pre the headers come from
+    <pre>, and slices its parent no longer includes drop out"""
+    out = _src.tree()
     if pre:
         for fn, rel in SUBST.items():
             if os.path.exists(os.path.join(pre, fn)):
                 out[rel] = open(os.path.join(pre, fn)).read()
+        out = _src.prune(out)
     return out
 
 
 MMW = SUBST["MMWSpalling.H"]
+# P2-26: the keys retired AT A DEFAULT, per clause (the retired-at-default table, MMWSpalling::Parse)
+P2_26 = {"R7": {"spall.flake_length": "twocell", "spall.flake_fraction": "cf",
+                "weibull.size_volume": "cell", "weibull.V_ref": "*"},
+         "R8": {"spall.surface_normal": "0", "spall.flake_coherence_length": "0",
+                "spall.melt_aware": "0", "melt.lambda_crit": "*"}}
+
+
+# P2-27 (census C1a): THE DAMAGE LINEAGE -- identifiers (comments included) that must be gone from src/
+C1A = re.compile(r"\b(?:ParseDamageSettings|DamageGrowthRHS|IntegrateDamageRK4|UpdateDamageAfterMechanics|"
+                 r"ParseCohesiveSettings|UpdateCohesiveAfterMechanics|ResetCohesiveDiagnostics|PrincipalStressRatio|"
+                 r"SpallSampleMode|DamageLaw|damage_enabled|cohesive_enabled|(?<!\.)kappa_damage_alpha|"
+                 r"damage_(?:phi_deg|phi_rad|cohesion|alpha_dp|k_dp|psi0|n|m|gb_multiplier|stiffness_floor)|"
+                 r"damage_(?:F|Psi|rate)_mf|damage_prescribed_stress_enabled|damage_s(?:xx|yy|zz|xy|yz|zx)_(?:parser|f)|"
+                 r"cohesive_(?:K_n|delta_c|delta_max|prescribed_enabled|delta_parser|delta_f)|"
+                 r"gb_(?:delta|delta_max|traction|cohesive_damage)_mf|"
+                 r"spall_(?:damage_threshold|xi_s|C_h|alpha_override|alpha|t_spall_override|t_spall|"
+                 r"prescribed_ratio_enabled|ratio_parser|ratio_f|sample_mode|shallow_depth)|DruckerPrager|CohesiveZone)\b")
+C1B = re.compile(r"\b(?:D_mf|kappa_eff_mf|k_eff_mf|ic_damage|RefreshKappaEff|keff_out|k_eff_value)\b")
+P2_27_TABLE = {"damage.enabled": "0", "conductivity.kappa_damage_alpha": "0.0", "spall.sample": "top_cell"}
+P2_27_SPALL = ["spall.alpha", "spall.C_h", "spall.t_spall", "spall.damage_threshold", "spall.xi_s",
+               "spall.shallow_depth", "spall.prescribed_ratio.enabled", "spall.prescribed_ratio.expr"]
+# P2-28 (census H): THE COLUMN PATH -- the names that must be gone from src/ (comments included, string literals
+# excluded: a retired key's own string survives once, as its table / abort-list literal)
+P2_28_NAMES = ["UpdateRemovalAfterCohesive", "BuildSurfaceTColumns", "UpdateSpAfterMechanics", "UpdateSpClusters",
+               "PatchDiagnostics", "GatherColumnSurface", "ColumnSolidRunBelowTop", "PinRule", "BuildPinEffective",
+               "SurfaceRobinT", "SharedSurfaceRecon", "RepairRemovalStateAfterRegrid", "CheckSurfaceCovered",
+               "rc_ell_prev", "h_col_events", "DetachMode", "connected_cluster", "E_sup_local", "Removal.H"]
+P2_28_TABLE = {"spall.surface_T": "reconstructed", "spall.removal_energy": "flake", "weibull.detach_mode": "per_face",
+               "surface.follow_mask": "1"}
+P2_28_ABORT = ["spall.clusters_csv", "spall.h_col_events_csv", "weibull.A_crit", "surface.refine_depth",
+               "surface.refine_height"]
+P2_28_FAMILY = ["bit", "spallation.sp.prescribed_stress", "spallation.sp.prescribed_T_surface"]
+# P2-29 (census D): THE SEPARATE HEAT KERNELS -- names gone from src/ (comments included, string literals excluded)
+P2_29_NAMES = ["AdvanceConstAlpha", "AdvanceMaterial", "AdvanceMaterialImplicit", "SolverKind", "solver_kind",
+               "material_table", "therm_alpha", "BuildEnthalpyTable", "SetPhaseFractionsConstAlpha", "FootRule",
+               "implicit_tol_rel", "implicit_tol_abs", "implicit_max_iter", "implicit_verbose"]
+P2_29_TABLE = {"solver": "explicit", "alpha": "0 0", "surface_patch.foot_rule": "pads"}
+P2_29_ABORT = ["phase.T_ref", "phase.T_m", "phase.T_v", "phase.lh_m", "phase.lh_v"]
+P2_29_FAMILY = ["material", "implicit"]
+# P2-31 (goal 9): THE DEAD LIST -- identifiers gone from src/ (comments included, string literals excluded)
+P2_31_NAMES = ["microstructure_enabled", "vapor_A_beam", "vapor_A_beam_override", "vapor_T0", "vapor_T0_override",
+               "vapor_prescribed_rop_enabled", "vapor_rop_parser", "vapor_rop_f", "ell_q", "H_of", "m_T_v",
+               "m_fus_lo_T", "m_fus_hi_T", "m_vap_hi_T"]
+P2_31_TABLE = {"vapor.A_beam": "*", "vapor.T0": "*", "vapor.prescribed_rop.enabled": "0", "vapor.prescribed_rop.expr": "*"}
 
 
 def clauses(src):
@@ -85,7 +207,7 @@ def clauses(src):
     need("R1 no deleted constraint-depth name anywhere in src/ (%d line(s)%s)"
          % (len(left), (": " + ", ".join(left[:4])) if left else ""), not left)
 
-    m = src[MMW]
+    m = _src.header(src)              # P2-30: the header's text, slices expanded
     total = sum(t.count(KEY) for t in src.values())
     body = re.search(r"static void Parse\(MMWSpalling& value, IO::ParmParse& pp\)\s*\{([\s\S]*?)\n    \}\n", m)
     body = body.group(1) if body else ""
@@ -133,11 +255,111 @@ def clauses(src):
     n_assign = len(re.findall(r"\bv\.alpha\s*=[^=]", bm_code))
     need("R6 (P2-21) MMWBeam.H forms alpha in the locked association `%s` (%d assignment(s) of v.alpha)"
          % (want[10:-1], n_assign), bm_code.count(want) == 1 and n_assign == 1)
+
+    tab = re.search(r"static const RetiredAtDefault retired_at_default\[\] = \{([\s\S]*?)\n        \};", m)
+    tab = tab.group(1) if tab else ""
+    for tag, keys in P2_26.items():
+        cnt = {k: sum(t.count('"%s"' % k) for t in src.values()) for k in keys}   # P2-28: quoted literals
+        inn = {k: re.search(r'\{"%s",\s*"%s",' % (re.escape(k), re.escape(v)), tab) is not None
+               for k, v in keys.items()}
+        need("%s (P2-26) each key string appears in src/ exactly once, as its retired-at-default entry with the "
+             "old default (%s)" % (tag, ", ".join("%s %d%s" % (k, cnt[k], "" if inn[k] else " NOT IN TABLE")
+                                                 for k in keys)),
+             all(c == 1 for c in cnt.values()) and all(inn.values()))
+    # P2-27 R10 (census C1b): the three fields are deregistered
+    left10 = ["%s:%d" % (rel, ln) for rel, t in src.items()
+              for ln, line in enumerate(t.split("\n"), 1) if C1B.search(line)]
+    reg10 = sum(len(re.findall(r'RegisterNewFab\([^;]*"(?:D|kappa_eff|k_eff)"', t)) for t in src.values())
+    need("R10 (P2-27) D, kappa_eff, k_eff deregistered: no identifier (%d line(s)%s), no registration (%d)"
+         % (len(left10), (": " + ", ".join(left10[:4])) if left10 else "", reg10), not left10 and reg10 == 0)
+    # P2-27 R9 (census C1a): the damage lineage
+    left9 = ["%s:%d" % (rel, ln) for rel, t in src.items()
+             for ln, line in enumerate(t.split("\n"), 1) if C1A.search(line)]
+    hdrs = [h for h in ("Numeric/DruckerPrager.H", "Numeric/CohesiveZone.H") if h in src]
+    cnt9 = {k: sum(t.count('"%s"' % k) for t in src.values()) for k in P2_27_TABLE}
+    inn9 = {k: re.search(r'\{"%s",\s*"%s",' % (re.escape(k), re.escape(v)), tab) is not None
+            for k, v in P2_27_TABLE.items()}
+    lst27 = re.search(r"P2-27 \(census C1a\)[\s\S]*?for \(const char\* k : \{([^}]*)\}\)", m)
+    keys27 = re.findall(r'"([\w.]+)"', lst27.group(1)) if lst27 else []
+    fam = all(('"%s"' % f) in m for f in ("damage", "cohesive")) and "P2-27" in m
+    # damage.enabled appears TWICE by design: its table row, and the family loop's exemption `k != "damage.enabled"`
+    want9 = {k: (2 if k == "damage.enabled" else 1) for k in P2_27_TABLE}
+    exempt = 'k != "damage.enabled"' in m
+    need("R9 (P2-27) no damage-lineage identifier in src/ (%d line(s)%s), DruckerPrager.H / CohesiveZone.H gone (%s); "
+         "the three table keys in the table, once each (damage.enabled twice: + the family exemption) (%s); the P2-27 "
+         "list names the eight spall.* keys (%d) and the damage / cohesive families"
+         % (len(left9), (": " + ", ".join(left9[:4])) if left9 else "", hdrs or "gone",
+            ", ".join("%s %d%s" % (k, cnt9[k], "" if inn9[k] else " NOT IN TABLE") for k in P2_27_TABLE), len(keys27)),
+         not left9 and not hdrs and cnt9 == want9 and exempt and all(inn9.values())
+         and sorted(keys27) == sorted(P2_27_SPALL) and fam)
+    # P2-28 R11 (census H): the column path is gone -- no column-only name in src/ (comments included, string
+    # literals excluded), Removal.H absent, each retired key string once as a QUOTED literal in its table row or
+    # abort list, the three families in the P2-28 family loop
+    nolit = {rel: re.sub(r'"(?:[^"\\\n]|\\.)*"', '""', t) for rel, t in src.items()}
+    left11 = sorted({n for n in P2_28_NAMES for t in nolit.values()
+                     if re.search(r"(?<![A-Za-z_])%s" % re.escape(n), t)})
+    rem_there = SUBST["Removal.H"] in src
+    cnt11 = {k: sum(t.count('"%s"' % k) for t in src.values()) for k in list(P2_28_TABLE) + P2_28_ABORT}
+    inn11 = {k: re.search(r'\{"%s",\s*"%s",' % (re.escape(k), re.escape(v)), tab) is not None
+             for k, v in P2_28_TABLE.items()}
+    lst28 = re.search(r"P2-28 \(census H\)[\s\S]*?for \(const char\* k : \{([^}]*)\}\)", m)
+    keys28 = re.findall(r'"([\w.]+)"', lst28.group(1)) if lst28 else []
+    fam28 = re.search(r"for \(const char\* family : \{([^}]*)\}\)[\s\S]{0,400}?retired in P2-28", m)
+    fams = re.findall(r'"([\w.]+)"', fam28.group(1)) if fam28 else []
+    need("R11 (P2-28) the column path is gone: column-only names left %s; Removal.H %s; the retired key strings once "
+         "each as quoted literals (%s), the table rows with their value (%s), the presence list %s, the families %s"
+         % (left11 or "none", "PRESENT" if rem_there else "deleted",
+            ", ".join("%s %d" % (k, c) for k, c in cnt11.items() if c != 1) or "all once",
+            "ok" if all(inn11.values()) else [k for k, v in inn11.items() if not v], sorted(keys28), sorted(fams)),
+         not left11 and not rem_there and all(c == 1 for c in cnt11.values()) and all(inn11.values())
+         and sorted(keys28) == sorted(P2_28_ABORT) and sorted(fams) == sorted(P2_28_FAMILY))
+    # P2-29 R12 (census D): one heat path -- the separate kernels' names gone (comments included), the half-conductance
+    # prescribed term gone everywhere in src/ (b4), the three table rows at their values, the presence list + families
+    left12 = sorted({n for n in P2_29_NAMES for t in nolit.values()
+                     if re.search(r"(?<![A-Za-z_])%s(?![A-Za-z_])" % re.escape(n), t)})
+    half = sum(len(re.findall(r"(?<!2\.0 \* )\bkc \* \(sp_T - Tc\) \* inv_dz2", t)) for t in src.values())
+    inn12 = {k: re.search(r'\{"%s",\s*"%s",' % (re.escape(k), re.escape(v)), tab) is not None
+             for k, v in P2_29_TABLE.items()}
+    lst29 = re.search(r"P2-29 \(census D\)[\s\S]*?for \(const char\* k : \{([^}]*)\}\)", m)
+    keys29 = re.findall(r'"([\w.]+)"', lst29.group(1)) if lst29 else []
+    fam29 = re.search(r"P2-29 \(census D\)[\s\S]*?for \(const char\* family : \{([^}]*)\}\)", m)
+    fams29 = re.findall(r'"([\w.]+)"', fam29.group(1)) if fam29 else []
+    nph = re.search(r'if \(!pp\.contains\("microstructure\.nphases"\)\)[\s\S]{0,120}?P2-29', m) is not None
+    need("R12 (P2-29) one heat path: the separate kernels' names left %s; half-conductance terms %d; the table rows %s; "
+         "the presence list %s, the families %s; a deck without nphases aborts: %s"
+         % (left12 or "none", half, "ok" if all(inn12.values()) else [k for k, v in inn12.items() if not v],
+            sorted(keys29), sorted(fams29), nph),
+         not left12 and half == 0 and all(inn12.values()) and sorted(keys29) == sorted(P2_29_ABORT)
+         and sorted(fams29) == sorted(P2_29_FAMILY) and nph)
+    # P2-31 R13 (goal 9): the dead list
+    left13 = sorted({n for n in P2_31_NAMES for t in nolit.values()
+                     if re.search(r"(?<![A-Za-z_])%s(?![A-Za-z_])" % re.escape(n), t)})
+    cnt13 = {k: sum(t.count('"%s"' % k) for t in src.values()) for k in P2_31_TABLE}
+    inn13 = {k: re.search(r'\{"%s",\s*"%s",' % (re.escape(k), re.escape(v)), tab) is not None
+             for k, v in P2_31_TABLE.items()}
+    ec = re.search(r"struct ElasticConsts \{([^}]*)\}", src.get(_src.SLICE_PREFIX + "Shared.H", ""))
+    act = re.search(r"\bbool\s+active\s*\(", src.get("Numeric/MMWBeam.H", ""))
+    kap = re.search(r"virtual\s+Set::Scalar\s+kappa\s*\(", src.get("Numeric/Material/Material.H", ""))
+    need("R13 (P2-31) the dead list is gone: names left %s; ElasticConsts::ok %s; MMWBeam::active() %s; virtual "
+         "Material::kappa %s; the vapour keys once each as quoted literals (%s), table rows %s"
+         % (left13 or "none", "gone" if ec and not re.search(r"\bok\b", ec.group(1)) else "PRESENT",
+            "PRESENT" if act else "gone", "PRESENT" if kap else "gone",
+            ", ".join("%s %d" % (k, c) for k, c in cnt13.items() if c != 1) or "all once",
+            "ok" if all(inn13.values()) else [k for k, v in inn13.items() if not v]),
+         not left13 and ec is not None and not re.search(r"\bok\b", ec.group(1)) and not act and not kap
+         and all(c == 1 for c in cnt13.values()) and all(inn13.values()))
     return out
 
 
 def _mmw(fn):
-    return lambda s: dict(s, **{MMW: fn(s[MMW])})
+    """a mutation is an edit of ONE file: apply `fn` to the class file (the parent, then each slice) holding its target"""
+    def go(s):
+        for nm in [MMW] + [_src.SLICE_PREFIX + n for n in _src.slices(s) if n not in _src.FRAGMENTS]:
+            t = fn(s[nm])
+            if t != s[nm]:
+                return dict(s, **{nm: t})
+        return s
+    return go
 
 
 MUTATIONS = [
@@ -158,6 +380,29 @@ MUTATIONS = [
     ("R6", "reassociate alpha to left-to-right `2 pi sqrt(eps_r) tan_delta / lambda` (algebraically equal)",
      lambda s: dict(s, **{SUBST["MMWBeam.H"]: s[SUBST["MMWBeam.H"]].replace(
          "std::sqrt(v.eps_r) * (v.tan_delta / v.lambda);", "std::sqrt(v.eps_r) * v.tan_delta / v.lambda;", 1)})),
+    ("R7", "re-add the parse of spall.flake_length (a second occurrence of the key string)",
+     _mmw(lambda t: t.replace('        pp.query_default("spall.flake_c_f"',
+                              '        { std::string fl; pp.query_default("spall.flake_length", fl, std::string("twocell")); }\n'
+                              '        pp.query_default("spall.flake_c_f"', 1))),
+    ("R10", "plant the member `Set::Field<Set::Scalar> D_mf;` back",
+     _mmw(lambda t: t.replace("    Set::Scalar sp_buckle_span = 0.0;",
+                              "    Set::Field<Set::Scalar> D_mf;\n    Set::Scalar sp_buckle_span = 0.0;", 1))),
+    ("R9", "plant the member `bool damage_enabled = false;` back",
+     _mmw(lambda t: t.replace("    Set::Scalar sp_buckle_span = 0.0;",
+                              "    bool damage_enabled = false;\n    Set::Scalar sp_buckle_span = 0.0;", 1))),
+    ("R11", "plant a comment naming the deleted column dispatch (`// UpdateRemovalAfterCohesive`)",
+     _mmw(lambda t: t.replace("    Set::Scalar sp_buckle_span = 0.0;",
+                              "    // UpdateRemovalAfterCohesive\n    Set::Scalar sp_buckle_span = 0.0;", 1))),
+    ("R12", "plant a comment naming the deleted material kernel (`// AdvanceMaterial`)",
+     _mmw(lambda t: t.replace("    Set::Scalar sp_buckle_span = 0.0;",
+                              "    // AdvanceMaterial\n    Set::Scalar sp_buckle_span = 0.0;", 1))),
+    ("R13", "plant the member `bool microstructure_enabled = false;` back",
+     _mmw(lambda t: t.replace("    Set::Scalar sp_buckle_span = 0.0;",
+                              "    bool microstructure_enabled = false;\n    Set::Scalar sp_buckle_span = 0.0;", 1))),
+    ("R8", "re-add the parse of spall.melt_aware (a second occurrence of the key string)",
+     _mmw(lambda t: t.replace('        pp.query_default("spall.flake_c_f"',
+                              '        { int mo = 0; pp.query_default("spall.melt_aware", mo, 0); }\n'
+                              '        pp.query_default("spall.flake_c_f"', 1))),
 ]
 
 
@@ -196,11 +441,18 @@ def source_half(pre):
     return bad
 
 
-def leg(extra):
+CAL = os.path.join(ROOT, "tests", "MMWSpalling", "validation", "kant", "grimsel_calibration", "input")
+# P2-29: the feet deck (nozzle_feed_max parses only under nozzle_descent = feet) and a deck WITHOUT phases (the
+# retired const-alpha beam deck: no material, no phase.*, alpha 0.0 0.0 -- only the nphases rule can stop it)
+FEET = os.path.join(ROOT, "tests", "MMWSpalling", "unit", "face_feet", "input")
+NOPHASE = os.path.join(ROOT, "tests", "MMWSpalling", "retired_units", "beam_separate_path", "input")
+
+
+def leg(extra, deck=None):
     d = tempfile.mkdtemp(prefix="retkey_")
     argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "1",
-            os.path.join(ROOT, "bin", "mmwspalling-3d-g++"),
-            os.path.join(ROOT, "tests", "MMWSpalling", "unit", "gradient_blind", "input")] + extra + \
+            os.environ.get("MMW_BIN", os.path.join(ROOT, "bin", "mmwspalling-3d-g++")),   # P2-31: two-sided runs
+            deck or os.path.join(ROOT, "tests", "MMWSpalling", "unit", "gradient_blind", "input")] + extra + \
            ["stop_time=0.008", "plot_file=%s" % os.path.join(d, "run")]
     r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
     return r.returncode, (r.stdout or "") + (r.stderr or "")
@@ -214,8 +466,80 @@ def run_half():
             ("K2", ["spall.lateral_drive=0"], True, ["spall.lateral_drive", "P2-10"]),
             ("K3", ["beam.alpha_expr=10"], True, ["beam.alpha_expr", "P2-20"]),
             ("K4", ["beam.R=0.0"], True, ["beam.R", "P2-20"]),
-            ("K0", [], False, [])):
-        rc, txt = leg(extra)
+            ("K0", [], False, []),
+            ("K5", ["spall.flake_length=twocell", "spall.flake_fraction=cf", "weibull.size_volume=cell",
+                    "weibull.V_ref=1.0e-9"], False, []),
+            ("K6", ["spall.flake_length=flux"], True, ["spall.flake_length", "P2-26"]),
+            ("K7", ["weibull.size_volume=flux"], True, ["weibull.size_volume", "P2-26"]),
+            ("K8", ["spall.flake_fraction=weibull"], True, ["spall.flake_fraction", "P2-26"]),
+            ("K9", ["surface_patch.pad_shield_open=0.5"], True, ["surface_patch.pad_shield_open",
+                                                                 "specified but not used"]),
+            ("K10", ["spall.surface_normal=0", "spall.flake_coherence_length=0", "spall.melt_aware=0",
+                     "melt.lambda_crit=0.4"], False, []),
+            ("K11", ["spall.surface_normal=1"], True, ["spall.surface_normal", "P2-26"]),
+            ("K12", ["spall.flake_coherence_length=0.004"], True, ["spall.flake_coherence_length", "P2-26"]),
+            ("K13", ["spall.melt_aware=1"], True, ["spall.melt_aware", "P2-26"]),
+            ("K14", ["spall.flake_coherence_length=0.0"], False, []),
+            ("K15", ["spall.surface_normal=0.0", "spall.melt_aware=0.0"], False, []),
+            ("K16", ["spall.flake_coherence_length=0 0"], True, ["spall.flake_coherence_length", "P2-26"]),
+            ("K17", ["damage.enabled=0", "conductivity.kappa_damage_alpha=0.0", "spall.sample=top_cell"], False, []),
+            ("K18", ["damage.enabled=1"], True, ["damage.enabled", "P2-27"]),
+            ("K19", ["spallation.model=damage_law"], True, ["damage_law", "P2-27"]),
+            ("K20", ["damage.ic.type=expression"], True, ["damage.ic.type", "P2-27"]),
+            ("K21", ["spall.sample=shallow_max"], True, ["spall.sample", "P2-27"]),
+            ("K22", ["cohesive.enabled=0"], True, ["cohesive.enabled", "P2-27"]),
+            ("K23", ["spall.xi_s=8.0"], True, ["spall.xi_s", "P2-27"]),
+            ("K24", ["microstructure.phase0.A_D=0.0"], False, []),
+            ("K25", ["microstructure.phase0.A_D=0.5"], True, ["A_D", "P2-27"]),
+            ("K26", ["spallation.model=none"], True, ["spallation.model", "sp_weibull"]),
+            ("K27", ["@CAL", "microstructure.phase0.kappa=3.0"], True, ["microstructure.phase0.kappa", "P2-27"]),
+            ("K28", ["@CAL"], False, []),
+            ("K29", ["microstructure.phase0.kappa=1.5"], False, []),
+            # P2-28 (P2-27 DR-5): the scalar stress law under the rock's thermal law keeps beta / E / mu REQUIRED
+            ("K30", ["@CAL", "spall.stress_law=scalar"], True, ["microstructure.phase0."]),
+            # P2-31: the parse accepts the scalars; the face list then refuses the pair (unit/interlocks S1)
+            ("K31", ["@CAL", "spall.stress_law=scalar", "microstructure.phase0.beta=8.4e-6",
+                     "microstructure.phase0.E=53.3e9", "microstructure.phase0.mu=20.5e9"], True,
+             ["spall.stress_law = scalar", "P2-31"]),
+            # P2-28 (census H), two-sided on the gradient_blind face deck (the fixture since P2-28)
+            ("K32", ["surface_patch.face_list=0"], True, ["surface_patch.face_list", "P2-28"]),
+            ("K33", ["surface_patch.robin_form=pinned"], True, ["robin_form = pinned", "P2-28"]),
+            ("K34", ["spall.surface_T=cell_average"], True, ["spall.surface_T", "P2-28"]),
+            ("K35", ["spall.surface_T=reconstructed"], False, []),
+            ("K36", ["spall.removal_energy=cell"], True, ["spall.removal_energy", "P2-28"]),
+            ("K37", ["spall.removal_energy=flake"], False, []),
+            ("K38", ["weibull.detach_mode=connected_cluster"], True, ["weibull.detach_mode", "P2-28"]),
+            ("K39", ["weibull.detach_mode=per_face"], False, []),
+            ("K40", ["bit.enabled=0"], True, ["bit.enabled", "P2-28"]),
+            ("K41", ["spall.h_col_events_csv=1"], True, ["spall.h_col_events_csv", "P2-28"]),
+            ("K42", ["spallation.sp.prescribed_T_surface.enabled=1"], True,
+             ["spallation.sp.prescribed_T_surface.enabled", "P2-28"]),
+            ("K43", ["surface.follow_mask=0"], True, ["surface.follow_mask", "P2-28"]),
+            ("K44", ["surface.follow_mask=1"], False, []),
+            # P2-29 (census D, one heat path), two-sided
+            ("K45", ["material.type=zhang"], True, ["material.type", "P2-29"]),
+            ("K46", ["implicit.tol_rel=1e-8"], True, ["implicit.tol_rel", "P2-29"]),
+            ("K47", ["phase.T_m=1000"], True, ["phase.T_m", "P2-29"]),
+            ("K48", ["phase.lh_m=1.0"], True, ["phase.lh_m", "P2-29"]),
+            ("K49", ["alpha=0 0"], False, []),
+            ("K50", ["alpha=0.0 0.0"], False, []),
+            ("K51", ["alpha=8e-6 0"], True, ["alpha", "P2-29"]),
+            ("K52", ["alpha=0.0"], True, ["alpha", "P2-29"]),
+            ("K53", ["solver=explicit"], False, []),
+            ("K54", ["solver=implicit"], True, ["solver", "P2-29"]),
+            ("K55", ["surface_patch.foot_rule=pads"], False, []),
+            ("K56", ["surface_patch.foot_rule=max"], True, ["surface_patch.foot_rule", "P2-29"]),
+            ("K57", ["surface_patch.foot_rule=mean"], True, ["surface_patch.foot_rule", "P2-29"]),
+            ("K58", ["@FEET", "surface_patch.nozzle_feed_max=0.001"], False, []),
+            ("K59", ["@NOPHASE"], True, ["microstructure.nphases", "P2-29"]),
+            ("K60", ["implicit.verbose=0"], True, ["implicit.verbose", "P2-29"]),
+            # P2-31 (goal 9): the vapour keys retired at their defaults (two-sided: K62 ran rc 0 before P2-31)
+            ("K61", ["vapor.prescribed_rop.enabled=0"], False, []),
+            ("K62", ["vapor.prescribed_rop.enabled=1"], True, ["vapor.prescribed_rop.enabled", "P2-31"]),
+            ("K63", ["vapor.A_beam=1.0", "vapor.T0=300.0", "vapor.prescribed_rop.expr=0.001"], False, [])):
+        deck = CAL if "@CAL" in extra else (FEET if "@FEET" in extra else (NOPHASE if "@NOPHASE" in extra else None))
+        extra = [e for e in extra if e not in ("@CAL", "@FEET", "@NOPHASE")]
+        rc, txt = leg(extra, deck)
         named = all(n in txt for n in names)
         ok = (rc != 0) == want_abort and named
         print("  %s  %s %-38s rc=%d%s" % ("ok  " if ok else "FAIL", tag, " ".join(extra) or "(fixture alone)", rc,
@@ -241,7 +565,9 @@ def main():
         print("FAIL: %d check(s)" % bad)
         return 1
     print("PASS: the constraint depth (P2-16) and the typed beam absorption (P2-20) are deleted from src/, their keys "
-          "abort naming their packets, P2-10's list still works, and alpha's association is locked (P2-21 R6).")
+          "abort naming their packets, P2-10's list still works, alpha's association is locked (P2-21 R6), and "
+          "P2-26's retired-at-default keys are named once each, run at the old default (as a number since P2-27: 0.0 == 0) "
+          "and abort otherwise.")
     return 0
 
 

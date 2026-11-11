@@ -40,6 +40,8 @@ OUT  = os.path.join(HERE, "output")
 # `spall.driving_ref` and `spall.driving_ref_depth` no longer exist. A leg
 # setting any of them would now abort as an UNUSED INPUT, which is asserted in
 # `unit/lateral_flux_lock` rather than here.
+# P2-28: `input` IS the slab on the FACE LIST (the production removal path, its surface form, the reconstruction
+# and the flake); the column path's slab is retired (retired_units/gradient_blind_column/).
 LEGS = [
     ("uniform", [], False),
 ]
@@ -48,9 +50,12 @@ def run(tag, extra, expect_fail=False):
     d = os.path.join(OUT, tag)
     if os.path.isdir(d): shutil.rmtree(d)
     os.makedirs(d, exist_ok=True)
+    deck = "input"
+    if extra and extra[0].startswith("@"):
+        deck, extra = extra[0][1:], extra[1:]
     cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np",
             "1" if expect_fail else "4", BIN,
-            os.path.join(HERE, "input")] + extra +
+            os.path.join(HERE, deck)] + extra +
            ["plot_file=%s" % os.path.join(d, "run")])
     env = os.environ.copy(); env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
     return subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)

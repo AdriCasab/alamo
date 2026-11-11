@@ -3,51 +3,35 @@
 
 // Fragment of class Integrator::MMWSpalling (P2-18, A3). This file is
 // textually #included INSIDE the class body of src/Integrator/MMWSpalling.H,
-// immediately before Removal.H. It is a class-body fragment, NOT a standalone
+// immediately before FaceRemoval.H. It is a class-body fragment, NOT a standalone
 // header: it must not be compiled or #included anywhere else, and it has no
 // #include / namespace / class of its own (everything it needs is already
 // included by MMWSpalling.H before the class).
-//
-// WHAT LIVES HERE AND WHY. The pieces BOTH removal paths call: the column path
-// (Removal.H, `surface_patch.face_list = 0`, retiring) and the line path
-// (FaceRemoval.H, `face_list = 1`, production). Until P2-18 they were declared
-// at the top of Removal.H, so deleting the column file would have taken the
-// production path's own helpers with it. Each helper body is P2-9's, moved
-// verbatim (clang contracts a*b + c only within ONE expression under
-// -ffp-contract=on, so a textual move keeps every frozen tree byte-identical),
-// plus the two prologue pieces the face list silently relied on Removal.H for:
-// the step guards and the per-step reset of the regime / rate fields.
     // =====================================================================
     // P2-9: THE DEPTH SCAN'S PIECES AND THE REMAP, ONE COPY EACH.
     // =====================================================================
-    // The column path (UpdateRemovalAfterCohesive, key off) and the line path
-    // (FaceRemoval.H, surface_patch.face_list = 1) call these and nothing else,
-    // so on a +z line (mu = 1) the two run the SAME reconstruction, scan and
-    // remap on the same inputs (P2-9 a2 (i)). Each body is the column path's
-    // former lambda moved expression for expression: clang contracts a*b + c
-    // only within ONE expression (-ffp-contract=on), so moving whole
-    // expressions keeps the key-off tree byte-identical (a1).
 
     // P2-9 rev 2 item 3: ONE copy of the elastic constants every T-derived
     // stress site reads -- phase 0's E, beta, nu = E/(2 mu) - 1, and the
     // confining offset p nu/(1 - nu) (Kant Eq. 15), 0 when confining.p is 0 or
-    // nu is outside (-1, 1). `ok` = phase 0 exists with E > 0 and mu > 0 (nu
-    // is 0 otherwise); each caller keeps its own abort. The four former copies
-    // (two in Removal.H, one in MMWSpalling.H, one in FaceRemoval.H) computed
-    // these same expressions.
-    struct ElasticConsts { Set::Scalar E = 0.0, beta = 0.0, nu = 0.0, conf = 0.0; bool ok = false; };
+    // nu is outside (-1, 1). nu is 0 unless phase 0 exists and either the rock
+    // law is selected or E > 0 and mu > 0.
+    struct ElasticConsts { Set::Scalar E = 0.0, beta = 0.0, nu = 0.0, conf = 0.0; };
     ElasticConsts ElasticConstants() const
     {
         ElasticConsts c;
         if (phases.empty()) return c;
         c.E    = phases[0].E;
         c.beta = phases[0].beta;
-        if (!(phases[0].E > 0.0 && phases[0].mu > 0.0)) return c;
-        c.ok = true;
         // P2-14a (DR-1): ONE Poisson's ratio. Under the rock law it is the law's
         // own (`grimsel.nu`, the nu LawSigma divides by); phase0.E/mu are then
-        // inert. Without the law, the scalar pair as before.
+        // inert. Without the law, the scalar pair E/(2 mu) - 1.
+        // P2-27 stage 4: under the rock law E / beta / mu are REFUSED when the
+        // phase's thermal law is grimsel too (Parse), so they read 0 here and
+        // the test below does not ask for them: every consumer takes the law then
+        // (LawSigma in ScanSigmaT, the strain table in BuckleRatio).
         const Numeric::Material::Grimsel *law = RockLaw();
+        if (!law && !(phases[0].E > 0.0 && phases[0].mu > 0.0)) return c;
         c.nu = law ? law->nu : phases[0].E / (2.0 * phases[0].mu) - 1.0;
         if (confining_p != 0.0 && c.nu > -1.0 && c.nu < 1.0)
             c.conf = confining_p * c.nu / (1.0 - c.nu);
@@ -59,7 +43,7 @@
     // ghosts only at the START of a step (Integrator.cpp:1204), and
     // Util::RealFillBoundary is a bare FillBoundary() -- box to box, neither the
     // periodic copy nor the physical BC -- so without this the firing step's
-    // kernel read the PRE-remap temperature across every domain side. This is
+    // kernel would read the PRE-remap temperature across every domain side. This is
     // what FillPatch does at level 0 with source == destination
     // (FillBoundary(periodicity) then the physical BC); FillPatch itself is
     // private to Integrator, the BC object is protected.
@@ -173,8 +157,8 @@
     }
 
     // K_Ic(T) under the configured law, in Pa*m^0.5. ⚠ P2-2d d7: the depth
-    // scan's two former blocks (at a cell, at a depth) were textually
-    // identical; they are this ONE function now, so they cannot disagree.
+    // scan's two reads (at a cell, at a depth) are this ONE function, so they
+    // cannot disagree.
     Set::Scalar ScanKIcPa(Set::Scalar T_at) const
     {
         const Numeric::Material::Grimsel *kic_g_loc =
@@ -198,23 +182,22 @@
 
     // The T-derived driving stress at one sample (1-D confinement,
     // compression-positive): the rock law through LawSigma when one is
-    // selected, else the scalar thermoelastic form. f_skel = 1 off melt.
+    // selected, else the scalar thermoelastic form.
     Set::Scalar ScanSigmaT(const Numeric::Material::Grimsel *scan_g,
-                           Set::Scalar T_z, Set::Scalar T0_z, Set::Scalar f_skel,
+                           Set::Scalar T_z, Set::Scalar T0_z,
                            Set::Scalar sp_conf_offset, Set::Scalar phase_E_loc,
                            Set::Scalar phase_beta_loc, Set::Scalar phase_nu_loc) const
     {
         if (scan_g)
-            return f_skel
-                 * (sp_relief
-                    * LawSigma(scan_g, T_z, T0_z)
-                    + sp_conf_offset);
+            return sp_relief
+                   * LawSigma(scan_g, T_z, T0_z)
+                   + sp_conf_offset;
         // ⚠ pre-P2-2b expression, VERBATIM.
-        return f_skel * (sp_relief * phase_E_loc
+        return sp_relief * phase_E_loc
                * phase_beta_loc
                * (T_z - T0_z)
                / (1.0 - phase_nu_loc)
-               + sp_conf_offset);
+               + sp_conf_offset;
     }
 
     // The depth scan proper: z_crack walks the line in 1-cell strides and
@@ -222,13 +205,11 @@
     // the bracketing cell is then bisected 8 times. Returns h_col (0 = no
     // crack below the surface). `on_pass(k_tip)` sees every passing stride;
     // `s_last_pass` / `found_failure` say how the walk ended; `score0` is
-    // K_I/K_Ic at the surface (s = 0) -- the line path's score. ⚠ K_Ic is
-    // evaluated BEFORE K_I at every sample, as it always was: the stress
-    // lambda carries counters.
+    // K_I/K_Ic at the surface (s = 0) -- the line's score (R2). ⚠ K_Ic is
+    // evaluated BEFORE K_I at every sample.
     template <class KI, class KICZ, class KICC, class PASS>
     static Set::Scalar DepthScanH(int max_steps, int k_top, int scan_kbot,
-                                  Set::Scalar dz, Set::Scalar sn_cth,
-                                  Set::Scalar sn_icth, Set::Scalar a_f, bool rec_ok,
+                                  Set::Scalar dz, Set::Scalar a_f, bool rec_ok,
                                   KI&& k_i_at_zcrack, KICZ&& kic_pa_at_z,
                                   KICC&& kic_pa_at_cell, PASS&& on_pass,
                                   int& s_last_pass, bool& found_failure,
@@ -241,12 +222,12 @@
         for (int s = 0; s <= max_steps; ++s)
         {
             const Set::Scalar z_crack =
-                Set::Scalar(s) * dz * sn_cth;
+                Set::Scalar(s) * dz;
             const int k_tip = k_top - s;
             if (k_tip < scan_kbot) break;
 
             Set::Scalar K_Ic_Pa = rec_ok
-                ? kic_pa_at_z((z_crack + a_f) * sn_icth)
+                ? kic_pa_at_z(z_crack + a_f)
                 : kic_pa_at_cell(k_tip);
             Set::Scalar K_I_val =
                 k_i_at_zcrack(z_crack);
@@ -269,20 +250,20 @@
             (k_top - (s_last_pass + 1)) >= scan_kbot)
         {
             Set::Scalar z_lo = Set::Scalar(s_last_pass)
-                               * dz * sn_cth; // pass
+                               * dz; // pass
             Set::Scalar z_hi = Set::Scalar(s_last_pass + 1)
-                               * dz * sn_cth; // fail
+                               * dz; // fail
             for (int b = 0; b < 8; ++b)
             {
                 Set::Scalar z_mid =
                     0.5 * (z_lo + z_hi);
                 int k_mid = k_top -
                     static_cast<int>(
-                        std::floor(z_mid * sn_icth / dz));
+                        std::floor(z_mid / dz));
                 if (k_mid < scan_kbot) k_mid = scan_kbot;
                 if (k_mid > k_top)      k_mid = k_top;
                 Set::Scalar K_Ic_mid = rec_ok
-                    ? kic_pa_at_z((z_mid + a_f) * sn_icth)
+                    ? kic_pa_at_z(z_mid + a_f)
                     : kic_pa_at_cell(k_mid);
                 Set::Scalar K_I_mid =
                     k_i_at_zcrack(z_mid);
@@ -297,7 +278,7 @@
     }
 
     // P0b's conservative remap of one line's enthalpy profile by a flake h_f
-    // along the line (see the column path's note at its call):
+    // along the line (called by RecedeAlongLine, FaceRemoval.H):
     //     new[d] = (1 - b) old[d + m] + b old[d + m + 1],
     //     b = (1 - e^{-r/ell}) / (1 - e^{-dz/ell}),  h_f = m dz + r,
     // indices past `nmax` clamped to it (ambient at depth on a long line).
@@ -330,16 +311,94 @@
     }
 
     // =====================================================================
-    // P2-18 A3: THE STEP PROLOGUE both paths share (formerly the first lines
-    // of UpdateRemovalAfterCohesive).
+    // P2-30: ONE COLUMN LIST PER LOG FILE. The ordered column NAMES of each CSV this class writes live here; the header is
+    // built from the list, and every row writer counts its own fields against it before writing (it assembles the row in
+    // a local stream carrying the writer's own format, counts, aborts on a mismatch, then writes). A row writer keeps its
+    // own << chain and formats (a column can print as `0` in one row type and `0.0` in another). This catches a missing
+    // or an extra field, NOT two fields swapped.
     // =====================================================================
-    // The guards: removal on, the microstructure path, and the surface-owning
-    // level only (AMR: coarser levels receive phi/removed by average-down).
-    // Returns false when the step has nothing to do on this level.
+    static std::string CsvHeader(const std::vector<std::string>& cols)
+    {
+        std::string s;
+        for (std::size_t i = 0; i < cols.size(); ++i)
+        {
+            if (i) s += ",";
+            s += cols[i];
+        }
+        return s + "\n";
+    }
+
+    // `row` is one finished row (its trailing newline is not a field); every field is a number, so a comma is a separator
+    static void CsvCheckRow(const std::string& row, std::size_t n_cols, const char* file)
+    {
+        std::size_t n = 1;
+        for (char ch : row) if (ch == ',') ++n;
+        if (n != n_cols)
+            Util::Abort(INFO, file, ": a row has ", n, " fields, its header has ", n_cols, ": ", row);
+    }
+
+    // <plot_file>_removal_events.csv: every row writer under the face list (firing, vapour, feet) shares this one list
+    static std::vector<std::string> FrEventsColumns(bool bk_on)
+    {
+        std::vector<std::string> c = {"time", "col_i", "col_j", "regime", "k_top", "T_top", "a_f", "Sp_top",
+                                      "h_scan", "h_applied", "n_voided",
+                                      "T_surf", "ell_eff", "h_f", "T_bar_flake",
+                                      "rc_flag", "d_ell_rel", "ell_raw", "delta", "q_ratio",
+                                      // P2-9 deliverable 6, appended: the line
+                                      "dir", "mu", "k", "run", "h_line", "h_n", "f_after", "score", "ts_fb", "sheet",
+                                      "through", "q_net", "k_c"};
+        if (bk_on) c.push_back("bk");                      // P2-15: under spall.buckle_span > 0 only, the line's ratio
+        // P2-19, appended: the line's profile depths and the energy thin limit [m] (diagnostics; nothing reads them)
+        for (const char* s : {"ell_p", "z_peak", "ell_pk", "h_E"}) c.push_back(s);
+        return c;
+    }
+
+    // <plot_file>_buckle_log.csv
+    static std::vector<std::string> FrBuckleColumns()
+    {
+        return {"time", "col_i", "col_j", "class", "fire", "through", "fb", "nodepth", "score", "h_col",
+                "T_surf", "ell_p", "z_peak", "ell_pk", "ell_eff", "x", "bk", "bk_lb", "blocked"};
+    }
+
+    // <plot_file>_jet_profile.csv (the optional columns follow the march's own switches)
+    static std::vector<std::string> JetProfileColumns(bool expo, bool fsurf, bool count)
+    {
+        std::vector<std::string> c = {"time", "bin", "r_lo", "n_cols", "T_gas", "P_bin", "P_share"};
+        if (expo) c.push_back("T_eff");
+        if (fsurf) { c.push_back("n_fs"); c.push_back("m_ratio"); }
+        if (count) c.push_back("P_neg");
+        return c;
+    }
+
+    // <plot_file>_side_power.csv
+    static std::vector<std::string> SidePowerColumns()
+    {
+        return {"time", "col_i", "col_j", "r", "P_side"};
+    }
+
+    // P2-30 (SR 14): the surface patch's three constants, ONE definition, read by the kernel and by EnergyLedger.
+    // ⚠ `sp_on` is NOT here: the kernel's carries `owner` and the ledger's does not (equal on one level only).
+    struct PatchConst { Set::Scalar inv_dz2; bool presc; Set::Scalar r2; };
+    PatchConst PatchConstants(const Set::Scalar* DX) const
+    {
+        PatchConst p;
+        p.inv_dz2 = 1.0 / (DX[2] * DX[2]);
+        p.presc   = surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature;
+        p.r2      = surface_patch.radius * surface_patch.radius;
+        return p;
+    }
+
+    // =====================================================================
+    // P2-18 A3: THE STEP PROLOGUE of the removal step: RemovalStep
+    // (FaceRemoval.H) calls both functions before the lines are read.
+    // =====================================================================
+    // The guards: removal on (P2-28: or the face list's evaluate-only mode, whose
+    // criterion runs here and removes nothing) and the surface-owning level only
+    // (AMR: coarser levels receive phi/removed by average-down). Returns false
+    // when the step has nothing to do on this level.
     bool RemovalStepBegins(int lev)
     {
-        if (!removal_enabled()) return false;
-        Util::Assert(INFO, TEST(microstructure_enabled));
+        if (!list_state()) return false;
         if (!SurfaceOwner(lev)) return false;
         return true;
     }
@@ -362,14 +421,6 @@
             vapor_event_mf[lev]->setVal(0.0);
             vapor_thickness_mf[lev]->setVal(0.0);
             RoP_vap_mf[lev]->setVal(0.0);
-        }
-        // Step 17: per-step reset for the per-cell regime field under
-        // sp_weibull. The field is registered only when
-        // spallation_model == SpWeibull && (spall_on || vapor_on).
-        if (spallation_model == SpallationModel::SpWeibull &&
-            (spall_enabled || vapor_enabled))
-        {
-            regime_field_mf[lev]->setVal(0.0);
         }
     }
 

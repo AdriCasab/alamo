@@ -2,7 +2,7 @@
 #define INTEGRATOR_MMWSPALLING_FACEREMOVAL_H
 
 // Fragment of class Integrator::MMWSpalling (P2-9). Textually #included INSIDE
-// the class body of src/Integrator/MMWSpalling.H, right after Removal.H. A
+// the class body of src/Integrator/MMWSpalling.H, right after Shared.H. A
 // class-body fragment, NOT a standalone header: no #include / namespace /
 // class of its own.
 
@@ -23,8 +23,8 @@
     //     the two NORMAL lengths h_spall_max and flake_h_max become line
     //     lengths by / mu. No inward decay or no solid cell behind => the face
     //     heat balance on e* (the face Newton), always defined, no history.
-    // R2  ONE criterion: the depth scan (Removal.H's DepthScanH and its
-    //     pieces, the SAME functions the column path calls) along the line,
+    // R2  ONE criterion: the depth scan (DepthScanH and its pieces,
+    //     Shared.H) along the line,
     //     over the cells gathered behind the surface cell up to
     //     floor(h_spall_max / (mu dx)), stopping at the first non-solid cell
     //     or the domain edge (`run`). Score = K_I/K_Ic at the surface.
@@ -147,12 +147,12 @@
             Set::Scalar a = 0.0, b = 0.0, c = 0.0, d = 0.0, Tf = Tc;
             SurfaceCellFlux(true, true, 1.0, el.h, Tg, kc, dx, Tc,
                             eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,
-                            a, b, c, d, 0.0, nullptr, 0.0, &Tf);
+                            a, b, c, d, 0.0, &Tf);
             Ts = Tf;
         }
         SurfaceCellFlux(true, true, 1.0, e.h, Tg, kc, dx, Tc,
                         eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,
-                        q_in, q_out, q_rob, q_los, 0.0, nullptr, Ts);
+                        q_in, q_out, q_rob, q_los, Ts);
     }
 
     // R1 at the list rebuild (the kernel, after FaceListHeat, before the
@@ -200,12 +200,17 @@
         fr_fresh = static_cast<Set::Scalar>(n_fresh);
         if (n_fresh > 0)
         {
-            std::vector<Set::Scalar> g(3 * nc, 0.0);   // T(c), T(c-e*), solid(c-e*)
+            // T(c), T(c-e*), solid(c-e*), and (P2-31) T_init(c): the cell's initial temperature, the reconstruction's
+            // reference -- the stress's own (RecedeAlongLines' T0_at_d), with its fallback phases[0].T_ref
+            std::vector<Set::Scalar> g(4 * nc, 0.0);
+            const bool have_T0c = T_init_mf.size() > lev && T_init_mf[lev];
             for (amrex::MFIter mfi(*temp_old_mf[lev], false); mfi.isValid(); ++mfi)
             {
                 const amrex::Box& bx = mfi.validbox();
                 amrex::Array4<const Set::Scalar> const& T = (*temp_old_mf[lev]).const_array(mfi);
                 amrex::Array4<const Set::Scalar> const& rm = (*removed_mf[lev]).const_array(mfi);
+                amrex::Array4<const Set::Scalar> T0a;
+                if (have_T0c) T0a = (*T_init_mf[lev]).const_array(mfi);
                 for (std::size_t n = 0; n < nc; ++n)
                 {
                     if (!fresh[n]) continue;
@@ -215,12 +220,15 @@
                     const int sg = (dir % 2 == 1) ? -1 : 1;   // a step AGAINST e*
                     if (dir / 2 == 0) ib += sg; else if (dir / 2 == 1) jb += sg; else kb += sg;
                     if (bx.contains(amrex::IntVect(AMREX_D_DECL(c.i, c.j, c.k))))
-                        g[3 * n] = T(c.i, c.j, c.k);
+                    {
+                        g[4 * n] = T(c.i, c.j, c.k);
+                        if (have_T0c) g[4 * n + 3] = T0a(c.i, c.j, c.k);
+                    }
                     if (dom.contains(amrex::IntVect(AMREX_D_DECL(ib, jb, kb))) &&
                         bx.contains(amrex::IntVect(AMREX_D_DECL(ib, jb, kb))))
                     {
-                        g[3 * n + 1] = T(ib, jb, kb);
-                        g[3 * n + 2] = (rm(ib, jb, kb) > 0.5) ? 0.0 : 1.0;
+                        g[4 * n + 1] = T(ib, jb, kb);
+                        g[4 * n + 2] = (rm(ib, jb, kb) > 0.5) ? 0.0 : 1.0;
                     }
                 }
             }
@@ -231,13 +239,14 @@
             {
                 if (!fresh[n]) continue;
                 const FrCell& c = cells[n];
-                const Set::Scalar x = (g[3 * n + 2] > 0.5)
-                    ? RawSurfaceX(g[3 * n], g[3 * n + 1], T0r) : 0.0;
+                const Set::Scalar T0c = (have_T0c && std::isfinite(g[4 * n + 3])) ? g[4 * n + 3] : T0r;
+                const Set::Scalar x = (g[4 * n + 2] > 0.5)
+                    ? RawSurfaceX(g[4 * n], g[4 * n + 1], T0c) : 0.0;
                 Set::Scalar Ts = 0.0;
                 int fb = 1;
                 if (x > 0.0)
                 {
-                    Ts = ReconFromX(g[3 * n], T0r, dx, x, cap, sp_flake_c_f,
+                    Ts = ReconFromX(g[4 * n], T0c, dx, x, cap, sp_flake_c_f,
                                     spall_h_spall_max / c.mu, sp_flake_h_max / c.mu).T_surf;
                     fb = 0;
                 }
@@ -246,6 +255,22 @@
                     FaceEntry& e = fl_faces[static_cast<std::size_t>(p)];
                     e.Ts = Ts; e.tsfb = fb;
                 }
+            }
+        }
+        // P2-28: a cell with a PRESCRIBED face has a KNOWN surface temperature -- the patch's
+        // T_expr(t) (FaceListHeat) -- on every face of the cell (its one T_s, P2-9): neither the
+        // carry nor the reconstruction is read there
+        for (std::size_t n = 0; n < nc; ++n)
+        {
+            const FrCell& c = cells[n];
+            Set::Scalar Tp = -1.0;
+            for (int p = c.q0; p < c.q0 + c.nq; ++p)
+                Tp = std::max(Tp, fl_faces[static_cast<std::size_t>(p)].T_presc);
+            if (!(Tp > 0.0)) continue;
+            for (int p = c.q0; p < c.q0 + c.nq; ++p)
+            {
+                FaceEntry& e = fl_faces[static_cast<std::size_t>(p)];
+                e.Ts = Tp; e.tsfb = 0;
             }
         }
         fr_carry.clear();
@@ -311,6 +336,9 @@
     // ElasticConstants().nu (the law's under RockLaw(), P2-14a). Returns
     // bk = C_L x / L_span; +inf for a non-finite x or eps_th <= 0, so the
     // caller's `blocked = !(bk <= 1)` withdraws them.
+    // ⚠ THE STRAIN HOLDS ABOVE 1000 degC: Grimsel::strain_of returns its last
+    // table node above 1273.15 K, so under the law eps_th, hence C_L and bk, stop
+    // changing there (MODEL_CARD §11 item 11).
     // ---------------------------------------------------------------------
     static Set::Scalar BuckleRatio(const Numeric::Material::Grimsel* law, Set::Scalar nu,
                                    Set::Scalar beta, Set::Scalar T_s, Set::Scalar T0_s,
@@ -325,8 +353,166 @@
         return C_L * x / L_span;
     }
 
+    // The event log's header (P2-9 deliverable 6 appended the line columns, P2-15 `bk` under the span, P2-19 the
+    // profile depths) -- ONE string for every row writer under the face list.
+    static std::string FrEventsHeader(bool bk_on)
+    {
+        return CsvHeader(FrEventsColumns(bk_on));
+    }
+
     // ---------------------------------------------------------------------
-    // The dispatch target: under the key this IS the removal step.
+    // ⚠⚠ P2-27 stage 5 (census G): THE PAD CLEARANCE ON THE FACE LIST.
+    // The burner stands on feet (surface_patch.nozzle_descent = feet); under
+    // surface_patch.foot_body_clearance = 1, FeetDescent (in the previous
+    // step's kernel, BuildFlameColumns) armed foot_clear_k: per annulus column
+    // standing proud of its pad, the pad height's cell index k_c. Every solid
+    // cell of that column above k_c leaves here, BEFORE the lines are read --
+    // regime 4, MECHANICAL (the burner body shears pad-height rock out of the
+    // way; it is not heat-driven spallation) -- written on the face list's
+    // state: fr_f 0, removed 1, regime 4, RoP n dz / dt; the
+    // column's phi shifted by n dz, n = k_top - k_c (flipped cells by INDEX: a
+    // tie left at phi >= 0 gets -tiny, k_c is held at phi >= 0). H is NOT
+    // touched (a void's H is frozen and still in the TOTAL ledger) and is booked
+    // ONCE to foot_mech_E (H V), which ledger_err_solid already credits --
+    // exactly the vapour rule's booking. foot_mech_vol accumulates the flipped
+    // cells' volume; foot_mech_cols counts the columns with a flipped cell this
+    // step. One regime-4 row per cleared column in the event log:
+    // k_top = the top BEFORE the cut, h_applied = n dz, n_voided = the cells
+    // flipped, the line columns a +z line's (dir 5, mu 1, k = k_top) and the
+    // vapour row's placeholders elsewhere. A cut listed cell then has no solid
+    // run, so its lines are skipped; the next kernel lists the cleared surface.
+    // Returns whether any cell was flipped (on every rank).
+    // ---------------------------------------------------------------------
+    bool FrFootClearance(int lev, Set::Scalar time, Set::Scalar dt,
+                         const amrex::Vector<int>& k_top_global)
+    {
+        const Set::Scalar* DX = geom[lev].CellSize();
+        const Set::Scalar dz = DX[2];
+        const Set::Scalar Vcell = DX[0] * DX[1] * DX[2];
+        const amrex::Box& dom = geom[lev].Domain();
+        const int dom_ilo = dom.smallEnd(0), dom_jlo = dom.smallEnd(1);
+        const int nx_dom = dom.length(0);
+        const int ncols = nx_dom * dom.length(1);
+        foot_mech_cols = 0.0;
+        if (foot_clear_k.size() != static_cast<std::size_t>(ncols)
+            || static_cast<int>(k_top_global.size()) != ncols)
+        {
+            foot_clear_k.clear();
+            return false;
+        }
+        std::vector<int> n_cut(ncols, 0);
+        bool any = false;
+        for (int idx = 0; idx < ncols; ++idx)
+        {
+            const int kc = foot_clear_k[static_cast<std::size_t>(idx)];
+            const int kt = k_top_global[static_cast<std::size_t>(idx)];
+            if (kc == std::numeric_limits<int>::min() || kt == std::numeric_limits<int>::min() || kt <= kc)
+                continue;
+            n_cut[idx] = kt - kc;
+            any = true;
+        }
+        if (!any) { foot_clear_k.clear(); return false; }
+        Set::Scalar E_local = 0.0;
+        amrex::Vector<int> flip(ncols, 0);
+        for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::Array4<Set::Scalar> const& rm   = (*removed_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& ff   = (*fr_f_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& phi  = (*phi_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& reg  = (*regime_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& ropU = (*RoP_mf[lev]).array(mfi);
+            amrex::Array4<const Set::Scalar> const& Hc = (*H_mf[lev]).const_array(mfi);
+            const amrex::Dim3 lo = amrex::lbound(bx), hi = amrex::ubound(bx);
+            for (int j = lo.y; j <= hi.y; ++j)
+            for (int i = lo.x; i <= hi.x; ++i)
+            {
+                const int idx = (j - dom_jlo) * nx_dom + (i - dom_ilo);
+                const int n = n_cut[idx];
+                if (n == 0) continue;
+                const int kc = foot_clear_k[static_cast<std::size_t>(idx)];
+                const Set::Scalar h = Set::Scalar(n) * dz;
+                for (int k = lo.z; k <= hi.z; ++k)
+                {
+                    phi(i, j, k) -= h;
+                    if (k > kc && rm(i, j, k) <= 0.5)
+                    {
+                        rm(i, j, k)   = 1.0;
+                        ff(i, j, k)   = 0.0;
+                        reg(i, j, k)  = 4.0;
+                        ropU(i, j, k) = (dt > 0.0) ? h / dt : 0.0;
+                        if (phi(i, j, k) >= 0.0)
+                            phi(i, j, k) = -std::numeric_limits<Set::Scalar>::min();
+                        // per rank: each rank owns distinct cells; reduced once below
+                        E_local += Hc(i, j, k) * Vcell;
+                        ++flip[idx];
+                    }
+                    else if (k == kc && phi(i, j, k) < 0.0)
+                        phi(i, j, k) = 0.0;
+                }
+            }
+        }
+        amrex::ParallelDescriptor::ReduceIntSum(flip.data(), ncols);
+        amrex::ParallelDescriptor::ReduceRealSum(E_local);
+        foot_mech_E += E_local;
+        long nflip = 0;
+        for (int idx = 0; idx < ncols; ++idx)
+        {
+            nflip += flip[idx];
+            if (flip[idx] > 0) foot_mech_cols += 1.0;
+        }
+        foot_mech_vol += Set::Scalar(nflip) * Vcell;
+
+        if (sp_emit_removal_events_csv && amrex::ParallelDescriptor::IOProcessor())
+        {
+            const std::string csv_path = plot_file + "_removal_events.csv";
+            const bool need_header = !sp_removal_events_csv_header_written;
+            std::ofstream ofs(csv_path, (need_header ? std::ios::trunc : std::ios::app) | std::ios::out);
+            if (ofs.is_open())
+            {
+                const bool bk_on = sp_buckle_span > 0.0;
+                if (need_header) ofs << FrEventsHeader(bk_on);
+                ofs.setf(std::ios::scientific);
+                ofs.precision(16);
+                const Set::Scalar nan = std::numeric_limits<Set::Scalar>::quiet_NaN();
+                const std::size_t n_ev = FrEventsColumns(bk_on).size();
+                for (int idx = 0; idx < ncols; ++idx)
+                {
+                    if (n_cut[idx] == 0) continue;
+                    const Set::Scalar h = Set::Scalar(n_cut[idx]) * dz;
+                    const int kt = k_top_global[static_cast<std::size_t>(idx)];
+                    std::ostringstream row;
+                    row.copyfmt(ofs);
+                    row << time << "," << (idx % nx_dom + dom_ilo) << "," << (idx / nx_dom + dom_jlo) << ",4,"
+                        << kt << ",0,0,0,0," << h << "," << flip[idx]
+                        << ",0,0,0,0,0,0,0,0,0";
+                    row << ",5,1," << kt << ",0," << h << "," << h << ",0,0,0,0,0,0,0";
+                    if (bk_on) row << ",0";
+                    row << "," << nan << "," << nan << "," << nan << "," << nan << "\n";
+                    CsvCheckRow(row.str(), n_ev, "_removal_events.csv");
+                    ofs << row.str();
+                }
+            }
+        }
+        if (sp_emit_removal_events_csv) sp_removal_events_csv_header_written = true;
+        foot_clear_k.clear();   // consumed; FeetDescent re-arms it
+        return nflip > 0;
+    }
+
+    // ---------------------------------------------------------------------
+    // ⚠ P2-28 (census H): THE removal step -- the face list is the ONE removal
+    // path. The prologue (Shared.H), the column tops, then the lines. Called
+    // by Advance once per step, BEFORE the thermal swap.
+    // ---------------------------------------------------------------------
+    void RemovalStep(int lev, Set::Scalar time, Set::Scalar dt)
+    {
+        if (!RemovalStepBegins(lev)) return;
+        ResetRemovalStepFields(lev);
+        RecedeAlongLines(lev, time, dt, ColumnTopSolid(lev));
+    }
+
+    // ---------------------------------------------------------------------
+    // The lines: R0-R3, the vapour rule, the ONE WRITE and the event log.
     // ---------------------------------------------------------------------
     void RecedeAlongLines(int lev, Set::Scalar time, Set::Scalar dt,
                          const amrex::Vector<int>& k_top_global)
@@ -336,6 +522,12 @@
         const Set::Scalar Vcell = DX[0] * DX[1] * DX[2];
         const amrex::Box& dom = geom[lev].Domain();
         const int nx_dom = dom.length(0);
+        // ⚠ P2-28: EVALUATE-ONLY (the face list on, spall and vapour off: the onset decks). R0-R2 and
+        // the buckling withdrawal run as with removal; R3 and the ONE WRITE do not -- nothing is
+        // removed, so the temperature field never depends on the criterion. One events row per cell
+        // whose winning line fired AFTER the buckling condition: the row production would write,
+        // with n_voided 0, h_applied 0, f_after = the cell's own fraction.
+        const bool eval_only = evaluate_only();
         for (int c3 = 0; c3 < 3; ++c3)
         { fr_n_c[c3] = fr_v_c[c3] = fr_fb_c[c3] = 0.0; fr_smax_c[c3] = 0.0; }
         fr_clip = fr_cap = fr_sheet = fr_multi = fr_overlap = 0.0;
@@ -358,12 +550,27 @@
         fr_mu_mf[lev]->setVal(0.0);
 
         bool any_write = false;
+        // P2-27 stage 5 (census G): the pad clearance, BEFORE the lines are read
+        if (surface_patch.enabled && surface_patch.feet && surface_patch.foot_body_clearance)
+            any_write = FrFootClearance(lev, time, dt, k_top_global) || any_write;
         // the list is built by the kernel; on the first step there is none
         // yet (nothing has heated, nothing can fire)
         if (fl_ready && !fl_faces.empty())
         {
             const std::vector<FrCell> cells = FrCells();
             fr_ncell = static_cast<Set::Scalar>(cells.size());
+            // P2-28: the cells with a PRESCRIBED face -- their surface temperature is KNOWN: the patch's value NOW.
+            // ⚠ This step runs BEFORE the kernel (Advance): the field read here is the temperature at `time`, the end
+            // of the previous kernel step, whose list set T_presc = T_expr(time - dt). That T_presc marks WHICH faces
+            // are held; the value is T_expr(time), else the criterion lags the boundary by one step (1.9 K at Hu's
+            // 3.74 K/s and dt 0.5 s; the first m4a run logged 50.5 s against T_expr(50.0 s)).
+            const Set::Scalar Tp_now = (surface_patch.enabled &&
+                                        surface_patch.mode == SurfacePatch::Mode::PrescribedTemperature)
+                                     ? surface_patch.T_at(time) : -1.0;
+            std::vector<Set::Scalar> cell_Tp(cells.size(), -1.0);
+            for (std::size_t n = 0; n < cells.size(); ++n)
+                for (int p = cells[n].q0; p < cells[n].q0 + cells[n].nq; ++p)
+                    if (fl_faces[static_cast<std::size_t>(p)].T_presc > 0.0) cell_Tp[n] = Tp_now;
 
             // ---- R0: the lines ------------------------------------------
             const Set::Scalar hcap = (sp_flake_h_max > 0.0)
@@ -400,7 +607,7 @@
 
             // ---- THE ONE GATHER: T, T0, H, solid, f along every line, plus
             // the surface cell's flaw and conductivity. Owner-written,
-            // ReduceRealSum-collapsed (PASS 1b pattern): each cell has exactly
+            // ReduceRealSum-collapsed: each cell has exactly
             // one owner, so the sum is exact and decomposition-free.
             constexpr int NF = 5;
             std::vector<Set::Scalar> G(off * NF, 0.0), Gc(2 * nl, 0.0);
@@ -414,7 +621,6 @@
                 amrex::Array4<const Set::Scalar> const& rm = (*removed_mf[lev]).const_array(mfi);
                 amrex::Array4<const Set::Scalar> const& ff = (*fr_f_mf[lev]).const_array(mfi);
                 amrex::Array4<const Set::Scalar> const& kp = (*kappa_mf[lev]).const_array(mfi);
-                amrex::Array4<const Set::Scalar> const& Df = (*D_mf[lev]).const_array(mfi);
                 amrex::Array4<const Set::Scalar> T0a, fa;
                 if (have_T0) T0a = (*T_init_mf[lev]).const_array(mfi);
                 if (weibull_enabled) fa = (*flaw_a_mf[lev]).const_array(mfi);
@@ -451,9 +657,7 @@
                         if (d == 0)
                         {
                             Gc[2 * l] = weibull_enabled ? fa(p[0], p[1], p[2]) : sp_a0;
-                            Gc[2 * l + 1] = (kappa_damage_alpha != 0.0)
-                                ? kp(p[0], p[1], p[2]) * std::exp(-kappa_damage_alpha * Df(p[0], p[1], p[2]))
-                                : kp(p[0], p[1], p[2]);
+                            Gc[2 * l + 1] = kp(p[0], p[1], p[2]);
                         }
                     }
                 }
@@ -507,6 +711,8 @@
             long n_molten = 0, n_lid = 0;
 
             // ---- R1 + R2 on every line (every rank, identical) ----------
+            // T0r is the FALLBACK only (no stored initial field, or a non-finite value): every line reads its start
+            // cell's initial temperature, T0l below (P2-31)
             const Set::Scalar T0r = phases.empty() ? 0.0 : phases[0].T_ref;
             const Set::Scalar cap = SurfaceGasTempCap();
             const Numeric::Material::Grimsel *scan_g = RockLaw();
@@ -554,7 +760,9 @@
                 int run = 0;
                 while (run < L.Lg && Gl[run * NF + 3] > 0.5) ++run;
                 o.run = run;
-                if (run < 1) continue;   // cannot happen: the cell is solid
+                // a listed cell the pad clearance cut THIS step (P2-27) has no solid run:
+                // it is skipped (its column is cleared; the next kernel lists the new top)
+                if (run < 1) continue;
                 // the scan window along the line, clamped to the solid run
                 const int nprof = std::min(L.Dmax, run - 1);
                 auto T_at_d = [&] (int d) -> Set::Scalar {
@@ -570,49 +778,24 @@
                     return std::isfinite(v) ? v : T0r;
                 };
                 // P2-19: the line's own temperature rise over the scan window (the
-                // fallback's depth and the logged diagnostics read it; nothing else)
+                // fallback's and the prescribed face's depth and the logged diagnostics
+                // read it; nothing else)
                 auto rise_at_d = [&] (int d) -> Set::Scalar { return T_at_d(d) - T0_at_d(d); };
+                // ⚠ P2-31: ONE REFERENCE TEMPERATURE. The reconstruction, the profile depth and the profile peak read
+                // the line's start cell's initial temperature -- the stress's reference, with the stress's fallback
+                // (T0_at_d) -- not phases[0].T_ref, which a deck may type away from its initial condition
+                // (unit/gradient_blind: 293.15 K against an 820 K start). A zero rise reads flat: RawSurfaceX returns
+                // 0 unless both cells are above T0l, and the e-fold and peak return NaN on a rise <= 0.
+                const Set::Scalar T0l = T0_at_d(0);
                 const Set::Scalar Tc = Gl[0];
-                const Set::Scalar x = (run >= 2) ? RawSurfaceX(Tc, Gl[NF], T0r) : 0.0;
-                if (x > 0.0)
-                {
-                    o.rec = ReconFromX(Tc, T0r, dx, x, cap, sp_flake_c_f,
-                                       spall_h_spall_max / L.mu, sp_flake_h_max / L.mu);
-                }
-                else
-                {
-                    // P2-9 rev 2 item 5 -- THE FALLBACK, from the face heat balance
-                    // on e*: T_s = the face Newton's root (sign-agnostic: it is the
-                    // surface temperature whether the face gains or loses heat).
-                    // ⚠⚠ P2-19: the flake depth is the E-FOLD DEPTH OF THE LINE'S OWN
-                    // RISE from T_s - T0 (ProfileEFoldDepth, Shared.H), defined on any
-                    // profile -- no longer ell_q = k_c (T_s - T0) / q_net, which is
-                    // undefined when the face loses heat. The flake is c_f ell_p under
-                    // ReconFromX's two caps (/ mu). A rise that never e-folds inside
-                    // the window has no depth: no recession (fr_nodepth). q_net and the
-                    // old tangent depth ell_q are kept for the log only. Nothing defaults
-                    // to one cell -- ReconFromX's flat h_f = dz is NOT read. (o.fb is set
-                    // on every fallback evaluation, as before, so fr_fb_* is unchanged.)
-                    o.rec = SurfaceRecon();
-                    o.rec.flat = true;
-                    o.rec.ell_eff = std::numeric_limits<Set::Scalar>::infinity();
-                    const FaceEntry& ef = fl_faces[static_cast<std::size_t>(L.qface)];
-                    Set::Scalar a1 = 0.0, a2 = 0.0, a3 = 0.0, a4 = 0.0, Tf = Tc;
-                    // P2-11b item 5: the face's own gas temperature (under
-                    // face_heat = position it is flame_Tg[c.col] exactly)
-                    const Set::Scalar Tg = ef.Tg;
-                    SurfaceCellFlux(true, true, 1.0, ef.h, Tg, Gc[2 * l + 1], dx, Tc,
-                                    eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,
-                                    a1, a2, a3, a4, 0.0, nullptr, 0.0, &Tf);
-                    o.rec.T_surf = Tf;
-                    o.rec.T_bar = Tf;
-                    o.fb = 1;
-                    const Set::Scalar q_net = a3 - a4;
-                    const Set::Scalar k_c = Gc[2 * l + 1];
-                    o.q_net = q_net;
-                    if (q_net > 0.0 && Tf > T0r && k_c > 0.0)
-                        o.rec.ell_q = k_c * (Tf - T0r) / q_net;   // the old depth (log only)
-                    const Set::Scalar ell_p = ProfileEFoldDepth(rise_at_d, Tf - T0r, dx, nprof);
+                const Set::Scalar x = (run >= 2) ? RawSurfaceX(Tc, Gl[NF], T0l) : 0.0;
+                // ⚠⚠ P2-19: the flake depth from a surface temperature the line did not
+                // reconstruct -- the E-FOLD DEPTH OF THE LINE'S OWN RISE from T_s - T0
+                // (ProfileEFoldDepth, Shared.H). The flake is c_f ell_p under ReconFromX's two
+                // caps (/ mu). A rise that never e-folds inside the window has no depth: no
+                // recession (fr_nodepth). The fallback's rule; P2-28's prescribed face reads it too.
+                auto depth_from_Ts = [&] (Set::Scalar Ts_k) {
+                    const Set::Scalar ell_p = ProfileEFoldDepth(rise_at_d, Ts_k - T0l, dx, nprof);
                     if (std::isfinite(ell_p))
                     {
                         Set::Scalar hf = sp_flake_c_f * ell_p;
@@ -628,6 +811,53 @@
                         o.rec.h_f = 0.0;
                         o.nodepth = 1;
                     }
+                };
+                const Set::Scalar Tp = cell_Tp[static_cast<std::size_t>(L.cell)];
+                if (Tp > 0.0)
+                {
+                    // P2-28: a PRESCRIBED face -- the surface temperature is KNOWN (the patch holds
+                    // it, FaceListHeat): neither the reconstruction nor the face Newton runs (ts_fb 0,
+                    // rc_flag 0); the depth is the line's own e-fold from it
+                    o.rec = SurfaceRecon();
+                    o.rec.ell_eff = std::numeric_limits<Set::Scalar>::infinity();
+                    o.rec.T_surf = Tp;
+                    o.rec.T_bar = Tp;
+                    depth_from_Ts(Tp);
+                }
+                else if (x > 0.0)
+                {
+                    o.rec = ReconFromX(Tc, T0l, dx, x, cap, sp_flake_c_f,
+                                       spall_h_spall_max / L.mu, sp_flake_h_max / L.mu);
+                }
+                else
+                {
+                    // P2-9 rev 2 item 5 -- THE FALLBACK, from the face heat balance
+                    // on e*: T_s = the face Newton's root (sign-agnostic: it is the
+                    // surface temperature whether the face gains or loses heat).
+                    // ⚠⚠ P2-19: the flake depth is the E-FOLD DEPTH OF THE LINE'S OWN
+                    // RISE from T_s - T0 (ProfileEFoldDepth, Shared.H), defined on any
+                    // profile -- NOT the tangent depth k_c (T_s - T0) / q_net, which is
+                    // undefined when the face loses heat. The flake is c_f ell_p under
+                    // ReconFromX's two caps (/ mu). A rise that never e-folds inside
+                    // the window has no depth: no recession (fr_nodepth). q_net is logged.
+                    // Nothing defaults to one cell -- ReconFromX's flat h_f = dz is NOT read.
+                    // (o.fb is set on every fallback evaluation.)
+                    o.rec = SurfaceRecon();
+                    o.rec.flat = true;
+                    o.rec.ell_eff = std::numeric_limits<Set::Scalar>::infinity();
+                    const FaceEntry& ef = fl_faces[static_cast<std::size_t>(L.qface)];
+                    Set::Scalar a1 = 0.0, a2 = 0.0, a3 = 0.0, a4 = 0.0, Tf = Tc;
+                    // P2-11b item 5: the face's own gas temperature (under
+                    // face_heat = position it is flame_Tg[c.col] exactly)
+                    const Set::Scalar Tg = ef.Tg;
+                    SurfaceCellFlux(true, true, 1.0, ef.h, Tg, Gc[2 * l + 1], dx, Tc,
+                                    eps_rad, eps_rad_hi, T_eps_break, sigma_SB, h_conv, T_amb,
+                                    a1, a2, a3, a4, 0.0, &Tf);
+                    o.rec.T_surf = Tf;
+                    o.rec.T_bar = Tf;
+                    o.fb = 1;
+                    o.q_net = a3 - a4;
+                    depth_from_Ts(Tf);
                 }
                 const Set::Scalar Ts = o.rec.T_surf;
                 auto T_at_zv = [&] (Set::Scalar z_v) -> Set::Scalar {
@@ -641,7 +871,7 @@
                         const Set::Scalar T_z = T_at_zv(z_v);
                         const Set::Scalar T0_z =
                             T0_at_d(static_cast<int>(std::floor(z_v / dx)));
-                        return ScanSigmaT(scan_g, T_z, T0_z, 1.0, conf_off, pE, pB, pNu);
+                        return ScanSigmaT(scan_g, T_z, T0_z, conf_off, pE, pB, pNu);
                     };
                     return Numeric::SpCriterion::K_I(sigma_at_depth, a_f, n_seg);
                 };
@@ -666,7 +896,7 @@
                 bool failed = false;
                 Set::Scalar score = 0.0;
                 if (std::isfinite(a_f) && a_f > 0.0)
-                    o.h_col = DepthScanH(nprof, 0, -(L.Lg + 1), dx, 1.0, 1.0, a_f, true,
+                    o.h_col = DepthScanH(nprof, 0, -(L.Lg + 1), dx, a_f, true,
                                          k_i_at_zcrack, kic_pa_at_z, kic_pa_at_cell,
                                          [] (int) {}, s_last, failed, score);
                 o.score = score;
@@ -688,9 +918,9 @@
                 // applies sp_relief), K_Ic in Pa sqrt(m). Logged, never applied.
                 if (o.fire)
                 {
-                    o.ell_p = ProfileEFoldDepth(rise_at_d, Ts - T0r, dx, nprof);
-                    ProfilePeak(rise_at_d, Ts - T0r, dx, nprof, o.z_peak, o.ell_pk);
-                    const Set::Scalar sig_s = ScanSigmaT(scan_g, T_at_zv(0.0), T0_at_d(0), 1.0,
+                    o.ell_p = ProfileEFoldDepth(rise_at_d, Ts - T0l, dx, nprof);
+                    ProfilePeak(rise_at_d, Ts - T0l, dx, nprof, o.z_peak, o.ell_pk);
+                    const Set::Scalar sig_s = ScanSigmaT(scan_g, T_at_zv(0.0), T0_at_d(0),
                                                          conf_off, pE, pB, pNu);
                     const Set::Scalar kic_s = ScanKIcPa(Ts);
                     o.h_E = (sig_s != 0.0) ? kic_s * kic_s * (1.0 + pNu) / (sig_s * sig_s)
@@ -772,22 +1002,25 @@
                                             | std::ios::out);
                 if (ofs.is_open())
                 {
-                    if (need_header)
-                        ofs << "time,col_i,col_j,class,fire,through,fb,nodepth,score,h_col,"
-                               "T_surf,ell_p,z_peak,ell_pk,ell_eff,x,bk,bk_lb,blocked\n";
+                    if (need_header) ofs << CsvHeader(FrBuckleColumns());
                     ofs.setf(std::ios::scientific);
                     ofs.precision(16);
+                    const std::size_t n_bk = FrBuckleColumns().size();
                     for (const BkRow& br : bk_rows)
                     {
                         const FrLine& L = lines[br.l];
                         const LineOut& o = out[br.l];
                         const FrCell& c = cells[static_cast<std::size_t>(L.cell)];
-                        ofs << time << "," << c.i << "," << c.j << "," << FrClass(L.dir)
+                        std::ostringstream row;
+                        row.copyfmt(ofs);
+                        row << time << "," << c.i << "," << c.j << "," << FrClass(L.dir)
                             << ",1," << br.through << "," << o.fb << "," << o.nodepth
                             << "," << o.score << "," << o.h_col << "," << o.rec.T_surf
                             << "," << o.ell_p << "," << o.z_peak << "," << o.ell_pk
                             << "," << o.rec.ell_eff << "," << br.x << "," << br.bk
                             << "," << br.bk_lb << "," << br.blocked << "\n";
+                        CsvCheckRow(row.str(), n_bk, "_buckle_log.csv");
+                        ofs << row.str();
                     }
                 }
             }
@@ -807,8 +1040,12 @@
             }
 
             // ---- R3: recede every firing line, per-cell deltas -----------
+            // ⚠ P2-31: THE OVERLAP RULE. Several lines can pass through one cell (fr_overlap: 792 cells in 4 steps
+            // on the gate's 45 deg tilt). h_phiz is the +z line's own recession, written ONLY at that line's own cell
+            // and read by the column's phi shift; h_max is the LARGEST h of the lines through the cell, read by the
+            // plotted thickness and rate. The additive books (df, dH) are unaffected.
             struct Upd { Set::Scalar dH = 0.0, df = 0.0, H0 = 0.0, f0 = 0.0;
-                         Set::Scalar h_line = 0.0; int nl = 0; int phiz = 0; };
+                         Set::Scalar h_max = 0.0, h_phiz = 0.0; int nl = 0; int phiz = 0; };
             std::map<long long, Upd> upd;
             std::map<long long, std::array<int, 3>> where;
             struct Ev { std::size_t l; int n_v; Set::Scalar h_line, f_after; };
@@ -825,7 +1062,7 @@
                 if (o.fb) fr_fb_c[cls] += 1.0;
                 if (o.nodepth) fr_nodepth_c[cls] += 1.0;
                 // no depth (the rise never e-folds) and no crack to the void:
-                // nothing to recede (P2-19: was "no heated skin", q_net <= 0)
+                // nothing to recede
                 if (o.fire && o.nodepth && !o.through)
                 {
                     fr_smax_c[cls] = std::max(fr_smax_c[cls], o.score);
@@ -859,6 +1096,16 @@
                     if (h > L_av) { h = L_av; fr_clip += 1.0; }
                 }
                 if (!(h > 0.0)) continue;
+                if (eval_only)
+                {
+                    // P2-28: the row production would write; nothing recedes, and the line's
+                    // T_s stays on its own cell (production's carry with n_voided = 0)
+                    evs.push_back({static_cast<std::size_t>(l), 0, h, f[0]});
+                    const long long key = FrKey(lev, cells[ci].i, cells[ci].j, cells[ci].k);
+                    if (fr_carry.find(key) == fr_carry.end())
+                        fr_carry[key] = {o.rec.T_surf, o.fb};
+                    continue;
+                }
                 const Set::Scalar ell = std::isfinite(o.rec.ell_eff) && o.rec.ell_eff > 0.0
                     ? o.rec.ell_eff : std::numeric_limits<Set::Scalar>::infinity();
                 std::vector<Set::Scalar> df, dH;
@@ -884,18 +1131,18 @@
                     u.df += df[static_cast<std::size_t>(d)];
                     u.H0 = Ho[static_cast<std::size_t>(d)];
                     u.f0 = f[static_cast<std::size_t>(d)];
-                    u.h_line = h;
+                    u.h_max = std::max(u.h_max, h);
                     u.nl += 1;
                     where[key] = {p[0], p[1], p[2]};
                     dsum += dH[static_cast<std::size_t>(d)];
                 }
                 dH_book += dsum;
-                // phi follows a +z line's column, as the column path moves it
+                // phi follows a +z line's column: marked here, shifted in the ONE WRITE
                 if (L.dir == 5)
                 {
                     const long long key = FrKey(lev, c.i, c.j, c.k);
                     upd[key].phiz = 1;
-                    upd[key].h_line = h;
+                    upd[key].h_phiz = h;
                     where[key] = {c.i, c.j, c.k};
                 }
                 evs.push_back({static_cast<std::size_t>(l), n_v, h, f_after});
@@ -962,77 +1209,76 @@
             for (amrex::MFIter mfi(*removed_mf[lev], false); mfi.isValid(); ++mfi)
             {
                 const amrex::Box& bx = mfi.validbox();
-                amrex::Array4<Set::Scalar> const& rm  = (*removed_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& H   = (*H_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& ff  = (*fr_f_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& phi = (*phi_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& reg = (*regime_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& ropU= (*RoP_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& D   = (*D_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& regf= (*regime_field_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& ev_s  = (*spall_event_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& thk_s = (*spall_thickness_mf[lev]).array(mfi);
-                amrex::Array4<Set::Scalar> const& rop_s = (*RoP_spall_mf[lev]).array(mfi);
-                for (const long long key : keys)
+                // P2-28: evaluate-only writes nothing here (no update, no vapour; the per-step
+                // removal fields of spall/vapour are not even registered) -- the witnesses below only
+                if (!eval_only)
                 {
-                    const Upd& u = upd[key];
-                    const std::array<int, 3>& p = where[key];
-                    if (u.phiz)
+                    amrex::Array4<Set::Scalar> const& rm  = (*removed_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& H   = (*H_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& ff  = (*fr_f_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& phi = (*phi_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& reg = (*regime_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& ropU= (*RoP_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& ev_s  = (*spall_event_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& thk_s = (*spall_thickness_mf[lev]).array(mfi);
+                    amrex::Array4<Set::Scalar> const& rop_s = (*RoP_spall_mf[lev]).array(mfi);
+                    for (const long long key : keys)
                     {
-                        // the whole column's phi, the column path's PASS 3 shift
-                        if (p[0] >= bx.smallEnd(0) && p[0] <= bx.bigEnd(0) &&
-                            p[1] >= bx.smallEnd(1) && p[1] <= bx.bigEnd(1))
-                            for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); ++k)
-                                phi(p[0], p[1], k) -= u.h_line;
-                    }
-                    if (u.nl == 0) continue;
-                    if (!bx.contains(amrex::IntVect(AMREX_D_DECL(p[0], p[1], p[2])))) continue;
-                    const Set::Scalar fn = u.f0 - u.df;
-                    if (fn <= eps_f)
-                    {
-                        // void: the thermal state stays frozen (never reset)
-                        ff(p[0], p[1], p[2]) = 0.0;
-                        rm(p[0], p[1], p[2]) = 1.0;
-                        reg(p[0], p[1], p[2]) = 1.0;
-                        regf(p[0], p[1], p[2]) = 1.0;
-                        ropU(p[0], p[1], p[2]) = (dt > 0.0) ? u.h_line / dt : 0.0;
-                        ev_s(p[0], p[1], p[2]) = 1.0;
-                        thk_s(p[0], p[1], p[2]) = u.h_line;
-                        rop_s(p[0], p[1], p[2]) = (dt > 0.0) ? u.h_line / dt : 0.0;
-                        D(p[0], p[1], p[2]) = 0.0;
-                    }
-                    else
-                    {
-                        ff(p[0], p[1], p[2]) = fn;
-                        H(p[0], p[1], p[2]) += u.dH;
-                    }
-                    any_write = true;
-                }
-                // P2-24: the vapour voids (regime 2); the thermal state stays frozen, as a spalled void's
-                if (!vap_list.empty())
-                {
-                    amrex::Array4<Set::Scalar> const& vev  = (*vapor_event_mf[lev]).array(mfi);
-                    amrex::Array4<Set::Scalar> const& vthk = (*vapor_thickness_mf[lev]).array(mfi);
-                    amrex::Array4<Set::Scalar> const& vrop = (*RoP_vap_mf[lev]).array(mfi);
-                    for (const std::size_t ci : vap_list)
-                    {
-                        const FrCell& c = cells[ci];
-                        const Set::Scalar h_v = vap_f[ci] * dx;
-                        if (vap_top[ci] && c.i >= bx.smallEnd(0) && c.i <= bx.bigEnd(0)
-                            && c.j >= bx.smallEnd(1) && c.j <= bx.bigEnd(1))
-                            for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); ++k)
-                                phi(c.i, c.j, k) -= h_v;
-                        if (!bx.contains(amrex::IntVect(AMREX_D_DECL(c.i, c.j, c.k)))) continue;
-                        ff(c.i, c.j, c.k) = 0.0;
-                        rm(c.i, c.j, c.k) = 1.0;
-                        reg(c.i, c.j, c.k) = 2.0;
-                        regf(c.i, c.j, c.k) = 2.0;
-                        ropU(c.i, c.j, c.k) = (dt > 0.0) ? h_v / dt : 0.0;
-                        D(c.i, c.j, c.k) = 0.0;
-                        vev(c.i, c.j, c.k) = 1.0;
-                        vthk(c.i, c.j, c.k) = h_v;
-                        vrop(c.i, c.j, c.k) = (dt > 0.0) ? h_v / dt : 0.0;
+                        const Upd& u = upd[key];
+                        const std::array<int, 3>& p = where[key];
+                        if (u.phiz)
+                        {
+                            // a +z line fired on this cell: the whole column's phi drops by that line's own h
+                            if (p[0] >= bx.smallEnd(0) && p[0] <= bx.bigEnd(0) &&
+                                p[1] >= bx.smallEnd(1) && p[1] <= bx.bigEnd(1))
+                                for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); ++k)
+                                    phi(p[0], p[1], k) -= u.h_phiz;
+                        }
+                        if (u.nl == 0) continue;
+                        if (!bx.contains(amrex::IntVect(AMREX_D_DECL(p[0], p[1], p[2])))) continue;
+                        const Set::Scalar fn = u.f0 - u.df;
+                        if (fn <= eps_f)
+                        {
+                            // void: the thermal state stays frozen (never reset)
+                            ff(p[0], p[1], p[2]) = 0.0;
+                            rm(p[0], p[1], p[2]) = 1.0;
+                            reg(p[0], p[1], p[2]) = 1.0;
+                            ropU(p[0], p[1], p[2]) = (dt > 0.0) ? u.h_max / dt : 0.0;
+                            ev_s(p[0], p[1], p[2]) = 1.0;
+                            thk_s(p[0], p[1], p[2]) = u.h_max;
+                            rop_s(p[0], p[1], p[2]) = (dt > 0.0) ? u.h_max / dt : 0.0;
+                        }
+                        else
+                        {
+                            ff(p[0], p[1], p[2]) = fn;
+                            H(p[0], p[1], p[2]) += u.dH;
+                        }
                         any_write = true;
+                    }
+                    // P2-24: the vapour voids (regime 2); the thermal state stays frozen, as a spalled void's
+                    if (!vap_list.empty())
+                    {
+                        amrex::Array4<Set::Scalar> const& vev  = (*vapor_event_mf[lev]).array(mfi);
+                        amrex::Array4<Set::Scalar> const& vthk = (*vapor_thickness_mf[lev]).array(mfi);
+                        amrex::Array4<Set::Scalar> const& vrop = (*RoP_vap_mf[lev]).array(mfi);
+                        for (const std::size_t ci : vap_list)
+                        {
+                            const FrCell& c = cells[ci];
+                            const Set::Scalar h_v = vap_f[ci] * dx;
+                            if (vap_top[ci] && c.i >= bx.smallEnd(0) && c.i <= bx.bigEnd(0)
+                                && c.j >= bx.smallEnd(1) && c.j <= bx.bigEnd(1))
+                                for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); ++k)
+                                    phi(c.i, c.j, k) -= h_v;
+                            if (!bx.contains(amrex::IntVect(AMREX_D_DECL(c.i, c.j, c.k)))) continue;
+                            ff(c.i, c.j, c.k) = 0.0;
+                            rm(c.i, c.j, c.k) = 1.0;
+                            reg(c.i, c.j, c.k) = 2.0;
+                            ropU(c.i, c.j, c.k) = (dt > 0.0) ? h_v / dt : 0.0;
+                            vev(c.i, c.j, c.k) = 1.0;
+                            vthk(c.i, c.j, c.k) = h_v;
+                            vrop(c.i, c.j, c.k) = (dt > 0.0) ? h_v / dt : 0.0;
+                            any_write = true;
+                        }
                     }
                 }
                 // the witnesses on every surface cell, fired or not
@@ -1062,22 +1308,10 @@
                                             | std::ios::out);
                 if (ofs.is_open())
                 {
-                    if (need_header)
-                        ofs << "time,col_i,col_j,regime,k_top,T_top,a_f,Sp_top,"
-                               "h_scan,h_applied,n_voided"
-                            << ",T_surf,ell_eff,h_f,T_bar_flake,"
-                               "rc_flag,d_ell_rel,ell_raw,delta,q_ratio"
-                            // P2-9 deliverable 6, appended: the line
-                            << ",dir,mu,k,run,h_line,h_n,f_after,score,ts_fb,sheet,"
-                               "through,q_net,k_c"
-                            // P2-15: under spall.buckle_span > 0 only, the line's ratio
-                            << (bk_on ? ",bk" : "")
-                            // P2-19, appended: the line's profile depths and the energy
-                            // thin limit [m] (diagnostics; nothing reads them)
-                            << ",ell_p,z_peak,ell_pk,h_E"
-                            << "\n";
+                    if (need_header) ofs << FrEventsHeader(bk_on);
                     ofs.setf(std::ios::scientific);
                     ofs.precision(16);
+                    const std::size_t n_ev = FrEventsColumns(bk_on).size();
                     for (const Ev& ev : evs)
                     {
                         const FrLine& L = lines[ev.l];
@@ -1087,25 +1321,29 @@
                         const int flag = (o.rec.flat ? 1 : 0) + (o.rec.ell_clamped ? 2 : 0)
                                        + (o.rec.T_clamped ? 4 : 0) + (o.rec.h_f_capped ? 8 : 0)
                                        + (o.rec.h_f_bounded ? 16 : 0);
-                        ofs << time << "," << c.i << "," << c.j << ",1,"
+                        std::ostringstream row;
+                        row.copyfmt(ofs);
+                        row << time << "," << c.i << "," << c.j << ",1,"
                             << k_top_global[static_cast<std::size_t>(c.col)] << ","
                             << Gl[0] << "," << Gc[2 * ev.l] << "," << 0.0 << ","
-                            << o.h_col << "," << ev.h_line << "," << ev.n_v
+                            << o.h_col << "," << (eval_only ? 0.0 : ev.h_line) << "," << ev.n_v
                             << "," << o.rec.T_surf << ","
                             << (std::isfinite(o.rec.ell_eff) ? o.rec.ell_eff : 0.0)
                             << "," << o.rec.h_f << "," << o.rec.T_bar << ","
                             << Set::Scalar(flag) << ",0,"
                             << (std::isfinite(o.rec.ell_eff) ? o.rec.ell_eff : 0.0)
                             << ",0,0";
-                        ofs << "," << L.dir << "," << L.mu << "," << c.k << "," << o.run
+                        row << "," << L.dir << "," << L.mu << "," << c.k << "," << o.run
                             << "," << ev.h_line << "," << L.mu * ev.h_line
                             << "," << ev.f_after << "," << o.score << "," << o.fb
                             << "," << c.sheet << "," << o.through << "," << o.q_net
                             << "," << Gc[2 * ev.l + 1];
-                        if (bk_on) ofs << "," << o.bk;
-                        ofs << "," << o.ell_p << "," << o.z_peak << "," << o.ell_pk
+                        if (bk_on) row << "," << o.bk;
+                        row << "," << o.ell_p << "," << o.z_peak << "," << o.ell_pk
                             << "," << o.h_E;
-                        ofs << "\n";
+                        row << "\n";
+                        CsvCheckRow(row.str(), n_ev, "_removal_events.csv");
+                        ofs << row.str();
                     }
                     // P2-24: one row per vaporised cell, regime 2; h_applied = the cell's remaining solid
                     // thickness; the line columns not defined for a vapour cell read 0 / NaN
@@ -1114,14 +1352,18 @@
                     {
                         const FrCell& c = cells[ci];
                         const Set::Scalar h_v = vap_f[ci] * dx;
-                        ofs << time << "," << c.i << "," << c.j << ",2,"
+                        std::ostringstream row;
+                        row.copyfmt(ofs);
+                        row << time << "," << c.i << "," << c.j << ",2,"
                             << k_top_global[static_cast<std::size_t>(c.col)] << ","
                             << vap_T[ci] << ",0,0,0," << h_v << ",1"
                             << ",0,0,0,0,0,0,0,0,0";
-                        ofs << "," << fl_faces[static_cast<std::size_t>(c.qline)].dir << ",1," << c.k << ",0,"
+                        row << "," << fl_faces[static_cast<std::size_t>(c.qline)].dir << ",1," << c.k << ",0,"
                             << h_v << "," << h_v << ",0,0,0," << c.sheet << ",0,0,0";
-                        if (bk_on) ofs << ",0";
-                        ofs << "," << nan << "," << nan << "," << nan << "," << nan << "\n";
+                        if (bk_on) row << ",0";
+                        row << "," << nan << "," << nan << "," << nan << "," << nan << "\n";
+                        CsvCheckRow(row.str(), n_ev, "_removal_events.csv");
+                        ofs << row.str();
                     }
                 }
             }
@@ -1129,18 +1371,17 @@
             (void) nx_dom;
         }
 
-        // the tail every removal step runs (Removal.H's own): T back from H,
-        // ghosts refilled, the derived masks rebuilt
+        // the tail every removal step runs: T back from H and ghosts refilled
+        // (after a write), the derived masks rebuilt
         if (any_write)
         {
             InvertHtoT(lev);
             Util::RealFillBoundary(*temp_mf[lev], geom[lev]);
             // P2-9 rev 2 item 2: the periodic + physical ghosts, through the
-            // solver's own BC (RefillTempGhosts, the column path's call too).
+            // solver's own BC (RefillTempGhosts, Shared.H).
             RefillTempGhosts(lev, time);
         }
         UpdateSurfaceMaskFromPhi(lev);
-        RefreshKappaEff(lev);
         {
             double tr = amrex::second() - fr_t0;
             amrex::ParallelDescriptor::ReduceRealMax(tr);

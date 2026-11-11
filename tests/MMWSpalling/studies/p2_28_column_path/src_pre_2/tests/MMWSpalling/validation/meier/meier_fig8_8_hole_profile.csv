@@ -1,0 +1,24 @@
+# Hole width vs depth read from Meier (2017) Fig. 8.8, p. 224: the 0.7 x 0.5 m Grimsel block sawn through the hole, cm scale on the right.
+# Method (2026-09-17): page rendered at 200 dpi, photo region cropped, 10 mm grid overlaid (0.756 px/mm from the cm scale), edges of the
+# visible channel read by eye at each depth. Precision about +/-5 mm. The saw cut need not pass through the hole axis, so the visible width is a
+# lower bound on the diameter; the thermally altered band on both sides suggests the cut is close to the axis. The hole centre sits about
+# 10-20 mm left of the photo's mid-width. The thesis states D = 85 mm (Tab. 8.2, p. 222); 3.42 L / 0.5 m implies a mean of 93 mm.
+# The underream at ~10 cm (thesis p. 223, "holding the burner steady for several seconds") appears as a thin dark streak reaching ~50 mm
+# beyond the wall on one side only between 80 and 90 mm depth; it is listed separately and not included in the width column.
+# depth_mm, visible_width_mm, note
+10, 96, collar; top of block slightly ragged
+25, 92,
+50, 88,
+75, 87,
+85, 87, one-sided underream streak to ~50 mm beyond the left wall (80-90 mm depth)
+100, 87,
+125, 87,
+150, 86,
+175, 85,
+200, 85,
+250, 84,
+300, 84,
+350, 83,
+400, 82,
+450, 80,
+480, 78, exit region; bright patch is the breakthrough

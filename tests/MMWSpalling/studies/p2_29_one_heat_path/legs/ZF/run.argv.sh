@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/zhang/zhang_oglesby/input_phase geometry.prob_lo=0.0 0.0 0.0 geometry.prob_hi=0.10 0.10 0.025 amr.n_cell=128 128 32 energy_ledger.enabled=1 plot_file=tests/MMWSpalling/studies/p2_29_one_heat_path/legs/ZF/run

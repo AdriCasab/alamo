@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+"""P2-11b (a5) -- unit/face_heat: surface_patch.face_heat = path on fixtures where the answer is known.
+
+Fixture: the Hoeser lab deck (validation/hoeser/input_lab + G1's keys, 50 x 50 x 150 at 1 mm, quarter domain,
+axis at the corner), h_expr = the LOCAL Goldstein form with no lid (the X legs' formula), geometry seeded with
+spall.seed_void boxes. Legs run for one step (plotfile 00001) unless stated; serial, -np 4.
+
+  (i)   FLAT_P vs FLAT_X (path vs position, same deck): per-cell fl_h ratio median within 1 %, max 6 %;
+        fl_H_stag = jet_s_c (the printed tokens) on every row
+  (ii)  fl_s vs the analytic surface distance on FLAT_P, PLANE_P (35 deg), BORE_P (R 12, depth 24 mm), cells
+        with s >= 10 mm: median <= 5 %, p95 <= 8 %
+  (iii) FLANGE_P (flat + barrier (r>0.02)and(z>0.15)): fl_n_blocked = the analytic census of +z faces at
+        r > 20 mm, their fl_h = 0; FLAT_P (no barrier): fl_n_blocked = 0
+  (iv)  fl_n_unreached = 0 on every path leg
+  (v)   BORE_PB (bore + barrier, 0.24 s, thermo every step): fl_id_march, fl_id_ledger <= 1e-9 on every row;
+        |ledger_err_solid| <= 5e-3; jet_P_face + jet_P_exhaust = jet_P_cap (the code aborts past 1e-9 of
+        the budget; the printed %g tokens agree to 1e-5)
+  (vi)  per-face Tg: on BORE_PB a column whose cells carry >= 2 distinct fl_Tg (non-vacuity) while
+        fl_id_march, fl_id_ledger <= 1e-12 -- the march's billed power and the kernel-mirror (diagnostics)
+        and ledger sums agree face by face; and a SOURCE LOCK: every FrFaceFlux call passes a face's own Tg
+        (kernel, diagnostics, ledger) or the march's bin temperature (q_col, q_face); flame_Tg is read by no
+        per-face consumer
+  (vii) each refused feature aborts naming its key and P2-12; barrier_expr under position and face_heat
+        without the face list abort. P2-26 (census B3): the pad shield and the above-plane pair are DELETED, so
+        R_pad and R_above are refused by the strict surface_patch scope instead -- ParmParse's EXCEPTION
+        "specified but not used" naming the key (STRICT below), no longer P2-12's message
+Usage: test [--check]   (--check re-reduces output/ without running)
+"""
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+sys.path.insert(0, os.path.join(ROOT, "tests", "MMWSpalling", "studies", "p2_2_props"))
+import fabcmp                                                     # noqa: E402
+
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+INPUT = os.path.join(ROOT, "tests", "MMWSpalling", "validation", "hoeser", "input_lab")
+OUT = os.path.join(HERE, "output")
+MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+NX, NZ, DX = 50, 150, 0.001
+ZN = 0.2132
+BASE = [  # G1's argv (studies/p2_11_heat/legs/G1/argv.sh) without plot_file, stop_time, h_expr, plot_int
+    "bit.enabled=0", "beam.P0=0.0", "surface_patch.mode=convective_flame", "surface_patch.robin_form=surface",
+    "surface_patch.pinned_idle_cycles=1.0e9", "surface.follow_mask=1", "spall.flake_coherence_length=0.0",
+    "spall.surface_normal=0", "spall.surface_T=reconstructed", "spall.removal_energy=flake", "spall.flake_c_f=0.4",
+    "weibull.a0_ig=8.0e-6", "weibull.a0_gb=40.0e-6", "spall.flake_h_max=0.0015",
+    "surface_patch.side_power_interval=10.0", "microstructure.phase0.law=grimsel", "spall.stress_law=grimsel",
+    "spallation.sp.kic.law=grimsel_table", "spallation.sp.kic.scale=1.0", "spallation.sp.stress_relief=0.531294",
+    "weibull.m=13", "surface_patch.enabled=1", "surface_patch.x0=0.0",
+    "surface_patch.y0=0.0", "surface_patch.radius=0.08", "surface_patch.nozzle_descent=prescribed",
+    "surface_patch.nozzle_feed=0.0", "surface_patch.nozzle_collision_radius=0.004",
+    "surface_patch.jet_closure=enthalpy", "surface_patch.jet_stagnation=decay", "surface_patch.jet_entrained_mass=1",
+    "surface_patch.jet_T_ent_mode=fixed", "surface_patch.jet_T_ent=293.15", "surface_patch.jet_mdot=3.4e-3",
+    "surface_patch.jet_cp=1250.0", "surface_patch.jet_D=0.0079", "surface_patch.jet_T_nozzle=1866.0",
+    "surface_patch.jet_decay_diameter=momentum", "surface_patch.jet_De_ref=0.003745",
+    "surface_patch.jet_bin_update=exponential", "surface_patch.jet_negative_flux=count",
+    "surface_patch.jet_profile_interval=1.0", "confining.p=0.0", "amr.thermo.plot_int=1", "amr.thermo.int=1",
+    "energy_ledger.enabled=1", "spall.removal_events_csv=1", "amr.n_cell=50 50 150", "amr.max_grid_size=25",
+    "geometry.prob_lo=0.0 0.0 0.0", "geometry.prob_hi=0.05 0.05 0.15", "timestep=0.008", "weibull.V0=1.0e-9",
+    "surface_patch.jet_core_length=30.0", "surface_patch.nozzle_z0=0.2132", "surface_patch.face_list=1"]
+C = 0.17 * 7272.3958
+HX = ("%.6f*533*(533+0.3575*44*pow(r/0.0079,1.285))/pow(533+44*pow(r/0.0079,1.285),2)"
+      "*pow(0.0632/max(0.0632,s),1.3185305455)" % C)
+PATH = {"surface_patch.face_heat": "path"}
+BAR = {"surface_patch.barrier_expr": "(r>0.02)and(z>0.15)"}
+FEET = {"surface_patch.nozzle_descent": "feet", "surface_patch.foot_r_inner": "0.02",
+        "surface_patch.foot_r_outer": "0.03", "surface_patch.foot_standoff": "0.06",
+        "surface_patch.nozzle_z0": None, "surface_patch.nozzle_feed": None}
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+# ------------------------------------------------------------------ geometry ----
+def plane_seeds(theta=35.0, z0=0.13):
+    """void above the plane through (0, 0, z0) tilted theta in x-z (downhill +x): one y-strip per column i"""
+    t = math.radians(theta)
+    out = []
+    for i in range(NX):
+        zs = z0 - math.tan(t) * (i + 0.5) * DX
+        ks = max(int(math.floor(zs / DX + 1e-9 - 0.5)) + 1, 0)
+        if ks <= NZ - 1:
+            out.append((i, 0, ks, i, NX - 1, NZ - 1))
+    return out
+
+
+def bore_seeds(R=12, dep=24):
+    out = []
+    for i in range(NX):
+        for j in range(NX):
+            if math.hypot(i + 0.5, j + 0.5) < R:
+                out.append((i, j, NZ - dep, i, j, NZ - 1))
+    return out
+
+
+def exact(name, I, J, K):
+    """the analytic surface distance [m] at cell centres"""
+    x, y, z = (I + 0.5) * DX, (J + 0.5) * DX, (K + 0.5) * DX
+    if name.startswith("FLAT") or name.startswith("FLANGE"):
+        return np.hypot(x, y)
+    if name.startswith("PLANE"):
+        t = math.radians(35.0)
+        n = np.array([math.sin(t), 0.0, math.cos(t)])
+        d = np.stack([x, y, z - 0.13], -1)
+        d = d - (d @ n)[..., None] * n
+        return np.sqrt((d ** 2).sum(-1))
+    R, top, dep = 0.012, 0.15, 0.024
+    r = np.hypot(x, y)
+    return np.where(z > top - DX, R + dep + np.maximum(0.0, r - R),
+                    np.where(r < R - 0.5 * DX, r, R + np.maximum(0.0, z - (top - dep))))
+
+
+LEGS = {  # name: (keys, seeds, stop_time)
+    "FLAT_X":   ({}, None, "0.024"),
+    "FLAT_P":   (dict(PATH), None, "0.024"),
+    "FLANGE_P": (dict(PATH, **BAR), None, "0.024"),
+    "PLANE_P":  (dict(PATH), plane_seeds(), "0.024"),
+    "BORE_P":   (dict(PATH), bore_seeds(), "0.024"),
+    "BORE_PB":  (dict(PATH, **BAR), bore_seeds(), "0.24"),
+}
+REFUSE = {  # name: (keys, the key the abort must name)
+    "R_pad":   (dict(PATH, **FEET, **{"surface_patch.pad_shield_open": "0.5"}), "pad_shield_open"),
+    "R_fs":    (dict(PATH, **FEET, **{"surface_patch.jet_free_surface": "1"}), "jet_free_surface"),
+    "R_feet":  (dict(PATH, **FEET), "nozzle_descent = feet"),
+    "R_above": (dict(PATH, **{"surface_patch.jet_above_h": "1", "surface_patch.jet_T_above": "1000.0"}),
+                "jet_above_h"),
+    # each deck drops the key its own change leaves unused (the strict surface_patch parser would stop
+    # first): pinned_idle_cycles is read under surface only, side_power_interval under the enthalpy closure
+    "R_robin": (dict(PATH, **{"surface_patch.robin_form": "face", "surface_patch.pinned_idle_cycles": None}),
+                "robin_form"),
+    "R_close": (dict(PATH, **{"surface_patch.jet_closure": "none", "surface_patch.T_flame_expr": "1866.0",
+                              "surface_patch.side_power_interval": None},
+                     **{k.split("=")[0]: None for k in BASE if k.startswith("surface_patch.jet_")
+                        and not k.startswith("surface_patch.jet_closure")}), "jet_closure"),
+    "R_barpos": (dict(BAR), "barrier_expr"),
+    "R_nolist": (dict(PATH, **{"surface_patch.face_list": "0"}), "face_heat"),
+}
+STRICT = ("R_pad", "R_above")   # P2-26: keys deleted (census B3), refused as unused by the strict scope
+
+
+def argv(name, keys, seeds, stop):
+    kv = {}
+    for t in BASE:
+        k, v = t.split("=", 1)
+        kv[k] = v
+    kv.update({"surface_patch.h_expr": HX, "stop_time": stop, "amr.plot_int": "1",
+               "plot_file": os.path.join(OUT, name, "run")})
+    for k, v in keys.items():
+        if v is None:
+            kv.pop(k, None)
+        else:
+            kv[k] = v
+    if seeds:
+        kv["spall.seed_void"] = " ".join(str(v) for b in seeds for v in b)
+    return MPI + [BIN, INPUT] + ["%s=%s" % (k, v) for k, v in kv.items()]
+
+
+def run(name, keys, seeds, stop):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    a = argv(name, keys, seeds, stop)
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join("'%s'" % x if " " in x else x for x in a) + "\n")
+    with open(os.path.join(d, "run.log"), "w") as log:
+        rc = subprocess.call(a, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    open(os.path.join(d, "rc"), "w").write("%d\n" % rc)
+    print("  ran %-9s rc=%d" % (name, rc), flush=True)
+    return rc
+
+
+# ------------------------------------------------------------------ reading ----
+def read_pf(name, step, comps):
+    pf = os.path.join(OUT, name, "run", "%05dcell" % step)
+    lvl = os.path.join(pf, "Level_0")
+    out = {c: np.zeros((NX, NX, NZ)) for c in comps}
+    names = None
+    for fn in sorted(f for f in os.listdir(lvl) if f.startswith("Cell_D_")):
+        blob = open(os.path.join(lvl, fn), "rb").read()
+        pos = 0
+        while True:
+            m = fabcmp.HDR.search(blob, pos)
+            if not m:
+                break
+            lo = [int(m.group(i)) for i in (2, 3, 4)]
+            hi = [int(m.group(i)) for i in (5, 6, 7)]
+            nc = int(m.group(11))
+            if names is None:
+                names = fabcmp.var_names(os.path.join(pf, "Header"), nc)
+            shp = [hi[q] - lo[q] + 1 for q in range(3)]
+            npts = shp[0] * shp[1] * shp[2]
+            for c in comps:
+                a = np.frombuffer(blob, dtype="<f8", count=npts, offset=m.end() + names.index(c) * npts * 8)
+                out[c][lo[0]:hi[0] + 1, lo[1]:hi[1] + 1, lo[2]:hi[2] + 1] = a.reshape(shp[2], shp[1], shp[0]).transpose(2, 1, 0)
+            pos = m.end() + nc * npts * 8
+    return out
+
+
+def thermo(name):
+    L = open(os.path.join(OUT, name, "run", "thermo.dat")).read().split("\n")
+    hdr = L[0].split()
+    rows = [l.split() for l in L[1:] if l.strip()]
+    return hdr, [r for r in rows if float(r[hdr.index("time")]) > 0]
+
+
+def col(hdr, rows, c):
+    return [r[hdr.index(c)] for r in rows]
+
+
+def last_step(name):
+    return max(int(p[:5]) for p in os.listdir(os.path.join(OUT, name, "run")) if p.endswith("cell"))
+
+
+# ------------------------------------------------------------------ checks ----
+def check():
+    I, J, K = np.meshgrid(np.arange(NX), np.arange(NX), np.arange(NZ), indexing="ij")
+    print("(i) FLAT_P vs FLAT_X: per-cell fl_h ratio; fl_H_stag = jet_s_c")
+    a = read_pf("FLAT_P", 1, ("fl_h", "fl_w"))
+    b = read_pf("FLAT_X", 1, ("fl_h", "fl_w"))
+    lst = (b["fl_w"] > 0) & (b["fl_h"] > 0)
+    e = np.abs(a["fl_h"][lst] / b["fl_h"][lst] - 1)
+    need(np.median(e) <= 0.01 and e.max() <= 0.06,
+         "flat h ratio path/position: median |rel| %.4f (<= 0.01), max %.4f (<= 0.06), %d cells"
+         % (np.median(e), e.max(), lst.sum()))
+    h, rows = thermo("FLAT_P")
+    need(col(h, rows, "fl_H_stag") == col(h, rows, "jet_s_c") and len(rows) > 0,
+         "fl_H_stag tokens == jet_s_c tokens on all %d rows (%s)" % (len(rows), rows[-1][h.index("fl_H_stag")]))
+
+    print("(ii) fl_s vs the analytic surface distance, s >= 10 mm")
+    for nm in ("FLAT_P", "PLANE_P", "BORE_P"):
+        f = read_pf(nm, 1, ("fl_s", "fl_w"))
+        ok = (f["fl_w"] > 0) & (f["fl_s"] >= 0)
+        ex = exact(nm, I, J, K)
+        m = ok & (ex >= 0.010)
+        e = np.abs(f["fl_s"][m] / ex[m] - 1)
+        need(np.median(e) <= 0.05 and np.percentile(e, 95) <= 0.08,
+             "%-8s median %.2f %%, p95 %.2f %% (<= 5 / 8), max %.2f %%, n %d"
+             % (nm, 100 * np.median(e), 100 * np.percentile(e, 95), 100 * e.max(), m.sum()))
+
+    print("(iii) the flange barrier")
+    census = sum(1 for i in range(NX) for j in range(NX) if math.hypot((i + 0.5) * DX, (j + 0.5) * DX) > 0.02)
+    h, rows = thermo("FLANGE_P")
+    nb = {float(x) for x in col(h, rows, "fl_n_blocked")}
+    f = read_pf("FLANGE_P", 1, ("fl_h", "fl_w", "fl_s"))
+    out = (np.hypot((I + 0.5) * DX, (J + 0.5) * DX) > 0.02) & (K == NZ - 1)
+    need(nb == {float(census)}, "fl_n_blocked %s == census of +z faces at r > 20 mm %d" % (sorted(nb), census))
+    need(bool((f["fl_h"][out] == 0).all()) and bool((f["fl_s"][out] == -1).all()),
+         "their fl_h = 0 and fl_s = -1 (%d cells)" % out.sum())
+    h, rows = thermo("FLAT_P")
+    need({float(x) for x in col(h, rows, "fl_n_blocked")} == {0.0}, "FLAT_P (no barrier): fl_n_blocked 0")
+
+    print("(iv) fl_n_unreached = 0 on every path leg")
+    for nm in ("FLAT_P", "FLANGE_P", "PLANE_P", "BORE_P", "BORE_PB"):
+        h, rows = thermo(nm)
+        v = {float(x) for x in col(h, rows, "fl_n_unreached")}
+        need(v == {0.0}, "%-8s fl_n_unreached %s; fl_n_src %s" % (nm, sorted(v), sorted({float(x) for x in col(h, rows, "fl_n_src")})))
+
+    print("(v) march by s on BORE_PB (0.24 s)")
+    h, rows = thermo("BORE_PB")
+    im = max(abs(float(x)) for x in col(h, rows, "fl_id_march"))
+    il = max(abs(float(x)) for x in col(h, rows, "fl_id_ledger"))
+    le = max(abs(float(x)) for x in col(h, rows, "ledger_err_solid"))
+    need(im <= 1e-9 and il <= 1e-9, "fl_id_march max %.2e, fl_id_ledger max %.2e (<= 1e-9), %d rows" % (im, il, len(rows)))
+    need(le <= 5e-3, "|ledger_err_solid| max %.2e (<= 5e-3)" % le)
+    pc = [abs(float(a) + float(b) - float(c)) / max(float(c), 1e-30) for a, b, c in
+          zip(col(h, rows, "jet_P_face"), col(h, rows, "jet_P_exhaust"), col(h, rows, "jet_P_cap"))]
+    need(max(pc) <= 1e-5, "jet_P_face + jet_P_exhaust vs jet_P_cap, printed tokens: max rel %.1e (%%g; the code "
+         "aborts past 1e-9 of the budget and the leg ran to rc 0)" % max(pc))
+
+    print("(vi) per-face Tg")
+    st = last_step("BORE_PB")
+    f = read_pf("BORE_PB", st, ("fl_Tg", "fl_w"))
+    best = (None, 0)
+    for i in range(NX):
+        for j in range(NX):
+            v = {round(x, 9) for x in f["fl_Tg"][i, j, :][f["fl_w"][i, j, :] > 0] if x > 0}
+            if len(v) > best[1]:
+                best = ((i, j), len(v))
+    need(best[1] >= 2, "a column with >= 2 distinct fl_Tg among its cells: column %s carries %d" % best)
+    need(im <= 1e-12 and il <= 1e-12, "with them, fl_id_march %.2e and fl_id_ledger %.2e (<= 1e-12)" % (im, il))
+    sites = []
+    for fn in ("MMWSpalling.H", os.path.join("MMWSpalling", "FaceRemoval.H")):
+        code = re.sub(r"//[^\n]*", "", open(os.path.join(ROOT, "src", "Integrator", fn)).read())
+        for m in re.finditer(r"\bFrFaceFlux\(\s*([^,()]+?),\s*([^,]+?),", code):
+            if m.group(1).strip().startswith("const FaceEntry"):
+                continue                                  # the definition
+            fns = re.findall(r"\n    (?:void|Set::Scalar|auto)\s+(\w+)\s*\(|auto (\w+) = \[", code[:m.start()])
+            where = [a or b for a, b in fns][-1] if fns else "?"
+            sites.append((os.path.basename(fn), where, m.group(2).strip()))
+    ok_arg = {"fTg ? flp[q].Tg : Set::Scalar(0.0)", "e.Tg", "Tg"}
+    need(len(sites) == 5 and all(s[2] in ok_arg for s in sites)
+         and sum(1 for s in sites if s[2] == "Tg") == 2,
+         "source lock: %d FrFaceFlux call sites, each passing a face's Tg or the march's bin T: %s"
+         % (len(sites), "; ".join("%s %s(%s)" % s for s in sites)))
+    code_fr = re.sub(r"//[^\n]*", "", open(os.path.join(ROOT, "src", "Integrator", "MMWSpalling",
+                                                         "FaceRemoval.H")).read())
+    need("flame_Tg" not in code_fr, "FaceRemoval.H code reads no flame_Tg (the fallback flake reads ef.Tg)")
+    # mutation control: would a reader on the COLUMN value (under path: the top face's Tg) break the
+    # identities on this leg? Each face's share of the class power scales with (Tg - Ts); the bar is
+    # discriminating if moving every face to its column's top-face Tg moves sum(w h (Tg - T)) by >> 1e-12.
+    f2 = read_pf("BORE_PB", st, ("fl_Tg", "fl_h", "fl_w", "Temp"))
+    lst = (f2["fl_w"] > 0) & (f2["fl_Tg"] > 0)
+    topTg = np.zeros((NX, NX))
+    for i in range(NX):
+        for j in range(NX):
+            ks = np.nonzero(lst[i, j, :])[0]
+            if ks.size:
+                topTg[i, j] = f2["fl_Tg"][i, j, ks.max()]
+    w, h, Tc = f2["fl_w"][lst], f2["fl_h"][lst], f2["Temp"][lst]
+    own = (w * h * (f2["fl_Tg"][lst] - Tc)).sum()
+    colv = (w * h * (np.broadcast_to(topTg[:, :, None], lst.shape)[lst] - Tc)).sum()
+    shift = abs(colv - own) / abs(own)
+    need(shift > 1e-6, "mutation control: a column-value reader would move the billed power by %.2e "
+         "(relative), >> the 1e-12 identity bar -- the identities discriminate on this leg" % shift)
+
+    print("(vii) refused features")
+    for nm, (_, key) in REFUSE.items():
+        rc = int(open(os.path.join(OUT, nm, "rc")).read())
+        log = open(os.path.join(OUT, nm, "run.log"), errors="replace").read()
+        if nm in STRICT:
+            ex = [re.sub(r"\x1b\[[0-9;]*m", "", l) for l in log.splitlines() if "EXCEPTION" in l]
+            ok = (rc != 0 and any("specified but not used" in l for l in ex)
+                  and any(l.rstrip().endswith("surface_patch." + key) for l in ex))
+            need(ok, "%-8s rc %d, the strict scope refuses the deleted key %r as unused (P2-26)%s"
+                 % (nm, rc, key, "" if ok else ": " + " | ".join(ex)[-150:]))
+            continue
+        ab = [l for l in log.splitlines() if "ABORT" in l]
+        p212 = nm not in ("R_barpos", "R_nolist")
+        ok = rc != 0 and ab and key in ab[0] and (("P2-12" in ab[0]) or not p212)
+        need(ok, "%-8s rc %d, abort names %r%s: %s" % (nm, rc, key, " and P2-12" if p212 else "",
+                                                      re.sub(r"\x1b\[[0-9;]*m", "", ab[0])[-150:] if ab else "no abort"))
+
+
+def main():
+    if "--check" not in sys.argv:
+        os.makedirs(OUT, exist_ok=True)
+        for nm, (k, s, st) in LEGS.items():
+            run(nm, k, s, st)
+        for nm, (k, _) in REFUSE.items():
+            run(nm, k, None, "0.0")
+    check()
+    print("\n" + ("PASS" if not FAIL else "FAIL (%d)" % len(FAIL)))
+    return 0 if not FAIL else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

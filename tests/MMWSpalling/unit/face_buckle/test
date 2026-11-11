@@ -4,7 +4,8 @@
 Fixture F (unit/face_removal/input: uniform gas 1866 K, h 700, one 8 um flaw) with spall.buckle_span = 0.015 m
 (a FIXTURE value, not a rock value):
   F_0 / F_S   1 mm, span off / on: the span must not touch a firing it passes (bk ~ 0.6)          (b1)
-  F_S_k0      1 mm, face_list = 0: must abort naming spall.buckle_span                            (b2)
+  (F_S_k0 retired in P2-28: face_list = 0 with removal on now aborts on the one-removal-path interlock first; b2 is
+   gone with the column path that could have left the key inert)
   N_0 / N_S   2 mm, h 150, 200 s: N_0 fires on every column, N_S never (bk ~ 3)                  (b1, b3)
   M2_S / M05_S  2 / 0.5 mm: bk / ell_eff is mesh-free (metres, not cells); the onset equals the d = 0 twins
                of the P2-9 record (b4; bar restated with the user 2026-11-02, the bk spread is reported)
@@ -27,10 +28,10 @@ MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
 B1 = ["amr.n_cell=24 24 64", "timestep=0.008", "amr.max_grid_size=16", "amr.plot_int=125"]
 B2 = ["amr.n_cell=12 12 32", "timestep=0.008", "amr.max_grid_size=8", "amr.plot_int=125"]
 B05 = ["amr.n_cell=48 48 128", "timestep=0.004", "amr.max_grid_size=32", "amr.plot_int=250"]
-K0, K1 = ["surface_patch.face_list=0"], ["surface_patch.face_list=1"]
+K1 = ["surface_patch.face_list=1"]
 SU = ["spall.buckle_span=0.015"]
 NEG = ["surface_patch.h_expr=150.0", "stop_time=200.0"]
-LEGS = {"F_0": B1 + K1, "F_S": B1 + K1 + SU, "F_S_k0": B1 + K0 + SU,
+LEGS = {"F_0": B1 + K1, "F_S": B1 + K1 + SU,
         "N_0": B2 + K1 + NEG, "N_S": B2 + K1 + NEG + SU, "M2_S": B2 + K1 + SU, "M05_S": B05 + K1 + SU}
 # the d = 0 twins' S_top on the P2-9 record (unit/face_removal/output/T00_{2,1,05}_k1), printed to 3 decimals
 TWIN = {"M2_S": "845.884", "F_S": "845.995", "M05_S": "845.537"}
@@ -89,8 +90,7 @@ def main():
     else:
         rcs = {n: int(open(os.path.join(OUT, n, "rc")).read()) for n in LEGS}
     for n in LEGS:
-        if n != "F_S_k0":
-            need(rcs[n] == 0, "%s rc 0" % n)
+        need(rcs[n] == 0, "%s rc 0" % n)
 
     # ---- b1 the span leaves a firing it passes untouched; it withdraws one it blocks
     print("\nb1 -- A unchanged where B passes; B withdraws where it blocks")
@@ -108,11 +108,7 @@ def main():
     need(len(n0) == 144, "N_0 (span off, h 150) fires on every column within 200 s (%d/144)" % len(n0))
     need(len(nS) == 0 and len(events("N_S")) == 0, "N_S (span on) has no firing in 200 s (%d rows)" % len(events("N_S")))
 
-    # ---- b2 the refusal
-    print("\nb2 -- the key cannot be silently inert on the column path")
-    log = open(os.path.join(OUT, "F_S_k0", "run.log"), errors="replace").read()
-    need(rcs["F_S_k0"] != 0 and "spall.buckle_span" in log,
-         "F_S_k0 (face_list = 0): rc %d, the abort names spall.buckle_span: %s" % (rcs["F_S_k0"], "spall.buckle_span" in log))
+    # ---- b2 (the refusal on the column path) retired in P2-28 with the column path
 
     # ---- b3 the witnesses
     print("\nb3 -- the witnesses mean what they say")

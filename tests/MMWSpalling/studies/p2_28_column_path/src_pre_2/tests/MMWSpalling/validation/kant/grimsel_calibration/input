@@ -1,0 +1,117 @@
+# ============================================================================
+# Kant 2017 -- THE GRIMSEL CALIBRATION DECK, in the production form (P2-13, 2026-10-30).
+# ============================================================================
+# The one place the rock's level is calibrated: a flat Grimsel block under a uniform flame,
+# run on today's removal rule (the face list) with the SAME rock and model-form files every
+# flame deck includes. The onset (the reconstructed surface temperature at each column's
+# first top-face firing) is scored against the Grimsel onset band 826.15-873.15 K
+# (Kant 2017 553-694 degC at 0 MPa, intersected with Hoeser's IR 430-600 degC). The decision
+# rule, the legs and the reducer: README.md, run.py, reduce.py in this directory.
+#
+#   rock:        tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+#   model form:  tests/MMWSpalling/validation/shared/model_form_flame.inputs
+#
+# ⚠ Do not set any key of those two files here or on a leg's argv except as a DECLARED
+#   override (check_shared.py --allow); run from the repo root (the FILE paths are relative).
+# ⚠ Kant's sample is an 85 mm cylinder with a 46 mm heated aperture and a flame whose profile
+#   is not reported. This deck is the onset's 1-D limit: a 24 x 24 mm block heated uniformly
+#   over its whole top, Neumann on every face, so every column is the same experiment.
+# ⚠⚠ AN ONSET-ONLY DECK (P2-16, 2026-11-03). It calibrates the onset rule A, with the buckling
+#   condition B (spall.buckle_span) OFF BY DEFINITION, and nothing else. B is a pure withdrawal:
+#   a firing that passes it is identical to the span-off firing (P2-15 DR-3, 576/576), so the
+#   onset measured here IS the production onset wherever production fires. The flame's h 500 /
+#   1673.15 K is a CONVENTION (Kant 2016's minimum coefficient, chosen in P2-13): Kant 2017 states
+#   no standoff, coefficient or flux, so this deck says nothing about B or the minimum flux, and a
+#   span that blocks it is not in conflict with it. With B off the onset is flat in flux
+#   (P2-14a c1: 847.7 / 850.4 / 851.4 / 853.0 K at h 150 / 500 / 1000 / 2000), so the
+#   calibration does not depend on the convention either.
+#   P2-17: the rock file now carries the span (spall.buckle_span = 0.012); this deck overrides
+#   it to 0 directly after the FILE lines (AMReX reads the LAST occurrence), declared to
+#   check_shared.py by the `# check_shared: allow spall.buckle_span` directive.
+
+FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
+# check_shared: allow spall.buckle_span
+spall.buckle_span = 0.0   # ONSET-ONLY: B off by definition (P2-16); overrides the rock file
+
+alamo.program = mmwspalling
+plot_file = tests/MMWSpalling/validation/kant/grimsel_calibration/output/run
+
+# --- clock and mesh (the deck's) -------------------------------------------
+timestep  = 0.008
+stop_time = 60.0
+amr.plot_int        = 1250
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.max_grid_size   = 16
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+amr.n_cell           = 24 24 64
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.024 0.024 0.064
+geometry.is_periodic = 0 0 0
+alpha = 0.0 0.0
+
+# The Weibull size reference = the cell volume (the user's 09-16 choice): moves with the mesh.
+weibull.V0 = 1.0e-9
+
+# --- initial state: 20 degC (Kant's T_i) -----------------------------------
+microstructure.phase0.T_ref = 293.15          # = the IC (check_shared (iii))
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.heat.alpha        = 6.9022e-7              # inert under law = grimsel; required (MODEL_CARD §6 row 4)
+hc.heat.refinement_threshold = 1.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+conductivity.h_gb0              = 0.0
+
+# --- Kant's rig ---------------------------------------------------------------
+confining.p = 0.0                             # his binding case; 27 / 48 MPa are legs
+losses.h_conv = 10.0                          # lab air
+losses.T_amb  = 293.15
+
+# The flame: uniform gas at Kant's ~1400 degC, one constant coefficient over the whole top
+# (h is not reported; 500 W/m2K, with a 2000 leg for the flux dependence). The block is
+# unit/face_removal/input's heat source key for key, centred on the full domain.
+surface_patch.enabled                 = 1
+surface_patch.mode                    = convective_flame
+surface_patch.pinned_idle_cycles      = 1.0e9
+surface_patch.x0                      = 0.012
+surface_patch.y0                      = 0.012
+surface_patch.radius                  = 1.0
+surface_patch.nozzle_descent          = prescribed
+surface_patch.nozzle_feed             = 0.0
+surface_patch.nozzle_collision_radius = 0.004   # set explicitly (SR 6)
+surface_patch.nozzle_z0               = 0.1272
+surface_patch.jet_closure             = none
+surface_patch.T_flame_expr            = 1673.15
+surface_patch.h_expr                  = 500.0
+
+# --- off: beam, mechanics ----------------------------------------------------
+beam.P0         = 0.0
+beam.profile    = uniform
+beam.radius     = 0.02
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.0
+beam.y0         = 0.0
+beam.z0         = 0.10
+el.type      = disable
+el.nmodels   = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

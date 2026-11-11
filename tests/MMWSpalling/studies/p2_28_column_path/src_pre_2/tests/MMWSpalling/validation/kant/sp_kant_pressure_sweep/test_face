@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+# P2-28 -- KANT'S CONFINING-PRESSURE SWEEP ON THE PRODUCTION CRITERION (the face list, evaluate-only).
+#
+# `test` (site A) re-expressed: ONE base deck (input_face) at p in {0, 27, 48} MPa (confining.p on the command line).
+# The pressure reaches the list's criterion through ElasticConstants().conf = p nu/(1 - nu) (Shared.H) -> the stress
+# offset in ScanSigmaT. Kant Eq. 15 with confining pressure (frozen K_Ic):
+#   Theta(p) = (1 - nu)/(E alpha) [K_Ic/(2 * 1.763 sqrt(a/pi)) - p nu/(1 - nu)]
+# PASS gates (the old test's): R1 |dT(p) - Theta(p)| / Theta(p) <= 0.08 at each p; R2 dT(0) > dT(27) > dT(48); R4 the
+# slope of a least-squares line through the three dT(p) within 20 % of -nu/(E alpha) = -0.9286 K/MPa. R3 (info): dT(0)
+# in Kant's predicted band 390-560 K.
+# THE STATISTIC: P2-13's (sp_kant_onset/test_face): per column the first events row with dir 5 and ts_fb 0, its T_surf;
+# the median over the columns; dT = median - 293.15 K.
+# Usage: test_face [--check]
+import importlib.machinery
+import importlib.util
+import os
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+_l = importlib.machinery.SourceFileLoader("kant_face", os.path.join(HERE, "..", "sp_kant_onset", "test_face"))
+_s = importlib.util.spec_from_loader("kant_face", _l)
+KF = importlib.util.module_from_spec(_s)
+_l.exec_module(KF)
+KF.OUT = os.path.join(HERE, "output_face")
+KF.HERE = HERE
+
+CASES = [("p0", 0.0), ("p27", 27.0e6), ("p48", 48.0e6)]
+TOL_EQ15, TOL_SLOPE = 0.08, 0.20
+BAND = (390.0, 560.0)
+NSTEPS = 480    # 48 s at dt 0.1
+
+
+def main():
+    check = "--check" in sys.argv
+    fails = []
+    if not check:
+        print("running the base deck at three confining pressures:")
+        for tag, p in CASES:
+            if KF.run(tag, "input_face", ["confining.p=%s" % repr(p)]) != 0:
+                fails.append("%s exited non-zero" % tag)
+        if fails:
+            print("\n".join(fails) + "\nFAIL")
+            sys.exit(1)
+    slope_eq = -KF.NU / (KF.E * KF.ALPHA) * 1.0e6
+    dT = []
+    for tag, p in CASES:
+        path = os.path.join(KF.OUT, tag + "_removal_events.csv")
+        if not os.path.exists(path):
+            fails.append("%s: no events file" % tag)
+            continue
+        rows, first, per_col = KF.onset_rows(path)
+        if len(first) < KF.NCOL:
+            fails.append("%s: %d of %d columns have a first top-face row" % (tag, len(first), KF.NCOL))
+        if per_col and max(per_col.values()) > NSTEPS:
+            fails.append("%s: rows per column %d > %d steps" % (tag, max(per_col.values()), NSTEPS))
+        if not first:
+            continue
+        Ts = np.array([float(r["T_surf"]) for r in first.values()])
+        d = float(np.median(Ts)) - KF.T_I
+        th = KF.theta15(p)
+        err = abs(d - th) / th
+        dT.append((p / 1.0e6, d))
+        print("  [R1] p = %2.0f MPa: dT %.1f K vs Eq. 15 %.1f K  rel err %.2f %%  %s  (first onset t %.2f s, %d rows)"
+              % (p / 1.0e6, d, th, 100 * err, "ok" if err <= TOL_EQ15 else "FAIL",
+                 min(float(r["time"]) for r in first.values()), len(rows)))
+        if err > TOL_EQ15:
+            fails.append("R1 p %g MPa: %.2f %% > 8 %%" % (p / 1.0e6, 100 * err))
+    if len(dT) == 3:
+        mono = dT[0][1] > dT[1][1] > dT[2][1]
+        print("  [R2] dT(0) > dT(27) > dT(48): %.1f > %.1f > %.1f  %s" % (dT[0][1], dT[1][1], dT[2][1],
+                                                                    "ok" if mono else "FAIL"))
+        if not mono:
+            fails.append("R2 not monotone")
+        ps, ds = np.array([x[0] for x in dT]), np.array([x[1] for x in dT])
+        slope = float(np.polyfit(ps, ds, 1)[0])
+        rel = abs(slope - slope_eq) / abs(slope_eq)
+        print("  [R4] slope %.4f K/MPa vs Eq. 15 %.4f K/MPa: rel %.1f %%  %s" % (slope, slope_eq, 100 * rel,
+                                                                           "ok" if rel <= TOL_SLOPE else "FAIL"))
+        if rel > TOL_SLOPE:
+            fails.append("R4 slope %.1f %% > 20 %%" % (100 * rel))
+        print("  [R3] (info) dT(0) %.1f K in Kant's band %.0f-%.0f K: %s" % (dT[0][1], BAND[0], BAND[1],
+                                                                       BAND[0] <= dT[0][1] <= BAND[1]))
+    print()
+    if fails:
+        print("FAILURES:")
+        print("\n".join("  " + f for f in fails))
+        print("\nFAIL")
+        sys.exit(1)
+    print("PASS")
+
+
+main()

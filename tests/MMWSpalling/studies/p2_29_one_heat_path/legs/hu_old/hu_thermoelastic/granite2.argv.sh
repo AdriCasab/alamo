@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 tests/MMWSpalling/studies/p2_29_one_heat_path/bin_pre/mmwspalling-3d-g++ tests/MMWSpalling/validation/hu/hu_thermoelastic/input_granite2  plot_file=tests/MMWSpalling/studies/p2_29_one_heat_path/legs/hu_old/hu_thermoelastic/granite2

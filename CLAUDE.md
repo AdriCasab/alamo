@@ -70,10 +70,13 @@ them or the user asks:
 ## Project Goal
 
 Implement a unified thermomechanical millimetre-wave drilling model in ALAMO:
-enthalpy heat conduction, Gaussian/Beer-Lambert MMW source, surface losses,
-Voronoi mineral microstructure, thermoelastic stress, Drucker-Prager damage,
-grain-boundary/cohesive effects, material removal by spallation or vaporisation,
-and staged validation tests.
+enthalpy heat conduction with melting and vaporisation as states of the rock, a
+Gaussian/Beer-Lambert MMW source computed from the rock's dielectric properties,
+a flame heat source, surface losses, Voronoi mineral microstructure, thermoelastic
+stress, a fracture-mechanics spall criterion with a buckling condition, material
+removal by spallation or vaporisation, and staged validation tests. (The
+Drucker-Prager damage and cohesive-zone models of the original plan were retired
+in P2-27; `docs/project/MODEL_CARD.md` is the current statement of the model.)
 
 ## ALAMO Architecture Notes
 
@@ -90,8 +93,15 @@ and staged validation tests.
   `IO::ParmParse` family of macros.
 - Reuse `src/Numeric/` utilities such as `Stencil`, `Gradient`, `Laplacian`, and
   `Interpolate::CellToNodeAverage` instead of hand-rolling stencils.
-- Tests live under `tests/<Name>/` with an `input`, a Python `test`, and optional
-  `reference/` data. Mirror existing `tests/MMWSpalling/*` patterns.
+- Tests live under `tests/MMWSpalling/{unit,validation,studies}/<name>/` with an
+  `input`, a Python `test`, and optional `reference/` data. Mirror the existing ones.
+- The `MMWSpalling` class is a short parent, `src/Integrator/MMWSpalling.H`, that
+  `#include`s its slices in place from `src/Integrator/MMWSpalling/` (`Parse`, `Model`,
+  `Heat`, `Flame`, `FaceList`, `Ledger`, `BeamProps`, `ParseRemoval`, `Fields`,
+  `SurfacePatch`, `State`, `Shared`, `FaceRemoval`). There is ONE heat path
+  (`AdvanceMicrostructure`, `Heat.H`) and ONE removal path (the face list,
+  `FaceRemoval.H`). A test that reads the source as text goes through
+  `tests/MMWSpalling/unit/_src.py`, never a fixed path.
 - The build is header-driven: `.H` files under `src/` are auto-discovered; each
   top-level `.cc` under `src/` becomes a binary in `bin/`.
 
@@ -104,12 +114,12 @@ and staged validation tests.
 3. `Parse` is static and `pp.queryclass<Foo>("prefix", value)` strict-checks
    unused keys. When an input fails, inspect each base class `Parse` before
    guessing at parameter names.
-4. The Zhang/Oglesby validation reference file corrects an old beam-waist
-   mistake: use `omega_0 = 0.02 m` for that case, not the stale `0.20 m` note in
-   older plan text.
-5. The implicit thermal path currently targets material thermal validation and
-   single-level runs. Revisit compatibility before coupling it to later fracture
-   mechanics steps.
+4. The Zhang/Oglesby deck uses `beam.omega0 = 0.01 m`, the waveguide radius
+   (the user, 2026-11-10). `0.02` is the aperture diameter and the `0.20` in
+   Zhang's Table 4 is a misprint. The deck is an energy-accounting check, not a
+   temperature validation: the experiment behind it re-heated a melt crater.
+5. AMR is parked: the mechanics solve aborts at the first regrid on the
+   production path. Keep `amr.max_level = 0` on every deck until it is repaired.
 
 ## Commands
 
@@ -131,6 +141,13 @@ mpirun --oversubscribe --bind-to none -np 4 \
 python3 tests/MMWSpalling/<step>/test tests/MMWSpalling/<step>/output
 # Or, if the test needs numpy/yt on this machine:
 /Users/tzetze20/Desktop/code/.venv/bin/python tests/MMWSpalling/<step>/test
+
+# The per-change regression gate (21 cases, about 3 minutes): run, then compare
+# with the pinned reference (`witness/REFERENCE.md` names it). `run_kept.py` beside it is the user's periodic full suite,
+# not a packet step.
+W=tests/MMWSpalling/studies/tree_sweep_0922/witness
+/Users/tzetze20/Desktop/code/.venv/bin/python $W/face_gate.py run <label>
+/Users/tzetze20/Desktop/code/.venv/bin/python $W/face_gate.py cmp <reference> <label>   # p2_30c on 2026-11-10
 
 # Remote Control (drive phases from the iPhone app / claude.ai/code).
 # Server rooted in this repo; -c resumes the last session. Header has setup.

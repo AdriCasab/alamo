@@ -53,7 +53,6 @@ microstructure.phase0.E                 = 95.0e9
 microstructure.phase0.mu                = 44.0e9
 microstructure.phase0.rho               = 2650.0
 microstructure.phase0.Cp                = 730.0
-microstructure.phase0.A_D               = 1.0e6
 
 microstructure.phase1.fraction          = 0.50
 microstructure.phase1.kappa             = 2.3
@@ -62,7 +61,6 @@ microstructure.phase1.E                 = 70.0e9
 microstructure.phase1.mu                = 28.0e9
 microstructure.phase1.rho               = 2620.0
 microstructure.phase1.Cp                = 700.0
-microstructure.phase1.A_D               = 1.5e6
 
 microstructure.phase2.fraction          = 0.20
 microstructure.phase2.kappa             = 2.0
@@ -71,7 +69,6 @@ microstructure.phase2.E                 = 50.0e9
 microstructure.phase2.mu                = 20.0e9
 microstructure.phase2.rho               = 2800.0
 microstructure.phase2.Cp                = 760.0
-microstructure.phase2.A_D               = 0.5e6
 
 #
 # BEAM: power = 0 disables the source for this thermal-trivial test.

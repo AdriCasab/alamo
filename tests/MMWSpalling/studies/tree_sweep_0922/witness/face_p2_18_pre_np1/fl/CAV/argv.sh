@@ -1,1 +1,0 @@
-mpirun --oversubscribe --bind-to none -np 1 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/face_list/input plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/tree_sweep_0922/witness/face_p2_18_pre_np1/fl/CAV/run 'spall.seed_void=2 2 9 5 5 11 6 3 9 6 4 10 7 6 3 9 8 5' surface_patch.face_list=1

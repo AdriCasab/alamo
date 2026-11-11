@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""P2-27 m4 -- GRIMSEL UNDER HU'S GRANITE-2 RAMP: the LEFM onset time on Hu's boundary condition (a RECORD).
+
+Runs input_granite2_lefm (the rock file's criterion; Hu's cube, mesh and prescribed patch T_B1(t) = 638.22 + 3.74 t)
+and reports the first time t* any top cell reaches Sp_field >= 1, bracketed linearly between the 1 s plotfiles
+(validation/kant/sp_kant_onset/test's onset_homogeneous), with T_B1(t*), beside Hu's measured granite-2 onset
+37.0 s / LRST 773.15 K (the validation file :73).
+
+PRE-REGISTERED (ACTIVE_STEP.md P2-27 m4): T_B1(t*) inside the Grimsel band 826-885 K => t* = 50-66 s, LATER than Hu
+by 13-29 s. This is a report, not a bar: the test FAILS only if the run fails or nothing fires by stop_time; a t*
+below 37 s or above 80 s is printed as a FINDING (the rock mismatch or the prescribed-T path), not a failure.
+⚠ Site A retires at H; the deck is then re-expressed on the evaluate-only face list and must reproduce t*.
+Usage: test_lefm [--check]      (--check re-reads output_lefm/ without running)
+"""
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input_granite2_lefm")
+OUT = os.path.join(HERE, "output_lefm")
+HU_T, HU_LRST = 37.0, 773.15                  # granite 2, the validation file :73
+BAND = (826.0, 885.0)                         # the Grimsel onset band on the face list (P2-25 base legs)
+
+
+def T_B1(t):
+    return 638.22 + 3.74 * t
+
+
+def plotfiles():
+    pat = re.compile(r"(\d+)cell$")
+    c = [(int(pat.search(p).group(1)), p) for p in glob.glob(os.path.join(OUT, "granite2", "*cell")) if pat.search(p)]
+    return [p for _, p in sorted(c)]
+
+
+def top_max_sp(path):
+    ds = yt.load(path)
+    ad = ds.all_data()
+    z = np.asarray(ad["z"])
+    top = np.isclose(z, z.max(), atol=1.0e-9)
+    sp = np.asarray(ad["Sp_field"])[top]
+    return float(ds.current_time), float(sp.max()), int((sp >= 1.0).sum())
+
+
+def main():
+    if "--check" not in sys.argv:
+        if os.path.isdir(OUT):
+            shutil.rmtree(OUT)
+        os.makedirs(OUT)
+        argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, DECK]
+        print("Running:", " ".join(argv), flush=True)
+        with open(os.path.join(OUT, "run.log"), "w") as log:
+            rc = subprocess.call(argv, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+        if rc != 0:
+            print("FAIL: the run exited with %d (output_lefm/run.log)" % rc)
+            return 1
+    files = plotfiles()
+    if not files:
+        print("FAIL: no plotfiles in output_lefm/")
+        return 1
+    prev, onset = None, None
+    for p in files:
+        t, mx, n = top_max_sp(p)
+        if mx >= 1.0:
+            if prev is None:
+                onset = (t, n, None)
+            else:
+                t0, mx0 = prev
+                f = (1.0 - mx0) / (mx - mx0) if mx > mx0 else 1.0
+                onset = (t0 + f * (t - t0), n, (t0, mx0, t, mx))
+            break
+        prev = (t, mx)
+    print("P2-27 m4 -- Grimsel under Hu's granite-2 ramp (input_granite2_lefm, %d plotfiles read)" % len(files))
+    if onset is None:
+        print("FAIL: no top cell reached Sp >= 1 by t = %.1f s (max Sp %.4f)" % (prev[0], prev[1]))
+        return 1
+    ts, n, br = onset
+    Tb = T_B1(ts)
+    if br:
+        print("  bracket: Sp_max %.4f at %.1f s -> %.4f at %.1f s (%d top cell(s) >= 1 at the second)"
+              % (br[1], br[0], br[3], br[2], n))
+    print("  t* = %.2f s, T_B1(t*) = %.1f K   |   Hu granite 2: %.1f s, LRST %.2f K   |   t* - Hu = %+.1f s,"
+          " T_B1(t*) - LRST = %+.1f K" % (ts, Tb, HU_T, HU_LRST, ts - HU_T, Tb - HU_LRST))
+    inside = BAND[0] <= Tb <= BAND[1]
+    print("  pre-registered: T_B1(t*) in the Grimsel band %.0f-%.0f K (t* = %.1f-%.1f s): %s"
+          % (BAND[0], BAND[1], (BAND[0] - 638.22) / 3.74, (BAND[1] - 638.22) / 3.74, "INSIDE" if inside else "OUTSIDE"))
+    if ts < 37.0 or ts > 80.0:
+        print("  FINDING: t* outside 37-80 s -- name the side (the rock mismatch or the prescribed-T path) in the notes")
+    print("RECORD: t* %.2f s, T_B1 %.1f K (a prediction for Hu's boundary condition, not a fit)" % (ts, Tb))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

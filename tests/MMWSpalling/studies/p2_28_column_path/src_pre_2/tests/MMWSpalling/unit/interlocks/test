@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""P2-27 (Oct census B14 + the dt check) -- THE CROSS-KEY INTERLOCKS, MOVED INTO ONE PLACE, STILL FIRE.
+
+P2-27 moved every cross-key abort of MMWSpalling::Parse's end-of-parse block, four sub-parse sites
+(ParseSpallSettings x3, ParseSpallationModel x2, ParseBitSettings x1) and BuildFaceList's cubic-cell check into
+one static CheckInterlocks(), called as the last statement of Parse (stage 2 deleted the two ParseSpallationModel
+checks with the damage lineage and added one: removal needs sp_weibull, I20). A move can break two ways: an abort that no
+longer fires (its condition reads a member parsed later than it used to, or the wrapper condition is wrong), or an
+abort that fires on a valid deck. This test runs one ONE-STEP leg per moved class, each breaking exactly ONE rule
+(-np 1), and checks the abort's MESSAGE (the text after `ABORT: file:line (function)`; the file, line and function
+moved with it).
+
+Base decks: G = unit/gradient_blind/input (column path, sp_weibull, follow_mask, reconstruction, removal_energy
+cell); FL = unit/face_list/input + surface_patch.face_list=1 (the face list, ledger on, grimsel law).
+  I0  G alone, FL alone                                  -> rc 0 (an abort test passes on a binary refusing every deck)
+  sub-parse (fired inside ParseSpallSettings / ParseSpallationModel / ParseBitSettings until P2-27):
+  I1  G + spall.flake_h_max=0.02 (h_spall_max 0.015)     -> "must be SMALLER than spall.h_spall_max"
+  I2  G + spall.removal_energy=flake + surface_T=diagnostic -> "removal_energy = flake requires spall.surface_T"
+  I3  G + spall.stress_source=mechanics                  -> "requires spall.stress_source = local_thermoelastic"
+  (I4, G + damage.enabled=1 -> "sp_weibull is incompatible with damage.enabled = 1", ran on P2-27's stage-1 binary
+      only: the damage law and that check are deleted at stage 2, where the key aborts as retired -- retired_keys K18)
+  I5  G + bit.enabled=1 + spall.enabled=0 (+ bit keys)   -> "bit.enabled requires spall.enabled or vapor.enabled"
+  Parse's end-of-parse block:
+  I6  G + spall.enabled=0 + removal_events_csv=0         -> "surface.follow_mask = 1 requires spall.enabled"
+  I7  G + energy_ledger.enabled=1 + amr.max_level=1      -> "energy_ledger.enabled is single-level only"
+  I8  G + robin_form=face + epsilon 0.5 > epsilon_high 0.3 -> "robin_form = face requires losses.epsilon_high"
+  I9  G + robin_form=surface + surface_T=diagnostic      -> "robin_form = surface requires spall.surface_T"
+  I10 G + follow_mask=0 + spall.enabled=0                -> "removal_events_csv = 1 requires spall.enabled = 1"
+  I11 G + removal_energy=flake + spall.enabled=0 + follow_mask=0 + removal_events_csv=0
+                                                          -> "removal_energy = flake requires spall.enabled = 1"
+  I12 G minus its h_conv / T_flame lines + h_expr and T_flame_expr + follow_mask=0
+                                                          -> "h_expr / T_flame_expr require surface.follow_mask"
+  I13 G + spall.buckle_log_csv=1                         -> "buckle_log_csv = 1 (P2-23)"
+  I14 G + spall.buckle_span=0.012                        -> "is evaluated only on the face list"
+  the face list's block (FL):
+  I15 FL + robin_form=pinned (the deck's pinned_idle_cycles is read) -> "face_list = 1 requires robin_form = surface"
+  I16 FL + bit.enabled=1 (+ bit keys)                    -> "does not carry regime 3 (bit.enabled)"
+  I17 FL + spall.removal_energy=cell                     -> "does not carry spall.removal_energy other than flake"
+  I18 FL + weibull.detach_mode=connected_cluster + A_crit -> "connected_cluster with A_crit > 0"
+  I19 FL + amr.n_cell = 12 12 24 (dz = dx/2)             -> "requires cubic cells; got" (BuildFaceList's runtime
+      check until P2-27, now at Parse)
+  I20 G + spallation.model=none (spall.enabled = 1)      -> "need spallation.model = sp_weibull" (NEW at stage 2)
+THE TIME-STEP LIMIT (P2-27; dt_lim = dx^2 / (6 alpha(T_cold)), the user's decision 2026-11-09: the face list ABORTS,
+any other deck WARNS):
+  D1  FL, timestep = 10 x dt_lim                          -> rc != 0, the abort names the level, dt, dt_lim, phase, T_cold
+  D2  FL, timestep = 0.9 x dt_lim                         -> rc 0, the per-level message, no warning
+  D3  G,  timestep = 10 x dt_lim                          -> rc 0 WITH the warning (not on the face list)
+  D4  unit/amr_microstructure_regrid/input (2 levels, L1 0.61 x its limit) -> rc 0, one message per level, no warning
+  D5  unit/sp_lefm/input_weibull_regrid (L1 1.73 x)       -> rc 0, the L1 warning (the user's decision: not on the
+      face list, it warns)
+With --pre <binary> every I leg is ALSO run on that binary (the P2-26 one, studies/p2_27_cleanup/bin_pre/) and its
+abort message must be IDENTICAL to the new binary's: same rule, same text. The pre binary gets phase0.A_D=0.0 and the
+six property scalars (the values P2-27 deleted from the decks, stages 2 and 4) on its command line: it requires them.
+Usage: test [--pre <binary>]
+"""
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+U = os.path.join(ROOT, "tests", "MMWSpalling", "unit")
+G = os.path.join(U, "gradient_blind", "input")
+FL = os.path.join(U, "face_list", "input")
+G1 = ["stop_time=0.008"]
+FL1 = ["surface_patch.face_list=1", "stop_time=0.008"]
+BIT = ["bit.enabled=1", "bit.feed_rate=0.001", "bit.radius=0.002"]
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+# the pre-P2-27 binary REQUIRES phase0.A_D (deleted from the decks at stage 2) and the six property scalars (deleted
+# from the grimsel fixture face_list/input at stage 4; they are refused there now): give them back on its argv only
+PRE_EXTRA = ["microstructure.phase0.A_D=0.0", "microstructure.phase0.kappa=1.5", "microstructure.phase0.beta=8.0e-6",
+             "microstructure.phase0.E=30.0e9", "microstructure.phase0.mu=11.538461538e9",
+             "microstructure.phase0.rho=2750.0", "microstructure.phase0.Cp=790.0"]
+
+LEGS = [
+    ("I1", G, G1 + ["spall.flake_h_max=0.02"], "must be SMALLER than spall.h_spall_max"),
+    ("I2", G, G1 + ["spall.removal_energy=flake", "spall.surface_T=diagnostic"],
+     "spall.removal_energy = flake requires spall.surface_T = reconstructed"),
+    ("I3", G, G1 + ["spall.stress_source=mechanics"], "requires spall.stress_source = local_thermoelastic"),
+    ("I5", G, G1 + BIT + ["spall.enabled=0"], "bit.enabled requires spall.enabled or vapor.enabled"),
+    ("I6", G, G1 + ["spall.enabled=0", "spall.removal_events_csv=0"],
+     "surface.follow_mask = 1 requires spall.enabled or vapor.enabled"),
+    ("I7", G, G1 + ["energy_ledger.enabled=1", "amr.max_level=1"], "energy_ledger.enabled is single-level only"),
+    ("I8", G, G1 + ["surface_patch.robin_form=face", "losses.epsilon=0.5", "losses.epsilon_high=0.3"],
+     "surface_patch.robin_form = face requires losses.epsilon_high >= losses.epsilon"),
+    ("I9", G, G1 + ["surface_patch.robin_form=surface", "spall.surface_T=diagnostic"],
+     "surface_patch.robin_form = surface requires spall.surface_T = reconstructed"),
+    ("I10", G, G1 + ["surface.follow_mask=0", "spall.enabled=0"],
+     "spall.removal_events_csv = 1 requires spall.enabled = 1"),
+    ("I11", G, G1 + ["spall.removal_energy=flake", "spall.enabled=0", "surface.follow_mask=0",
+                     "spall.removal_events_csv=0"], "spall.removal_energy = flake requires spall.enabled = 1"),
+    ("I12", "G_EXPR", G1 + ["surface_patch.h_expr=1000.0", "surface_patch.T_flame_expr=820.0",
+                            "surface_patch.nozzle_z0=0.2", "surface.follow_mask=0"],
+     "surface_patch.h_expr / T_flame_expr require surface.follow_mask = 1"),
+    ("I13", G, G1 + ["spall.buckle_log_csv=1"], "spall.buckle_log_csv = 1 (P2-23)"),
+    ("I14", G, G1 + ["spall.buckle_span=0.012"], "is evaluated only on the face list"),
+    ("I15", FL, FL1 + ["surface_patch.robin_form=pinned"], "surface_patch.face_list = 1 requires robin_form = surface"),
+    ("I16", FL, FL1 + BIT, "does not carry regime 3 (bit.enabled)"),
+    ("I17", FL, FL1 + ["spall.removal_energy=cell"], "does not carry spall.removal_energy other than flake"),
+    ("I18", FL, FL1 + ["weibull.detach_mode=connected_cluster", "weibull.A_crit=1.0e-6"],
+     "connected_cluster with A_crit > 0"),
+    ("I19", FL, FL1 + ["amr.n_cell=12 12 24"], "surface_patch.face_list = 1 requires cubic cells; got"),
+]
+# P2-27 stage 2's ONE new interlock (no pre-move counterpart, so it is not compared under --pre): with the damage-law
+# removal retired, spall / vapour without the sp_weibull criterion would remove nothing
+NEW = [("I20", G, G1 + ["spallation.model=none"], "spall.enabled / vapor.enabled need spallation.model = sp_weibull")]
+
+
+def g_expr():
+    """G without its scalar flame pair (surface_patch.h_conv / T_flame), so the expression pair can be given: the
+    patch refuses the two forms together (SurfacePatch::Parse, not a moved check)"""
+    d = tempfile.mkdtemp(prefix="interlocks_deck_")
+    p = os.path.join(d, "input_expr")
+    keep = [ln for ln in open(G).read().split("\n")
+            if not re.match(r"\s*surface_patch\.(h_conv|T_flame)\s*=", ln)]
+    open(p, "w").write("\n".join(keep))
+    return p
+
+
+def run(binary, deck, extra, np_=1):
+    if deck == "G_EXPR":
+        deck = g_expr()
+    d = tempfile.mkdtemp(prefix="interlocks_")
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(np_), binary, deck] + extra + \
+           ["plot_file=%s" % os.path.join(d, "run")]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    return r.returncode, ANSI.sub("", (r.stdout or "") + (r.stderr or ""))
+
+
+def abort_message(txt):
+    """the message of the first ABORT line (the text after `(function) `)"""
+    for ln in txt.split("\n"):
+        m = re.match(r"\s*ABORT:\s+\S+:\d+ \((?:operator\(\)|[^)]*)\) (.*)$", ln)   # a lambda prints (operator())
+        if m:
+            return m.group(1).strip()
+    return None
+
+
+def grimsel_alpha(T):          # Numeric::Material::Grimsel at its defaults (the FL deck sets none of them)
+    th = T - 273.15
+    cp = 1370.0 - 178000.0 / (th + 271.0)
+    return (2000.0 / (th + 563.0)) / (2650.0 * cp)
+
+
+def main():
+    pre = sys.argv[sys.argv.index("--pre") + 1] if "--pre" in sys.argv else None
+    bad = 0
+    print("P2-27 -- THE CROSS-KEY INTERLOCKS (CheckInterlocks) AND THE TIME-STEP LIMIT")
+    print("=" * 96)
+
+    def need(ok, msg):
+        nonlocal bad
+        print("  %s  %s" % ("ok  " if ok else "FAIL", msg))
+        bad += 0 if ok else 1
+
+    for tag, deck, extra in (("I0 G", G, G1), ("I0 FL", FL, FL1)):
+        rc, txt = run(BIN, deck, extra)
+        need(rc == 0, "%-6s valid base deck runs one step (rc %d)%s" % (tag, rc,
+             "" if rc == 0 else ": " + str(abort_message(txt))))
+    print("-- the moved aborts (one broken rule per leg)")
+    for tag, deck, extra, want in LEGS:
+        rc, txt = run(BIN, deck, extra)
+        msg = abort_message(txt)
+        ok = rc != 0 and msg is not None and want in msg
+        line = "%-4s rc=%d  %s" % (tag, rc, (msg or "(no ABORT line)")[:110])
+        if pre:
+            # the pre-P2-27 binary REQUIRES phase0.A_D, which stage 2 deleted from the base decks as a default
+            # (DECK_EDITS_2.txt): give it back on its command line, or it aborts on the missing key instead
+            rc0, txt0 = run(pre, deck, extra + PRE_EXTRA)
+            msg0 = abort_message(txt0)
+            same = rc0 != 0 and msg0 == msg
+            ok = ok and same
+            line += "  | pre: %s" % ("IDENTICAL message" if same else "DIFFERS: rc=%d %s" % (rc0, (msg0 or "")[:80]))
+        need(ok, line)
+
+    for tag, deck, extra, want in NEW:
+        rc, txt = run(BIN, deck, extra)
+        msg = abort_message(txt)
+        need(rc != 0 and msg is not None and want in msg, "%-4s rc=%d  %s  (new at stage 2)"
+             % (tag, rc, (msg or "(no ABORT line)")[:110]))
+
+    print("-- the time-step limit")
+    a_fl = grimsel_alpha(293.15)
+    lim_fl = 0.001 ** 2 / (6.0 * a_fl)              # FL: dx 1 mm, T_cold min(T_ref, T_amb) = 293.15 K
+    a_g = 1.5 / (2750.0 * 790.0)
+    lim_g = 0.002 ** 2 / (6.0 * a_g)                # G: dx 2 mm, constant law
+    dt = 10.0 * lim_fl
+    rc, txt = run(BIN, FL, ["surface_patch.face_list=1", "timestep=%r" % dt, "stop_time=%r" % dt])
+    msg = abort_message(txt) or ""
+    need(rc != 0 and "exceeds the explicit limit" in msg and "level 0" in msg and "phase 0" in msg
+         and "T_cold 293.15" in msg,
+         "D1 FL timestep = 10 x dt_lim (%.4g s, dt_lim %.4g s) aborts naming level, dt_lim, phase, T_cold: %s"
+         % (dt, lim_fl, msg[:120]))
+    dt = 0.9 * lim_fl
+    rc, txt = run(BIN, FL, ["surface_patch.face_list=1", "timestep=%r" % dt, "stop_time=%r" % dt])
+    need(rc == 0 and "explicit time-step limit, level 0" in txt and "WARNING" not in txt,
+         "D2 FL timestep = 0.9 x dt_lim runs (rc %d), message present, no warning" % rc)
+    dt = 10.0 * lim_g
+    rc, txt = run(BIN, G, ["timestep=%r" % dt, "stop_time=%r" % dt])
+    wl = [l for l in txt.split("\n") if "WARNING" in l and "exceeds the explicit limit" in l]
+    need(rc == 0 and len(wl) == 1, "D3 G (not the face list) timestep = 10 x dt_lim (%.4g s) runs WITH one warning "
+         "(rc %d, %d warning line(s))" % (dt, rc, len(wl)))
+    for tag, deck, nlev, warn_lev in (("D4", os.path.join(U, "amr_microstructure_regrid", "input"), 2, []),
+                                      ("D5", os.path.join(U, "sp_lefm", "input_weibull_regrid"), 2, [1])):
+        rc, txt = run(BIN, deck, [], np_=4)
+        msgs = sorted(set(int(m) for m in re.findall(r"explicit time-step limit, level (\d+):", txt)))
+        warns = sorted(set(int(m.group(1)) for m in re.finditer(r"level (\d+): timestep dt = \S+ s exceeds the "
+                                                                 r"explicit limit dt_lim", txt)))
+        need(rc == 0 and msgs == list(range(nlev)) and warns == warn_lev,
+             "%s %s runs (rc %d); per-level messages %s; warnings on levels %s (want %s)"
+             % (tag, os.path.relpath(deck, U), rc, msgs, warns, warn_lev))
+    print("=" * 96)
+    if bad:
+        print("FAIL: %d check(s)" % bad)
+        return 1
+    print("PASS: every moved interlock fires on its one broken rule%s, the valid decks run, and the explicit "
+          "time-step limit aborts on the face list and warns elsewhere, per level."
+          % (" with a message identical to the pre-move binary's" if pre else ""))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

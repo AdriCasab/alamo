@@ -2,9 +2,16 @@
 # Verification of Step 3: Beer-Lambert + Gaussian MMW source.
 #
 # Pass criteria:
-#   - Domain-integrated enthalpy at t_end matches t_end * P0 * (1 - exp(-alpha Lz))
+#   - The domain-integrated enthalpy GAIN at t_end, int (H_end - H_0) dV, matches t_end * P0 * (1 - exp(-alpha Lz))
 #     to within 5% (the in-plane Gaussian is fully captured because omega0 << L).
 #   - Surface (top-z) row max H is at the in-plane beam centre (x0, y0).
+#
+# P2-29: the constants are read from the RUN's metadata (P0, alpha from the dielectric pair, Lz, t_end, x0, y0), so one
+# test scores both the old const-alpha deck (`input`, H in kelvin, rho c_p = 1, IC 0) and the production-kernel deck
+# (`input_phase`, one constant phase, H [J/m^3], IC 300 K); the gain is H_end - H_0 (H_0 the t = 0 plotfile). The
+# Temp range of the last plotfile is printed (the property table spans 200-5000 K).
+#
+# Usage: test [OUTPUT_DIR]   (default: this directory's output/)
 
 import sys
 import os
@@ -14,30 +21,52 @@ import math
 import numpy as np
 import yt
 
-P0    = 1.0
-ALPHA = 10.0
-LZ    = 1.0
-T_END = 0.01
 TOL_INTEGRAL = 0.05
 
 outdir = sys.argv[1] if len(sys.argv) > 1 else "tests/MMWSpalling/unit/beam/output"
 
+
+def meta(run):
+    d = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            d[k.strip()] = v.strip()   # the LAST occurrence wins (an argv override follows the deck's value)
+    return d
+
+
+m = meta(outdir)
+P0 = float(m["beam.P0"])
+ALPHA = 2.0 * math.pi * math.sqrt(float(m["beam.eps_r"])) * float(m["beam.tan_delta"]) / float(m["beam.lambda"])
+LZ = float(m["geometry.prob_hi"].split()[2]) - float(m["geometry.prob_lo"].split()[2])
+X0, Y0 = float(m["beam.x0"]), float(m["beam.y0"])
+NZ = int(m["amr.n_cell"].split()[2])
+print(f"from the run's metadata: P0 {P0} W, alpha {ALPHA:.6f} 1/m, Lz {LZ} m, beam axis ({X0}, {Y0})")
+
 plotfiles = sorted(glob.glob(os.path.join(outdir, "*cell")))
-if not plotfiles:
-    print("FAIL: no cell plotfiles in", outdir)
+if len(plotfiles) < 2:
+    print("FAIL: need the t = 0 and a later cell plotfile in", outdir)
     sys.exit(1)
-final = plotfiles[-1]
+first, final = plotfiles[0], plotfiles[-1]
 
+ds0 = yt.load(first)
 ds = yt.load(final)
+T_END = float(ds.current_time) - float(ds0.current_time)
+ad0 = ds0.all_data()
 ad = ds.all_data()
+o0 = np.lexsort((ad0["x"].to_value(), ad0["y"].to_value(), ad0["z"].to_value()))
+o1 = np.lexsort((ad["x"].to_value(), ad["y"].to_value(), ad["z"].to_value()))
 
-H  = ad["H"].to_value()
-dV = ad["cell_volume"].to_value()
-H_int = float(np.sum(H * dV))
+H = ad["H"].to_value()[o1]
+dH = H - ad0["H"].to_value()[o0]
+dV = ad["cell_volume"].to_value()[o1]
+H_int = float(np.sum(dH * dV))
+Tv = ad["Temp"].to_value()
+print(f"Temp range at t = {float(ds.current_time):g} s: {Tv.min():.4f} .. {Tv.max():.4f} K")
 
 H_int_analytic = T_END * P0 * (1.0 - math.exp(-ALPHA * LZ))
 err = abs(H_int - H_int_analytic) / H_int_analytic
-print(f"Beer-Lambert integral: simulated = {H_int:.6e}, analytic = {H_int_analytic:.6e}, "
+print(f"Beer-Lambert integral (gain over {T_END:g} s): simulated = {H_int:.6e}, analytic = {H_int_analytic:.6e}, "
       f"relative error = {err*100:.2f}%")
 
 ok = True
@@ -46,16 +75,16 @@ if err > TOL_INTEGRAL:
     ok = False
 
 # Spot check: beam centre (x0, y0) just below the top surface should have the
-# largest H; the corner cell at the same z should have effectively zero.
-x = ad["x"].to_value()
-y = ad["y"].to_value()
-z = ad["z"].to_value()
-top = z > (LZ - 1.0/16)  # within the top z-row
-H_top = H[top]
+# largest H gain; the corner cell at the same z should have effectively zero.
+x = ad["x"].to_value()[o1]
+y = ad["y"].to_value()[o1]
+z = ad["z"].to_value()[o1]
+top = z > (LZ - LZ / NZ)  # within the top z-row
+H_top = dH[top]
 x_top = x[top]
 y_top = y[top]
 i_max = int(np.argmax(H_top))
-center_dist = math.hypot(x_top[i_max] - 0.5, y_top[i_max] - 0.5)
+center_dist = math.hypot(x_top[i_max] - X0, y_top[i_max] - Y0)
 if center_dist > 0.05:
     print(f"FAIL: hot-spot not at beam axis (offset {center_dist:.3f} m).")
     ok = False

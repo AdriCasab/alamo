@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""P2-23 unit/face_beam -- THE FACE LIST WITHOUT A FLAME. Runs U1 / U2 (and U3 with --bin_pre) -np 4 into output/.
+
+  z1 [gate] U1, the thermo row t = 1.0 (step 2; its T_old is the t = 0.5 plotfile 00001cell):
+       fl_n_top = 1024 and fl_n_side = 0 (also on the step-1 row t = 0.5); the flame GAIN fl_P_top = 0 (h = 0);
+       the listed faces' LOSS ledger_P_loss [W] against the ANALYTIC sum over the top cells of
+       A fl_w h_conv (T_s - T_amb), with T_s the code's own construction from the plotfile's T_old (FrAssignTs):
+         x = ln(dT0/dT1) when dT0 > dT1 > 0 (dT = T - T_ref, the top cell and the one below) =>
+             T_s = T_ref + dT0 x/(1 - e^-x) (ReconFromX, x <= 4, no gas cap with the patch off);
+         else the face balance at h = 0 and eps = 0, closed form: T_s = (G T_c + h_conv T_amb)/(G + h_conv),
+             G = 2 lambda(T_c)/dz, lambda = 2000/(theta + 563) (the Grimsel law at T_old)
+       bar: relative difference <= 1e-6 beyond the %g print (|d| <= 1e-6 |want| + half a unit in the 6th digit);
+       the loss non-zero (the hottest top cell >= 310 K at t = 0.5)
+  z1r [report] U1 vs U2 at t = 1 s (00002cell): the H field's max relative difference and the two ledger_P_loss
+  z2 [gate, --bin_pre PATH] U1's deck on that binary exits rc != 0; the message is printed
+Usage: test [--bin_pre PATH]   (exit 1 on a failed gate)
+"""
+import math
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input")
+OUT = os.path.join(HERE, "output")
+MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def run(name, extra, binary=BIN):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(OUT, exist_ok=True)
+    argv = MPI + [binary, DECK] + extra + ["plot_file=" + os.path.join(d, "run")]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    os.makedirs(d, exist_ok=True)
+    txt = (r.stdout or "") + (r.stderr or "")
+    open(os.path.join(d, "run.log"), "w").write(txt)
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join(argv) + "\n")
+    return r.returncode, txt, os.path.join(d, "run")
+
+
+def meta(run_dir):
+    kv = {}
+    for ln in open(os.path.join(run_dir, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            kv[k.strip()] = v.strip()
+    return kv
+
+
+def row(run_dir, t):
+    L = open(os.path.join(run_dir, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    for r in L[1:]:
+        v = [x.strip() for x in r.split("\t")]
+        if abs(float(v[0]) - t) < 1e-9:
+            return dict(zip(h, v))
+    raise KeyError("no thermo row at t = %g" % t)
+
+
+def grid(pf, fields=("Temp", "H", "fl_w")):
+    """fields as (nx, ny, nz) arrays (the covering grid of level 0)"""
+    ds = yt.load(pf)
+    cg = ds.covering_grid(0, ds.domain_left_edge, ds.domain_dimensions)
+    return {f: cg[("boxlib", f)].to_value() for f in fields}, ds
+
+
+def lam(T):
+    return 2000.0 / ((T - 273.15) + 563.0)
+
+
+def main(argv):
+    print("P2-23 unit/face_beam -- the face list without a flame (units: W, K, m)")
+    print("=" * 100)
+    rc, txt, d1 = run("U1", [])
+    need(rc == 0, "U1 runs (rc %d)" % rc)
+    m = meta(d1)
+    h_c, T_a, T_ref = float(m["losses.h_conv"]), float(m["losses.T_amb"]), float(m["microstructure.phase0.T_ref"])
+    print("  from metadata: losses.h_conv %s, losses.epsilon %s, T_amb %s, phase0.T_ref %s, surface_patch.enabled %s"
+          % (m["losses.h_conv"], m["losses.epsilon"], m["losses.T_amb"], m["microstructure.phase0.T_ref"],
+             m["surface_patch.enabled"]))
+    r1, r2 = row(d1, 0.5), row(d1, 1.0)
+    need(r1["fl_n_top"] == "1024" and r1["fl_n_side"] == "0" and r2["fl_n_top"] == "1024" and r2["fl_n_side"] == "0",
+         "z1 fl_n_top %s / %s, fl_n_side %s / %s (rows t 0.5 / 1.0; bar 1024, 0)" % (
+             r1["fl_n_top"], r2["fl_n_top"], r1["fl_n_side"], r2["fl_n_side"]))
+    need(float(r2["fl_P_top"]) == 0.0, "z1 the flame gain fl_P_top %s (h = 0 on every face)" % r2["fl_P_top"])
+    F, ds = grid(os.path.join(d1, "00001cell"))
+    T, w = F["Temp"], F["fl_w"]
+    dx = float((ds.domain_right_edge[0] - ds.domain_left_edge[0]).to_value()) / int(ds.domain_dimensions[0])
+    dz = float((ds.domain_right_edge[2] - ds.domain_left_edge[2]).to_value()) / int(ds.domain_dimensions[2])
+    A = dx * dx
+    Tt, T1, wt = T[:, :, -1], T[:, :, -2], w[:, :, -1]
+    d0, d1v = Tt - T_ref, T1 - T_ref
+    main_b = (d0 > 0) & (d1v > 0) & (d0 > d1v)
+    Ts = np.empty_like(Tt)
+    x = np.where(main_b, np.log(np.where(main_b, d0 / np.where(d1v > 0, d1v, 1.0), 1.0)), 0.0)
+    x = np.minimum(x, 4.0)
+    Ts[main_b] = T_ref + d0[main_b] * x[main_b] / (1.0 - np.exp(-x[main_b]))
+    G = 2.0 * lam(Tt) / dz
+    fb = ~main_b
+    Ts[fb] = (G[fb] * Tt[fb] + h_c * T_a) / (G[fb] + h_c)
+    want = float(np.sum(A * wt * h_c * (Ts - T_a)))
+    got_s = r2["ledger_P_loss"]
+    got = float(got_s)
+    half_ulp6 = 0.5 * 10.0 ** (math.floor(math.log10(abs(want))) - 5) if want != 0 else 0.0
+    need(abs(got - want) <= 1e-6 * abs(want) + half_ulp6 and Tt.max() >= 310.0,
+         "z1 ledger_P_loss %s W (printed) vs the analytic %.9g W (rel %+.2e; %d main-branch, %d fallback top cells; "
+         "fl_w on the top %.6f..%.6f; hottest top cell %.2f K at t 0.5)" % (
+             got_s, want, (got - want) / want if want else float("nan"), int(main_b.sum()), int(fb.sum()),
+             wt.min(), wt.max(), Tt.max()))
+    # z1r
+    # P2-24: vapor.enabled=0 -- the deck (via validation/oglesby/input) turns the face list's vapour rule on, and on the
+    # column path that key would select the OLD column-path front instead; U2 stays P2-23's control
+    rc2, _, d2 = run("U2", ["surface_patch.face_list=0", "spall.buckle_span=0", "spall.buckle_log_csv=0",
+                            "vapor.enabled=0"])
+    need(rc2 == 0, "U2 (U1 + face_list=0, buckle_span=0, buckle_log_csv=0, vapor.enabled=0) runs (rc %d)" % rc2)
+    if rc2 == 0:
+        Fa, _ = grid(os.path.join(d1, "00002cell"), ("H",))
+        Fb, _ = grid(os.path.join(d2, "00002cell"), ("H",))
+        Ha, Hb = Fa["H"], Fb["H"]
+        den = np.maximum(np.abs(Ha), np.abs(Hb))
+        rH = float(np.max(np.where(den > 0, np.abs(Ha - Hb) / np.where(den > 0, den, 1), 0)))
+        dHa = Ha - grid(os.path.join(d1, "00000cell"), ("H",))[0]["H"]
+        dHb = Hb - grid(os.path.join(d2, "00000cell"), ("H",))[0]["H"]
+        mm = np.maximum(np.abs(dHa), np.abs(dHb)) > 0
+        rdH = float(np.max(np.abs(dHa - dHb)[mm] / np.maximum(np.abs(dHa), np.abs(dHb))[mm]))
+        la, lb = float(r2["ledger_P_loss"]), float(row(d2, 1.0)["ledger_P_loss"])
+        print("  z1r (report) U1 vs U2 at t = 1 s: H max rel diff %.2e (of the change since t = 0: %.2e); total loss "
+              "power %.6g vs %.6g W (rel %+.2e) -- the face form at T_s vs the column-top form at T_cell" % (
+                  rH, rdH, la, lb, (la - lb) / lb if lb else float("nan")))
+    if "--bin_pre" in argv:
+        bp = argv[argv.index("--bin_pre") + 1]
+        rc3, txt3, _ = run("U3", [], binary=bp)
+        msg = [ln for ln in txt3.replace("\x1b", "").splitlines() if "EXCEPTION" in ln or "Abort" in ln][:4]
+        need(rc3 != 0, "z2 U3 on %s: rc %d; %s" % (os.path.relpath(bp, ROOT), rc3,
+                                                   " | ".join(s.split(")", 1)[-1].strip()[:90] for s in msg)))
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

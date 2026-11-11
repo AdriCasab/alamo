@@ -1,0 +1,108 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P2-2b (b7) -- THE PIN / IDLE-CLOCK PATH AFTER THE STORED PRODUCTS RETIRE.
+#
+# ⚠⚠ WHAT THIS TEST CAN AND CANNOT SEE. The idle clock is
+#     t_cell = pin_rho[c] * pin_Cp[c] * dz * (pin_T[c] - T_amb) / q_pin
+# formed at `MMWSpalling.H:3825` and consumed one line later at `:3827`. It is
+# never written to any output, so `t_cell` CANNOT be read back from a run.
+# (b7)'s bar -- "t_cell unchanged to 1e-9 under law = constant" -- therefore
+# has to be witnessed one step upstream, at the fields the product is built
+# from. The chain is exact, not approximate:
+#
+#   rho_phase == phases[p].rho  AND  Cp_phase == phases[p].Cp   BIT-EXACTLY
+#     => pin_rho[c] * pin_Cp[c] is bit-identical to the retired stored
+#        product pin_rhoCp
+#     => t_cell is bit-identical, so the clock fires on exactly the same steps.
+#
+# ⚠ P2-2b retired the stored products `pin_rhoCp`/`rev_rhoCp` and now carries
+# rho and Cp separately, forming the product at the point of use. That is the
+# change this deck guards.
+#
+# ⚠⚠ AND THE FAILURE MODE IT EXISTS FOR. `UpdatePropertyFields` RETURNS at
+# `:5380` unless some phase sets `law = grimsel`, and SKIPS non-Grimsel phases
+# at `:5412`. If the init fill at `:8229` had simply been deleted -- which
+# deliverable 2 as written asked for -- `rho_mf`/`Cp_mf` would be NEVER WRITTEN
+# under the shipped default, i.e. ZERO, and the idle clock would divide
+# (pin_T - T_amb) by zero. So this deck asserts the fields are non-zero as its
+# own row, not merely equal to something.
+#
+# Two legs from one file, `microstructure.phase0.law` supplied per leg.
+
+alamo.program = mmwspalling
+
+timestep  = 0.001
+stop_time = 0.002
+
+amr.plot_int        = 1
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 4 4 4
+amr.blocking_factor = 1
+amr.max_grid_size   = 4
+amr.regrid_int      = 1000000
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.008 0.008 0.008
+geometry.is_periodic = 0 0 0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+
+microstructure.phase0.fraction          = 1.0
+microstructure.phase0.kappa             = 1.5
+microstructure.phase0.beta              = 8.0e-6
+microstructure.phase0.E                 = 30.0e9
+microstructure.phase0.mu                = 11.538461538e9
+microstructure.phase0.rho               = 2750.0
+microstructure.phase0.Cp                = 790.0
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.h_gb0              = 0.0
+
+spall.enabled = 0
+beam.omega0     = 1.0
+beam.lambda     = 1.0e-3
+beam.x0         = 0.004
+beam.y0         = 0.004
+beam.z0         = 0.008
+beam.P0         = 0.0
+
+losses.epsilon  = 0.0
+losses.h_conv   = 0.0
+losses.T_amb    = 293.15
+losses.sigma_SB = 5.670374e-8
+
+hc.ic.type           = constant
+hc.ic.constant.value = 1600.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+# ⚠ mandatory even here: HeatConduction query_requires hc.heat.alpha and
+# Mechanics.H:131 asserts models.size() > 0 even under el.type = disable.
+hc.heat.alpha                = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+
+el.type        = disable
+el.nmodels     = 1
+el.model1.E    = 30.0e9
+el.model1.nu   = 0.3
+el.model1.F0   = 0 0 0 0 0 0 0 0 0

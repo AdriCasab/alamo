@@ -26,7 +26,22 @@ Legs (all -np 4, the test's own runner where one exists):
                                                        (the onset-calibration deck), stop_time 10 s
   BEAM_S                                               unit/face_beam/input (P2-23): the face list WITHOUT
                                                        a flame on the #19 beam deck, stop_time 1 s
-The three argv-built legs drop `surface_patch.face=zhi` (a dead key with no reader; P2-18 A2).
+  FEET_S FEET_0                                        unit/face_feet/input (P2-27, census G): the burner on its
+                                                       feet with the pad clearance ON (regime 4 on the face
+                                                       list) and OFF, 10 s
+  KV_S HU_S GB_S                                       P2-28: validation/kant/sp_kant_onset/input_verification_face
+                                                       (EVALUATE-ONLY, 10 s), validation/hu/hu_spall_onset/
+                                                       input_granite2_lefm (the PRESCRIBED patch, buckling on, 10 s),
+                                                       unit/gradient_blind/input (P2-28 stage 1: input_face; removal
+                                                       on, its 0.04 s)
+  VAP_S BKL_S                                          2026-11-10 (found by P2-30's step zero: until then NO leg wrote a
+                                                       vapour row or a buckle-log data row): unit/face_vapor/input
+                                                       as it stands (regime-2 rows in the event log), and
+                                                       unit/face_buckle's F_S + spall.buckle_log_csv=1, 8 s (the
+                                                       buckle log's rows). Legs 20 and 21; the first 19 are unchanged.
+The three argv-built legs drop `surface_patch.face=zhi` (a dead key with no reader; P2-18 A2). From P2-26 to P2-27 they
+also dropped `spall.flake_coherence_length=0.0` / `spall.surface_normal=0` (the table then compared strings); since
+P2-27 the retired-at-default table compares a one-token number as a double, so those tokens are replayed as written.
 
 Hashed: Header, Cell_D_*, Cell_H, Checkpoint, thermo.dat, *.csv. Not hashed: run.log, argv.sh,
 rc, BINARY.txt, .done, metadata, diff.patch, *.visit (timestamps / argv / git state).
@@ -57,7 +72,11 @@ DROP = {"surface_patch.side_face_flux", "surface_patch.side_face_step_height",
         "surface_patch.side_face_staircase", "spall.lateral_drive", "spall.lateral_removal",
         "spall.lateral_subcell", "spall.lateral_thermal", "surface_patch.side_face_h_datum",
         "surface_patch.side_face_h_r_min", "surface_patch.side_face_h_law",
-        "surface_patch.face"}
+        "surface_patch.face",
+        # P2-28: the bit's OFF switch (bit.* aborts by presence since the column path retired); inert at 0
+        "bit.enabled"}
+# P2-27: the two C2 tokens (spall.flake_coherence_length = 0.0, spall.surface_normal = 0) are no longer dropped: the
+# retired-at-default table compares a one-token number as a double, so M0S replays its record as written.
 TIMERS = {"fr_t_removal", "fr_t_step", "fl_t_path"}
 SKIP = {"run.log", "argv.sh", "rc", "BINARY.txt", ".done", "metadata", "diff.patch", "DROPPED.txt"}
 FR_LEGS = ["T00_1_k1", "TL35_1", "TL45_1", "SPH_1", "BORE_1"]
@@ -188,6 +207,29 @@ def run(label):
     d = os.path.join(W, "BEAM_S")
     run_argv(d, MPI + ["-np", "4", BIN, os.path.join(T, "unit", "face_beam", "input"), "stop_time=1.0",
                        "plot_file=" + os.path.join(d, "run")])
+    # P2-27 (census G): the pad clearance on the face list, on and off
+    for nm, extra in (("FEET_S", []), ("FEET_0", ["surface_patch.foot_body_clearance=0"])):
+        d = os.path.join(W, nm)
+        run_argv(d, MPI + ["-np", "4", BIN, os.path.join(T, "unit", "face_feet", "input"), "stop_time=10.0",
+                           "plot_file=" + os.path.join(d, "run")] + extra)
+    # P2-28: what site A served, on the face list -- the evaluate-only mode (Kant's onset deck), the prescribed patch
+    # with buckling on (Hu's deck) and the uniform slab with removal on (the locks' stage-2 fixture)
+    for nm, deck, stop in (("KV_S", os.path.join(T, "validation", "kant", "sp_kant_onset", "input_verification_face"),
+                            "10.0"),
+                           ("HU_S", os.path.join(T, "validation", "hu", "hu_spall_onset", "input_granite2_lefm"),
+                            "10.0"),
+                           ("GB_S", os.path.join(T, "unit", "gradient_blind", "input"), None)):
+        d = os.path.join(W, nm)
+        run_argv(d, MPI + ["-np", "4", BIN, deck] + (["stop_time=" + stop] if stop else []) +
+                 ["plot_file=" + os.path.join(d, "run")])
+
+    # 2026-11-10: the two writers no leg reached with a data row (P2-30 z0) -- the vapour row and the buckle-log row
+    d = os.path.join(W, "VAP_S")
+    run_argv(d, MPI + ["-np", "4", BIN, os.path.join(T, "unit", "face_vapor", "input"),
+                       "plot_file=" + os.path.join(d, "run")])
+    d = os.path.join(W, "BKL_S")
+    run_argv(d, MPI + ["-np", "4", BIN, fb.INPUT] + list(fb.LEGS["F_S"]) +
+             ["stop_time=" + FR_STOP, "spall.buckle_log_csv=1", "plot_file=" + os.path.join(d, "run")])
 
     n = write_hashes(W, os.path.join(HERE, "face_%s.md5" % label), os.path.join(HERE, "face_%s_headers.txt" % label))
     print("face gate %s: %d files hashed -> face_%s.md5" % (label, n, label), flush=True)

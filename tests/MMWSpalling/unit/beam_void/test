@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""P2-29 stage 3 (c3, m7) -- A BEAM ACROSS AN INTERIOR VOID on the face list (DR-5 gap 3; the retired spec is
+retired_units/seed_void S2). Two legs of this directory's deck, two steps each, -np 4:
+  U  the deck: a uniform 6 mm disk, a seeded 4 x 4 x 2 void under the axis at mid-depth
+  G  the deck + beam.profile=gaussian (omega0 4 mm)
+Checks (U):
+  (1) beam_invariant_viol == 0 and |beam_closure_err| <= 1e-9 on every step row; beam_P_dep <= beam_P_inc
+  (2) the seed: every seeded cell is removed in the t = 0 plotfile, with solid above and below it
+  (3) PER CELL, step 1: Q = (H_1 - H_0)/dt (losses off, T_ref = the IC, a uniform start: conduction and losses are
+      0) equals the Beer-Lambert continuation Q = I (e^{-a n dz} - e^{-a (n+1) dz})/dz, I = P0/(pi r_b^2) inside the
+      disk (cell centres), n = the SOLID cells above in the column (no attenuation across the gap): rel <= 1e-9 on
+      every heated cell; exactly 0 in every void cell and outside the disk
+  (4) the PLANTED control: n counted GEOMETRICALLY (k_top - k, the void counted as rock) must miss the cells below
+      the void by more than 1e-9 -- the check discriminates the path rule it claims to test
+Reported (G, m7): |beam_closure_err| per step (prediction <= 0.1, the lateral-spread residual class of P2-21 b1r).
+Usage: test   (exit 1 on a failed check)"""
+import math
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input")
+OUT = os.path.join(HERE, "output")
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def meta(run):
+    d = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            d[k.strip()] = v.strip()
+    return d
+
+
+def thermo(run):
+    L = open(os.path.join(run, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    return h, [[c.strip() for c in r.split("\t")] for r in L[1:] if r.strip()]
+
+
+def grid(pf, f):
+    ds = yt.load(pf)
+    cg = ds.covering_grid(0, ds.domain_left_edge, ds.domain_dimensions)
+    return np.array(cg[f].to_value(), dtype=np.float64)
+
+
+def run(tag, extra):
+    d = os.path.join(OUT, tag)
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, DECK] + extra + ["plot_file=" + d]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    open(d + ".log", "w").write(" ".join(argv) + "\n" + (r.stdout or "") + (r.stderr or ""))
+    return r.returncode, d
+
+
+def main():
+    print("P2-29 unit/beam_void -- a beam across an interior void on the face list")
+    print("=" * 100)
+    if os.path.isdir(OUT):
+        shutil.rmtree(OUT)
+    os.makedirs(OUT)
+    rcU, U = run("U", [])
+    need(rcU == 0, "U runs (rc %d)" % rcU)
+    rcG, G = run("G", ["beam.profile=gaussian"])
+    need(rcG == 0, "G runs (rc %d)" % rcG)
+    if rcU != 0:
+        print("FAIL (%d)" % len(FAIL))
+        return 1
+    m = meta(U)
+    h, rows = thermo(U)
+    st = rows[1:]
+    viol = max(float(r[h.index("beam_invariant_viol")]) for r in st)
+    clo = max(abs(float(r[h.index("beam_closure_err")])) for r in st)
+    pinc = [float(r[h.index("beam_P_inc")]) for r in st]
+    pdep = [float(r[h.index("beam_P_dep")]) for r in st]
+    need(viol == 0 and clo <= 1e-9 and all(d <= i for d, i in zip(pdep, pinc)),
+         "(1) U: invariant violations %g, max |closure| %.2e (bar 1e-9), P_dep %s <= P_inc %s on every step row"
+         % (viol, clo, rows[1][h.index("beam_P_dep")], rows[1][h.index("beam_P_inc")]))
+    seed = [int(x) for x in m["spall.seed_void"].split()]
+    i0, j0, k0, i1, j1, k1 = seed
+    pfs = sorted(p for p in os.listdir(U) if p.endswith("cell"))
+    R0 = grid(os.path.join(U, pfs[0]), "removed")
+    box = R0[i0:i1 + 1, j0:j1 + 1, k0:k1 + 1]
+    nz = R0.shape[2]
+    above = R0[i0:i1 + 1, j0:j1 + 1, k1 + 1:]
+    below = R0[i0:i1 + 1, j0:j1 + 1, :k0]
+    need(np.all(box > 0.5) and np.all(above < 0.5) and np.all(below < 0.5) and int((R0 > 0.5).sum()) == box.size,
+         "(2) the seed: %d cells removed at t = 0 (the box %s), solid above (%d cells) and below (%d cells) it"
+         % (int((R0 > 0.5).sum()), seed, above.size, below.size))
+    dt = float(m["timestep"])
+    H0 = grid(os.path.join(U, pfs[0]), "H")
+    H1 = grid(os.path.join(U, pfs[1]), "H")
+    Q = (H1 - H0) / dt
+    nx, ny, _ = (int(x) for x in m["amr.n_cell"].split())
+    lo = [float(x) for x in m["geometry.prob_lo"].split()]
+    hi = [float(x) for x in m["geometry.prob_hi"].split()]
+    dx, dy, dz = ((h_ - l) / n for h_, l, n in zip(hi, lo, (nx, ny, nz)))
+    x0, y0, rb, P0 = (float(m["beam." + k]) for k in ("x0", "y0", "radius", "P0"))
+    a = 2.0 * math.pi * math.sqrt(float(m["beam.eps_r"])) * float(m["beam.tan_delta"]) / float(m["beam.lambda"])
+    I = P0 / (math.pi * rb * rb)
+    want = np.zeros_like(Q)
+    geo = np.zeros_like(Q)
+    for i in range(nx):
+        for j in range(ny):
+            xc, yc = lo[0] + (i + 0.5) * dx - x0, lo[1] + (j + 0.5) * dy - y0
+            if xc * xc + yc * yc > rb * rb:
+                continue
+            solid = R0[i, j, :] < 0.5
+            ktop = max(k for k in range(nz) if solid[k])
+            for k in range(ktop, -1, -1):
+                if not solid[k]:
+                    continue
+                n = int(solid[k + 1:ktop + 1].sum())              # SOLID cells above
+                want[i, j, k] = I * (math.exp(-a * n * dz) - math.exp(-a * (n + 1) * dz)) / dz
+                g = ktop - k                                       # geometric: the void counted as rock
+                geo[i, j, k] = I * (math.exp(-a * g * dz) - math.exp(-a * (g + 1) * dz)) / dz
+    heated = want > 0
+    rel = np.abs(Q[heated] - want[heated]) / want[heated]
+    zero_void = float(np.max(np.abs(Q[R0 > 0.5])))
+    zero_out = float(np.max(np.abs(Q[~heated & (R0 < 0.5)])))
+    below_void = heated.copy()
+    below_void[:, :, k0:] = False
+    below_void[:i0] = below_void[i1 + 1:] = False
+    below_void[:, :j0] = below_void[:, j1 + 1:] = False
+    need(float(rel.max()) <= 1e-9 and zero_void == 0.0 and zero_out == 0.0,
+         "(3) U per cell: Q = the solid-path Beer-Lambert continuation on %d heated cells, max rel %.2e (bar 1e-9; %d "
+         "below the void, max rel there %.2e); void cells max |Q| %g, outside the disk %g" % (
+             int(heated.sum()), float(rel.max()), int(below_void.sum()),
+             float((np.abs(Q[below_void] - want[below_void]) / want[below_void]).max()), zero_void, zero_out))
+    miss = float((np.abs(Q[below_void] - geo[below_void]) / geo[below_void]).max())
+    need(miss > 1e-9, "(4) planted: the GEOMETRIC path (the void counted as rock) misses the cells below the void "
+         "(max rel %.2e > 1e-9) -- the check discriminates" % miss)
+    if rcG == 0:
+        hG, rG = thermo(G)
+        cg = [float(r[hG.index("beam_closure_err")]) for r in rG[1:]]
+        vg = max(float(r[hG.index("beam_invariant_viol")]) for r in rG[1:])
+        print("  ----  (m7, report) G: beam_closure_err per step %s (prediction |err| <= 0.1); invariant violations %g"
+              % (["%.3e" % x for x in cg], vg))
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

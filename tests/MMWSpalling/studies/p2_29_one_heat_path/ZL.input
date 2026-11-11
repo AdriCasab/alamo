@@ -1,0 +1,39 @@
+# P2-29 study leg ZL (a study deck, not a test deck): the quarter-block Zhang deck on the FACE LIST in its evaluate-only
+# mode (spall and vapour off: the criterion runs on every listed line, nothing is removed) -- production's
+# surface-loss form (FrFaceFlux: radiation + convection on the reconstructed surface temperature T_s) on the heating
+# benchmark, against ZQ's cell form (the top cell's T). m8 reports the difference.
+FILE = tests/MMWSpalling/validation/zhang/zhang_oglesby/input_phase
+
+surface_patch.face_list  = 1
+surface_patch.enabled    = 0          # no flame: the list runs without one (P2-23)
+surface_patch.x0         = 0.05       # the quadrant's corner: FillFractionGhosts mirrors there
+surface_patch.y0         = 0.05
+surface_patch.radius     = 0.08       # the LISTING mask: with the patch off it defaults to 0 = nothing listed (the
+                                      # first ZL run, legs/ZL_r0_emptylist: fl_n_top 0); 0.08 > the quadrant's
+                                      # corner-to-corner 0.0707 m, so every top cell is listed
+surface_patch.robin_form = surface
+
+# CHOICE (P2-29): the criterion's rock keys, copied from validation/shared/rock_grimsel.inputs (its Grimsel stress law,
+# K_Ic table, relief, flaw and span; the law's coefficients are parsed whatever the phase law). Nothing is removed in
+# this mode, so none of them can move T; they make the evaluated criterion production's.
+spallation.model                 = sp_weibull
+spall.stress_source              = local_thermoelastic   # the list's one stress source (interlock I3)
+microstructure.phase0.grimsel.cp.a            = 1370
+microstructure.phase0.grimsel.cp.b            = 178000
+microstructure.phase0.grimsel.cp.th0          = 271
+microstructure.phase0.grimsel.lambda.a        = 2000
+microstructure.phase0.grimsel.lambda.th0      = 563
+microstructure.phase0.grimsel.rho             = 2650
+microstructure.phase0.grimsel.E0              = 53.3e9
+microstructure.phase0.grimsel.nu              = 0.30
+microstructure.phase0.grimsel.K_Ic0           = 1.5
+microstructure.phase0.grimsel.alpha_cap_theta = -1
+spall.stress_law              = grimsel
+spallation.sp.kic.law         = grimsel_table
+spallation.sp.kic.scale       = 1.0
+spallation.sp.stress_relief   = 0.531294
+weibull.a0_ig                 = 8.0e-6
+spallation.sp.a0              = 8.0e-6
+weibull.m                     = 13
+weibull.a0_gb                 = 40.0e-6
+spall.buckle_span             = 0.012

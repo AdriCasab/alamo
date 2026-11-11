@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+# P2-28 deliverable 1b -- THE PRESCRIBED-TEMPERATURE BOUNDARY AGAINST ITS EXACT SOLUTION.
+#
+# Four legs on `input` (see its header): F = the face list (evaluate-only; the T_presc top faces carry the half-cell
+# Dirichlet term), C = the list off (the column kernel's term), each at 3.125 mm / dt 0.5 s and 1.5625 mm / dt 0.125 s.
+#   (a) the TOP CELL'S average rise T_top - T0 against the exact cell average of the semi-infinite solution under
+#       T_s = A + B t, at 30 / 60 / 120 s: |error| <= 2 % at 3.125 mm and <= 0.5 % at 1.5625 mm (leg F; C reported)
+#   (b) second order: |err(3.125)| / |err(1.5625)| >= 3 at each time (the pre-P2-28 factor reads 2.0)
+#   (c) the two call sites agree: F and C identical to 1e-12 K at every cell of every plotfile, both meshes
+#   (d) leg F's ledger closes: max |ledger_err_solid| <= 1e-9 (the mirror booked the same flux)
+#   (e) non-vacuity: leg F bills the list (thermo fl_P_top > 0 at the last row); the top slab is uniform (1-D)
+# Usage: test [--check]   (--check re-reduces the existing output)
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT = os.path.join(HERE, "output")
+DECK = os.path.join(HERE, "input")
+
+A, B, T0 = 638.22, 3.74, 280.15
+KAPPA, RHO, CP = 2.5, 2640.0, 827.2
+ALPHA = KAPPA / (RHO * CP)
+TIMES = (30.0, 60.0, 120.0)
+TOL = {"3125": 0.02, "1562": 0.005}
+RATIO_MIN = 3.0
+SAME_TOL = 1.0e-12
+LEDGER_TOL = 1.0e-9
+
+# leg C: the list off (P2-28: surface.follow_mask, spall.surface_T and spall.removal_energy are retired at the list's
+# values, so leg C names only the switch and the form)
+COL = ["surface_patch.face_list=0", "surface_patch.robin_form=cell"]
+FINE = ["amr.n_cell=16 16 64", "timestep=0.125", "amr.plot_int=240"]
+LEGS = {"F_3125": [], "C_3125": COL, "F_1562": FINE, "C_1562": FINE + COL}
+DZ = {"3125": 0.1 / 32, "1562": 0.1 / 64}
+
+
+def run(tag):
+    d = os.path.join(OUT, tag)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN, DECK] + LEGS[tag] + \
+           ["plot_file=%s" % os.path.join(d, "run")]
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join(argv) + "\n")
+    with open(os.path.join(d, "run.log"), "w") as log:
+        rc = subprocess.call(argv, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    print("  %-7s rc %d" % (tag, rc), flush=True)
+    return rc
+
+
+# ---- a single-level cell plotfile, no yt (P2-27's FAB reader: little-endian, component-major, Fortran order) ----
+FAB = re.compile(rb"FAB \(\(8, \(([\d ]+)\)\),\(8, \(([\d ]+)\)\)\)\(\(([-\d,]+)\) \(([-\d,]+)\) \(([\d,]+)\)\) (\d+)\n")
+
+
+def load(pf, name):
+    L = open(os.path.join(pf, "Header")).read().split("\n")
+    n = int(L[1])
+    comps, t = L[2:2 + n], float(L[2 + n + 1])
+    c = comps.index(name)
+    boxes = []
+    for fn in sorted(glob.glob(os.path.join(pf, "Level_0", "Cell_D_*"))):
+        raw = open(fn, "rb").read()
+        pos = 0
+        while pos < len(raw):
+            m = FAB.match(raw, pos)
+            lo = [int(x) for x in m.group(3).split(b",")]
+            hi = [int(x) for x in m.group(4).split(b",")]
+            nc = int(m.group(6))
+            npts = int(np.prod([h - l + 1 for l, h in zip(lo, hi)]))
+            dt = np.dtype("<f8") if m.group(2).split()[0] == b"8" else np.dtype(">f8")
+            data = np.frombuffer(raw, dtype=dt, count=nc * npts, offset=m.end()).reshape(nc, npts)
+            boxes.append((lo, hi, data[c]))
+            pos = m.end() + nc * npts * 8
+    lo = [min(b[0][d] for b in boxes) for d in range(3)]
+    hi = [max(b[1][d] for b in boxes) for d in range(3)]
+    a = np.full((hi[2] - lo[2] + 1, hi[1] - lo[1] + 1, hi[0] - lo[0] + 1), np.nan)
+    for blo, bhi, v in boxes:
+        a[blo[2] - lo[2]:bhi[2] - lo[2] + 1, blo[1] - lo[1]:bhi[1] - lo[1] + 1, blo[0] - lo[0]:bhi[0] - lo[0] + 1] = \
+            v.reshape(bhi[2] - blo[2] + 1, bhi[1] - blo[1] + 1, bhi[0] - blo[0] + 1)
+    return t, a
+
+
+def plotfiles(tag):
+    out = []
+    for p in glob.glob(os.path.join(OUT, tag, "run", "*cell")):
+        m = re.search(r"(\d+)cell$", p)
+        if m:
+            out.append((int(m.group(1)), p))
+    return [p for _, p in sorted(out)]
+
+
+def thermo(tag):
+    rows = [ln.rstrip("\n").split("\t") for ln in open(os.path.join(OUT, tag, "run", "thermo.dat")) if ln.strip()]
+    hdr = [h.strip() for h in rows[0]]
+    return {h: np.array([float(r[i]) for r in rows[1:]]) for i, h in enumerate(hdr)}
+
+
+# ---- the exact solution, averaged over the top cell [0, dz] below the surface -------------------------------------
+def exact(z, t):
+    eta = z / (2.0 * math.sqrt(ALPHA * t))
+    return T0 + (A - T0) * math.erfc(eta) + B * t * ((1.0 + 2.0 * eta * eta) * math.erfc(eta)
+                                                      - 2.0 / math.sqrt(math.pi) * eta * math.exp(-eta * eta))
+
+
+def exact_cellavg(dz, t, m=2000):
+    zs = (np.arange(m) + 0.5) * dz / m          # midpoint rule, 2000 points
+    return float(np.mean([exact(z, t) for z in zs]))
+
+
+def main():
+    check = "--check" in sys.argv
+    if not os.path.exists(BIN):
+        print("FAIL: missing binary")
+        sys.exit(1)
+    fails = []
+    if not check:
+        print("running the four legs:")
+        for tag in LEGS:
+            if run(tag) != 0:
+                fails.append("%s exited non-zero" % tag)
+        if fails:
+            print("\n".join(fails) + "\nFAIL")
+            sys.exit(1)
+
+    print("\n(a) the top cell's average rise vs the exact cell average [%%]   (alpha %.4e m^2/s)" % ALPHA)
+    err = {}
+    for mesh in ("3125", "1562"):
+        for leg in ("F", "C"):
+            tag = "%s_%s" % (leg, mesh)
+            got = {}
+            for p in plotfiles(tag):
+                t, T = load(p, "Temp")
+                top = T[-1]
+                got[round(t, 6)] = (float(np.mean(top)), float(np.max(top) - np.min(top)))
+            for t in TIMES:
+                if round(t, 6) not in got:
+                    fails.append("%s: no plotfile at t = %g s" % (tag, t))
+                    continue
+                Tm, spread = got[round(t, 6)]
+                ex = exact_cellavg(DZ[mesh], t)
+                e = ((Tm - T0) - (ex - T0)) / (ex - T0)
+                err[(leg, mesh, t)] = e
+                bar = TOL[mesh]
+                ok = abs(e) <= bar if leg == "F" else True
+                if not ok:
+                    fails.append("(a) %s t %g: error %.3f %% > %.1f %%" % (tag, t, 100 * e, 100 * bar))
+                if spread > 1.0e-9:
+                    fails.append("(e) %s t %g: top slab not uniform (spread %.3e K)" % (tag, t, spread))
+                print("  %-7s t %5.0f s  T_top %9.4f  exact %9.4f  rise error %+7.3f %%  %s" % (
+                    tag, t, Tm, ex, 100 * e, ("<= %.1f %% %s" % (100 * bar, "ok" if ok else "FAIL")) if leg == "F"
+                    else "(reported)"))
+
+    print("\n(b) convergence: |err(3.125 mm)| / |err(1.5625 mm)| (second order ~4; the old factor 2.0)")
+    for t in TIMES:
+        for leg in ("F", "C"):
+            if (leg, "3125", t) in err and (leg, "1562", t) in err and err[(leg, "1562", t)] != 0.0:
+                r = abs(err[(leg, "3125", t)]) / abs(err[(leg, "1562", t)])
+                ok = r >= RATIO_MIN
+                if leg == "F" and not ok:
+                    fails.append("(b) t %g: ratio %.2f < %.1f" % (t, r, RATIO_MIN))
+                print("  %s t %5.0f s  ratio %.2f  %s" % (leg, t, r, ("ok" if ok else "FAIL") if leg == "F"
+                                                            else "(reported)"))
+
+    print("\n(c) F vs C (the two call sites), every cell of every plotfile")
+    for mesh in ("3125", "1562"):
+        pF, pC = plotfiles("F_" + mesh), plotfiles("C_" + mesh)
+        if len(pF) != len(pC) or not pF:
+            fails.append("(c) %s: %d vs %d plotfiles" % (mesh, len(pF), len(pC)))
+            continue
+        mx = 0.0
+        for a, b in zip(pF, pC):
+            mx = max(mx, float(np.nanmax(np.abs(load(a, "Temp")[1] - load(b, "Temp")[1]))))
+        ok = mx <= SAME_TOL
+        if not ok:
+            fails.append("(c) %s: max |T_F - T_C| = %.3e K > %.0e" % (mesh, mx, SAME_TOL))
+        print("  %s mm: %d plotfiles, max |T_F - T_C| = %.3e K  %s" % (mesh, len(pF), mx, "ok" if ok else "FAIL"))
+
+    print("\n(d) leg F's ledger; (e) leg F bills the list")
+    for mesh in ("3125", "1562"):
+        th = thermo("F_" + mesh)
+        le = float(np.max(np.abs(th["ledger_err_solid"])))
+        ok = le <= LEDGER_TOL
+        if not ok:
+            fails.append("(d) F_%s: max |ledger_err_solid| %.3e > %.0e" % (mesh, le, LEDGER_TOL))
+        P = float(th["fl_P_top"][-1]) if "fl_P_top" in th else float("nan")
+        okP = P > 0.0
+        if not okP:
+            fails.append("(e) F_%s: fl_P_top %.4g, not > 0 (the list did not bill the prescribed faces)" % (mesh, P))
+        print("  F_%s: max |ledger_err_solid| %.3e  %s;  fl_P_top (last row) %.4f W  %s"
+              % (mesh, le, "ok" if ok else "FAIL", P, "ok" if okP else "FAIL"))
+        thc = thermo("C_" + mesh)
+        print("  C_%s: fl_P_top column %s" % (mesh, "present" if "fl_P_top" in thc else "absent (no list)"))
+
+    print()
+    if fails:
+        print("FAILURES:")
+        print("\n".join("  " + f for f in fails))
+        print("\nFAIL")
+        sys.exit(1)
+    print("PASS")
+
+
+main()

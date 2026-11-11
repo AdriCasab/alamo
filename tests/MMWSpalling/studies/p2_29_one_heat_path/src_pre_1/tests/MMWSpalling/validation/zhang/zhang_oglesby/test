@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+"""Zhang/Oglesby MMW heating of Barre granite (P2-20 rewrite, 2026-11-06; P2-21 rows the same day): a RECORDED PREDICTION.
+
+The model's surface-centre temperature is scored RAW and as a BRIGHTNESS temperature (1 - R) T, against Oglesby's
+test #28c as the radiometer saw it (the digitised experiment x 0.7, i.e. uncorrected) and as printed (the
+digitised values, which the DOE report divided by 0.7, the MELT emissivity). Nothing is multiplied by a fitted
+emissivity any more. ⚠ #28c is the THIRD exposure of an already-melted disc (DOE DE-EE0005504 p. 53): its glassed
+surface heats > 10x faster than virgin rock, so this cold volumetric model is EXPECTED to fall short in the first
+minute, and that gap measures the glass, not the virgin loss tangent. It is never a tuning target.
+
+  b1 [gate] thermo.dat step rows (the t = 0 row is written before the first step, every beam column 0):
+     beam_P_inc > 0, beam_invariant_viol = 0, and
+       FLAT deck (no beam_col_err_max column): max |beam_closure_err| <= 1e-3 (P2-20);
+       TABLE deck (P2-21: beam.tan_delta_T varies): beam_col_err_max <= 1e-12 (the per-column optical-depth pairs
+       telescope), beam_alpha_max >= 13.9 on every row and > 14.0 from the first row with bc_T_peak > 486 K (the
+       table's 0.98 dip ends at 485.8 K)
+  b1r [report, table deck] beam_closure_err per step: the lateral power a column sum cannot follow under a spreading
+     Gaussian once alpha varies sideways (studies/p2_21_loss_table/step0)
+  b2 [gate] at the first step row: P_dep / P_inc = 1 - exp(-alpha L) +- 0.002 and P_trans / P_inc = exp(-alpha L)
+     -+ 0.002, alpha from the run's metadata (the cold value), L the block height
+  b3 [gate, only with --explicit DIR] TABLE runs: the onset time (the first step row with a finite bc_z_melt) of the
+     explicit twin within 10 % of this run's; FLAT runs: the twin's raw surface-centre T at its last plotfile at or
+     before 50 s within 2 % of this run's
+  c1 [report] raw and brightness T at 25 / 50 / 100 / 150 s vs #28c uncorrected (x 0.7) and as printed
+  c4 [report] the axial profile under the beam at the last plotfile: peak T and its depth
+  c5-c7, c10 [report, table deck; the per-step central-column columns, no plotfile read] at ONSET (the first step
+     row with a finite bc_z_melt): c5 the shallowest melting depth bc_z_melt; c6 the onset time after beam-on;
+     c7 the TOTAL transmitted fraction P_trans/P_inc and the CENTRAL e^-bc_tau, each / its first-step value, with
+     beam_tau_max and beam_alpha_max; c10 bc_ell_p, bc_ell_pk, bc_z_peak beside the 2.4 mm buckling depth
+  c8 [report, with --scan LABEL=DIR ...] the scan read together: c5 depth and c7 total-transmission ratio per leg
+
+Usage: test [RUN_DIR] [--explicit DIR] [--scan LABEL=DIR ...]   (RUN_DIR = the deck's plot_file directory; exit 1
+on a failed gate)
+"""
+import glob
+import math
+import os
+import sys
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+
+# Digitised from Zhang (2023) Fig. 6 / 7 (zhang_oglesby_mmw_validation_summary.txt): t [s], the experiment AS PRINTED
+# (already divided by 0.7), Zhang's simulation [K]. Kept whole; this deck runs the first 150 s.
+REFERENCE = [
+    (   0,  300,  300), (  50, 1410,  989), ( 100, 1630, 1400), ( 150, 1716, 1678),
+    ( 200, 2100, 2138), ( 250, 2320, 2215), ( 300, 2272, 2253), ( 350, 2291, 2282),
+    ( 400, 2392, 2387), ( 450, 2406, 2507), ( 500, 2435, 2540), ( 550, 2617, 2703),
+    ( 600, 2713, 2741), ( 650, 2646, 2761), ( 700, 2655, 2770), ( 750, 2559, 2636),
+    ( 800, 2339, 2416), ( 850, 2358, 2387), ( 900, 2521, 2646), ( 950, 2713, 2741),
+    (1000, 2693, 2780), (1050, 2808, 2641), (1100, 2559, 2440), (1150, 2502, 2397),
+    (1200, 2478, 2579), (1250, 2866, 2850), (1300, 1400, 1621), (1350, 1123, 1381),
+    (1400, 1027, 1238), (1450,  950, 1161), (1500,  893, 1084), (1550,  854, 1017),
+    (1600,  807,  989), (1650,  778,  969), (1700,  768,  950), (1750,  740,  926),
+]
+E_MELT = 0.7          # the DOE's correction factor (the melt emissivity)
+HERE = os.path.dirname(os.path.abspath(__file__))
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def meta(run):
+    d = {}
+    for ln in open(os.path.join(run, "metadata")):
+        if " = " in ln:
+            k, v = ln.rstrip("\n").split(" = ", 1)
+            d[k.strip()] = v.strip()
+    return d
+
+
+def thermo(run):
+    L = open(os.path.join(run, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    return h, [[float(x) for x in r.split("\t")] for r in L[1:] if r.strip()]
+
+
+def axial(run, m):
+    """[(t, T_top_centre, z_centres(top first), T column)] for every cell plotfile: the column of cells nearest the
+    beam axis (x0, y0), read with yt; the top cell is the highest cell centre."""
+    x0, y0 = float(m["beam.x0"]), float(m["beam.y0"])
+    out = []
+    for pf in sorted(glob.glob(os.path.join(run, "*cell"))):
+        ds = yt.load(pf)
+        ad = ds.all_data()
+        x, y, z = ad["x"].to_value(), ad["y"].to_value(), ad["z"].to_value()
+        T = ad["Temp"].to_value()
+        rr = (x - x0) ** 2 + (y - y0) ** 2
+        col = np.where(rr <= rr.min() * (1 + 1e-9) + 1e-30)[0]
+        xs, ys = x[col[0]], y[col[0]]
+        col = col[(x[col] == xs) & (y[col] == ys)]
+        o = np.argsort(-z[col])
+        out.append((float(ds.current_time), z[col][o], T[col][o]))
+    return out
+
+
+def at(series, t):
+    ts = np.array([s[0] for s in series])
+    vs = np.array([s[1] for s in series])
+    return float(np.interp(t, ts, vs)) if ts.min() - 1e-9 <= t <= ts.max() + 1e-9 else float("nan")
+
+
+def table_rows(run):
+    """(header, step rows, column getter) of a run's thermo.dat; the t = 0 row is written before the first step
+    (every beam column 0), so the rows scored are the steps"""
+    h, rows = thermo(run)
+    rows = [r for r in rows if r[h.index("time")] > 0.0]
+    return h, rows, (lambda k: [r[h.index(k)] for r in rows])
+
+
+def onset(run):
+    """P2-21: the onset step row (the first with a finite bc_z_melt) of a TABLE run, or None (also on a flat run)"""
+    h, rows, c = table_rows(run)
+    if "bc_z_melt" not in h:
+        return None
+    for r in rows:
+        if math.isfinite(r[h.index("bc_z_melt")]):
+            return dict(zip(h, r))
+    return None
+
+
+def onset_record(run):
+    """c5-c7 and c10 at onset, from the per-step columns: a dict, or None when the run never melts"""
+    h, rows, c = table_rows(run)
+    o = onset(run)
+    if o is None:
+        return None
+    first = dict(zip(h, rows[0]))
+    dt = rows[1][h.index("time")] - rows[0][h.index("time")] if len(rows) > 1 else rows[0][h.index("time")]
+    t_on = next(r[h.index("time")] for r in rows if r[h.index("beam_P_inc")] > 0) - dt   # the step's START
+    return dict(t=o["time"] - t_on, z_melt=o["bc_z_melt"], T_peak=o["bc_T_peak"], z_peak=o["bc_z_peak"],
+                tr_tot=(o["beam_P_trans"] / o["beam_P_inc"]) / (first["beam_P_trans"] / first["beam_P_inc"]),
+                tr_tot_abs=o["beam_P_trans"] / o["beam_P_inc"],
+                tr_c=math.exp(-o["bc_tau"]) / math.exp(-first["bc_tau"]), tau_max=o["beam_tau_max"],
+                alpha_max=o["beam_alpha_max"], ell_p=o["bc_ell_p"], ell_pk=o["bc_ell_pk"],
+                closure=o["beam_closure_err"])
+
+
+def main(argv):
+    pos = []
+    skip = False
+    for a in argv:
+        if skip:
+            skip = False
+            continue
+        if a == "--explicit":
+            skip = True
+            continue
+        if not a.startswith("--") and "=" not in a:
+            pos.append(a)
+    run = pos[0] if pos else os.path.join(HERE, "output")
+    exp_dir = argv[argv.index("--explicit") + 1] if "--explicit" in argv else None
+    scan = [a.split("=", 1) for a in argv[argv.index("--scan") + 1:]] if "--scan" in argv else []
+    m = meta(run)
+    lam, er, td = float(m["beam.lambda"]), float(m["beam.eps_r"]), float(m["beam.tan_delta"])
+    alpha = 2.0 * math.pi * math.sqrt(er) * (td / lam)
+    n = math.sqrt(er)
+    R = ((n - 1) / (n + 1)) ** 2
+    print("Zhang/Oglesby (P2-20, P2-21) on %s" % run)
+    print("  from the run's metadata: lambda %s m, eps_r %s, tan_delta %s => alpha %.4f 1/m (POWER, cold), R %.4f; "
+          "omega0 %s m; loss table: %s" % (m["beam.lambda"], m["beam.eps_r"], m["beam.tan_delta"], alpha, R,
+                                           m["beam.omega0"], m.get("beam.tan_delta_T", "(none: flat)")))
+    print("  ⚠ #28c = the THIRD exposure of an already-melted Barre disc (DOE p. 53): a glassed surface heats > 10x "
+          "faster than virgin rock, so a short fall here measures the glass, not the virgin loss tangent.")
+    print("=" * 100)
+    h, rows, c = table_rows(run)
+    table = "beam_col_err_max" in h
+    pinc, pdep, ptr, cl, nv = c("beam_P_inc"), c("beam_P_dep"), c("beam_P_trans"), c("beam_closure_err"), \
+        c("beam_invariant_viol")
+    if table:
+        ce, am, tpk = c("beam_col_err_max"), c("beam_alpha_max"), c("bc_T_peak")
+        i486 = next((i for i, x in enumerate(tpk) if x > 486.0), None)
+        am_ok = min(am) >= 13.9 and (i486 is None or min(am[i486:]) > 14.0)
+        need(min(pinc) > 0 and max(nv) == 0 and max(ce) <= 1e-12 and am_ok,
+             "b1 per-column optical depth on the %s path: %d step rows, min P_inc %.4g W, invariant violations %g, "
+             "max beam_col_err_max %.2e (bar 1e-12); beam_alpha_max min %.4f (>= 13.9), from the first row with "
+             "bc_T_peak > 486 K (%s) min %s (> 14.0)" % (m.get("solver", "?"), len(rows), min(pinc), max(nv), max(ce),
+                                                          min(am), "t %g s" % rows[i486][h.index("time")]
+                                                          if i486 is not None else "never",
+                                                          "%.4f" % min(am[i486:]) if i486 is not None else "-"))
+        o = onset(run)
+        k_on = rows.index([r for r in rows if r[h.index("time")] == o["time"]][0]) if o else len(rows) - 1
+        cold = [x for x, t in zip(cl, tpk) if t < 310.0]
+        print("  b1r (report) beam_closure_err: first step %+.2e; %s; at %s %+.2e; min %+.2e, max %+.2e over the run "
+              "(the lateral residual of a column sum under a spreading Gaussian)" % (
+                  cl[0], "cold rows (bc_T_peak < 310 K) within %.2e" % max(abs(x) for x in cold) if cold else
+                  "no cold row", "onset" if o else "the last row", cl[k_on], min(cl), max(cl)))
+    else:
+        need(min(pinc) > 0 and max(nv) == 0 and max(abs(x) for x in cl) <= 1e-3,
+             "b1 closure on the %s path: %d rows, min P_inc %.4g W, invariant violations %g, max |closure| %.2e "
+             "(bar 1e-3)" % (m.get("solver", "?"), len(rows), min(pinc), max(nv), max(abs(x) for x in cl)))
+    L = float(m["geometry.prob_hi"].split()[2]) - float(m["geometry.prob_lo"].split()[2])
+    want = 1 - math.exp(-alpha * L)
+    fd, ft = pdep[0] / pinc[0], ptr[0] / pinc[0]
+    need(abs(fd - want) <= 0.002 and abs(ft - (1 - want)) <= 0.002,
+         "b2 first step row: P_dep/P_inc %.4f, P_trans/P_inc %.4f (1 - exp(-alpha L) = %.4f at alpha %.3f, L %.3f m; "
+         "bar +- 0.002)" % (fd, ft, want, alpha, L))
+    if exp_dir and table and "beam_col_err_max" in thermo(exp_dir)[0]:
+        oi, oe = onset_record(run), onset_record(exp_dir)
+        if oi is None or oe is None:
+            need(False, "b3 onset times: this run %s, explicit twin %s (both must melt)" % (
+                "%.2f s" % oi["t"] if oi else "never", "%.2f s" % oe["t"] if oe else "never"))
+        else:
+            need(abs(oe["t"] / oi["t"] - 1) <= 0.10, "b3 explicit vs implicit onset time (first step row with a "
+                 "finite bc_z_melt): %.2f vs %.2f s (rel %+.1f %%, bar 10 %%)" % (oe["t"], oi["t"],
+                                                                               100 * (oe["t"] / oi["t"] - 1)))
+    ax = axial(run, m)
+    top = [(t, Tc[0]) for t, z, Tc in ax]
+    if exp_dir and not table:
+        axe = axial(exp_dir, meta(exp_dir))
+        # the explicit leg plots every 333 steps of 0.03 s: its last plotfile at or before 50 s (49.95 s) is the
+        # comparison time, and this run is interpolated to it
+        te_t, te = max((t, Tc[0]) for t, z, Tc in axe if t <= 50.0 + 1e-6)
+        ti = at(top, te_t)
+        need(abs(te / ti - 1) <= 0.02, "b3 explicit vs implicit raw surface-centre T at %.2f s: %.1f vs %.1f K "
+             "(rel %+.2f %%, bar 2 %%)" % (te_t, te, ti, 100 * (te / ti - 1)))
+    if table:
+        r = onset_record(run)
+        print("\nc5-c7, c10 (report; the per-step central-column columns) at ONSET:")
+        if r is None:
+            print("   no step row with a finite bc_z_melt: the axial peak never reaches T_m on this run "
+                  "(last row: bc_T_peak %.1f K at %.2f mm)" % (c("bc_T_peak")[-1], 1e3 * c("bc_z_peak")[-1]))
+        else:
+            print("   c6 onset %.1f s after beam-on;  c5 shallowest melting depth %.2f mm (DOE: 2-4 mm);  peak %.1f K at "
+                  "%.2f mm" % (r["t"], 1e3 * r["z_melt"], r["T_peak"], 1e3 * r["z_peak"]))
+            print("   c7 transmitted fraction / its first-step value: TOTAL %.3f (P_trans/P_inc %.4f), CENTRAL e^-tau "
+                  "%.3f;  beam_tau_max %.3f, beam_alpha_max %.1f 1/m (Fig. 34: >= 0.75)" % (
+                      r["tr_tot"], r["tr_tot_abs"], r["tr_c"], r["tau_max"], r["alpha_max"]))
+            print("   c10 bc_ell_p %s, bc_ell_pk %s, bc_z_peak %.2f mm vs the 2.4 mm buckling depth L/(C_L mu c_f)" % (
+                "%.2f mm" % (1e3 * r["ell_p"]) if math.isfinite(r["ell_p"]) else "undefined",
+                "%.2f mm" % (1e3 * r["ell_pk"]) if math.isfinite(r["ell_pk"]) else "undefined", 1e3 * r["z_peak"]))
+    if scan:
+        print("\nc8 (report): the scan read together (depth c5, TOTAL transmission ratio c7) vs DOE 2-4 mm and "
+              "Fig. 34's >= 0.75")
+        print("   %-8s %9s %10s %12s %9s" % ("leg", "onset [s]", "z_melt", "trans ratio", "both?"))
+        for lab, d in scan:
+            r = onset_record(d)
+            if r is None:
+                print("   %-8s %9s" % (lab, "no melt"))
+                continue
+            both = 2e-3 <= r["z_melt"] <= 4e-3 and r["tr_tot"] >= 0.75
+            print("   %-8s %9.1f %7.2f mm %12.3f %9s" % (lab, r["t"], 1e3 * r["z_melt"], r["tr_tot"],
+                                                         "YES" if both else "no"))
+    print("\nc1 (report): surface-centre T, raw and brightness (1 - R) T, vs #28c")
+    print("   %5s  %8s  %10s  %12s  %10s  %8s" % ("t [s]", "raw [K]", "bright [K]", "#28c x0.7", "#28c /0.7",
+                                                 "Zhang"))
+    ref = {t: (e, zz) for t, e, zz in REFERENCE}
+    for t in (25, 50, 100, 150):
+        Tr = at(top, t)
+        e, zz = ref.get(t, (None, None))
+        print("   %5d  %8.1f  %10.1f  %12s  %10s  %8s" % (t, Tr, (1 - R) * Tr,
+              "%.0f" % (E_MELT * e) if e else "-", "%d" % e if e else "-", "%d" % zz if zz else "-"))
+    t_end, z, Tc = ax[-1]
+    ip = int(np.argmax(Tc))
+    zt = z[0] + 0.5 * (z[0] - z[1])
+    print("\nc4 (report): at t %.1f s the axial peak is %.1f K at %.2f mm below the top face (top cell %.1f K)" % (
+        t_end, Tc[ip], 1e3 * (zt - z[ip]), Tc[0]))
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

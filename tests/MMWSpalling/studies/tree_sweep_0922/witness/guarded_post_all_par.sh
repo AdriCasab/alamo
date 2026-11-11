@@ -1,4 +1,5 @@
 #!/bin/bash
+# P2-28 RECORD: the tree gate retired with the column removal path (one removal path, the face list); p2_27.md5 is the column era's last list, its outputs moved with their tests to retired_units/. Kept, not run: face_gate.py is the gate.
 # D2q-2c pre-flight 3: run post_all_par.sh with the binary pinned.
 #
 # WHY THIS EXISTS. At the D2q-2b checkpoint the implementer rebuilt while an

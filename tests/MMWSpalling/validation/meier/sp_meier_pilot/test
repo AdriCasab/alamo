@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
+# P2-28 RECORD: this file ran the COLUMN removal path, retired in P2-28 (one removal path, the face list); it now aborts at parse. Kept as the record of its last runs, not run.
 # Meier 2017 Grimsel pilot demo (660 kg block) -- flame-jet spallation
 # drilling validation. Reference packet:
 # meier-2017-pilot-660kg-validation-reference.md
+#
+# ⚠ P2-26 (2026-11-08): input_energy / input_drilling (and input_drilling_25mm,
+# input_2d_dev, input_2d_dev_melt) lost spall.flake_coherence_length = 0.004
+# (and the 2d_dev decks spall.surface_normal = 1; 2d_dev_melt spall.melt_aware
+# = 1): the keys are deleted (census C2, C3). The cap was BINDING here, so the
+# record changes BY DESIGN. Scored on both binaries
+# (studies/p2_26_closed_switches/MEIER_AB.txt): case A FAILS on both
+# (A1 dV/dt 0.00 both; A2 TSE at 10 s 10.22 -> 3.93 J/mm^3 vs 15.4; the
+# hole saturates by 3 s at 37.2 -> 96.8 cm^3); case B PASSES on both
+# (ROP 1.44 m/h both; V(56 s) 100.6 -> 122.9 cm^3; TSE 6.35 -> 5.20 J/mm^3;
+# Tmax 2268 -> 2078 K).
 #
 # Two cases, run + scored (see the input headers for the full modelling
 # rationale and the documented kernel limitation):

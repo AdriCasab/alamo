@@ -1,0 +1,120 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# P2-28 -- THE PRESCRIBED-TEMPERATURE BOUNDARY AGAINST ITS EXACT SOLUTION.
+#
+# A 1-D problem in 3-D: every top cell held by the prescribed patch (radius 1 m over a 25 mm square), Neumann sides
+# and bottom, no losses, no beam -- the semi-infinite solid under a LINEARLY RISING surface temperature
+#   T_s(t) = A + B t  (Hu's granite-2 ramp: A = 638.22 K, B = 3.74 K/s), T(z, 0) = T0 = 280.15 K,
+#   T(z, t) = T0 + (A - T0) erfc(eta) + B t [(1 + 2 eta^2) erfc(eta) - (2/sqrt(pi)) eta exp(-eta^2)],
+#   eta = z / (2 sqrt(alpha t)), alpha = kappa/(rho Cp) (Carslaw & Jaeger 2.5; the planner's 1-D check).
+# The test compares the TOP CELL'S average with the exact average over the same cell at 30 / 60 / 120 s, on this
+# mesh (8 x 8 x 32 cells of 3.125 mm, dt 0.5 s) and the refined one (16 x 16 x 64 of 1.5625 mm, dt 0.125 s, argv).
+# The held temperature sits on the top FACE, dz/2 from the cell centre: the term is 2 kc (T_s - T_c)/dz^2. The
+# pre-P2-28 term kc (T_s - T_c)/dz^2 (the face a full cell away) reads -11.7 to -19.6 % in the rise at 3.125 mm and
+# converges at FIRST order (coarse/fine ratio 2.0); the corrected term -0.7 to -1.5 % at second order (ratio ~4).
+#
+# THIS deck is leg F: the FACE LIST in its evaluate-only mode (the list's T_presc top faces carry the term). Leg C
+# (the test's argv) switches the list off: the column kernel's term, the same expression at its own call site.
+# One constant-law phase with Hu's granite: kappa 2.5 W/mK, rho 2640 kg/m^3, Cp 827.2 J/kgK (alpha 1.1448e-6 m^2/s).
+# The criterion runs (evaluate-only needs it) on Kant's constants; nothing is removed, so it never touches T.
+# Explicit limit on the prescribed top: dx^2/(7 alpha) = 1.219 s (coarse), 0.305 s (fine): ratios 0.41.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/face_dirichlet/output/F_3125/run
+
+timestep  = 0.5
+stop_time = 120.0
+amr.plot_int        = 60          # 30, 60, 90, 120 s
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 8 8 32
+amr.blocking_factor = 2
+amr.max_grid_size   = 16
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.025 0.025 0.1
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+# --- one constant-law phase: Hu's granite (Hu's file :17-25) ------------------------------------------------------
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+microstructure.phase0.fraction = 1.0
+microstructure.phase0.kappa    = 2.5
+microstructure.phase0.rho      = 2640.0
+microstructure.phase0.Cp       = 827.2
+microstructure.phase0.beta     = 8.0e-6
+microstructure.phase0.E        = 35.0e9
+microstructure.phase0.mu       = 13.8888888889e9
+microstructure.phase0.T_ref    = 280.15
+conductivity.h_gb0 = 0.0
+
+# --- the boundary: every top cell prescribed (radius 1 m), nothing else ------------------------------------------
+surface_patch.enabled = 1
+surface_patch.mode    = prescribed_T
+surface_patch.x0      = 0.0125
+surface_patch.y0      = 0.0125
+surface_patch.radius  = 1.0
+surface_patch.T_expr  = 638.22+3.74*t
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 280.15
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.0125
+beam.y0     = 0.0125
+beam.z0     = 0.1
+
+# --- the criterion (evaluate-only: it runs, nothing is removed) ---------------------------------------------------
+spallation.model          = sp_weibull
+spall.stress_source       = local_thermoelastic
+spallation.sp.a0          = 20.0e-6
+spallation.sp.n_segments  = 128
+spallation.sp.kic.law     = linear
+spallation.sp.kic.K_Ic0   = 1.5
+spallation.sp.kic.T_ref   = 280.15
+spallation.sp.kic.T_melt  = 1.0e9
+energy_ledger.enabled     = 1
+
+# --- leg F: the face list ------------------------------------------------------------------------------------------
+surface_patch.face_list  = 1
+surface_patch.robin_form = surface
+
+hc.heat.alpha = 1.1448e-6        # HC's required parse; unused on the microstructure path
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 280.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 35.0e9
+el.model1.nu = 0.26
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

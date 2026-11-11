@@ -11,10 +11,21 @@ MODES
               reconstruction / scan / remap; (ii) SHEET; (iii) COLD; (iv) DECOMP;
               (v) fr_multi / fr_id_remap on every leg run here; (vi) the area rule
               at every tilt (initial interior faces).
-  --floor     a3 (+ c4's first half): T00 key 0 vs key 1 at dx 2 / 1 / 0.5 mm.
+  --floor     a3 (+ c4's first half): T00 (key 1) at dx 2 / 1 / 0.5 mm (P2-28: key 0 retired).
   --tilt      a5 (+ c4's second half): the tilted planes at 1 mm (and 2 mm).
   --curved    a6: SPH and BORE at 1 and 2 mm (make_input.py's curved fixtures).
   --check     re-reduce existing outputs (no runs), every block.
+  --p2_31     P2-31 goal 8 (two-sided: RED on the pre-P2-31 binary, MMW_BIN=<it>): TREF -- the fixture from 600 K with
+              phase0.T_ref 293.15 vs 600.0 (2 mm, 8 s): the reconstruction reads the start cell's initial temperature,
+              so the two event logs carry the same rows and T_surf to 1e-9 (T_ref is ALSO the enthalpy table's zero, so
+              the temperatures may differ by round-off: byte identity is reported, not required); SV -- an
+              evaluate-only deck (spall.enabled = 0) with a seeded 4 x 4 x 2 void voids its 32 cells.
+  --ovl       P2-31 goal 12 (OVL; two-sided: RED on the pre-stage-3 binary), two windows at 1 mm, each a plotfile pair
+              around one step: TL45 to 2.400 s (the first overlap step: 384 overlapped cells) and TD to 3.312 s (the
+              first step on any fixture where the old rule's thickness differs from the new; OVL_SEARCH.txt). Every
+              column's phi drop equals the h_line of its +z event(s) to 1e-12 m; every voided cell's spall_thickness
+              equals the LARGEST h_line of the lines through it (lines rebuilt from the event rows: start cell, dir,
+              run, n_voided, mu and the code's own window rule) to 1e-12 m.
 P2-9 rev 2 renumbered the packet's rows: the old a2 block is a3 (i)-(v), the area
 rule (vi) now reads the smoothed-fraction normal, and (vii)-(x) are new; the floor
 is a4 and the tilts a5 (bar 4 %).
@@ -40,12 +51,14 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
 sys.path.insert(0, os.path.join(ROOT, "tests", "MMWSpalling", "studies", "p2_2_props"))
 import fabcmp                                                     # noqa: E402
 sys.path.insert(0, HERE)
 import make_input as MI                                           # noqa: E402
 
-BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+BIN = os.environ.get("MMW_BIN", os.path.join(ROOT, "bin", "mmwspalling-3d-g++"))   # P2-31: the two-sided runs
 INPUT = os.path.join(HERE, "input")
 OUT = os.path.join(HERE, "output")
 MPI = ["mpirun", "--oversubscribe", "--bind-to", "none"]
@@ -268,9 +281,9 @@ def leg_tilt(nm, dxk):
 
 
 def run_floor():
+    # P2-28: key 1 only -- the key-0 (column path) legs are retired with it
     for dxk in ("2", "1", "05"):
-        for key in (0, 1):
-            run_leg(leg_T00(dxk, key), dict(mesh_keys(dxk), **{"surface_patch.face_list": str(key)}))
+        run_leg(leg_T00(dxk, 1), dict(mesh_keys(dxk), **{"surface_patch.face_list": "1"}))
 
 
 def run_tilt():
@@ -310,28 +323,24 @@ def run_offline():
 
 
 def check_source():
-    print("\n(a3 i) one reconstruction, one scan, one remap -- the column path and the line path")
-    rd = lambda *q: open(os.path.join(ROOT, "src", "Integrator", *q)).read()
+    # P2-28: the column half (Removal.H and the column reconstruction, both deleted) is retired; what stays is the
+    # ONE-declaration rule and the line path's calls
+    print("\n(a3 i) one reconstruction, one scan, one remap -- declared once, called by the line path")
     code = lambda t: "\n".join(l.split("//")[0] for l in t.split("\n"))
-    # P2-18 A3: the shared helpers moved from the top of Removal.H to Shared.H; the
-    # declaration count runs over all four fragments
-    rem, frm, mmw, shr = code(rd("MMWSpalling", "Removal.H")), code(rd("MMWSpalling", "FaceRemoval.H")), \
-        code(rd("MMWSpalling.H")), code(rd("MMWSpalling", "Shared.H"))
-    col = rem[rem.index("void UpdateRemovalAfterCohesive("):]           # the column path
-    col_recon = mmw[mmw.index("void BuildSurfaceTColumns("):mmw.index("bool SharedSurfaceRecon(")]
+    frm, mmw, shr = code(_src.read(_src.SLICE_PREFIX + "FaceRemoval.H")), code(_src.header()), \
+        code(_src.read(_src.SLICE_PREFIX + "Shared.H"))
     line = frm[frm.index("void RecedeAlongLines("):]                     # the line path
     line_all = frm                                                       # incl. RecedeAlongLine
-    for fn, decl, col_txt in (("ReconFromX(", "static SurfaceRecon ReconFromX(", col_recon),
-                              ("ScanTAtZv(", "static Set::Scalar ScanTAtZv(", col),
-                              ("ScanKIcPa(", "Set::Scalar ScanKIcPa(", col),
-                              ("ScanSigmaT(", "Set::Scalar ScanSigmaT(", col),
-                              ("DepthScanH(", "static Set::Scalar DepthScanH(", col),
-                              ("RemapProfile(", "static Set::Scalar RemapProfile(", col)):
-        n_decl = len(re.findall(re.escape(decl), rem + frm + mmw + shr))
-        in_col, in_line = fn in col_txt, fn in line_all
-        need(n_decl == 1 and in_col and in_line,
-             "`%s` declared once (%d), called by the column path (%s) AND the line path (%s)"
-             % (fn[:-1], n_decl, in_col, in_line))
+    for fn, decl in (("ReconFromX(", "static SurfaceRecon ReconFromX("),
+                     ("ScanTAtZv(", "static Set::Scalar ScanTAtZv("),
+                     ("ScanKIcPa(", "Set::Scalar ScanKIcPa("),
+                     ("ScanSigmaT(", "Set::Scalar ScanSigmaT("),
+                     ("DepthScanH(", "static Set::Scalar DepthScanH("),
+                     ("RemapProfile(", "static Set::Scalar RemapProfile(")):
+        n_decl = len(re.findall(re.escape(decl), frm + mmw + shr))
+        in_line = fn in line_all
+        need(n_decl == 1 and in_line, "`%s` declared once (%d), called by the line path (%s)"
+             % (fn[:-1], n_decl, in_line))
     for fn in ("RecedeAlongLine(", "DepthScanH(", "ReduceRealSum(G.data()"):
         need(line.count(fn) == 1, "the line path makes ONE `%s` call (%d)" % (fn, line.count(fn)))
 
@@ -890,41 +899,28 @@ def check_curved(R=None):
 def floor_rates():
     R = {}
     for dxk in ("2", "1", "05"):
-        for key in (0, 1):
-            lg = leg_T00(dxk, key)
-            if plotfiles(lg):
-                R[(dxk, key)] = rate(lg, dxk, np.array([0.0, 0.0, 1.0]), key0=(key == 0))
+        lg = leg_T00(dxk, 1)
+        if plotfiles(lg):
+            R[(dxk, 1)] = rate(lg, dxk, np.array([0.0, 0.0, 1.0]))
     return R
 
 
 def check_floor():
-    print("\n(a4) T00: key 0 vs key 1 at each dx")
+    # P2-28: the key-0 reference (the column path) is retired, so a4's key 0 vs key 1 bars are retired with it;
+    # the key-1 floor is reported and c4's mesh spread below stays
+    print("\n(a4) T00 on the face list at each dx (REPORT; the key-0 comparison is retired, P2-28)")
     R = floor_rates()
     for dxk in ("2", "1", "05"):
-        if (dxk, 0) not in R or (dxk, 1) not in R:
-            need(False, "T00 %s mm: legs missing" % dxk)
+        if (dxk, 1) not in R:
+            need(False, "T00 %s mm: key-1 leg missing" % dxk)
             continue
-        (r0, n0), (r1, n1) = R[(dxk, 0)], R[(dxk, 1)]
-        rel = r1 / r0 - 1
-        need(abs(rel) <= 1e-3, "T00 %s mm rate key0 %.6e key1 %.6e m/s (%d/%d lines), rel %+.5f (bar 1e-3)"
-             % (dxk, r0, r1, n0, n1, rel))
-        e0, e1 = events(leg_T00(dxk, 0)), events(leg_T00(dxk, 1))
-        m0 = float(np.median([float(e["T_surf"]) for e in e0]))
-        m1 = float(np.median([float(e["T_surf"]) for e in e1]))
-        need(abs(m1 - m0) <= 0.5, "T00 %s mm median firing T_s %.4f vs %.4f K (diff %+.4f, bar 0.5)"
-             % (dxk, m0, m1, m1 - m0))
-        h0, D0 = thermo(leg_T00(dxk, 0))
+        r1, n1 = R[(dxk, 1)]
+        e1 = events(leg_T00(dxk, 1))
+        m1 = float(np.median([float(e["T_surf"]) for e in e1])) if e1 else float("nan")
         h1, D1 = thermo(leg_T00(dxk, 1))
-        E0 = D0[-1, h0.index("ledger_E_flake")]
         E1 = D1[-1, h1.index("ledger_E_flake")]
-        need(abs(E1 / E0 - 1) <= 1e-3, "T00 %s mm total ledger_E_flake %.6e vs %.6e J (rel %+.5f, bar 1e-3)"
-             % (dxk, E0, E1, E1 / E0 - 1))
-        tf = min(float(e["time"]) for e in e1) if e1 else float("inf")
-        it = h1.index("time")
-        fb = D1[:, h1.index("fr_fb_floor")]
-        after = fb[D1[:, it] > tf]
-        print("        key-1 fallback T_s after the first firing (t %.3f s): %d of %d thermo rows "
-              "non-zero, max %g cells" % (tf, int((after > 0).sum()), len(after), after.max() if len(after) else 0))
+        print("  REPORT  T00 %s mm: rate %.6e m/s (%d lines), median firing T_s %.4f K, ledger_E_flake %.6e J"
+              % (dxk, r1, n1, m1, E1))
     print("\n(c4, first half) T00 key-1 rate spread over 2 / 1 / 0.5 mm")
     rs = [R[(d, 1)][0] for d in ("2", "1", "05") if (d, 1) in R]
     if len(rs) == 3:
@@ -969,8 +965,152 @@ def check_tilt(R=None):
               % (nm, r, ref2, nl, rel, "within" if abs(rel) <= 0.04 else "OUTSIDE"))
 
 
+# ------------------------------------------------------------------ P2-31 ----
+TREF_LEGS = (("TREF_293", "293.15"), ("TREF_600", "600.0"))
+INT_COLS = ("time", "col_i", "col_j", "regime", "k_top", "n_voided", "dir", "k", "run", "ts_fb", "sheet", "through")
+SV_BOX = (4, 4, 26, 7, 7, 27)                     # 2 mm: 4 x 4 x 2 cells under the top (k_top 31)
+
+
+def run_p2_31():
+    for nm, tr in TREF_LEGS:
+        run_leg(nm, dict(mesh_keys("2"), **{"surface_patch.face_list": "1", "hc.ic.constant.value": "600.0",
+                                           "microstructure.phase0.T_ref": tr, "stop_time": "8.0"}))
+    run_leg("SV_EVAL", dict(mesh_keys("2"), **{"surface_patch.face_list": "1", "spall.enabled": "0",
+                                              "stop_time": "0.016"}), seeds=[SV_BOX])
+
+
+def check_tref():
+    """(ok, line): the two T_ref legs carry the same rows and T_surf within 1e-9"""
+    (na, _), (nb, _) = TREF_LEGS
+    a, b = events(na), events(nb)
+    pa, pb = (os.path.join(OUT, n, "run_removal_events.csv") for n in (na, nb))
+    same_bytes = os.path.exists(pa) and os.path.exists(pb) and open(pa, "rb").read() == open(pb, "rb").read()
+    struct = len(a) == len(b) and all(all(x[c] == y[c] for c in INT_COLS) for x, y in zip(a, b))
+    worst, worst_c, w_ts = 0.0, "-", 0.0
+    if struct:
+        for x, y in zip(a, b):
+            for c in x:
+                if c in INT_COLS:
+                    continue
+                fx, fy = float(x[c]), float(y[c])
+                if fx == fy or (fx != fx and fy != fy):
+                    continue
+                r = abs(fx - fy) / max(abs(fx), abs(fy), 1e-300)
+                if c == "T_surf":
+                    w_ts = max(w_ts, r)
+                if r > worst:
+                    worst, worst_c = r, c
+    dT = max((abs(float(x["T_surf"]) - float(y["T_surf"])) for x, y in zip(a, b)), default=0.0)
+    ok = len(a) > 0 and struct and w_ts <= 1e-9
+    return ok, ("TREF (T_ref 293.15 vs 600.0, IC 600 K): rows %d / %d; same rows %s; T_surf worst rel %.2e (max |dT_surf| "
+                "%.3g K over the paired rows); every real column worst rel %.2e (%s); bytes identical %s"
+                % (len(a), len(b), struct, w_ts, dT, worst, worst_c, same_bytes))
+
+
+def check_seedvoid():
+    """(ok, line): the evaluate-only deck seeds its void"""
+    log = re.sub(r"\x1b\[[0-9;]*m", "", open(os.path.join(OUT, "SV_EVAL", "run.log"), errors="replace").read())
+    m = re.search(r"spall\.seed_void: level 0, voided (\d+) cells", log)
+    n_log = int(m.group(1)) if m else 0
+    pf = plotfiles("SV_EVAL")
+    n_pf = int(round(read_pf(pf[0], ["removed"], (12, 12, 32))["removed"].sum())) if pf else -1
+    want = (SV_BOX[3] - SV_BOX[0] + 1) * (SV_BOX[4] - SV_BOX[1] + 1) * (SV_BOX[5] - SV_BOX[2] + 1)
+    return n_log == want and n_pf == want, ("SV (evaluate-only, spall.enabled = 0, seeded %d cells): run.log reports %d "
+                                            "voided; plotfile 00000 removed sum %d" % (want, n_log, n_pf))
+
+
+# P2-31 goal 12: two windows (studies/p2_31_fixes_mesh/OVL_SEARCH.txt). TL45's first overlap step (the packet's leg: 408
+# lines, 384 overlapped cells) never differs between the old rule and the new -- its overlaps are interior cells, where
+# h_line feeds nothing -- so the TWO-SIDED half rides on TD, the (1,1,1) plane, whose step from 3.304 s voids a cell two
+# lines cross with different h (the first step on any fixture where the rules differ; the offline replay of the old
+# rule, ovl_search.py). No fixture overwrites a +z line's own cell, so the phi half never differs between the rules.
+OVL_WIN = {"OVL_TL45": ("TL45", "2.400", "299"), "OVL_TD": ("TD", "3.312", "413")}
+
+
+def run_ovl():
+    for lg, (tl, stop, pint) in OVL_WIN.items():
+        th, ph = TILTS[tl]
+        run_leg(lg, dict(mesh_keys("1"), **{"surface_patch.face_list": "1", "stop_time": stop,
+                                           "amr.plot_int": pint}), seeds=tilt_seeds(th, ph, "1"))
+
+
+def ovl_leg(lg, pint):
+    """one window: the phi drop per column vs its +z lines' h_line; each voided cell's spall_thickness vs the largest h
+    of the lines through it (lines rebuilt from the event rows with RecedeAlongLine's own window rule)"""
+    nx, nz = MESH["1"][0], MESH["1"][1]
+    dx = 0.024 / 24                                   # AMReX's CellSize, the same IEEE arithmetic
+    by = {os.path.basename(pf): pf for pf in plotfiles(lg)}
+    a, b = by.get("%05dcell" % int(pint)), by.get("%05dcell" % (int(pint) + 1))
+    if not (a and b):
+        return None
+    A = read_pf(a, ["phi"], (nx, nx, nz))
+    B = read_pf(b, ["phi", "spall_thickness"], (nx, nx, nz))
+    t_a = pf_time(a)
+    ev = [e for e in events(lg) if abs(float(e["time"]) - t_a) < 0.004 and e["regime"] == "1"]
+    hz, hmax, nlin, last = {}, {}, {}, {}
+    span = max(nx, nx, nz)
+    for e in ev:
+        i, j, k, d = int(e["col_i"]), int(e["col_j"]), int(e["k"]), int(e["dir"])
+        run_, nv, mu, h = int(e["run"]), int(e["n_voided"]), float(e["mu"]), float(e["h_line"])
+        ax, sg = d // 2, (-1 if d % 2 == 1 else 1)
+        Dmax = max(1, min(span, int(math.floor(H_SPALL_MAX / (mu * dx)))))
+        Wr = min(min(Dmax, run_ - 1), run_ - 1 - nv)
+        for jd in range(0, min(run_ - 1, Wr + nv) + 1):
+            p = [i, j, k]
+            p[ax] += sg * jd
+            key = tuple(p)
+            nlin[key] = nlin.get(key, 0) + 1
+            hmax[key] = max(hmax.get(key, 0.0), h)
+            last[key] = h
+        if d == 5:
+            hz[(i, j)] = hz.get((i, j), 0.0) + h
+            last[(i, j, k)] = h
+    worst_phi = max(abs((A["phi"][i, j, 0] - B["phi"][i, j, 0]) - hz.get((i, j), 0.0))
+                    for i in range(nx) for j in range(nx))
+    thk = B["spall_thickness"]
+    vox = [tuple(int(x) for x in v) for v in np.argwhere(thk > 0.0)]
+    worst_thk = max((abs(thk[v] - hmax.get(v, -1.0)) for v in vox), default=0.0)
+    return {"t": t_a, "rows": len(ev), "zcols": len(hz), "ovl": sum(1 for c in nlin.values() if c > 1),
+            "phi": worst_phi, "vox": len(vox), "multi": sum(1 for v in vox if nlin.get(v, 0) > 1),
+            "differ": sum(1 for v in vox if last.get(v) != hmax.get(v)), "thk": worst_thk}
+
+
+def check_ovl():
+    """(ok, line): the overlap rule on both windows"""
+    R = {lg: ovl_leg(lg, pint) for lg, (_, _, pint) in OVL_WIN.items()}
+    if any(r is None for r in R.values()):
+        return False, "OVL: a window's plotfiles are missing (%s)" % [lg for lg, r in R.items() if r is None]
+    tl, td = R["OVL_TL45"], R["OVL_TD"]
+    ok = (tl["rows"] > 0 and tl["ovl"] >= 100 and td["differ"] >= 1
+          and all(r["phi"] <= 1e-12 and r["thk"] <= 1e-12 for r in R.values()))
+    return ok, "; ".join("%s step from %.3f s: %d lines (%d +z columns), %d cells on >= 2 lines; phi drop vs the +z "
+                         "h_line worst |d| %.2e m over 576 columns; %d voided cells, %d on >= 2 lines, %d where the last "
+                         "writer's h != the largest; spall_thickness vs the largest h worst |d| %.2e m"
+                         % (lg[4:], r["t"], r["rows"], r["zcols"], r["ovl"], r["phi"], r["vox"], r["multi"],
+                            r["differ"], r["thk"]) for lg, r in R.items())
+
+
 def main():
     args = set(sys.argv[1:])
+    if "--ovl" in args:                    # P2-31 goal 12
+        os.makedirs(OUT, exist_ok=True)
+        run_ovl()
+        ok, line = check_ovl()
+        need(ok, line)
+        print("\n" + ("PASS" if not FAIL else "FAIL (%d)" % len(FAIL)))
+        sys.exit(0 if not FAIL else 1)
+    if "--p2_31" in args:                  # P2-31 goal 8: runs its three legs, then reports
+        os.makedirs(OUT, exist_ok=True)
+        run_p2_31()
+        for fn in (check_tref, check_seedvoid):
+            ok, line = fn()
+            need(ok, line)
+        print("\n" + ("PASS" if not FAIL else "FAIL (%d)" % len(FAIL)))
+        sys.exit(0 if not FAIL else 1)
+    if "--source" in args:                 # P2-30: the source clauses alone (seconds; no leg is run or read)
+        check_source()
+        print("\n" + ("PASS" if not FAIL else "FAIL (%d)" % len(FAIL)))
+        sys.exit(0 if not FAIL else 1)
     os.makedirs(OUT, exist_ok=True)
     check_only = "--check" in args
     if "--offline" in args or check_only:

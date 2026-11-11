@@ -42,12 +42,14 @@ import os, re, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
-MMW = os.path.join(ROOT, "src", "Integrator", "MMWSpalling.H")
-REM = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "Removal.H")
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
+REM = _src.SLICE_PREFIX + "Removal.H"   # P2-28: deleted (read as empty when absent)
 # P2-18 A3: the helpers both paths call (ElasticConstants, the scan pieces, the remap, the
 # step prologue) moved from the top of Removal.H into Shared.H. Every clause below that
 # reads `rem` reads the UNION of the two files, so the counts it asserts are unchanged.
-SHR = os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "Shared.H")
+SHR = _src.SLICE_PREFIX + "Shared.H"
+FRM = _src.SLICE_PREFIX + "FaceRemoval.H"
 
 def strip_comments(text):
     """blank out // and /* */ comments, PRESERVING newlines so every line number
@@ -90,8 +92,8 @@ def main():
             fails.append(msg)
 
     # ⚠ every assertion below reads CODE, never comments -- see strip_comments.
-    mmw, rem = strip_comments(open(MMW).read()), \
-        strip_comments(open(REM).read()) + "\n" + strip_comments(open(SHR).read())
+    mmw, rem = strip_comments(_src.header()), \
+        (strip_comments(_src.read(REM)) if _src.exists(REM) else "") + "\n" + strip_comments(_src.read(SHR))
     # ---- P2-2a (b4) + (b8): ONE RESTRAINT REFERENCE, NO SECOND FORM ------
     # ⚠⚠ WHY EACH CLAUSE. Three things can go wrong here and none shows in any
     # output:
@@ -191,11 +193,12 @@ def main():
     print("\nP2-2a (b4) BOTH FIRING SITES READ IT")
     need(len(re.findall(r"\(T_z - T0_z\)", rem)) == 1,
          "the depth scan's bracket is (T_z - T0_z)")
-    need(len(re.findall(r"auto T0_at_didx = ", rem)) == 1
-         and len(re.findall(r"T0_at_didx\(", rem)) >= 1,
-         "the depth scan reads it through ONE depth-indexed reader, the same "
-         "addressing `T_at_didx` uses for the temperature -- so the bracket is "
-         "a difference of two reads at one cell, with no box-seam artefact")
+    # P2-28: the column path's T0_at_didx is deleted; the ONE firing site is the face list's scan, whose
+    # reference reader is T0_at_d over the line's gathered T_init (the same slot as the temperature it brackets)
+    frm28 = strip_comments(_src.read(FRM))
+    need(len(re.findall(r"auto T0_at_d = ", frm28)) == 1 and "Gl[d * NF + 1]" in frm28,
+         "the face list's scan reads it through ONE depth-indexed reader (T0_at_d over the gathered "
+         "T_init, Gl[d * NF + 1]) -- a difference of two reads at one cell, no box-seam artefact")
     # ⚠ P2-16 RESTATED. P2-2e routed both Sp_field branches through a reference
     # resolver (`Tref_at`, the live T a constraint depth d behind the face); P2-16
     # deletes d, so both branches read the stored field inline again, exactly as
@@ -206,17 +209,9 @@ def main():
     # name is left. ⚠ The cell is part of the claim: T0_at(i, j, k) in the cell-
     # sample branch would read the reference one sample away from the temperature
     # it brackets (the mutation control in studies/p2_16_span_rule/lfl_control).
-    need(len(re.findall(r"\(T_recon_at\(dv\) - T0_at\(i, j, k\)\)", mmw)) == 1
-         and len(re.findall(r"\(T_a\(i_d, j_d, k_d\) - T0_at\(i_d, j_d, k_d\)\)", mmw)) == 1,
-         "BOTH Sp_field branches subtract the STORED field T0_at(...) at their own "
-         "sampled cell, exactly once each -- the conjunction the code at the sigma "
-         "site pre-registers")
-    need(len(re.findall(r"LawSigma\(te_g, T_recon_at\(dv\),\s*T0_at\(i, j, k\)\)", mmw)) == 1
-         and len(re.findall(r"LawSigma\(te_g, T_a\(i_d, j_d, k_d\),\s*T0_at\(i_d, j_d, k_d\)\)",
-                            mmw)) == 1,
-         "their law-path twins pass the same T0_at(...) as the reference")
-    need(len(re.findall(r"const Set::Scalar T0_z = T0_at_didx\(", rem)) == 1,
-         "the depth scan's T0_z is the stored field through T0_at_didx, unconditionally")
+    # P2-28: site A's two Sp_field branches are deleted -- the face list's scan is the ONE firing site
+    need(len(re.findall(r"const Set::Scalar T0_z =\s*T0_at_d\(", frm28)) == 1,
+         "the scan's T0_z is the stored field through T0_at_d, unconditionally")
     n_res = len(re.findall(r"\b(?:Tref_at|Tref_h|Tref_d|cref_on_sp|cref_on|CrefTAtDepth)\b", mmw + rem))
     need(n_res == 0,
          "no reference resolver or constraint-reference name is left in the code "
@@ -224,9 +219,8 @@ def main():
     # the declared constant survives ONLY as the fallback and in the two uses
     # that are not stress brackets (the lateral exponential asymptote, the
     # lateral enthalpy datum).
-    need(len(re.findall(r"return std::isfinite\(v\) \? v : phase_T_ref_loc;", rem)) == 1
-         and len(re.findall(r"return std::isfinite\(v\) \? v : te_Tref;", mmw)) == 1,
-         "each site falls back to the DECLARED constant when the field is "
+    need(len(re.findall(r"return std::isfinite\(v\) \? v : T0r;", frm28)) == 1,
+         "the site falls back to the DECLARED constant when the field is "
          "absent or non-finite -- today's behaviour, so a cell with no stored "
          "value cannot silently acquire a zero bracket")
     for pat, nm in ((r"\(T_recon_at\(dv\) - te_Tref\)", "Sp_field surface lerp"),
@@ -305,32 +299,27 @@ def main():
     # packet means one FORM, not one code site. The four are the lateral
     # criterion, the depth scan, and the Sp_field site's two branches.
     # P2-10: the lateral criterion's expression is deleted with its site.
-    STRESS = [("depth scan", rem, r"f_skel \* \(sp_relief \* phase_E_loc"),
-              ("Sp_field recon", mmw, r"te_relief \* te_E \* te_beta\s*\n?\s*\* \(T_recon_at"),
-              ("Sp_field cell", mmw, r"te_relief \* te_E \* te_beta\s*\n?\s*\* \(T_a\(")]
+    # P2-26: ScanSigmaT lost its f_skel factor (C3), so the scalar return is `sp_relief * phase_E_loc ...`
+    # P2-28: site A's two Sp_field expressions are deleted -- ONE survives, the scan's (ScanSigmaT)
+    STRESS = [("depth scan", rem, r"return sp_relief \* phase_E_loc")]
     found = 0
     for nm, txt, pat in STRESS:
         n = len(re.findall(pat, txt))
         found += n
         print("       %-20s %d" % (nm, n))
-    need(found == 3,
-         "all THREE surviving stress expressions carry a relief factor (%d) -- a "
-         "subset relieves the wall and not the floor" % found)
+    need(found == 1,
+         "the ONE surviving stress expression carries a relief factor (%d)" % found)
     prod = (len(re.findall(r"phase_E_loc\s*\n?\s*\*?\s*phase_beta_loc", rem))
             + len(re.findall(r"te_E \* te_beta", mmw)))
-    need(prod == 3,
-         "there are exactly THREE E*beta products, so none is left un-relieved "
+    need(prod == 1,
+         "there is exactly ONE E*beta product, so none is left un-relieved "
          "(%d)" % prod)
     need(len(re.findall(r"Set::Scalar sp_relief = 1\.0;", mmw)) == 1,
          "`sp_relief` is declared exactly once, with the identity default")
     need(not re.search(r"\brelief_loc\b", rem),
          "Removal.H has no `relief_loc` alias left (P2-10: it lived in the deleted "
          "lateral criterion; the depth scan reads sp_relief itself)")
-    for alias, txt, nm in (("te_relief", mmw, "MMWSpalling.H"),):
-        rhs = re.findall(r"%s\s*=\s*([A-Za-z_]\w*)" % alias, txt)
-        need(rhs and all(r == "sp_relief" for r in rhs),
-             "%s's `%s` comes only from sp_relief (%s)"
-             % (nm, alias, ", ".join(sorted(set(rhs))) or "never assigned"))
+    # (P2-28: MMWSpalling.H's `te_relief` alias died with site A)
 
     # ==== P2-2d (b4), deliverable 10: THREE CLAUSES =======================
     print("\nP2-2d (b4) THE AT-TEMPERATURE TOUGHNESS ROUTE AND THE FLAW READS")
@@ -356,20 +345,19 @@ def main():
     # "two identical blocks" is gone, not the site.
     # ⚠ P2-10 RESTATED: 3 -> 2. The lateral face was the third site; it is
     # deleted with the lateral criterion.
-    need(n_sites == 2,
-         "both toughness sites EVALUATE the route (%d) -- MMWSpalling.H's "
-         "Sp_field site and the depth scan's ONE ScanKIcPa" % n_sites)
+    # ⚠ P2-28 RESTATED: 2 -> 1. Site A's toughness was the other site; it is deleted.
+    need(n_sites == 1,
+         "the ONE toughness site EVALUATES the route (%d) -- the scan's ScanKIcPa" % n_sites)
     need(len(re.findall(r"Set::Scalar\s+ScanKIcPa\s*\(", rem)) == 1
-         and rem.count("ScanKIcPa(") >= 3,
-         "the depth scan's toughness is ScanKIcPa, declared once, called by both "
-         "of the column path's lambdas (P2-9)")
+         and frm28.count("ScanKIcPa(") >= 2,
+         "the scan's toughness is ScanKIcPa, declared once, called by the face list's lambdas")
     # ⚠ K_Ic0 comes from the LAW, never a new scalar. A `grimsel_table` leg
     # must NOT be made to supply `spallation.sp.kic.K_Ic0`: that would let a
     # deck set a level disagreeing with the table it is reading.
     need("|| value.kic_law == KIcLaw::GrimselTable" in mmw,
          "`grimsel_table` takes `kic.scale`, NOT a hand-typed `kic.K_Ic0` -- "
          "its K_Ic0 is the law's")
-    for frag in ("kic_g->K_Ic_of(", "kic_g_loc->K_Ic_of("):
+    for frag in ("kic_g_loc->K_Ic_of(",):   # P2-28: site A's kic_g is deleted
         need(frag in both2,
              "the route reads `Grimsel::K_Ic_of` through a hoisted law pointer "
              "(`%s`)" % frag)
@@ -383,110 +371,11 @@ def main():
          "microstructure cross-key aborts, BEFORE the spall parse in file "
          "order -- beside the key it would fire on every legal leg")
 
-    # ---- clause 2: ONE size factor, at ALL THREE flaw reads ---------------
-    # ⚠⚠ THIS CLAUSE USED TO ASSERT "exactly 2" AND SO MECHANISED THE BUG.
-    # rev 5 enumerated two flaw reads -- the criterion's and the lateral
-    # face's -- and locked that count in. There are THREE. A removal needs
-    # BOTH `detach_true` (criterion gate, flaw scaled at MMWSpalling.H:7403)
-    # AND `h_col > 0` from the thickness scan (Removal.H:2001), and the scan's
-    # own read took the flaw RAW. So the effective flaw was the SMALLER of the
-    # two and the size term could only ever DELAY a firing, never advance one.
-    # A count is exactly the wrong instrument for "did we find them all" --
-    # the same lesson as (a1)'s rho/Cp predicate, now twice over.
-    need(len(re.findall(r"Set::Scalar WeibullSizeFactor\(", mmw)) == 1,
-         "there is exactly ONE size factor")
-    READS = (
-        ("criterion / Sp_field", mmw, "a_loc *= WeibullSizeFactor(lq * lq * lq)"),
-        ("thickness scan",       rem, "a_f *= WeibullSizeFactor(lq_sc * lq_sc * lq_sc)"),
-    )
-    for nm, txt, frag in READS:
-        need(frag in txt,
-             "flaw read `%s` applies the ONE size factor" % nm)
-    callers = len(re.findall(r"WeibullSizeFactor\(", both2)) - 1
-    need(callers == len(READS),
-         "all %d flaw reads scale and nothing else calls the factor (%d)"
-         % (len(READS), callers))
-    # ⚠⚠ AND THE EQUALITY IS BY CONFIGURATION, NOT UNCONDITIONAL. Under
-    # `size_volume = cell` the factor is identically 1, so the three reads
-    # agree; under `flux` each scales by its OWN column's length and they do
-    # NOT agree in general. Asserting unconditional equality would be false.
-    m_sf2 = re.search(r"Set::Scalar WeibullSizeFactor\([\s\S]*?\n    \}", mmw)
-    need(m_sf2 is not None and "if (!sp_size_flux) return 1.0;" in m_sf2.group(0),
-         "the factor returns exactly 1 under `cell`, which is what makes the "
-         "three reads equal there and keeps every frozen anchor identical")
-    # the scan's scaling must be gated on the same key, or `cell` stops being
-    # byte-identical and (b1) breaks for a reporting reason.
-    need("if (sp_size_flux)" in rem,
-         "the scan's new scaling is gated on `sp_size_flux`, so `cell` stays "
-         "byte-identical")
-    need("weibull_V_ref" in mmw and "weibull.V_ref" in mmw,
-         "`V_ref` is a SEPARATE key from `weibull.V0`")
-    m_sf = re.search(r"Set::Scalar WeibullSizeFactor\([\s\S]*?\n    \}", mmw)
-    need(m_sf is not None, "the size factor body is locatable")
-    if m_sf:
-        body = m_sf.group(0)
-        need("weibull_V_ref" in body and "weibull_V0" not in body,
-             "under `flux` the size factor reads V_ref and NOT V0 -- V0 stays "
-             "the mesh anchor, and sharing it would import the 8x cross-deck "
-             "difference in V0 into a quantity unrelated to the mesh")
-    need("weibull.size_volume = flux requires weibull.V_ref" in mmw,
-         "`flux` with V_ref unset ABORTS rather than silently borrowing V0")
-
-    # ---- clause 2b: the diagnostic column is RANK-REDUCED -----------------
-    # ⚠⚠ `rc_ellq` was filled owner-only and written from the IO rank's LOCAL
-    # copy while being absent from the reduce block, so the CSV's `ell_q` was
-    # positive iff rank 0 owned the column -- `col_j <= 11 && k_top <= 11`, on
-    # 100 % of rows. That read as an inert lever and cost a review round.
-    need("ReduceRealSum(rc_ellq.data(), ncols)" in rem,
-         "`rc_ellq` is rank-reduced with the other recon columns -- a "
-         "per-column diagnostic written from one rank's local copy is a "
-         "decomposition signature, not a measurement")
-
-    # ---- clause 3: the two reads' CONDUCTIVITY, settled -------------------
-    # ⚠⚠ PRE-REGISTERED AS RED BEFORE DELIVERABLE 6, AND IT WAS. The vertical
-    # read built `ell_q` from `phases[0].kappa`, the deck's per-phase SCALAR,
-    # while the lateral read uses the per-cell field. They agree under
-    # `law = constant` and DIVERGE under the Grimsel law, where lambda halves
-    # by 600 degC. That red was a PRE-EXISTING inconsistency, not a regression:
-    # it survived P2-2b only because `(a1)`'s predicate scans `rho` and `Cp`
-    # and not `kappa`. The reading against HEAD source is recorded in
-    # `p2_2d_kic/LOCK_prechange_ellq.txt`, not scored.
-    m_ef = re.search(r"if \(q_net > 0\.0 && Ts_pre > T0\)[\s\S]{0,200}", mmw)
-    need(m_ef is not None, "the vertical ell_q construction is locatable")
-    if m_ef:
-        seg = m_ef.group(0)
-        need("phases[0].kappa * (Ts_pre - T0)" not in seg,
-             "the VERTICAL ell_q no longer multiplies by the per-phase SCALAR "
-             "kappa -- that was the pre-existing split with the lateral read")
-        need("k_use" in seg,
-             "it takes a resolved conductivity (`k_use`) instead")
-    need("Ktop[c] : phases[0].kappa" in mmw,
-         "`k_use` comes from the per-cell `kappa_mf` gather, falling back to "
-         "the scalar only if the field is unavailable")
-    # ⚠ NOT `(*kappa_mf[lev]).const_array(mfi)` ALONE -- that reads `ok` on
-    # PRE-CHANGE source, because kappa_mf is const_array'd at several existing
-    # sites, so it discriminates nothing. What is new is the per-column gather
-    # itself, in the SAME loop and with the SAME k_top indexing as Ttop.
-    need("Ktop[c] = KA(i, j, kt);" in mmw,
-         "the per-column conductivity is gathered in the SAME loop as Ttop, "
-         "with the same k_top indexing -- a separate loop could pick a "
-         "different top cell")
-    need("ReduceRealSum(Ktop.data(), ncols)" in mmw,
-         "and it is rank-reduced like Ttop -- a per-box gather read without "
-         "reduction is the P1g-2c defect")
-    # ⚠ the evaluation temperature must be STATED in the source, because it
-    # moves V_ref ~25 % and an unstated choice gets written up as a measurement.
-    # ⚠⚠ THE ONE CLAUSE THAT MUST READ COMMENTS, AND WHY. Every other
-    # assertion here reads comment-STRIPPED source on purpose, so a comment
-    # claiming a property can never satisfy a lock. But this clause's subject
-    # IS the documentation: the packet requires the evaluation temperature to
-    # be STATED, because it moves V_ref ~25 % and an unstated choice gets
-    # written up as a measurement. So it reads the RAW file, deliberately, and
-    # it is the only clause that does.
-    mmw_raw = open(MMW).read()
-    need("TOP CELL CENTRE" in mmw_raw,
-         "the evaluation temperature is STATED in the source as the top cell "
-         "centre -- ell_q^3 spans 8.36e-9 to ~1.67e-8 across that choice")
+    # ---- clauses 2, 2b, 3 (the size factor at the flaw reads, the rank-reduced
+    # ell_q column, the conductivity of the vertical ell_q) are RETIRED by P2-26
+    # with `weibull.size_volume = flux` and `spall.flake_length = flux` (census
+    # B3): the factor, the column and the flux length are deleted from src/, and
+    # the P2-26 clause at the end of this file asserts that none of them survives.
 
     # ---- P2-2b (b4), deliverable 7: ONE STRAIN AND ONE STIFFNESS SOURCE ---
     # The hazard Grimsel.H's header records: three independent attempts at the
@@ -549,13 +438,9 @@ def main():
     # together -- P0 closed the gap between them deliberately. A packet that
     # converted one would leave the diagnostic measuring a different criterion
     # than the one that fires, which is unfalsifiable from any output.
-    for where, txt, tag in (("Removal.H depth scan", rem, "LawSigma(scan_g"),
-                            ("MMWSpalling.H Sp_field", mmw, "LawSigma(te_g")):
-        need(tag in txt, "%s routes its stress through LawSigma" % where)
-    # the Sp_field site has TWO branches (inside / outside the top half-cell)
-    need(mmw.count("LawSigma(te_g") == 2,
-         "BOTH `Sp_field` branches convert -- the reconstructed top half-cell "
-         "AND the sampled cell (%d of 2)" % mmw.count("LawSigma(te_g"))
+    # P2-28: the Sp_field site is deleted -- the scan (ScanSigmaT) is the ONE firing site
+    need("LawSigma(scan_g" in rem and "LawSigma(te_g" not in mmw,
+         "the scan routes its stress through LawSigma, and site A's twin is gone")
 
     # The law's RAW pieces belong to the per-cell cache writer and to nobody
     # else. Anyone else reading E_of/strain_of/alpha_of/mu_of is building a
@@ -611,9 +496,7 @@ def main():
     # would break (b1) on a tree where the new law is switched off.
     need(rem.count("* phase_beta_loc") >= 1 and "phase_E_loc" in rem,
          "the depth scan keeps its scalar expression for `law = constant`")
-    need(mmw.count("te_relief * te_E * te_beta") == 2,
-         "both `Sp_field` branches keep the scalar expression too (%d of 2)"
-         % mmw.count("te_relief * te_E * te_beta"))
+    # (P2-28: site A's two scalar expressions are deleted with it)
 
     # ---- P2-2b (a1)/(b4): THE RULE, AS A PREDICATE ------------------------
     # WHY A PREDICATE AND NOT A COUNT. rev 1 barred this as "five sites and no
@@ -673,9 +556,7 @@ def main():
         n_code = len(re.findall(r"\b%s\b" % name, code))
         need(n_code == 0,
              "the stored product `%s` is retired from code (%d)" % (name, n_code))
-    for name in ("pin_rho", "pin_Cp", "col_rho", "col_Cp"):
-        n = len(re.findall(r"\b%s\b" % name, code))
-        need(n >= 2, "`%s` is carried separately (%d uses)" % (name, n))
+    # (P2-28: pin_rho / pin_Cp / col_rho / col_Cp -- the pin rule's and the column path's -- are deleted)
 
     # site 4 builds the enthalpy table FROM THE LAW, with the latent heat copied
     need(len(re.findall(r"phase_tables\[p\]\.Build\(g\)", mmw)) == 1,
@@ -760,8 +641,9 @@ def main():
         # the control: the SAME prefix with a live key must run, or "aborts"
         # would be true of a binary that refuses every surface_patch key.
         # ⚠ P2-10: side_face_flux is itself retired now, so the live key is face_list.
-        ab, txt = aborts_for(["surface_patch.face_list=0"])
-        print("       %-42s %s" % ("surface_patch.face_list=0 (live)",
+        # P2-28: face_list = 0 now aborts with removal on (one removal path) -- the live key is the list's own
+        ab, txt = aborts_for(["surface_patch.face_list=1"])
+        print("       %-42s %s" % ("surface_patch.face_list=1 (live)",
                                    "runs (good)" if not ab else "** ABORTS **"))
         need(not ab, "a LIVE surface_patch key still runs -- the abort clause "
                      "above is not vacuous")
@@ -797,8 +679,15 @@ def main():
     for name, dpat, want_calls, where in (
             ("BuildFaceList", r"void\s+BuildFaceList\s*\(", 1,
              "once per step, in AdvanceMicrostructure"),
-            ("FaceListHeat", r"void\s+FaceListHeat\s*\(", 1,
-             "once per step, in BuildFlameColumns before the march"),
+            # P2-23 (the flameless list) added a SECOND call, in the `else if (fl_on)` branch of
+            # `if (sp_on) BuildFlameColumns(...)` -- exclusive with the first, so still once per step
+            # (asserted just below). The lock read 1 until P2-26 re-ran it (restated there).
+            # P2-28 (a PRESCRIBED patch on the list) added a THIRD, in BuildFlameColumns' constant-patch branch
+            # (`if (!surface_patch.use_expr)`), which RETURNS right after it -- exclusive with the map branch's call
+            # (asserted just below), so still once per step.
+            ("FaceListHeat", r"void\s+FaceListHeat\s*\(", 3,
+             "once per step: in BuildFlameColumns before the march (the h_expr map), in its constant-patch branch "
+             "(P2-28: a prescribed patch, no march), or (patch off, P2-23) in its place"),
             ("FaceH", r"Set::Scalar\s+FaceH\s*\(", 1,
              "only inside FaceListHeat -- the ONE heat resolver"),
             ("FaceWeight", r"static\s+Set::Scalar\s+FaceWeight\s*\(", 1,
@@ -809,9 +698,18 @@ def main():
         need(nd == 1, "`%s` is declared EXACTLY ONCE (%d)" % (name, nd))
         need(nc == want_calls, "`%s` has exactly %d call site(s) -- %s (%d)"
              % (name, want_calls, where, nc))
-    # P2-10: P2-8's face Newton (F4) had no caller after P2-9 and is deleted.
-    need(ndecl(r"void\s+FaceListFlux\s*\(") == 0,
-         "`FaceListFlux` is DELETED (P2-10; FrFaceFlux heats every listed face)")
+    need(re.search(r"if \(sp_on\) BuildFlameColumns\(lev, time, dt, k_top_col\);\s*else if \(fl_on\)\s*"
+                   r"\{\s*FaceListHeat\(lev, 0\.0, time, k_top_col\);", code_m) is not None,
+         "the second FaceListHeat call (P2-23, h = 0) is the ELSE of BuildFlameColumns' call: one per step")
+    # P2-28: the third call is inside BuildFlameColumns' constant-patch branch, under the list switch, and that branch
+    # RETURNS before the map branch's call -- the two calls inside BuildFlameColumns never run in one step
+    bfc28 = re.search(r"void\s+BuildFlameColumns\s*\(.*?\n    \}\n", code_m, re.S)
+    need(bfc28 is not None and re.search(
+        r"if \(!surface_patch\.use_expr\)\s*\{[^{}]*?if \(surface_patch\.face_list\)\s*\{\s*"
+        r"FaceListHeat\(lev, 0\.0, time, k_top_col\);\s*FrAssignTs\(lev\);\s*FaceListTg\(lev\);\s*\}\s*return;\s*\}",
+        bfc28.group(0), re.S) is not None,
+         "the third FaceListHeat call (P2-28, a prescribed patch) is in BuildFlameColumns' constant-patch branch, "
+         "which RETURNS after it: exclusive with the map branch's call, one per step")
     # the heat resolver is the ONLY place h_expr is evaluated per face
     fh_body = re.search(r"void\s+FaceListHeat\s*\(.*?\n    \}\n", code_m, re.S)
     need(fh_body is not None and "FaceH(" in fh_body.group(0),
@@ -846,7 +744,7 @@ def main():
     # ⚠⚠ Under `surface_patch.face_list` every surface cell is judged and
     # receded along ONE line by ONE path (FaceRemoval.H). Asserted on CODE.
     print("\nP2-9 ONE BREAKING RULE -- one gather, one criterion, one RecedeAlongLine")
-    frm = open(os.path.join(ROOT, "src", "Integrator", "MMWSpalling", "FaceRemoval.H")).read()
+    frm = _src.read(FRM)
     code_f = "\n".join(l.split("//")[0] for l in frm.split("\n"))
     allc = code_m + "\n" + code_r + "\n" + code_f
     rl = code_f[code_f.index("void RecedeAlongLines("):]
@@ -872,16 +770,14 @@ def main():
     # face_heat = path) -- so the count is 5 (unit/face_heat (vi) locks each site's gas temperature)
     need(nff == 5 and len(re.findall(r"void\s+FrFaceFlux\s*\(", allc)) == 1,
          "`FrFaceFlux` declared once, called by kernel, ledger, march (q_col, q_face), diagnostics (%d)" % nff)
-    # the dispatch precedes BOTH old criteria, so R:719's transitional skip is
-    # unreachable under the key
-    ur = code_r[code_r.index("void UpdateRemovalAfterCohesive("):]
-    i_disp = ur.find("if (surface_patch.face_list)")
-    i_ret = ur.find("return;", i_disp)
-    i_scan = ur.find("h_col = DepthScanH(")
-    need(0 <= i_disp < i_ret < i_scan and "RecedeAlongLines(" in ur[i_disp:i_ret]
-         and "lat_on" not in ur,
-         "the face-list DISPATCH (RecedeAlongLines; return) precedes the column depth "
-         "scan, and no lateral criterion is left after it (P2-10)")
+    # P2-28 RESTATED: the column path is deleted -- Advance calls ONE removal step, the face list's, whose
+    # prologue is the shared one and whose body is RecedeAlongLines on the column tops
+    rs = re.search(r"void\s+RemovalStep\s*\(.*?\n    \}\n", code_f, re.S)
+    need(rs is not None and re.search(r"RemovalStepBegins\(lev\).*ResetRemovalStepFields\(lev\).*"
+                                      r"RecedeAlongLines\(lev, time, dt, ColumnTopSolid\(lev\)\)",
+                                      rs.group(0), re.S) is not None
+         and len(re.findall(r"\bRemovalStep\(lev, time, dt\)", code_m)) == 1,
+         "ONE removal step: Advance calls RemovalStep once; it runs the shared prologue, then the lines")
 
     # ---- P2-9 rev 2: one normal, one elastic helper, the edge-cell refill ---
     print("\nP2-9 rev 2 -- one normal, one elastic helper, the ghost refill on both paths")
@@ -897,24 +793,38 @@ def main():
     nc = len(re.findall(r"\bElasticConstants\s*\(\s*\)", allc2)) - nd
     n_nu = len(re.findall(r"E\s*/\s*\(2\.0\s*\*\s*phases\[0\]\.mu\)\s*-\s*1\.0", allc2))
     n_cf = len(re.findall(r"confining_p\s*\*", allc2))
-    need(nd == 1 and nc >= 4 and n_nu == 1 and n_cf == 1,
+    # ⚠ P2-28 RESTATED: >= 4 -> >= 1 -- site A's and the column path's calls are deleted; the face list's scan remains
+    need(nd == 1 and nc >= 1 and n_nu == 1 and n_cf == 1,
          "ONE elastic helper: `ElasticConstants` declared once, called %d times; nu and the "
          "confining offset each written once (%d, %d)" % (nc, n_nu, n_cf))
     need("FrFillTempGhosts" not in allc2, "rev 1's zero-gradient `FrFillTempGhosts` is deleted")
     nd = len(re.findall(r"void\s+RefillTempGhosts\s*\(", allc2))
-    ur2 = code_r[code_r.index("void UpdateRemovalAfterCohesive("):]
-    tail = re.search(r"if\s*\(remap_any\)\s*\{(.*?)\}", ur2, re.S)
     rl2 = code_f[code_f.index("void RecedeAlongLines("):]
     tl2 = re.search(r"if\s*\(any_write\)\s*\{(.*?)\}", rl2, re.S)
-    need(nd == 1 and tail is not None and re.search(r"InvertHtoT\(lev\);.*RefillTempGhosts\(lev,\s*time\)",
-                                                     tail.group(1), re.S) is not None
-         and tl2 is not None and re.search(r"InvertHtoT\(lev\);.*RefillTempGhosts\(lev,\s*time\)",
-                                           tl2.group(1), re.S) is not None,
+    need(nd == 1 and tl2 is not None and re.search(r"InvertHtoT\(lev\);.*RefillTempGhosts\(lev,\s*time\)",
+                                                   tl2.group(1), re.S) is not None,
          "the temperature ghosts are refilled through the solver's BC (`RefillTempGhosts`) after "
-         "InvertHtoT on BOTH removal paths -- the column tail and the line tail")
-    hc = open(os.path.join(ROOT, "src", "Integrator", "HeatConduction.H")).read()
+         "InvertHtoT on the removal path's tail (P2-28: the column tail is deleted)")
+    hc = _src.read("Integrator/HeatConduction.H")
     need(re.search(r"protected:\s*(//[^\n]*\n\s*)*BC::BC<Set::Scalar>\*\s*bc\s*=", hc) is not None,
          "HeatConduction::bc is protected (P2-9 rev 2, that member only)")
+
+    # ---- P2-30 (L7, SR 14): THE SURFACE PATCH'S THREE CONSTANTS, ONE DEFINITION ---------------------------
+    print("\nP2-30 (L7) THE PATCH CONSTANTS -- one definition, read by the kernel and the ledger")
+    code_l7 = "\n".join(l.split("//")[0] for l in _src.text().split("\n"))
+    if "--plant-patch-def" in sys.argv:          # the control: a second definition must turn the clause RED
+        code_l7 += "\n    PatchConst PatchConstants(const Set::Scalar* DX) const { return PatchConst(); }\n"
+    n_pc = len(re.findall(r"PatchConst\s+PatchConstants\s*\(", code_l7))
+    adv_l7 = re.search(r"void\s+AdvanceMicrostructure\s*\(.*?\n    \}\n", code_l7, re.S)
+    led_l7 = re.search(r"void\s+EnergyLedger\s*\(.*?\n    \}\n", code_l7, re.S)
+    reads_l7 = lambda b: (b is not None and "PatchConstants(DX)" in b.group(0) and "= patch_c.inv_dz2" in b.group(0)
+                          and "= patch_c.presc" in b.group(0) and "= patch_c.r2" in b.group(0))
+    n_dz2 = len(re.findall(r"\binv_dz2\s*=\s*1\.0\s*/", code_l7))
+    n_r2 = len(re.findall(r"\bsp_r2\s*=\s*surface_patch\.radius", code_l7))
+    n_prs = len(re.findall(r"\bsp_presc\s*=\s*surface_patch\.mode", code_l7))
+    need(n_pc == 1 and reads_l7(adv_l7) and reads_l7(led_l7) and n_dz2 == 1 and n_r2 == 0 and n_prs == 0,
+         "L7 `PatchConstants` defined once (%d) and read by the kernel and EnergyLedger; inv_dz2 formed once (%d), "
+         "sp_r2 and sp_presc formed nowhere else (%d, %d)" % (n_pc, n_dz2, n_r2, n_prs))
 
     # ---- P2-10: NOTHING DELETED SURVIVES ------------------------------------
     # The retired-key list (MMWSpalling::Parse) is the ONE place the deleted keys
@@ -924,30 +834,63 @@ def main():
     DELETED = re.compile(
         'side_face_(?:flux|h|T|h_r_min|h_law|h_datum|factor_above|area_law|step_height|staircase)\\b|lateral_(?:drive|removal|subcell|thermal)\\b|per_cell_removal|jet_wall_march|jet_wall_mdot|jet_body|step_diag_radius|PerCellRemoval|FaceListFlux|ReconstructSurfaceT|fl_lat_top|fl_lat_nfb|SideFaceH|SideFaceTgas|ColumnWallCorner|PatchAzimuthFraction|UpdateWallLawState|WallJetH|WallJetBranch|WallZFill|WallMu\\b|UpdateColumnPhase|AssertStepSplit|WallStepDiagnostic|StepConductance|StepCellWeight|StaircaseFactor|AreaOfDelta|ColPhi|PairDelta|side_T_eff|groupB_given|surf_side_P_(?:top|buried|rin|rout)|lat_accum_col|lat_shift|ledger_E_flake_wall|sp_lateral_|pcr_on|wall_T_gas|jet_P_wall|wall_T_mouth')
     left = []
-    for dp, _d, fs in os.walk(os.path.join(ROOT, "src")):
-        for fn in fs:
-            if not fn.endswith((".H", ".h", ".cpp", ".cc")):
+    for rel, txt in sorted(_src.tree().items()):
+        in_list = False
+        for ln, line in enumerate(txt.split("\n"), 1):
+            if "P2-10: THE RETIRED KEYS" in line:
+                in_list = True
+            if in_list and "remove it from the input" in line:
+                in_list = False
                 continue
-            p = os.path.join(dp, fn)
-            in_list = False
-            for ln, line in enumerate(open(p, errors="replace"), 1):
-                if "P2-10: THE RETIRED KEYS" in line:
-                    in_list = True
-                if in_list and "remove it from the input" in line:
-                    in_list = False
-                    continue
-                if in_list:
-                    continue
-                if DELETED.search(line):
-                    left.append("%s:%d %s" % (os.path.relpath(p, ROOT), ln, line.strip()[:70]))
+            if in_list:
+                continue
+            if DELETED.search(line):
+                left.append("src/%s:%d %s" % (rel, ln, line.strip()[:70]))
     for o in left[:20]:
         print("       ** %s" % o)
     need(not left, "no deleted key, function or member is named anywhere in src/ outside "
                    "the retired-key list (%d line(s))" % len(left))
-    nlist = sum(open(os.path.join(ROOT, "src", "Integrator", "MMWSpalling.H")).read()
-                .count(k) for k in ("\"spall.lateral_drive\"", "\"surface_patch.side_face_flux\"",
-                                    "\"surface_patch.jet_wall_march\""))
-    need(nlist == 3, "the retired-key list itself exists and names them (%d of 3 probes)" % nlist)
+
+    # ---- P2-26: THE CLOSED SWITCHES ARE GONE ---------------------------------
+    # census B1 (dead members) and B3 (five closed switches). C++ IDENTIFIERS only:
+    # the top-level key strings must survive exactly once, in the retired-at-default
+    # table (unit/retired_keys R7), so a key-string pattern here would contradict it.
+    print("\nP2-26 THE CLOSED SWITCHES (and P2-27's damage lineage, C1a) ARE GONE FROM src/ (identifiers, comments included)")
+    P2_26 = {
+        "B1": r"\bfl_wtop\b|\bsp_surface_T_mode\b|\bSurfaceTMode\b",
+        "B3": (r"\bpad_shield_open\b|\bCheckPadRing\b|\bpad_open\b|\bjet_above_h\b|\bjet_T_above\b|"
+               r"\bjet_rec_fixed\b|\bjet_T_rec_fixed\b|\bsp_flake_len_flux\b|\bsp_flake_frac_weibull\b|"
+               r"\bsp_len_fb_[hq]0\b|\bW_CONE_MEDIAN\b|\bell_flux\b|\bfrac_over\b|\bsurf_ellq_col\b|"
+               r"\brc_ellq\b|\bWeibullSizeFactor\b|\bsp_size_flux\b|\bweibull_V_ref\b"),
+        "C2": (r"\bspall_surface_normal\b|\bsn_recession_superseded\b|\bSP_SN_COS_MIN\b|\bColumnSurfaceCos\b|"
+               r"\bsn_cos_p\b|\bsn_cos_col\b|\bsn_cth\b|\bsn_icth\b|\bicth\b|\bsn_active\b|"
+               r"\bspall_flake_coh_len\b|\bcoh_cells\b"),
+        # `melt_aware` also ends the key string "spall.melt_aware", which survives once in the table
+        "C3": (r"\bMeltSkeleton\b|(?<!\.)\bmelt_aware\b|\bmelt_lambda_crit\b|\bf_skel\b|\bLL_col_prof\b|"
+               r"\bLL_col_p\b|\bLLcol_i\b|\bLL_at_didx\b"),
+        # P2-27 (census C1a): the damage lineage -- the Drucker-Prager law, the cohesive zone, the damage-law
+        # removal; the three key strings survive once each in the retired-at-default table (retired_keys R9)
+        "C1a": (r"\bParseDamageSettings\b|\bUpdateDamageAfterMechanics\b|\bDamageGrowthRHS\b|"
+                r"\bIntegrateDamageRK4\b|\bParseCohesiveSettings\b|\bUpdateCohesiveAfterMechanics\b|"
+                r"\bResetCohesiveDiagnostics\b|\bPrincipalStressRatio\b|\bSpallSampleMode\b|\bDamageLaw\b|"
+                r"\bdamage_enabled\b|\bcohesive_enabled\b|(?<!\.)\bkappa_damage_alpha\b|\bD_max_col\b|"
+                r"\bspall_damage_threshold\b|\bspall_xi_s\b|\bspall_C_h\b|\bspall_ratio_f\b|\bDruckerPrager\b|"
+                r"\bCohesiveZone\b"),
+    }
+    for tag, rx in P2_26.items():
+        pat = re.compile(rx)
+        # non-vacuity: the pattern must catch a planted leftover of its own list
+        probe = rx.split("|")[0].replace("\\b", "")
+        need(pat.search(" %s " % probe) is not None, "%s %s pattern catches a planted `%s`"
+             % ("P2-27" if tag in ("C1a", "C1b") else "P2-26", tag, probe))
+        hits = []
+        for rel, txt in sorted(_src.tree().items()):
+            for ln, line in enumerate(txt.split("\n"), 1):
+                if pat.search(line):
+                    hits.append("src/%s:%d %s" % (rel, ln, line.strip()[:70]))
+        for o in hits[:10]:
+            print("       ** %s" % o)
+        need(not hits, "no %s identifier of the deleted switches survives in src/ (%d line(s))" % (tag, len(hits)))
 
     print()
     if fails:
@@ -957,8 +900,8 @@ def main():
           "      unplotted, read at BOTH firing sites -- the second driving form and\n"
           "      the support rule are DELETED rather than defaulted off, no strain\n"
           "      table has entered the criterion, the face list is one builder, one\n"
-          "      heat rule and one breaking rule, and nothing P2-10 deleted survives\n"
-          "      in src/ outside the retired-key list.")
+          "      heat rule and one breaking rule, and nothing P2-10 or P2-26 deleted\n"
+          "      survives in src/ outside the retired-key lists.")
     return 0
 
 

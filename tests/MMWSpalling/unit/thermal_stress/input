@@ -58,7 +58,6 @@ microstructure.phase0.E                 = 1.0
 microstructure.phase0.mu                = 0.4
 microstructure.phase0.rho               = 1.0
 microstructure.phase0.Cp                = 1.0
-microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 300.0
 
 microstructure.phase1.fraction          = 0.5
@@ -68,7 +67,6 @@ microstructure.phase1.E                 = 2.0
 microstructure.phase1.mu                = 0.8
 microstructure.phase1.rho               = 1.0
 microstructure.phase1.Cp                = 1.0
-microstructure.phase1.A_D               = 0.0
 microstructure.phase1.T_ref             = 350.0
 
 #

@@ -1,0 +1,383 @@
+#!/usr/bin/env python3
+"""P2-27 stage 5 (census G) -- THE PAD CLEARANCE ON THE FACE LIST (FrFootClearance, FaceRemoval.H).
+
+The burner stands on three pads in the foot annulus (unit/face_feet/input = robin_feet/input_feet re-keyed onto the face
+list). With surface_patch.foot_body_clearance = 1, FeetDescent (the kernel of step n) arms, per annulus column standing
+proud of its pad, the pad height's cell index k_c (the pad's nearest-rank 0.9 quantile of the column tops); the removal
+of step n+1 cuts every solid cell above k_c BEFORE the lines are read: regime 4, MECHANICAL, its enthalpy booked once to
+foot_mech_E (H V; H frozen), foot_mech_vol / foot_mech_cols logged, one regime-4 row per cleared column.
+
+Legs (10 s of the deck, the event log on, thermo every step):
+  P   the deck, -np 4                         N   + surface_patch.foot_body_clearance=0        P3  P on 3 ranks
+  PT  P re-run to t1 (the first regime-4 row's time = the cut step's START) with ONE plotfile at t1 (amr.plot_dt = t1):
+      the column tops the kernel armed that cut from
+Checks:
+  (a) P: regime-4 rows > 0 and <= (annulus columns x steps)
+  (b) N: no regime-4 row, and no foot_mech_* column in thermo.dat (the key's registration)
+  (c) every regime-4 row's column lies in the foot annulus, n = h_applied/dz >= 1 and 1 <= n_voided <= n; at t1, the
+      pad rule recomputed from PT's plotfile (`removed` -> column tops): the cut set == the annulus columns above their
+      pad's k, each row's k_top == the rebuilt top and k_top - n == its pad's k; NO RATCHET: the pad k's recomputed
+      after the cut are unchanged; and PT's event rows before t1 == P's (the re-run reproduces the run)
+  (d) foot_mech_vol at the last thermo row (cumulative) == sum(n_voided) dx dy dz over the regime-4 rows, compared as
+      PRINTED (thermo.dat is %g, standing rule 7 iv); foot_mech_cols == the regime-4 rows of the step (per step)
+  (e) |ledger_err_solid| <= 1e-9 on every thermo row of P and N -- the SOLID row, which credits foot_mech_E; the TOTAL
+      row ledger_err is REPORTED, not barred: on the face list it omits the flake credit BY DESIGN (EnergyLedger,
+      MMWSpalling.H), so on a deck that spalls it reads ~-0.4 with the clearance OFF too (the packet's 1e-10 total bar
+      is face_vapor's, a deck that does not spall; restated, P2-27 notes)
+  (e2) THE BOOKING: at t1, foot_mech_E's step increment == sum H V over the cells cut at t1, H read from PT's plotfile
+      (the state the cut step starts from), compared as printed (%g)
+  (f) the last two plotfiles: every cell a clearance row cut BEFORE the previous plotfile is removed, fr_f == 0, and
+      its H is bit-identical in both (frozen)
+  (g) P3 == P: the event log byte for byte, every plotfile's cell data bit for bit, thermo.dat to round-off (relative
+      1e-9 per column, the face gate rankcheck's rule: its columns are rank-reduced sums; wall-clock timers excluded)
+P2-29 stage 3 (c2, DR-5 gap 2: the feet descent's stall clock and feed cap; the retired spec is robin_feet's SM/SP/FC):
+  B   the deck with spall.enabled=0 and the clearance off, 1 s: nothing erodes, the descent is BLOCKED
+  C   P + surface_patch.nozzle_feed_max = 1e-3 m/s, below the free descent (a pad dropping a cell moves z_target
+      0.67 mm in ONE step, 0.33 m/s)
+  (h) B: nozzle_z never moves after the first descent call, and foot_stall_time = (n - 1) dt = t - t0 on every row
+      (t0 the init row), compared as printed (%g)
+  (i) P (the descending leg): on every row where nozzle_z falls, foot_stall_time == 0; between, t - t_last (printed);
+      at least one descending row
+  (j) C: the CAPPED runs (rows whose previous nozzle_z exceeds z_target = foot_z + foot_standoff by more than one
+      cap step): over each run of >= 500 rows nozzle_z falls at the cap -- the run's slope within 0.1 % of
+      nozzle_feed_max (thermo.dat's 6 digits resolve 1e-6 m, so the bar needs >= 0.5 mm of capped descent), every
+      row within 1e-6 m of the line, and no row's step faster than cap x dt (+1e-6 m print tolerance)
+
+Usage: test [--check]     (--check re-reduces output/ without running)
+"""
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK = os.path.join(HERE, "input")
+OUT = os.path.join(HERE, "output")
+TIMERS = {"fr_t_removal", "fr_t_step", "fl_t_path"}
+NX, NY, NZ, DX = 24, 24, 40, 0.002
+DT, STOP = 0.002, 10.0
+R_IN, R_OUT, NPADS, QUANT = 0.028, 0.040, 3, 0.9
+STANDOFF, CAP = 0.050, 1.0e-3   # P2-29 (c2): the deck's foot_standoff; leg C's nozzle_feed_max [m/s]
+
+
+def descent(name):
+    """(times, nozzle_z, foot_stall_time tokens, foot_z) from the init row on (the row where nozzle_z first > 0)"""
+    h, rows = thermo(name)
+    t = tcol(h, rows, "time")
+    z = tcol(h, rows, "nozzle_z")
+    fz = tcol(h, rows, "foot_z")
+    st = [r[h.index("foot_stall_time")].strip() for r in rows]
+    i0 = int(np.argmax(z > 0.0))
+    return t[i0:], z[i0:], st[i0:], fz[i0:]
+
+
+def run(name, extra, np_=4):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    argv = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", str(np_), BIN, DECK,
+            "plot_file=" + os.path.join(d, "F")] + extra
+    open(os.path.join(d, "argv.sh"), "w").write(" ".join(argv) + "\n")
+    with open(os.path.join(d, "run.log"), "w") as log:
+        rc = subprocess.call(argv, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    print("  ran %-3s rc=%d" % (name, rc), flush=True)
+    return rc
+
+
+def thermo(name):
+    rows = [ln.rstrip("\n").split("\t") for ln in open(os.path.join(OUT, name, "F", "thermo.dat")) if ln.strip()]
+    hdr = [h.strip() for h in rows[0]]
+    return hdr, rows[1:]
+
+
+def tcol(hdr, rows, c):
+    i = hdr.index(c)
+    return np.array([float(r[i]) for r in rows])
+
+
+def events(name):
+    p = os.path.join(OUT, name, "F_removal_events.csv")
+    L = open(p).read().split("\n")
+    hdr = L[0].split(",")
+    rows = [r.split(",") for r in L[1:] if r.strip()]
+    return hdr, rows
+
+
+def ecol(hdr, rows, c, cast=float):
+    i = hdr.index(c)
+    return np.array([cast(float(r[i])) for r in rows])
+
+
+# ---- a raw AMReX plotfile reader (cell data, level 0), box by box ----------------------------------------------
+FAB = re.compile(rb"FAB \(\(8, \(([\d ]+)\)\),\(8, \(([\d ]+)\)\)\)\(\(([-\d,]+)\) \(([-\d,]+)\) \(([\d,]+)\)\) (\d+)\n")
+
+
+def plotfiles(name):
+    d = os.path.join(OUT, name, "F")
+    c = sorted((int(m.group(1)), os.path.join(d, f)) for f in os.listdir(d)
+               for m in [re.match(r"(\d+)cell$", f)] if m)
+    return [p for _, p in c]
+
+
+def read_pf(pf):
+    """({name: array[nx, ny, nz]}, time, [(lo, hi, data)] in box order)"""
+    H = open(os.path.join(pf, "Header")).read().split("\n")
+    nc = int(H[1])
+    names = H[2:2 + nc]
+    t = float(H[2 + nc + 1])
+    out = {n: np.full((NX, NY, NZ), np.nan) for n in names}
+    boxes = []
+    entries = [ln.split()[1:3] for ln in open(os.path.join(pf, "Level_0", "Cell_H")) if ln.startswith("FabOnDisk:")]
+    cache = {}
+    for f, off in entries:
+        if f not in cache:
+            cache[f] = open(os.path.join(pf, "Level_0", f), "rb").read()
+        raw = cache[f]
+        m = FAB.match(raw, int(off))
+        lo = [int(x) for x in m.group(3).split(b",")]
+        hi = [int(x) for x in m.group(4).split(b",")]
+        n = int(m.group(6))
+        shp = [h - l + 1 for l, h in zip(lo, hi)]
+        npts = int(np.prod(shp))
+        data = np.frombuffer(raw, dtype="<f8", count=n * npts, offset=m.end()).reshape(n, shp[2], shp[1], shp[0])
+        boxes.append((tuple(lo), tuple(hi), data))
+        for c, nm in enumerate(names):
+            out[nm][lo[0]:hi[0] + 1, lo[1]:hi[1] + 1, lo[2]:hi[2] + 1] = data[c].transpose(2, 1, 0)
+    return out, t, boxes
+
+
+def column_tops(removed):
+    top = np.full((NX, NY), -1, int)
+    for i in range(NX):
+        for j in range(NY):
+            s = np.nonzero(removed[i, j, :] <= 0.5)[0]
+            if s.size:
+                top[i, j] = s.max()
+    return top
+
+
+def annulus():
+    cols, az = [], []
+    for j in range(NY):
+        for i in range(NX):
+            x, y = (i + 0.5) * DX, (j + 0.5) * DX
+            r2 = x * x + y * y
+            if R_IN * R_IN <= r2 <= R_OUT * R_OUT:
+                cols.append((i, j))
+                az.append(math.atan2(y, x))
+    return cols, np.array(az)
+
+
+def pad_ks(top, cols, az):
+    am, aM = az.min(), az.max()
+    pad = [min(NPADS - 1, int(math.floor((a - am) / (aM - am) * NPADS))) for a in az] if aM > am else [0] * len(az)
+    pk = []
+    for p in range(NPADS):
+        v = sorted(top[i, j] for (i, j), q in zip(cols, pad) if q == p)
+        idx = max(0, min(int(math.ceil(QUANT * len(v))) - 1, len(v) - 1))
+        pk.append(v[idx])
+    return pk, pad
+
+
+def main():
+    bad = 0
+
+    def need(ok, msg):
+        nonlocal bad
+        print("  %s  %s" % ("ok  " if ok else "FAIL", msg), flush=True)
+        bad += 0 if ok else 1
+
+    print("P2-27 stage 5 -- the pad clearance on the face list (unit/face_feet)")
+    print("=" * 100)
+    if "--check" not in sys.argv:
+        os.makedirs(OUT, exist_ok=True)
+        for nm, extra, np_ in (("P", [], 4), ("N", ["surface_patch.foot_body_clearance=0"], 4), ("P3", [], 3),
+                               ("B", ["spall.enabled=0", "surface_patch.foot_body_clearance=0", "stop_time=1.0",
+                                      "amr.plot_int=1000000"], 4),
+                               ("C", ["surface_patch.nozzle_feed_max=%r" % CAP], 4)):
+            if run(nm, extra, np_) != 0:
+                print("FAIL: leg %s did not run (output/%s/run.log)" % (nm, nm))
+                return 1
+    hP, eP = events("P")
+    reg = ecol(hP, eP, "regime", int)
+    m4 = reg == 4
+    t_ev = ecol(hP, eP, "time")
+    ci, cj = ecol(hP, eP, "col_i", int), ecol(hP, eP, "col_j", int)
+    ktop, nvd = ecol(hP, eP, "k_top", int), ecol(hP, eP, "n_voided", int)
+    hap = ecol(hP, eP, "h_applied")
+    cols, az = annulus()
+    colset = set(cols)
+    steps = int(round(STOP / DT))
+    n4 = int(m4.sum())
+    need(0 < n4 <= len(cols) * steps, "(a) P: %d regime-4 rows (bound %d annulus columns x %d steps); %d spall rows"
+         % (n4, len(cols), steps, int((reg == 1).sum())))
+    hN, eN = events("N") if os.path.exists(os.path.join(OUT, "N", "F_removal_events.csv")) else ([], [])
+    n4N = sum(1 for r in eN if int(float(r[hN.index("regime")])) == 4) if eN else 0
+    thN, rowsN = thermo("N")
+    need(n4N == 0 and not any(c.startswith("foot_mech") for c in thN),
+         "(b) N: %d regime-4 rows, foot_mech_* columns in thermo: %s" % (n4N, [c for c in thN if c.startswith("foot_mech")]))
+
+    # (c)
+    n_cut = np.rint(hap / DX).astype(int)
+    in_ann = all((ci[e], cj[e]) in colset for e in np.nonzero(m4)[0])
+    sane = all(n_cut[e] >= 1 and 1 <= nvd[e] <= n_cut[e] for e in np.nonzero(m4)[0])
+    need(in_ann and sane, "(c1) every regime-4 column is in the foot annulus (%s) and 1 <= n_voided <= n = h/dz (%s)"
+         % (in_ann, sane))
+    if n4:
+        t1 = float(t_ev[m4].min())
+        if "--check" not in sys.argv:
+            run("PT", ["stop_time=%r" % t1, "amr.plot_int=1000000", "amr.plot_dt=%r" % t1], 4)
+        hT, eT = events("PT")
+        pre_P = [r for r in eP if float(r[0]) < t1]
+        pre_T = [r for r in eT if float(r[0]) < t1]
+        pf = plotfiles("PT")[-1]
+        F, tpf, _ = read_pf(pf)
+        top = column_tops(F["removed"])
+        pk, pad = pad_ks(top, cols, az)
+        padk = {c: pk[p] for c, p in zip(cols, pad)}
+        proud = {c for c in cols if top[c] > padk[c]}
+        cut_rows = [e for e in np.nonzero(m4)[0] if t_ev[e] == t1]
+        cut = {(ci[e], cj[e]) for e in cut_rows}
+        bad_top = sum(1 for e in cut_rows if ktop[e] != top[ci[e], cj[e]])
+        bad_k = sum(1 for e in cut_rows if ktop[e] - n_cut[e] != padk[(ci[e], cj[e])])
+        after = top.copy()
+        for e in cut_rows:
+            after[ci[e], cj[e]] = ktop[e] - n_cut[e]
+        pk2, _ = pad_ks(after, cols, az)
+        need(abs(tpf - t1) < 1e-9 and cut == proud and bad_top == 0 and bad_k == 0 and pk2 == pk and pre_P == pre_T,
+             "(c2) at t1 = %.4f s (PT plotfile t = %.4f): cut set == proud set (%d / %d columns), k_top != rebuilt: %d,"
+             " k_top - n != pad k: %d, pad k %s -> %s after the cut (no ratchet), PT's %d earlier rows == P's"
+             % (t1, tpf, len(cut), len(proud), bad_top, bad_k, pk, pk2, len(pre_T)))
+    # (d) (e)
+    th, rows = thermo("P")
+    vol = float(nvd[m4].sum()) * DX ** 3
+    fmv = rows[-1][th.index("foot_mech_vol")].strip()
+    need(fmv == ("%g" % vol), "(d1) foot_mech_vol at the last row %s == sum n_voided dx^3 = %g (as printed)" % (fmv, vol))
+    tt = tcol(th, rows, "time")
+    fmc = tcol(th, rows, "foot_mech_cols")
+    per = {}
+    for e in np.nonzero(m4)[0]:
+        per[round(t_ev[e] / DT)] = per.get(round(t_ev[e] / DT), 0) + 1
+    bad_c = sum(1 for r in range(len(tt)) if tt[r] > 0 and fmc[r] != per.get(round((tt[r] - DT) / DT), 0))
+    need(bad_c == 0, "(d2) foot_mech_cols == the step's regime-4 rows on every thermo row (%d mismatches; the event"
+         " log stamps a step's START, thermo its END: standing rule 7 iii)" % bad_c)
+    for nm, (hh, rr) in (("P", (th, rows)), ("N", (thN, rowsN))):
+        le = np.abs(tcol(hh, rr, "ledger_err_raw"))   # P2-28: renamed (P2-27 DR-1)
+        ls = np.abs(tcol(hh, rr, "ledger_err_solid"))
+        need(ls.max() <= 1e-9, "(e) %s: |ledger_err_solid| max %.2e (<= 1e-9) over %d rows; the total row |ledger_err|"
+             " max %.3g (reported: the flake credit it omits by design)" % (nm, ls.max(), len(rr), le.max()))
+    if n4:
+        fmE = tcol(th, rows, "foot_mech_E")
+        i1 = int(np.argmin(np.abs(tt - (t1 + DT))))
+        i0 = int(np.argmin(np.abs(tt - t1)))
+        dE = fmE[i1] - fmE[i0]
+        want = 0.0
+        for e in cut_rows:
+            for k in range(ktop[e] - n_cut[e] + 1, ktop[e] + 1):
+                if F["removed"][ci[e], cj[e], k] <= 0.5:
+                    want += F["H"][ci[e], cj[e], k] * DX ** 3
+        need(abs(tt[i1] - (t1 + DT)) < 1e-9 and want > 0.0
+             and (("%g" % dE) == ("%g" % want) or abs(dE - want) <= 1e-5 * abs(want)),
+             "(e2) foot_mech_E rises by %g J over the cut step (rows t = %.4f -> %.4f) == sum H V of the %d cut cells"
+             " from PT's plotfile, %g J" % (dE, tt[i0], tt[i1], len(cut_rows), want))
+    # (f)
+    pfs = plotfiles("P")
+    A, ta, _ = read_pf(pfs[-2])
+    B, tb, _ = read_pf(pfs[-1])
+    cells = set()
+    for e in np.nonzero(m4)[0]:
+        if t_ev[e] < ta:
+            for k in range(ktop[e] - n_cut[e] + 1, ktop[e] + 1):
+                cells.add((ci[e], cj[e], k))
+    okf = cells and all(B["removed"][c] == 1.0 and B["fr_f"][c] == 0.0 and B["H"][c] == A["H"][c] for c in cells)
+    need(bool(okf), "(f) %d cells cut before t = %.2f s: removed 1, fr_f 0 and H unchanged to t = %.2f s (frozen)"
+         % (len(cells), ta, tb))
+    # (g)
+    same_ev = open(os.path.join(OUT, "P", "F_removal_events.csv"), "rb").read() == \
+        open(os.path.join(OUT, "P3", "F_removal_events.csv"), "rb").read()
+    th3, rows3 = thermo("P3")
+    keep = [i for i, h in enumerate(th) if h not in TIMERS]
+    # thermo columns are rank-reduced sums: round-off differs between 3 and 4 ranks, so they are compared as the face
+    # gate's rankcheck does -- relative 1e-9, or absolute for a column that is itself a round-off residual
+    worst = 0.0
+    same_th = th == th3 and len(rows) == len(rows3)
+    if same_th:
+        for i in keep:
+            xa = np.array([float(r[i]) for r in rows])
+            xb = np.array([float(r[i]) for r in rows3])
+            scale = np.max(np.abs(xa))
+            d = np.max(np.abs(xa - xb))
+            worst = max(worst, d / scale if scale > 1e-9 else d)
+        same_th = worst < 1e-9
+    p3 = plotfiles("P3")
+    same_pf = len(p3) == len(pfs)
+    for a, b in zip(pfs, p3):
+        if not same_pf:
+            break
+        fa, _, _ = read_pf(a)
+        fb, _, _ = read_pf(b)
+        same_pf = all(np.array_equal(fa[n].view(np.uint64), fb[n].view(np.uint64)) for n in fa)
+    need(same_ev and same_th and same_pf, "(g) P3 == P: events byte for byte %s, thermo (timers excluded) to round-off %s"
+         " (worst %.1e), %d plotfiles' cell data bit for bit %s" % (same_ev, same_th, worst, len(pfs), same_pf))
+    # P2-29 (c2): the stall clock and the feed cap
+    t, z, st, _ = descent("B")
+    want = ["%g" % (x - t[0]) for x in t]
+    miss = [i for i in range(len(t)) if st[i] != want[i]]
+    need(len(t) > 100 and np.all(z == z[0]) and not miss,
+         "(h) B (blocked): nozzle_z %.6g on all %d rows from the init row; foot_stall_time = t - t0 = (n - 1) dt on "
+         "every row (printed) %s; last %s s" % (z[0], len(t), "ok" if not miss else "MISSES at %d rows (first t %g: "
+                                                  "%s vs %s)" % (len(miss), t[miss[0]], st[miss[0]], want[miss[0]]),
+                                                  st[-1]))
+    t, z, st, _ = descent("P")
+    t_last, n_desc, miss = t[0], 0, []
+    for i in range(1, len(t)):
+        if z[i] < z[i - 1]:
+            t_last, n_desc = t[i], n_desc + 1
+            if st[i] != "0":
+                miss.append(i)
+        elif st[i] != "%g" % (t[i] - t_last):
+            miss.append(i)
+    need(n_desc >= 1 and not miss, "(i) P (descending): %d descending rows, foot_stall_time 0 on each and t - t_last "
+         "between them %s" % (n_desc, "on every row" if not miss else "-- MISSES at %d rows (first t %g)"
+                              % (len(miss), t[miss[0]])))
+    t, z, st, fz = descent("C")
+    step = CAP * DT
+    capped = [i for i in range(1, len(t)) if z[i - 1] - step > fz[i] + STANDOFF + 1e-6]
+    runs, cur = [], []
+    for i in capped:
+        if cur and i != cur[-1] + 1:
+            runs.append(cur)
+            cur = []
+        cur.append(i)
+    if cur:
+        runs.append(cur)
+    long_runs = [r for r in runs if len(r) >= 500]
+    fastest = max((z[i - 1] - z[i]) for i in range(1, len(t)))
+    res = []
+    for r in long_runs:
+        i0, i1 = r[0] - 1, r[-1]
+        slope = (z[i0] - z[i1]) / (t[i1] - t[i0])
+        line = z[i0] - CAP * (t[i0:i1 + 1] - t[i0])
+        res.append((t[i0], t[i1], slope / CAP - 1.0, float(np.max(np.abs(z[i0:i1 + 1] - line)))))
+    need(long_runs and all(abs(x[2]) <= 1e-3 and x[3] <= 1e-6 for x in res) and fastest <= step + 1e-6,
+         "(j) C (cap %g m/s): %d capped run(s) of >= 500 rows %s; the fastest step %.3g m (cap x dt %.3g m)" % (
+             CAP, len(long_runs), "; ".join("t %.3f-%.3f s: slope/cap - 1 = %+.2e, max |z - line| %.1e m"
+                                            % x for x in res) or "NONE", fastest, step))
+    print("=" * 100)
+    if bad:
+        print("FAIL: %d check(s)" % bad)
+        return 1
+    print("PASS: the pad clearance runs on the face list -- cut to the pad rule, no ratchet, booked once, frozen, "
+          "decomposition-free; off, it writes nothing.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

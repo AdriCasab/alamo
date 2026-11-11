@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""P2-21 -- THE COLUMN OPTICAL DEPTH: unit test. Runs three decks with bin/mmwspalling-3d-g++, -np 4, into output/:
+
+  U1  this directory's input (a two-layer column: alpha 4 1/m above z = 0.5, 1 1/m below, beam.tan_delta_T
+      = 300 1.0  1000 4.0), step 1 scored: the deposition per layer from the plotfiles (H after step 1 minus H at
+      step 0, x dV / dt, DOUBLE precision), normalised by (1 - R) P0 = 1 W; the transmitted fraction as
+      1 + closure - P_dep (the closure from thermo.dat is tiny, so its %g print loses nothing; the printed
+      P_trans/P_inc is shown beside it to its six digits). Bars: top 1 - e^-2, bottom e^-2 (1 - e^-0.5),
+      transmitted e^-2.5, each within 1e-9; |closure| <= 1e-9; beam_col_err_max <= 1e-12; beam_tau_max 2.5 and
+      beam_alpha_max 4 (printed digits)
+  U2  U1's deck with beam.tan_delta_T = 300 1.0 1000 1.0 (two EQUAL entries: the sum path on a uniform alpha 1
+      column) against U1's deck with the ONE-pair table 300 1.0 (the closed form): every plotfile field's max
+      relative difference <= 1e-12 (Cell_D) AND, non-vacuous, the per-cell deposition's (H - H0, the quantity the
+      path moves); the two closures equal to 1e-15
+  U3  unit/beam's OWN deck (no table) against studies/p2_20_beam_deposition/unit_beam_output_pre/: every plotfile
+      (Header, Cell_H, Cell_D_*) byte-identical -- the closed form untouched
+  With --bin_pre PATH (z1): that binary (the P2-20 build) on U1's deck must ABORT (rc != 0) naming beam.tan_delta_T.
+  P2-29: --deck input_phase runs U1 and U2 on the production-kernel deck (one constant phase, kappa 0, rho = c_p = 1:
+  H [J/m^3] = the old H [K]) into output_phase/; U3 is a byte lock on the const-alpha path's output and retires with
+  it (it runs only on the old deck). --bin PATH runs every leg on that binary (P2-29 m2: the old deck on bin_pre).
+  The Temp range of U1's plotfiles is printed (the property table spans 200-5000 K).
+
+Usage: test [--bin_pre PATH] [--deck NAME] [--bin PATH]   (exit 1 on a failed bar)
+"""
+import filecmp
+import math
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.set_log_level(50)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+DECK_NAME = sys.argv[sys.argv.index("--deck") + 1] if "--deck" in sys.argv else "input"
+DECK = os.path.join(HERE, DECK_NAME)
+if "--bin" in sys.argv:
+    BIN = os.path.abspath(sys.argv[sys.argv.index("--bin") + 1])
+BEAM_DECK = os.path.join(ROOT, "tests", "MMWSpalling", "unit", "beam", "input")
+PRE = os.path.join(ROOT, "tests", "MMWSpalling", "studies", "p2_20_beam_deposition", "unit_beam_output_pre")
+OUT = os.path.join(HERE, "output" if DECK_NAME == "input" else "output_" + DECK_NAME.replace("input_", ""))
+MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+FAIL = []
+
+
+def need(ok, msg):
+    print(("  PASS  " if ok else "  FAIL  ") + msg)
+    if not ok:
+        FAIL.append(msg)
+
+
+def run(name, deck, extra, binary=BIN, np_=4):
+    d = os.path.join(OUT, name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(OUT, exist_ok=True)
+    argv = MPI[:-1] + [str(np_), binary, deck] + extra + ["plot_file=" + d]
+    r = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
+    os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "..", name + ".log"), "w").write((r.stdout or "") + (r.stderr or ""))
+    return r.returncode, (r.stdout or "") + (r.stderr or ""), d
+
+
+def thermo_row(d, t):
+    L = open(os.path.join(d, "thermo.dat")).read().splitlines()
+    h = [c.strip() for c in L[0].split("\t")]
+    for r in L[1:]:
+        v = [x.strip() for x in r.split("\t")]
+        if abs(float(v[h.index("time")]) - t) < 1e-9:
+            return dict(zip(h, v))
+    raise KeyError("no thermo row at t = %g in %s" % (t, d))
+
+
+def fields(pf):
+    ds = yt.load(pf)
+    ad = ds.all_data()
+    o = np.lexsort((ad["x"].to_value(), ad["y"].to_value(), ad["z"].to_value()))
+    names = [f for (t, f) in ds.field_list if t in ("boxlib", "amrex")]
+    return {f: ad[f].to_value()[o] for f in names}, ad["z"].to_value()[o], ad["cell_volume"].to_value()[o]
+
+
+def main(argv):
+    dt = 0.01
+    print("P2-21 unit/beam_tau -- the column optical depth (deck %s, binary %s)" % (DECK_NAME, os.path.relpath(BIN, ROOT)))
+    print("=" * 100)
+    # ---- U1
+    rc, txt, d1 = run("U1", DECK, [])
+    need(rc == 0, "U1 runs (rc %d)" % rc)
+    f0, z, dV = fields(os.path.join(d1, "00000cell"))
+    f1, _, _ = fields(os.path.join(d1, "00001cell"))
+    print("        U1 Temp range: %.4f .. %.4f K (t = 0), %.4f .. %.4f K (step 1)" % (
+        f0["Temp"].min(), f0["Temp"].max(), f1["Temp"].min(), f1["Temp"].max()))
+    q = (f1["H"] - f0["H"]) * dV / dt                # W per cell, step 1
+    top, bot = float(q[z >= 0.5].sum()), float(q[z < 0.5].sum())
+    row = thermo_row(d1, dt)
+    clo = float(row["beam_closure_err"])
+    trans = 1.0 + clo - (top + bot)
+    want = (1.0 - math.exp(-2.0), math.exp(-2.0) * (1.0 - math.exp(-0.5)), math.exp(-2.5))
+    for nm, got, w in (("top", top, want[0]), ("bottom", bot, want[1]), ("transmitted", trans, want[2])):
+        need(abs(got - w) <= 1e-9, "U1 %-11s fraction %.12f vs %.12f (|d| %.1e, bar 1e-9)" % (nm, got, w, abs(got - w)))
+    need(abs(clo) <= 1e-9, "U1 closure %s (bar 1e-9); printed P_trans/P_inc %s / %s" % (
+        row["beam_closure_err"], row["beam_P_trans"], row["beam_P_inc"]))
+    need(float(row["beam_col_err_max"]) <= 1e-12, "U1 beam_col_err_max %s (bar 1e-12)" % row["beam_col_err_max"])
+    need(row["beam_tau_max"] == "%g" % 2.5 and row["beam_alpha_max"] == "%g" % 4.0,
+         "U1 beam_tau_max %s (2.5), beam_alpha_max %s (4)" % (row["beam_tau_max"], row["beam_alpha_max"]))
+    old_bot = math.exp(-0.5) * (1.0 - math.exp(-0.5))
+    print("        (the OLD per-cell kernel would read bottom %.4f, total %.4f: offline)" % (
+        old_bot, 1.0 - math.exp(-2.0) + old_bot))
+    if "--bin_pre" in argv:
+        bp = argv[argv.index("--bin_pre") + 1]
+        rc0, txt0, _ = run("U1_bin_pre", DECK, [], binary=bp)
+        need(rc0 != 0 and "tan_delta_T" in txt0, "U1 on bin_pre (%s): rc %d, names beam.tan_delta_T: %s" % (
+            os.path.relpath(bp, ROOT), rc0, "tan_delta_T" in txt0))
+    # ---- U2
+    rca, _, da = run("U2_equal", DECK, ["beam.tan_delta_T=300.0 1.0 1000.0 1.0"])
+    rcb, _, db = run("U2_one", DECK, ["beam.tan_delta_T=300.0 1.0"])
+    need(rca == 0 and rcb == 0, "U2 both decks run (rc %d, %d)" % (rca, rcb))
+    worst, wf = 0.0, ""
+    for pf in ("00000cell", "00001cell"):
+        fa, _, _ = fields(os.path.join(da, pf))
+        fb, _, _ = fields(os.path.join(db, pf))
+        for k in fa:
+            a, b = fa[k], fb[k]
+            den = np.maximum(np.abs(a), np.abs(b))
+            r = np.where(den > 0, np.abs(a - b) / np.where(den > 0, den, 1.0), 0.0)
+            if r.max() > worst:
+                worst, wf = float(r.max()), "%s %s" % (pf, k)
+    need(worst <= 1e-12, "U2 Cell_D: every field's max relative difference %.2e%s (bar 1e-12)" % (
+        worst, " (" + wf + ")" if wf else ""))
+    fa0, _, _ = fields(os.path.join(da, "00000cell"))
+    fa1, _, _ = fields(os.path.join(da, "00001cell"))
+    fb0, _, _ = fields(os.path.join(db, "00000cell"))
+    fb1, _, _ = fields(os.path.join(db, "00001cell"))
+    qa, qb = fa1["H"] - fa0["H"], fb1["H"] - fb0["H"]
+    m = np.maximum(np.abs(qa), np.abs(qb)) > 1e-300
+    rq = float((np.abs(qa - qb)[m] / np.maximum(np.abs(qa), np.abs(qb))[m]).max())
+    need(rq <= 1e-12, "U2 per-cell deposition (H - H0) max relative difference %.2e over %d cells (bar 1e-12; "
+         "non-vacuous: sum %.6f W vs %.6f W)" % (rq, int(m.sum()), float((qa * dV).sum() / dt),
+                                                 float((qb * dV).sum() / dt)))
+    ca, cb = thermo_row(da, dt), thermo_row(db, dt)
+    need(abs(float(ca["beam_closure_err"]) - float(cb["beam_closure_err"])) <= 1e-15,
+         "U2 closures %s (sum path) vs %s (closed form), |d| <= 1e-15; sum-path columns %s / one-pair columns %s" % (
+             ca["beam_closure_err"], cb["beam_closure_err"],
+             "present" if "beam_tau_max" in ca else "ABSENT", "present" if "beam_tau_max" in cb else "absent"))
+    # ---- U3 (the const-alpha byte lock: only on the old deck; it retires with that path, P2-29)
+    if DECK_NAME != "input":
+        print("  ----  U3 not run on %s: a byte lock on the const-alpha path's output, retired with it (P2-29)" % DECK_NAME)
+        print("=" * 100)
+        print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+        return 1 if FAIL else 0
+    rc3, _, d3 = run("U3", BEAM_DECK, [])
+    need(rc3 == 0, "U3 unit/beam's own deck runs (rc %d)" % rc3)
+    bad, n = [], 0
+    for pf in sorted(p for p in os.listdir(PRE) if p.endswith(("cell", "node")) and os.path.isdir(os.path.join(PRE, p))):
+        for dp, _ds, fs in os.walk(os.path.join(PRE, pf)):
+            for fn in fs:
+                a = os.path.join(dp, fn)
+                b = os.path.join(d3, os.path.relpath(a, PRE))
+                n += 1
+                if not (os.path.exists(b) and filecmp.cmp(a, b, shallow=False)):
+                    bad.append(os.path.relpath(a, PRE))
+    need(not bad and n > 0, "U3 %d plotfile files byte-identical to unit_beam_output_pre/%s" % (
+        n, ("; DIFFER: " + ", ".join(bad[:4])) if bad else ""))
+    print("=" * 100)
+    print("FAIL (%d)" % len(FAIL) if FAIL else "PASS")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

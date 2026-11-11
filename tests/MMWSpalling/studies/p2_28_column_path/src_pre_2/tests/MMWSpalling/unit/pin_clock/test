@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+"""P2-2b (b7) -- the pin / idle-clock path survives retiring the stored product.
+
+See `input` for why the witness is the FIELDS and not `t_cell` itself: the
+clock is formed at `MMWSpalling.H:3825` and consumed at `:3827`, and never
+reaches any output. The chain from here to the bar is exact:
+
+    rho_phase == phases[p].rho  and  Cp_phase == phases[p].Cp  BIT-EXACTLY
+      => pin_rho[c] * pin_Cp[c] == the retired `pin_rhoCp` bit for bit
+      => t_cell is bit-identical, so the clock fires on the same steps.
+
+⚠ "to <= 1e-9" is the packet's bar; what is measured here is EXACT equality,
+which is the stronger statement and the only one that supports the chain
+above -- a 1e-9 drift in rho would be a real change in the clock.
+
+Three rows per leg, and the second and third are what stop it passing for the
+wrong reason:
+  1. under `constant`, the fields equal the deck scalars exactly;
+  2. the fields are NON-ZERO -- the `:5380` failure mode, where deleting the
+     init fill leaves them never written and the clock divides by zero;
+  3. under `grimsel` the fields MUST differ from the deck, or row 1 would also
+     pass on a binary where the law is silently inert.
+
+Usage: test
+"""
+
+import os
+import shutil
+import struct
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT = os.path.join(HERE, "output")
+sys.path.insert(0, os.path.join(ROOT, "tests", "MMWSpalling", "studies", "p2_2_props"))
+
+import fabcmp  # noqa: E402
+import grimsel as G  # noqa: E402
+
+RHO_DECK, CP_DECK, T_INIT = 2750.0, 790.0, 1600.0
+LEGS = (("constant", []),
+        ("grimsel", ["microstructure.phase0.law=grimsel"]))
+
+
+def run(tag, extra):
+    d = os.path.join(OUT, tag)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4", BIN,
+            os.path.join(HERE, "input")] + extra +
+           ["plot_file=%s" % os.path.join(d, "run")])
+    env = os.environ.copy()
+    env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    with open(os.path.join(d, "run.log"), "w") as lg:
+        return subprocess.call(cmd, cwd=ROOT, stdout=lg, stderr=subprocess.STDOUT)
+
+
+def read_range(tag, name):
+    """(min, max) of `name` over the LAST cell plotfile. ⚠ the last, not the
+    first: the init fill happens at Initialize but `UpdatePropertyFields` runs
+    per step, so the last plotfile is where a per-step writer would have
+    overwritten the init values."""
+    d = os.path.join(OUT, tag, "run")
+    if not os.path.isdir(d):
+        return None
+    cells = sorted(x for x in os.listdir(d) if x.endswith("cell"))
+    if not cells:
+        return None
+    base = os.path.join(d, cells[-1])
+    hdr, lvl = os.path.join(base, "Header"), os.path.join(base, "Level_0")
+    lo, hi = None, None
+    for f in sorted(os.listdir(lvl)):
+        if not f.startswith("Cell_D"):
+            continue
+        fs = fabcmp.read_fabs(os.path.join(lvl, f))
+        if not fs:
+            continue
+        names = fabcmp.var_names(hdr, fs[0][0])
+        if name not in names:
+            return None
+        c = names.index(name)
+        for _, npts, comp in fs:
+            vals = struct.unpack("<%dd" % npts, comp[c])
+            lo = min(vals) if lo is None else min(lo, min(vals))
+            hi = max(vals) if hi is None else max(hi, max(vals))
+    return None if lo is None else (lo, hi)
+
+
+def main():
+    if not os.path.exists(BIN):
+        print("FAIL: missing binary")
+        return 1
+    fails = []
+
+    def need(ok, msg):
+        print("  %s  %s" % ("ok  " if ok else "FAIL", msg))
+        if not ok:
+            fails.append(msg)
+
+    print("P2-2b (b7) THE PIN / IDLE-CLOCK PATH\n")
+    print("  the clock: t_cell = pin_rho*pin_Cp*dz*(pin_T - T_amb)/q_pin")
+    print("  deck scalars: rho %.1f  Cp %.1f   T_init %.1f\n"
+          % (RHO_DECK, CP_DECK, T_INIT))
+
+    seen = {}
+    for tag, extra in LEGS:
+        rc = run(tag, extra)
+        if rc != 0:
+            need(False, "%s exited %d" % (tag, rc))
+            continue
+        r = read_range(tag, "rho_phase")
+        c = read_range(tag, "Cp_phase")
+        if r is None or c is None:
+            need(False, "%s: could not read rho_phase / Cp_phase" % tag)
+            continue
+        seen[tag] = (r, c)
+        print("  --- %s ---" % tag)
+        print("      rho_phase [%.17g, %.17g]" % r)
+        print("      Cp_phase  [%.17g, %.17g]" % c)
+
+        # ROW 2 first: the fields must have been written at all.
+        need(r[0] > 0.0 and c[0] > 0.0,
+             "%s: rho_phase and Cp_phase are NON-ZERO everywhere -- the init "
+             "fill covers every phase under every law (:5380 / :5412)" % tag)
+
+        if tag == "constant":
+            # ROW 1: exact equality, which is what the proof chain needs.
+            need(r == (RHO_DECK, RHO_DECK),
+                 "constant: rho_phase == the deck's %.1f EXACTLY, so "
+                 "pin_rho*pin_Cp reproduces the retired pin_rhoCp bit for bit"
+                 % RHO_DECK)
+            need(c == (CP_DECK, CP_DECK),
+                 "constant: Cp_phase == the deck's %.1f EXACTLY" % CP_DECK)
+        else:
+            want_rho = G.RHO
+            want_cp = G.c_p(T_INIT - 273.15)
+            print("      law at T_init: rho %.17g  c_p %.17g"
+                  % (want_rho, want_cp))
+            need(abs(r[0] - want_rho) / want_rho <= 1e-12
+                 and abs(r[1] - want_rho) / want_rho <= 1e-12,
+                 "grimsel: rho_phase is the LAW's %.1f to 1e-12" % want_rho)
+            need(abs(c[0] - want_cp) / want_cp <= 1e-12
+                 and abs(c[1] - want_cp) / want_cp <= 1e-12,
+                 "grimsel: Cp_phase is the LAW's c_p(T) %.2f to 1e-12"
+                 % want_cp)
+
+    # ROW 3: non-vacuity ACROSS the legs.
+    if "constant" in seen and "grimsel" in seen:
+        need(seen["constant"] != seen["grimsel"],
+             "the two laws give DIFFERENT fields -- row 1 is not passing on a "
+             "binary where `law = grimsel` is silently inert")
+
+    print()
+    if fails:
+        print("FAILURES:")
+        for f in fails:
+            print("  " + f)
+        print("\nFAIL")
+        return 1
+    print("the idle clock reads per-cell fields that reproduce the deck")
+    print("scalars exactly under the shipped default, so retiring the stored")
+    print("product pin_rhoCp left t_cell bit-identical.")
+    print("\nPASS")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

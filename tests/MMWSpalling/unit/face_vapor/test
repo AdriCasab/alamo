@@ -123,7 +123,7 @@ def u3(log, d3):
     need(np.array_equal(fl["removed"] > 0.5, sel) and np.array_equal(fl["H"][sel], fv["H"][sel]),
          "z2 U3 at the end the removed set is those %d cells and their H is unchanged since the void (frozen)" % int(
              sel.sum()))
-    e1 = max(abs(float(r["ledger_err"])) for r in rows)
+    e1 = max(abs(float(r["ledger_err_raw"])) for r in rows)   # P2-28: renamed (P2-27 DR-1)
     e2 = max(abs(float(r["ledger_err_solid"])) for r in rows)
     need(e1 <= 1e-9 and e2 <= 1e-9, "z2 U3 max |ledger_err| %.2e, max |ledger_err_solid| %.2e (bar 1e-9); without the "
          "vapour term the solid row would read %.4f" % (e1, e2, float(tok) / float(rows[-1]["ledger_E_src"])))

@@ -15,17 +15,14 @@
 spallation.model     = sp_weibull              # CHOICE (form): LEFM Sp = K_I/K_Ic
 spall.enabled        = 1
 spall.stress_source  = local_thermoelastic     # CHOICE (form): stress from the local temperature
-spall.surface_T      = reconstructed           # CHOICE (form): P0, mesh-independent firing T
 spallation.sp.n_segments       = 128           # NUM: the K_I quadrature
 spall.h_spall_max    = 0.015                   # NUM / CHOICE: the depth-scan limit
 
 # --- the flaw draw ----------------------------------------------------------
 weibull.enabled     = 1                        # CHOICE (form): random flaws, scale/modulus in the rock file
-weibull.detach_mode = per_face
 weibull.seed        = 12345                    # NUM
 
 # --- how a fired cell leaves: the flake rule --------------------------------
-spall.removal_energy         = flake           # CHOICE (form): P0b; the face list requires it
 spall.flake_c_f              = 0.4             # CHOICE (literature-informed): h = c_f ell, Wilkinson/Rauenzahn
 spall.flake_h_max            = 0.0015          # NUM (P2-17): DEAD as a flake bound under B (P2-17 e0);
                                                #   still sets each line's gather/remap window
@@ -34,7 +31,6 @@ spall.flake_h_max            = 0.0015          # NUM (P2-17): DEAD as a flake bo
                                                #   MODEL_CARD §6 row 21
 
 # --- the surface and the removal path ---------------------------------------
-surface.follow_mask        = 1
 surface_patch.robin_form   = surface           # CHOICE (form): P0b; the face list requires it
 surface_patch.face_list    = 1                 # the removal rule (P2-8)
 

@@ -21,7 +21,9 @@ spall.seed_void boxes. Legs run for one step (plotfile 00001) unless stated; ser
         (kernel, diagnostics, ledger) or the march's bin temperature (q_col, q_face); flame_Tg is read by no
         per-face consumer
   (vii) each refused feature aborts naming its key and P2-12; barrier_expr under position and face_heat
-        without the face list abort
+        without the face list abort. P2-26 (census B3): the pad shield and the above-plane pair are DELETED, so
+        R_pad and R_above are refused by the strict surface_patch scope instead -- ParmParse's EXCEPTION
+        "specified but not used" naming the key (STRICT below), no longer P2-12's message
 Usage: test [--check]   (--check re-reduces output/ without running)
 """
 import math
@@ -35,6 +37,8 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
 sys.path.insert(0, os.path.join(ROOT, "tests", "MMWSpalling", "studies", "p2_2_props"))
 import fabcmp                                                     # noqa: E402
 
@@ -45,9 +49,12 @@ MPI = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
 NX, NZ, DX = 50, 150, 0.001
 ZN = 0.2132
 BASE = [  # G1's argv (studies/p2_11_heat/legs/G1/argv.sh) without plot_file, stop_time, h_expr, plot_int
-    "bit.enabled=0", "beam.P0=0.0", "surface_patch.mode=convective_flame", "surface_patch.robin_form=surface",
-    "surface_patch.pinned_idle_cycles=1.0e9", "surface.follow_mask=1", "spall.flake_coherence_length=0.0",
-    "spall.surface_normal=0", "spall.surface_T=reconstructed", "spall.removal_energy=flake", "spall.flake_c_f=0.4",
+    "beam.P0=0.0", "surface_patch.mode=convective_flame", "surface_patch.robin_form=surface",
+    # P2-26: G1's spall.flake_coherence_length=0.0 and spall.surface_normal=0 are dropped (both keys retired at
+    # the string "0"; the argv must not write 0.0)
+    # P2-28: G1's bit.enabled=0 (bit.* aborts) and its tokens at the retired defaults (pinned_idle_cycles,
+    # surface.follow_mask=1, spall.surface_T=reconstructed, spall.removal_energy=flake) are dropped
+    "spall.flake_c_f=0.4",
     "weibull.a0_ig=8.0e-6", "weibull.a0_gb=40.0e-6", "spall.flake_h_max=0.0015",
     "surface_patch.side_power_interval=10.0", "microstructure.phase0.law=grimsel", "spall.stress_law=grimsel",
     "spallation.sp.kic.law=grimsel_table", "spallation.sp.kic.scale=1.0", "spallation.sp.stress_relief=0.531294",
@@ -142,8 +149,9 @@ REFUSE = {  # name: (keys, the key the abort must name)
                      **{k.split("=")[0]: None for k in BASE if k.startswith("surface_patch.jet_")
                         and not k.startswith("surface_patch.jet_closure")}), "jet_closure"),
     "R_barpos": (dict(BAR), "barrier_expr"),
-    "R_nolist": (dict(PATH, **{"surface_patch.face_list": "0"}), "face_heat"),
+    # (R_nolist, path heat with the list off, retired in P2-28: removal now requires the list)
 }
+STRICT = ("R_pad", "R_above")   # P2-26: keys deleted (census B3), refused as unused by the strict scope
 
 
 def argv(name, keys, seeds, stop):
@@ -220,6 +228,26 @@ def last_step(name):
 
 
 # ------------------------------------------------------------------ checks ----
+def check_source():
+    # P2-30: the source clauses of (vi), their own function so `--source` runs them without the legs
+    sites = []
+    for fn, txt in (("MMWSpalling.H", _src.header()), ("MMWSpalling/FaceRemoval.H", _src.read(_src.SLICE_PREFIX + "FaceRemoval.H"))):
+        code = re.sub(r"//[^\n]*", "", txt)
+        for m in re.finditer(r"\bFrFaceFlux\(\s*([^,()]+?),\s*([^,]+?),", code):
+            if m.group(1).strip().startswith("const FaceEntry"):
+                continue                                  # the definition
+            fns = re.findall(r"\n    (?:void|Set::Scalar|auto)\s+(\w+)\s*\(|auto (\w+) = \[", code[:m.start()])
+            where = [a or b for a, b in fns][-1] if fns else "?"
+            sites.append((os.path.basename(fn), where, m.group(2).strip()))
+    ok_arg = {"fTg ? flp[q].Tg : Set::Scalar(0.0)", "e.Tg", "Tg"}
+    need(len(sites) == 5 and all(s[2] in ok_arg for s in sites)
+         and sum(1 for s in sites if s[2] == "Tg") == 2,
+         "source lock: %d FrFaceFlux call sites, each passing a face's Tg or the march's bin T: %s"
+         % (len(sites), "; ".join("%s %s(%s)" % s for s in sites)))
+    code_fr = re.sub(r"//[^\n]*", "", _src.read(_src.SLICE_PREFIX + "FaceRemoval.H"))
+    need("flame_Tg" not in code_fr, "FaceRemoval.H code reads no flame_Tg (the fallback flake reads ef.Tg)")
+
+
 def check():
     I, J, K = np.meshgrid(np.arange(NX), np.arange(NX), np.arange(NZ), indexing="ij")
     print("(i) FLAT_P vs FLAT_X: per-cell fl_h ratio; fl_H_stag = jet_s_c")
@@ -286,23 +314,7 @@ def check():
                 best = ((i, j), len(v))
     need(best[1] >= 2, "a column with >= 2 distinct fl_Tg among its cells: column %s carries %d" % best)
     need(im <= 1e-12 and il <= 1e-12, "with them, fl_id_march %.2e and fl_id_ledger %.2e (<= 1e-12)" % (im, il))
-    sites = []
-    for fn in ("MMWSpalling.H", os.path.join("MMWSpalling", "FaceRemoval.H")):
-        code = re.sub(r"//[^\n]*", "", open(os.path.join(ROOT, "src", "Integrator", fn)).read())
-        for m in re.finditer(r"\bFrFaceFlux\(\s*([^,()]+?),\s*([^,]+?),", code):
-            if m.group(1).strip().startswith("const FaceEntry"):
-                continue                                  # the definition
-            fns = re.findall(r"\n    (?:void|Set::Scalar|auto)\s+(\w+)\s*\(|auto (\w+) = \[", code[:m.start()])
-            where = [a or b for a, b in fns][-1] if fns else "?"
-            sites.append((os.path.basename(fn), where, m.group(2).strip()))
-    ok_arg = {"fTg ? flp[q].Tg : Set::Scalar(0.0)", "e.Tg", "Tg"}
-    need(len(sites) == 5 and all(s[2] in ok_arg for s in sites)
-         and sum(1 for s in sites if s[2] == "Tg") == 2,
-         "source lock: %d FrFaceFlux call sites, each passing a face's Tg or the march's bin T: %s"
-         % (len(sites), "; ".join("%s %s(%s)" % s for s in sites)))
-    code_fr = re.sub(r"//[^\n]*", "", open(os.path.join(ROOT, "src", "Integrator", "MMWSpalling",
-                                                         "FaceRemoval.H")).read())
-    need("flame_Tg" not in code_fr, "FaceRemoval.H code reads no flame_Tg (the fallback flake reads ef.Tg)")
+    check_source()
     # mutation control: would a reader on the COLUMN value (under path: the top face's Tg) break the
     # identities on this leg? Each face's share of the class power scales with (Tg - Ts); the bar is
     # discriminating if moving every face to its column's top-face Tg moves sum(w h (Tg - T)) by >> 1e-12.
@@ -325,14 +337,25 @@ def check():
     for nm, (_, key) in REFUSE.items():
         rc = int(open(os.path.join(OUT, nm, "rc")).read())
         log = open(os.path.join(OUT, nm, "run.log"), errors="replace").read()
+        if nm in STRICT:
+            ex = [re.sub(r"\x1b\[[0-9;]*m", "", l) for l in log.splitlines() if "EXCEPTION" in l]
+            ok = (rc != 0 and any("specified but not used" in l for l in ex)
+                  and any(l.rstrip().endswith("surface_patch." + key) for l in ex))
+            need(ok, "%-8s rc %d, the strict scope refuses the deleted key %r as unused (P2-26)%s"
+                 % (nm, rc, key, "" if ok else ": " + " | ".join(ex)[-150:]))
+            continue
         ab = [l for l in log.splitlines() if "ABORT" in l]
-        p212 = nm not in ("R_barpos", "R_nolist")
+        p212 = nm not in ("R_barpos",)
         ok = rc != 0 and ab and key in ab[0] and (("P2-12" in ab[0]) or not p212)
         need(ok, "%-8s rc %d, abort names %r%s: %s" % (nm, rc, key, " and P2-12" if p212 else "",
                                                       re.sub(r"\x1b\[[0-9;]*m", "", ab[0])[-150:] if ab else "no abort"))
 
 
 def main():
+    if "--source" in sys.argv:               # P2-30: the source clauses alone (seconds; no leg is run or read)
+        check_source()
+        print("\n" + ("PASS" if not FAIL else "FAIL (%d)" % len(FAIL)))
+        return 0 if not FAIL else 1
     if "--check" not in sys.argv:
         os.makedirs(OUT, exist_ok=True)
         for nm, (k, s, st) in LEGS.items():

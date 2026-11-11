@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 bin/mmwspalling-3d-g++ tests/MMWSpalling/validation/hu/hu_conduction/input_granite2_phase  plot_file=tests/MMWSpalling/studies/p2_29_one_heat_path/legs/hu_new/hu_conduction/granite2

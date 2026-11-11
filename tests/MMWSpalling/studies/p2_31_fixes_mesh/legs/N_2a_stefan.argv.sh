@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 /Users/tzetze20/amr_tools/alamo/bin/mmwspalling-3d-g++ /Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/unit/stefan/input plot_file=/Users/tzetze20/amr_tools/alamo/tests/MMWSpalling/studies/p2_31_fixes_mesh/legs/N_2a_stefan

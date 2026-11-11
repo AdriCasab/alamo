@@ -1,0 +1,1 @@
+mpirun --oversubscribe --bind-to none -np 4 bin/mmwspalling-3d-g++ tests/MMWSpalling/studies/p2_29_one_heat_path/ZL.input energy_ledger.enabled=1 plot_file=tests/MMWSpalling/studies/p2_29_one_heat_path/legs/ZL/run

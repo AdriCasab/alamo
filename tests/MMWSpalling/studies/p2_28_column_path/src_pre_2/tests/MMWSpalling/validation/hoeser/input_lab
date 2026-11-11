@@ -1,0 +1,152 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=false
+#@ exe=mmwspalling
+#@
+
+# ============================================================================
+# Hoeser 2016 (Diss. ETH 23896) lab flame-jet drilling -- the MEASURED-FLUX leg.
+# ============================================================================
+#
+# P2-5. The one configuration in which the heat arriving at the rock is a
+# MEASUREMENT and not an inference: a 7.9 mm / 38 kW flame at a FIXED 63.2 mm
+# (L = 8) standoff above a Grimsel cylinder, inside the same Ø 40 x 35 mm steel
+# channel her drilling flange forms. No burner body in the hole, no feet, no
+# exhaust recirculation, no annulus. She measured 7.4 MW/m2 on the axis with a
+# water-cooled PSI calorimeter in that channel (sensor face ~600 degC) and then
+# removed 26 cm3/min at ZERO axial load over 30 s.
+#
+#   flux series  tests/MMWSpalling/validation/hoeser/hoeser_2016_heat_transfer.csv
+#   removal      tests/MMWSpalling/validation/hoeser/hoeser_2016_drilling_series.csv
+#   notes        hoeser_2016_thesis_notes.md, hoeser_2018_uniaxial_load_notes.md
+#
+# --- THE ROCK AND THE MODEL FORM: TWO SHARED FILES (P2-13, 2026-10-30) -------
+# Every Grimsel constant (laws, toughness table, relief R, flaw scale and modulus,
+# emissivity) and the flame model form (criterion, Weibull draw, flake rule, surface
+# Robin form, face list) come from
+#   tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+#   tests/MMWSpalling/validation/shared/model_form_flame.inputs
+# the same files the Kant calibration deck (validation/kant/grimsel_calibration) includes:
+# same rock, same properties, calibrated once. ⚠ Do not set their keys here or on the
+# command line except as a declared override (validation/shared/check_shared.py). The
+# paths are relative to the run's cwd: run from the repo root. Pre-P2-13 text:
+# validation/kant/grimsel_calibration/pre/input_lab.pre_p2_13.
+#
+# --- WHAT THIS FILE IS ------------------------------------------------------
+# The Meier pilot deck's PHYSICS (`validation/meier/sp_meier_pilot/
+# input_drilling`) with the lab GEOMETRY and clock. Everything that makes it a
+# Grimsel/spall configuration now arrives from the two shared files above; the heat
+# source (the h map, the jet closure) and the mesh arrive on the command line (G1:
+# studies/p2_11_heat/legs/G1/argv.sh). Until P2-13 the rock arrived on the command
+# line too (studies/p2_5_hoeser/run_p2_5.py and its successors).
+#
+# --- GEOMETRY ---------------------------------------------------------------
+# A QUARTER of the Ø 100 x 150 mm cylinder: a 50 x 50 x 100 mm prism with the
+# jet axis on the (0, 0) corner, so the two cut planes are the symmetry planes
+# (Neumann, which the BC block below already sets on all six faces). Volumes
+# are therefore one quadrant and are scaled x4 (standing rule 3).
+# ⚠ The quarter of a square prism is NOT the quarter of her cylinder: the
+# curved side sits at 50 mm on the axes and 70.7 mm on the diagonal, where the
+# rock is 50 mm from the axis. Both are >= 30 mm from the heated zone and the
+# 30 s conduction reach is ~6 mm (sqrt(alpha t), alpha = 6.9e-7), so the
+# difference never enters the solution. Stated, not scored.
+# ⚠ Mesh is set on the command line: 1 mm here (the user's decision of
+# 2026-10-14 -- the 7.9 mm jet is only four cells across at 2 mm), with a 2 mm
+# twin for the mesh row. `weibull.V0` is V_cell and MUST move with it.
+#
+# --- THE FLANGE -------------------------------------------------------------
+# Her 20 mm flange + 15 mm disc leave a Ø 40 mm opening, i.e. a Ø 40 x 35 mm
+# steel channel standing on the rock. It is NOT the hard patch mask (which is
+# circular, hard-edged and radius-keyed): it is a LID inside `h_expr`, zero
+# flux on the ORIGINAL rock surface beyond r = 20 mm, lifting over any cell
+# that has receded -- so the undercut she measured (44-64 mm top width) can be
+# heated once it exists. `surface_patch.radius` is set beyond the domain
+# corner so the mask never bites inside the opening.
+# ⚠ The "0 MPa" leg has the flange ON but untorqued (without it the cylinder
+# splits in ~10 s). The lid is part of the GEOMETRY; the load is not applied.
+#
+# --- NOT MODELLED (stated) --------------------------------------------------
+# Axial load (her 0 MPa leg), cuttings transport, the steel channel's own heat
+# capacity and its radiative exchange with the rock, exhaust re-entrainment
+# (`jet_T_ent_mode = fixed` by design: a ventilated box with a confined jet).
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/validation/hoeser/output/lab
+
+# Clock and mesh arrive on the command line (run_p2_5.py): timestep,
+# stop_time, amr.n_cell, amr.max_grid_size, geometry.prob_*, weibull.V0,
+# amr.plot_int, amr.thermo.*.
+timestep  = 0.008
+stop_time = 30.0
+
+amr.max_level       = 0
+amr.blocking_factor = 2
+amr.regrid_int      = 1000000
+amr.grid_eff        = 0.7
+amr.n_error_buf     = 1
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.05  0.05  0.10
+geometry.is_periodic = 0 0 0
+
+alpha = 0.0 0.0
+
+FILE = tests/MMWSpalling/validation/shared/rock_grimsel.inputs
+FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
+
+# --- Grimsel granite: the deck's own lines --------------------------------
+# The rock is in rock_grimsel.inputs; the reference temperature stays here because it
+# must equal the initial condition below (check_shared (iii)).
+microstructure.phase0.T_ref             = 293.15
+
+conductivity.h_gb0              = 0.0
+
+# Her 0 MPa leg: no axial load, and no lateral confinement either (the flange
+# is untorqued). Passed explicitly by the harness as well, so the Meier deck's
+# 1 MPa can never be inherited by accident.
+confining.p = 0.0
+
+# --- No beam on this leg: the flame is the whole heat source ---------------
+beam.P0         = 0.0
+beam.profile    = uniform
+beam.radius     = 0.02
+beam.omega0     = 0.02
+beam.lambda     = 2.19e-3
+beam.x0         = 0.0
+beam.y0         = 0.0
+beam.z0         = 0.10
+
+# --- Surface losses to lab air (emissivity: rock_grimsel.inputs) ----------
+losses.h_conv        = 10.0
+losses.T_amb         = 293.15
+
+# The flame patch itself (mode, the h map, the jet closure and its keys) is
+# command-line (G1's argv); robin_form and face_list are in model_form_flame.inputs.
+surface_patch.enabled = 0
+
+hc.heat.alpha = 6.9022e-7
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 293.15
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0
+

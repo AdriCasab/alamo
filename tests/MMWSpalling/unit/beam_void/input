@@ -1,0 +1,107 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# P2-29 stage 3 (census D, DR-5 gap 3): A BEAM ACROSS AN INTERIOR VOID on the face list. The retired spec is
+# retired_units/seed_void S2 (the column path). Production makes such voids (the face list's vapour rule voids wall
+# cells); nothing tested the beam path across one since P2-28.
+#   24^3 cubes of 1 mm, the beam axis at the block's centre, a SEEDED interior void (spall.seed_void, a 4 x 4 x 2 box at
+#   mid-depth under the axis, solid above and below), two steps from a uniform 300 K (nothing fires: the rock stays
+#   cold). Losses off and T_ref = the IC, so a cell's H after step 1 is exactly dt Q. eps_r 1 (R = 0, no in-rock
+#   spread), a flat alpha = 50 1/m (tan_delta = alpha lambda / (2 pi)). Leg U (this deck): a uniform 6 mm disk -- the
+#   per-cell Beer-Lambert continuation is exact; leg G (the test's argv): a Gaussian, omega0 4 mm.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/beam_void/output/U
+
+timestep  = 0.001
+stop_time = 0.002                  # two steps
+
+amr.plot_int        = 1
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 24 24 24
+amr.blocking_factor = 2
+amr.max_grid_size   = 12
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0   0.0   0.0
+geometry.prob_hi     = 0.024 0.024 0.024
+geometry.is_periodic = 0 0 0
+
+# the face list in its removal mode (chosen when spall.seed_void was read only under spall.enabled; since P2-31 it is
+# read on every deck): the shared flame model form
+FILE = tests/MMWSpalling/validation/shared/model_form_flame.inputs
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+microstructure.phase0.fraction = 1.0
+microstructure.phase0.kappa    = 2.5
+microstructure.phase0.rho      = 2600.0
+microstructure.phase0.Cp       = 800.0
+microstructure.phase0.T_ref    = 300.0
+microstructure.phase0.beta     = 8.0e-6
+microstructure.phase0.E        = 30.0e9
+microstructure.phase0.mu       = 12.0e9
+conductivity.h_gb0             = 0.0
+spallation.sp.a0          = 20.0e-6
+weibull.a0_ig = 8.0e-6     # the rock file's flaw (validation/shared/rock_grimsel.inputs); nothing fires cold
+weibull.a0_gb = 40.0e-6
+weibull.m     = 13
+spallation.sp.kic.law     = linear
+spallation.sp.kic.K_Ic0   = 1.5
+spallation.sp.kic.T_ref   = 293.15
+spallation.sp.kic.T_melt  = 1.0e9
+spall.seed_void = 10 10 10 13 13 11   # ilo jlo klo ihi jhi khi: under the axis, 2 cells thick, 12 solid cells above
+
+beam.P0         = 100.0
+beam.profile    = uniform
+beam.radius     = 0.006
+beam.omega0     = 0.004
+beam.lambda     = 1.0e-3
+beam.x0         = 0.012
+beam.y0         = 0.012
+beam.z0         = 0.024
+beam.eps_r      = 1.0
+beam.tan_delta  = 0.007957747154594767   # alpha = 2 pi sqrt(eps_r) tan_delta / lambda = 50 1/m
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.h_conv        = 0.0
+losses.T_amb         = 300.0
+
+surface_patch.enabled = 0
+surface_patch.x0      = 0.012
+surface_patch.y0      = 0.012
+surface_patch.radius  = 0.05     # the listing mask (it defaults to 0 with the patch off: nothing listed)
+
+hc.heat.alpha = 1.2019e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 300.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

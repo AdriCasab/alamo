@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+# P1 deliverable 4 / P2-2a change C -- THE UNIFORM PREHEATED SLAB.
+#
+# A column held uniformly at 820 K with no net surface flux (the flame gas sits
+# at the rock's own temperature) never develops a gradient. A slab restrained by
+# nothing carries no thermal stress: the rock around any candidate flake has
+# expanded by exactly as much as the flake has.
+#
+#   MUST NOT FIRE. The criterion references the COLUMN MINIMUM temperature, so
+#   on a uniform column the stress bracket is a number minus itself -- exactly
+#   zero by cancellation, not small.
+#
+# ⚠⚠ HISTORY, BECAUSE THE INVERSION IS THE POINT. Until P2-2a this test
+# asserted the OPPOSITE for `absolute` -- that it MUST FIRE -- and passed with
+# 80 firings. It was written to CERTIFY the defect: the criterion referenced
+# `phases[0].T_ref`, a declared input constant of 293.15 K, so it saw 527 K of
+# phantom superheat on a slab that had merely been soaking, and could not tell
+# it from a thermal skin about to spall. The retired `differential` mode read
+# zero here correctly, which is why its four `diff_*` legs are gone rather than
+# merely passing: there is now ONE form, and it is right in both limits.
+#
+# ⚠ So this row is WEAK EVIDENCE of the change, not proof of a novel capability
+# -- in the uniform limit it is the old `diff_flake` assertion with the mode
+# renamed. What it does prove is that the restraint reference REACHES the
+# criterion.
+#
+# Usage: test   (runs ALAMO, then checks)
+
+import csv, os, shutil, subprocess, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+BIN  = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+OUT  = os.path.join(HERE, "output")
+
+# ⚠⚠ P2-2a change C: `absolute` INVERTED to must-NOT-fire, and the four
+# `diff_*` legs DELETED BY NAME -- `diff_flake`, `diff_fixed05`,
+# `diff_fixed10`, `diff_fixed20` -- together with the `fixed`-without-depth
+# parse-guard leg (`abort`), because `spall.driving_stress`,
+# `spall.driving_ref` and `spall.driving_ref_depth` no longer exist. A leg
+# setting any of them would now abort as an UNUSED INPUT, which is asserted in
+# `unit/lateral_flux_lock` rather than here.
+LEGS = [
+    ("uniform", [], False),
+]
+
+def run(tag, extra, expect_fail=False):
+    d = os.path.join(OUT, tag)
+    if os.path.isdir(d): shutil.rmtree(d)
+    os.makedirs(d, exist_ok=True)
+    cmd = (["mpirun", "--oversubscribe", "--bind-to", "none", "-np",
+            "1" if expect_fail else "4", BIN,
+            os.path.join(HERE, "input")] + extra +
+           ["plot_file=%s" % os.path.join(d, "run")])
+    env = os.environ.copy(); env.setdefault("OMPI_MCA_btl", "self,vader,tcp")
+    return subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)
+
+def firings(tag):
+    p = os.path.join(OUT, tag, "run_removal_events.csv")
+    if not os.path.exists(p): return 0
+    with open(p) as f:
+        return sum(1 for r in csv.DictReader(f) if r["regime"] == "1")
+
+def main():
+    if not os.path.exists(BIN):
+        print("FAIL: missing binary"); sys.exit(1)
+    fails = []
+    print("a column uniformly at 820 K, no net surface flux:\n")
+    for tag, extra, must_fire in LEGS:
+        r = run(tag, extra)
+        if r.returncode != 0:
+            fails.append("%s exited %d" % (tag, r.returncode))
+            print("  %-14s ABORTED" % tag); continue
+        n = firings(tag)
+        good = (n > 0) if must_fire else (n == 0)
+        if not good:
+            fails.append("%s: %d firings, expected %s"
+                         % (tag, n, "> 0" if must_fire else "exactly 0"))
+        print("  %-14s %6d firings   expected %-7s %s"
+              % (tag, n, "> 0" if must_fire else "0", "ok" if good else "WRONG"))
+
+    print()
+    if fails:
+        print("FAILURES:"); print("\n".join("  " + f for f in fails))
+        print("\nFAIL"); sys.exit(1)
+    print("the criterion reads exactly zero drive on a slab with no gradient.")
+    print("the reference is the STORED INITIAL TEMPERATURE at each cell, so this")
+    print("slab is unstressed because it STARTED at 820 K and is still at 820 K")
+    print("-- the bracket is a number minus itself.")
+    print("⚠ not because of a column minimum: that was rev 6's mechanism and it")
+    print("  was WITHDRAWN. It would also read zero here, which is why this leg")
+    print("  is weak evidence -- it cannot tell the two references apart.")
+    print("\nPASS")
+
+main()

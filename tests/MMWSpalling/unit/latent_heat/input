@@ -71,11 +71,15 @@ microstructure.phase0.E                 = 30.0e9
 microstructure.phase0.mu                = 11.538461538e9
 microstructure.phase0.rho               = 2750.0
 microstructure.phase0.Cp                = 790.0
-microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 microstructure.phase0.T_m               = 1473.0
 microstructure.phase0.fus_width         = 50.0
 microstructure.phase0.L_m               = 335000.0
+# P2-31: stated at their present values (the phase defaults: no vaporisation band), because the test's zhang leg
+# (law = zhang) must state all six latent keys
+microstructure.phase0.T_vap_lo          = 1.0e30
+microstructure.phase0.T_vap_hi          = 1.0e30
+microstructure.phase0.L_v               = 0.0
 
 conductivity.h_gb0              = 0.0
 

@@ -1,0 +1,340 @@
+#!/usr/bin/env python3
+# S1: Robin source forms, surface.follow_mask and the energy ledger.
+#
+# (a) input_form -- discrete-exact form check. A 1 x 1 x 20 column (dz = 1 mm)
+#     with a convective_flame Robin top, Neumann-0 elsewhere, no beam and no
+#     removal, run for surface_patch.robin_form = cell | face with losses off
+#     and on. This script replays the same explicit FV update in Python (same
+#     face-conductivity stencil, same enthalpy table, same safeguarded Newton
+#     for the face temperature) and requires the final T and H profiles to
+#     match ALAMO to <= 1e-10 relative. It also checks
+#       * the first-step face/cell flux ratio is 1/(1+Bi), Bi = h dz/(2k) = 6.67;
+#       * the absorbed-energy ratio face/cell (losses off) at t = 20 s is < 1
+#         and matches the model;
+#       * |ledger_err| <= 1e-9 on every thermo row.
+# (b) input_ledger -- Robin (face form) + removal + surface.follow_mask +
+#     energy_ledger on 4 ranks:
+#       * |ledger_err| <= 1e-9 on every thermo row;
+#       * ledger_P_robin > 0 on every row after the first removal (the patch
+#         followed the receding surface; without follow_mask it would switch
+#         off when the domain-top cell voids);
+#       * >= 3 layers removed;
+#       * control run with surface.follow_mask = 0 (3 s): ledger_P_robin == 0
+#         for t >= 2 s (patch stuck on the voided domain top), ledger still closes.
+#
+# Usage: test            (runs ALAMO, then checks)
+#        test <outdir>   (checks existing outputs under <outdir>)
+
+import glob
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = TEST_DIR.split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+RUN = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4"]
+
+TOL_FORM = 1.0e-10
+TOL_LEDGER = 1.0e-9
+NLAYERS_MIN = 3
+
+# Must match input_form.
+N, DZ, DXY = 20, 1.0e-3, 1.0e-3
+KAPPA, RHO, CP, T_REF, T0 = 1.5, 2750.0, 790.0, 293.15, 293.15
+H_FL, T_GAS = 2.0e4, 1000.0
+LOSSES_ON = dict(eps_lo=0.8, eps_hi=0.9, T_eps_b=600.0, sig=5.670374e-8, h_c=10.0, T_a=293.15)
+LOSSES_OFF = dict(eps_lo=0.0, eps_hi=0.0, T_eps_b=1.0e30, sig=0.0, h_c=0.0, T_a=293.15)
+
+FORM_CASES = {
+    "form_cell_off": ("cell", LOSSES_OFF),
+    "form_face_off": ("face", LOSSES_OFF),
+    "form_cell_on": ("cell", LOSSES_ON),
+    "form_face_on": ("face", LOSSES_ON),
+}
+
+ok = True
+
+
+def check(name, cond, detail):
+    global ok
+    print(f"[{'PASS' if cond else 'FAIL'}] {name}: {detail}")
+    if not cond:
+        ok = False
+
+
+def overrides(form, L):
+    return [f"surface_patch.robin_form={form}",
+            f"losses.epsilon={L['eps_lo']}", f"losses.epsilon_high={L['eps_hi']}",
+            f"losses.T_eps_break={L['T_eps_b']}", f"losses.sigma_SB={L['sig']}",
+            f"losses.h_conv={L['h_c']}", f"losses.T_amb={L['T_a']}"]
+
+
+def run(inp, outdir, extra):
+    if not os.path.exists(BIN):
+        print(f"FAIL: missing binary {BIN}; build first")
+        sys.exit(1)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    cmd = RUN + [BIN, os.path.join(TEST_DIR, inp), f"plot_file={outdir}"] + extra
+    print("Running:", " ".join(cmd))
+    with open(outdir + ".log", "w") as log:
+        res = subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    if res.returncode != 0:
+        print(f"FAIL: ALAMO exited with {res.returncode} (see {outdir}.log)")
+        sys.exit(res.returncode)
+
+
+def plotfiles(outdir):
+    out = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = re.search(r"(\d+)cell$", os.path.basename(p))
+        if m:
+            out.append((int(m.group(1)), p))
+    return sorted(out)
+
+
+def thermo(outdir):
+    path = os.path.join(outdir, "thermo.dat")
+    with open(path) as f:
+        names = f.readline().split()
+    rows = np.loadtxt(path, skiprows=1, ndmin=2)
+    return {n: rows[:, i] for i, n in enumerate(names)}
+
+
+# ---------------------------------------------------------------------------
+# Python replica of the microstructure explicit update (1-D column)
+# ---------------------------------------------------------------------------
+class Table:
+    """Numeric::Material::Table for a Constant material without phase change."""
+
+    def __init__(self, rho, cp, T_ref, T_min=200.0, T_max=5000.0, dT=0.5):
+        self.T_min, self.dT = T_min, dT
+        self.N = int((T_max - T_min) / dT) + 1
+        rhocp = rho * cp
+        T = [T_min]
+        H = [0.0]
+        for i in range(1, self.N):
+            T.append(T_min + i * dT)
+            H.append(H[-1] + 0.5 * (rhocp + rhocp) * dT)
+        self.T = T
+        self.H = H
+        H_ref = self.H_of_T(T_ref)
+        self.H = np.array([h - H_ref for h in H])
+        self.T = np.array(T)
+
+    def H_of_T(self, T):
+        if T <= self.T_min:
+            return self.H[0]
+        if T >= self.T[self.N - 1]:
+            return self.H[-1]
+        f = (T - self.T_min) / self.dT
+        i = int(f)
+        w = f - i
+        return self.H[i] * (1.0 - w) + self.H[i + 1] * w
+
+    def T_of_H(self, H):
+        if H <= self.H[0]:
+            return self.T[0]
+        if H >= self.H[-1]:
+            return self.T[-1]
+        lo, hi = 0, self.N - 1
+        while hi - lo > 1:
+            mid = (lo + hi) // 2
+            if self.H[mid] <= H:
+                lo = mid
+            else:
+                hi = mid
+        denom = self.H[hi] - self.H[lo]
+        w = (H - self.H[lo]) / denom if denom > 0.0 else 0.0
+        return self.T[lo] * (1.0 - w) + self.T[hi] * w
+
+
+def surface_cell_flux(in_patch, face, surf_c, h, T_gas, kc, dz, Tc, L):
+    """Mirror of MMWSpalling::SurfaceCellFlux. Returns (q_in, q_out, q_robin, q_loss)."""
+    eps_lo, eps_hi, T_eps_b = L["eps_lo"], L["eps_hi"], L["T_eps_b"]
+    sig, h_c, T_a = L["sig"], L["h_c"], L["T_a"]
+    if in_patch and face:
+        G = 2.0 * kc / dz
+        lo = min(min(Tc, T_gas), T_a)
+        hi = max(max(Tc, T_gas), T_a)
+        Tf = Tc
+        for _ in range(10):
+            eps = eps_lo if Tf <= T_eps_b else eps_hi
+            T3 = Tf * Tf * Tf
+            F = (G * (Tf - Tc) - h * (T_gas - Tf)
+                 + eps * sig * (T3 * Tf - T_a * T_a * T_a * T_a) + h_c * (Tf - T_a))
+            if F == 0.0:
+                break
+            if F > 0.0:
+                hi = Tf
+            else:
+                lo = Tf
+            dF = G + h + 4.0 * eps * sig * T3 + h_c
+            Tn = Tf - F / dF
+            if not (lo <= Tn <= hi):
+                Tn = 0.5 * (lo + hi)
+            step = Tn - Tf
+            Tf = Tn
+            if abs(step) <= 1.0e-9 * Tc:
+                break
+        q_in = G * (Tf - Tc)
+        q_robin = h * (T_gas - Tf)
+        return q_in, 0.0, q_robin, q_robin - q_in
+    eps = eps_lo if Tc <= T_eps_b else eps_hi
+    q_in = h * (T_gas - Tc) if in_patch else 0.0
+    q_out = surf_c * (eps * sig * (Tc * Tc * Tc * Tc - T_a * T_a * T_a * T_a) + h_c * (Tc - T_a))
+    return q_in, q_out, q_in, q_out
+
+
+def replay(form, L, nsteps, dt):
+    tab = Table(RHO, CP, T_REF)
+    T = [T0] * N
+    H = [tab.H_of_T(T0)] * N
+    kc = KAPPA * math.exp(-0.0 * 0.0)
+    inv_dz, inv_dz2 = 1.0 / DZ, 1.0 / (DZ * DZ)
+    inv_dx2 = 1.0 / (DXY * DXY)
+    first_q_in = None
+    for n in range(nsteps):
+        H_new = [0.0] * N
+        for k in range(N):
+            Tc = T[k]
+            def kface(kk):
+                if kk < 0 or kk >= N:
+                    return kc
+                inv = 0.5 / kc + 0.5 / kc
+                return 1.0 / inv
+            Tzp = T[k + 1] if k + 1 < N else T[k]      # Neumann-0 ghost
+            Tzm = T[k - 1] if k - 1 >= 0 else T[k]
+            k_zp, k_zm = kface(k + 1), kface(k - 1)
+            # x and y: single cell, both faces are domain boundaries with
+            # ghost == interior, so each term is exactly 0.
+            div = ((kc * (Tc - Tc) - kc * (Tc - Tc)) * inv_dx2
+                   + (kc * (Tc - Tc) - kc * (Tc - Tc)) * inv_dx2
+                   + (k_zp * (Tzp - Tc) - k_zm * (Tc - Tzm)) * inv_dz2)
+            top = (k == N - 1)
+            q_in, q_out, _, _ = surface_cell_flux(top, form == "face", 1.0 if top else 0.0,
+                                                  H_FL, T_GAS, kc, DZ, Tc, L)
+            if top:
+                div += q_in * inv_dz
+                if n == 0:
+                    first_q_in = q_in
+            Q = 0.0
+            H_new[k] = H[k] + dt * (div + Q - q_out * inv_dz)
+        H = H_new
+        T = [tab.T_of_H(h) for h in H]
+    return np.array(T), np.array(H), first_q_in
+
+
+def load_column(pf):
+    ds = yt.load(pf)
+    cg = ds.covering_grid(level=0, left_edge=ds.domain_left_edge, dims=ds.domain_dimensions)
+    return (np.asarray(cg["Temp"])[0, 0, :], np.asarray(cg["H"])[0, 0, :],
+            float(ds.current_time))
+
+
+# ---------------------------------------------------------------------------
+root_out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(TEST_DIR, "output")
+do_run = len(sys.argv) <= 1
+if do_run:
+    os.makedirs(root_out, exist_ok=True)
+
+DT = 0.01
+print("=== (a) Robin form discrete-exact check ===")
+E_abs = {}
+first_q = {}
+for name, (form, L) in FORM_CASES.items():
+    outdir = os.path.join(root_out, name)
+    if do_run:
+        run("input_form", outdir, overrides(form, L))
+    pfs = plotfiles(outdir)
+    step, pf = pfs[-1]
+    T_al, H_al, t_al = load_column(pf)
+    T_py, H_py, q0 = replay(form, L, step, DT)
+    first_q[name] = q0
+    relT = np.max(np.abs(T_al - T_py) / np.abs(T_py))
+    dH = np.abs(H_al - H_py)
+    relH = np.max(dH / np.maximum(np.abs(H_py), 1.0))
+    check(f"a {name} profile", relT <= TOL_FORM and relH <= TOL_FORM,
+          f"step {step} (t={t_al:.6g} s): max rel dT = {relT:.2e}, max rel dH = {relH:.2e}, "
+          f"T_top ALAMO {T_al[-1]:.6f} K / model {T_py[-1]:.6f} K")
+    th = thermo(outdir)
+    lerr = np.max(np.abs(th["ledger_err"]))
+    check(f"a {name} ledger", lerr <= TOL_LEDGER, f"max |ledger_err| = {lerr:.2e}")
+    E_abs[name] = float(np.sum(H_al)) * DXY * DXY * DZ
+
+Bi = H_FL * DZ / (2.0 * KAPPA)
+ratio0 = first_q["form_face_off"] / first_q["form_cell_off"]
+check("a first-step face/cell flux = 1/(1+Bi)",
+      abs(ratio0 - 1.0 / (1.0 + Bi)) <= 1e-12,
+      f"Bi = {Bi:.4f}: ratio {ratio0:.12f} vs {1.0 / (1.0 + Bi):.12f}")
+T_py_c, H_py_c, _ = replay("cell", LOSSES_OFF, plotfiles(os.path.join(root_out, "form_cell_off"))[-1][0], DT)
+T_py_f, H_py_f, _ = replay("face", LOSSES_OFF, plotfiles(os.path.join(root_out, "form_face_off"))[-1][0], DT)
+r_model = float(np.sum(H_py_f)) / float(np.sum(H_py_c))
+r_al = E_abs["form_face_off"] / E_abs["form_cell_off"]
+# Over 20 s both forms drive the top toward T_gas, so the cumulative ratio is
+# much milder than the first-step 1/(1+Bi); require only face < cell and the
+# model value.
+check("a absorbed energy face/cell (losses off)",
+      abs(r_al - r_model) <= 1e-9 * r_model and r_al < 1.0,
+      f"ALAMO {r_al:.6f}, model {r_model:.6f} (cell form over-absorbs at Bi = {Bi:.2f})")
+
+print()
+print("=== (b) ledger + follow_mask on a removal run ===")
+outdir = os.path.join(root_out, "ledger")
+if do_run:
+    run("input_ledger", outdir, [])
+th = thermo(outdir)
+t = th["time"]
+lerr = np.abs(th["ledger_err"])
+check("b ledger_err", lerr.size > 1 and np.max(lerr) <= TOL_LEDGER,
+      f"{lerr.size} rows, max |ledger_err| = {np.max(lerr):.2e} (tol {TOL_LEDGER:g}); "
+      f"final E_src = {th['ledger_E_src'][-1]:.4g} J, P_loss = {th['ledger_P_loss'][-1]:.4g} W")
+
+pfs = plotfiles(outdir)
+t_rem = None
+layers = 0
+for step, pf in pfs:
+    ds = yt.load(pf)
+    cg = ds.covering_grid(level=0, left_edge=ds.domain_left_edge, dims=ds.domain_dimensions)
+    rem = np.asarray(cg["removed"]) > 0.5
+    nz = rem.shape[2]
+    solid = ~rem
+    k_top = nz - 1 - np.argmax(solid[:, :, ::-1], axis=2)
+    lay = int(np.min(nz - 1 - k_top))
+    if lay > 0 and t_rem is None:
+        t_rem = float(ds.current_time)
+    layers = lay
+after = (t > (t_rem if t_rem is not None else np.inf))
+p_rob = th["ledger_P_robin"][after]
+check("b patch follows surface", t_rem is not None and p_rob.size > 0 and np.all(p_rob > 0.0),
+      f"first removal seen by t = {t_rem} s; {p_rob.size} later rows, "
+      f"min ledger_P_robin = {np.min(p_rob) if p_rob.size else float('nan'):.4g} W")
+# Negative control: same run with follow_mask = 0 -- the patch stays on the
+# fixed domain top, so once that cell voids the Robin power drops to zero.
+ctrl = os.path.join(root_out, "ledger_nofollow")
+if do_run:
+    run("input_ledger", ctrl, ["surface.follow_mask=0", "stop_time=3.0"])
+thc = thermo(ctrl)
+late = thc["time"] >= 2.0
+check("b control (follow_mask = 0) loses the patch",
+      np.any(late) and np.all(thc["ledger_P_robin"][late] == 0.0)
+      and np.max(np.abs(thc["ledger_err"])) <= TOL_LEDGER,
+      f"ledger_P_robin for t >= 2 s: max {np.max(thc['ledger_P_robin'][late]):.4g} W; "
+      f"max |ledger_err| {np.max(np.abs(thc['ledger_err'])):.2e}")
+miss = th["ledger_surface_missing_cols"]
+print(f"       ledger_surface_missing_cols: max {np.max(miss):g}, mean {np.mean(miss):.3g}")
+check("b removal happened", layers >= NLAYERS_MIN,
+      f"min layers removed over columns at the last plotfile = {layers} (need >= {NLAYERS_MIN})")
+
+print()
+print("PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

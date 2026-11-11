@@ -1,3 +1,5 @@
+# P2-28 RECORD: this file ran the COLUMN removal path, retired in P2-28 (one removal path, the face list); it now aborts at parse. Kept as the record of its last runs, not run.
+# P2-26 (2026-11-07): `spall.flake_coherence_length = 0.004` deleted from this deck -- the key is retired (census C2). The deleted line was LIVE, so this deck's next run differs from its earlier outputs BY DESIGN.
 #@
 #@ [3d]
 #@ dim=3
@@ -67,7 +69,6 @@ microstructure.phase0.E                 = 30.0e9
 microstructure.phase0.mu                = 11.538461538e9
 microstructure.phase0.rho               = 2750.0
 microstructure.phase0.Cp                = 790.0
-microstructure.phase0.A_D               = 0.0
 microstructure.phase0.T_ref             = 293.15
 
 conductivity.h_gb0              = 0.0
@@ -90,7 +91,6 @@ weibull.seed    = 12345
 # Moving boundary + detachment.
 spall.enabled                = 1
 spall.h_spall_max            = 0.015
-spall.flake_coherence_length = 0.004
 
 # Spallation only for the bring-up; no vaporisation relief (watch for runaway T).
 vapor.enabled = 0

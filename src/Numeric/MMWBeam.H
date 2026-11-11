@@ -18,12 +18,17 @@
 // temperature (alpha_at); with it the deposition is the column optical-depth
 // sum (MMWSpalling::ColumnOpticalDepth). Absent or one pair: flat, as P2-20.
 // The typed `beam.alpha_expr` and
-// `beam.R` are retired (MMWSpalling::Parse aborts naming them). Surface
-// position z_0 is constant in step 3; surface advancement is step 11.
+// `beam.R` are retired (MMWSpalling::Parse aborts naming them). z_0
+// (`beam.z0`) is the FIXED beam origin: nothing is deposited above it and the
+// waist law runs from it. Where the surface has receded, the integrator
+// measures the Beer-Lambert path through SOLID cells from each column's top
+// solid cell (the path argument of MMWSpalling::BeamSource), not from z_0.
 //
 // See in-main-tex-you-will-quizzical-treasure.md, step 3.
 
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -43,8 +48,8 @@ public:
 
     static void Parse(MMWBeam& v, IO::ParmParse& pp)
     {
-        // Beam power [W]; default zero so the integrator reduces to step 2 if
-        // no beam block is supplied.
+        // Beam power [W]; default zero, so a deck with no beam block deposits
+        // nothing (the source is zero at P = 0).
         pp.query_default("P0",     v.P0,     std::string("0.0"),   Unit::Power());
         // Beam waist at waveguide exit [m].
         pp.query_default("omega0", v.omega0, std::string("1.0"),   Unit::Length());
@@ -55,7 +60,7 @@ public:
         pp.query_default("y0",     v.y0,     std::string("0.0"),   Unit::Length());
         pp.query_default("z0",     v.z0,     std::string("0.0"),   Unit::Length());
         // P2-20: the dielectric description, read AFTER `lambda` (every input
-        // of the two derived members below is parsed before they are formed).
+        // of the derived members below -- alpha, R, n_idx -- is parsed before they are formed).
         // Dimensionless, through the same strtod path as `lambda`. Defaults:
         // vacuum (eps_r 1, tan_delta 0) => alpha 0, R 0.
         pp.query_default("eps_r",     v.eps_r,     std::string("1.0"), Unit::Less());
@@ -111,7 +116,7 @@ public:
         //     alpha = alpha_at(T) * (1 + (melt_factor - 1) * f_L(T)), f_L the rock phase's liquid fraction
         //   R_melt: the liquid surface's reflection; per column R_col = R + (R_melt - R) * f_L(T_top)
         // Both enter only through the column optical-depth sum (MMWSpalling::ColumnOpticalDepth); the integrator
-        // aborts when they differ from the no-op and the loss table is flat (no sum to carry them).
+        // aborts when they differ from the no-op on a deck that can deposit and whose loss table is flat (no sum to carry them).
         pp.query_default("melt_factor", v.melt_factor, std::string("1.0"), Unit::Less());
         if (!(v.melt_factor > 0.0))
             Util::Abort(INFO, "beam.melt_factor must be > 0, got ", v.melt_factor);
@@ -143,10 +148,55 @@ public:
         // ignored and the active power is `schedule.P[i]` whenever
         // `t < schedule.t_end[i]`. Both arrays must have equal length and
         // `t_end` must be strictly increasing.
-        pp.queryarr("schedule.t_end", v.sched_t);
-        pp.queryarr("schedule.P",     v.sched_P);
+        // P2-27: or `schedule.file = <path>` (relative to the run's cwd, as FILE =
+        // is): two columns `t_end P` per line, `#` comments and blank lines
+        // skipped -- the form for a long measured schedule (oglesby's 159
+        // intervals: two 159-token lines as arrays). The file and the arrays are mutually
+        // exclusive, and the promised monotonicity is enforced for both forms.
+        std::string sched_file;
+        pp.query_default("schedule.file", sched_file, std::string(""));
+        if (!sched_file.empty())
+        {
+            if (pp.contains("schedule.t_end") || pp.contains("schedule.P"))
+                Util::Abort(INFO, "beam.schedule.file and beam.schedule.t_end / .P are two forms of one "
+                            "schedule: give one (P2-27)");
+            std::ifstream in(sched_file);
+            if (!in)
+                Util::Abort(INFO, "beam.schedule.file: cannot open '", sched_file, "' (relative to the run's cwd)");
+            std::string line;
+            int lineno = 0;
+            while (std::getline(in, line))
+            {
+                ++lineno;
+                const std::size_t hash = line.find('#');
+                if (hash != std::string::npos) line.erase(hash);
+                std::istringstream is(line);
+                std::string tok;
+                std::vector<std::string> toks;
+                while (is >> tok) toks.push_back(tok);
+                if (toks.empty()) continue;
+                Set::Scalar t_end = 0.0, P = 0.0;
+                std::istringstream it(toks[0]), ip(toks.size() == 2 ? toks[1] : std::string());
+                if (toks.size() != 2 || !(it >> t_end) || !(ip >> P) || !it.eof() || !ip.eof())
+                    Util::Abort(INFO, "beam.schedule.file '", sched_file, "' line ", lineno,
+                                ": expected two numbers `t_end P`, got '", line, "'");
+                v.sched_t.push_back(t_end);
+                v.sched_P.push_back(P);
+            }
+            if (v.sched_t.empty())
+                Util::Abort(INFO, "beam.schedule.file '", sched_file, "' holds no `t_end P` pair");
+        }
+        else
+        {
+            pp.queryarr("schedule.t_end", v.sched_t);
+            pp.queryarr("schedule.P",     v.sched_P);
+        }
         if (v.sched_t.size() != v.sched_P.size())
             Util::Abort(INFO, "MMWBeam.schedule.t_end and .P must have the same length");
+        for (std::size_t i = 1; i < v.sched_t.size(); ++i)
+            if (!(v.sched_t[i] > v.sched_t[i - 1]))
+                Util::Abort(INFO, "beam.schedule: t_end must be strictly increasing; got t_end[", i - 1, "] = ",
+                            v.sched_t[i - 1], " then t_end[", i, "] = ", v.sched_t[i], " (P2-27)");
 
         v.parsed = true;
     }
@@ -160,8 +210,6 @@ public:
             if (t < sched_t[i]) return sched_P[i];
         return sched_P.back();
     }
-
-    bool active() const { return parsed && P0 != 0.0; }
 
     // P2-21: the loss table varies (>= 2 pairs). Only then is the column
     // optical-depth sum built, and only then are its thermo columns registered.

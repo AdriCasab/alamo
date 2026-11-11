@@ -13,8 +13,7 @@ LEGS
          (i 7-9, j 6-8, k 3-5) -- faces in all six directions, every class.
   STAIR  face_list = 1. A 45 deg staircase in x (k_top = 13 - i for i >= 3), flat
          at i = 0-2.
-  OFF0   CAV's seeds, face_list = 0 given explicitly.
-  CAVU   CAV's seeds, face_list unset.
+  (OFF0 / CAVU, the key at 0 and unset, retired in P2-28: removal now requires the face list, so both abort)
 
 CHECKS
   (i)   CAV: the class census (top / up / side / down) at step 1 equals the
@@ -28,8 +27,7 @@ CHECKS
         smoothed normal reaches 3 cells; STAIR's flat run is too narrow); STAIR: on the interior
         staircase (i 4-9, j 2-9) sum w * dx^2 is within 2 % of the 45 deg plane's
         area (sqrt2 dx^2 per surface cell); no fallback there.
-  (iv)  OFF0 == CAVU byte for byte (thermo.dat and every Cell_D): the key at 0 is
-        the key unset.
+  ((iv), OFF0 == CAVU, retired in P2-28 with the legs)
 Usage: test            (runs ALAMO, then checks)
        test --check    (checks existing outputs)
 """
@@ -57,8 +55,6 @@ STAIR_BOXES = [(i, 0, 14 - i, i, N - 1, KHI) for i in range(3, N)]   # k_top = 1
 LEGS = {
     "CAV":   (CAV_BOXES, ["surface_patch.face_list=1"]),
     "STAIR": (STAIR_BOXES, ["surface_patch.face_list=1"]),
-    "OFF0":  (CAV_BOXES, ["surface_patch.face_list=0"]),
-    "CAVU":  (CAV_BOXES, []),
 }
 FAIL = []
 
@@ -278,18 +274,6 @@ def main():
     th_s = thermo_row("STAIR", 0.008)
     check("(iii) no fallback on the staircase leg", th_s["fl_w_fallback"] == 0.0,
           f"fl_w_fallback {th_s['fl_w_fallback']:.0f}")
-
-    print("\n(iv) the key at 0 is the key unset")
-    same = open(os.path.join(OUT, "OFF0", "run", "thermo.dat"), "rb").read() == \
-           open(os.path.join(OUT, "CAVU", "run", "thermo.dat"), "rb").read()
-    a = sorted(glob.glob(os.path.join(OUT, "OFF0", "run", "*", "Level_0", "Cell_D_*")))
-    b = sorted(glob.glob(os.path.join(OUT, "CAVU", "run", "*", "Level_0", "Cell_D_*")))
-    same_c = len(a) == len(b) and len(a) > 0 and all(
-        open(x, "rb").read() == open(y, "rb").read() for x, y in zip(a, b))
-    check("(iv) OFF0 == CAVU, thermo.dat", same, "byte-identical" if same else "DIFFERS")
-    check("(iv) OFF0 == CAVU, every Cell_D", same_c, f"{len(a)} files")
-    hdr = open(os.path.join(OUT, "OFF0", "run", "thermo.dat")).readline()
-    check("(iv) key off adds no fl_ column", "fl_" not in hdr, "no fl_ column" if "fl_" not in hdr else "fl_ PRESENT")
 
     print("\n" + ("PASS" if not FAIL else f"FAIL: {FAIL}"))
     return 1 if FAIL else 0

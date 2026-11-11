@@ -1,0 +1,120 @@
+#@
+#@ [3d]
+#@ dim=3
+#@ check=true
+#@ exe=mmwspalling
+#@
+
+# P2-29 stage 3 (census D, DR-5 gap 1): THE JET ENTHALPY MARCH on the face list -- the per-bin recursion against an
+# independent recomputation and its first-order convergence to the continuous solution. The retired spec is
+# retired_units/jet_enthalpy (b) (the column path's strip); this is its face-list form.
+#   A quarter block (the axis on its corner, x0 = y0 = 0), 160 x 160 x 8 cubes of 0.25 mm, flat top, one step from a
+#   uniform 500 K, the face list (robin_form = surface) in its evaluate-only mode (spall and vapour off: nothing is
+#   removed). Losses OFF, so each top face's T_s is the face Newton's LINEAR root T_s = (G T_c + h T_gas)/(G + h),
+#   G = 2 k/dx, and the column bills h_eff (T_gas - T_c) dA with h_eff = h G/(G + h) (FrFaceFlux's fallback: a uniform
+#   field carries no profile). Constant h = 2000 W/m^2K, jet_stagnation = nozzle (T_stag = jet_T_nozzle), m = 1e-3
+#   kg/s, cp 1250: the excess decays to ~e^-2 at r = 40 mm.
+
+alamo.program = mmwspalling
+
+plot_file = tests/MMWSpalling/unit/jet_march/output/run
+
+timestep  = 0.001                  # the explicit limit at 0.25 mm is 8.7e-3 s
+stop_time = 0.001                  # ONE step: the march runs on the uniform 500 K IC
+
+amr.plot_int        = 1
+amr.thermo.int      = 1
+amr.thermo.plot_int = 1
+amr.max_level       = 0
+amr.n_cell          = 160 160 8
+amr.blocking_factor = 2
+amr.max_grid_size   = 40
+amr.regrid_int      = 1000000
+amr.grid_eff        = 1.0
+amr.cell.all        = 1
+
+geometry.prob_lo     = 0.0  0.0  0.0
+geometry.prob_hi     = 0.04 0.04 0.002
+geometry.is_periodic = 0 0 0
+
+microstructure.mode       = expression
+microstructure.phase_expr = 0
+microstructure.nphases    = 1
+microstructure.phase0.fraction = 1.0
+microstructure.phase0.kappa    = 2.5
+microstructure.phase0.rho      = 2600.0
+microstructure.phase0.Cp       = 800.0
+microstructure.phase0.T_ref    = 500.0
+microstructure.phase0.beta     = 8.0e-6
+microstructure.phase0.E        = 30.0e9
+microstructure.phase0.mu       = 12.0e9
+conductivity.h_gb0             = 0.0
+
+# the face list's criterion (evaluated, never applied: spall and vapour off)
+spallation.model          = sp_weibull
+spall.stress_source       = local_thermoelastic
+spallation.sp.a0          = 20.0e-6
+spallation.sp.n_segments  = 128
+spallation.sp.kic.law     = linear
+spallation.sp.kic.K_Ic0   = 1.5
+spallation.sp.kic.T_ref   = 293.15
+spallation.sp.kic.T_melt  = 1.0e9
+
+beam.P0     = 0.0
+beam.omega0 = 0.02
+beam.lambda = 2.19e-3
+beam.x0     = 0.0
+beam.y0     = 0.0
+beam.z0     = 0.002
+
+losses.epsilon       = 0.0
+losses.epsilon_high  = 0.0
+losses.T_eps_break   = 1.0e30
+losses.sigma_SB      = 0.0
+losses.h_conv        = 0.0
+losses.T_amb         = 500.0
+
+surface_patch.enabled    = 1
+surface_patch.mode       = convective_flame
+surface_patch.x0         = 0.0
+surface_patch.y0         = 0.0
+surface_patch.radius     = 0.06       # > the quadrant's diagonal 0.0566 m: every top column marches
+surface_patch.face_list  = 1
+surface_patch.robin_form = surface
+surface_patch.h_expr     = 2000.0
+surface_patch.nozzle_descent = prescribed
+surface_patch.nozzle_z0  = 0.05
+surface_patch.nozzle_feed = 0.0
+surface_patch.nozzle_collision_radius = 0.004
+surface_patch.jet_closure    = enthalpy
+surface_patch.jet_stagnation = nozzle
+surface_patch.jet_T_ent      = 500.0
+surface_patch.jet_T_nozzle   = 1500.0
+surface_patch.jet_mdot       = 1.0e-3
+surface_patch.jet_cp         = 1250.0
+surface_patch.jet_D          = 0.008
+surface_patch.jet_dr         = 0.001
+surface_patch.jet_profile_interval = 1.0
+
+hc.heat.alpha = 1.2019e-6
+hc.heat.refinement_threshold = 1.0
+hc.ic.type           = constant
+hc.ic.constant.value = 500.0
+hc.bc.temp.constant.type.xlo = neumann
+hc.bc.temp.constant.type.xhi = neumann
+hc.bc.temp.constant.type.ylo = neumann
+hc.bc.temp.constant.type.yhi = neumann
+hc.bc.temp.constant.type.zlo = neumann
+hc.bc.temp.constant.type.zhi = neumann
+hc.bc.temp.constant.val.xlo  = 0.0
+hc.bc.temp.constant.val.xhi  = 0.0
+hc.bc.temp.constant.val.ylo  = 0.0
+hc.bc.temp.constant.val.yhi  = 0.0
+hc.bc.temp.constant.val.zlo  = 0.0
+hc.bc.temp.constant.val.zhi  = 0.0
+
+el.type     = disable
+el.nmodels  = 1
+el.model1.E  = 30.0e9
+el.model1.nu = 0.3
+el.model1.F0 = 0 0 0 0 0 0 0 0 0

@@ -4,7 +4,9 @@
 Asserts by source inspection (comments stripped) that `spall.buckle_span` is one key, read once, evaluated by ONE
 helper at ONE site on the face list, refused elsewhere, and fed by the one rock law:
   B1 the key is parsed ONCE, default 0, BEFORE the sp_weibull early return
-  B2 BuckleRatio is defined once (FaceRemoval.H) and called once; Removal.H never reads the key
+  B2 BuckleRatio is defined once (FaceRemoval.H) and called for ONE decision (o.bk); Removal.H never reads the key.
+     (P2-26 restated: P2-23's blocked-line record added a second, LOG-ONLY call -- br.bk_lb inside if (bk_log),
+     read by nothing but the CSV row -- and this lock was not re-run until P2-26.)
   B3 span > 0 with face_list = 0 aborts, naming the key
   B4 a through line's x is its solid run L_av (the fractions R3 reads), times mu; else mu c_f ell_eff
   B5 the site blocks on !(bk <= 1) and zeroes BOTH fire and through
@@ -20,7 +22,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
-SRC = os.path.join(ROOT, "src", "Integrator")
+sys.path.insert(0, os.path.join(HERE, ".."))   # tests/MMWSpalling/unit/_src.py, the one reader of src/ (P2-30)
+import _src  # noqa: E402
 
 
 def nc(t):
@@ -46,10 +49,14 @@ def clauses(mmw, frm, rem):
     need("B1 the key is parsed ONCE, default 0.0, BEFORE the sp_weibull early return",
          m.count('"spall.buckle_span"') == 1 and 0 <= q < e)
 
-    need("B2 BuckleRatio is defined once in FaceRemoval.H and called once; nothing else defines or calls it, and "
+    need("B2 BuckleRatio is defined once in FaceRemoval.H and called for one decision (o.bk) plus P2-23's log-only "
+         "record (br.bk_lb inside if (bk_log), read only by the CSV row); nothing else defines or calls it, and "
          "Removal.H never reads sp_buckle_span",
          len(re.findall(r"static Set::Scalar BuckleRatio\(", f)) == 1
-         and len(re.findall(r"\bBuckleRatio\(", f)) == 2
+         and len(re.findall(r"\bBuckleRatio\(", f)) == 3
+         and len(re.findall(r"\bo\.bk = BuckleRatio\(", f)) == 1
+         and re.search(r"if \(bk_log\)\s*\{[^}]*?br\.bk_lb = BuckleRatio\(", f) is not None
+         and len(re.findall(r"\.bk_lb\b", f)) == 2
          and "BuckleRatio" not in m and "BuckleRatio" not in r
          and "sp_buckle_span" not in r)
 
@@ -76,7 +83,8 @@ def clauses(mmw, frm, rem):
          len(re.findall(r"RegisterIntegratedVariable\(&value\.bk_", m)) == 8
          and len(re.findall(r"RegisterIntegratedVariable\(&value\.bk_", rb)) == 8
          and "const bool bk_on = sp_buckle_span > 0.0;" in f
-         and '<< (bk_on ? ",bk" : "")' in f and 'if (bk_on) ofs << "," << o.bk;' in f)
+         # P2-30 (4a): the header is built from FrEventsColumns (Shared.H, in `r`); the row is assembled in `row`
+         and 'if (bk_on) c.push_back("bk");' in r and 'if (bk_on) row << "," << o.bk;' in f)
 
     hb = re.search(r"static Set::Scalar BuckleRatio\([\s\S]*?\n    \}\n", f)
     hb = hb.group(0) if hb else ""
@@ -111,7 +119,7 @@ MUTATIONS = [
         m, f.replace("                        o.fire = 0;\n                        o.through = 0;\n",
                      "                        o.fire = 0;\n"), r)),
     ("B6", "the CSV column on every run", lambda m, f, r: (
-        m, f.replace('<< (bk_on ? ",bk" : "")', '<< ",bk"'), r)),
+        m, f, r.replace('if (bk_on) c.push_back("bk");', 'c.push_back("bk");'))),
     ("B7", "eps_th from alpha(T_s) dT", lambda m, f, r: (
         m, f.replace("law ? law->strain_of(T_s) - law->strain_of(T0_s)",
                      "law ? law->alpha(T_s) * (T_s - T0_s)"), r)),
@@ -122,10 +130,9 @@ def main():
     pre = sys.argv[sys.argv.index("--pre") + 1] if "--pre" in sys.argv else None
     # P2-18 A3: the helpers both paths call moved from Removal.H into Shared.H; `rem` is the
     # UNION of the two, so B2's "nothing else defines or calls / never reads" covers both files
-    mmw, frm, rem = read(SRC) if False else (open(os.path.join(SRC, "MMWSpalling.H")).read(),
-                                            open(os.path.join(SRC, "MMWSpalling", "FaceRemoval.H")).read(),
-                                            open(os.path.join(SRC, "MMWSpalling", "Removal.H")).read() + "\n"
-                                            + open(os.path.join(SRC, "MMWSpalling", "Shared.H")).read())
+    REM = _src.SLICE_PREFIX + "Removal.H"
+    mmw, frm, rem = (_src.header(), _src.read(_src.SLICE_PREFIX + "FaceRemoval.H"),
+                     (_src.read(REM) if _src.exists(REM) else "") + "\n" + _src.read(_src.SLICE_PREFIX + "Shared.H"))
     bad = 0
     print("P2-15 (a0) -- THE BUCKLING-CONDITION LOCK")
     print("=" * 84)

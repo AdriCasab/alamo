@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# P2-28 RECORD: the tree gate retired with the column removal path (one removal path, the face list); p2_27.md5 is the column era's last list, its outputs moved with their tests to retired_units/. Kept, not run: face_gate.py is the gate.
 """P2-9 rev 2: compare a tree-sweep manifest with reference manifests.
 usage: tree_compare.py NEW REF [REF ...] [--declared FILE] [--list]
 Every manifest is tree_sweep_0922/witness/<label>.md5 (`md5  path` lines). For each

@@ -1,0 +1,257 @@
+#!/usr/bin/env python3
+# Step 19: sp_weibull spall under MMW beam (relax Step 16d surface_patch
+# gate). Model-extension exploration — NOT a validation. No MMW + LEFM
+# literature reference exists.
+#
+# Binding gates (code-correctness only):
+#   G1: sim completes without abort (>= 2 cell plotfiles).
+#   G2: Sp_field non-trivial somewhere across the run (max(Sp_field) > 0
+#       on at least one plotfile).
+#   G3: sp_weibull diagnostic fields registered (Sp_field, h_spall_field,
+#       Sp_cluster_id, flaw_a — auto-registered when sp_weibull +
+#       spall.enabled).
+#
+# Informational gates (recorded, not packet-FAIL):
+#   G4: spall_event > 0 at some plotfile (LEFM removal fired at least
+#       once). May FAIL if free-lateral sigma_xx under MMW is too weak
+#       to reach K_Ic (Step 16 takeaway #6).
+#   G5: final h_spall_field max, total removed cell count, RoP at last
+#       plotfile.
+#   G6: regime field split (spall vs vapor fraction among removed cells).
+#
+# Usage:
+#   python3 tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/test         # run + score
+#   python3 tests/MMWSpalling/extensions/hu_spall_onset_mmwbeam_lefm/test manual  # score existing
+
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import yt
+
+yt.funcs.mylog.setLevel(40)
+
+ROOT = os.path.dirname(os.path.abspath(__file__)).split(os.sep + os.path.join("tests", "MMWSpalling") + os.sep)[0]
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT = os.path.join(TEST_DIR, "input_granite2")
+OUTDIR = os.path.join(TEST_DIR, "output", "granite2")
+BIN = os.path.join(ROOT, "bin", "mmwspalling-3d-g++")
+
+
+def plotfiles_cell(outdir):
+    pat = re.compile(r"(\d+)cell$")
+    cands = []
+    for p in glob.glob(os.path.join(outdir, "*cell")):
+        m = pat.search(os.path.basename(p))
+        if m:
+            cands.append((int(m.group(1)), p))
+    cands.sort()
+    return [p for _, p in cands]
+
+
+def to_numpy(a):
+    return np.asarray(a.to_value() if hasattr(a, "to_value") else a)
+
+
+def run_alamo():
+    if os.path.isdir(OUTDIR):
+        shutil.rmtree(OUTDIR)
+    os.makedirs(OUTDIR, exist_ok=True)
+    cmd = ["mpirun", "--oversubscribe", "--bind-to", "none", "-np", "4",
+           BIN, INPUT]
+    env = os.environ.copy()
+    env.setdefault("OMPI_ALLOW_RUN_AS_ROOT", "1")
+    env.setdefault("OMPI_ALLOW_RUN_AS_ROOT_CONFIRM", "1")
+    print("Running:", " ".join(cmd))
+    res = subprocess.run(cmd, cwd=ROOT, env=env)
+    if res.returncode != 0:
+        print(f"FAIL (G1): mpirun returned {res.returncode}")
+        sys.exit(1)
+
+
+def summarize(ds):
+    ad = ds.all_data()
+    fields = {f[1] for f in ds.field_list}
+    out = {
+        "time": float(ds.current_time),
+        "fields": fields,
+    }
+    for fname in ("Temp", "Sp_field", "h_spall_field", "Sp_cluster_id",
+                  "flaw_a", "spall_event", "vapor_event", "regime_field",
+                  "regime", "removed", "RoP_spall", "RoP_vap"):
+        if fname in fields:
+            arr = to_numpy(ad[fname])
+            out[f"{fname}_max"]    = float(np.max(arr)) if arr.size else 0.0
+            out[f"{fname}_min"]    = float(np.min(arr)) if arr.size else 0.0
+            out[f"{fname}_finite"] = bool(np.all(np.isfinite(arr)))
+    # Removed-cell book-keeping
+    if "removed" in fields:
+        rem = to_numpy(ad["removed"]) > 0.5
+        out["n_removed"] = int(np.count_nonzero(rem))
+        if "regime_field" in fields and out["n_removed"] > 0:
+            reg = to_numpy(ad["regime_field"])
+            reg_at_removed = reg[rem]
+            out["n_spall_removed"] = int(np.count_nonzero(
+                np.isclose(reg_at_removed, 1.0, atol=0.4)))
+            out["n_vapor_removed"] = int(np.count_nonzero(
+                np.isclose(reg_at_removed, 2.0, atol=0.4)))
+        # Drill depth: deepest removed cell, measured from the +z face
+        if out["n_removed"] > 0:
+            z = to_numpy(ad["z"])
+            out["drill_depth"] = float(0.1 - np.min(z[rem]))
+        else:
+            out["drill_depth"] = 0.0
+    # spall_event counter
+    if "spall_event" in fields:
+        ev = to_numpy(ad["spall_event"])
+        out["n_spall_event"] = int(np.count_nonzero(ev > 0.5))
+    else:
+        out["n_spall_event"] = 0
+    return out
+
+
+def main():
+    manual = len(sys.argv) > 1
+    if not manual:
+        run_alamo()
+
+    print()
+    print("=" * 70)
+    print("Step 19: sp_weibull spall under MMW beam (model-extension)")
+    print("=" * 70)
+    print("Goals: G1 no abort, G2 max(Sp_field) > 0 somewhere, G3 fields")
+    print("       registered. G4-G6 informational (no MMW + LEFM reference).")
+    print()
+
+    files = plotfiles_cell(OUTDIR)
+    if len(files) < 2:
+        print(f"FAIL (G1): only {len(files)} cell plotfiles in {OUTDIR}")
+        sys.exit(1)
+    print(f"G1 PASS: {len(files)} cell plotfiles in {OUTDIR}")
+
+    summaries = [summarize(yt.load(f)) for f in files]
+
+    # G3: fields registered (read from the first plotfile's metadata).
+    REQUIRED = ("Sp_field", "h_spall_field", "Sp_cluster_id", "flaw_a")
+    first_fields = summaries[0]["fields"]
+    missing = [f for f in REQUIRED if f not in first_fields]
+    if missing:
+        print(f"FAIL (G3): missing sp_weibull fields {missing}")
+        sys.exit(1)
+    print(f"G3 PASS: all required sp_weibull fields registered ({', '.join(REQUIRED)})")
+
+    # G2: max(Sp_field) > 0 somewhere across the run.
+    max_sp_global = max(s.get("Sp_field_max", 0.0) for s in summaries)
+    if max_sp_global <= 0.0:
+        print(f"FAIL (G2): max(Sp_field) = 0 across all plotfiles")
+        sys.exit(1)
+    print(f"G2 PASS: max(Sp_field) = {max_sp_global:.4f} (global maximum across the run)")
+
+    # All finite?
+    for s in summaries:
+        for f in REQUIRED + ("Temp",):
+            if f in s["fields"] and not s.get(f"{f}_finite", True):
+                print(f"FAIL: non-finite {f} at t = {s['time']:.2f} s")
+                sys.exit(1)
+
+    # --- per-plotfile diagnostics ---
+    print()
+    hdr = (f"  {'t [s]':>7} {'T_max':>8} {'Sp_max':>7} {'hs_max[mm]':>11} "
+           f"{'cluster_max':>11} {'removed':>8} {'drill[mm]':>9} {'spallEv':>8}")
+    print(hdr)
+    for s in summaries:
+        print(f"  {s['time']:7.2f}"
+              f" {s.get('Temp_max', float('nan')):8.1f}"
+              f" {s.get('Sp_field_max', 0.0):7.4f}"
+              f" {s.get('h_spall_field_max', 0.0)*1e3:11.4f}"
+              f" {s.get('Sp_cluster_id_max', 0.0):11.1f}"
+              f" {s.get('n_removed', 0):8d}"
+              f" {s.get('drill_depth', 0.0)*1e3:9.4f}"
+              f" {s.get('n_spall_event', 0):8d}")
+
+    # --- G4 (informational) ---
+    any_spall = any(s.get("n_spall_event", 0) > 0 for s in summaries)
+    onset_t = next((s["time"] for s in summaries
+                    if s.get("n_spall_event", 0) > 0), None)
+
+    # --- G5 / G6 ---
+    last = summaries[-1]
+    n_rem  = last.get("n_removed", 0)
+    hs_max = last.get("h_spall_field_max", 0.0)
+    drill  = last.get("drill_depth", 0.0)
+    # G6: regime accounting. `spall_event` / `vapor_event` / `regime_field`
+    # are all reset at the start of each Advance (per-step transients).
+    # The plotfile only sees the LAST advance's flags within each plot
+    # interval, so with plot_int = 20 we under-sample firings by ~20x.
+    # Report: (a) whether regime=1 or regime=2 was observed in any
+    # plotfile snapshot — that confirms the path fired; (b) cumulative
+    # removed (the only reliable accumulation across the run).
+    any_reg1 = False  # spall regime observed at any snapshot
+    any_reg2 = False  # vapor regime observed at any snapshot
+    for f in files:
+        ds_local = yt.load(f)
+        ad_local = ds_local.all_data()
+        if "regime_field" in {fld[1] for fld in ds_local.field_list}:
+            reg = to_numpy(ad_local["regime_field"])
+            if np.any((reg > 0.5) & (reg < 1.5)): any_reg1 = True
+            if np.any(reg > 1.5):                 any_reg2 = True
+        if any_reg1 and any_reg2:
+            break
+
+    print()
+    print("--- Informational findings (not gated) ---")
+    print(f"G4: spall_event > 0 somewhere: {'YES' if any_spall else 'NO'}"
+          + (f" (first at t = {onset_t:.2f} s)" if onset_t is not None else ""))
+    print(f"G5: final h_spall_field max = {hs_max*1e3:.3f} mm; "
+          f"cumulative removed cells = {n_rem}; "
+          f"final drill depth = {drill*1e3:.3f} mm")
+    print(f"G6: regime_field observations across snapshots — "
+          f"regime=1 (spall): {'YES' if any_reg1 else 'NO'}; "
+          f"regime=2 (vapor): {'YES' if any_reg2 else 'NO'} "
+          f"(per-step transients sub-sampled at plot_int=20)")
+
+    # --- comparison.png ---
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        t = [s["time"] for s in summaries]
+        fig, ax = plt.subplots(1, 2, figsize=(11.5, 4.5))
+        ax[0].plot(t, [s.get("Sp_field_max", 0.0) for s in summaries],
+                   "C0o-", lw=1.6, ms=4, label="Sp_field max")
+        ax[0].plot(t, [s.get("h_spall_field_max", 0.0) * 1e3 for s in summaries],
+                   "C1s--", lw=1.6, ms=4, label="h_spall_field max [mm]")
+        ax[0].axhline(1.0, color="k", ls=":", lw=1, alpha=0.6)
+        ax[0].set_xlabel("Time [s]"); ax[0].set_ylabel("Sp_field / h_spall_mm")
+        ax[0].set_title("LEFM diagnostic (MMW beam, free-lateral)")
+        ax[0].legend(loc="best"); ax[0].grid(alpha=0.3)
+
+        ax[1].plot(t, [s.get("n_removed", 0) for s in summaries],
+                   "C2o-", lw=1.6, ms=4, label="cumulative removed")
+        ax[1].plot(t, [s.get("n_spall_event", 0) for s in summaries],
+                   "C3s--", lw=1.4, ms=3, label="spall_event count this step")
+        ax[1].set_xlabel("Time [s]")
+        ax[1].set_ylabel("cells")
+        ax[1].set_title("Material removal under MMW + LEFM")
+        ax[1].legend(loc="best"); ax[1].grid(alpha=0.3)
+
+        out_png = os.path.join(TEST_DIR, "output", "comparison.png")
+        fig.tight_layout()
+        fig.savefig(out_png, dpi=120)
+        print(f"\nWrote plot: {out_png}")
+    except ImportError:
+        print("(matplotlib not installed - skipping PNG plot)")
+
+    print()
+    print("PASS (G1+G2+G3 binding; G4 = "
+          + ("PASS" if any_spall else "INFORMATIONAL-FAIL")
+          + "; G5/G6 reported above)")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
